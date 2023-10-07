@@ -14,15 +14,11 @@
 
 ActsExamples::HelloLoggerAlgorithm::HelloLoggerAlgorithm(
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("HelloLogger", level) {}
+    : ActsExamples::IAlgorithm("HelloLogger", level) {}
 
 ActsExamples::ProcessCode ActsExamples::HelloLoggerAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  // using hard-coded data name should be avoided, but i'm a bit lazy tonight.
-  auto block = ctx.eventStore.get<std::size_t>("eventBlock");
-
-  ACTS_INFO(" Hello World! (from event=" << ctx.eventNumber
-                                         << ", block=" << block << ")");
+  ACTS_INFO(" Hello World! (from event=" << ctx.eventNumber);
   ACTS_DEBUG("  - that's an ACTS_DEBUG message");
   ACTS_VERBOSE("  - that's an ACTS_VERBOSE message");
   return ActsExamples::ProcessCode::SUCCESS;

@@ -1,5 +1,3 @@
-add_unittest(AbortList AbortListTests.cpp)
-add_unittest(ActionList ActionListTests.cpp)
 add_unittest(AtlasStepper AtlasStepperTests.cpp)
 add_unittest(Auctioneer AuctioneerTests.cpp)
 add_unittest(ConstrainedStep ConstrainedStepTests.cpp)

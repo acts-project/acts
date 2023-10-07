@@ -28,7 +28,7 @@ using namespace ActsExamples;
 
 int runDigitizationConfigExample(
     int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);

@@ -18,11 +18,13 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <ios>
+#include <limits>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -51,6 +53,9 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -129,34 +134,26 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
 }
 
 ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  m_outputFile->Close();
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write parameters of trajectories to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
-  }
+ActsExamples::ProcessCode
+ActsExamples::RootTrajectorySummaryWriter::finalize() {
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  ACTS_INFO("Wrote parameters of trajectories to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
-
   // Read additional input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -171,17 +168,19 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
+    // The trajectory entry indices
+    const auto& trackTips = traj.tips();
+
+    // Dont write empty MultiTrajectory
+    if (trackTips.empty()) {
       continue;
     }
 
+    // Get the MultiTrajectory
+    const auto& mj = traj.multiTrajectory();
+
     // The trajectory index
     m_multiTrajNr.push_back(itraj);
-
-    // The trajectory entry indices and the multiTrajectory
-    const auto& mj = traj.multiTrajectory();
-    const auto& trackTips = traj.tips();
 
     // Loop over the entry indices for the subtrajectories
     for (unsigned int isubtraj = 0; isubtraj < trackTips.size(); ++isubtraj) {
@@ -214,9 +213,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                                   trajState.outlierLayer.end());
 
       // Initialize the truth particle info
-      uint64_t majorityParticleId = NaNint;
-      unsigned int nMajorityHits = NaNint;
-      float t_charge = NaNint;
+      ActsFatras::Barcode majorityParticleId(
+          std::numeric_limits<size_t>::max());
+      unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
+      int t_charge = std::numeric_limits<int>::max();
       float t_time = NaNfloat;
       float t_vx = NaNfloat;
       float t_vy = NaNfloat;
@@ -246,7 +246,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Get the truth particle info
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
-        majorityParticleId = particleHitCounts.front().particleId.value();
+        majorityParticleId = particleHitCounts.front().particleId;
         nMajorityHits = particleHitCounts.front().hitCount;
 
         // Find the truth particle via the barcode
@@ -255,11 +255,12 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           foundMajorityParticle = true;
 
           const auto& particle = *ip;
-          ACTS_DEBUG(
-              "Find the truth particle with barcode = " << majorityParticleId);
+          ACTS_VERBOSE("Find the truth particle with barcode "
+                       << majorityParticleId << "="
+                       << majorityParticleId.value());
           // Get the truth particle info at vertex
           t_p = particle.absoluteMomentum();
-          t_charge = particle.charge();
+          t_charge = static_cast<int>(particle.charge());
           t_time = particle.time();
           t_vx = particle.position().x();
           t_vy = particle.position().y();
@@ -284,8 +285,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
             }
           }
         } else {
-          ACTS_WARNING("Truth particle with barcode = "
-                       << majorityParticleId
+          ACTS_WARNING("Truth particle with barcode "
+                       << majorityParticleId << "="
+                       << majorityParticleId.value()
                        << " not found in the input collection!");
         }
       }
@@ -296,7 +298,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
       // Push the corresponding truth particle info for the track.
       // Always push back even if majority particle not found
-      m_majorityParticleId.push_back(majorityParticleId);
+      m_majorityParticleId.push_back(majorityParticleId.value());
       m_nMajorityHits.push_back(nMajorityHits);
       m_t_charge.push_back(t_charge);
       m_t_time.push_back(t_time);
@@ -334,7 +336,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
         res = {param[Acts::eBoundLoc0] - t_d0,
                param[Acts::eBoundLoc1] - t_z0,
-               param[Acts::eBoundPhi] - t_phi,
+               Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
+                                                 static_cast<float>(2 * M_PI)),
                param[Acts::eBoundTheta] - t_theta,
                param[Acts::eBoundQOverP] - t_charge / t_p,
                param[Acts::eBoundTime] - t_time};
@@ -343,7 +346,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           const auto& covariance = *boundParam.covariance();
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
             error[i] = std::sqrt(covariance(i, i));
-            pull[i] = res[i] / error[i];
+            if (error[i] != 0.0) {
+              pull[i] = res[i] / error[i];
+            } else {
+              pull[i] = std::numeric_limits<double>::quiet_NaN();
+            }
           }
         }
       }

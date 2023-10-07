@@ -11,6 +11,7 @@
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
 
@@ -35,6 +36,6 @@ void addAlignmentOptions(ActsExamples::Options::Description& desc);
 /// @param detector is the detector to be aligned
 int runDetectorAlignment(
     int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector,
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector,
     ActsAlignment::AlignedTransformUpdater alignedTransformUpdater,
-    AlignedDetElementGetter alignedDetElementsGetter);
+    const AlignedDetElementGetter& alignedDetElementsGetter);

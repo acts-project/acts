@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -53,10 +53,10 @@ class CsvSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   CsvSpacepointWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~CsvSpacepointWriter() final override;
+  ~CsvSpacepointWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -68,7 +68,7 @@ class CsvSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param spacepoints is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimSpacePointContainer& spacepoints) final override;
+                     const SimSpacePointContainer& spacepoints) override;
 
  private:
   Config m_cfg;

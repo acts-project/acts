@@ -44,7 +44,8 @@ Acts::ApproachDescriptor* Acts::Layer::approachDescriptor() {
 
 void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
                                 const GeometryIdentifier& layerID,
-                                const GeometryIdentifierHook& hook) {
+                                const GeometryIdentifierHook& hook,
+                                const Logger& logger) {
   // set the volumeID of this
   assignGeometryId(layerID);
   // assign to the representing surface
@@ -52,6 +53,8 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   if (materialDecorator != nullptr) {
     materialDecorator->decorate(*rSurface);
   }
+  ACTS_DEBUG("layerID: " << layerID);
+
   rSurface->assignGeometryId(layerID);
 
   // also find out how the sub structure is defined
@@ -85,9 +88,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
     GeometryIdentifier::Value issurface = 0;
     for (auto& sSurface : m_surfaceArray->surfaces()) {
       auto ssurfaceID = GeometryIdentifier(layerID).setSensitive(++issurface);
-      if (hook) {
-        ssurfaceID = hook(ssurfaceID, *sSurface);
-      }
+      ssurfaceID = hook.decorateIdentifier(ssurfaceID, *sSurface);
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeometryId(ssurfaceID);
       if (materialDecorator != nullptr) {

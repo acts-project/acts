@@ -66,7 +66,7 @@ class SensitiveSurfaceMapper {
   /// @param motherPosition the absolute position of the mother
   /// @param sCounter  a counter of how many volumes have been remapped
   void remapSensitiveNames(G4VPhysicalVolume* g4PhysicalVolume,
-                           Acts::Transform3 motherTransform,
+                           const Acts::Transform3& motherTransform,
                            int& sCounter) const;
 
  protected:

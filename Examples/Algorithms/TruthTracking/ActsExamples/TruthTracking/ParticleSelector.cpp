@@ -19,13 +19,17 @@
 
 ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
                                                  Acts::Logging::Level level)
-    : BareAlgorithm("ParticleSelector", level), m_cfg(config) {
+    : IAlgorithm("ParticleSelector", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
   }
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output particles collection");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputParticles.initialize(m_cfg.outputParticles);
+
   ACTS_DEBUG("selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax
                                         << ")");
   ACTS_DEBUG("selection particle |z| [" << m_cfg.absZMin << "," << m_cfg.absZMax
@@ -70,8 +74,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
   };
 
   // prepare input/ output types
-  const auto& inputParticles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto& inputParticles = m_inputParticles(ctx);
+
   SimParticleContainer outputParticles;
   outputParticles.reserve(inputParticles.size());
 
@@ -88,6 +92,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
                       << outputParticles.size() << " from "
                       << inputParticles.size() << " particles");
 
-  ctx.eventStore.add(m_cfg.outputParticles, std::move(outputParticles));
+  m_outputParticles(ctx, std::move(outputParticles));
   return ProcessCode::SUCCESS;
 }

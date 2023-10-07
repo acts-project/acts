@@ -123,9 +123,10 @@ PhotonConversion::generatePathLimits(generator_t& generator,
 
   // Fast exit if not a photon or the energy is too low
   if (particle.pdg() != Acts::PdgParticle::eGamma ||
-      particle.absoluteMomentum() < (2 * kElectronMass))
+      particle.absoluteMomentum() < (2 * kElectronMass)) {
     return std::make_pair(std::numeric_limits<Scalar>::infinity(),
                           std::numeric_limits<Scalar>::infinity());
+  }
 
   // Use for the moment only Al data - Yung Tsai - Rev.Mod.Particle Physics Vol.
   // 46, No.4, October 1974 optainef from a fit given in the momentum range 100
@@ -197,7 +198,7 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
 
   // We will need 3 uniform random number for each trial of sampling
   Scalar greject = 0.;
-  Scalar eps;
+  Scalar eps = 0.;
   std::uniform_real_distribution<Scalar> rndmEngine;
   do {
     if (NormF1 > rndmEngine(generator) * (NormF1 + NormF2)) {
@@ -288,13 +289,15 @@ template <typename generator_t>
 bool PhotonConversion::run(generator_t& generator, Particle& particle,
                            std::vector<Particle>& generated) const {
   // Fast exit if particle is not a photon
-  if (particle.pdg() != Acts::PdgParticle::eGamma)
+  if (particle.pdg() != Acts::PdgParticle::eGamma) {
     return false;
+  }
 
   // Fast exit if momentum is too low
   const Scalar p = particle.absoluteMomentum();
-  if (p < (2 * kElectronMass))
+  if (p < (2 * kElectronMass)) {
     return false;
+  }
 
   // Get one child energy
   const Scalar childEnergy = p * generateFirstChildEnergyFraction(generator, p);

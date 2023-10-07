@@ -13,3 +13,4 @@ dependencies and are thus disabled by default.
    exatrkx
    json
    tgeo
+   MLAlgorithms

@@ -23,44 +23,36 @@ constexpr static double s_normalizationTolerance = 1.e-4;
 
 namespace detail {
 
-template <typename component_range_t, typename projector_t,
-          typename print_flag_t = std::false_type>
+template <typename component_range_t, typename projector_t>
 bool weightsAreNormalized(const component_range_t &cmps,
                           const projector_t &proj,
-                          double tol = s_normalizationTolerance,
-                          print_flag_t print_flag = print_flag_t{}) {
-  double sum_of_weights = 0.0;
+                          double tol = s_normalizationTolerance) {
+  double sumOfWeights = 0.0;
 
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    sum_of_weights += proj(*it);
+    sumOfWeights += proj(*it);
   }
 
-  if (std::abs(sum_of_weights - 1.0) < tol) {
-    return true;
-  } else {
-    if constexpr (print_flag) {
-      std::cout << std::setprecision(10)
-                << "diff from 1: " << std::abs(sum_of_weights - 1.0) << "\n";
-    }
-
-    return false;
-  }
+  return std::abs(sumOfWeights - 1.0) < tol;
 }
 
 template <typename component_range_t, typename projector_t>
 void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
-  double sum_of_weights = 0.0;
+  double sumOfWeights = 0.0;
 
   // we need decltype(auto) here to support proxy-types with reference
   // semantics, otherwise there is a `cannot bind ... to ...` error
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
     decltype(auto) cmp = *it;
-    sum_of_weights += proj(cmp);
+    assert(std::isfinite(proj(cmp)) && "weight not finite in normalization");
+    sumOfWeights += proj(cmp);
   }
+
+  assert(sumOfWeights > 0 && "sum of weights is not > 0");
 
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
     decltype(auto) cmp = *it;
-    proj(cmp) /= sum_of_weights;
+    proj(cmp) /= sumOfWeights;
   }
 }
 
@@ -68,14 +60,15 @@ void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
 // destruction, it also contains some assertions in the constructor and
 // destructor. It can be removed without change of behaviour, since it only
 // holds const references
-template <typename propagator_state_t, typename stepper_t>
+template <typename propagator_state_t, typename stepper_t, typename navigator_t>
 class ScopedGsfInfoPrinterAndChecker {
   const propagator_state_t &m_state;
   const stepper_t &m_stepper;
+  const navigator_t &m_navigator;
   double m_p_initial;
-  std::size_t m_missedCount;
+  const Logger &m_logger;
 
-  const auto &logger() const { return m_state.options.logger(); }
+  const Logger &logger() const { return m_logger; }
 
   void print_component_stats() const {
     std::size_t i = 0;
@@ -86,38 +79,44 @@ class ScopedGsfInfoPrinterAndChecker {
       ACTS_VERBOSE("  #" << i++ << " pos: " << getVector(eFreePos0) << ", dir: "
                          << getVector(eFreeDir0) << ", weight: " << cmp.weight()
                          << ", status: " << cmp.status()
-                         << ", qop: " << cmp.pars()[eFreeQOverP]);
+                         << ", qop: " << cmp.pars()[eFreeQOverP]
+                         << ", det(cov): " << cmp.cov().determinant());
     }
   }
 
-  void checks(const std::string_view &where) const {
+  void checks(bool onStart) const {
     const auto cmps = m_stepper.constComponentIterable(m_state.stepping);
+    [[maybe_unused]] const bool allFinite =
+        std::all_of(cmps.begin(), cmps.end(),
+                    [](auto cmp) { return std::isfinite(cmp.weight()); });
+    [[maybe_unused]] const bool allNormalized = detail::weightsAreNormalized(
+        cmps, [](const auto &cmp) { return cmp.weight(); });
+    [[maybe_unused]] const bool zeroComponents =
+        m_stepper.numberComponents(m_state.stepping) == 0;
 
-    // If all components are missed, their weights have been reset to zero.
-    // In this case the weights might not be normalized and not even be
-    // finite due to a division by zero.
-    if (m_stepper.numberComponents(m_state.stepping) > m_missedCount) {
-      throw_assert(detail::weightsAreNormalized(
-                       cmps, [](const auto &cmp) { return cmp.weight(); }),
-                   "not normalized at " << where);
-
-      throw_assert(
-          std::all_of(cmps.begin(), cmps.end(),
-                      [](auto cmp) { return std::isfinite(cmp.weight()); }),
-          "some weights are not finite at " << where);
+    if (onStart) {
+      assert(not zeroComponents && "no cmps at the start");
+      assert(allFinite && "weights not finite at the start");
+      assert(allNormalized && "not normalized at the start");
+    } else {
+      assert(not zeroComponents && "no cmps at the end");
+      assert(allFinite && "weights not finite at the end");
+      assert(allNormalized && "not normalized at the end");
     }
   }
 
  public:
   ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
                                  const stepper_t &stepper,
-                                 std::size_t missedCount)
+                                 const navigator_t &navigator,
+                                 const Logger &logger)
       : m_state(state),
         m_stepper(stepper),
+        m_navigator(navigator),
         m_p_initial(stepper.momentum(state.stepping)),
-        m_missedCount(missedCount) {
+        m_logger{logger} {
     // Some initial printing
-    checks("start");
+    checks(true);
     ACTS_VERBOSE("Gsf step "
                  << state.stepping.steps << " at mean position "
                  << stepper.position(state.stepping).transpose()
@@ -134,14 +133,14 @@ class ScopedGsfInfoPrinterAndChecker {
   }
 
   ~ScopedGsfInfoPrinterAndChecker() {
-    if (m_state.navigation.currentSurface) {
+    if (m_navigator.currentSurface(m_state.navigation)) {
       const auto p_final = m_stepper.momentum(m_state.stepping);
       ACTS_VERBOSE("Component status at end of step:");
       print_component_stats();
       ACTS_VERBOSE("Delta Momentum = " << std::setprecision(5)
                                        << p_final - m_p_initial);
     }
-    checks("end");
+    checks(false);
   }
 };
 
@@ -198,6 +197,40 @@ void computePosteriorWeights(
     }
   }
 }
+
+/// Enumeration type to allow templating on the state we want to project on with
+/// a MultiTrajectory
+enum class StatesType { ePredicted, eFiltered, eSmoothed };
+
+inline std::ostream &operator<<(std::ostream &os, StatesType type) {
+  constexpr static std::array names = {"predicted", "filtered", "smoothed"};
+  os << names[static_cast<int>(type)];
+  return os;
+}
+
+/// @brief Projector type which maps a MultiTrajectory-Index to a tuple of
+/// [weight, parameters, covariance]. Therefore, it contains a MultiTrajectory
+/// and for now a std::map for the weights
+template <StatesType type, typename traj_t>
+struct MultiTrajectoryProjector {
+  const MultiTrajectory<traj_t> &mt;
+  const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
+
+  auto operator()(MultiTrajectoryTraits::IndexType idx) const {
+    const auto proxy = mt.getTrackState(idx);
+    switch (type) {
+      case StatesType::ePredicted:
+        return std::make_tuple(weights.at(idx), proxy.predicted(),
+                               proxy.predictedCovariance());
+      case StatesType::eFiltered:
+        return std::make_tuple(weights.at(idx), proxy.filtered(),
+                               proxy.filteredCovariance());
+      case StatesType::eSmoothed:
+        return std::make_tuple(weights.at(idx), proxy.smoothed(),
+                               proxy.smoothedCovariance());
+    }
+  }
+};
 
 }  // namespace detail
 }  // namespace Acts

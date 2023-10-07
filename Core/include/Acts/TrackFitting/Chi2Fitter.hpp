@@ -84,7 +84,6 @@ struct Chi2FitterOptions {
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
   /// @param extensions_ The chi2 extensions
-  /// @param logger_ The logger wrapper
   /// @param pOptions The plain propagator options
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
@@ -97,7 +96,6 @@ struct Chi2FitterOptions {
                     const MagneticFieldContext& mctx,
                     std::reference_wrapper<const CalibrationContext> cctx,
                     Chi2FitterExtensions<traj_t> extensions_,
-                    LoggerWrapper logger_,
                     const PropagatorPlainOptions& pOptions,
                     bool mScattering = false, bool eLoss = false, int nIter = 1,
                     bool calcFinalChi2_ = true,
@@ -112,8 +110,7 @@ struct Chi2FitterOptions {
         energyLoss(eLoss),
         nUpdates(nIter),
         calcFinalChi2(calcFinalChi2_),
-        freeToBoundCorrection(freeToBoundCorrection_),
-        logger(logger_) {}
+        freeToBoundCorrection(freeToBoundCorrection_) {}
   /// Contexts are required and the options must not be default-constructible.
   Chi2FitterOptions() = delete;
 
@@ -145,15 +142,12 @@ struct Chi2FitterOptions {
   /// Whether to include non-linear correction during global to local
   /// transformation
   FreeToBoundCorrection freeToBoundCorrection;
-
-  /// Logger
-  LoggerWrapper logger;
 };
 
 template <typename traj_t>
 struct Chi2FitterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<traj_t> fittedStates;
+  traj_t* fittedStates{nullptr};
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurement state in the multitrajectory.
@@ -165,7 +159,7 @@ struct Chi2FitterResult {
   // This correspond to the last state in the multitrajectory.
   // Since this GX2F only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
-  size_t lastTrackIndex = SIZE_MAX;
+  size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   // The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
@@ -216,11 +210,22 @@ class Chi2Fitter {
   using Chi2Navigator = typename propagator_t::Navigator;
 
  public:
-  Chi2Fitter(propagator_t pPropagator) : m_propagator(std::move(pPropagator)) {}
+  Chi2Fitter(propagator_t pPropagator,
+             std::unique_ptr<const Logger> _logger =
+                 getDefaultLogger("Chi2Fitter", Logging::INFO))
+      : m_propagator(std::move(pPropagator)),
+        m_logger{std::move(_logger)},
+        m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
 
  private:
   /// The propgator for the transport and material update
   propagator_t m_propagator;
+
+  /// A logger instance
+  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_actorLogger;
+
+  const Logger& logger() const { return *m_logger; }
 
   /// @brief Propagator Actor plugin for the Chi2Fitter
   ///
@@ -245,6 +250,7 @@ class Chi2Fitter {
     /// Whether to consider energy loss.
     bool energyLoss = false;  // TODO: add later
 
+    int updateNumber = -1;
     /// Whether to include non-linear correction during global to local
     /// transformation
     FreeToBoundCorrection freeToBoundCorrection;
@@ -252,19 +258,26 @@ class Chi2Fitter {
     /// Extension struct
     Chi2FitterExtensions<traj_t> extensions;
 
+    /// A logger instance
+    const Logger* actorLogger{nullptr};
+
+    const Logger& logger() const { return *actorLogger; }
+
     /// @brief Chi square actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result) const {
-      const auto& logger = state.options.logger;
-
+                    const navigator_t& navigator, result_type& result,
+                    const Logger& /*logger*/) const {
       if (result.finished) {
         return;
       }
@@ -274,18 +287,17 @@ class Chi2Fitter {
       if (result.processedStates == 0) {
         for (auto measurementIt = inputMeasurements->begin();
              measurementIt != inputMeasurements->end(); measurementIt++) {
-          state.navigation.externalSurfaces.insert(
-              std::pair<uint64_t, GeometryIdentifier>(
-                  measurementIt->first.layer(), measurementIt->first));
+          navigator.insertExternalSurface(state.navigation,
+                                          measurementIt->first);
         }
       }
 
       // wait for surface
-      auto surface = state.navigation.currentSurface;
+      auto surface = navigator.currentSurface(state.navigation);
       if (surface != nullptr) {
-        auto res = processSurface(surface, state, stepper, result);
+        auto res = processSurface(surface, state, stepper, navigator, result);
         if (!res.ok()) {
-          ACTS_ERROR("chi2 | Error in processSurface: " << res.error());
+          ACTS_ERROR("Error in processSurface: " << res.error());
           result.result = res.error();
         }
       }
@@ -294,9 +306,9 @@ class Chi2Fitter {
       if (not result.finished) {
         if (result.measurementStates == inputMeasurements->size() or
             (result.measurementStates > 0 and
-             state.navigation.navigationBreak)) {
+             navigator.navigationBreak(state.navigation))) {
           result.missedActiveSurfaces.resize(result.measurementHoles);
-          ACTS_VERBOSE("chi2 | Finalize...");
+          ACTS_VERBOSE("Finalize...");
           result.finished = true;
         }
       }
@@ -306,34 +318,32 @@ class Chi2Fitter {
     ///
     /// @tparam propagator_state_t is the type of Propagator state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the update happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result The mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     Result<void> processSurface(const Surface* surface,
                                 propagator_state_t& state,
                                 const stepper_t& stepper,
+                                const navigator_t& navigator,
                                 result_type& result) const {
-      const auto& logger = state.options.logger;
-
       // We need the full jacobianFromStart, so we'll need to calculate it no
       // matter if we have a measurement or not.
 
-      // Transport the covariance to the surface
-      stepper.transportCovarianceToBound(state.stepping, *surface,
-                                         freeToBoundCorrection);
-
       // Update state and stepper with pre material effects
-      materialInteractor(surface, state, stepper,
+      materialInteractor(surface, state, stepper, navigator,
                          MaterialUpdateStage::PreUpdate);
       // TODO: do we need the materialInteractor before we access the
       // boundState? In the material-only case in the KF, the materialInteractor
       // is called with fullUpdate *after* retrieving the boundState.
 
       // Bind the transported state to the current surface
-      auto res = stepper.boundState(state.stepping, *surface, false);
+      auto res = stepper.boundState(state.stepping, *surface, true);
       if (!res.ok()) {
         return res.error();
       }
@@ -347,23 +357,48 @@ class Chi2Fitter {
       auto sourcelink_it = inputMeasurements->find(surface->geometryId());
       // inputMeasurements is a std::map<GeometryIdentifier, source_link_t>
       if (sourcelink_it != inputMeasurements->end()) {
-        ACTS_VERBOSE("chi2 |    processSurface: Measurement surface "
+        ACTS_VERBOSE("   processSurface: Measurement surface "
                      << surface->geometryId() << " detected.");
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
-        result.lastTrackIndex = result.fittedStates->addTrackState(
-            ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
-            result.lastTrackIndex);
+
+        size_t currentTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
+        bool foundExistingSurface =
+            false;  // Checks if during the update an existing surface is found.
+                    // If not, there will be a new index generated afterwards
+
+        if (updateNumber == 0) {
+          result.lastTrackIndex = result.fittedStates->addTrackState(
+              ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
+              result.lastTrackIndex);
+          currentTrackIndex = result.lastTrackIndex;
+        } else {
+          result.fittedStates->visitBackwards(
+              result.lastTrackIndex, [&](auto proxy) {
+                if (&proxy.referenceSurface() == surface) {
+                  currentTrackIndex = proxy.index();
+                  foundExistingSurface = true;
+                }
+              });
+
+          if (!foundExistingSurface) {
+            ACTS_VERBOSE("   processSurface: Found new surface during update.");
+            result.lastTrackIndex = result.fittedStates->addTrackState(
+                ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
+                result.lastTrackIndex);
+            currentTrackIndex = result.lastTrackIndex;
+          }
+        }
 
         // now get track state proxy back
         auto trackStateProxy =
-            result.fittedStates->getTrackState(result.lastTrackIndex);
+            result.fittedStates->getTrackState(currentTrackIndex);
 
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
         // assign the source link to the track state
-        trackStateProxy.setUncalibrated(sourcelink_it->second);
+        trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
@@ -390,10 +425,9 @@ class Chi2Fitter {
               trackStateProxy
                   .template calibrated<kMeasurementSize>();  // 2x1 or 1x1
 
-          const auto& covariance =
-              trackStateProxy.template calibratedCovariance<
-                  kMeasurementSize>();  // 2x2 or 1x1. Should
-                                        // be diagonal.
+          const auto covariance = trackStateProxy.template calibratedCovariance<
+              kMeasurementSize>();  // 2x2 or 1x1. Should
+                                    // be diagonal.
           const auto covInv = covariance.inverse();
 
           auto residuals =
@@ -405,6 +439,10 @@ class Chi2Fitter {
           const auto derive2Chi2 = (2 * Hi.transpose() * covInv * Hi).eval();
           result.collectorDerive1Chi2Sum += derive1Chi2;
           result.collectorDerive2Chi2Sum += derive2Chi2;
+
+          double localChi2 =
+              (residuals.transpose() * covInv * residuals).eval()(0);
+          trackStateProxy.chi2() = localChi2;
 
           for (int i = 0; i < localMeasurements.rows(); ++i) {
             result.collectorMeasurements.push_back(localMeasurements(i));
@@ -427,7 +465,7 @@ class Chi2Fitter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           ++result.measurementStates;
         } else {
-          ACTS_VERBOSE("chi2 | Measurement is determined to be an outlier.");
+          ACTS_VERBOSE("Measurement is determined to be an outlier.");
           typeFlags.set(TrackStateFlag::OutlierFlag);
         }
 
@@ -496,7 +534,7 @@ class Chi2Fitter {
       }
 
       // Update state and stepper with post material effects
-      materialInteractor(surface, state, stepper,
+      materialInteractor(surface, state, stepper, navigator,
                          MaterialUpdateStage::PostUpdate);
       // TODO: is it more expensive to split the materialInteractor into
       // preUpdate and postUpdate vs fullUpdate? One could just fullUpdate in
@@ -509,18 +547,20 @@ class Chi2Fitter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the material interaction happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param updateStage The materal update stage
     ///
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,
-                            stepper_t& stepper,
-                            const MaterialUpdateStage& updateStage =
-                                MaterialUpdateStage::FullUpdate) const {
-      const auto& logger = state.options.logger;
+                            const stepper_t& stepper,
+                            const navigator_t& navigator,
+                            const MaterialUpdateStage& updateStage) const {
       // Indicator if having material
       bool hasMaterial = false;
 
@@ -529,7 +569,7 @@ class Chi2Fitter {
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
         // Evaluate the material properties
-        if (interaction.evaluateMaterialSlab(state, updateStage)) {
+        if (interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
           // Surface has material at this stage
           hasMaterial = true;
 
@@ -569,9 +609,10 @@ class Chi2Fitter {
     using action_type = Actor<parameters_t>;
 
     template <typename propagator_state_t, typename stepper_t,
-              typename result_t>
+              typename navigator_t, typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const result_t& result) const {
+                    const navigator_t& /*navigator*/, const result_t& result,
+                    const Logger& /*logger*/) const {
       // const auto& logger = state.options.logger;
       if (!result.result.ok() or result.finished) {
         return true;
@@ -591,25 +632,24 @@ class Chi2Fitter {
   /// @param end End iterator for the fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param chi2FitterOptions Chi2FitterOptions steering the fit
-  /// @param trajectory Input trajectory storage to append into
+  /// @param trackContainer The target track container
   /// @note The input measurements are given in the form of @c SourceLink s.
   /// It's the calibrators job to turn them into calibrated measurements used in
   /// the fit.
   ///
   /// @return the output as an output track
-  template <typename source_link_iterator_t, typename start_parameters_t,
-            typename parameters_t = BoundTrackParameters>
-  Result<Chi2FitterResult<traj_t>> fit(
-      source_link_iterator_t it, source_link_iterator_t end,
-      const start_parameters_t& sParameters,
-      const Chi2FitterOptions<traj_t>& chi2FitterOptions,
-      std::shared_ptr<traj_t> trajectory = {}) const {
-    const auto& logger = chi2FitterOptions.logger;
-
+  template <typename source_link_iterator_t, typename track_container_t,
+            template <typename> class holder_t>
+  auto fit(source_link_iterator_t it, source_link_iterator_t end,
+           const BoundTrackParameters& sParameters,
+           const Chi2FitterOptions<traj_t>& chi2FitterOptions,
+           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
+      const -> Result<typename TrackContainer<track_container_t, traj_t,
+                                              holder_t>::TrackProxy> {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
-    ACTS_VERBOSE("chi2 | preparing " << std::distance(it, end)
-                                     << " input measurements");
+    ACTS_VERBOSE("preparing " << std::distance(it, end)
+                              << " input measurements");
     std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
         inputMeasurements;
 
@@ -622,8 +662,8 @@ class Chi2Fitter {
     // propagation. Use dynamic Matrix instead? Performance?
 
     // Create the ActionList and AbortList
-    using Chi2Aborter = Aborter<parameters_t>;
-    using Chi2Actor = Actor<parameters_t>;
+    using Chi2Aborter = Aborter<BoundTrackParameters>;
+    using Chi2Actor = Actor<BoundTrackParameters>;
 
     using Chi2Result = typename Chi2Actor::result_type;
     using Actors = ActionList<Chi2Actor>;
@@ -632,11 +672,13 @@ class Chi2Fitter {
     // the result object which will be returned. Overridden every iteration.
     Chi2Result c2r;
 
+    BoundTrackParameters vParams = sParameters;
+    auto updatedStartParameters = sParameters;
+
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
       // Create relevant options for the propagation options
       PropagatorOptions<Actors, Aborters> propOptions(
-          chi2FitterOptions.geoContext, chi2FitterOptions.magFieldContext,
-          logger);
+          chi2FitterOptions.geoContext, chi2FitterOptions.magFieldContext);
 
       // Set the trivial propagator options
       propOptions.setPlainOptions(chi2FitterOptions.propagatorPlainOptions);
@@ -648,32 +690,24 @@ class Chi2Fitter {
       chi2Actor.energyLoss = chi2FitterOptions.energyLoss;
       chi2Actor.freeToBoundCorrection = chi2FitterOptions.freeToBoundCorrection;
       chi2Actor.extensions = chi2FitterOptions.extensions;
+      chi2Actor.updateNumber = i;
+      chi2Actor.actorLogger = m_actorLogger.get();
 
       typename propagator_t::template action_list_t_result_t<
           CurvilinearTrackParameters, Actors>
           inputResult;
 
       auto& r = inputResult.template get<Chi2FitterResult<traj_t>>();
-
-      if (trajectory) {
-        r.fittedStates = trajectory;
-      } else {
-        r.fittedStates = std::make_shared<traj_t>();
+      r.fittedStates = &trackContainer.trackStateContainer();
+      if (i > 0) {
+        r.lastTrackIndex = c2r.lastTrackIndex;
       }
 
-      using paramType = typename std::conditional<
-          std::is_same<start_parameters_t, parameters_t>::value,
-          std::variant<start_parameters_t>,
-          std::variant<start_parameters_t, parameters_t>>::type;
-      paramType vParams = sParameters;
       // start_parameters_t and parameter_t can be the same
-
-      auto result = m_propagator.template propagate(sParameters, propOptions,
-                                                    std::move(inputResult));
-
+      auto result = m_propagator.template propagate(
+          updatedStartParameters, propOptions, std::move(inputResult));
       if (!result.ok()) {
-        ACTS_ERROR("chi2 | it=" << i
-                                << " | propapation failed: " << result.error());
+        ACTS_ERROR("it=" << i << " | propagation failed: " << result.error());
         return result.error();
       }
 
@@ -687,9 +721,9 @@ class Chi2Fitter {
       }
 
       if (!c2rCurrent.result.ok()) {
-        ACTS_ERROR("chi2 | it=" << i << " | Chi2Fitter failed: "
-                                << c2rCurrent.result.error() << ", "
-                                << c2rCurrent.result.error().message());
+        ACTS_ERROR("it=" << i << " | Chi2Fitter failed: "
+                         << c2rCurrent.result.error() << ", "
+                         << c2rCurrent.result.error().message());
         return c2rCurrent.result.error();
       }
 
@@ -702,10 +736,11 @@ class Chi2Fitter {
                                         c2rCurrent.collectorCovariance.size());
       c2rCurrent.covariance = variance.asDiagonal();
 
+      // calculate the global chisquare
       c2rCurrent.chisquare = c2rCurrent.residuals.transpose() *
                              c2rCurrent.covariance.inverse() *
                              c2rCurrent.residuals;
-      ACTS_VERBOSE("chi2 | it=" << i << " | χ² = " << c2rCurrent.chisquare);
+      ACTS_VERBOSE("it=" << i << " | χ² = " << c2rCurrent.chisquare);
 
       // copy over data from previous runs (namely chisquares vector)
       c2rCurrent.chisquares.reserve(c2r.chisquares.size() + 1);
@@ -719,13 +754,9 @@ class Chi2Fitter {
 
       if (i == chi2FitterOptions.nUpdates) {
         // don't update parameters in last iteration
-        c2r.fittedParameters = std::visit(
-            [](auto&& prevParams) {
-              return BoundTrackParameters(
-                  prevParams.referenceSurface().getSharedPtr(),
-                  prevParams.parameters(), prevParams.covariance());
-            },
-            vParams);
+        c2r.fittedParameters =
+            BoundTrackParameters(vParams.referenceSurface().getSharedPtr(),
+                                 vParams.parameters(), vParams.covariance());
         break;
 
         // TODO: verify if another step would be useful, e.g. by comparing the
@@ -737,24 +768,36 @@ class Chi2Fitter {
           c2r.collectorDerive2Chi2Sum.colPivHouseholderQr().solve(
               c2r.collectorDerive1Chi2Sum);
 
-      c2r.fittedParameters = std::visit(
-          [delta_start_parameters, logger, i](auto&& prevParams) {
-            BoundVector newParamsVec =
-                prevParams.parameters() - delta_start_parameters;
-            ACTS_VERBOSE("chi2 | it=" << i << " | updated parameters = "
-                                      << newParamsVec.transpose());
-
-            return BoundTrackParameters(
-                prevParams.referenceSurface().getSharedPtr(), newParamsVec,
-                prevParams.covariance());
-          },
-          vParams);
+      BoundVector newParamsVec = vParams.parameters() - delta_start_parameters;
+      ACTS_VERBOSE(
+          "it=" << i << " | updated parameters = " << newParamsVec.transpose());
+      c2r.fittedParameters =
+          BoundTrackParameters(vParams.referenceSurface().getSharedPtr(),
+                               newParamsVec, vParams.covariance());
 
       vParams = c2r.fittedParameters.value();  // passed to next iteration
+      updatedStartParameters = c2r.fittedParameters.value();
+    }
+
+    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    track.tipIndex() = c2r.lastMeasurementIndex;
+    if (c2r.fittedParameters) {
+      const auto& params = c2r.fittedParameters.value();
+      track.parameters() = params.parameters();
+      track.covariance() = params.covariance().value();
+      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+    }
+
+    track.nMeasurements() = c2r.measurementStates;
+    track.nHoles() = c2r.measurementHoles;
+
+    if (trackContainer.hasColumn(hashString("chi2"))) {
+      track.template component<ActsScalar, hashString("chi2")>() =
+          c2r.chisquare;
     }
 
     // Return the converted track
-    return c2r;
+    return track;
   }
 };
 

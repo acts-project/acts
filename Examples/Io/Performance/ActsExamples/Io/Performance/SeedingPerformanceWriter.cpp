@@ -10,6 +10,7 @@
 
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -19,16 +20,10 @@
 
 #include <TFile.h>
 
-namespace {
-using SimParticleContainer = ActsExamples::SimParticleContainer;
-using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-using ProtoTrackContainer = ActsExamples::ProtoTrackContainer;
-}  // namespace
-
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     ActsExamples::SeedingPerformanceWriter::Config config,
     Acts::Logging::Level level)
-    : WriterT(config.inputProtoTracks, "SeedingPerformanceWriter", level),
+    : WriterT(config.inputSeeds, "SeedingPerformanceWriter", level),
       m_cfg(std::move(config)),
       m_effPlotTool(m_cfg.effPlotToolConfig, level),
       m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, level) {
@@ -41,6 +36,9 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -63,7 +61,7 @@ ActsExamples::SeedingPerformanceWriter::~SeedingPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
   float eff = float(m_nTotalMatchedParticles) / m_nTotalParticles;
   float fakeRate = float(m_nTotalSeeds - m_nTotalMatchedSeeds) / m_nTotalSeeds;
   float duplicationRate =
@@ -97,20 +95,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
-    const AlgorithmContext& ctx, const ProtoTrackContainer& tracks) {
+    const AlgorithmContext& ctx, const SimSeedContainer& seeds) {
   // Read truth information collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
-  size_t nSeeds = tracks.size();
+  size_t nSeeds = seeds.size();
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
 
-  for (size_t itrack = 0; itrack < tracks.size(); ++itrack) {
-    const auto& track = tracks[itrack];
+  for (size_t itrack = 0; itrack < seeds.size(); ++itrack) {
+    const auto& seed = seeds[itrack];
+    const auto track = seedToPrototrack(seed);
     std::vector<ParticleHitCount> particleHitCounts;
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     // All hits matched to the same particle

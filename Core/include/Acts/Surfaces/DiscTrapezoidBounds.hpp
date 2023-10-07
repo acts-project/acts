@@ -129,7 +129,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   std::array<double, eSize> m_values;
 
   /// Dreived maximum y value
-  double m_ymax;
+  double m_ymax = 0;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given

@@ -46,8 +46,8 @@ struct BoundParametersSmearer {
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.
-  std::array<Acts::BoundIndices, kSize> indices;
-  std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions;
+  std::array<Acts::BoundIndices, kSize> indices{};
+  std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions{};
 
   static constexpr size_t size() { return kSize; }
 
@@ -109,7 +109,7 @@ struct FreeParametersSmearer {
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.
-  std::array<Acts::FreeIndices, kSize> indices;
+  std::array<Acts::FreeIndices, kSize> indices{};
   std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions;
 
   static constexpr size_t size() { return kSize; }

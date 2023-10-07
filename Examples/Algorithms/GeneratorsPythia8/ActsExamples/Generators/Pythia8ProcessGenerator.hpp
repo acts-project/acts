@@ -38,7 +38,7 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   };
 
   Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl);
-  ~Pythia8Generator();
+  ~Pythia8Generator() override;
   // try to prevent pythia breakage by forbidding copying
   Pythia8Generator() = delete;
   Pythia8Generator(const Pythia8Generator&) = delete;

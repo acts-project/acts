@@ -72,7 +72,7 @@ class MultiComponentBoundTrackParameters {
       std::shared_ptr<const Surface> surface,
       const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps,
       ActsScalar q)
-      : m_surface(surface), m_chargeInterpreter(std::abs(q)) {
+      : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
     static_assert(std::is_same_v<BoundSymMatrix, covariance_t> ||
                   std::is_same_v<std::optional<BoundSymMatrix>, covariance_t>);
     if constexpr (std::is_same_v<BoundSymMatrix, covariance_t>) {
@@ -90,7 +90,7 @@ class MultiComponentBoundTrackParameters {
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface,
       const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps)
-      : m_surface(surface) {
+      : m_surface(std::move(surface)) {
     static_assert(std::is_same_v<BoundSymMatrix, covariance_t> ||
                   std::is_same_v<std::optional<BoundSymMatrix>, covariance_t>);
     if constexpr (std::is_same_v<BoundSymMatrix, covariance_t>) {
@@ -118,8 +118,8 @@ class MultiComponentBoundTrackParameters {
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface, const BoundVector& params,
       ActsScalar q, std::optional<BoundSymMatrix> cov = std::nullopt)
-      : m_surface(surface), m_chargeInterpreter(std::abs(q)) {
-    m_components.push_back({1., params, cov});
+      : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
+    m_components.push_back({1., params, std::move(cov)});
   }
 
   /// Construct from a parameters vector on the surface.
@@ -135,8 +135,8 @@ class MultiComponentBoundTrackParameters {
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface, const BoundVector& params,
       std::optional<BoundSymMatrix> cov = std::nullopt)
-      : m_surface(surface) {
-    m_components.push_back({1., params, cov});
+      : m_surface(std::move(surface)) {
+    m_components.push_back({1., params, std::move(cov)});
   }
 
   /// Parameters are not default constructible due to the charge type.

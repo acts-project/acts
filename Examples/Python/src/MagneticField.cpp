@@ -84,8 +84,8 @@ void addMagneticField(Context& ctx) {
 
   mex.def(
       "MagneticFieldMapXyz",
-      [](std::string filename, std::string tree, double lengthUnit,
-         double BFieldUnit, bool firstOctant) {
+      [](const std::string& filename, const std::string& tree,
+         double lengthUnit, double BFieldUnit, bool firstOctant) {
         const std::filesystem::path file = filename;
 
         auto mapBins = [](std::array<size_t, 3> bins,
@@ -117,8 +117,8 @@ void addMagneticField(Context& ctx) {
 
   mex.def(
       "MagneticFieldMapRz",
-      [](std::string filename, std::string tree, double lengthUnit,
-         double BFieldUnit, bool firstQuadrant) {
+      [](const std::string& filename, const std::string& tree,
+         double lengthUnit, double BFieldUnit, bool firstQuadrant) {
         const std::filesystem::path file = filename;
 
         auto mapBins = [](std::array<size_t, 2> bins,

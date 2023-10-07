@@ -3,8 +3,7 @@ set(_common_libraries
   ActsExamplesFramework
   ActsExamplesCommon
   ActsExamplesTruthTracking
-  ActsExamplesVertexing
-  Boost::program_options)
+  ActsExamplesVertexing)
 
 add_executable(
   ActsExampleVertexFinderParticleReader

@@ -84,7 +84,7 @@ auto combineCov(const components_t components, const ActsVector<D> &mean,
   for (const auto &cmp : components) {
     const auto &[weight_l, pars_l, cov_l] = projector(cmp);
 
-    cov += weight_l * *cov_l;
+    cov += weight_l * cov_l;
 
     ActsVector<D> diff = pars_l - mean;
 
@@ -133,7 +133,7 @@ auto combineGaussianMixture(const components_t components,
 
   // Assert type properties
   using ParsType = std::decay_t<decltype(beginPars)>;
-  using CovType = std::decay_t<decltype(*beginCov)>;
+  using CovType = std::decay_t<decltype(beginCov)>;
   using WeightType = std::decay_t<decltype(beginWeight)>;
 
   constexpr int D = ParsType::RowsAtCompileTime;
@@ -152,11 +152,11 @@ auto combineGaussianMixture(const components_t components,
 #endif
 
   // Define the return type
-  using RetType = std::tuple<ActsVector<D>, std::optional<ActsSymMatrix<D>>>;
+  using RetType = std::tuple<ActsVector<D>, ActsSymMatrix<D>>;
 
   // Early return in case of range with length 1
   if (components.size() == 1) {
-    return RetType{beginPars / beginWeight, *beginCov / beginWeight};
+    return RetType{beginPars / beginWeight, beginCov / beginWeight};
   }
 
   // Zero initialized values for aggregation
@@ -194,14 +194,10 @@ auto combineGaussianMixture(const components_t components,
 
   std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
 
-  if (not beginCov) {
-    return RetType{mean, std::nullopt};
-  } else {
-    const auto cov =
-        combineCov(components, mean, sumOfWeights, projector, angleDesc);
+  const auto cov =
+      combineCov(components, mean, sumOfWeights, projector, angleDesc);
 
-    return RetType{mean, cov};
-  }
+  return RetType{mean, cov};
 }
 
 }  // namespace detail

@@ -24,7 +24,7 @@ def parse_clang_tidy_item(itemstr):
 
     try:
         m = re.match(
-            r"(?P<file>[/.\-+\w]+):(?P<line>\d+):(?P<col>\d+): (?P<sev>.*?):(?P<msg>[\s\S]*?)\[(?P<code>.*)\]\n(?P<info>[\s\S]*)",
+            r"(?P<file>[/.\-+\w]+):(?P<line>\d+):(?P<col>\d+): (?P<sev>.*?):(?P<msg>[\s\S]*)\[(?P<code>.*)\]\n(?P<info>[\s\S]*)",
             itemstr,
         )
 
@@ -35,7 +35,7 @@ def parse_clang_tidy_item(itemstr):
             line=int(m.group("line")),
             col=int(m.group("col")),
             #  message=m.group("msg").strip(),
-            message="\n".join(lines[1:]),
+            message=m.group("msg").strip() + "\n" + "\n".join(lines[1:]),
             code=m.group("code"),
             severity=m.group("sev"),
         )
@@ -101,6 +101,12 @@ def main():
         default=[],
         help="Only include files that match any of these patterns",
     )
+    p.add_argument(
+        "--ignore",
+        action="append",
+        default=[],
+        help="Ignore items with codes matching any of these patterns",
+    )
     p.add_argument("--cwd", type=Path)
     p.add_argument("--strip-common", action="store_true")
 
@@ -116,6 +122,9 @@ def main():
             accept = accept and all(fnmatch(item.path, e) for e in args.filter)
 
         accept = accept and not any(fnmatch(item.path, e) for e in args.exclude)
+
+        accept = accept and not any(fnmatch(item.code, i) for i in args.ignore)
+
         return accept
 
     items = list(filter(select, items))

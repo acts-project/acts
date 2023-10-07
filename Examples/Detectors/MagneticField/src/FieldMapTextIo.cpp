@@ -20,10 +20,10 @@ constexpr size_t kDefaultSize = 1 << 15;
 
 ActsExamples::detail::InterpolatedMagneticField2
 ActsExamples::makeMagneticFieldMapRzFromText(
-    std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)>
+    const std::function<size_t(std::array<size_t, 2> binsRZ,
+                               std::array<size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, Acts::ActsScalar lengthUnit,
+    const std::string& fieldMapFile, Acts::ActsScalar lengthUnit,
     Acts::ActsScalar BFieldUnit, bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
@@ -63,10 +63,10 @@ ActsExamples::makeMagneticFieldMapRzFromText(
 
 ActsExamples::detail::InterpolatedMagneticField3
 ActsExamples::makeMagneticFieldMapXyzFromText(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
+    const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                               std::array<size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, Acts::ActsScalar lengthUnit,
+    const std::string& fieldMapFile, Acts::ActsScalar lengthUnit,
     Acts::ActsScalar BFieldUnit, bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z

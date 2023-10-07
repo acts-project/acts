@@ -32,7 +32,7 @@ namespace detail {
 template <typename stepper_t>
 Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
-    const Surface& surface, const BoundaryCheck& bcheck, LoggerWrapper logger) {
+    const Surface& surface, const BoundaryCheck& bcheck, const Logger& logger) {
   ACTS_VERBOSE(
       "Update single surface status for surface: " << surface.geometryId());
 

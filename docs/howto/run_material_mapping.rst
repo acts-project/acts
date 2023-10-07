@@ -30,16 +30,32 @@ Once Acts has been built we can start the mapping. The mapping is divided in two
 Mapping and configuration
 -------------------------
 
-First we need to extract the list of all the surfaces and volumes in our detector, to do so we will use the GeometryExample:
+First we need to extract the list of all the surfaces and volumes in our detector. To do so we will use the ``geometry.py`` script:
 
-.. code-block:: console
+.. code-block::
 
-   $ <build>/bin/ActsExampleGeometryDD4hep -n1 -j1 \
-       --mat-output-file geometry-map \
-       --dd4hep-input <source>/thirdparty/OpenDataDetector/xml/OpenDataDetector.xml \
-       --output-json \
-       --mat-output-allmaterial true \
-       --mat-output-sensitives false
+   $ python3 <source>/Examples/Scripts/Python/geometry.py 
+
+Ideally the following options should be used in the python file:
+
+.. code-block::
+
+   def runGeometry(
+      trackingGeometry,
+      decorators,
+      outputDir,
+      events=1,
+      outputObj=False,
+      outputCsv=False,
+      outputJson=True,
+      outputRoot=False,
+   ):
+
+For the following example we will be remapping the material of the ODD, we will thus get our detector via the following line:
+
+.. code-block::  console
+
+   detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory() )
 
 This algorithm is useful to obtain a visualisation of your detector using the different types of output available (``output-obj`` gives ``.obj`` with a 3D representation of the different subdetectors, for example). Here, we use ``output-json`` to obtain a map of all the surfaces and volumes in the detector with a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``), ``mat-output-allmaterial`` ensure that a ``ProtoSurfaceMaterial`` (or a ``ProtoVolumeMaterial``) is associated to all the surfaces (or volumes), enforcing all of them to be written.
 Four types of surfaces exist:
@@ -87,51 +103,71 @@ Then edit the config-map.json file
 
    $ python3 <source>/Examples/Scripts/MaterialMapping/configureMap.py geometry-map.json config-map.json
 
-Geantino scan
--------------
+Geometry visualisation and preparation of JSON files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The next step is to do a geantino scan of our detector. For this we will use the ``MaterialRecording`` application:
+To help you visualising the geometry and understand the hierarchical structure of volumes and layers, a script has been provided: ``Examples/scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py``. The documentation of the module can be printed using:
 
 .. code-block:: console
 
-   $ <build>/bin/ActsExampleMaterialRecordingDD4hep -n1000 -j1 \
-       --dd4hep-input <source>/thirdparty/OpenDataDetector/xml/OpenDataDetector.xml \
-       --output-root
+   $ python3 <source>/Examples/Scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py --help
 
+The first thing you can do, is to visualise your geometry with:
+
+.. code-block:: console
+
+   $ python3 <source>/Examples/Scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py --geometry <source>/thirdparty/OpenDataDetector/config/odd-material-mapping-config.json
+
+This command produces a series of plots in the output folder ``plot``, or set a different name using ``--output_folder``.
+
+The picture ``volumes_and_layers.png`` show you the volumes and all layers constructed in them:
+
+.. image:: /figures/materialMapping/volumes_and_layers.png
+
+For each volume containing layers, another picture is produced to show the representative layers (without ``approach`` index) and highlight the ones with ``approach`` index. The picture below show layers for one of the ODD volumes. Knowledge of the approach layers is needed to select the lyers you want the material to be mapped onto.
+
+.. image:: /figures/materialMapping/layers_for_volume_17.png
+
+The totality of representative and approach layers is shown in a separate picture ``approach_layers.png``.
+
+.. image:: /figures/materialMapping/approach_layers.png
+
+Additionally, another picture is produced to visualise boundaries of volumes containing layers.
+
+.. image:: /figures/materialMapping/boundaries.png
+
+The same script can be used to dump a steering file that can help you selecting boundaries and approach layers you want the material to be mapped onto, using ``--dump_steering``. At this point you have to edit the steering file which has to contain **ONLY** the structures on which you want to map the material. Once this is done, you can read the steering file with the same python module to produce the final material map file to run material mapping. This is done enabling ``--edit``. At the end of the process, another plot is produced to visualise and validate the structures that will be selected in the mapping procedure to carry material.
+
+
+Geantino scan
+-------------
+
+The next step is to do a geantino scan of our detector. For this we will use the ``material_recording.py`` script:
+
+.. code-block:: console
+
+   $ python3 <source>/Examples/Scripts/Python/material_recording.py 
 
 The result of the geantino scan will be a root file containing material tracks. Those contain the direction and production vertex of the geantino, the total material accumulated and all the interaction points in the detector.
 
 Material Mapping
 ----------------
 
-With the surfaces map and the material track we can finally do the material mapping using the ``MaterialMapping`` application:
+With the surfaces map and the material track we can finally do the material mapping using the ``material_mapping.py`` script:
 
 .. code-block:: console
 
-   $ <build>/bin/ActsExampleMaterialMappingDD4hep -j1 \
-       --input-root true \
-       --input-files geant4_material_tracks.root \
-       --mat-input-type file \
-       --mat-input-file geometry-map.json \
-       --output-root \
-       --output-json \
-       --output-cbor \
-       --mat-output-file material-maps \
-       --mat-mapping-surfaces true \
-       --mat-mapping-volumes true \
-       --mat-mapping-volume-stepsize 1 \
-       --mat-mapping-read-surfaces false \
-       --dd4hep-input <source>/thirdparty/OpenDataDetector/xml/OpenDataDetector.xml
+   $ python3 <source>/Examples/Scripts/Python/material_mapping.py 
 
-Note that technically when using DD4hep (in particular for the ODD) using the option ``--mat-input-type`` is not strictly necessary as the DD4hep geometry can hold the information of which surface to map onto with which binning. We will ignore this option, since the goal of this guide is to explain how to make a material map regardless of the detector.
+Note that technically when using DD4hep (in particular for the ODD) defining a ``matDeco`` in the main function is not strictly necessary as the DD4hep geometry can hold the information of which surface to map onto with which binning. We will ignore this option, since the goal of this guide is to explain how to make a material map regardless of the detector.
 
 As an output you will obtain the material map as a root and JSON file and a new material track collection in a root file. This new collection adds to each material interaction the associated surface during the mapping. This can be used for the control plots.
 Depending on what you want to do there are three options you can change:
 
-- ``mat-mapping-surfaces``: determine if material is mapped onto surfaces
-- ``mat-mapping-volumes``: determine if material is mapped onto volumes
-- ``mat-mapping-volume-stepsize``: determine the step size used in the sampling of the volume. This should be small compared to the bin size.
-
+- ``mapSurface``: determine if material is mapped onto surfaces
+- ``mapVolume``: determine if material is mapped onto volumes
+- ``mappingStep``: determine the step size used in the sampling of the volume in the volume mapping. By default, the material interaction point obtained from G4 is accumulated at the intersection between the track and the volume material. The mapping will be therefore incorrect if the material extends through the bin. To avoid this, additional material points are created every ``mappingStep`` [mm] along the trajectory. The mapping step should be small compared to the bin size.
+- ``readCachedSurfaceInformation`` if added the material-surface association will be taken from the input material track file (doesn't work with geantino file, you need to use the material track file obtained from running the material mapping).
 
 In addition to root and JSON output, one can also output the material map to a Cbor file (Concise Binary Object Representation). Doing so results in a file about 10 time smaller than the JSON one, but that file is no longer human-readable. This should be done once the map has been optimised and you want to export it. 
 
@@ -150,14 +186,7 @@ By default, the Geantino scan is performed with no spread in :math:`z_0` and :ma
 
 .. code-block:: console
 
-   $ <build>/bin/ActsExampleMaterialValidationDD4hep -n1000 \
-       --mat-input-type file \
-       --mat-input-file material-maps.json \
-       --output-root \
-       --mat-output-file val-mat-map \
-       --dd4hep-input <source>/thirdparty/OpenDataDetector/xml/OpenDataDetector.xml \
-       --prop-z0-sigma 0.0 \
-       --prop-d0-sigma 0.0
+   $ python3 <source>/Examples/Scripts/Python/material_validation.py 
 
 To do the validation, five root macros are available in ``scripts/MaterialMapping``:
 
@@ -171,7 +200,7 @@ To do the validation, five root macros are available in ``scripts/MaterialMappin
 
   mkdir Validation
 
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map.C'("propagation-material.root","material-maps_tracks.root","Validation")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map.C'("propagation-material.root","material-map_tracks.root","Validation")''
   .q
 
   mkdir Surfaces
@@ -181,11 +210,11 @@ To do the validation, five root macros are available in ``scripts/MaterialMappin
   mkdir Surfaces/dist_plot
   mkdir Surfaces/1D_plot
 
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-map_tracks.root",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root",-1,"Surfaces/dist_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-map_tracks.root",-1,"Surfaces/dist_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root",100000,"Surfaces/1D_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-map_tracks.root",100000,"Surfaces/1D_plot")'
   .q
 
 Using the validation plots you can then adapt the binning and the mapped surface to improve the mapping.
@@ -194,7 +223,7 @@ On top of those plots:
 
 .. code-block:: console
 
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_detector_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",{X,Y,Z},100000,"Det_ratio","Det_Acts","Det_G4")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_detector_plot_ratio.C'("propagation-material.root","material-map_tracks.root",{X,Y,Z},100000,"Det_ratio","Det_Acts","Det_G4")'
   .q
 
 Can be use with X,Y,Z is a list of volumes, this will plot the material ratio between the map and the Geantino scan for the given volumes.
@@ -203,4 +232,4 @@ Can be use with X,Y,Z is a list of volumes, this will plot the material ratio be
 Using a different detector
 --------------------------
 
-If you want to use a different type of detector, you will first need to ensure that the relevant packages were added during the compilation. After that, if your detector is a DD4hep detector you will just need to replace the path given to the ``--dd4hep-input`` option. In case it is another type of detector implementation, you can replace DD4hep in the name of the algorithm by what corresponds to your detector implementation. For more information on how to include your detector in that case you can refer to the documentation of the algorithm using the ``-h`` option.
+If you want to use a different type of detector, you will first need to ensure that the relevant packages were added during the compilation. After this you can just replace the detector initialisation in the different main function. For reference you can have a look on the Odd for DD4Hep detector and on the ITk for TGeo detector. 

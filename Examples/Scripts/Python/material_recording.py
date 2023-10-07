@@ -16,6 +16,7 @@ import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.geant4.dd4hep
 from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 u = acts.UnitConstants
 
@@ -42,6 +43,10 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
                     mean=acts.Vector4(0, 0, 0, 0),
                 ),
                 particles=ParametricParticleGenerator(
+                    pdg=acts.PdgParticle.eInvalid,
+                    charge=0,
+                    randomizeCharge=False,
+                    mass=0,
                     p=(1 * u.GeV, 10 * u.GeV),
                     eta=(-4, 4),
                     numParticles=tracksPerEvent,
@@ -55,7 +60,7 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
 
     s.addReader(evGen)
 
-    g4AlgCfg = acts.examples.geant4.materialRecordingConfig(
+    g4AlgCfg = acts.examples.geant4.makeGeant4MaterialRecordingConfig(
         level=acts.logging.INFO,
         detector=g4geo,
         inputParticles=evGen.config.outputParticles,
@@ -86,9 +91,10 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
 
 if "__main__" == __name__:
 
-    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
     )
-    g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(dd4hepSvc)
+
+    g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(detector)
 
     runMaterialRecording(g4geo=g4geo, tracksPerEvent=100, outputDir=os.getcwd()).run()

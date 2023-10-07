@@ -15,7 +15,7 @@ Result<void> GainMatrixSmoother::calculate(
     const GetCovariance& filteredCovariance, const GetParameters& smoothed,
     const GetParameters& predicted, const GetCovariance& predictedCovariance,
     const GetCovariance& smoothedCovariance, const GetCovariance& jacobian,
-    LoggerWrapper logger) const {
+    const Logger& logger) const {
   static constexpr double epsilon = 1e-13;
   auto regularization = BoundMatrix::Identity() * epsilon;
 

@@ -7,10 +7,11 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Options/include>)
 target_link_libraries(
   ActsExamplesHepMC3Options
+  PUBLIC
+    Boost::program_options
   PRIVATE
     ActsExamplesFramework
-    ActsExamplesIoHepMC3
-    Boost::program_options)
+    ActsExamplesIoHepMC3)
 
 add_executable(
   ActsExampleHepMC3Exe
@@ -28,8 +29,7 @@ target_link_libraries(
   ActsExampleHepMC3Histogram
   PRIVATE
     ActsCore ActsExamplesCommon
-    ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC3 ActsExamplesIoNuclearInteractions ActsExamplesHepMC3Options
-    Boost::program_options)
+    ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC3 ActsExamplesIoNuclearInteractions ActsExamplesHepMC3Options)
     
 install(
   TARGETS ActsExampleHepMC3Exe ActsExampleHepMC3Histogram

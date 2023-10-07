@@ -10,7 +10,10 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
@@ -24,7 +27,7 @@ struct FatrasSimulation;
 }
 
 /// Fast track simulation using the Acts propagation and navigation.
-class FatrasSimulation final : public BareAlgorithm {
+class FatrasSimulation final : public IAlgorithm {
  public:
   struct Config {
     /// The particles input collection.
@@ -77,16 +80,24 @@ class FatrasSimulation final : public BareAlgorithm {
   /// @param cfg is the configuration struct
   /// @param lvl is the logging level
   FatrasSimulation(Config cfg, Acts::Logging::Level lvl);
-  ~FatrasSimulation() final override;
+  ~FatrasSimulation() override;
 
   /// Run the simulation for a single event.
   ///
   /// @param ctx the algorithm context containing all event information
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+
+  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
+      this, "OutputParticlesInitial"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
+      this, "OutputParticlesFinal"};
 
  private:
   Config m_cfg;

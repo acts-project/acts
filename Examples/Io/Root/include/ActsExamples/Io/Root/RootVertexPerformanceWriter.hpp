@@ -12,6 +12,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <mutex>
@@ -32,20 +33,19 @@ namespace ActsExamples {
 class RootVertexPerformanceWriter final
     : public WriterT<std::vector<Acts::Vertex<Acts::BoundTrackParameters>>> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// All input truth particle collection.
     std::string inputAllTruthParticles;
     /// Selected input truth particle collection.
     std::string inputSelectedTruthParticles;
+    /// Optional. Input track parameters.
+    std::string inputTrackParameters;
     /// Optional. Truth particles associated to tracks. Using 1:1 matching if
     /// given.
     std::string inputAssociatedTruthParticles;
-    /// Input track parameters.
-    std::string inputTrackParameters;
-    /// Input track parameters tips (points from `inputTrackParameters` to
-    /// `inputTrajectories`).
-    std::string inputTrackParametersTips;
-    /// Trajectories object from track finidng.
+    /// Optional. Trajectories object from track finidng.
     std::string inputTrajectories;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
@@ -73,10 +73,10 @@ class RootVertexPerformanceWriter final
   /// @param level Message level declaration
   RootVertexPerformanceWriter(const Config& config, Acts::Logging::Level level);
 
-  ~RootVertexPerformanceWriter() final override;
+  ~RootVertexPerformanceWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -87,7 +87,7 @@ class RootVertexPerformanceWriter final
   ProcessCode writeT(
       const AlgorithmContext& ctx,
       const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices)
-      final override;
+      override;
 
  private:
   Config m_cfg;             ///< The config class
@@ -128,6 +128,26 @@ class RootVertexPerformanceWriter final
       const SimParticleContainer& collection) const;
 
   int getNumberOfTruePriVertices(const SimParticleContainer& collection) const;
+
+  ReadDataHandle<SimParticleContainer> m_inputAllTruthParticles{
+      this, "InputAllTruthParticles"};
+
+  ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
+      this, "InputSelectedTruthParticles"};
+
+  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
+      m_inputTrackParameters{this, "InputTrackParameters"};
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  ReadDataHandle<SimParticleContainer> m_inputAssociatedTruthParticles{
+      this, "InputAssociatedTruthParticles"};
+
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
+
+  ReadDataHandle<int> m_inputTime{this, "InputTime"};
 };
 
 }  // namespace ActsExamples

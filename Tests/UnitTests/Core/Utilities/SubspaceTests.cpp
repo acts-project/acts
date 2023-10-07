@@ -68,7 +68,7 @@ std::vector<std::size_t> makeMonotonicIndices(std::size_t n) {
 template <std::size_t kSize>
 std::array<std::size_t, kSize> selectFixedIndices(
     const std::vector<std::size_t>& fullIndices) {
-  std::array<std::size_t, kSize> indices;
+  std::array<std::size_t, kSize> indices{};
   for (auto i = 0u; i < kSize; ++i) {
     indices[i] = fullIndices[i];
   }

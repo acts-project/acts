@@ -12,6 +12,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -97,7 +98,7 @@ struct TestOutlierFinder {
 // Construct a straight-line propagator.
 StraightPropagator makeStraightPropagator(
     std::shared_ptr<const Acts::TrackingGeometry> geo) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -108,16 +109,19 @@ StraightPropagator makeStraightPropagator(
 
 // Construct a propagator using a constant magnetic field along z.
 ConstantFieldPropagator makeConstantFieldPropagator(
-    std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
-  Acts::Navigator::Config cfg{geo};
+    std::shared_ptr<const Acts::TrackingGeometry> geo, double bz,
+    std::unique_ptr<const Logger> logger = getDefaultLogger("ConstField",
+                                                            Logging::INFO)) {
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
+  Acts::Navigator navigator(cfg, logger->cloneWithSuffix("Nav"));
   auto field =
       std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   ConstantFieldStepper stepper(std::move(field));
-  return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
+  return ConstantFieldPropagator(std::move(stepper), std::move(navigator),
+                                 logger->cloneWithSuffix("Prop"));
 }
 
 // Construct initial track parameters.
@@ -166,8 +170,9 @@ const auto simPropagator = makeStraightPropagator(geometry);
 // reconstruction propagator and fitter
 const auto chi2Logger =
     getDefaultLogger("Chi2Fitter", Logging::VERBOSE);  // TODO: INFO for KF
-const auto chi2ZeroPropagator = makeConstantFieldPropagator(geometry, 0_T);
-const auto chi2Zero = Chi2Fitter(chi2ZeroPropagator);
+const auto chi2ZeroPropagator =
+    makeConstantFieldPropagator(geometry, 0_T, chi2Logger->clone());
+const auto chi2Zero = Chi2Fitter(chi2ZeroPropagator, chi2Logger->clone());
 
 std::default_random_engine rng(42);
 
@@ -179,23 +184,30 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto start = makeParameters();
   auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                          resolutions, rng);
-  const auto& sourceLinks = measurements.sourceLinks;
+  std::vector<Acts::SourceLink> sourceLinks;
+  std::transform(measurements.sourceLinks.begin(),
+                 measurements.sourceLinks.end(),
+                 std::back_inserter(sourceLinks),
+                 [](const auto& sl) { return Acts::SourceLink{sl}; });
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
   Chi2FitterOptions chi2Options(geoCtx, magCtx, calCtx, getExtensions(),
-                                LoggerWrapper{*chi2Logger},
                                 PropagatorPlainOptions());
 
-  // chi2Options.nUpdates = 2; //  χ² = 17.9695 -> 11.0035 -> 11.0035 ...
+  chi2Options.nUpdates = 5;
+  // χ² = 9.14513 -> 6.34088 -> 6.34088 ...
 
   // BOOST_TEST_INFO("Test Case ZeroFieldNoSurfaceForward: running .fit()...");
 
-  auto res =
-      chi2Zero.fit(sourceLinks.begin(), sourceLinks.end(), start, chi2Options);
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  auto res = chi2Zero.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                          chi2Options, tracks);
   BOOST_REQUIRE(res.ok());
 
   const auto& val = res.value();
-  BOOST_CHECK(val.finished);
+  BOOST_CHECK(val.hasReferenceSurface());
 }
 
 // TODO: add more test cases, for holes, outliers, ...

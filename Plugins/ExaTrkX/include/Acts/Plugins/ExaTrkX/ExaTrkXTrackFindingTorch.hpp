@@ -59,7 +59,7 @@ class ExaTrkXTrackFindingTorch final : public ExaTrkXTrackFindingBase {
   std::optional<ExaTrkXTime> getTracks(
       std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
       std::vector<std::vector<int> >& trackCandidates,
-      LoggerWrapper logger = getDummyLogger(),
+      const Logger& logger = getDummyLogger(),
       bool recordTiming = false) const override;
 
   /// Access the config struct

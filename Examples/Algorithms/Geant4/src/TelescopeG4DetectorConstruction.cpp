@@ -25,7 +25,7 @@
 #include "globals.hh"
 
 ActsExamples::Telescope::TelescopeG4DetectorConstruction::
-    TelescopeG4DetectorConstruction(TelescopeDetector::Config cfg)
+    TelescopeG4DetectorConstruction(const TelescopeDetector::Config& cfg)
     : m_cfg(cfg) {
   throw_assert(cfg.surfaceType ==
                    static_cast<int>(Telescope::TelescopeSurfaceType::Plane),

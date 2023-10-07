@@ -80,12 +80,13 @@ There are two approaches to logger integration:
    use this approach.
 
     :::{note}
-    ACTS code has iteratively moved to not construct loggers via `getDefaultLogger`
-    as much as possible, in favor of using {class}`Acts::LoggerWrapper`. The latter
-    is a lightweight non-owning wrapper around a logger instance, that can default
-    to not containing a logger. It is more suitable to pass into functions that
-    might be called from other ACTS functions (rather than construction a local
-    logger via `getDefaultLogger`). 
+    ACTS code has iteratively moved to not construct loggers via
+    {func}`Acts::getDefaultLogger()` as much as possible, in favor of using a
+    const-reference to {class}`Acts::Logger`. The latter can be defaulted to a
+    dummy logger using {func}`Acts::getDummyLogger`. It is more suitable to
+    pass into functions that might be called from other ACTS functions (rather
+    than construction a local logger via `getDefaultLogger`, or creating logger
+    instances on the fly). 
     :::
 
 2. Passing logger instances to high level components, and rely on ACTS code to
@@ -123,15 +124,6 @@ the following way (tested under Unix)
 
 ```console
 $ LD_PRELOAD=<YOUR_SHARED_LIBRARY> path/to/your/exectuable
-```
-
-For an example have a look at [`CustomDefaultLogger.cpp`](https://github.com/acts-project/acts/blob/main/Examples/Run/Misc/CustomDefaultLogger.cpp) which you can use as
-follows:
-
-```console
-$ cd <ACTS/INSTALL/DIRECTORY>
-$ source bin/setup.sh
-$ LD_PRELOAD=lib/libActsCustomLogger.so bin/Examples/ActsGenericDetector
 ```
 
 ## Logging thresholds

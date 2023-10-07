@@ -36,6 +36,8 @@ ActsExamples::CsvSpacePointReader::CsvSpacePointReader(
                        : cfg.inputStem + '_' + cfg.inputCollection;
   m_eventsRange = determineEventFilesRange(cfg.inputDir, filename + ".csv");
   m_logger = Acts::getDefaultLogger("CsvSpacePointReader", lvl);
+
+  m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
 }
 
 std::string ActsExamples::CsvSpacePointReader::CsvSpacePointReader::name()
@@ -66,7 +68,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
 
     if (m_cfg.inputCollection == "pixel" || m_cfg.inputCollection == "strip" ||
         m_cfg.inputCollection == "overlap") {
-      boost::container::static_vector<const Acts::SourceLink*, 2> sLinks;
+      boost::container::static_vector<Acts::SourceLink, 2> sLinks;
       // auto sp = SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, sLinks);
 
       if (m_cfg.extendCollection) {
@@ -99,8 +101,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
 
   ACTS_DEBUG("Created " << spacePoints.size() << " " << m_cfg.inputCollection
                         << " space points");
-  ctx.eventStore.add("PixelSpacePoints", std::move(spacePoints));
-  ctx.eventStore.add("StripSpacePoints", std::move(spacePoints));
+  m_outputSpacePoints(ctx, std::move(spacePoints));
 
   return ProcessCode::SUCCESS;
 }

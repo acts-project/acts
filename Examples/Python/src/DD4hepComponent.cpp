@@ -41,14 +41,15 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_MEMBER(envelopeR);
     ACTS_PYTHON_MEMBER(envelopeZ);
     ACTS_PYTHON_MEMBER(defaultLayerThickness);
+    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
   }
 
   {
-    py::class_<DD4hep::DD4hepDetector, ActsExamples::IBaseDetector,
-               std::shared_ptr<DD4hep::DD4hepDetector>>(m, "DD4hepDetector")
+    py::class_<DD4hep::DD4hepDetector, std::shared_ptr<DD4hep::DD4hepDetector>>(
+        m, "DD4hepDetector")
         .def(py::init<>())
         .def("finalize",
              py::overload_cast<DD4hep::DD4hepGeometryService::Config,

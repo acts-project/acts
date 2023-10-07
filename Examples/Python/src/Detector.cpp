@@ -10,7 +10,6 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
-#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
@@ -32,11 +31,6 @@ void addDetector(Context& ctx) {
         mex, "IContextDecorator")
         .def("decorate", &IContextDecorator::decorate)
         .def("name", &IContextDecorator::name);
-  }
-
-  {
-    py::class_<IBaseDetector, std::shared_ptr<IBaseDetector>>(mex,
-                                                              "IBaseDetector");
   }
 
   {
@@ -65,13 +59,13 @@ void addDetector(Context& ctx) {
     using Config = TelescopeDetector::Config;
 
     auto td =
-        py::class_<TelescopeDetector, IBaseDetector,
-                   std::shared_ptr<TelescopeDetector>>(mex, "TelescopeDetector")
+        py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(
+            mex, "TelescopeDetector")
             .def(py::init<>())
             .def("finalize",
                  py::overload_cast<
                      const Config&,
-                     std::shared_ptr<const Acts::IMaterialDecorator>>(
+                     const std::shared_ptr<const Acts::IMaterialDecorator>&>(
                      &TelescopeDetector::finalize));
 
     py::class_<Config>(td, "Config")
@@ -165,6 +159,7 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(itkModuleSplit);
     ACTS_PYTHON_MEMBER(barrelMap);
     ACTS_PYTHON_MEMBER(discMap);
+    ACTS_PYTHON_MEMBER(splitPatterns);
 
     ACTS_PYTHON_MEMBER(layers);
     ACTS_PYTHON_MEMBER(subVolumeName);

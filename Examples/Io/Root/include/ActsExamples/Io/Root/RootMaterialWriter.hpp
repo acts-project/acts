@@ -109,7 +109,7 @@ class RootMaterialWriter : public IMaterialWriter {
   RootMaterialWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~RootMaterialWriter();
+  ~RootMaterialWriter() override;
 
   /// Write out the material map
   ///

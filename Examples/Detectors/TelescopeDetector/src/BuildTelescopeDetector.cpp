@@ -72,8 +72,7 @@ ActsExamples::Telescope::buildDetector(
   // Construct the surfaces and layers
   size_t nLayers = positions.size();
   std::vector<Acts::LayerPtr> layers(nLayers);
-  unsigned int i;
-  for (i = 0; i < nLayers; ++i) {
+  for (unsigned int i = 0; i < nLayers; ++i) {
     // The translation without rotation yet
     Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
     // The transform
@@ -131,7 +130,7 @@ ActsExamples::Telescope::buildDetector(
       lacConfig,
       Acts::getDefaultLogger("LayerArrayCreator", Acts::Logging::INFO));
   Acts::LayerVector layVec;
-  for (i = 0; i < nLayers; i++) {
+  for (unsigned int i = 0; i < nLayers; i++) {
     layVec.push_back(layers[i]);
   }
   // Create the layer array

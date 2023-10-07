@@ -9,6 +9,8 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
@@ -48,7 +50,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
   /// @param level is the logging level
   EDM4hepSimHitWriter(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode endRun() final;
+  ProcessCode finalize() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -69,6 +71,8 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
 
   edm4hep::MCParticleCollection* m_mcParticleCollection;
   edm4hep::SimTrackerHitCollection* m_simTrackerHitCollection;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 };
 
 }  // namespace ActsExamples

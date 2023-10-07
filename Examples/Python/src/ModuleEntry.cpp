@@ -9,14 +9,17 @@
 #include "Acts/ActsVersion.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
@@ -28,42 +31,42 @@ namespace {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
-class PyIAlgorithm : public IAlgorithm {
+class PySequenceElement : public SequenceElement {
  public:
-  using IAlgorithm::IAlgorithm;
+  using SequenceElement::SequenceElement;
 
   std::string name() const override {
     py::gil_scoped_acquire acquire{};
-    PYBIND11_OVERRIDE_PURE(std::string, IAlgorithm, name);
+    PYBIND11_OVERRIDE_PURE(std::string, SequenceElement, name);
   }
 
-  ProcessCode execute(const AlgorithmContext& ctx) const override {
+  ProcessCode internalExecute(const AlgorithmContext& ctx) override {
     py::gil_scoped_acquire acquire{};
-    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
+    PYBIND11_OVERRIDE_PURE(ProcessCode, SequenceElement, sysExecute, ctx);
   }
 
-  ProcessCode initialize() const override {
+  ProcessCode initialize() override {
     py::gil_scoped_acquire acquire{};
-    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, initialize);
+    PYBIND11_OVERRIDE_PURE(ProcessCode, SequenceElement, initialize);
   }
 
-  ProcessCode finalize() const override {
+  ProcessCode finalize() override {
     py::gil_scoped_acquire acquire{};
-    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, finalize);
+    PYBIND11_OVERRIDE_PURE(ProcessCode, SequenceElement, finalize);
   }
 };
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
 
-class PyBareAlgorithm : public BareAlgorithm {
+class PyIAlgorithm : public IAlgorithm {
  public:
-  using BareAlgorithm::BareAlgorithm;
+  using IAlgorithm::IAlgorithm;
 
   ProcessCode execute(const AlgorithmContext& ctx) const override {
     py::gil_scoped_acquire acquire{};
     try {
-      PYBIND11_OVERRIDE_PURE(ProcessCode, BareAlgorithm, execute, ctx);
+      PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
     } catch (py::error_already_set& e) {
       throw;  // Error from python, handle in python.
     } catch (std::runtime_error& e) {
@@ -93,7 +96,6 @@ void addInput(Context& ctx);
 void addGenerators(Context& ctx);
 void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
-void addTrackFittingChi2(Context& ctx);
 void addTrackFinding(Context& ctx);
 void addVertexing(Context& ctx);
 
@@ -105,6 +107,7 @@ void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
 void addSvg(Context& ctx);
+void addMLTrackFinding(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -155,20 +158,21 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def_readonly("geoContext", &AlgorithmContext::geoContext)
       .def_readonly("calibContext", &AlgorithmContext::calibContext);
 
-  auto iAlgorithm =
-      py::class_<ActsExamples::IAlgorithm, PyIAlgorithm,
-                 std::shared_ptr<ActsExamples::IAlgorithm>>(mex, "IAlgorithm")
+  auto pySequenceElement =
+      py::class_<ActsExamples::SequenceElement, PySequenceElement,
+                 std::shared_ptr<ActsExamples::SequenceElement>>(
+          mex, "SequenceElement")
           .def(py::init_alias<>())
-          .def("execute", &IAlgorithm::execute)
-          .def("name", &IAlgorithm::name);
+          .def("internalExecute", &SequenceElement::internalExecute)
+          .def("name", &SequenceElement::name);
 
   auto bareAlgorithm =
-      py::class_<ActsExamples::BareAlgorithm,
-                 std::shared_ptr<ActsExamples::BareAlgorithm>, IAlgorithm,
-                 PyBareAlgorithm>(mex, "BareAlgorithm")
+      py::class_<ActsExamples::IAlgorithm,
+                 std::shared_ptr<ActsExamples::IAlgorithm>, SequenceElement,
+                 PyIAlgorithm>(mex, "IAlgorithm")
           .def(py::init_alias<const std::string&, Acts::Logging::Level>(),
                py::arg("name"), py::arg("level"))
-          .def("execute", &BareAlgorithm::execute);
+          .def("execute", &IAlgorithm::execute);
 
   py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
       .def(py::init<>())
@@ -177,11 +181,13 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def("setBoundary", &Acts::GeometryIdentifier::setBoundary)
       .def("setApproach", &Acts::GeometryIdentifier::setApproach)
       .def("setSensitive", &Acts::GeometryIdentifier::setSensitive)
+      .def("setExtra", &Acts::GeometryIdentifier::setExtra)
       .def("volume", &Acts::GeometryIdentifier::volume)
       .def("layer", &Acts::GeometryIdentifier::layer)
       .def("boundary", &Acts::GeometryIdentifier::boundary)
       .def("approach", &Acts::GeometryIdentifier::approach)
-      .def("sensitive", &Acts::GeometryIdentifier::sensitive);
+      .def("sensitive", &Acts::GeometryIdentifier::sensitive)
+      .def("extra", &Acts::GeometryIdentifier::extra);
 
   using ActsExamples::Sequencer;
   using Config = Sequencer::Config;
@@ -220,6 +226,19 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def_readwrite("outputDir", &Config::outputDir)
       .def_readwrite("outputTimingFile", &Config::outputTimingFile);
 
+  struct PyFpeMonitor {
+    std::optional<Acts::FpeMonitor> mon;
+  };
+
+  py::class_<PyFpeMonitor>(m, "FpeMonitor")
+      .def(py::init([]() { return std::make_unique<PyFpeMonitor>(); }))
+      .def("__enter__", [](PyFpeMonitor& fm) { fm.mon.emplace(); })
+      .def("__exit__", [](PyFpeMonitor& fm, py::object /*exc_type*/,
+                          py::object /*exc_value*/,
+                          py::object /*traceback*/) { fm.mon.reset(); })
+      .def_static("enable", &Acts::FpeMonitor::enable)
+      .def_static("disable", &Acts::FpeMonitor::disable);
+
   using ActsExamples::RandomNumbers;
   auto randomNumbers =
       py::class_<RandomNumbers, std::shared_ptr<RandomNumbers>>(mex,
@@ -248,7 +267,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addGenerators(ctx);
   addTruthTracking(ctx);
   addTrackFitting(ctx);
-  addTrackFittingChi2(ctx);
   addTrackFinding(ctx);
   addVertexing(ctx);
 
@@ -259,4 +277,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
   addSvg(ctx);
+  addMLTrackFinding(ctx);
 }

@@ -146,7 +146,7 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
   std::array<std::string, 3> colors({"orange", "blue", "red"});
 
   auto draw_line = [&](const VertexType& left_, const VertexType& right_,
-                       std::string color, size_t width) {
+                       const std::string& color, size_t width) {
     VertexType left = trf * left_;
     VertexType right = trf * right_;
     os << "<line ";
@@ -159,7 +159,8 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
     os << " stroke=\"" << color << "\" stroke-width=\"" << width << "\"/>\n";
   };
 
-  auto draw_point = [&](const VertexType& p_, std::string color, size_t r) {
+  auto draw_point = [&](const VertexType& p_, const std::string& color,
+                        size_t r) {
     VertexType p = trf * p_;
     os << "<circle ";
     os << "cx=\"" << p.x() << "\" cy=\"" << p.y() << "\" r=\"" << r << "\"";

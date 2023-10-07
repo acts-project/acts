@@ -38,8 +38,9 @@ class DirectNavigator {
   using SurfaceSequence = std::vector<const Surface*>;
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
-  /// Defaulted Constructed
-  DirectNavigator() = default;
+  DirectNavigator(std::unique_ptr<const Logger> _logger =
+                      getDefaultLogger("DirectNavigator", Logging::INFO))
+      : m_logger{std::move(_logger)} {}
 
   /// The tolerance used to define "surface reached"
   double tolerance = s_onSurfaceTolerance;
@@ -64,12 +65,15 @@ class DirectNavigator {
     /// Actor operator call
     /// @tparam statet Type of the full propagator state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param state the entire propagator state
     /// @param r the result of this Actor
-    template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& state, const stepper_t& /*unused*/,
-                    result_type& r) const {
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    void operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/, result_type& r,
+                    const Logger& /*logger*/) const {
       // Only act once
       if (not r.initialized) {
         // Initialize the surface sequence
@@ -78,11 +82,6 @@ class DirectNavigator {
         r.initialized = true;
       }
     }
-
-    /// Actor operator call - resultless, unused
-    template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& /*unused*/,
-                    const stepper_t& /*unused*/) const {}
   };
 
   /// Nested State struct
@@ -119,27 +118,71 @@ class DirectNavigator {
     bool targetReached = false;
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
-
-    /// Reset state
-    ///
-    /// @param ssurface is the new starting surface
-    /// @param tsurface is the target surface
-    void reset(const GeometryContext& /*geoContext*/, const Vector3& /*pos*/,
-               const Vector3& /*dir*/, NavigationDirection /*navDir*/,
-               const Surface* ssurface, const Surface* tsurface) {
-      // Reset everything except the navSurfaces
-      State newState = State();
-      newState.navSurfaces = this->navSurfaces;
-      *this = newState;
-
-      // Reset others
-      navSurfaceIter =
-          std::find(navSurfaces.begin(), navSurfaces.end(), ssurface);
-      startSurface = ssurface;
-      currentSurface = ssurface;
-      targetSurface = tsurface;
-    }
   };
+
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
+    State result;
+    result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
+    return result;
+  }
+
+  /// Reset state
+  ///
+  /// @param state is the state to reset
+  /// @param ssurface is the new starting surface
+  /// @param tsurface is the target surface
+  void resetState(State& state, const GeometryContext& /*geoContext*/,
+                  const Vector3& /*pos*/, const Vector3& /*dir*/,
+                  NavigationDirection /*navDir*/, const Surface* ssurface,
+                  const Surface* tsurface) const {
+    // Reset everything except the navSurfaces
+    auto navSurfaces = state.navSurfaces;
+    state = State();
+    state.navSurfaces = navSurfaces;
+
+    // Reset others
+    state.navSurfaceIter =
+        std::find(state.navSurfaces.begin(), state.navSurfaces.end(), ssurface);
+    state.startSurface = ssurface;
+    state.currentSurface = ssurface;
+    state.targetSurface = tsurface;
+  }
+
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
+  }
+
+  const TrackingVolume* currentVolume(const State& state) const {
+    return state.currentVolume;
+  }
+
+  const Surface* startSurface(const State& state) const {
+    return state.startSurface;
+  }
+
+  const Surface* targetSurface(const State& state) const {
+    return state.targetSurface;
+  }
+
+  bool targetReached(const State& state) const { return state.targetReached; }
+
+  bool navigationBreak(const State& state) const {
+    return state.navigationBreak;
+  }
+
+  void currentSurface(State& state, const Surface* surface) const {
+    state.currentSurface = surface;
+  }
+
+  void targetReached(State& state, bool targetReached) const {
+    state.targetReached = targetReached;
+  }
+
+  void navigationBreak(State& state, bool navigationBreak) const {
+    state.navigationBreak = navigationBreak;
+  }
 
   /// @brief Navigator status call
   ///
@@ -150,7 +193,6 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void status(propagator_state_t& state, const stepper_t& stepper) const {
-    const auto& logger = state.options.logger;
     // Screen output
     ACTS_VERBOSE("Entering navigator::status.");
 
@@ -196,7 +238,6 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void target(propagator_state_t& state, const stepper_t& stepper) const {
-    const auto& logger = state.options.logger;
     // Screen output
     ACTS_VERBOSE("Entering navigator::target.");
 
@@ -233,6 +274,11 @@ class DirectNavigator {
       }
     }
   }
+
+ private:
+  const Logger& logger() const { return *m_logger; }
+
+  std::unique_ptr<const Logger> m_logger;
 };
 
 }  // namespace Acts

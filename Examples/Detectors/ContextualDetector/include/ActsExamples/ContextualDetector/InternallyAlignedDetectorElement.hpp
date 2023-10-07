@@ -55,7 +55,7 @@ class InternallyAlignedDetectorElement
   ///
   /// @note this is called from the surface().transform(gctx)
   const Acts::Transform3& transform(
-      const Acts::GeometryContext& gctx) const final override;
+      const Acts::GeometryContext& gctx) const override;
 
   /// Return the nominal local to global transform
   ///

@@ -190,7 +190,7 @@ class CylinderVolumeBounds : public VolumeBounds {
 
  private:
   /// The internal version of the bounds can be float/double
-  std::array<double, eSize> m_values;
+  std::array<double, eSize> m_values{};
   /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
   /// Bounds of the inner CylinderBounds

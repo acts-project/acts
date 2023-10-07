@@ -192,13 +192,13 @@ class TrackingVolume : public Volume {
   /// @param position The position for searching
   /// @param direction The direction for searching
   /// @param options The templated navigation options
-  /// @param logger A @c LoggerWrapper instance
+  /// @param logger A @c Logger instance
   ///
   /// @return is the templated boundary intersection
   boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Surface>& options,
-      LoggerWrapper logger = getDummyLogger()) const;
+      const Logger& logger = getDummyLogger()) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition
@@ -438,11 +438,13 @@ class TrackingVolume : public Volume {
   /// @param vol is the geometry id of the volume
   ///        as calculated by the TrackingGeometry
   /// @param hook Identifier hook to be applied to surfaces
+  /// @param logger A @c LoggerWrapper instance
   ///
   void closeGeometry(
       const IMaterialDecorator* materialDecorator,
       std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-      size_t& vol, const GeometryIdentifierHook& hook);
+      size_t& vol, const GeometryIdentifierHook& hook,
+      const Logger& logger = getDummyLogger());
 
   /// interlink the layers in this TrackingVolume
   void interlinkLayers();

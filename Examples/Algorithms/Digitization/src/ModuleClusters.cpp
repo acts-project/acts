@@ -180,7 +180,7 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
           Acts::ActsScalar v_i = thisval.paramVariances.at(k);
           Acts::ActsScalar v_j = values.at(j).paramVariances.at(k);
 
-          Acts::ActsScalar left, right;
+          Acts::ActsScalar left = 0, right = 0;
           if (p_i < p_j) {
             left = p_i + m_nsigma * std::sqrt(v_i);
             right = p_j - m_nsigma * std::sqrt(v_j);

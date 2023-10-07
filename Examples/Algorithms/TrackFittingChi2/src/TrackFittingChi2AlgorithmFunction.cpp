@@ -16,6 +16,7 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
@@ -33,14 +34,13 @@ struct TrackFitterChi2FunctionImpl
   TrackFitterChi2FunctionImpl(Fitter&& f) : trackFitterChi2(std::move(f)) {}
 
   ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Result operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Options&
           options,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      ActsExamples::TrackContainer& trackContainer) const override {
     return trackFitterChi2.fit(sourceLinks.begin(), sourceLinks.end(),
-                               initialParameters, options, trajectory);
+                               initialParameters, options, trackContainer);
   };
 };
 
@@ -52,7 +52,7 @@ ActsExamples::TrackFittingChi2Algorithm::makeTrackFitterChi2Function(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   Stepper stepper(std::move(magneticField));
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

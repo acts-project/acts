@@ -37,7 +37,7 @@ def addChi2Tracks(
         inputSourceLinks="sourcelinks",
         inputProtoTracks="prototracks",
         inputInitialTrackParameters="estimatedparameters",
-        outputTrajectories="trajectories",
+        outputTracks="tracks",
         **chi2Options,
         # TODO: implement TrackFittingAlgorith.makeChi2FitterFunction
         pickTrack=-1,
@@ -49,6 +49,13 @@ def addChi2Tracks(
         )
     )
     s.addAlgorithm(fitAlg)
+
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=fitAlg.config.outputTracks,
+        outputTrajectories="trajectories",
+    )
+    s.addAlgorithm(trackConverter)
 
     return s
 

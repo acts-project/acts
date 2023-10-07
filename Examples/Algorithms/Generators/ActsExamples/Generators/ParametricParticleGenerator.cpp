@@ -16,8 +16,8 @@
 ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
     const Config& cfg)
     : m_cfg(cfg),
-      m_charge(ActsFatras::findCharge(m_cfg.pdg)),
-      m_mass(ActsFatras::findMass(m_cfg.pdg)),
+      m_charge(cfg.charge.value_or(ActsFatras::findCharge(m_cfg.pdg))),
+      m_mass(cfg.mass.value_or(ActsFatras::findMass(m_cfg.pdg))),
       // since we want to draw the direction uniform on the unit sphere, we must
       // draw from cos(theta) instead of theta. see e.g.
       // https://mathworld.wolfram.com/SpherePointPicking.html

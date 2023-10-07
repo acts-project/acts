@@ -257,7 +257,7 @@ namespace detail {
 Result<BoundState> boundState(
     const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
-    FreeVector& derivatives, BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
     FreeVector& parameters, bool covTransport, double accumulatedPath,
     const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) {
@@ -268,10 +268,10 @@ Result<BoundState> boundState(
     jacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
-    // boundToFreeJacobian
-    transportCovarianceToBound(
-        geoContext, covarianceMatrix, jacobian, transportJacobian, derivatives,
-        boundToFreeJacobian, parameters, surface, freeToBoundCorrection);
+    // jacToGlobal
+    transportCovarianceToBound(geoContext, covarianceMatrix, jacobian,
+                               transportJacobian, derivatives, jacToGlobal,
+                               parameters, surface, freeToBoundCorrection);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
@@ -293,7 +293,7 @@ CurvilinearState curvilinearState(BoundSymMatrix& covarianceMatrix,
                                   BoundMatrix& jacobian,
                                   FreeMatrix& transportJacobian,
                                   FreeVector& derivatives,
-                                  BoundToFreeMatrix& boundToFreeJacobian,
+                                  BoundToFreeMatrix& jacToGlobal,
                                   const FreeVector& parameters,
                                   bool covTransport, double accumulatedPath) {
   const Vector3& direction = parameters.segment<3>(eFreeDir0);
@@ -305,10 +305,10 @@ CurvilinearState curvilinearState(BoundSymMatrix& covarianceMatrix,
     jacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
-    // boundToFreeJacobian
+    // jacToGlobal
     transportCovarianceToCurvilinear(covarianceMatrix, jacobian,
                                      transportJacobian, derivatives,
-                                     boundToFreeJacobian, direction);
+                                     jacToGlobal, direction);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;

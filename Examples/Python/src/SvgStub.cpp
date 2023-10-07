@@ -9,5 +9,5 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 
 namespace Acts::Python {
-void addSvg(Context& /*unused*/) {}
+void addSvg(Context& /*ctx*/) {}
 }  // namespace Acts::Python

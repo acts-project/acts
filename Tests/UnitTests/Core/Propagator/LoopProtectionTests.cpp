@@ -21,6 +21,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -57,8 +58,8 @@ struct Stepper {
   ///                 the magnetic field cell is used (and potentially
   ///                 updated)
   /// @param [in] pos is the field position
-  Result<Vector3> getField(SteppingState& /*unused*/,
-                           const Vector3& /*unused*/) const {
+  Result<Vector3> getField(SteppingState& /*state*/,
+                           const Vector3& /*pos*/) const {
     // get the field from the cell
     return Result<Vector3>::success(field);
   }
@@ -93,7 +94,7 @@ struct Options {
   /// Contains: target aborters
   AbortList<PathLimitReached> abortList;
 
-  LoggerWrapper logger{getDummyLogger()};
+  const Acts::Logger& logger = Acts::getDummyLogger();
 };
 
 /// @brief mockup of propagtor state
@@ -130,7 +131,9 @@ BOOST_DATA_TEST_CASE(
   auto& pathLimit = pState.options.abortList.get<PathLimitReached>();
   auto initialLimit = pathLimit.internalLimit;
 
-  detail::setupLoopProtection(pState, pStepper, pathLimit);
+  detail::setupLoopProtection(
+      pState, pStepper, pathLimit,
+      *Acts::getDefaultLogger("LoopProt", Logging::INFO));
 
   auto updatedLimit =
       pState.options.abortList.get<PathLimitReached>().internalLimit;
@@ -181,7 +184,7 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, p, q);
 
   using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
-  PropagatorOptions options(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions options(tgContext, mfContext);
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();
 

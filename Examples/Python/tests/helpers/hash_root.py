@@ -15,7 +15,7 @@ def hash_root_file(path: Path, ordering_invariant: bool = True) -> str:
 
     gh = hashlib.sha256()
 
-    for tree_name in sorted(rf.keys()):
+    for tree_name in sorted(rf.keys(cycle=False)):
         gh.update(tree_name.encode("utf8"))
 
         try:

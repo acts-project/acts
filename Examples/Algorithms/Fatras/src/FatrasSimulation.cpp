@@ -16,7 +16,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
@@ -161,8 +161,7 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
 
 ActsExamples::FatrasSimulation::FatrasSimulation(Config cfg,
                                                  Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("FatrasSimulation", lvl),
-      m_cfg(std::move(cfg)) {
+    : ActsExamples::IAlgorithm("FatrasSimulation", lvl), m_cfg(std::move(cfg)) {
   ACTS_DEBUG("hits on sensitive surfaces: " << m_cfg.generateHitsOnSensitive);
   ACTS_DEBUG("hits on material surfaces: " << m_cfg.generateHitsOnMaterial);
   ACTS_DEBUG("hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
@@ -184,6 +183,11 @@ ActsExamples::FatrasSimulation::FatrasSimulation(Config cfg,
 
   // construct the simulation for the specific magnetic field
   m_sim = std::make_unique<FatrasSimulationT>(m_cfg, lvl);
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
+  m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
 }
 
 // explicit destructor needed for the PIMPL implementation to work
@@ -192,8 +196,7 @@ ActsExamples::FatrasSimulation::~FatrasSimulation() = default;
 ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
     const AlgorithmContext &ctx) const {
   // read input containers
-  const auto &inputParticles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto &inputParticles = m_inputParticles(ctx);
 
   ACTS_DEBUG(inputParticles.size() << " input particles");
 
@@ -243,9 +246,10 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
                         particlesFinalUnordered.end());
   simHits.insert(simHitsUnordered.begin(), simHitsUnordered.end());
   // store ordered output containers
-  ctx.eventStore.add(m_cfg.outputParticlesInitial, std::move(particlesInitial));
-  ctx.eventStore.add(m_cfg.outputParticlesFinal, std::move(particlesFinal));
-  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+
+  m_outputParticlesInitial(ctx, std::move(particlesInitial));
+  m_outputParticlesFinal(ctx, std::move(particlesFinal));
+  m_outputSimHits(ctx, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

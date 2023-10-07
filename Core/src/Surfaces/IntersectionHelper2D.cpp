@@ -55,7 +55,7 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
     ActsScalar solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
     ActsScalar altD = std::copysign(toAltD.norm(), toAltD.dot(dir));
 
-    if (solD * solD < altD * altD) {
+    if (std::abs(solD) < std::abs(altD)) {
       return {Intersection2D(sol, solD, Intersection2D::Status::reachable),
               Intersection2D(alt, altD, Intersection2D::Status::reachable)};
     }

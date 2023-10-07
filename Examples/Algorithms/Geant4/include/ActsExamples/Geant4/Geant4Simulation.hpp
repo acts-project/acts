@@ -8,8 +8,12 @@
 
 #pragma once
 
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
@@ -45,10 +49,13 @@ class SensitiveSurfaceMapper;
 /// individual slots for the event containers and the store.
 ///
 /// The Geant4Simulation algorithm clears those after processing.
-class Geant4Simulation final : public BareAlgorithm {
+class Geant4Simulation final : public IAlgorithm {
  public:
   /// Nested configuration struct for the Geant4 simulation
   struct Config {
+    // Name of the input particle collection
+    std::string inputParticles = "";
+
     // Name of the output collection : hits
     std::string outputSimHits = "";
 
@@ -99,19 +106,28 @@ class Geant4Simulation final : public BareAlgorithm {
   /// @param level is the logging level to be used
   Geant4Simulation(const Config& config,
                    Acts::Logging::Level level = Acts::Logging::INFO);
-  ~Geant4Simulation();
+  ~Geant4Simulation() override;
 
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
   ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final override;
+      const ActsExamples::AlgorithmContext& ctx) const final;
 
   /// Readonly access to the configuration
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
+      this, "OutputParticlesInitial"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
+      this, "OutputParticlesFinal"};
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHIts"};
+  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+      m_outputMaterialTracks{this, "OutputMaterialTracks"};
 
   // Has to be mutable; algorithm interface enforces object constness
   mutable std::mutex m_runManagerLock;

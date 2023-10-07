@@ -57,7 +57,7 @@ void setupInput(
     // generate particle input from a particle gun
     auto gen = Options::readParticleGunOptions(vars);
     gen.outputParticles = kParticlesInput;
-    gen.randomNumbers = randomNumbers;
+    gen.randomNumbers = std::move(randomNumbers);
     sequencer.addReader(std::make_shared<EventGenerator>(gen, logLevel));
   }
 

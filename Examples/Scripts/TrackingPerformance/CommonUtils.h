@@ -231,7 +231,7 @@ struct AcceptRange {
   /// returns true if value is within range
   /// @param entry the entry in the tree
   bool operator()(ULong64_t entry) {
-    if (value) {
+    if (value != nullptr) {
       float v = value->at(entry);
       return (range[0] <= v and range[1] > v);
     }
@@ -289,7 +289,7 @@ struct ResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (value and reference) {
+    if (value != nullptr and reference != nullptr) {
       float v = value->at(entry);
       float r = reference->at(entry);
       return (v - r);
@@ -310,7 +310,8 @@ struct QopResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value and reference_charge and reference_p) {
+    if (qop_value != nullptr and reference_charge != nullptr and
+        reference_p != nullptr) {
       float v = qop_value->at(entry);
       float q_true = reference_charge->at(entry);
       float p_true = reference_p->at(entry);
@@ -332,7 +333,8 @@ struct PtResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value and theta_value and reference_pt) {
+    if (qop_value != nullptr and theta_value != nullptr and
+        reference_pt != nullptr) {
       float p = 1. / std::abs(qop_value->at(entry));
       float theta = theta_value->at(entry);
       float pt_true = reference_pt->at(entry);
@@ -354,7 +356,8 @@ struct PtErrorAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value and qop_error and theta_value and theta_error) {
+    if (qop_value != nullptr and qop_error != nullptr and
+        theta_value != nullptr and theta_error != nullptr) {
       float qop_v = qop_value->at(entry);
       float qop_e = qop_error->at(entry);
       float theta_v = theta_value->at(entry);
@@ -411,10 +414,9 @@ void estimateResiudalRange(ResidualPullHandle& handle, dir_t& directory,
 /// @param peakEntries the number of entries for the range peak
 /// @param hBarcode a temporary unqiue ROOT barcode for memory managements
 template <typename dir_t, typename tree_t>
-void estimateIntegerRange(SingleHandle& handle, dir_t& directory,
-                                  tree_t& tree, unsigned long peakEntries,
-                                  unsigned int startBins, unsigned int addBins,
-                                  unsigned int hBarcode) {
+void estimateIntegerRange(SingleHandle& handle, dir_t& directory, tree_t& tree,
+                          unsigned long peakEntries, unsigned int startBins,
+                          unsigned int addBins, unsigned int hBarcode) {
   // Change into the Directory
   directory.cd();
   TString rangeHist = handle.rangeDrawStr;
@@ -441,11 +443,11 @@ void estimateIntegerRange(SingleHandle& handle, dir_t& directory,
       }
     }
     handle.bins = (nBins + addBins);
-    handle.range = { -0.5, static_cast<float>(handle.bins-0.5) };
+    handle.range = {-0.5, static_cast<float>(handle.bins - 0.5)};
     return;
   }
-  handle.bins = ( startBins );
-  handle.range = { -0.5, static_cast<float>(handle.bins-0.5) };
+  handle.bins = (startBins);
+  handle.range = {-0.5, static_cast<float>(handle.bins - 0.5)};
 }
 
 /// Helper mehtod to book residual and pull histograms

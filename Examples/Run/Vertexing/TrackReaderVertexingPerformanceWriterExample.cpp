@@ -23,7 +23,7 @@
 #include "ActsExamples/Options/VertexingOptions.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 
@@ -82,15 +82,14 @@ int main(int argc, char* argv[]) {
       trackSummaryReader, logLevel));
 
   // Apply some primary vertexing selection cuts
-  TrackSelector::Config trackSelectorConfig;
+  TrackParameterSelector::Config trackSelectorConfig;
   trackSelectorConfig.inputTrackParameters = trackSummaryReader.outputTracks;
   trackSelectorConfig.outputTrackParameters = "selectedTracks";
-  trackSelectorConfig.removeNeutral = true;
   trackSelectorConfig.absEtaMax = vars["vertexing-eta-max"].as<double>();
   trackSelectorConfig.loc0Max = vars["vertexing-rho-max"].as<double>() * 1_mm;
   trackSelectorConfig.ptMin = vars["vertexing-pt-min"].as<double>() * 1_MeV;
   sequencer.addAlgorithm(
-      std::make_shared<TrackSelector>(trackSelectorConfig, logLevel));
+      std::make_shared<TrackParameterSelector>(trackSelectorConfig, logLevel));
 
   // find vertices
   AdaptiveMultiVertexFinderAlgorithm::Config findVertices;

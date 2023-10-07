@@ -21,7 +21,6 @@ pybind11_add_module(ActsPythonBindings
   src/Generators.cpp
   src/TruthTracking.cpp
   src/TrackFitting.cpp
-  src/TrackFittingChi2.cpp
   src/TrackFinding.cpp
   src/Vertexing.cpp
 )
@@ -34,7 +33,6 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsCore 
   ActsPythonUtilities
   ActsExamplesFramework
-  ActsExamplesDetectorsCommon
   ActsExamplesDetectorGeneric
   ActsExamplesDetectorContextual
   ActsExamplesDetectorTGeo
@@ -53,6 +51,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesFatras
   ActsExamplesPrinters
   ActsExamplesDetectorTelescope
+  ActsExamplesUtilities
 )
 
 set(py_files 
@@ -78,7 +77,6 @@ if(ACTS_BUILD_PLUGIN_ACTSVG)
 else()
   target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
 endif()
-
 
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
   pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
@@ -110,7 +108,7 @@ endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
   target_link_libraries(ActsPythonBindingsGeant4 PUBLIC 
-    ActsExamplesGeant4
+    ActsExamplesGeant4 ActsExamplesDetectorGeant4
     ActsPythonUtilities)
   add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
 
@@ -164,6 +162,13 @@ if(ACTS_BUILD_EXAMPLES_EDM4HEP)
   list(APPEND py_files examples/edm4hep.py)
 else()
   target_sources(ActsPythonBindings PRIVATE src/EDM4hepStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_ONNX)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingML)
+  target_sources(ActsPythonBindings PRIVATE src/MLTrackFinding.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/MLTrackFindingStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)

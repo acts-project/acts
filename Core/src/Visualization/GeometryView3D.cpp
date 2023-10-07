@@ -8,6 +8,8 @@
 
 #include "Acts/Visualization/GeometryView3D.hpp"
 
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -26,6 +28,7 @@
 #include <unistd.h>
 
 namespace {
+
 std::string joinPaths(const std::string& a, const std::string& b) {
   if (b.substr(0, 1) == "/" || a.empty()) {
     return b;
@@ -48,13 +51,13 @@ std::string getWorkingDirectory() {
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
-                                          const ViewConfig& ViewConfig) {
-  if (ViewConfig.visible) {
-    if (not ViewConfig.triangulate) {
-      helper.faces(polyhedron.vertices, polyhedron.faces, ViewConfig.color);
+                                          const ViewConfig& viewConfig) {
+  if (viewConfig.visible) {
+    if (not viewConfig.triangulate) {
+      helper.faces(polyhedron.vertices, polyhedron.faces, viewConfig.color);
     } else {
       helper.faces(polyhedron.vertices, polyhedron.triangularMesh,
-                   ViewConfig.color);
+                   viewConfig.color);
     }
   }
 }
@@ -63,13 +66,13 @@ void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
                                        const Surface& surface,
                                        const GeometryContext& gctx,
                                        const Transform3& transform,
-                                       const ViewConfig& ViewConfig) {
+                                       const ViewConfig& viewConfig) {
   Polyhedron surfaceHedron =
-      surface.polyhedronRepresentation(gctx, ViewConfig.nSegments);
+      surface.polyhedronRepresentation(gctx, viewConfig.nSegments);
   if (not transform.isApprox(Transform3::Identity())) {
     surfaceHedron.move(transform);
   }
-  drawPolyhedron(helper, surfaceHedron, ViewConfig);
+  drawPolyhedron(helper, surfaceHedron, viewConfig);
 }
 
 void Acts::GeometryView3D::drawSurfaceArray(
@@ -119,7 +122,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
                                0.5 * thickness);
       auto cvbOrientedSurfaces = cvb.orientedSurfaces();
       for (auto z : zValues) {
-        for (auto cvbSf : cvbOrientedSurfaces) {
+        for (const auto& cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
@@ -135,7 +138,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
         CylinderVolumeBounds cvb(r - 0.5 * thickness, r + 0.5 * thickness,
                                  0.5 * thickness);
         auto cvbOrientedSurfaces = cvb.orientedSurfaces();
-        for (auto cvbSf : cvbOrientedSurfaces) {
+        for (const auto& cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
@@ -167,6 +170,45 @@ void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
   for (const auto& bs : bSurfaces) {
     drawSurface(helper, bs->surfaceRepresentation(), gctx, transform,
                 viewConfig);
+  }
+}
+
+void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
+                                      const Experimental::Portal& portal,
+                                      const GeometryContext& gctx,
+                                      const Transform3& transform,
+                                      const ViewConfig& connected,
+                                      const ViewConfig& disconnected) {
+  // color the portal based on if it contains two links(green)
+  // or one link(red)
+  auto surface = &(portal.surface());
+  auto links = &(portal.detectorVolumeUpdators());
+  if (links->size() == 2) {
+    drawSurface(helper, *surface, gctx, transform, connected);
+  } else {
+    drawSurface(helper, *surface, gctx, transform, disconnected);
+  }
+}
+
+void Acts::GeometryView3D::drawDetectorVolume(
+    IVisualization3D& helper, const Experimental::DetectorVolume& volume,
+    const GeometryContext& gctx, const Transform3& transform,
+    const ViewConfig& connected, const ViewConfig& unconnected,
+    const ViewConfig& viewConfig) {
+  // draw the surfaces of the mother volume
+  for (auto surface : volume.surfaces()) {
+    drawSurface(helper, *surface, gctx, transform, viewConfig);
+  }
+
+  // draw the envelope first
+  for (auto portal : volume.portals()) {
+    drawPortal(helper, *portal, gctx, transform, connected, unconnected);
+  }
+
+  // recurse if there are subvolumes
+  for (auto subvolume : volume.volumes()) {
+    drawDetectorVolume(helper, *subvolume, gctx, transform, connected,
+                       unconnected, viewConfig);
   }
 }
 
@@ -231,7 +273,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
   if (writeIt) {
     std::vector<std::string> repChar = {"::" /*, "|", " ", "{", "}"*/};
     // std::cout << "PRE: " << vname << std::endl;
-    for (auto rchar : repChar) {
+    for (const auto& rchar : repChar) {
       while (vname.find(rchar) != std::string::npos) {
         vname.replace(vname.find(rchar), rchar.size(), std::string("_"));
       }

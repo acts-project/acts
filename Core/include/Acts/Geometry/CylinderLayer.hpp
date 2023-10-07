@@ -40,15 +40,15 @@ class CylinderLayer : public CylinderSurface, public Layer {
   /// @todo ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
-  static MutableLayerPtr create(
+  static std::shared_ptr<CylinderLayer> create(
       const Transform3& transform,
       const std::shared_ptr<const CylinderBounds>& cbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
       double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = passive) {
-    return MutableLayerPtr(new CylinderLayer(transform, cbounds,
-                                             std::move(surfaceArray), thickness,
-                                             std::move(ad), laytyp));
+    return std::shared_ptr<CylinderLayer>(
+        new CylinderLayer(transform, cbounds, std::move(surfaceArray),
+                          thickness, std::move(ad), laytyp));
   }
 
   CylinderLayer(const CylinderLayer& cla) = delete;

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,9 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <limits>
 #include <string>
@@ -16,17 +18,13 @@
 namespace ActsExamples {
 
 /// Select tracks by applying some selection cuts.
-class TrackSelector final : public BareAlgorithm {
+class TrackSelector final : public IAlgorithm {
  public:
   struct Config {
-    /// Input track parameters collection.
-    std::string inputTrackParameters;
-    /// Optional. Input track parameters tips w.r.t a trajectories container.
-    std::string inputTrackParametersTips;
-    /// Output track parameters collection.
-    std::string outputTrackParameters;
-    /// Optional. Output track parameters tips w.r.t a trajectories container.
-    std::string outputTrackParametersTips;
+    /// Input track collection.
+    std::string inputTracks;
+    /// Output track collection
+    std::string outputTracks;
 
     // Minimum/maximum local positions.
     double loc0Min = -std::numeric_limits<double>::infinity();
@@ -46,10 +44,6 @@ class TrackSelector final : public BareAlgorithm {
     // Momentum cuts.
     double ptMin = 0.0;
     double ptMax = std::numeric_limits<double>::infinity();
-    /// Remove charged particles.
-    bool removeCharged = false;
-    /// Remove neutral particles.
-    bool removeNeutral = false;
   };
 
   TrackSelector(const Config& config, Acts::Logging::Level level);
@@ -61,6 +55,11 @@ class TrackSelector final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<ConstTrackContainer> m_inputTrackContainer{this,
+                                                            "InputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTrackContainer{this,
+                                                              "OutputTracks"};
 };
 
 }  // namespace ActsExamples

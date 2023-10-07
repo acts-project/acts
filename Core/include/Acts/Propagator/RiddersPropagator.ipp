@@ -190,10 +190,11 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     if (param == eBoundPhi) {
       double phi0 = nominal(Acts::eBoundPhi);
       double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
-      if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+      if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0)) {
         derivatives.back()[Acts::eBoundPhi] = (phi1 + 2. * M_PI - phi0) / h;
-      else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
+      } else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0)) {
         derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
+      }
     }
   }
   return derivatives;

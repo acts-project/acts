@@ -57,7 +57,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
     } else if (bval != binR and bval != binPhi) {
       throw std::invalid_argument("Disc binning must be: phi, r");
     }
-    float min, max = 0.;
+    float min = 0., max = 0.;
     // Perform the value adjustment
     if (bval == binPhi) {
       min = minPhi;
@@ -107,7 +107,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
     } else if (bval != binRPhi and bval != binPhi and bval != binZ) {
       throw std::invalid_argument("Cylinder binning must be: rphi, phi, z");
     }
-    float min, max = 0.;
+    float min = 0., max = 0.;
     // Perform the value adjustment
     if (bval == binPhi) {
       min = minPhi;
@@ -159,7 +159,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     } else if (bval != binX and bval != binY) {
       throw std::invalid_argument("Rectangle binning must be: x, y. ");
     }
-    float min, max = 0.;
+    float min = 0., max = 0.;
     // Perform the value adjustment
     if (bval == binX) {
       min = minX;
@@ -209,7 +209,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     } else if (bval != binX and bval != binY) {
       throw std::invalid_argument("Rectangle binning must be: x, y. ");
     }
-    float min, max = 0.;
+    float min = 0., max = 0.;
     // Perform the value adjustment
     if (bval == binX) {
       min = -1 * halfX;

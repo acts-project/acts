@@ -281,7 +281,7 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
     double minDist = std::numeric_limits<double>::max();
 
     Vector2 currentClosest;
-    double currentDist;
+    double currentDist = 0;
 
     // do projection in STRIP PC
 

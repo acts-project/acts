@@ -19,6 +19,8 @@ static double computeAnnealingWeight(double chi2, double invTemp) {
   return std::exp(-chi2 * invTemp);
 }
 
+Acts::AnnealingUtility::Config::Config() = default;
+
 void Acts::AnnealingUtility::anneal(State& state) const {
   if (state.currentTemperatureIndex < m_cfg.setOfTemperatures.size() - 1) {
     ++state.currentTemperatureIndex;

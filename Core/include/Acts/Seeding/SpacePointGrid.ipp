@@ -7,27 +7,37 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/detail/Axis.hpp"
-
+#include <iostream>
 #include <memory>
 
 template <typename SpacePoint>
 std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
 Acts::SpacePointGridCreator::createGrid(
-    const Acts::SpacePointGridConfig& _config) {
-  Acts::SpacePointGridConfig config = _config.toInternalUnits();
+    const Acts::SpacePointGridConfig& config,
+    const Acts::SpacePointGridOptions& options) {
+  if (not config.isInInternalUnits) {
+    throw std::runtime_error(
+        "SpacePointGridConfig not in ACTS internal units in "
+        "SpacePointGridCreator::createGrid");
+  }
+  if (not options.isInInternalUnits) {
+    throw std::runtime_error(
+        "SpacePointGridOptions not in ACTS internal units in "
+        "SpacePointGridCreator::createGrid");
+  }
   using AxisScalar = Acts::Vector3::Scalar;
 
-  int phiBins;
+  int phiBins = 0;
   // for no magnetic field, create 100 phi-bins
-  if (config.bFieldInZ == 0) {
+  if (options.bFieldInZ == 0) {
     phiBins = 100;
   } else {
     // calculate circle intersections of helix and max detector radius
     float minHelixRadius =
         config.minPt /
-        (300. * config.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T]) =
-                                    // pT[MeV] / (300 *Bz[kT])
-
+        (300. * options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
+                                     // = pT[MeV] / (300 *Bz[kT])
+				     std::cout << "minhelix " << minHelixRadius << ", " << config.minPt << ", " << options.bFieldInZ << ", " << config.rMax << std::endl;
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < config.rMax / 2) {
       throw std::domain_error(
@@ -77,7 +87,7 @@ Acts::SpacePointGridCreator::createGrid(
 
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
-    phiBins = std::ceil(2 * M_PI / deltaPhi);
+    phiBins = static_cast<int>(std::ceil(2 * M_PI / deltaPhi));
     // need to scale the number of phi bins accordingly to the number of
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on this

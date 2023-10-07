@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   // And it's path should be further away then the primary solution
   double pn = sfIntersection.intersection.pathLength;
   double pa = sfIntersection.alternative.pathLength;
-  BOOST_CHECK(pn * pn < pa * pa);
+  BOOST_CHECK(std::abs(pn) < std::abs(pa));
   BOOST_CHECK_EQUAL(sfIntersection.object, cylinderSurfaceObject.get());
 
   //

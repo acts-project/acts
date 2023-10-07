@@ -44,6 +44,5 @@ At the time of writing, there are two aspects to the ACTS examples:
    full_chain_odd
    material_mapping
    digizier_config
-   geo_selection
    alignment
    Analysis Apps <analysis_apps>

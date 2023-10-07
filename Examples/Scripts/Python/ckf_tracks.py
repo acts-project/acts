@@ -38,8 +38,9 @@ def runCKFTracks(
         TruthSeedRanges,
         ParticleSmearingSigmas,
         SeedFinderConfigArg,
+        SeedFinderOptionsArg,
         SeedingAlgorithm,
-        TrackParamsEstimationConfig,
+        TruthEstimatedSeedingAlgorithmConfigArg,
         CKFPerformanceConfig,
         addCKFTracks,
     )
@@ -105,10 +106,10 @@ def runCKFTracks(
             sigmaScattering=5,
             radLengthPerSeed=0.1,
             minPt=500 * u.MeV,
-            bFieldInZ=1.99724 * u.T,
             impactMax=3 * u.mm,
         ),
-        TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
+        SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
+        TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared
         if truthSmearedSeeded
         else SeedingAlgorithm.TruthEstimated

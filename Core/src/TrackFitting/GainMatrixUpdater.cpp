@@ -8,14 +8,19 @@
 
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <optional>
+
+#include <Eigen/src/Core/MatrixBase.h>
 
 namespace Acts {
 
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     InternalTrackState trackState, NavigationDirection direction,
-    LoggerWrapper logger) const {
+    const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
   std::error_code error;
   double chi2 = 0;
@@ -74,11 +79,13 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     residual = calibrated - H * trackState.filtered;
     ACTS_VERBOSE("Residual: " << residual.transpose());
 
-    chi2 = (residual.transpose() *
-            ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance)
-                .inverse() *
-            residual)
-               .value();
+    CovarianceMatrix m =
+        ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance).eval();
+
+    static constexpr double epsilon = 1e-13;
+    m.diagonal().array() += epsilon;
+
+    chi2 = (residual.transpose() * (m.inverse()) * residual).value();
 
     ACTS_VERBOSE("Chi2: " << chi2);
     return true;  // continue execution

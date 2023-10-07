@@ -95,6 +95,8 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   LayerCreator layerCreator(lCfg);
   ProtoLayer pl{gctx, cfg.surfaces};
   pl.envelope[binX] = cfg.envelopeX;
+  pl.envelope[binY] = cfg.envelopeY;
+  pl.envelope[binZ] = cfg.envelopeZ;
   return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
                                  BinningValue::binX, pl, trafo);
 }
@@ -219,8 +221,8 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 }
 
 Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
-    const GeometryContext& gctx, Acts::TrackingVolumePtr /*unused*/,
-    Acts::VolumeBoundsPtr /*unused*/) const {
+    const GeometryContext& gctx, Acts::TrackingVolumePtr /*gctx*/,
+    Acts::VolumeBoundsPtr /*bounds*/) const {
   // Build volumes
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
   volumes.reserve(m_cfg.volumeCfg.size());

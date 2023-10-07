@@ -33,8 +33,8 @@ namespace bd = boost::unit_test::data;
 using RandomGenerator = std::default_random_engine;
 
 struct SterileSmearer {
-  Acts::Result<std::pair<double, double>> operator()(
-      double value, RandomGenerator& /*unused*/) {
+  Acts::Result<std::pair<double, double>> operator()(double value,
+                                                     RandomGenerator& /*rng*/) {
     return Acts::Result<std::pair<double, double>>(
         std::make_pair<double, double>(value + 0., 0.));
   }
@@ -43,16 +43,16 @@ struct SterileSmearer {
 struct AddSmearer {
   double offset = 1.0;
 
-  Acts::Result<std::pair<double, double>> operator()(
-      double value, RandomGenerator& /*unused*/) {
+  Acts::Result<std::pair<double, double>> operator()(double value,
+                                                     RandomGenerator& /*rng*/) {
     return Acts::Result<std::pair<double, double>>(
         std::make_pair<double, double>(value + offset, 3.));
   }
 };
 
 struct InvalidSmearer {
-  Acts::Result<std::pair<double, double>> operator()(
-      double /*ignored*/, RandomGenerator& /*unused*/) {
+  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/,
+                                                     RandomGenerator& /*rng*/) {
     return Acts::Result<std::pair<double, double>>(
         ActsFatras::DigitizationError::SmearingError);
   }

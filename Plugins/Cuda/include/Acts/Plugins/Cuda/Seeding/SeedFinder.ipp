@@ -1,10 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -15,23 +17,29 @@ namespace Acts {
 
 template <typename external_spacepoint_t>
 SeedFinder<external_spacepoint_t, Acts::Cuda>::SeedFinder(
-    Acts::SeedFinderConfig<external_spacepoint_t> config)
-    : m_config(config.toInternalUnits()) {
-  // calculation of scattering using the highland formula
-  // convert pT to p once theta angle is known
-  m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
-                      (1 + 0.038 * std::log(m_config.radLengthPerSeed));
-  float maxScatteringAngle = m_config.highland / m_config.minPt;
-  m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-
-  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
-  // millimeter
-  // TODO: change using ACTS units
-  m_config.pTPerHelixRadius = 300. * m_config.bFieldInZ;
-  m_config.minHelixDiameter2 =
-      std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
-  m_config.pT2perRadius =
-      std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    const Acts::SeedFinderOptions& options)
+    : m_config(config), m_options(options) {
+  if (not m_config.isInInternalUnits)
+    throw std::runtime_error(
+        "SeedFinderConfig not in ACTS internal units in "
+        "Cuda/Seeding/SeedFinder");
+  if (not m_options.isInInternalUnits)
+    throw std::runtime_error(
+        "SeedFinderOptions not in ACTS internal units in "
+        "Cuda/Seeding/SeedFinder");
+  if (std::isnan(m_config.deltaRMaxTopSP)) {
+    throw std::runtime_error("Value of deltaRMaxTopSP was not initialised");
+  }
+  if (std::isnan(m_config.deltaRMinTopSP)) {
+    throw std::runtime_error("Value of deltaRMinTopSP was not initialised");
+  }
+  if (std::isnan(m_config.deltaRMaxBottomSP)) {
+    throw std::runtime_error("Value of deltaRMaxBottomSP was not initialised");
+  }
+  if (std::isnan(m_config.deltaRMinBottomSP)) {
+    throw std::runtime_error("Value of deltaRMinBottomSP was not initialised");
+  }
 }
 
 // CUDA seed finding
@@ -39,7 +47,10 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointData& spacePointData,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // Get SeedFinderConfig values
@@ -50,8 +61,8 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   CudaScalar<float> collisionRegionMax_cuda(&m_config.collisionRegionMax);
   CudaScalar<float> maxScatteringAngle2_cuda(&m_config.maxScatteringAngle2);
   CudaScalar<float> sigmaScattering_cuda(&m_config.sigmaScattering);
-  CudaScalar<float> minHelixDiameter2_cuda(&m_config.minHelixDiameter2);
-  CudaScalar<float> pT2perRadius_cuda(&m_config.pT2perRadius);
+  CudaScalar<float> minHelixDiameter2_cuda(&m_options.minHelixDiameter2);
+  CudaScalar<float> pT2perRadius_cuda(&m_options.pT2perRadius);
   CudaScalar<float> impactMax_cuda(&m_config.impactMax);
   const auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
   CudaScalar<float> deltaInvHelixDiameter_cuda(
@@ -75,17 +86,26 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   int nSpB(0);
   int nSpT(0);
 
-  for (auto sp : middleSPs) {
-    nSpM++;
-    middleSPvec.push_back(sp);
+  {
+    auto& sp_collection = grid.at(middleSPs);
+    for (auto& sp : sp_collection) {
+      nSpM++;
+      middleSPvec.push_back(sp.get());
+    }
   }
-  for (auto sp : bottomSPs) {
-    nSpB++;
-    bottomSPvec.push_back(sp);
+  for (auto idx : bottomSPs) {
+    auto& sp_collection = grid.at(idx);
+    for (auto& sp : sp_collection) {
+      nSpB++;
+      bottomSPvec.push_back(sp.get());
+    }
   }
-  for (auto sp : topSPs) {
-    nSpT++;
-    topSPvec.push_back(sp);
+  for (std::size_t idx : topSPs) {
+    auto& sp_collection = grid.at(idx);
+    for (auto& sp : sp_collection) {
+      nSpT++;
+      topSPvec.push_back(sp.get());
+    }
   }
 
   CudaScalar<int> nSpM_cuda(&nSpM);
@@ -111,15 +131,15 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   };
 
   int mIdx(0);
-  for (auto sp : middleSPs) {
+  for (auto sp : middleSPvec) {
     fillMatrix(spMmat_cpu, mIdx, sp);
   }
   int bIdx(0);
-  for (auto sp : bottomSPs) {
+  for (auto sp : bottomSPvec) {
     fillMatrix(spBmat_cpu, bIdx, sp);
   }
   int tIdx(0);
-  for (auto sp : topSPs) {
+  for (auto sp : topSPvec) {
     fillMatrix(spTmat_cpu, tIdx, sp);
   }
 
@@ -254,9 +274,9 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
 
     if (i_m > 0) {
       const auto m_experimentCuts = m_config.seedFilter->getExperimentCuts();
-      std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-          seedsPerSpM;
+      std::vector<typename CandidatesForMiddleSp<
+          const InternalSpacePoint<external_spacepoint_t>>::value_type>
+          candidates;
 
       for (int i = 0; i < *nTrplPerSpM_cpu.get(i_m - 1); i++) {
         auto& triplet = *TripletsPerSpM_cpu.get(i, i_m - 1);
@@ -281,13 +301,16 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
         float Zob = 0;  // It is not used in the seed filter but needs to be
                         // fixed anyway...
 
-        seedsPerSpM.push_back(std::make_pair(
-            triplet.weight,
-            std::make_unique<const InternalSeed<external_spacepoint_t>>(
-                bottomSP, middleSP, topSP, Zob)));
+        candidates.emplace_back(bottomSP, middleSP, topSP, triplet.weight, Zob,
+                                false);
       }
-      int numQualitySeeds = 0;  // not used but needs to be fixed
-      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, numQualitySeeds,
+
+      std::sort(candidates.begin(), candidates.end(),
+                CandidatesForMiddleSp<const InternalSpacePoint<
+                    external_spacepoint_t>>::descendingByQuality);
+      std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
+      m_config.seedFilter->filterSeeds_1SpFixed(spacePointData, candidates,
+                                                numQualitySeeds,
                                                 std::back_inserter(outputVec));
     }
   }

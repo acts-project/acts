@@ -27,7 +27,7 @@ class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
   ///
   /// @note for facilitating configuration within the ACTS framework the world
   /// volume is cached
-  G4VPhysicalVolume* Construct() final override;
+  G4VPhysicalVolume* Construct() final;
 
  private:
   /// The DD4hep detector instrance

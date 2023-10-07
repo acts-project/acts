@@ -57,7 +57,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// @param pBounds is the planar bounds for the planar detector element
   /// @param thickness is the module thickness
   AlignableDetectorElement(std::shared_ptr<const Transform3> transform,
-                           std::shared_ptr<const PlanarBounds> pBounds,
+                           const std::shared_ptr<const PlanarBounds>& pBounds,
                            double thickness)
       : DetectorElementBase(),
         m_elementTransform(std::move(transform)),

@@ -34,6 +34,7 @@ option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
+option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx plugin" ON)
@@ -60,6 +61,7 @@ option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_BINARIES "Build the examples binaries (deprecated)" OFF)
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examples" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
@@ -110,12 +112,16 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
   OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
+  OR ACTS_BUILD_EXAMPLES_BINARIES
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
   ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
   ACTS_BUILD_EXAMPLES_EDM4HEP)
+set_option_if(
+    ACTS_BUILD_PLUGIN_GEANT4
+    ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)  
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
   ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
@@ -173,6 +179,7 @@ set(_acts_doxygen_version 1.9.4)
 set(_acts_eigen3_version 3.3.7)
 set(_acts_hepmc3_version 3.2.1)
 set(_acts_nlohmanjson_version 3.2.0)
+set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
@@ -180,7 +187,15 @@ set(_acts_tbb_version 2020.1)
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
     # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
-    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
+
+    # Enable both program_options and unit_test_framework to reduce complexity
+    # Also Cuda tests seem to use program_options
+    if( ACTS_BUILD_EXAMPLES_BINARIES OR ACTS_BUILD_ANALYSIS_APPS OR
+        ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
+      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
+    else()
+      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+    endif()
   else()
     add_subdirectory(thirdparty/boost)
   endif()
@@ -274,7 +289,7 @@ if(ACTS_BUILD_PLUGIN_JSON)
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX)
-  find_package(OnnxRuntime REQUIRED)
+  find_package(OnnxRuntime ${_acts_onnxruntime_version} REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_SYCL)
   find_package(SYCL REQUIRED)

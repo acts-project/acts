@@ -29,17 +29,14 @@ class AnnealingUtility {
 
   /// @brief The configuration struct
   struct Config {
-    // Config constructor with default temperature list: {64.,16.,4.,2.,1.5,1.}
-    Config(const std::vector<double>& temperatures = {64., 16., 4., 2., 1.5,
-                                                      1.})
-        : setOfTemperatures(temperatures) {}
+    Config();
 
     // Insensitivity of calculated weight at cutoff
     double cutOff{9.};
 
     // Set of temperatures, annealing starts at setOfTemperatures[0]
     // and anneals towards setOfTemperatures[last]
-    std::vector<double> setOfTemperatures;
+    std::vector<double> setOfTemperatures{64., 16., 4., 2., 1.5, 1.};
   };
 
   /// Constructor

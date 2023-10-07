@@ -5,7 +5,7 @@ target_link_libraries(
   ActsExampleTruthTracksDD4hep
   PRIVATE
     ActsExamplesRecTracksCommon 
-    ActsExamplesDetectorDD4hep)
+    ActsExamplesDD4hepDetectorWithOptions)
 
 add_executable(
   ActsExampleCKFTracksDD4hep
@@ -14,7 +14,7 @@ target_link_libraries(
   ActsExampleCKFTracksDD4hep
   PRIVATE
     ActsExamplesRecTracksCommon 
-    ActsExamplesDetectorDD4hep)
+    ActsExamplesDD4hepDetectorWithOptions)
 
 add_executable(
   ActsExampleSeedingDD4hep
@@ -23,7 +23,7 @@ target_link_libraries(
   ActsExampleSeedingDD4hep
   PRIVATE
     ActsExamplesRecTracksCommon
-    ActsExamplesDetectorDD4hep)
+    ActsExamplesDD4hepDetectorWithOptions)
 
 install(
   TARGETS

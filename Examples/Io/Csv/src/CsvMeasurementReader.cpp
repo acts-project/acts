@@ -39,6 +39,11 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");
   }
+
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+  m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
+  m_outputClusters.maybeInitialize(m_cfg.outputClusters);
 }
 
 std::string ActsExamples::CsvMeasurementReader::CsvMeasurementReader::name()
@@ -213,14 +218,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   }
 
   // Write the data to the EventStore
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
-  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
-                     std::move(measurementSimHitsMap));
-  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-  ctx.eventStore.add(m_cfg.outputSourceLinks + "__storage",
-                     std::move(sourceLinkStorage));
+  m_outputMeasurements(ctx, std::move(measurements));
+  m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
+  m_outputSourceLinks(ctx, std::move(sourceLinks));
   if (not clusters.empty()) {
-    ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
+    m_outputClusters(ctx, std::move(clusters));
   }
 
   return ActsExamples::ProcessCode::SUCCESS;

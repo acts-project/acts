@@ -145,19 +145,24 @@ class GeometryHierarchyMap {
     // manually iterate over identifier levels starting from the lowest
     if (id.sensitive() != 0u) {
       // all levels are valid; keep all bits set.
-      return allSet.value();
+      return allSet.setExtra(0u).value();
     }
     if (id.approach() != 0u) {
-      return allSet.setSensitive(0u).value();
+      return allSet.setExtra(0u).setSensitive(0u).value();
     }
     if (id.layer() != 0u) {
-      return allSet.setSensitive(0u).setApproach(0u).value();
+      return allSet.setExtra(0u).setSensitive(0u).setApproach(0u).value();
     }
     if (id.boundary() != 0u) {
-      return allSet.setSensitive(0u).setApproach(0u).setLayer(0u).value();
+      return allSet.setExtra(0u)
+          .setSensitive(0u)
+          .setApproach(0u)
+          .setLayer(0u)
+          .value();
     }
     if (id.volume() != 0u) {
-      return allSet.setSensitive(0u)
+      return allSet.setExtra(0u)
+          .setSensitive(0u)
           .setApproach(0u)
           .setLayer(0u)
           .setBoundary(0u)

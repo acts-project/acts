@@ -8,13 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
+#include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
 
 #include <random>
 
@@ -29,9 +30,9 @@ using namespace Acts::UnitLiterals;
 // Describes a component of a D-dimensional gaussian component
 template <int D>
 struct DummyComponent {
-  Acts::ActsScalar weight;
+  Acts::ActsScalar weight = 0;
   Acts::ActsVector<D> boundPars;
-  std::optional<Acts::ActsSymMatrix<D>> boundCov;
+  Acts::ActsSymMatrix<D> boundCov;
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -71,7 +72,7 @@ auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
   std::vector<MultiNormal> dists;
   std::vector<double> weights;
   for (const auto &cmp : cmps) {
-    dists.push_back(MultiNormal(cmp.boundPars, *cmp.boundCov));
+    dists.push_back(MultiNormal(cmp.boundPars, cmp.boundCov));
     weights.push_back(cmp.weight);
   }
 
@@ -204,6 +205,9 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
               detail::wrap_periodic(phi + dphi, -M_PI, 2 * M_PI);
           a.boundPars[eBoundTheta] = theta + dtheta;
 
+          // We don't look at covariance in this test
+          a.boundCov = BoundSymMatrix::Zero();
+
           cmps.push_back(a);
           ++p_it;
         }
@@ -211,9 +215,6 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
 
       const auto [mean_approx, cov_approx] =
           detail::combineGaussianMixture(cmps, proj, desc);
-
-      // We don't have a boundCovariance in this test
-      BOOST_CHECK(not cov_approx);
 
       const auto mean_ref = meanFromFree(cmps, surface);
 
@@ -227,13 +228,11 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   std::vector<DummyComponent<2>> cmps(2);
 
   cmps[0].boundPars << 1.0, 1.0;
-  cmps[0].boundCov = ActsSymMatrix<2>::Zero();
-  *cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
+  cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
   cmps[0].weight = 0.5;
 
   cmps[1].boundPars << -2.0, -2.0;
-  cmps[1].boundCov = ActsSymMatrix<2>::Zero();
-  *cmps[1].boundCov << 1.0, 1.0, 1.0, 2.0;
+  cmps[1].boundCov << 1.0, 1.0, 1.0, 2.0;
   cmps[1].weight = 0.5;
 
   const auto samples = sampleFromMultivariate(cmps, 10000, gen);
@@ -244,7 +243,7 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
       detail::combineGaussianMixture(cmps, Identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
-  CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
+  CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_with_data_circular) {
@@ -252,13 +251,11 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   std::vector<DummyComponent<2>> cmps(2);
 
   cmps[0].boundPars << 175_degree, 5_degree;
-  cmps[0].boundCov = ActsSymMatrix<2>::Zero();
-  *cmps[0].boundCov << 20_degree, 0.0, 0.0, 20_degree;
+  cmps[0].boundCov << 20_degree, 0.0, 0.0, 20_degree;
   cmps[0].weight = 0.5;
 
   cmps[1].boundPars << -175_degree, -5_degree;
-  cmps[1].boundCov = ActsSymMatrix<2>::Zero();
-  *cmps[1].boundCov << 20_degree, 20_degree, 20_degree, 40_degree;
+  cmps[1].boundCov << 20_degree, 20_degree, 20_degree, 40_degree;
   cmps[1].weight = 0.5;
 
   const auto samples = sampleFromMultivariate(cmps, 10000, gen);
@@ -280,7 +277,7 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
                                                    2 * M_PI)) < 1.e-1);
   BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[1], mean_test[1],
                                                    2 * M_PI)) < 1.e-1);
-  CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
+  CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_plane_surface) {
@@ -341,72 +338,4 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
 
   // Here we expect a very bad approximation
   test_surface(*surface, desc, p, 1.);
-}
-
-BOOST_AUTO_TEST_CASE(test_kl_mixture_reduction) {
-  auto meanAndSumOfWeights = [](const auto &cmps) {
-    const auto mean = std::accumulate(
-        cmps.begin(), cmps.end(), Acts::BoundVector::Zero().eval(),
-        [](auto sum, const auto &cmp) -> Acts::BoundVector {
-          return sum + cmp.weight * cmp.boundPars;
-        });
-
-    const double sumOfWeights = std::accumulate(
-        cmps.begin(), cmps.end(), 0.0,
-        [](auto sum, const auto &cmp) { return sum + cmp.weight; });
-
-    return std::make_tuple(mean, sumOfWeights);
-  };
-
-  // Do not bother with circular angles in this test
-  const auto desc = std::tuple<>{};
-
-  // Need this projection, since we need to write to the lvalue references which
-  // isn't possible through Identity / std::identity due to perfect forwarding
-  const auto proj = [](auto &a) -> decltype(auto) { return a; };
-
-  const std::size_t NComps = 4;
-  std::vector<DummyComponent<eBoundSize>> cmps;
-
-  for (auto i = 0ul; i < NComps; ++i) {
-    DummyComponent<eBoundSize> a;
-    a.boundPars = Acts::BoundVector::Zero();
-    a.boundCov = Acts::BoundSymMatrix::Identity();
-    a.weight = 1.0 / NComps;
-    cmps.push_back(a);
-  }
-
-  cmps[0].boundPars[eBoundQOverP] = 0.5_GeV;
-  cmps[1].boundPars[eBoundQOverP] = 1.5_GeV;
-  cmps[2].boundPars[eBoundQOverP] = 3.5_GeV;
-  cmps[3].boundPars[eBoundQOverP] = 4.5_GeV;
-
-  // Check start properties
-  const auto [mean0, sumOfWeights0] = meanAndSumOfWeights(cmps);
-
-  BOOST_CHECK_CLOSE(mean0[eBoundQOverP], 2.5_GeV, 1.e-8);
-  BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
-
-  // Reduce by factor of 2 and check if weights and QoP are correct
-  Acts::detail::reduceWithKLDistance(cmps, 2, proj, desc);
-
-  BOOST_CHECK(cmps.size() == 2);
-
-  std::sort(cmps.begin(), cmps.end(), [](const auto &a, const auto &b) {
-    return a.boundPars[eBoundQOverP] < b.boundPars[eBoundQOverP];
-  });
-  BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 1.0_GeV, 1.e-8);
-  BOOST_CHECK_CLOSE(cmps[1].boundPars[eBoundQOverP], 4.0_GeV, 1.e-8);
-
-  const auto [mean1, sumOfWeights1] = meanAndSumOfWeights(cmps);
-
-  BOOST_CHECK_CLOSE(mean1[eBoundQOverP], 2.5_GeV, 1.e-8);
-  BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
-
-  // Reduce by factor of 2 and check if weights and QoP are correct
-  Acts::detail::reduceWithKLDistance(cmps, 1, proj, desc);
-
-  BOOST_CHECK(cmps.size() == 1);
-  BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);
-  BOOST_CHECK_CLOSE(cmps[0].weight, 1.0, 1.e-8);
 }
