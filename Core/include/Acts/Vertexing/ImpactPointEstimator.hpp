@@ -40,7 +40,7 @@ struct ImpactParametersAndSigma {
 ///
 /// @brief Estimator for impact point calculations
 /// A description of the underlying mathematics can be found here:
-/// https://github.com/acts-project/acts/pull/2414
+/// https://github.com/acts-project/acts/pull/2506
 /// TODO: Upload reference at a better place
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
@@ -81,10 +81,6 @@ class ImpactPointEstimator {
     int maxIterations = 20;
     /// Desired precision of deltaPhi in Newton method
     double precision = 1.e-10;
-    /// Minimum q/p value
-    double minQoP = 1e-15;
-    /// Maximum curvature value
-    double maxRho = 1e+15;
   };
 
   /// @brief Constructor
@@ -147,6 +143,8 @@ class ImpactPointEstimator {
   /// corresponding 3D PCA. Returns also the momentum direction at the 3D PCA.
   /// The template parameter nDim determines whether we calculate the 3D
   /// distance (nDim = 3) or the 4D distance (nDim = 4) to the 3D PCA.
+  /// @note For straight tracks we use an analytical solution; for helical
+  /// tracks we use the Newton method.
   ///
   /// @tparam nDim Number of dimensions used to compute compatibility
   /// @note If nDim = 3 we only consider spatial dimensions; if nDim = 4, we
