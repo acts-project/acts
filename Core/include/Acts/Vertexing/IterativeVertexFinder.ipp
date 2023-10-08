@@ -317,7 +317,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
 
     // check if sufficiently compatible with last fitted vertex
     // (quite loose constraint)
-    if (chi2 < m_cfg.maximumChi2CutForSeeding) {
+    if (chi2 < m_cfg.maximumChi2cutForSeeding) {
       auto foundIter =
           std::find_if(seedTracks.begin(), seedTracks.end(),
                        [&trk](const auto seedTrk) { return trk == seedTrk; });

@@ -216,5 +216,21 @@ inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
   return vec4;
 }
 
+/// Calculate the incident angles of a vector with in a given reference frame
+/// @tparam Derived Eigen derived concrete type
+/// @param direction The crossing direction in the global frame
+/// @param globalToLocal Rotation from global to local frame
+/// @return The angles of incidence in the two normal planes
+inline std::pair<double, double> incidentAngles(
+    const Acts::Vector3& direction,
+    const Acts::RotationMatrix3& globalToLocal) {
+  Acts::Vector3 trfDir = globalToLocal * direction;
+  // The angles are defined with respect to the measurement axis
+  // i.e. "head-on" == pi/2, parallel = 0
+  double phi = std::atan2(trfDir[2], trfDir[0]);
+  double theta = std::atan2(trfDir[2], trfDir[1]);
+  return {phi, theta};
+}
+
 }  // namespace VectorHelpers
 }  // namespace Acts
