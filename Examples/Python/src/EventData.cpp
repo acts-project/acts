@@ -36,9 +36,20 @@ void addEventData(Context& ctx) {
                                     [](py::object /* self */) {
                                       return Acts::ParticleHypothesis::pion();
                                     })
-      .def_property_readonly_static("electron", [](py::object /* self */) {
-        return Acts::ParticleHypothesis::electron();
-      });
+      .def_property_readonly_static(
+          "electron",
+          [](py::object /* self */) {
+            return Acts::ParticleHypothesis::electron();
+          })
+      .def_property_readonly_static(
+          "geantino",
+          [](py::object /* self */) {
+            return Acts::ParticleHypothesis::geantino();
+          })
+      .def_property_readonly_static(
+          "chargedGeantino", [](py::object /* self */) {
+            return Acts::ParticleHypothesis::chargedGeantino();
+          });
 }
 
 }  // namespace Acts::Python
