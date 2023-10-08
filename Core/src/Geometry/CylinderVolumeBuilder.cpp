@@ -161,6 +161,15 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   wConfig.cVolumeConfig = analyzeContent(gctx, centralLayers, centralVolumes);
   wConfig.pVolumeConfig = analyzeContent(gctx, positiveLayers, {});  // TODO
 
+  bool hasLayers = wConfig.nVolumeConfig.present ||
+                   wConfig.cVolumeConfig.present ||
+                   wConfig.pVolumeConfig.present;
+
+  if (!hasLayers) {
+    ACTS_INFO("No layers present, returning nullptr");
+    return nullptr;
+  }
+
   std::string layerConfiguration = "|";
   if (wConfig.nVolumeConfig) {
     // negative layers are present
