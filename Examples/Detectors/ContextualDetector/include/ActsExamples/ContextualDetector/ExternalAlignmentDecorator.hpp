@@ -15,13 +15,7 @@
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <cstddef>
-#include <memory>
-#include <mutex>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace Acts {
@@ -29,7 +23,6 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 namespace Contextual {
 
@@ -44,6 +37,9 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
   struct Config : public AlignmentDecorator::Config {
     /// The trackng geometry
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
+    std::vector<MisalignmentStruct> misalignmentInstructions;
+    double translationSigma = 0.1; // SD - translation distribution
+    double rotationSigma = 0.1;// SD - rotation distribution
   };
 
   /// Constructor
@@ -56,7 +52,7 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
           "ExternalAlignmentDecorator", Acts::Logging::INFO));
 
   /// Virtual destructor
-  ~ExternalAlignmentDecorator() override = default;
+  virtual ~ExternalAlignmentDecorator() = default;
 
   /// @brief decorates (adds, modifies) the AlgorithmContext
   /// with a geometric rotation per event
@@ -65,10 +61,10 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
   /// added in order.
   ///
   /// @param context the bare (or at least non-const) Event context
-  ProcessCode decorate(AlgorithmContext& context) override;
+  ProcessCode decorate(AlgorithmContext& context) final override;
 
   /// @brief decorator name() for screen output
-  const std::string& name() const override { return m_name; }
+  const std::string& name() const final override { return m_name; }
 
  private:
   Config m_cfg;                                  ///< the configuration class

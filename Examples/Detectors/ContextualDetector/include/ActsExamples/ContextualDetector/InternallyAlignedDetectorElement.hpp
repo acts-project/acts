@@ -25,13 +25,20 @@ namespace ActsExamples {
 
 namespace Contextual {
 
+
+  //Struct that takes care of misalignment
+struct AlignmentMisalignment {
+    Acts::Translation3 translation;  
+    Acts::Rotation3 rotation;       
+};
+
 /// @class InternallyAlignedDetectorElement extends GenericDetectorElement
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
 ///
 /// The AlignedDetectorElement demonstrates how a GeometryContext
-/// can be used if it carries an interval of validity concept
+/// can be used if it carries an intervall of validity concept
 ///
 /// The nominal transform is only used to once create the alignment
 /// store and then in a contextual call the actual detector element
@@ -55,7 +62,7 @@ class InternallyAlignedDetectorElement
   ///
   /// @note this is called from the surface().transform(gctx)
   const Acts::Transform3& transform(
-      const Acts::GeometryContext& gctx) const override;
+      const Acts::GeometryContext& gctx) const final override;
 
   /// Return the nominal local to global transform
   ///
@@ -66,15 +73,22 @@ class InternallyAlignedDetectorElement
   /// Return local to global transform associated with this identifier
   ///
   /// @param alignedTransform is a new transform
-  /// @param iov is the batch for which it is meant
+  /// @oaram iov is the batch for which it is meant
   void addAlignedTransform(const Acts::Transform3& alignedTransform,
                            unsigned int iov);
 
   void clearAlignedTransform(unsigned int iov);
 
+ // Adding function that preforms misalignment
+  void applyMisalignment(const AlignmentMisalignment& misalignment);
+
  private:
   std::unordered_map<unsigned int, Acts::Transform3> m_alignedTransforms;
   mutable std::mutex m_alignmentMutex;
+
+
+  // Storing misalignment information
+  AlignmentMisalignment m_misalignment;
 };
 
 inline const Acts::Transform3& InternallyAlignedDetectorElement::transform(
@@ -98,6 +112,12 @@ inline const Acts::Transform3& InternallyAlignedDetectorElement::transform(
         "early (--align-flushsize too low)"};
   }
   return aTransform->second;
+
+  // Preforming misalignment here
+  Acts::Transform3 transformedAlignment = aTransform->second;
+  transformedAlignment.translation() += m_misalignment.translation;
+  transformedAlignment.rotation() *= m_misalignment.rotation;
+  return transformedAlignment;
 }
 
 inline const Acts::Transform3&
@@ -120,6 +140,13 @@ inline void InternallyAlignedDetectorElement::clearAlignedTransform(
     m_alignedTransforms.erase(it);
   }
 }
+
+// Adding function that sets up misalignment 
+inline void InternallyAlignedDetectorElement::applyMisalignment(
+    const AlignmentMisalignment& misalignment) {
+  m_misalignment = misalignment;
+}
+
 
 }  // namespace Contextual
 }  // end of namespace ActsExamples

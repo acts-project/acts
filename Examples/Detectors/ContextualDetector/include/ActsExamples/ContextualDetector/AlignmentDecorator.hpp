@@ -30,6 +30,11 @@ namespace Contextual {
 /// geometry context carries the full transform store (payload)
 class AlignmentDecorator : public IContextDecorator {
  public:
+ /// @brief struct for misalignment (translation+rotation)
+  struct MisalignmentStruct {
+    Acts::Vector3 translation;  // t_x,t_y,t_z
+    Acts::Vector3 rotation;     // eta_x,eta_y,eta_z
+  };
   /// @brief nested configuration struct
   struct Config {
     /// Alignment frequency - every X events
@@ -50,40 +55,84 @@ class AlignmentDecorator : public IContextDecorator {
     double aSigmaZ = 0.;  // rotate around local z Axis
 
     bool firstIovNominal = false;
+
+  
+    std::vector<MisalignmentStruct> misalignmentInstructions;
+    double tranSigma = 0.1; // STD - translation distribution
+    double rotSigma = 0.1;// STD - rotation distribution
+
+    // taking care of transformations before misalignment (for each event)
+    // The idea is to: calculate the transform deltas by comparing the pre-misalignment transforms with the transformed (misaligned) ones
+    std::map<unsigned int, Acts::Transform3> preMisalignmentTransforms;
   };
 
  protected:
-  static void applyTransform(Acts::Transform3& trf, const Config& cfg,
+//   //static void applyTransform(Acts::Transform3& trf, const Config& cfg,
+//                              RandomEngine& rng, unsigned int iov) {
+//     std::normal_distribution<double> gauss(0., 1.);
+//     if (iov != 0 or not cfg.firstIovNominal) {
+//       // the shifts in x, y, z
+//       double tx = cfg.gSigmaX != 0 ? cfg.gSigmaX * gauss(rng) : 0.;
+//       double ty = cfg.gSigmaY != 0 ? cfg.gSigmaY * gauss(rng) : 0.;
+//       double tz = cfg.gSigmaZ != 0 ? cfg.gSigmaZ * gauss(rng) : 0.;
+//       // Add a translation - if there is any
+//       if (tx != 0. or ty != 0. or tz != 0.) {
+//         const auto& tMatrix = trf.matrix();
+//         auto colX = tMatrix.block<3, 1>(0, 0).transpose();
+//         auto colY = tMatrix.block<3, 1>(0, 1).transpose();
+//         auto colZ = tMatrix.block<3, 1>(0, 2).transpose();
+//         Acts::Vector3 newCenter = tMatrix.block<3, 1>(0, 3).transpose() +
+//                                   tx * colX + ty * colY + tz * colZ;
+//         trf.translation() = newCenter;
+//       }
+//       // now modify it - rotation around local X
+//       if (cfg.aSigmaX != 0.) {
+//         trf *=
+//             Acts::AngleAxis3(cfg.aSigmaX * gauss(rng), Acts::Vector3::UnitX());
+//       }
+//       if (cfg.aSigmaY != 0.) {
+//         trf *=
+//             Acts::AngleAxis3(cfg.aSigmaY * gauss(rng), Acts::Vector3::UnitY());
+//       }
+//       if (cfg.aSigmaZ != 0.) {
+//         trf *=
+//             Acts::AngleAxis3(cfg.aSigmaZ * gauss(rng), Acts::Vector3::UnitZ());
+//       }
+//     }
+//   }
+// };
+// }  // namespace Contextual
+// }  // namespace ActsExamples
+
+static void applyTransform(Acts::Transform3& trf, const Config& cfg,
                              RandomEngine& rng, unsigned int iov) {
-    std::normal_distribution<double> gauss(0., 1.);
-    if (iov != 0 or not cfg.firstIovNominal) {
-      // the shifts in x, y, z
-      double tx = cfg.gSigmaX != 0 ? cfg.gSigmaX * gauss(rng) : 0.;
-      double ty = cfg.gSigmaY != 0 ? cfg.gSigmaY * gauss(rng) : 0.;
-      double tz = cfg.gSigmaZ != 0 ? cfg.gSigmaZ * gauss(rng) : 0.;
-      // Add a translation - if there is any
-      if (tx != 0. or ty != 0. or tz != 0.) {
-        const auto& tMatrix = trf.matrix();
-        auto colX = tMatrix.block<3, 1>(0, 0).transpose();
-        auto colY = tMatrix.block<3, 1>(0, 1).transpose();
-        auto colZ = tMatrix.block<3, 1>(0, 2).transpose();
-        Acts::Vector3 newCenter = tMatrix.block<3, 1>(0, 3).transpose() +
-                                  tx * colX + ty * colY + tz * colZ;
-        trf.translation() = newCenter;
-      }
-      // now modify it - rotation around local X
-      if (cfg.aSigmaX != 0.) {
-        trf *=
-            Acts::AngleAxis3(cfg.aSigmaX * gauss(rng), Acts::Vector3::UnitX());
-      }
-      if (cfg.aSigmaY != 0.) {
-        trf *=
-            Acts::AngleAxis3(cfg.aSigmaY * gauss(rng), Acts::Vector3::UnitY());
-      }
-      if (cfg.aSigmaZ != 0.) {
-        trf *=
-            Acts::AngleAxis3(cfg.aSigmaZ * gauss(rng), Acts::Vector3::UnitZ());
-      }
+    if (iov < cfg.misalignmentInstructions.size()) {
+      const MisalignmentStruct& misalignment = cfg.misalignmentInstructions[iov];
+
+      // place where we take care of transformations before misalignment (for each event)
+      cfg.preMisalignmentTransforms[iov] = trf;
+
+      // for SD apply random translation
+      std::normal_distribution<double> translationDist(0.0, cfg.translationSigma);
+      double tx = translationDist(rng);
+      double ty = translationDist(rng);
+      double tz = translationDist(rng);
+
+      // apply the modified translations
+      trf.translation().x() += tx;
+      trf.translation().y() += ty;
+      trf.translation().z() += tz;
+
+      // for SD apply random rotation 
+      std::normal_distribution<double> rotationDist(0.0, cfg.rotationSigma);
+      double rx = rotationDist(rng);
+      double ry = rotationDist(rng);
+      double rz = rotationDist(rng);
+
+      // apply the modified rotations
+      trf.rotate(Eigen::AngleAxisd(rx, Eigen::Vector3d::UnitX()));
+      trf.rotate(Eigen::AngleAxisd(ry, Eigen::Vector3d::UnitY()));
+      trf.rotate(Eigen::AngleAxisd(rz, Eigen::Vector3d::UnitZ()));
     }
   }
 };

@@ -17,6 +17,7 @@
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
 #include <map>
+#include <random> 
 
 namespace ActsExamples {
 
@@ -38,13 +39,19 @@ namespace Contextual {
 /// In this simple implementation, it does rely on the Identifier
 /// to be orderded from 0 to N-1, as the identifier is simply taken
 /// as a vector index for the alignment store
+
+// struct that takes care of misalignment (random translation + rotation)
+struct AlignmentMisalignment {
+    Acts::Translation3 translation; 
+    Acts::Rotation3 rotation;        
+};
 class ExternallyAlignedDetectorElement
     : public Generic::GenericDetectorElement {
  public:
   struct AlignmentStore {
     // GenericDetector identifiers are sequential
     std::vector<Acts::Transform3> transforms;
-    size_t lastAccessed = 0;
+    size_t lastAccessed;
   };
 
   /// @class ContextType
@@ -52,9 +59,19 @@ class ExternallyAlignedDetectorElement
   struct ContextType {
     // GenericDetector identifiers are an integer sequence, so vector is fine!
     std::shared_ptr<const AlignmentStore> alignmentStore{nullptr};
+    AlignmentMisalignment misalignment;  // misalignment
   };
 
   using Generic::GenericDetectorElement::GenericDetectorElement;
+  ExternallyAlignedDetectorElement(
+      const Acts::GeometryIdentifier& id,
+      const Acts::Surface& surface,
+      AlignmentMisalignment misalignment = AlignmentMisalignment())
+      : Generic::GenericDetectorElement(id, surface),
+        m_alignmentStore(std::make_shared<AlignmentStore>()),
+        m_misalignment(misalignment) {}
+
+
 
   /// Return local to global transform associated with this identifier
   ///
@@ -62,8 +79,16 @@ class ExternallyAlignedDetectorElement
   ///
   /// @note this is called from the surface().transform(gctx)
   const Acts::Transform3& transform(
-      const Acts::GeometryContext& gctx) const override;
+      const Acts::GeometryContext& gctx) const final override;
 };
+
+
+// Adding two private variable to store alignment and misalignment information for instances
+ private:
+  std::shared_ptr<AlignmentStore> m_alignmentStore;
+  AlignmentMisalignment m_misalignment;
+};
+
 
 inline const Acts::Transform3& ExternallyAlignedDetectorElement::transform(
     const Acts::GeometryContext& gctx) const {
@@ -83,6 +108,16 @@ inline const Acts::Transform3& ExternallyAlignedDetectorElement::transform(
   assert(idValue < alignContext.alignmentStore->transforms.size());
   return alignContext.alignmentStore->transforms[idValue];
 }
+
+// At this point, misalignment is preformed
+  Acts::Transform3 transformedAlignment =
+      alignContext.alignmentStore->transforms[idValue];
+  transformedAlignment.translation() += alignContext.misalignment.translation;
+  transformedAlignment.rotation() *= alignContext.misalignment.rotation;
+
+  return transformedAlignment;
+}
+
 
 }  // end of namespace Contextual
 }  // end of namespace ActsExamples

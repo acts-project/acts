@@ -14,21 +14,14 @@
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
-#include <cstddef>
-#include <memory>
 #include <mutex>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 namespace Contextual {
-class InternallyAlignedDetectorElement;
 
 /// @brief A mockup service that rotates the modules in a
 /// simple tracking geometry
@@ -47,6 +40,11 @@ class InternalAlignmentDecorator : public AlignmentDecorator {
     DetectorStore detectorStore;
   };
 
+// Adding definition of applyMisalignment
+void applyMisalignment(std::shared_ptr<InternallyAlignedDetectorElement>& element,
+                       const AlignmentMisalignment& misalignment);
+
+
   /// Constructor
   ///
   /// @param cfg Configuration struct
@@ -57,7 +55,7 @@ class InternalAlignmentDecorator : public AlignmentDecorator {
                                                         Acts::Logging::INFO));
 
   /// Virtual destructor
-  ~InternalAlignmentDecorator() override = default;
+  virtual ~InternalAlignmentDecorator() = default;
 
   /// @brief decorates (adds, modifies) the AlgorithmContext
   /// with a geometric rotation per event
@@ -66,10 +64,10 @@ class InternalAlignmentDecorator : public AlignmentDecorator {
   /// added in order.
   ///
   /// @param context the bare (or at least non-const) Event context
-  ProcessCode decorate(AlgorithmContext& context) override;
+  ProcessCode decorate(AlgorithmContext& context) final override;
 
   /// @brief decorator name() for screen output
-  const std::string& name() const override { return m_name; }
+  const std::string& name() const final override { return m_name; }
 
  private:
   Config m_cfg;                                  ///< the configuration class
@@ -86,6 +84,24 @@ class InternalAlignmentDecorator : public AlignmentDecorator {
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
+
+
+   // Struct that takes care of misalignment (random translation + rotation)
+  struct AlignmentMisalignment {
+    Acts::Translation3 translation; 
+    Acts::Rotation3 rotation;       
+  };
+
+// Adding function that generates misalignment
+  AlignmentMisalignment generateMisalignment();
+
+  // Adding function that applies  misalignment and fills transform deltas
+  void applyMisalignment(std::shared_ptr<InternallyAlignedDetectorElement>& element,
+                         const AlignmentMisalignment& misalignment);
+
+
+  AlignmentMisalignment m_alignmentMisalignment;
 };
+
 }  // namespace Contextual
 }  // namespace ActsExamples
