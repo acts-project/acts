@@ -147,8 +147,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     if (!result.ok()) {
       m_nFailedSeeds++;
-      ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
-                                                    << result.error());
+      ACTS_ERROR("Track finding failed for seed " << iseed << " with error"
+                                                  << result.error());
       continue;
     }
 

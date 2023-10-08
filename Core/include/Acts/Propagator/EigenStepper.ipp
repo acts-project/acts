@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 template <typename E, typename A>
@@ -186,7 +187,9 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return success(error_estimate <= state.options.tolerance);
   };
 
-  double h = state.stepping.stepSize.value() * state.options.direction;
+  const double initialH =
+      state.stepping.stepSize.value() * state.options.direction;
+  double h = initialH;
   size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
@@ -256,7 +259,13 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
                std::sqrt(std::sqrt(static_cast<float>(
                    state.options.tolerance / std::abs(error_estimate))))),
       4.0f);
-  state.stepping.stepSize.setAccuracy(std::abs(h * stepSizeScaling));
+  const double nextAccuracy = std::abs(h * stepSizeScaling);
+  const double previousAccuracy =
+      std::abs(state.stepping.stepSize.value(ConstrainedStep::accuracy));
+  const double initialStepLength = std::abs(initialH);
+  if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
+    state.stepping.stepSize.setAccuracy(nextAccuracy);
+  }
   state.stepping.stepSize.nStepTrials = nStepTrials;
 
   return h;
