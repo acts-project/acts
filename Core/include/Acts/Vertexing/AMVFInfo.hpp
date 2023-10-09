@@ -25,22 +25,24 @@ struct VertexInfo {
   VertexInfo(const Acts::Vertex<input_track_t>& vtx, const Acts::Vector4& pos)
       : constraintVertex(vtx),
         linPoint(pos),
-        oldPosition(pos),
+        position(pos),
         seedPosition(pos) {}
 
-  // The constraint vertex
+  // Vertex constraint
   Acts::Vertex<input_track_t> constraintVertex;
 
-  // The linearization point
+  // Point where all associated tracks were linearized (?)
   Acts::Vector4 linPoint{Acts::Vector4::Zero()};
 
-  // Old position from last iteration
-  Acts::Vector4 oldPosition{Acts::Vector4::Zero()};
+  // Current vertex position
+  Acts::Vector4 position{Acts::Vector4::Zero()};
 
-  // The seed position
+  // The seed position (i.e., the first estimate for the vertex position as
+  // obtained by the vertex seed finder)
   Acts::Vector4 seedPosition{Acts::Vector4::Zero()};
 
-  // Needs relinearization bool
+  // If set to true, the associated tracks need to be relinearized at a
+  // different point in space
   bool relinearize = true;
 
   // Vector of all tracks that are currently assigned to vertex
