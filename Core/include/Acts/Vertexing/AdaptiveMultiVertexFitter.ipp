@@ -53,6 +53,10 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
          (!state.annealingState.equilibriumReached or !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
     for (auto vtx : state.vertexCollection) {
+      if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
+        return VertexingError::NoCovariance;
+      }
+
       VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
       vtxInfo.relinearize = false;
       // Store old position of vertex, i.e. seed position
@@ -69,21 +73,22 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       if (xyDist > m_cfg.maxDistToLinPoint) {
         // Set flag for relinaerization
         vtxInfo.relinearize = true;
-        // Recalculate the tracks impact parameters at the current vertex
+        // Recalculate the track impact parameters at the current vertex
         // position
         prepareVertexForFit(state, vtx, vertexingOptions);
       }
-      // Determine if constraint vertex exist
-      if (state.vtxInfoMap[vtx].constraintVertex.fullCovariance() !=
-          SquareMatrix4::Zero()) {
-        vtx->setFullPosition(
-            state.vtxInfoMap[vtx].constraintVertex.fullPosition());
-        vtx->setFitQuality(state.vtxInfoMap[vtx].constraintVertex.fitQuality());
-        vtx->setFullCovariance(
-            state.vtxInfoMap[vtx].constraintVertex.fullCovariance());
-      } else if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
-        return VertexingError::NoCovariance;
+
+      // Check if we use the constraint during the vertex fit
+      // TODO seems strange to set the vtx position to the constraint position
+      // at each iteration
+      if (vertexingOptions.useConstraintInFit) {
+        Acts::Vertex<input_track_t> constraint =
+            state.vtxInfoMap[vtx].constraint;
+        vtx->setFullPosition(constraint.fullPosition());
+        vtx->setFitQuality(constraint.fitQuality());
+        vtx->setFullCovariance(constraint.fullCovariance());
       }
+      // TODO understand why we calculate a weight for the vertex
       double weight =
           1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
       vtx->setFullCovariance(vtx->fullCovariance() * weight);
@@ -125,9 +130,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
 
   std::vector<Vertex<input_track_t>*> verticesToFit;
 
-  // Save the 3D impact parameters of all tracks associated with newVertex. Note
-  // that the impact parameters are calculated wrt the position of the vertex
-  // seed.
+  // Save the 3D impact parameters of all tracks associated with newVertex.
   auto res = prepareVertexForFit(state, &newVertex, vertexingOptions);
   if (!res.ok()) {
     return res.error();
@@ -223,8 +226,8 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
 
-  // Loop over tracks at current vertex and
-  // estimate compatibility with vertex
+  // Loop over all tracks that are associated with vtx and estimate their
+  // compatibility
   for (const auto& trk : vtxInfo.trackLinks) {
     auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
     // Recover from cases where linearization point != 0 but

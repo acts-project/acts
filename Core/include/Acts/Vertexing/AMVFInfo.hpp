@@ -22,16 +22,14 @@ template <typename input_track_t>
 struct VertexInfo {
   VertexInfo() = default;
 
-  VertexInfo(const Acts::Vertex<input_track_t>& vtx, const Acts::Vector4& pos)
-      : constraintVertex(vtx),
-        linPoint(pos),
-        position(pos),
-        seedPosition(pos) {}
+  VertexInfo(const Acts::Vertex<input_track_t>& constr,
+             const Acts::Vector4& pos)
+      : constraint(constr), linPoint(pos), position(pos), seedPosition(pos) {}
 
   // Vertex constraint
-  Acts::Vertex<input_track_t> constraintVertex;
+  Acts::Vertex<input_track_t> constraint;
 
-  // Point where all associated tracks were linearized (?)
+  // Point where all associated tracks are linearized (?)
   Acts::Vector4 linPoint{Acts::Vector4::Zero()};
 
   // Current vertex position

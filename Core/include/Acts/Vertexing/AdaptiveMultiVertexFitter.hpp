@@ -182,8 +182,8 @@ class AdaptiveMultiVertexFitter {
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
-  /// 1. The 3D impacts parameters wrt the seed position of newVertex are
-  /// calculated for all tracks associated with newVertex.
+  /// 1. The 3D impacts parameters are calculated for all tracks associated
+  /// with newVertex.
   /// 2. A list of all vertices that are connected with newVertex via shared
   /// tracks is created. It also considers indirect connections (e.g., vertex A
   /// which shares a track with vertex B which, in turn, shares a track with
@@ -240,9 +240,7 @@ class AdaptiveMultiVertexFitter {
 
   /// @brief 1) Calls ImpactPointEstimator::estimate3DImpactParameters
   /// for all tracks that are associated with vtx (i.e., all elements
-  /// of the trackLinks vector in the VertexInfo of vtx). Note that the
-  /// we use the vertex seed position rather than the current vertex
-  /// position to calculate the impact parameters.
+  /// of the trackLinks vector in the VertexInfo of vtx).
   /// 2) Saves the 3D impact parameters in the VertexInfo of vtx.
   ///
   /// @param state Vertex fitter state
