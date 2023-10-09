@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -49,45 +49,44 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
   unsigned int nIter = 0;
 
   // Start iterating
-  while (nIter < m_cfg.maxIterations &&
-         (!state.annealingState.equilibriumReached || !isSmallShift)) {
+  while (nIter < m_cfg.maxIterations and
+         (!state.annealingState.equilibriumReached or !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
-    for (auto currentVtx : state.vertexCollection) {
-      VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
-      currentVtxInfo.relinearize = false;
+    for (auto vtx : state.vertexCollection) {
+      VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
+      vtxInfo.relinearize = false;
       // Store old position of vertex, i.e. seed position
       // in case of first iteration or position determined
       // in previous iteration afterwards
-      currentVtxInfo.oldPosition = currentVtx->fullPosition();
+      vtxInfo.oldPosition = vtx->fullPosition();
 
-      Vector4 dist = currentVtxInfo.oldPosition - currentVtxInfo.linPoint;
+      Vector4 dist = vtxInfo.oldPosition - vtxInfo.linPoint;
       double perpDist = std::hypot(dist[0], dist[1]);
       // Determine if relinearization is needed
       if (perpDist > m_cfg.maxDistToLinPoint) {
         // Relinearization needed, distance too big
-        currentVtxInfo.relinearize = true;
+        vtxInfo.relinearize = true;
         // Prepare for fit with new vertex position
-        prepareVertexForFit(state, currentVtx, vertexingOptions);
+        prepareVertexForFit(state, vtx, vertexingOptions);
       }
       // Determine if constraint vertex exist
-      if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
+      if (state.vtxInfoMap[vtx].constraintVertex.fullCovariance() !=
           SquareMatrix4::Zero()) {
-        currentVtx->setFullPosition(
-            state.vtxInfoMap[currentVtx].constraintVertex.fullPosition());
-        currentVtx->setFitQuality(
-            state.vtxInfoMap[currentVtx].constraintVertex.fitQuality());
-        currentVtx->setFullCovariance(
-            state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance());
-      } else if (currentVtx->fullCovariance() == SquareMatrix4::Zero()) {
+        vtx->setFullPosition(
+            state.vtxInfoMap[vtx].constraintVertex.fullPosition());
+        vtx->setFitQuality(state.vtxInfoMap[vtx].constraintVertex.fitQuality());
+        vtx->setFullCovariance(
+            state.vtxInfoMap[vtx].constraintVertex.fullCovariance());
+      } else if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
         return VertexingError::NoCovariance;
       }
       double weight =
           1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
-      currentVtx->setFullCovariance(currentVtx->fullCovariance() * weight);
+      vtx->setFullCovariance(vtx->fullCovariance() * weight);
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
-      setAllVertexCompatibilities(state, currentVtx, vertexingOptions);
+      setAllVertexCompatibilities(state, vtx, vertexingOptions);
     }  // End loop over vertex collection
 
     // Now after having estimated all compatibilities of all tracks at
@@ -216,33 +215,31 @@ template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(
-        State& state, Vertex<input_track_t>* currentVtx,
+        State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
-  VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
+  VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
 
   // Loop over tracks at current vertex and
   // estimate compatibility with vertex
-  for (const auto& trk : currentVtxInfo.trackLinks) {
-    auto& trkAtVtx =
-        state.tracksAtVerticesMap.at(std::make_pair(trk, currentVtx));
+  for (const auto& trk : vtxInfo.trackLinks) {
+    auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
     // Recover from cases where linearization point != 0 but
     // more tracks were added later on
-    if (currentVtxInfo.impactParams3D.find(trk) ==
-        currentVtxInfo.impactParams3D.end()) {
+    if (vtxInfo.impactParams3D.find(trk) == vtxInfo.impactParams3D.end()) {
       auto res = m_cfg.ipEst.estimate3DImpactParameters(
           vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-          m_extractParameters(*trk),
-          VectorHelpers::position(currentVtxInfo.linPoint), state.ipState);
+          m_extractParameters(*trk), VectorHelpers::position(vtxInfo.linPoint),
+          state.ipState);
       if (!res.ok()) {
         return res.error();
       }
       // Set impactParams3D for current trackAtVertex
-      currentVtxInfo.impactParams3D.emplace(trk, res.value());
+      vtxInfo.impactParams3D.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.template getVertexCompatibility<3>(
-        vertexingOptions.geoContext, &(currentVtxInfo.impactParams3D.at(trk)),
-        VectorHelpers::position(currentVtxInfo.oldPosition));
+        vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
+        VectorHelpers::position(vtxInfo.oldPosition));
     if (!compRes.ok()) {
       return compRes.error();
     }
@@ -257,13 +254,13 @@ Acts::Result<void> Acts::
         State& state, const linearizer_t& linearizer,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
-    VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[vtx];
+    VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
 
     const std::shared_ptr<PerigeeSurface> vtxPerigeeSurface =
         Surface::makeShared<PerigeeSurface>(
             VectorHelpers::position(state.vtxInfoMap[vtx].oldPosition));
 
-    for (const auto& trk : currentVtxInfo.trackLinks) {
+    for (const auto& trk : vtxInfo.trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
 
       // Set trackWeight for current track
