@@ -61,16 +61,16 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       vtxInfo.position = vtx->fullPosition();
 
       // Calculate the x-y-distance between the current vertex position and the
-      // linearization point of the track. If it is too large, we perform a
-      // relinearization.
+      // linearization point of the track. If it is too large, we relinearize
+      // the tracks and recalculate their 3D impact parameters.
       ActsVector<2> xyDiff = vtxInfo.position.template head<2>() -
                              vtxInfo.linPoint.template head<2>();
       double xyDist = std::hypot(xyDiff[0], xyDiff[1]);
-      // Determine if relinearization is needed
       if (xyDist > m_cfg.maxDistToLinPoint) {
-        // Relinearization needed, distance too big
+        // Set flag for relinaerization
         vtxInfo.relinearize = true;
-        // Prepare for fit with new vertex position
+        // Recalculate the tracks impact parameters at the current vertex
+        // position
         prepareVertexForFit(state, vtx, vertexingOptions);
       }
       // Determine if constraint vertex exist
