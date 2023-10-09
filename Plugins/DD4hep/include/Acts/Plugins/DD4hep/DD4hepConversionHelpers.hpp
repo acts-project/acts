@@ -149,7 +149,7 @@ std::vector<value_type> extractSeries(const dd4hep::DetElement& dd4hepElement,
 /// @param bname The base name attribute of the variant parameter pack
 /// @param unitConversion is a conversion factor DD4hep -> ACTS
 ///
-/// @returna transform extracted from parameters
+/// @return a transform extracted from parameters
 inline Transform3 extractTransform(const dd4hep::DetElement& dd4hepElement,
                                    const std::string& bname,
                                    const ActsScalar& unitConversion = 1.) {
