@@ -74,7 +74,7 @@ struct AlignmentOptions {
   // The detector elements to be aligned
   std::vector<Acts::DetectorElementBase*> alignedDetElements;
 
-  // The alignment tolerance to determine if the alignment is averaged
+  // The alignment tolerance to determine if the alignment is covered
   double averageChi2ONdfCutOff = 0.5;
 
   // The delta of average chi2/ndf within a couple of iterations to determine if

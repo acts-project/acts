@@ -756,7 +756,7 @@ class KalmanFitter {
         } else {
           // Update the stepping state with filtered parameters
           ACTS_VERBOSE(
-              "Backward Filtering step successful, updated parameters are:\n"
+              "Backward filtering step successful, updated parameters are:\n"
               << trackStateProxy.filtered().transpose());
 
           // Fill the smoothed parameter for the existing track state
