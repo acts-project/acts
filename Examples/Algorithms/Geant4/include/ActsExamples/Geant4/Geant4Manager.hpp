@@ -52,7 +52,7 @@ struct Geant4Handle {
   /// Set logging consistently across common Geant4 modules
   ///
   /// Convenience method which calls into Geant4Manager
-  void tweekLogging(int level) const;
+  void tweakLogging(int level) const;
 };
 
 /// Allows easy instantiation of a Geant4Handle object
@@ -61,7 +61,9 @@ class Geant4Manager {
   static Geant4Manager &instance();
 
   /// Set logging consistently across common Geant4 modules
-  static void tweekLogging(G4RunManager &runManager, int level);
+  static void tweakLogging(G4RunManager &runManager, int level);
+
+  std::shared_ptr<Geant4Handle> currentHandle() const;
 
   /// This can only be called once due to Geant4 limitations
   std::shared_ptr<Geant4Handle> createHandle(int logLevel,
