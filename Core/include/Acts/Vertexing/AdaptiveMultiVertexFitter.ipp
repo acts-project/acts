@@ -139,7 +139,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
   // tracks and/or other vertices).
   while (!lastIterAddedVertices.empty()) {
     for (auto& lastIterAddedVertex : lastIterAddedVertices) {
-      // Loop over all tracks at the current vtx
+      // Loop over all tracks at lastIterAddedVertex
       const std::vector<const input_track_t*>& trks =
           state.vtxInfoMap[lastIterAddedVertex].trackLinks;
       for (const auto& trk : trks) {
@@ -159,7 +159,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
 
             // Collect vertices that were added this iteration
             if (vtxToFit != lastIterAddedVertex) {
-              currentIterAddedVertices.push_back(newVtxIter);
+              currentIterAddedVertices.push_back(vtxToFit);
             }
           }
         }  // End for loop over range of associated vertices
@@ -193,12 +193,12 @@ Acts::Result<void> Acts::
     AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
-  // The current vertex info object
+  // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
-  // The seed position
+  // Position of the vertex seed
   const Vector3& seedPos = vtxInfo.seedPosition.template head<3>();
 
-  // Loop over all tracks at current vertex
+  // Loop over all tracks at the vertex
   for (const auto& trk : vtxInfo.trackLinks) {
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
@@ -206,7 +206,7 @@ Acts::Result<void> Acts::
     if (!res.ok()) {
       return res.error();
     }
-    // Set impactParams3D for current trackAtVertex
+    // Save 3D impact parameters of the track
     vtxInfo.impactParams3D.emplace(trk, res.value());
   }
   return {};

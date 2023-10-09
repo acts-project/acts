@@ -167,12 +167,12 @@ class AdaptiveMultiVertexFitter {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
-  /// @brief The actual fit function, performs a simultaneous
-  /// fit of all vertices in `verticesToFit` by invoking `fitImpl`
+  /// @brief Performs a simultaneous fit of all vertices in `verticesToFit`
+  /// by invoking `fitImpl`.
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   /// @param verticesToFit Vector containing all vertices to be fitted
-  /// @param linearizer The track linearizer
+  /// @param linearizer Track linearizer
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
@@ -181,26 +181,18 @@ class AdaptiveMultiVertexFitter {
       const Linearizer_t& linearizer,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
-  /// @brief Adds new vertex to an existing multi-vertex fit
-  /// and fits everything together (by invoking the fit_impl method):
-  /// 1. The new vertex is added to the fit: all associated tracks get
-  /// initialized, i.e. ParamsAtIP3d are created (from ImpactPointEstimator)
-  /// to be later able to estimate in a fast way the compatibility of the tracks
-  /// to their respective vertices.
-  /// 2. All tracks belonging to the new vertex are scanned and all the vertices
-  ///  which share tracks with the new vertex to be fit are also added to the
-  ///  fit.
-  /// 3. The multivertex fit is performed with all involved vertices.
+  /// @brief Adds a new vertex to an existing multi-vertex fit.
+  /// 1. The 3D impacts parameters wrt the seed position of newVertex are
+  /// calculated for all tracks associated with newVertex.
+  /// 2. A list of all vertices that are connected with newVertex via shared
+  /// tracks is created. It also considers indirect connections (e.g., vertex A
+  /// which shares a track with vertex B which, in turn, shares a track with
+  /// newVertex).
+  /// 3. The multivertex fit is performed for all vertices on said list.
   ///
-  /// This has the advantage that only vertices that are affected by adding the
-  /// new vertex are refitted.
-  ///
-  /// Note: newVertex has to be properly initialized (seed vertex,
-  /// constraint vertex, list of MAV)
-  ///
-  /// @param state The state object
-  /// @param newVertex New vertex to be added to fit
-  /// @param linearizer The track linearizer
+  /// @param state Fitter state
+  /// @param newVertex Vertex to be added to fit
+  /// @param linearizer Track linearizer
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
