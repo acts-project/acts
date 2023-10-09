@@ -210,7 +210,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   static constexpr bool isBottomCandidate =
       candidateType == Acts::SpacePointCandidateType::eBottom;
 
-  if (isBottomCandidate) {
+  if constexpr (isBottomCandidate) {
     impactMax = -impactMax;
   }
 
@@ -256,7 +256,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     // the iterator so we don't need to look at the other SPs again
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
-      if (isBottomCandidate) {
+      if constexpr (isBottomCandidate) {
         // if r-distance is too big, try next SP in bin
         if ((rM - otherSP->radius()) <= deltaRMaxSP) {
           break;
@@ -276,7 +276,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
 
-      if (isBottomCandidate) {
+      if constexpr (isBottomCandidate) {
         deltaR = (rM - otherSP->radius());
 
         // if r-distance is too small, try next SP in bin
@@ -292,7 +292,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         }
       }
 
-      if (isBottomCandidate) {
+      if constexpr (isBottomCandidate) {
         deltaZ = (zM - otherSP->z());
       } else {
         deltaZ = (otherSP->z() - zM);
@@ -385,7 +385,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
         // discard bottom-middle dublets in a certain (r, eta) region according
         // to detector specific cuts
-        if (isBottomCandidate) {
+        if constexpr (isBottomCandidate) {
           if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
             continue;
           }
@@ -434,7 +434,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // discard bottom-middle dublets in a certain (r, eta) region according
       // to detector specific cuts
-      if (isBottomCandidate) {
+      if constexpr (isBottomCandidate) {
         if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
           continue;
         }
