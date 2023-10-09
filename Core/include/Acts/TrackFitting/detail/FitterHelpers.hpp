@@ -71,12 +71,19 @@ auto getTrackStateProxy(propagator_state_t &state, const stepper_t &stepper,
   auto &[boundParams, jacobian, pathLength] = *res;
 
   // Fill the track state
-  trackStateProxy.predicted() = std::move(boundParams.parameters());
+  if ((mask & TrackStatePropMask::Predicted) != TrackStatePropMask::None) {
+    trackStateProxy.predicted() = std::move(boundParams.parameters());
+  }
+
   if (boundParams.covariance().has_value()) {
     trackStateProxy.predictedCovariance() =
         std::move(*boundParams.covariance());
   }
-  trackStateProxy.jacobian() = std::move(jacobian);
+
+  if ((mask & TrackStatePropMask::Jacobian) != TrackStatePropMask::None) {
+    trackStateProxy.jacobian() = std::move(jacobian);
+  }
+
   trackStateProxy.pathLength() = std::move(pathLength);
 
   return trackStateProxy;
