@@ -29,8 +29,8 @@ struct SeedFinderConfig {
   // lower cutoff for seeds
   float minPt = 400. * Acts::UnitConstants::MeV;
   // cot of maximum theta angle
-  // equivalent to 2.7 eta (pseudorapidity)
-  float cotThetaMax = 7.40627;
+  // equivalent to 3 eta (pseudorapidity)
+  float cotThetaMax = 10.01788;
   // minimum distance in r between two measurements within one seed
   float deltaRMin = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between two measurements within one seed
@@ -57,16 +57,16 @@ struct SeedFinderConfig {
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
+  // z of last layers to avoid iterations
+  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                           2700 * Acts::UnitConstants::mm};
+
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
 
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
-
-  // use arithmetic average in the calculation of the squared error on the
-  // difference in tan(theta)
-  bool arithmeticAverageCotTheta = false;
 
   // non equidistant binning in z
   std::vector<float> zBinEdges;
@@ -101,6 +101,10 @@ struct SeedFinderConfig {
   // xyz
   float toleranceParam = 1.1 * Acts::UnitConstants::mm;
 
+  // Parameter which can loosen the tolerance of the track seed to form to a
+  // helix, useful for (e.g.) misaligned seeding
+  float helixCut = 1.;
+
   // Geometry Settings
   // Detector ROI
   // limiting location of collision region in z
@@ -116,11 +120,10 @@ struct SeedFinderConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
-  // z of last layers to avoid iterations
-  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
-                                           2700 * Acts::UnitConstants::mm};
-
+  // Order of z bins to loop over when searching for SPs
   std::vector<size_t> zBinsCustomLooping = {};
+  // Number of Z bins to skip the search for middle SPs
+  std::size_t skipZMiddleBinSearch = 0;
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.

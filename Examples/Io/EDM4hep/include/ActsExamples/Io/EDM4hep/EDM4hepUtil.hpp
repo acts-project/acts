@@ -115,6 +115,7 @@ void writeMeasurement(const Measurement& from,
 void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
                      const Trajectories& from, edm4hep::MutableTrack to,
                      std::size_t fromIndex,
+                     const Acts::ParticleHypothesis& particleHypothesis,
                      const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap);
 
 }  // namespace EDM4hepUtil

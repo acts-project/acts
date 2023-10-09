@@ -9,11 +9,14 @@
 #include "Acts/Detector/Detector.hpp"
 
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <iterator>
+#include <sstream>
 #include <stdexcept>
+#include <unordered_map>
 #include <utility>
 
 Acts::Experimental::Detector::Detector(
@@ -48,6 +51,8 @@ Acts::Experimental::Detector::Detector(
   m_volumes = DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>>(
       collectVolumes());
 
+  // Fill the surface map
+  std::unordered_map<GeometryIdentifier, const Surface*> surfaceGeoIdMap;
   // Check for unique names and fill the volume name / index map
   for (auto [iv, v] : enumerate(m_volumes.internal)) {
     // Assign this detector
@@ -61,7 +66,27 @@ Acts::Experimental::Detector::Detector(
                                   " detected.");
     }
     m_volumeNameIndex[vName] = iv;
+
+    for (const auto* s : v->surfaces()) {
+      auto sgeoID = s->geometryId();
+      if (surfaceGeoIdMap.find(sgeoID) != surfaceGeoIdMap.end()) {
+        std::stringstream ss;
+        ss << sgeoID;
+        throw std::invalid_argument(
+            "Detector: duplicate sensitive surface geometry id '" + ss.str() +
+            "' detected. Make sure a GeometryIdGenerator is used.");
+      }
+      surfaceGeoIdMap.emplace(sgeoID, s);
+    }
   }
+  // Let us transfer the surfaces into the hierarchy map
+  std::vector<std::pair<GeometryIdentifier, const Surface*>> surfaceGeoIdVec;
+  surfaceGeoIdVec.reserve(surfaceGeoIdMap.size());
+  for (auto [geoID, surface] : surfaceGeoIdMap) {
+    surfaceGeoIdVec.emplace_back(geoID, surface);
+  }
+  m_sensitiveHierarchyMap =
+      GeometryHierarchyMap<const Surface*>(std::move(surfaceGeoIdVec));
 }
 
 std::shared_ptr<Acts::Experimental::Detector>
@@ -140,4 +165,9 @@ Acts::Experimental::Detector::findDetectorVolume(
     return m_volumes.external[vCandidate->second];
   }
   return nullptr;
+}
+
+const Acts::GeometryHierarchyMap<const Acts::Surface*>&
+Acts::Experimental::Detector::sensitiveHierarchyMap() const {
+  return m_sensitiveHierarchyMap;
 }

@@ -94,6 +94,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     float trueGx = 0.;
     float trueGy = 0.;
     float trueGz = 0.;
+    float incidentPhi = 0.;
+    float incidentTheta = 0.;
 
     /// Reconstruction information
     float recBound[Acts::eBoundSize] = {};
@@ -130,6 +132,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       tree->Branch("true_x", &trueGx);
       tree->Branch("true_y", &trueGy);
       tree->Branch("true_z", &trueGz);
+      tree->Branch("true_incident_phi", &incidentPhi);
+      tree->Branch("true_incident_theta", &incidentTheta);
     }
 
     /// Constructor from GeometryIdentifier
@@ -198,7 +202,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// @param xt The true 4D global position
     /// @param dir The true particle direction
     void fillTruthParameters(const Acts::Vector2& lp, const Acts::Vector4& xt,
-                             const Acts::Vector3& dir) {
+                             const Acts::Vector3& dir,
+                             const std::pair<double, double> angles) {
       trueBound[Acts::eBoundLoc0] = lp[Acts::eBoundLoc0];
       trueBound[Acts::eBoundLoc1] = lp[Acts::eBoundLoc1];
       trueBound[Acts::eBoundPhi] = Acts::VectorHelpers::phi(dir);
@@ -208,6 +213,9 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       trueGx = xt[Acts::ePos0];
       trueGy = xt[Acts::ePos1];
       trueGz = xt[Acts::ePos2];
+
+      incidentPhi = angles.first;
+      incidentTheta = angles.second;
     }
 
     /// Convenience function to fill bound parameters
@@ -224,7 +232,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       recBound[Acts::eBoundTheta] = fullVect[Acts::eBoundTheta];
       recBound[Acts::eBoundTime] = fullVect[Acts::eBoundTime];
 
-      Acts::BoundSymMatrix fullVar =
+      Acts::BoundSquareMatrix fullVar =
           m.expander() * m.covariance() * m.expander().transpose();
       varBound[Acts::eBoundLoc0] = fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0);
       varBound[Acts::eBoundLoc1] = fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1);

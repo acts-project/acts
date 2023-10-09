@@ -21,6 +21,9 @@
 namespace Acts {
 namespace Experimental {
 
+class IRootVolumeFinderBuilder;
+class IGeometryIdGenerator;
+
 /// @brief A dedicated container builder for cylindrical detector containers
 ///
 /// It relies on the detailed implementation of the CylindricalDetectorHelper
@@ -41,6 +44,12 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
     /// Binning prescription of attachment
     std::vector<BinningValue> binning = {};
+    /// The root volume finder
+    std::shared_ptr<IRootVolumeFinderBuilder> rootVolumeFinderBuilder = nullptr;
+    /// The geometry id generator
+    std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
+    /// An eventual reverse geometry id generation
+    bool geoIdReverseGen = false;
     /// Auxiliary information, mainly for screen output
     std::string auxiliary = "";
   };

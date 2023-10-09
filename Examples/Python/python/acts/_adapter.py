@@ -1,6 +1,7 @@
 import inspect
 import functools
 from typing import Optional, Callable, Dict, Any
+from pathlib import Path
 
 import acts
 
@@ -23,8 +24,16 @@ def _make_config_adapter(fn):
         cfg = type(self).Config()
         _kwargs = {}
         for k, v in kwargs.items():
+            if isinstance(v, Path):
+                v = str(v)
+
             if hasattr(cfg, k):
-                setattr(cfg, k, v)
+                try:
+                    setattr(cfg, k, v)
+                except TypeError as e:
+                    raise RuntimeError(
+                        "{}: Failed to set {}={}".format(type(cfg), k, v)
+                    ) from e
             else:
                 _kwargs[k] = v
         try:

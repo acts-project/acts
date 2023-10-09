@@ -17,6 +17,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
@@ -56,13 +57,12 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using Fitter =
       Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using Seeder = Acts::TrackDensityVertexFinder<
-      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
-  using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
   using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
   using VertexCollection =
       std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
+
+  enum class SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
 
   struct Config {
     /// Optional. Input track parameters collection
@@ -73,17 +73,30 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
+    /// Enum member determining the choice of the vertex seed finder
+    SeedFinder seedFinder;
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
 
   AdaptiveMultiVertexFinderAlgorithm(const Config& config,
                                      Acts::Logging::Level level);
-  /// Find vertices using the adaptive multi vertex finder algorithm.
+
+  /// Set up vertex seeder and call the function executeAfterSeederChoice.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Find vertices using the adaptive multi vertex finder algorithm.
+  ///
+  /// @param ctx is the algorithm context with event information
+  /// @param seedFinder is the vertex seed finder
+  /// @return a process code indication success or failure
+  template <typename vseeder_t, typename vfinder_t>
+  ProcessCode executeAfterSeederChoice(
+      const ActsExamples::AlgorithmContext& ctx,
+      const vseeder_t& seedFinder) const;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

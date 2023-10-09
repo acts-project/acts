@@ -50,10 +50,10 @@ Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
   m_cosIncidentAngleMaxCutoff = freeToBoundCorrection.cosIncidentAngleMaxCutoff;
 }
 
-std::optional<std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>>
+std::optional<std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>>
 Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Acts::FreeVector& freeParams,
-    const Acts::FreeSymMatrix& freeCovariance, const Acts::Surface& surface,
+    const Acts::FreeSquareMatrix& freeCovariance, const Acts::Surface& surface,
     const Acts::GeometryContext& geoContext, Direction navDir,
     const Logger& logger) const {
   // Get the incidence angle
@@ -78,9 +78,9 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   sampledFreeParams.reserve(sampleSize);
 
   // Initialize the covariance sqrt root matrix
-  FreeSymMatrix covSqrt = FreeSymMatrix::Zero();
+  FreeSquareMatrix covSqrt = FreeSquareMatrix::Zero();
   // SVD decomposition: freeCovariance = U*S*U^T here
-  Eigen::JacobiSVD<FreeSymMatrix> svd(
+  Eigen::JacobiSVD<FreeSquareMatrix> svd(
       freeCovariance, Eigen::ComputeFullU | Eigen::ComputeFullV);
   auto S = svd.singularValues();
   FreeMatrix U = svd.matrixU();
@@ -117,7 +117,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   // Initialize the mean of the bound parameters
   BoundVector bpMean = BoundVector::Zero();
   // Initialize the bound covariance
-  BoundSymMatrix bv = BoundSymMatrix::Zero();
+  BoundSquareMatrix bv = BoundSquareMatrix::Zero();
 
   // The transformed bound parameters and weight for each sampled free
   // parameters
@@ -148,10 +148,11 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
 
     // Reintersect to get the corrected free params without boundary check
     SurfaceIntersection intersection =
-        surface.intersect(geoContext, params.segment<3>(eFreePos0),
-                          navDir * params.segment<3>(eFreeDir0), false);
-    correctedFreeParams.segment<3>(eFreePos0) =
-        intersection.intersection.position;
+        surface
+            .intersect(geoContext, params.segment<3>(eFreePos0),
+                       navDir * params.segment<3>(eFreeDir0), false)
+            .closest();
+    correctedFreeParams.segment<3>(eFreePos0) = intersection.position();
 
     // Transform the free to bound
     auto result = detail::transformFreeToBoundParameters(correctedFreeParams,

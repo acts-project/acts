@@ -197,15 +197,17 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
       double resT = (*m_err_eT_fit)[i];
 
       // Fill vector of track objects with simple covariance matrix
-      Acts::BoundSymMatrix covMat;
+      Acts::BoundSquareMatrix covMat;
 
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
           resT * resT;
 
+      // TODO we do not have a hypothesis at hand here. defaulting to pion
       trackParameterCollection.push_back(Acts::BoundTrackParameters(
-          perigeeSurface, paramVec, std::move(covMat)));
+          perigeeSurface, paramVec, std::move(covMat),
+          Acts::ParticleHypothesis::pion()));
     }
 
     unsigned int nTruthParticles = m_t_vx->size();

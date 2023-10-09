@@ -9,8 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -19,8 +21,8 @@ namespace detail {
 
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
-  /// Data from the propagation state
-  const TrackingVolume* volume = nullptr;
+  /// The material interaction volume
+  InteractionVolume volume{};
   /// The particle current position
   const Vector3 pos = Vector3::Zero();
   /// The particle current time
@@ -28,15 +30,15 @@ struct VolumeMaterialInteraction {
   /// The particle current direction
   const Vector3 dir = Vector3::Zero();
   /// The particle q/p at the interaction
-  const double qOverP = 0;
+  const float qOverP = 0;
   /// The absolute particle charge
-  const double absQ = 0;
+  const float absQ = 0;
   /// The particle momentum at the interaction
-  const double momentum = 0;
+  const float momentum = 0;
   /// The particle mass
-  const double mass = 0;
+  const float mass = 0;
   /// The particle pdg
-  const int pdg = 0;
+  const PdgParticle absPdg = eInvalid;
   /// The covariance transport decision at the interaction
   const bool performCovarianceTransport = false;
   /// The navigation direction
@@ -64,12 +66,12 @@ struct VolumeMaterialInteraction {
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
         qOverP(stepper.qOverP(state.stepping)),
-        absQ(std::abs(stepper.charge(state.stepping))),
+        absQ(stepper.particleHypothesis(state.stepping).absoluteCharge()),
         momentum(stepper.absoluteMomentum(state.stepping)),
-        mass(state.options.mass),
-        pdg(state.options.absPdgCode),
+        mass(stepper.particleHypothesis(state.stepping).mass()),
+        absPdg(stepper.particleHypothesis(state.stepping).absolutePdg()),
         performCovarianceTransport(state.stepping.covTransport),
-        navDir(state.stepping.navDir) {}
+        navDir(state.options.direction) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
