@@ -24,7 +24,7 @@ struct VertexInfo {
   VertexInfo(const Acts::Vertex<input_track_t>& vtx, const Acts::Vector4& pos)
       : constraintVertex(vtx),
         linPoint(pos),
-        oldPosition(pos),
+        position(pos),
         seedPosition(pos) {}
 
   // The constraint vertex
@@ -34,7 +34,7 @@ struct VertexInfo {
   Acts::Vector4 linPoint{Acts::Vector4::Zero()};
 
   // Old position from last iteration
-  Acts::Vector4 oldPosition{Acts::Vector4::Zero()};
+  Acts::Vector4 position{Acts::Vector4::Zero()};
 
   // The seed position
   Acts::Vector4 seedPosition{Acts::Vector4::Zero()};

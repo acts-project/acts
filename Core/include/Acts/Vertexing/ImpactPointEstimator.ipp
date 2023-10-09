@@ -128,7 +128,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 
   // x-, y-, and possibly time-coordinate of the vertex and the track in the
-  // surface coordinate system
+  // surface coordinate system. Since the vertex is at the surface origin, its
+  // spatial coordinates are 0.
   ActsVector<nDim - 1> localVertexCoords;
   localVertexCoords.template head<2>() = Vector2(0., 0.);
 
