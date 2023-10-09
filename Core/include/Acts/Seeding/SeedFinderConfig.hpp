@@ -22,7 +22,7 @@ template <typename T>
 class SeedFilter;
 
 inline bool noopExperimentCuts(float /*bottomRadius*/, float /*cotTheta*/) {
-	return true;
+  return true;
 }
 
 template <typename SpacePoint>
@@ -175,13 +175,13 @@ struct SeedFinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
   // Delegate to apply experiment specific cuts
-  //Delegate<bool(float bottomRadius, float cotTheta)> experimentCuts;
-	
-	Delegate<bool(float bottomRadius, float cotTheta)> experimentCuts = [](){
-		Delegate<bool(float bottomRadius, float cotTheta)> delegate;
-		delegate.connect<&noopExperimentCuts>();
-		return delegate;
-	}();
+  // Delegate<bool(float bottomRadius, float cotTheta)> experimentCuts;
+
+  Delegate<bool(float bottomRadius, float cotTheta)> experimentCuts = []() {
+    Delegate<bool(float bottomRadius, float cotTheta)> delegate;
+    delegate.connect<&noopExperimentCuts>();
+    return delegate;
+  }();
 
   bool isInInternalUnits = false;
 
