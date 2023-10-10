@@ -16,9 +16,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <fstream>
-#include <sstream>
 #include <string>
-#include <tuple>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetFactoryHelper.h>
@@ -72,12 +70,12 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
   cxml.open(fNameBase + ".xml");
   cxml << head_xml;
   cxml << beampipe_head_xml;
-  cxml << indent_12_xml << "  <passive_surface>" << '\n';
+  cxml << indent_12_xml << "  <acts_passive_surface>" << '\n';
   cxml << indent_12_xml
        << "    <tubs rmin=\"25*mm\" rmax=\"25.8*mm\" dz=\"1800*mm\" "
           "material=\"Air\"/>"
        << '\n';
-  cxml << indent_12_xml << "  </passive_surface>" << '\n';
+  cxml << indent_12_xml << "  </acts_passive_surface>" << '\n';
 
   cxml << tail_xml;
   cxml << end_xml;
@@ -103,7 +101,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
 
   Acts::Experimental::DD4hepLayerStructure::Options lsOptions;
   lsOptions.name = "BeamPipe";
-  lsOptions.logLevel = Acts::Logging::INFO;
+  lsOptions.logLevel = Acts::Logging::VERBOSE;
 
   auto beamPipeInternalsBuilder =
       beamPipeStructure.builder(dd4hepStore, world, lsOptions);
@@ -111,6 +109,15 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
   // Build the internal volume structure
   auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
       beamPipeInternalsBuilder->construct(tContext);
+
+  // All surfaces are filled
+  BOOST_CHECK(surfaces.size() == 1u);
+  // No volumes are added
+  BOOST_CHECK(volumes.empty());
+  // The surface updator is connected
+  BOOST_CHECK(surfacesUpdator.connected());
+  // The volume updator is connected
+  BOOST_CHECK(volumeUpdator.connected());
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();
@@ -175,7 +182,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     cxml << "</modules>" << '\n';
 
     // test the support structure definition
-    unsigned int passiveAddon = 0;
+    unsigned int passiveAddon = 0u;
     if (itest == 1u) {
       cxml << indent_12_xml << "  <acts_passive_surface>" << '\n';
       cxml << indent_12_xml
@@ -183,7 +190,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
               "material=\"Air\"/>"
            << '\n';
       cxml << indent_12_xml << "  </acts_passive_surface>" << '\n';
-      passiveAddon = 1;
+      passiveAddon = 1u;
     } else if (itest == 2u) {
       cxml << indent_12_xml << "  <acts_passive_surface>" << '\n';
       cxml << indent_12_xml
@@ -192,7 +199,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
            << '\n';
       cxml << "    <acts_proto_material/>" << '\n';
       cxml << indent_12_xml << "  </acts_passive_surface>" << '\n';
-      passiveAddon = 1;
+      passiveAddon = 1u;
     }
     ++itest;
 

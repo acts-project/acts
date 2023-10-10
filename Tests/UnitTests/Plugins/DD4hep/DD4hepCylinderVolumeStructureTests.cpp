@@ -14,9 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <fstream>
-#include <sstream>
 #include <string>
-#include <tuple>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetFactoryHelper.h>

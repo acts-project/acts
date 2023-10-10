@@ -14,7 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
-#include <vector>
+#include <string>
 
 #include <DD4hep/DD4hepUnits.h>
 

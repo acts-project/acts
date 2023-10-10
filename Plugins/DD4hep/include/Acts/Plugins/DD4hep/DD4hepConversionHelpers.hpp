@@ -152,7 +152,7 @@ std::vector<value_type> extractSeries(const dd4hep::DetElement& dd4hepElement,
 /// @return a transform extracted from parameters
 inline Transform3 extractTransform(const dd4hep::DetElement& dd4hepElement,
                                    const std::string& bname,
-                                   const ActsScalar& unitConversion = 1.) {
+                                   const ActsScalar unitConversion = 1.) {
   Transform3 transform = Transform3::Identity();
   ActsScalar x =
       unitConversion * getParamOr<ActsScalar>(bname + "_x", dd4hepElement, 0.);

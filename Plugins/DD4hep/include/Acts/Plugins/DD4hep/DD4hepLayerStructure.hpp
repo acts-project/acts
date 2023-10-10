@@ -16,7 +16,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
-#include <vector>
+#include <string>
 
 namespace dd4hep {
 class DetElement;
