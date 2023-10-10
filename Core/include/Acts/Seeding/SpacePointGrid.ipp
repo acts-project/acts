@@ -37,7 +37,7 @@ Acts::SpacePointGridCreator::createGrid(
         config.minPt /
         (300. * options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
                                      // = pT[MeV] / (300 *Bz[kT])
-				     std::cout << "minhelix " << minHelixRadius << ", " << config.minPt << ", " << options.bFieldInZ << ", " << config.rMax << std::endl;
+		
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < config.rMax / 2) {
       throw std::domain_error(
