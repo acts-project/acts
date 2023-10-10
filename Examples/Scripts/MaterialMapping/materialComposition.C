@@ -164,7 +164,7 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
 
     // The material histograms for all
     mCache[0] = MaterialHistograms(rName, 0, bins, eta);
-    for (unsigned int ib = 1; ib <= 100; ++ib) {
+    for (unsigned int ib = 1; ib <= 200; ++ib) {
       if (histA->GetBinContent(ib) > 0.) {
         mCache[ib] = MaterialHistograms(rName, ib, bins, eta);
       }
@@ -201,7 +201,11 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
 
         unsigned int sA = histA->FindBin(stepA->at(is));
         // The current one
-        auto& current = mCache[sA];
+        auto currentIt = mCache.find(sA);
+        if (currentIt == mCache.end()) {
+          throw std::runtime_error{"Unknown atomic number " +std::to_string(sA)};
+        }
+        auto& current = currentIt->second;
         current.s_x0 += step / X0;
         current.s_l0 += step / L0;
       }
