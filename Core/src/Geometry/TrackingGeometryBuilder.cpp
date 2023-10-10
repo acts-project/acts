@@ -47,7 +47,14 @@ Acts::TrackingGeometryBuilder::trackingGeometry(
   for (auto& volumeBuilder : m_cfg.trackingVolumeBuilders) {
     // assign a new highest volume (and potentially wrap around the given
     // highest volume so far)
-    highestVolume = volumeBuilder(gctx, highestVolume, nullptr);
+    auto volume = volumeBuilder(gctx, highestVolume, nullptr);
+    if (!volume) {
+      ACTS_INFO(
+          "Received nullptr volume from builder, keeping previous highest "
+          "volume");
+    } else {
+      highestVolume = std::move(volume);
+    }
   }
 
   // create the TrackingGeometry & decorate it with the material
