@@ -67,8 +67,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
         // Relinearization needed, distance too big
         currentVtxInfo.relinearize = true;
       }
-      // Set the 3D impact parameters of all tracks
-      prepareVertexForFit(state, currentVtx, vertexingOptions);
 
       // Determine if constraint vertex exist
       if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
@@ -183,8 +181,9 @@ bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void> Acts::
-    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
+Acts::Result<void>
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
+    updateImpactParams3D(
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   // The current vertex info object
@@ -194,14 +193,30 @@ Acts::Result<void> Acts::
 
   // Loop over all tracks at current vertex
   for (const auto& trk : currentVtxInfo.trackLinks) {
+    // Boolean indicating whether the impact parameters were already calculated
+    bool hasIP = currentVtxInfo.impactParams3D.count(trk) == 1;
+    // Track parameters
+    auto trkParams = m_extractParameters(*trk);
+    // Origin of the track reference surface
+    Vector3 surfaceOrigin = trkParams.referenceSurface()
+                                .transform(vertexingOptions.geoContext)
+                                .translation();
+    // Skip the impact point estimation if the impact parameters of trk wrt the
+    // vertex position were already calculated
+    if (hasIP and surfaceOrigin == vtxPosition) {
+      continue;
+    }
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-        m_extractParameters(*trk), vtxPosition, state.ipState);
+        trkParams, vtxPosition, state.ipState);
     if (!res.ok()) {
       return res.error();
     }
-    // Set ip3dParams for current trackAtVertex
-    currentVtxInfo.ip3dParams.emplace(trk, res.value());
+    if (hasIP) {
+      currentVtxInfo.impactParams3D.at(trk) = res.value();
+    } else {
+      currentVtxInfo.impactParams3D.emplace(trk, res.value());
+    }
   }
   return {};
 }
@@ -212,30 +227,17 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(
         State& state, Vertex<input_track_t>* currentVtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
-  VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
+  // Update the 3D impact parameters of all tracks
+  updateImpactParams3D(state, currentVtx, vertexingOptions);
 
-  // Loop over tracks at current vertex and
-  // estimate compatibility with vertex
+  VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
+  // Loop over the tracks that are associated with currentVtx and estimate their
+  // compatibility
   for (const auto& trk : currentVtxInfo.trackLinks) {
     auto& trkAtVtx =
         state.tracksAtVerticesMap.at(std::make_pair(trk, currentVtx));
-    // Recover from cases where linearization point != 0 but
-    // more tracks were added later on
-    if (currentVtxInfo.ip3dParams.find(trk) ==
-        currentVtxInfo.ip3dParams.end()) {
-      auto res = m_cfg.ipEst.estimate3DImpactParameters(
-          vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-          m_extractParameters(*trk),
-          VectorHelpers::position(currentVtxInfo.linPoint), state.ipState);
-      if (!res.ok()) {
-        return res.error();
-      }
-      // Set ip3dParams for current trackAtVertex
-      currentVtxInfo.ip3dParams.emplace(trk, res.value());
-    }
-    // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.template getVertexCompatibility<3>(
-        vertexingOptions.geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
+        vertexingOptions.geoContext, &(currentVtxInfo.impactParams3D.at(trk)),
         VectorHelpers::position(currentVtxInfo.position));
     if (!compRes.ok()) {
       return compRes.error();
