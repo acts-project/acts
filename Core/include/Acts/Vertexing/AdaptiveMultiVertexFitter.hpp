@@ -250,7 +250,6 @@ class AdaptiveMultiVertexFitter {
   /// tracks were calculated wrt the vertex position. Updates them
   /// if needed.
   ///
-  ///
   /// @param state The state to operate on
   /// @param vtx The vertex object
   /// @param vertexingOptions Vertexing options
