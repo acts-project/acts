@@ -183,7 +183,7 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
         )
     )
 
-    # Write hits, so we can later construct the measurment-particles-map
+    # Write hits, so we can later construct the measurement-particles-map
     s.addWriter(
         CsvSimHitWriter(
             level=acts.logging.INFO,

@@ -21,7 +21,7 @@ namespace Acts {
 
 /// Clusterise tracks based on shared hits
 ///
-/// @param trackMap : Multimap storing pair of track ID and vector of measurement ID. The keys are the number of measurement and are just there to focilitate the ordering.
+/// @param trackMap : Multimap storing pair of track ID and vector of measurement ID. The keys are the number of measurement and are just there to facilitate the ordering.
 /// @param tracks : Track container with all the track to be clustered
 /// @param epsilon : Maximum distance between 2 tracks to be clustered
 /// @param minPoints : Minimum number of tracks to create a cluster

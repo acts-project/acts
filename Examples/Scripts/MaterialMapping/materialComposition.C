@@ -81,7 +81,7 @@ struct MaterialHistograms {
   /// Write out the histograms, the TDirectory needs
   /// to be set before
   ///
-  /// Histrograms with no contribution will not be
+  /// Histograms with no contribution will not be
   /// written to file.
   void write() {
     if (x0_vs_eta->GetMaximum() > 0.) {

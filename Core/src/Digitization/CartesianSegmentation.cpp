@@ -140,10 +140,9 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
         -m_activeBounds->boundingBox().halfLengthX() + ibinx * pitchX;
     // (i) this is the low/high boundary --- ( ibin == 0/m_binUtility->bins(0) )
     if ((ibinx == 0u) || ibinx == m_binUtility->bins(0)) {
-      // check if it a straight boundary or not: always straight for no lorentz
-      // angle,
-      // and either the first boundary or the last depending on lorentz &
-      // readout
+      // check if it is a straight boundary or not: always straight for no
+      // lorentz angle, and either the first boundary or the last depending on
+      // lorentz and readout
       bool boundaryStraight =
           (lorentzAngle == 0. ||
            ((ibinx == 0u) && readoutDirection * lorentzAngle > 0.) ||

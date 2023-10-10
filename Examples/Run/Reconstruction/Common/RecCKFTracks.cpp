@@ -107,7 +107,7 @@ int runRecCKFTracks(
   for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
-  // Setup the magnetic field
+  // Set up the magnetic field
   auto magneticField = Options::readMagneticField(vm);
 
   // Read the sim hits
@@ -256,7 +256,7 @@ int runRecCKFTracks(
     outputTrackParameters = paramsEstimationCfg.outputTrackParameters;
   }
 
-  // Setup the track finding algorithm with CKF
+  // Set up the track finding algorithm with CKF
   // It takes all the source links created from truth hit smearing, seeds from
   // truth particle smearing and source link selection config
   auto trackFindingCfg = Options::readTrackFindingConfig(vm);
