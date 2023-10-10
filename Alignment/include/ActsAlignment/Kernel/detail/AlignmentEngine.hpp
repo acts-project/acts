@@ -149,7 +149,7 @@ TrackAlignmentState trackAlignmentState(
       alignState.alignedSurfaces[surface].first = it->second;
       nAlignSurfaces++;
     }
-    // Rember the index of the state within the trajectory and whether it's
+    // Remember the index of the state within the trajectory and whether it's
     // alignable
     measurementStates.push_back({ts.index(), isAlignable});
     // Add up measurement dimension
@@ -167,7 +167,7 @@ TrackAlignmentState trackAlignmentState(
   // Dimension of global track parameters (from only measurement states)
   alignState.trackParametersDim = eBoundSize * measurementStates.size();
 
-  // Initialize the alignment matrixs with components from the measurement
+  // Initialize the alignment matrices with components from the measurement
   // states
   // The measurement covariance
   alignState.measurementCovariance = ActsDynamicMatrix::Zero(
@@ -190,7 +190,7 @@ TrackAlignmentState trackAlignmentState(
   // should be same as eBoundSize * nSmoothedStates
   const auto& [sourceTrackParamsCov, stateRowIndices] = globalTrackParamsCov;
 
-  // Loop over the measurement states to fill those alignment matrixs
+  // Loop over the measurement states to fill those alignment matrices
   // This is done in reverse order
   size_t iMeasurement = alignState.measurementDim;
   size_t iParams = alignState.trackParametersDim;
@@ -227,7 +227,7 @@ TrackAlignmentState trackAlignmentState(
       // The direction
       const Vector3 direction = freeParams.segment<3>(eFreeDir0);
       // The derivative of free parameters w.r.t. path length. @note Here, we
-      // assumes a linear track model, i.e. negecting the change of track
+      // assume a linear track model, i.e. neglecting the change of track
       // direction. Otherwise, we need to know the magnetic field at the free
       // parameters
       FreeVector pathDerivative = FreeVector::Zero();
