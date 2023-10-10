@@ -24,7 +24,7 @@ Developers and R&D meetings can be found in the [Acts indico category](https://i
 
  In order to minimize virtual function calls and complex inheritance schemes, Acts does - in general - not define module interfaces, but rather relies on a data-centric pattern. Wherever possible, composition is favoured over inheritance/code extension.
 
- Code execution performance is a big focus in Acts in order to serve the needs of the HL-LHC experiments; however, this is attempted to be reached mainly by technical means rather then compromising the physics performance.
+ Code execution performance is a big focus in Acts in order to serve the needs of the HL-LHC experiments; however, this is attempted to be reached mainly by technical means rather than compromising the physics performance.
 
  ## R&D Testbed
 

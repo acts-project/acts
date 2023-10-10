@@ -672,7 +672,7 @@ int trackSummaryAnalysis(
   /// @param residualPullsMatrix the 2D matrix of handles
   /// @param auxiliaryMatrix the 2D matrix of the auxiliary handles
   /// @param matrixTag the identification tag for the matrix
-  /// @param outputBordres the border vector for the outer bins
+  /// @param outputBorders the border vector for the outer bins
   /// @param innerBorders the border vector for the inner bins
   /// @param fXTitle the title of the x axis of the first projection
   /// @param sXTitle the title of the x axis of the second projection
@@ -684,7 +684,7 @@ int trackSummaryAnalysis(
                          const TVectorF& innerBorders,
                          const TString& fXTitle = "#eta",
                          const TString& sXTitle = "#phi") -> void {
-    // The summary histrogram set
+    // The summary histogram set
     SummaryHistograms summary;
 
     // 2D handles ---------------------------
@@ -701,7 +701,7 @@ int trackSummaryAnalysis(
     progress_display analysis_progress(nOuterBins * nInnerBins);
 #endif
 
-    // Prepare by looping over the base bhandles - residuals
+    // Prepare by looping over the base bHandles - residuals
     for (auto& bHandle : baseResidualPulls) {
       // Create a unique handle tag
       TString handleTag = TString(bHandle.tag) + matrixTag;

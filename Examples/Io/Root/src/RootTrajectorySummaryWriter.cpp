@@ -226,7 +226,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     // The trajectory entry indices
     const auto& trackTips = traj.tips();
 
-    // Dont write empty MultiTrajectory
+    // Don't write empty MultiTrajectory
     if (trackTips.empty()) {
       continue;
     }

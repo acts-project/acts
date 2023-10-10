@@ -599,7 +599,7 @@ class TrackProxy {
 
   /// Return a mutable reference to the number of degrees of freedom for the
   /// track. Mutable version
-  /// @return The the number of degrees of freedom
+  /// @return The number of degrees of freedom
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nDoF() {
     return component<unsigned int>(hashString("ndf"));
@@ -627,7 +627,7 @@ class TrackProxy {
 
   /// Copy the content of another track proxy into this one
   /// @tparam track_proxy_t the other track proxy's type
-  /// @param other The the track proxy
+  /// @param other The track proxy
   /// @param copyTrackStates Copy the track state sequence from @p other
   template <typename track_proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>

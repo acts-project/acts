@@ -18,13 +18,13 @@ struct DigitizationCell final {
   size_t channel1 = 1;
   float data = 0.;
 
-  // connstruct them
+  // construct them
   DigitizationCell(size_t ch0, size_t ch1, float d = 0.)
       : channel0(ch0), channel1(ch1), data(d) {}
 
   /// To merge cells in case they are at the same position
   /// @param dc the cell to be added to the current cell
-  /// @param analogueReadout flag indicating if we have analgue readout
+  /// @param analogueReadout flag indicating if we have analogue readout
   /// @note this function is needed because possible derived classes may
   /// calculate the energy deposit differently. Furthermore this allows to apply
   /// an energy cut, because the energy deposit can also be stored for digital

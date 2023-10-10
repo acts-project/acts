@@ -4,7 +4,7 @@
 ACTS Material Mapping Tutorial
 ==============================
 
-(This how to uses **deprecated** executables and will be uptaded soon)
+(This how to uses **deprecated** executables and will be updated soon)
 
 When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps: 
 
