@@ -74,22 +74,21 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   // q over p
   ActsScalar qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
-
+  // Rest mass
   ActsScalar m0 = params.particleHypothesis().mass();
-  ActsScalar absoluteCharge = params.particleHypothesis().absoluteCharge();
-  ActsScalar p = std::abs(absoluteCharge / qOvP);
+  // Momentum
+  ActsScalar p = params.particleHypothesis().extractMomentum(qOvP);
 
   // Speed in units of c
   ActsScalar beta = p / std::hypot(p, m0);
   // Transverse speed (i.e., speed in the x-y plane)
   ActsScalar betaT = beta * sinTheta;
 
-  // Momentu at the PCA
+  // Momentum direction at the PCA
   Vector3 momentumAtPCA(phi, theta, qOvP);
 
-  // Complete Jacobian (consists of positionJacobian and momentumJacobian)
-  ActsMatrix<eBoundSize, eLinSize> completeJacobian =
-      ActsMatrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
+  // Particle charge
+  ActsScalar absoluteCharge = params.particleHypothesis().absoluteCharge();
 
   // get the z-component of the B-field at the PCA
   auto field =
@@ -98,6 +97,10 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     return field.error();
   }
   ActsScalar Bz = (*field)[eZ];
+
+  // Complete Jacobian (consists of positionJacobian and momentumJacobian)
+  ActsMatrix<eBoundSize, eLinSize> completeJacobian =
+      ActsMatrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
 
   // The particle moves on a straight trajectory if its charge is 0 or if there
   // is no B field. Conversely, if it has a charge and the B field is constant,
