@@ -8,14 +8,18 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/NuclearInteractions/detail/NuclearInteractionParametrisation.hpp"
 
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// This class takes fractions of recorded events that represent the
 /// effect of a nuclear interaction and produces histograms and parameters which

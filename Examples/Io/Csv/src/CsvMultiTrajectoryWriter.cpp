@@ -8,15 +8,30 @@
 
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-#include <ios>
-#include <iostream>
+#include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
+
+namespace ActsExamples {
+class IndexSourceLink;
+}  // namespace ActsExamples
 
 using namespace ActsExamples;
 
@@ -94,7 +109,8 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       }
 
       // Requirement on the pT of the track
-      const auto& momentum = traj.trackParameters(trackTip).momentum();
+      const auto& params = traj.trackParameters(trackTip);
+      const auto momentum = params.momentum();
       const auto pT = Acts::VectorHelpers::perp(momentum);
       if (pT < m_cfg.ptMin) {
         continue;
@@ -186,6 +202,9 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       trajState.trackType = "duplicate";
     }
 
+    const auto& params = *trajState.fittedParameters;
+    const auto momentum = params.momentum();
+
     // write the track info
     mos << trajState.trackId << ",";
     mos << trajState.particleId << ",";
@@ -198,12 +217,9 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     mos << trajState.chi2Sum << ",";
     mos << trajState.NDF << ",";
     mos << trajState.chi2Sum * 1.0 / trajState.NDF << ",";
-    mos << Acts::VectorHelpers::perp(trajState.fittedParameters->momentum())
-        << ",";
-    mos << Acts::VectorHelpers::eta(trajState.fittedParameters->momentum())
-        << ",";
-    mos << Acts::VectorHelpers::phi(trajState.fittedParameters->momentum())
-        << ",";
+    mos << Acts::VectorHelpers::perp(momentum) << ",";
+    mos << Acts::VectorHelpers::eta(momentum) << ",";
+    mos << Acts::VectorHelpers::phi(momentum) << ",";
     mos << trajState.truthMatchProb << ",";
     mos << trajState.trackType << ",";
     mos << "\"[";

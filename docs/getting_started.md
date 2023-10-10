@@ -123,7 +123,7 @@ $ cmake --build build
 
 A set of container images is available through the [Acts container
 registry][acts_containers]. The following containers are used as part of the
-continous integration setup and come with all dependencies pre-installed.
+continuous integration setup and come with all dependencies pre-installed.
 
 -   `centos7-lcg97apython3-gcc9`: based on CentOS 7 with HEP-specific software from
     LCG 97apython3 using the GCC 9 compiler
@@ -178,7 +178,7 @@ container $ cmake --build build
 
 ### On your local machine
 
-Building and running Acts on your local machine is not offically supported.
+Building and running Acts on your local machine is not officially supported.
 However, if you have the necessary prerequisites installed it is possible to use
 it locally. Acts developers regularly use different Linux distributions
 and macOS to build and develop Acts.
@@ -190,7 +190,7 @@ The documentation uses [Doxygen][doxygen] to extract the source code
 documentation and [Sphinx][sphinx] with the [Breathe][breathe] extension to
 generate the documentation website. To build the documentation locally, you
 need to have [Doxygen][doxygen] version `1.9.5` or newer installed.
-[Sphinx][sphinx] and a few other depencencies can be installed using the Python
+[Sphinx][sphinx] and a few other dependencies can be installed using the Python
 package manager `pip`:
 
 ```console
@@ -264,6 +264,7 @@ components.
 |-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ACTS_BUILD_EVERYTHING               | Build with most options enabled (except<br>HepMC3 and documentation)<br> type: `bool`, default: `OFF`                                                                                                                              |
 | ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter<br>definitions header<br> type: `filepath`, default: `""`                                                                                                                                        |
+| ACTS_SOURCELINK_SBO_SIZE            | Customize the SBO size used by<br>SourceLink<br> type: `string`, default: `""`                                                                                                                                                     |
 | ACTS_FORCE_ASSERTIONS               | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                      |
 | ACTS_USE_SYSTEM_LIBS                | Use system libraries by default<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_BUILD_PLUGIN_AUTODIFF          | Build the autodiff plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
@@ -272,6 +273,8 @@ components.
 | ACTS_BUILD_PLUGIN_ACTSVG            | Build SVG display plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                          |
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
+| ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
+| ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_EXATRKX           | Build the Exa.TrkX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
 | ACTS_EXATRKX_ENABLE_ONNX            | Build the Onnx backend for the exatrkx<br>plugin<br> type: `bool`, default: `OFF`                                                                                                                                                  |
@@ -281,6 +284,7 @@ components.
 | ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                               |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_BUILD_PLUGIN_MLPACK            | Build MLpack plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_SETUP_VECMEM                   | Explicitly set up vecmem for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_USE_SYSTEM_VECMEM              | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
 | ACTS_BUILD_PLUGIN_SYCL              | Build SYCL plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
@@ -303,6 +307,7 @@ components.
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
 | ACTS_BUILD_UNITTESTS                | Build unit tests<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
+| ACTS_BUILD_NONCOMPILE_TESTS         | Build tests that check build failure<br>invariants<br> type: `bool`, default: `OFF`                                                                                                                                                |
 | ACTS_RUN_CLANG_TIDY                 | Run clang-tidy static analysis<br> type: `bool`, default: `OFF`                                                                                                                                                                    |
 | ACTS_BUILD_DOCS                     | Build documentation<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_SETUP_BOOST                    | Explicitly set up Boost for the project<br> type: `bool`, default: `ON`                                                                                                                                                            |

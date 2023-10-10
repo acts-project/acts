@@ -188,7 +188,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
         # Normalise the loss to the batch size
         batch_loss = batch_loss / len(b_data[0])
         loss += batch_loss
-        # Perform the gradient decend if an optimiser was specified
+        # Perform the gradient descend if an optimiser was specified
         if Optimiser:
             batch_loss.backward()
             Optimiser.step()

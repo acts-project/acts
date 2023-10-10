@@ -24,7 +24,6 @@
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Tests/CommonHelpers/CubicBVHTrackingGeometry.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
 namespace Acts {

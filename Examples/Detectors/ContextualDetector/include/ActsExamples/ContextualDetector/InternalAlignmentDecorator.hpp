@@ -14,14 +14,21 @@
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <cstddef>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 namespace Contextual {
+class InternallyAlignedDetectorElement;
 
 /// @brief A mockup service that rotates the modules in a
 /// simple tracking geometry

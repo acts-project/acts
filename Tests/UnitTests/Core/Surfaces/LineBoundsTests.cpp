@@ -11,8 +11,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+
+#include <algorithm>
+#include <array>
+#include <stdexcept>
+#include <vector>
 
 namespace Acts {
 

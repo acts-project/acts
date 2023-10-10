@@ -11,13 +11,19 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/PlaneLayer.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 
-#include <limits>
+#include <memory>
+#include <string>
+
+namespace Acts {
+class PlanarBounds;
+}  // namespace Acts
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;

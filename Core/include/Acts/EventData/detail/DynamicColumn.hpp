@@ -9,7 +9,9 @@
 #pragma once
 
 #include <any>
+#include <cassert>
 #include <memory>
+#include <vector>
 
 namespace Acts::detail {
 

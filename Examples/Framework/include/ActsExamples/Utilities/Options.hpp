@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <iosfwd>
 #include <optional>
 #include <vector>

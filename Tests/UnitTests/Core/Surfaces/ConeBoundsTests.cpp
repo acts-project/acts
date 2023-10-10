@@ -12,9 +12,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <stdexcept>
+#include <vector>
 
 /* Note on nomenclature:
   alpha = cone opening half angle

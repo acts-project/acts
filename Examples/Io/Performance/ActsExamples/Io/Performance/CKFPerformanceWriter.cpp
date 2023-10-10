@@ -10,16 +10,28 @@
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <numeric>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
 #include <TFile.h>
-#include <TTree.h>
-#include <TVectorF.h>
+#include <TVectorFfwd.h>
+#include <TVectorT.h>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
     ActsExamples::CKFPerformanceWriter::Config cfg, Acts::Logging::Level lvl)
@@ -153,12 +165,6 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       auto trajState =
           Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
 
-      // Reco track selection
-      //@TODO: add interface for applying others cuts on reco tracks:
-      // -> pT, d0, z0, detector-specific hits/holes number cut
-      if (trajState.nMeasurements < m_cfg.nMeasurementsMin) {
-        continue;
-      }
       // Check if the reco track has fitted track parameters
       if (not traj.hasTrackParameters(trackTip)) {
         ACTS_WARNING(
@@ -167,12 +173,6 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         continue;
       }
       const auto& fittedParameters = traj.trackParameters(trackTip);
-      // Requirement on the pT of the track
-      const auto& momentum = fittedParameters.momentum();
-      const auto pT = perp(momentum);
-      if (pT < m_cfg.ptMin) {
-        continue;
-      }
       // Fill the trajectory summary info
       m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                   trajState.nStates, trajState.nMeasurements,
@@ -262,9 +262,6 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // Loop over all truth particle seeds for efficiency plots and reco details.
   // These are filled w.r.t. truth particle seed info
   for (const auto& particle : particles) {
-    if (particle.transverseMomentum() < m_cfg.ptMin) {
-      continue;
-    }
     auto particleId = particle.particleId();
     // Investigate the truth-matched tracks
     size_t nMatchedTracks = 0;

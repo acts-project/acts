@@ -8,8 +8,8 @@
 
 #include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
 
-#include "ActsFatras/Utilities/ParticleData.hpp"
+#include "Acts/Definitions/ParticleData.hpp"
 
 const ActsFatras::PhotonConversion::Scalar
     ActsFatras::PhotonConversion::kElectronMass =
-        ActsFatras::findMass(Acts::PdgParticle::eElectron);
+        Acts::findMass(Acts::PdgParticle::eElectron).value();

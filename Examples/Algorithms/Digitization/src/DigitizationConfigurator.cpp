@@ -8,7 +8,24 @@
 
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsExamples/Digitization/SmearingConfig.hpp"
+#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
 
 namespace {
 /// @note This does not really compare if the configs are equal, therefore

@@ -18,7 +18,7 @@ class TrackingVolume;
 /// Virtual base class for decorators that allow to load
 /// material onto a TrackingGeometry. The geometry allows material
 /// to be assigned either to surfaces or to volumes, hence there are
-/// two decorate interface methots.
+/// two decorate interface methods.
 ///
 class IMaterialDecorator {
  public:

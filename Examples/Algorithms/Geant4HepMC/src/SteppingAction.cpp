@@ -23,7 +23,7 @@ namespace ActsExamples::Geant4::HepMC3 {
 SteppingAction* SteppingAction::s_instance = nullptr;
 
 SteppingAction* SteppingAction::instance() {
-  // Static acces function via G4RunManager
+  // Static access function via G4RunManager
   return s_instance;
 }
 

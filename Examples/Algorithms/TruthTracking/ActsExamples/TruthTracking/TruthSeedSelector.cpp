@@ -8,16 +8,21 @@
 
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
+#include <functional>
 #include <stdexcept>
-#include <vector>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 using namespace ActsExamples;
 
@@ -55,8 +60,8 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
     return (min <= x) and (x < max);
   };
   auto isValidparticle = [&](const auto& p) {
-    const auto eta = Acts::VectorHelpers::eta(p.unitDirection());
-    const auto phi = Acts::VectorHelpers::phi(p.unitDirection());
+    const auto eta = Acts::VectorHelpers::eta(p.direction());
+    const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // find the corresponding hits for this particle
     const auto& hits = makeRange(particleHitsMap.equal_range(p.particleId()));

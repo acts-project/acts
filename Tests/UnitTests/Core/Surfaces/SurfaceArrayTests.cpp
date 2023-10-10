@@ -12,18 +12,29 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/LayerCreator.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <boost/format.hpp>
 
@@ -248,6 +259,25 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   BOOST_CHECK_EQUAL(binContent.at(0), srf.get());
   BOOST_CHECK_EQUAL(sa.surfaces().size(), 1u);
   BOOST_CHECK_EQUAL(sa.surfaces().at(0), srf.get());
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
+  double w = 3, h = 4;
+  auto bounds = std::make_shared<const RectangleBounds>(w, h);
+  auto srf0 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+  auto srf1 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+
+  std::vector<const Surface*> sfPointers = {srf0.get(), srf1.get()};
+  std::vector<std::shared_ptr<const Surface>> surfaces = {srf0, srf1};
+
+  auto singleLookUp =
+      std::make_unique<Acts::SurfaceArray::SingleElementLookup>(sfPointers);
+
+  SurfaceArray sa(std::move(singleLookUp), surfaces);
+
+  auto binContent = sa.at(Vector3(42, 42, 42));
+  BOOST_CHECK_EQUAL(binContent.size(), 2u);
+  BOOST_CHECK_EQUAL(sa.surfaces().size(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

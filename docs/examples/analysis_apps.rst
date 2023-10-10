@@ -185,7 +185,7 @@ The following options are available:
 	                                        TTree.
 	  -t [ --tree ] arg (=tracksummary)     Input TTree/TChain name.
 	  -o [ --output ] arg                   Output ROOT file with histograms
-	  --hist-bins arg (=61)                 Numer of bins for the residual/pull
+	  --hist-bins arg (=61)                 Number of bins for the residual/pull
 	                                        histograms
 	  --pull-range arg (=5)                 Number of sigmas for the pull range.
 	  --eta-bins arg (=10)                  Number of bins in eta.

@@ -10,8 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -20,18 +22,21 @@
 namespace Acts {
 
 class Surface;
-class Layer;
-class TrackingVolume;
 
 namespace detail {
 
-/// @brief the step information for
+/// @brief The step information for recording
+///
+/// The surface object could be a temporarily created object
+/// and as the Step vector is collected and written out at a
+/// later stage, the surface is referenced counted here.
 struct Step {
   ConstrainedStep stepSize;
+  Direction navDir;
   Vector3 position = Vector3(0., 0., 0.);
   Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
-  const TrackingVolume* volume = nullptr;
+  GeometryIdentifier geoID = 0;
 };
 
 /// @brief a step length logger for debugging the stepping
@@ -63,23 +68,25 @@ struct SteppingLogger {
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, result_type& result,
                   const Logger& /*logger*/) const {
-    // don't log if you have reached the target
+    // Don't log if you have reached the target or are sterile
     if (sterile or navigator.targetReached(state.navigation)) {
       return;
     }
-    // record the propagation state
+    // Record the propagation state
     Step step;
     step.stepSize = state.stepping.stepSize;
+    step.navDir = state.options.direction;
     step.position = stepper.position(state.stepping);
-    step.momentum =
-        stepper.momentum(state.stepping) * stepper.direction(state.stepping);
+    step.momentum = stepper.momentum(state.stepping);
 
+    // Record the information about the surface
     if (navigator.currentSurface(state.navigation) != nullptr) {
-      // hang on to surface
       step.surface = navigator.currentSurface(state.navigation)->getSharedPtr();
+      step.geoID = step.surface->geometryId();
+    } else if (navigator.currentVolume(state.navigation) != nullptr) {
+      // If there's no surface but a volume, this sets the geoID
+      step.geoID = navigator.currentVolume(state.navigation)->geometryId();
     }
-
-    step.volume = navigator.currentVolume(state.navigation);
     result.steps.push_back(std::move(step));
   }
 };

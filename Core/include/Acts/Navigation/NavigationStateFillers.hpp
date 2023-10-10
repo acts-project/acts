@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -50,7 +51,7 @@ struct SurfacesFiller {
                           const std::vector<const Surface*>& surfaces) {
     std::for_each(surfaces.begin(), surfaces.end(), [&](const auto& s) {
       nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
-          ObjectIntersection<Surface>{}, s, nullptr,
+          ObjectIntersection<Surface>::invalid(), s, nullptr,
           nState.surfaceBoundaryCheck});
     });
   }
@@ -67,7 +68,7 @@ struct PortalsFiller {
                           const std::vector<const Portal*>& portals) {
     std::for_each(portals.begin(), portals.end(), [&](const auto& p) {
       nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
-          ObjectIntersection<Surface>{}, nullptr, p, true});
+          ObjectIntersection<Surface>::invalid(), nullptr, p, true});
     });
   }
 };

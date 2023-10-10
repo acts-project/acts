@@ -16,7 +16,7 @@ cmake -B <build> -S <source> \
   -D CMAKE_PREFIX_PATH=<path-to-installed-dependencies-if-not-in-default-paths>
 ```
 
-This plugin is known to build without erros with (as of September 2022)
+This plugin is known to build without errors with (as of September 2022)
 
 - [GCC](https://gcc.gnu.org) versions 8 and 9
 - [CUDA](https://developer.nvidia.com/cuda-zone) v11.5.1
@@ -45,4 +45,4 @@ In order that python can find the `acts.examples` module, setup your `PYTHONPATH
 
 ## Required files
 
-The track finding module requires some ONNX-files or TorchScript-files that descripe the used neural networks. These files are currently not provided within the ACTS repository.
+The track finding module requires some ONNX-files or TorchScript-files that describe the used neural networks. These files are currently not provided within the ACTS repository.

@@ -17,7 +17,6 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -62,7 +61,7 @@ struct MeasurementsCreator {
   // how far away from the measurements the outliers should be
   double distanceOutlier = 10 * Acts::UnitConstants::mm;
 
-  /// @brief Operater that is callable by an ActionList. The function
+  /// @brief Operator that is callable by an ActionList. The function
   /// collects the surfaces
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -119,7 +118,7 @@ struct MeasurementsCreator {
     // compute covariance for all components, might contain bogus values
     // depending on the configuration. but those remain unused.
     Vector2 stddev(resolution.stddev[0], resolution.stddev[1]);
-    SymMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
+    SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
 
     if (resolution.type == MeasurementType::eLoc0) {
       double val = loc[0] + stddev[0] * normalDist(*rng);

@@ -9,15 +9,22 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <limits>
 #include <random>
 #include <tuple>
+#include <utility>
+#include <variant>
 #include <vector>
 
 using namespace Acts;
@@ -102,7 +109,7 @@ const std::vector<std::tuple<double, double, double>> kPhiDataset = {
 BOOST_DATA_TEST_CASE(BoundResidualsPhi, bd::make(kPhiDataset), phiMea, phiRef,
                      phiRes) {
   using MeasurementVector = Acts::ActsVector<1>;
-  using MeasurementCovariance = Acts::ActsSymMatrix<1>;
+  using MeasurementCovariance = Acts::ActsSquareMatrix<1>;
 
   // prepare measurement
   MeasurementVector params = MeasurementVector::Zero();

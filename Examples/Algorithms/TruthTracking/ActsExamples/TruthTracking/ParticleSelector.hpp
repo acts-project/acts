@@ -12,13 +12,17 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <limits>
+#include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Select particles by applying some selection cuts.
 class ParticleSelector final : public IAlgorithm {
@@ -28,7 +32,7 @@ class ParticleSelector final : public IAlgorithm {
     std::string inputParticles;
     /// The output particles collection.
     std::string outputParticles;
-    // Minimum/maximum distance from the origin in the tranverse plane.
+    // Minimum/maximum distance from the origin in the transverse plane.
     double rhoMin = 0;
     double rhoMax = std::numeric_limits<double>::infinity();
     // Minimum/maximum absolute distance from the origin along z.
@@ -47,10 +51,16 @@ class ParticleSelector final : public IAlgorithm {
     // Momentum cuts.
     double ptMin = 0;
     double ptMax = std::numeric_limits<double>::infinity();
+    // Rest mass cuts
+    double mMin = 0;
+    double mMax = std::numeric_limits<double>::infinity();
     /// Remove charged particles.
     bool removeCharged = false;
     /// Remove neutral particles.
     bool removeNeutral = false;
+
+    /// Remove secondaries.
+    bool removeSecondaries = false;
   };
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);

@@ -8,20 +8,29 @@
 
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <iterator>
+#include <ostream>
 #include <stdexcept>
+#include <variant>
 
 static inline int quant(double min, double max, unsigned nSteps, double val);
 static inline double unquant(double min, double max, unsigned nSteps, int step);
@@ -52,14 +61,23 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   }
 
   if (!foundInput) {
-    throw std::invalid_argument("Missing some kind of input");
+    throw std::invalid_argument(
+        "HoughTransformSeeder: Missing some kind of input (measurements of "
+        "spacepoints)");
   }
 
   if (m_cfg.outputProtoTracks.empty()) {
-    throw std::invalid_argument("Missing hough tracks output collection");
+    throw std::invalid_argument(
+        "HoughTransformSeeder: Missing hough tracks output collection");
   }
+  if (m_cfg.outputSeeds.empty()) {
+    throw std::invalid_argument(
+        "HoughTransformSeeder: Missing hough track seeds output collection");
+  }
+
   if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument("Missing source link input collection");
+    throw std::invalid_argument(
+        "HoughTransformSeeder: Missing source link input collection");
   }
 
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
@@ -67,19 +85,21 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
 
   if (not m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
+    throw std::invalid_argument(
+        "HoughTransformSeeder: Missing tracking geometry");
   }
 
   if (m_cfg.geometrySelection.empty()) {
-    throw std::invalid_argument("Missing geometry selection");
+    throw std::invalid_argument(
+        "HoughTransformSeeder: Missing geometry selection");
   }
   // ensure geometry selection contains only valid inputs
   for (const auto& geoId : m_cfg.geometrySelection) {
     if ((geoId.approach() != 0u) or (geoId.boundary() != 0u) or
         (geoId.sensitive() != 0u)) {
       throw std::invalid_argument(
-          "Invalid geometry selection: only volume and layer are allowed to be "
-          "set");
+          "HoughTransformSeeder: Invalid geometry selection: only volume and "
+          "layer are allowed to be set");
     }
   }
   // remove geometry selection duplicates
@@ -190,7 +210,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
       }
     }
   }
-  ACTS_DEBUG("Created " << protoTracks.size() << " track seeds");
+  ACTS_DEBUG("Created " << protoTracks.size() << " proto track");
 
   m_outputProtoTracks(ctx, ProtoTrackContainer{protoTracks});
   // clear the vector
@@ -509,12 +529,12 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
             [](const auto& meas) {
               auto expander = meas.expander();
               Acts::BoundVector par = expander * meas.parameters();
-              Acts::BoundSymMatrix cov =
+              Acts::BoundSquareMatrix cov =
                   expander * meas.covariance() * expander.transpose();
               // extract local position
               Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
               // extract local position covariance.
-              Acts::SymMatrix2 lcov =
+              Acts::SquareMatrix2 lcov =
                   cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
               return std::make_pair(lpar, lcov);
             },

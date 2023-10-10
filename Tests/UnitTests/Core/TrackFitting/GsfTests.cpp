@@ -9,16 +9,54 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
+#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Holders.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
+#include <array>
+#include <functional>
+#include <map>
 #include <memory>
+#include <optional>
 #include <random>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <vector>
 
 #include "FitterTestsCommon.hpp"
 
@@ -27,9 +65,12 @@ namespace {
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
-using namespace Acts::Experimental;
+
+static const auto electron = ParticleHypothesis::electron();
 
 Acts::GainMatrixUpdater kfUpdater;
+
+FitterTester tester;
 
 GsfExtensions<VectorMultiTrajectory> getExtensions() {
   GsfExtensions<VectorMultiTrajectory> extensions;
@@ -38,12 +79,12 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
   extensions.updater
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(
+          &tester.surfaceAccessor);
+  extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
   return extensions;
 }
-
-FitterTester tester;
-
-const auto logger = getDefaultLogger("GSF", Logging::INFO);
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
@@ -63,21 +104,17 @@ auto makeDefaultGsfOptions() {
 }
 
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into
-// the function so that it can also be used as SingleBoundTrackParameters for
+// the function so that it can also be used as GenericBoundTrackParameters for
 // the MeasurementsCreator
-template <typename charge_t>
-struct MultiCmpsParsInterface : public SingleBoundTrackParameters<charge_t> {
-  MultiComponentBoundTrackParameters<charge_t> multi_pars;
+struct MultiCmpsParsInterface : public BoundTrackParameters {
+  MultiComponentBoundTrackParameters multi_pars;
 
-  MultiCmpsParsInterface(const MultiComponentBoundTrackParameters<charge_t> &p)
-      : SingleBoundTrackParameters<charge_t>(
-            p.referenceSurface().getSharedPtr(), p.parameters(),
-            p.covariance()),
+  MultiCmpsParsInterface(const MultiComponentBoundTrackParameters &p)
+      : BoundTrackParameters(p.referenceSurface().getSharedPtr(),
+                             p.parameters(), p.covariance(), electron),
         multi_pars(p) {}
 
-  operator MultiComponentBoundTrackParameters<charge_t>() const {
-    return multi_pars;
-  }
+  operator MultiComponentBoundTrackParameters() const { return multi_pars; }
 };
 
 auto makeParameters() {
@@ -89,12 +126,12 @@ auto makeParameters() {
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
-  Acts::CurvilinearTrackParameters cp(mPos4, 0_degree, 90_degree, 1_GeV, 1_e,
-                                      cov);
+  Acts::CurvilinearTrackParameters cp(mPos4, 0_degree, 90_degree, 1_e / 1_GeV,
+                                      cov, electron);
 
   // Construct bound multi component parameters from curvilinear ones
   Acts::BoundVector deltaLOC0 = Acts::BoundVector::Zero();
@@ -106,16 +143,15 @@ auto makeParameters() {
   Acts::BoundVector deltaQOP = Acts::BoundVector::Zero();
   deltaQOP[eBoundQOverP] = 0.01_GeV;
 
-  std::vector<std::tuple<double, BoundVector, BoundSymMatrix>> cmps = {
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps = {
       {0.2, cp.parameters(), cov},
       {0.2, cp.parameters() + deltaLOC0 + deltaLOC1 + deltaQOP, cov},
       {0.2, cp.parameters() + deltaLOC0 - deltaLOC1 - deltaQOP, cov},
       {0.2, cp.parameters() - deltaLOC0 + deltaLOC1 + deltaQOP, cov},
       {0.2, cp.parameters() - deltaLOC0 - deltaLOC1 - deltaQOP, cov}};
 
-  return MultiCmpsParsInterface<SinglyCharged>(
-      Acts::MultiComponentBoundTrackParameters<SinglyCharged>(
-          cp.referenceSurface().getSharedPtr(), cmps));
+  return MultiCmpsParsInterface(MultiComponentBoundTrackParameters(
+      cp.referenceSurface().getSharedPtr(), cmps, electron));
 }
 
 }  // namespace
@@ -182,6 +218,37 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
 
   tester.test_ZeroFieldWithOutliers(gsfZero, options, multi_pars, rng, true,
                                     false, false);
+}
+
+BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+  using namespace Acts::GsfConstants;
+  std::string key(kFinalMultiComponentStateColumn);
+  tracks.template addColumn<FinalMultiComponentState>(key);
+
+  auto multi_pars = makeParameters();
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         multi_pars, tester.resolutions, rng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+
+  // create a boundless target surface near the tracker exit
+  Acts::Vector3 center(-3._m, 0., 0.);
+  Acts::Vector3 normal(1., 0., 0.);
+  auto targetSurface =
+      Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
+
+  options.referenceSurface = targetSurface.get();
+
+  auto res = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), multi_pars,
+                         options, tracks);
+
+  BOOST_REQUIRE(res.ok());
+  BOOST_CHECK(res->template component<FinalMultiComponentState>(
+                     kFinalMultiComponentStateColumn)
+                  .has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

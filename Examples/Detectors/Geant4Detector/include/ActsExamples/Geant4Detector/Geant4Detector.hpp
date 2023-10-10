@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -21,6 +22,9 @@ class G4VPhysicalVolume;
 
 namespace Acts {
 class TrackingGeometry;
+class Geant4DetectorElement;
+class Surface;
+
 namespace Experimental {
 class Detector;
 }
@@ -51,7 +55,7 @@ struct Geant4Detector {
     Acts::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
     /// The corresponding ProtoDetector
     Acts::ProtoDetector protoDetector;
-    /// Optional geometry identfier hook to be used during closure
+    /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<Acts::GeometryIdentifierHook>();
     /// Logging level of the child tools

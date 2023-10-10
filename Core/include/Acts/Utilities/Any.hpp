@@ -136,7 +136,9 @@ class AnyBase : public AnyBaseAll {
   }
 
 #if defined(_ACTS_ANY_ENABLE_VERBOSE)
-  AnyBase() { _ACTS_ANY_VERBOSE("Default construct this=" << this); };
+  AnyBase() {
+    _ACTS_ANY_VERBOSE("Default construct this=" << this);
+  };
 #else
   AnyBase() = default;
 #endif
@@ -173,7 +175,9 @@ class AnyBase : public AnyBaseAll {
     return *reinterpret_cast<const T*>(dataPtr());
   }
 
-  ~AnyBase() { destroy(); }
+  ~AnyBase() {
+    destroy();
+  }
 
   AnyBase(const AnyBase& other) {
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -243,7 +247,9 @@ class AnyBase : public AnyBaseAll {
     return *this;
   }
 
-  operator bool() const { return m_handler != nullptr; }
+  operator bool() const {
+    return m_handler != nullptr;
+  }
 
  private:
   void* dataPtr() {
@@ -254,7 +260,9 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
-  void setDataPtr(void* ptr) { *reinterpret_cast<void**>(m_data.data()) = ptr; }
+  void setDataPtr(void* ptr) {
+    *reinterpret_cast<void**>(m_data.data()) = ptr;
+  }
 
   const void* dataPtr() const {
     if (m_handler->heapAllocated) {

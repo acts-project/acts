@@ -9,14 +9,20 @@
 #pragma once
 
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstddef>
 #include <mutex>
+#include <string>
+#include <vector>
 
 class TFile;
 class TTree;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 using PropagationSteps = std::vector<Acts::detail::Step>;
 

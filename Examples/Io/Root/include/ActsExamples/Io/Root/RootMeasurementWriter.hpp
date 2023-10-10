@@ -8,30 +8,42 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
 
+#include <array>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <TTree.h>
 
 class TFile;
 class TTree;
+namespace Acts {
+class Surface;
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootMeasurementWriter
 ///
@@ -212,7 +224,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       recBound[Acts::eBoundTheta] = fullVect[Acts::eBoundTheta];
       recBound[Acts::eBoundTime] = fullVect[Acts::eBoundTime];
 
-      Acts::BoundSymMatrix fullVar =
+      Acts::BoundSquareMatrix fullVar =
           m.expander() * m.covariance() * m.expander().transpose();
       varBound[Acts::eBoundLoc0] = fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0);
       varBound[Acts::eBoundLoc1] = fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1);

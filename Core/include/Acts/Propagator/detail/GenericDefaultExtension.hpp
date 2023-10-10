@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
 
@@ -61,8 +62,7 @@ struct GenericDefaultExtension {
          const navigator_t& /*navigator*/, ThisVector3& knew,
          const Vector3& bField, std::array<Scalar, 4>& kQoP, const int i = 0,
          const double h = 0., const ThisVector3& kprev = ThisVector3::Zero()) {
-    auto qop =
-        stepper.charge(state.stepping) / stepper.momentum(state.stepping);
+    auto qop = stepper.qOverP(state.stepping);
     // First step does not rely on previous data
     if (i == 0) {
       knew = qop * stepper.direction(state.stepping).cross(bField);
@@ -132,15 +132,18 @@ struct GenericDefaultExtension {
             typename navigator_t>
   void propagateTime(propagator_state_t& state, const stepper_t& stepper,
                      const navigator_t& /*navigator*/, const double h) const {
+    // using because of autodiff
+    using std::hypot;
+
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
-    using std::hypot;
-    auto derivative =
-        hypot(1, state.options.mass / stepper.momentum(state.stepping));
-    state.stepping.pars[eFreeTime] += h * derivative;
+    auto m = stepper.particleHypothesis(state.stepping).mass();
+    auto p = stepper.absoluteMomentum(state.stepping);
+    auto dtds = hypot(1, m / p);
+    state.stepping.pars[eFreeTime] += h * dtds;
     if (state.stepping.covTransport) {
-      state.stepping.derivative(3) = derivative;
+      state.stepping.derivative(3) = dtds;
     }
   }
 
@@ -167,7 +170,7 @@ struct GenericDefaultExtension {
     /// in the calculation. The matrix A from eq. 17 consists out of 3
     /// different parts. The first one is given by the upper left 3x3 matrix
     /// that are calculated by the derivatives dF/dT (called dFdT) and dG/dT
-    /// (calles dGdT). The second is given by the top 3 lines of the rightmost
+    /// (calls dGdT). The second is given by the top 3 lines of the rightmost
     /// column. This is calculated by dFdL and dGdL. The remaining non-zero term
     /// is calculated directly. The naming of the variables is explained in eq.
     /// 11 and are directly related to the initial problem in eq. 7.
@@ -180,10 +183,15 @@ struct GenericDefaultExtension {
     /// constant offset does not exist for rectangular matrix dGdu' (due to the
     /// missing Lambda part) and only exists for dFdu' in dlambda/dlambda.
 
+    // using because of autodiff
+    using std::hypot;
+
+    auto m = state.stepping.particleHypothesis.mass();
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
-    auto qop =
-        stepper.charge(state.stepping) / stepper.momentum(state.stepping);
+    auto qop = stepper.qOverP(state.stepping);
+    auto p = stepper.absoluteMomentum(state.stepping);
+    auto dtds = hypot(1, m / p);
 
     D = FreeMatrix::Identity();
 
@@ -242,11 +250,7 @@ struct GenericDefaultExtension {
 
     dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
-    D(3, 7) =
-        h * state.options.mass * state.options.mass *
-        stepper.charge(state.stepping) /
-        (stepper.momentum(state.stepping) *
-         std::hypot(1., state.options.mass / stepper.momentum(state.stepping)));
+    D(3, 7) = h * m * m * qop / dtds;
     return true;
   }
 };

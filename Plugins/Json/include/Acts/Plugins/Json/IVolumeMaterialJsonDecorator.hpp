@@ -14,7 +14,7 @@ namespace Acts {
 class ISurfaceMaterial;
 class IVolumeMaterial;
 
-/// helper class to add extra informtion to surface or volume json objects
+/// helper class to add extra information to surface or volume json objects
 class IVolumeMaterialJsonDecorator {
  public:
   virtual ~IVolumeMaterialJsonDecorator() = default;

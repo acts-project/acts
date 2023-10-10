@@ -8,6 +8,10 @@
 
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <cmath>
+
 ActsFatras::PlanarSurfaceDrift::Segment2D
 ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
                                           const Acts::Surface& surface,

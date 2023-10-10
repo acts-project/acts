@@ -11,6 +11,8 @@
 #include "Acts/Material/MaterialSlab.hpp"
 
 #include <ostream>
+#include <utility>
+#include <vector>
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility& binUtility, MaterialSlabVector fullProperties,

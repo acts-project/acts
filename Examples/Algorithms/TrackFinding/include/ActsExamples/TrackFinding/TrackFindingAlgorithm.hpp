@@ -8,13 +8,19 @@
 
 #pragma once
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
+#include "Acts/TrackFinding/TrackSelector.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -24,12 +30,22 @@
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <atomic>
+#include <cstddef>
 #include <functional>
+#include <limits>
+#include <memory>
+#include <string>
 #include <vector>
 
 #include <tbb/combinable.h>
 
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+}  // namespace Acts
+
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class TrackFindingAlgorithm final : public IAlgorithm {
  public:
@@ -58,7 +74,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   /// contains shared_ptr anyways.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      const Acts::Logger& logger);
 
   struct Config {
     /// Input measurements collection.
@@ -69,12 +86,17 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output find trajectories collection.
     std::string outputTracks;
+
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Compute shared hit information
     bool computeSharedHits = false;
+    /// Track selector config
+    std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
+    /// Run backward finding
+    bool backward = false;
   };
 
   /// Constructor of the track finding algorithm
@@ -102,6 +124,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
+  std::optional<Acts::TrackSelector> m_trackSelector;
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
@@ -139,7 +162,7 @@ void TrackFindingAlgorithm::computeSharedHits(
       sourceLinks.size(), std::numeric_limits<std::size_t>::max());
 
   for (auto track : tracks) {
-    for (auto state : track.trackStates()) {
+    for (auto state : track.trackStatesReversed()) {
       if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         continue;
       }

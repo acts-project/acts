@@ -8,16 +8,21 @@
 
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <cmath>
+#include <algorithm>
 #include <cstdint>
 #include <stdexcept>
+#include <utility>
 #include <vector>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::TrackModifier::TrackModifier(const Config& config,
                                            Acts::Logging::Level level)
@@ -37,7 +42,7 @@ ActsExamples::TrackModifier::TrackModifier(const Config& config,
   }
 
   m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTrajectories.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
   m_outputTrackParameters.maybeInitialize(m_cfg.outputTrackParameters);
   m_outputTrajectories.maybeInitialize(m_cfg.outputTrajectories);
 }
@@ -60,7 +65,7 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
         auto& cov = *optCov;
 
         if (m_cfg.dropCovariance) {
-          cov = Acts::BoundSymMatrix(cov.diagonal().asDiagonal());
+          cov = Acts::BoundSquareMatrix(cov.diagonal().asDiagonal());
         }
         if (m_cfg.covScale != 1) {
           cov *= m_cfg.covScale;

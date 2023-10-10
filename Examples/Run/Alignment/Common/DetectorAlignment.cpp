@@ -29,8 +29,8 @@
 #include "ActsExamples/Options/TrackFittingOptions.hpp"
 #include "ActsExamples/Options/TruthSeedSelectorOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
-#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
@@ -89,7 +89,12 @@ int runDetectorAlignment(
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   auto rnd = std::make_shared<const ActsExamples::RandomNumbers>(
       Options::readRandomNumbersConfig(vm));
-  auto dirNav = vm["fit-directed-navigation"].as<bool>();
+
+  if (vm["fit-directed-navigation"].as<bool>()) {
+    throw std::runtime_error(
+        "Directed navigation not supported anymore in the examples binaries."
+        "Please refer to the RefittingAlgorithm in the python bindings.");
+  }
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
@@ -143,17 +148,6 @@ int runDetectorAlignment(
   sequencer.addAlgorithm(
       std::make_shared<TruthTrackFinder>(trackFinderCfg, logLevel));
 
-  SurfaceSortingAlgorithm::Config sorterCfg;
-  // Setup the surface sorter if running direct navigator
-  sorterCfg.inputProtoTracks = trackFinderCfg.outputProtoTracks;
-  sorterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
-  sorterCfg.outputProtoTracks = "sortedprototracks";
-  if (dirNav) {
-    sequencer.addAlgorithm(
-        std::make_shared<SurfaceSortingAlgorithm>(sorterCfg, logLevel));
-  }
-
   if (vm["reco-with-misalignment-correction"].as<bool>()) {
     // setup the alignment (which will update the aligned transforms of the
     // detector elements)
@@ -186,15 +180,10 @@ int runDetectorAlignment(
   fitter.inputMeasurements = digiCfg.outputMeasurements;
   fitter.inputSourceLinks = digiCfg.outputSourceLinks;
   fitter.inputProtoTracks = trackFinderCfg.outputProtoTracks;
-  if (dirNav) {
-    fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
-  }
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTracks = "tracks";
-  fitter.directNavigation = dirNav;
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
-  fitter.trackingGeometry = trackingGeometry;
   fitter.fit = ActsExamples::makeKalmanFitterFunction(
       trackingGeometry, magneticField,
       vm["fit-multiple-scattering-correction"].as<bool>(),

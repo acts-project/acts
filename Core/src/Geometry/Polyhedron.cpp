@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
 #include <cmath>

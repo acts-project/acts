@@ -25,9 +25,9 @@ namespace detail {
 
 template <typename T>
 constexpr T ipow(T num, unsigned int pow) {
-  return (pow >= sizeof(unsigned int) * 8)
-             ? 0
-             : pow == 0 ? 1 : num * ipow(num, pow - 1);
+  return (pow >= sizeof(unsigned int) * 8) ? 0
+         : pow == 0                        ? 1
+                                           : num * ipow(num, pow - 1);
 }
 
 // This object can be iterated to produce the (ordered) set of global indices
@@ -97,18 +97,19 @@ class GlobalNeighborHoodIndices {
       return *this;
     }
 
-    bool operator==(const iterator& it) {
-      // We know when we've reached the end, so we don't need an end-iterator.
-      // Sadly, in C++, there has to be one. Therefore, we special-case it
-      // heavily so that it's super-efficient to create and compare to.
-      if (it.m_parent == nullptr) {
+    bool operator!=(const iterator& it) { return !(*this == it); }
+
+    bool isEqual(const iterator& b) const {
+      if (b.m_parent == nullptr) {
         return m_localIndicesIter[0] == m_parent->m_localIndices[0].end();
       } else {
-        return m_localIndicesIter == it.m_localIndicesIter;
+        return m_localIndicesIter == b.m_localIndicesIter;
       }
     }
 
-    bool operator!=(const iterator& it) { return !(*this == it); }
+    friend bool operator==(const iterator& a, const iterator& b) {
+      return a.isEqual(b);
+    }
 
    private:
     std::array<NeighborHoodIndices::iterator, DIM> m_localIndicesIter;

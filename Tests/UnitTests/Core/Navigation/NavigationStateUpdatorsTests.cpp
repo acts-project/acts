@@ -8,14 +8,21 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 // A test context
@@ -108,6 +115,25 @@ struct IndexedSurfacesExtractor {
 
 }  // namespace Experimental
 
+class TestAxis : public IAxis {
+ public:
+  bool isEquidistant() const final { return true; }
+
+  bool isVariable() const final { return false; }
+
+  detail::AxisBoundaryType getBoundaryType() const final {
+    return detail::AxisBoundaryType::Closed;
+  }
+
+  std::vector<ActsScalar> getBinEdges() const final { return {-1, 1}; }
+
+  ActsScalar getMin() const final { return -1.; }
+
+  ActsScalar getMax() const final { return 1.; }
+
+  size_t getNBins() const final { return 1; };
+};
+
 class MultiGrid1D {
  public:
   static constexpr size_t DIM = 1u;
@@ -116,6 +142,9 @@ class MultiGrid1D {
       const std::array<ActsScalar, 1u>& /*position*/) const {
     return e;
   }
+
+  std::array<const IAxis*, DIM> axes() const { return {&ta}; }
+  TestAxis ta;
 
  private:
   std::vector<size_t> e = {0u, 1u};
@@ -129,6 +158,9 @@ class MultiGrid2D {
       const std::array<ActsScalar, 2u>& /*position*/) const {
     return e;
   }
+
+  std::array<const IAxis*, DIM> axes() const { return {&ta, &ta}; };
+  TestAxis ta;
 
  private:
   std::vector<size_t> e = {1u};

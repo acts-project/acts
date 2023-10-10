@@ -15,10 +15,9 @@
 
 #include <string>
 
-#include "edm4hep/MCParticleCollection.h"
-#include "edm4hep/SimTrackerHitCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTWriter.h"
+#include <edm4hep/MCParticleCollection.h>
+#include <edm4hep/SimTrackerHitCollection.h>
+#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -40,7 +39,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
     std::string outputPath;
     /// Name of the particle collection in EDM4hep.
     std::string outputParticles = "MCParticles";
-    /// Name of the particle collection in EDM4hep.
+    /// Name of the sim tracker hit collection in EDM4hep
     std::string outputSimTrackerHits = "ActsSimTrackerHits";
   };
 
@@ -66,11 +65,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
  private:
   Config m_cfg;
 
-  podio::ROOTWriter m_writer;
-  podio::EventStore m_store;
-
-  edm4hep::MCParticleCollection* m_mcParticleCollection;
-  edm4hep::SimTrackerHitCollection* m_simTrackerHitCollection;
+  podio::ROOTFrameWriter m_writer;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 };

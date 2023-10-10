@@ -10,11 +10,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
+
+#include <array>
+#include <memory>
 
 namespace bdata = boost::unit_test::data;
 
@@ -69,7 +73,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
   //
   // -> local segment must not be symmetric around (0,0)
   // -> segment exit at pos local z remains unchanged
-  // -> segment entry at neg local z changes in x, remains unchaged in y
+  // -> segment entry at neg local z changes in x, remains unchanged in y
   auto driftedSegment = psd.toReadout(geoCtx, *planeSurface, depletion,
                                       cPosition, particleDir, holeDrift);
 
@@ -91,7 +95,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
   //
   // -> local segment must not be symmetric around (0,0)
   // -> segment entry at neg local z remains unchanged
-  // -> segment exit at pos local z changes in x, remains unchaged in y
+  // -> segment exit at pos local z changes in x, remains unchanged in y
   driftedSegment = psd.toReadout(geoCtx, *planeSurface, depletion, cPosition,
                                  particleDir, chargeDrift);
 

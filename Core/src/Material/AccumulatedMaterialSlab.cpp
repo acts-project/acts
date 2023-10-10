@@ -8,6 +8,7 @@
 
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
 
+#include "Acts/Material/Material.hpp"
 #include "Acts/Material/detail/AverageMaterials.hpp"
 
 void Acts::AccumulatedMaterialSlab::accumulate(MaterialSlab slab,

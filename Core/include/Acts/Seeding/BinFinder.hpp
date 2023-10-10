@@ -41,7 +41,7 @@ class BinFinder {
       const SpacePointGrid<external_spacepoint_t>* binnedSP) const;
 
  private:
-  // This vector is provided by the user and is supposed to be a contant for
+  // This vector is provided by the user and is supposed to be a constant for
   // all events. No point in making a copy
   Acts::detail::RefHolder<const std::vector<std::pair<int, int>>>
       m_zBinNeighbors;

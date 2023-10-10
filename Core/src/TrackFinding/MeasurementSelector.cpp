@@ -8,6 +8,11 @@
 
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
+
+#include <algorithm>
+
 namespace Acts {
 
 double MeasurementSelector::calculateChi2(

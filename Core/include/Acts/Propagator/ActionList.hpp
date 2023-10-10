@@ -37,7 +37,7 @@ struct ActionList : public detail::Extendable<actors_t...> {
   using detail::Extendable<actors_t...>::tuple;
 
  public:
-  // This uses the type collector and unpacks using the `R` meta funciton
+  // This uses the type collector and unpacks using the `R` meta function
   template <template <typename...> class R>
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::result_type_extractor, actors_t...>,

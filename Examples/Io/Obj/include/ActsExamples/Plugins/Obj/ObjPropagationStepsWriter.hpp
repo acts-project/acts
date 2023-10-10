@@ -60,7 +60,7 @@ class ObjPropagationStepsWriter
   const Config& config() const { return m_cfg; }
 
  private:
-  Config m_cfg;  ///!< Internal configuration represenation
+  Config m_cfg;  ///!< Internal configuration representation
 
  protected:
   /// This implementation holds the actual writing method

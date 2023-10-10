@@ -61,7 +61,7 @@ auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
         float varianceZ;
         int layer;
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-        r = std::sqrt(x * x + y * y);
+        r = std::hypot(x, y);
         float f22 = varianceR;
         float wid = varianceZ;
         float cov = wid * wid * .08333;

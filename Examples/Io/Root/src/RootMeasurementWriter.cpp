@@ -8,24 +8,24 @@
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <cstddef>
 #include <ios>
-#include <optional>
 #include <stdexcept>
+#include <utility>
+#include <variant>
 
 #include <TFile.h>
-#include <TString.h>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
     const ActsExamples::RootMeasurementWriter::Config& config,
@@ -119,7 +119,8 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
 
     std::visit(
         [&](const auto& m) {
-          Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
+          Acts::GeometryIdentifier geoId =
+              m.sourceLink().template get<IndexSourceLink>().geometryId();
           // find the corresponding surface
           const Acts::Surface* surfacePtr =
               m_cfg.trackingGeometry->findSurface(geoId);
@@ -140,8 +141,8 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
           // Find the contributing simulated hits
           auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
           // Use average truth in the case of multiple contributing sim hits
-          auto [local, pos4, dir] =
-              averageSimHits(ctx.geoContext, surface, simHits, indices);
+          auto [local, pos4, dir] = averageSimHits(ctx.geoContext, surface,
+                                                   simHits, indices, logger());
           dTree->fillTruthParameters(local, pos4, dir);
           dTree->fillBoundMeasurement(m);
           if (not clusters.empty()) {

@@ -8,15 +8,18 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <limits>
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Select tracks by applying some selection cuts.
 class TrackModifier final : public IAlgorithm {
@@ -35,7 +38,7 @@ class TrackModifier final : public IAlgorithm {
     /// parameters input was set.
     std::string outputTrackParameters;
 
-    /// When turned on, only keed the diagonal of the cov matrix.
+    /// When turned on, only keep the diagonal of the cov matrix.
     bool dropCovariance{false};
     /// Scale cov matrix;
     double covScale{1};
