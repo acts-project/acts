@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Detector/ComponentBuilderProxy.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -45,7 +46,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     /// Binning prescription of attachment
     std::vector<BinningValue> binning = {};
     /// The root volume finder
-    std::shared_ptr<IRootVolumeFinderBuilder> rootVolumeFinderBuilder = nullptr;
+    std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
+        nullptr;
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// An eventual reverse geometry id generation
@@ -69,6 +71,22 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   ///
   /// @return an outgoing detector component
   DetectorComponent construct(const GeometryContext& gctx) const final;
+
+  /// This method interprets a prefilled ComponentBuilderProxy object
+  /// and completes the sub builders
+  ///
+  /// @param proxy is the top level proxy object
+  /// @param logLevel is the logging output level
+  ///
+  /// @return the top level builders
+  static std::shared_ptr<IDetectorComponentBuilder> createFromProxy(
+      const ComponentBuilderProxy& proxy, Logging::Level logLevel);
+
+  /// Access to the config object
+  Config& config() { return m_cfg; }
+
+  /// Const access to the config object
+  const Config& config() const { return m_cfg; }
 
  private:
   /// configuration object

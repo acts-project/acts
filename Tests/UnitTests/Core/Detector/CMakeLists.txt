@@ -1,3 +1,5 @@
+add_unittest(ComponentBuilderProxy ComponentBuilderProxyTests.cpp)
+add_unittest(CylindricalComponentProxyHelper CylindricalComponentProxyHelperTests.cpp)
 add_unittest(CylindricalContainerBuilder CylindricalContainerBuilderTests.cpp)
 add_unittest(CylindricalDetectorHelper CylindricalDetectorHelperTests.cpp)
 add_unittest(GridAxisGenerators GridAxisGeneratorsTests.cpp)

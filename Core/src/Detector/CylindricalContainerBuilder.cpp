@@ -9,6 +9,9 @@
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 
 #include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/VolumeStructureBuilder.hpp"
+#include "Acts/Detector/detail/CylindricalComponentProxyHelper.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
@@ -185,4 +188,43 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   // Return the container
   return Acts::Experimental::DetectorComponent{
       {}, rContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
+}
+
+std::shared_ptr<Acts::Experimental::IDetectorComponentBuilder>
+Acts::Experimental::CylindricalContainerBuilder::createFromProxy(
+    const ComponentBuilderProxy& proxy, Logging::Level logLevel) {
+  // Grab the container
+  ComponentBuilderProxy proxyCopy = proxy;
+
+  if (proxy.boundsType != VolumeBounds::BoundsType::eCylinder) {
+    throw std::invalid_argument(
+        "CylindricalContainerBuilder: boundary type must be cylinder.");
+  }
+
+  // Add Gap volumes - will do  nothing if gap volumes are not needed
+  detail::CylindricalComponentProxyHelper::addGapProxies(proxyCopy, logLevel);
+  // Grab off the container
+  ComponentBuilderProxy::ContainerProxy container =
+      std::get<ComponentBuilderProxy::ContainerProxy>(proxyCopy.holder);
+
+  std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders;
+  for (const auto& child : container.children) {
+    if (std::holds_alternative<ComponentBuilderProxy::VolumeProxy>(
+            child->holder)) {
+      builders.push_back(child->builder());
+    } else if (std::holds_alternative<ComponentBuilderProxy::ContainerProxy>(
+                   child->holder)) {
+      // This evokes the recursive stepping down the tree
+      builders.push_back(createFromProxy(*child, logLevel));
+    }
+  }
+
+  // Create the contif and finally the container builder
+  Config cfg;
+  cfg.binning = container.binning;
+  cfg.builders = builders;
+  cfg.auxiliary = "*** acts auto-generated from proxy ***";
+
+  return std::make_shared<CylindricalContainerBuilder>(
+      cfg, getDefaultLogger(proxyCopy.name, logLevel));
 }
