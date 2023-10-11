@@ -1,6 +1,6 @@
 # Machine leaning algorithms
 
-Acts allows you to replace some of the component of the tracking chain by machine learning solutions. For now a replacement to the ambiguity solver is available, but when others are implemented they will be explained here.  
+Acts allows you to replace some of the components of the tracking chain by machine learning solutions. For now a replacement to the ambiguity solver is available, but when others are implemented they will be explained here.  
 
 
 ## Onnx plugin
@@ -15,9 +15,9 @@ The `OnnxRuntimeBase` class implement the inference of a standard MLP via Onnx a
 
 The goal of the ambiguity solver is to remove duplicated and fake tracks that remains after the CKF. To perform this cleaning, this algorithm works in three steps :
 
-- Clustering : track are clustered together, one cluster ~ one truth particle
-- Ranking : tracks in each cluster are ranked, the best one is kept 
-- Cleaning : last pass over all the remain track to remove duplicate and fake (not implemented yet)
+- Clustering: tracks are clustered together, one cluster ~ one truth particle
+- Ranking: tracks in each cluster are ranked, the best one is kept 
+- Cleaning: last pass over all the remaining tracks to remove duplicate and fake (not implemented yet)
 
 ### Clustering
 

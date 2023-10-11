@@ -418,7 +418,7 @@ struct WrappingConfig {
       sl << "New container built with       configuration: "
          << containerVolumeConfig.toString() << '\n';
     }
-    // go through the new new ones first
+    // go through the new ones first
     if (nVolumeConfig) {
       sl << " - n: Negative Endcap, current configuration: "
          << nVolumeConfig.toString() << '\n';
@@ -476,7 +476,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   struct Config {
     /// The tracking volume helper for construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
-    /// The string based indenfication
+    /// The string based identification
     std::string volumeName = "";
     /// The world material
     std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;

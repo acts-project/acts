@@ -140,7 +140,7 @@ _patchKwargsConstructor(TGeoDetector.Config.Volume, proc=_process_volume_interva
 
 
 def NamedTypeArgs(**namedTypeArgs):
-    """Decorator to move args of a named type (eg. `namedtuple` or `Enum`) to kwargs based on type, so user doesn't need to specify the key name.
+    """Decorator to move args of a named type (e.g. `namedtuple` or `Enum`) to kwargs based on type, so user doesn't need to specify the key name.
     Also allows the keyword argument to be converted from a built-in type (eg. `tuple` or `int`).
     """
 

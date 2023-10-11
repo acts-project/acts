@@ -533,7 +533,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   // Check for bounds compatibility
   // We check phi sector (3u) and average phi (4u)
   std::vector<std::array<unsigned int, 2u>> checks = {{3u, 3u}, {4u, 4u}};
-  // And we check the inner radius [0u], outer radius[1u] if its' not a
+  // And we check the inner radius [0u], outer radius[1u] if it is not a
   // selective attachment
   if (selectedOnly.empty()) {
     checks.push_back({0u, 0u});
