@@ -44,7 +44,6 @@
 #include <map>
 #include <memory>
 #include <random>
-#include <sstream>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -57,8 +56,8 @@ using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
 // Set up logger
-Acts::Logging::Level logLevel = Acts::Logging::INFO;
-ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AMVFitterTests", logLevel));
+ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AMVFitterTests",
+                                         Acts::Logging::INFO));
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
