@@ -1007,7 +1007,7 @@ def addCKFTracks(
         ),
         **acts.examples.defaultKWArgs(
             maxSteps=ckfConfig.maxSteps,
-        )
+        ),
     )
     s.addAlgorithm(trackFinder)
     s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
