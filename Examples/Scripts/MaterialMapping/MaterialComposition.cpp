@@ -15,6 +15,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <filesystem>
+#include <fstream>
+
+#include <nlohmann/json.hpp>
 
 #include <TApplication.h>
 #include <boost/program_options.hpp>
@@ -62,6 +66,8 @@ int main(int argc, char** argv) {
     ao("sub-rmax", value<VariableReals>(), "Maximal radial restrictions.");
     ao("sub-zmin", value<VariableReals>(), "Minimal z radial restrictions");
     ao("sub-zmax", value<VariableReals>(), "Maximal z radial restrictions.");
+    ao("config,c", value<std::string>(),
+       "Configuration file (json).");
 
     // Set up the variables map
     variables_map vm;
@@ -83,6 +89,37 @@ int main(int argc, char** argv) {
 
     // Subdetector configurations
     std::vector<Region> dRegion = {};
+
+    if(vm.count("config") > 0) {
+      std::filesystem::path config = vm["config"].as<std::string>();
+      std::cout << "Reading region configuration from JSON: " << config << std::endl;
+
+      if(!std::filesystem::exists(config)) {
+        std::cerr << "Configuration file does not exist." << std::endl;
+        return 1;
+      }
+
+      std::ifstream ifs(config.string().c_str());
+      nlohmann::json j = nlohmann::json::parse(ifs);
+
+      for (const auto& [key, regions] : j.items()) {
+        dRegion.push_back(Region{key});
+        auto& reg = dRegion.back();
+        std::cout << "Region(" << key << ")" << std::endl;
+        for(const auto& region : regions) {
+          float rmin = region["rmin"].template get<float>();
+          float rmax = region["rmax"].template get<float>();
+          float zmin = region["zmin"].template get<float>();
+          float zmax = region["zmax"].template get<float>();
+
+          reg.boxes.push_back({rmin, rmax, zmin, zmax});
+          std::cout << "* " << key << " r/z: " << rmin << "/" << rmax << " " << zmin << "/" << zmax << std::endl;    
+
+        }
+      }
+    }
+    else {
+
     auto snames = vm["sub-names"].as<std::vector<std::string>>();
     auto rmins = vm["sub-rmin"].as<VariableReals>().values;
     auto rmaxs = vm["sub-rmax"].as<VariableReals>().values;
@@ -100,8 +137,14 @@ int main(int argc, char** argv) {
     // Create the regions
     for (unsigned int is = 0; is < subs; ++is) {
       dRegion.push_back(
-          {snames[is], rmins[is], rmaxs[is], zmins[is], zmaxs[is]});
+          Region{snames[is], {{static_cast<float>(rmins[is]), 
+          static_cast<float>(rmaxs[is]), 
+          static_cast<float>(zmins[is]), 
+          static_cast<float>(zmaxs[is])}}});
     }
+
+    }
+
 
     TApplication* tApp =
         vm["silent"].as<bool>()
