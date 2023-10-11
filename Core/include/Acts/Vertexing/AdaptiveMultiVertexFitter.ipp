@@ -53,10 +53,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
          (!state.annealingState.equilibriumReached or !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
     for (auto vtx : state.vertexCollection) {
-      if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
-        return VertexingError::NoCovariance;
-      }
-
       VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
       vtxInfo.relinearize = false;
       // Store old position of vertex, i.e. seed position
@@ -81,12 +77,15 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // Check if we use the constraint during the vertex fit
       // TODO seems strange to set the vtx position to the constraint position
       // at each iteration
-      if (vertexingOptions.useConstraintInFit) {
+      if (state.vtxInfoMap[vtx].constraint.fullCovariance() !=
+          SquareMatrix4::Zero()) {
         Acts::Vertex<input_track_t> constraint =
             state.vtxInfoMap[vtx].constraint;
         vtx->setFullPosition(constraint.fullPosition());
         vtx->setFitQuality(constraint.fitQuality());
         vtx->setFullCovariance(constraint.fullCovariance());
+      } else if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
+        return VertexingError::NoCovariance;
       }
       // TODO understand why we calculate a weight for the vertex
       double weight = m_cfg.annealingTool.getWeight(state.annealingState, 1.);
