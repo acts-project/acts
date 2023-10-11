@@ -332,7 +332,7 @@ Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
-  const auto& sTransform = transform(gctx);
+  const auto sTransform = transform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
@@ -348,7 +348,7 @@ Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
 Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
                                         const Vector2& /*lposition*/) const {
   // fast access via transform matrix (and not rotation())
-  const auto& tMatrix = transform(gctx).matrix();
+  const auto tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 

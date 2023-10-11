@@ -83,7 +83,7 @@ Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
-  const auto& rotation = transform(gctx).rotation();
+  const auto rotation = transform(gctx).rotation();
   // The axes of local frame
   const auto& localXAxis = rotation.col(0);
   const auto& localYAxis = rotation.col(1);
@@ -124,7 +124,7 @@ Acts::AlignmentToPathMatrix Acts::Surface::alignmentToPathDerivative(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
-  const auto& rotation = transform(gctx).rotation();
+  const auto rotation = transform(gctx).rotation();
   // The local frame z axis
   const auto& localZAxis = rotation.col(2);
   // Cosine of angle between momentum direction and local frame z axis
@@ -238,8 +238,7 @@ Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
   return normal(gctx, Vector2(Vector2::Zero()));
 }
 
-const Acts::Transform3& Acts::Surface::transform(
-    const GeometryContext& gctx) const {
+Acts::Transform3 Acts::Surface::transform(const GeometryContext& gctx) const {
   if (m_associatedDetElement != nullptr) {
     return m_associatedDetElement->transform(gctx);
   }

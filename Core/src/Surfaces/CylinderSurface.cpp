@@ -128,7 +128,7 @@ Acts::Result<Acts::Vector2> Acts::CylinderSurface::globalToLocal(
   if (inttol < 0.01) {
     inttol = 0.01;
   }
-  const Transform3& sfTransform = transform(gctx);
+  Transform3 sfTransform = transform(gctx);
   Transform3 inverseTrans(sfTransform.inverse());
   Vector3 loc3Dframe(inverseTrans * position);
   if (std::abs(perp(loc3Dframe) - bounds().get(CylinderBounds::eR)) > inttol) {
@@ -151,7 +151,7 @@ Acts::Vector3 Acts::CylinderSurface::normal(
 
 Acts::Vector3 Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector3& position) const {
-  const Transform3& sfTransform = transform(gctx);
+  Transform3 sfTransform = transform(gctx);
   // get it into the cylinder frame
   Vector3 pos3D = sfTransform.inverse() * position;
   // set the z coordinate to 0
@@ -220,7 +220,7 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
-  const auto& gctxTransform = transform(gctx);
+  auto gctxTransform = transform(gctx);
 
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctxTransform, position, direction);
@@ -293,7 +293,7 @@ Acts::AlignmentToPathMatrix Acts::CylinderSurface::alignmentToPathDerivative(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
-  const auto& rotation = transform(gctx).rotation();
+  const auto rotation = transform(gctx).rotation();
   // The local frame x/y/z axis
   const auto& localXAxis = rotation.col(0);
   const auto& localYAxis = rotation.col(1);
@@ -339,7 +339,7 @@ Acts::CylinderSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
-  const auto& sTransform = transform(gctx);
+  auto sTransform = transform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);

@@ -54,7 +54,7 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
 
-  const Transform3& ctransform = transform(gctx);
+  const Transform3 ctransform = transform(gctx);
   // Draw the bounds if more than one segment are chosen
   if (lseg > 1) {
     double r = m_bounds->get(LineBounds::eR);
