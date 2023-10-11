@@ -129,7 +129,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   // Sanitizer run with dummy input to detect configuration issues
   // TODO This would be quite helpful I think, but currently it does not work
   // in general because the stages do not expose the number of node features.
-  // However, this must be addressed anyways when we also want to allow to
+  // However, this must be addressed anyway when we also want to allow to
   // configure this more flexible with e.g. cluster information as input. So
   // for now, we disable this.
 #if 0

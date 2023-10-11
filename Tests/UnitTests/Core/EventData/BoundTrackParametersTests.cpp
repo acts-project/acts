@@ -235,7 +235,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
 
 // different surfaces
 // parameters must be chosen such that all possible local positions (as defined
-// in the datasets header) represent valid points on the surface.
+// in the dataset's header) represent valid points on the surface.
 const auto cones = bdata::make({
     Surface::makeShared<ConeSurface>(Transform3::Identity(),
                                      0.5 /* opening angle */),

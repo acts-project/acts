@@ -71,7 +71,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   /// Create the track finder function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
+  /// contains shared_ptr anyway.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,

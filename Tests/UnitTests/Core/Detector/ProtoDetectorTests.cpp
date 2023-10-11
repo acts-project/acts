@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
                   std::numeric_limits<ActsScalar>::epsilon());
 
   // The first volume is the beam pipe, it should have gotten the
-  // the z dimension
+  // z dimension
   auto& beamPipe = cts.constituentVolumes[0u];
 
   BOOST_CHECK(beamPipe.name == "beam-pipe");

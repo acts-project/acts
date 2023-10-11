@@ -496,7 +496,7 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 // is appropriate for the run timings distribution otherwise.
 //
 // You shouldn't usually need to adjust the number of runs and warmup time, but
-// here are some guidelines for those times where you need to:
+// here are some guidelines for those times when you need to:
 // - `num_runs` is a somewhat delicate compromise between several concerns:
 //       * Quality of error bars (many runs mean more precise error bars)
 //       * Outlier rejection (many runs mean better outlier rejection)
