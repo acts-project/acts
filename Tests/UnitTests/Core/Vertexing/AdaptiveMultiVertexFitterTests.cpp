@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   auto vtx2PosFitted = state.vertexCollection.at(1)->position();
   auto vtx2CovFitted = state.vertexCollection.at(1)->covariance();
-  auto vtx2Trks = state.vertexCollection.at(1)->tracks();
+  // auto vtx2Trks = state.vertexCollection.at(1)->tracks();
   auto vtx2FQ = state.vertexCollection.at(1)->fitQuality();
 
   if (debugMode) {
