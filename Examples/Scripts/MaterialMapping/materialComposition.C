@@ -44,9 +44,9 @@ struct MaterialHistograms {
                   : name + std::string("_l0_vs_eta_A") + std::to_string(iA);
 
     x0_vs_eta = new TProfile(x0NameEta.c_str(), "X_{0} vs. #eta", bins, -eta,
-                             eta, 0., 5.);
+                             eta, 0., 50.);
     l0_vs_eta = new TProfile(l0NameEta.c_str(), "L_{0} vs. #eta", bins, -eta,
-                             eta, 0., 5.);
+                             eta, 0., 50.);
 
     std::string x0NamePhi =
         (iA == 0) ? name + std::string("_x0_vs_phi_all")
@@ -56,9 +56,9 @@ struct MaterialHistograms {
                   : name + std::string("_l0_vs_phi_A") + std::to_string(iA);
 
     x0_vs_phi = new TProfile(x0NamePhi.c_str(), "X_{0} vs. #phi", bins, -M_PI,
-                             M_PI, 0., 5.);
+                             M_PI, 0., 50.);
     l0_vs_phi = new TProfile(l0NamePhi.c_str(), "L_{0} vs. #phi", bins, -M_PI,
-                             M_PI, 0., 5.);
+                             M_PI, 0., 50.);
   }
 
   /// This fills the event into the histograms
@@ -118,7 +118,7 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
       new TCanvas("materialCanvas", "Materials", 100, 100, 620, 400);
   materialCanvas->cd();
   // Draw all the atomic elements & get the histogram
-  inputTree->Draw("mat_A>>hA(100,0.5,100.5)");
+  inputTree->Draw("mat_A>>hA(200,0.5,200.5)");
   TH1F* histA = dynamic_cast<TH1F*>(gDirectory->Get("hA"));
   histA->Draw();
 
@@ -164,7 +164,7 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
 
     // The material histograms for all
     mCache[0] = MaterialHistograms(rName, 0, bins, eta);
-    for (unsigned int ib = 1; ib <= 100; ++ib) {
+    for (unsigned int ib = 1; ib <= 200; ++ib) {
       if (histA->GetBinContent(ib) > 0.) {
         mCache[ib] = MaterialHistograms(rName, ib, bins, eta);
       }
@@ -201,7 +201,11 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
 
         unsigned int sA = histA->FindBin(stepA->at(is));
         // The current one
-        auto& current = mCache[sA];
+        auto currentIt = mCache.find(sA);
+        if (currentIt == mCache.end()) {
+          throw std::runtime_error{"Unknown atomic number " +std::to_string(sA)};
+        }
+        auto& current = currentIt->second;
         current.s_x0 += step / X0;
         current.s_l0 += step / L0;
       }
