@@ -70,8 +70,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
         prepareVertexForFit(state, currentVtx, vertexingOptions);
       }
       // Determine if constraint vertex exist
-      if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
-          SquareMatrix4::Zero()) {
+      if (vertexingOptions.useConstraintInFit) {
         currentVtx->setFullPosition(
             state.vtxInfoMap[currentVtx].constraintVertex.fullPosition());
         currentVtx->setFitQuality(
