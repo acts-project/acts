@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
       nlohmann::json j = nlohmann::json::parse(ifs);
 
       for (const auto& [key, regions] : j.items()) {
-        dRegion.push_back(Region{key});
+        dRegion.push_back(Region{key, {}});
         auto& reg = dRegion.back();
         std::cout << "Region(" << key << ")" << std::endl;
         for (const auto& region : regions) {

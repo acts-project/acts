@@ -99,7 +99,7 @@ struct Region {
   std::vector<std::tuple<float, float, float, float>> boxes;
 
   bool inside(float r, float z) const {
-    for (const auto [minR, maxR, minZ, maxZ] : boxes) {
+    for (const auto& [minR, maxR, minZ, maxZ] : boxes) {
       if (minR < r && r < maxR && minZ < z && z < maxZ) {
         return true;
       }
