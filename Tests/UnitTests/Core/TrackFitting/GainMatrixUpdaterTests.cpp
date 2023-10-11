@@ -73,9 +73,10 @@ BOOST_AUTO_TEST_CASE(Update) {
   BOOST_CHECK(ts.hasCalibrated());
 
   // Gain matrix update and filtered state
+  Acts::Surface* surface = nullptr;
   BOOST_CHECK(GainMatrixUpdater()
                   .
-                  operator()<VectorMultiTrajectory>(tgContext, ts)
+                  operator()<VectorMultiTrajectory>(tgContext, surface, ts)
                   .ok());
 
   // Check for regression. This does NOT test if the math is correct, just that

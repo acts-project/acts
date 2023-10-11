@@ -148,6 +148,8 @@ class LineSurface : public Surface {
   FreeToPathMatrix freeToPathDerivative(
       const GeometryContext& gctx, const FreeVector& parameters) const final;
 
+  BoundVector correctSign(const BoundVector& boundParams) const final;
+
   /// Local to global transformation
   ///
   /// @note for line surfaces the momentum direction is used in order to interpret the

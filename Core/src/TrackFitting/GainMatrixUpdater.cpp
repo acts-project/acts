@@ -22,7 +22,7 @@
 namespace Acts {
 
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
-    InternalTrackState trackState, Direction direction,
+    InternalTrackState trackState, const Surface* surface, Direction direction,
     const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
   std::error_code error;
@@ -64,8 +64,15 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
       return false;                                           // abort execution
     }
 
+    auto signCorrected = surface->correctSign(trackState.predicted);
+
+    /*
+        InternalTrackState{
+            Eigen::Map(surface->correctSign(
+                Eigen::Map<BoundVector>(trackState.predicted().data()))),
+    */
     trackState.filtered =
-        trackState.predicted + K * (calibrated - H * trackState.predicted);
+        trackState.predicted + K * (calibrated - H * signCorrected);
     trackState.filteredCovariance = (BoundSquareMatrix::Identity() - K * H) *
                                     trackState.predictedCovariance;
     ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());

@@ -389,6 +389,8 @@ class Surface : public virtual GeometryObject,
   virtual FreeToPathMatrix freeToPathDerivative(
       const GeometryContext& gctx, const FreeVector& parameters) const;
 
+  virtual BoundVector correctSign(const BoundVector& boundParams) const;
+
   /// Calucation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment

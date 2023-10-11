@@ -29,6 +29,7 @@ void voidFitterCalibrator(const GeometryContext& /*gctx*/,
 
 template <typename traj_t>
 Result<void> voidFitterUpdater(const GeometryContext& /*gctx*/,
+                               const Surface* /*surface*/,
                                typename traj_t::TrackStateProxy trackState,
                                Direction /*direction*/,
                                const Logger& /*logger*/) {

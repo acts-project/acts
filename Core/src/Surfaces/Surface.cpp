@@ -333,6 +333,10 @@ Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
   return freeToPath;
 }
 
+Acts::BoundVector Acts::Surface::correctSign(const BoundVector& boundParams) const {
+  return boundParams;
+}
+
 const Acts::DetectorElementBase* Acts::Surface::associatedDetectorElement()
     const {
   return m_associatedDetElement;
@@ -367,3 +371,4 @@ void Acts::Surface::assignSurfaceMaterial(
 void Acts::Surface::associateLayer(const Acts::Layer& lay) {
   m_associatedLayer = (&lay);
 }
+

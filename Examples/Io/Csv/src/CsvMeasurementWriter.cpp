@@ -109,6 +109,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           meas.local_key = 0;
           // Create a full set of parameters
           auto parameters = (m.expander() * m.parameters()).eval();
+          //parameters = surface->correctSign(parameters);
           meas.local0 = parameters[Acts::eBoundLoc0];
           meas.local1 = parameters[Acts::eBoundLoc1];
           meas.phi = parameters[Acts::eBoundPhi];
