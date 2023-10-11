@@ -40,6 +40,9 @@ ActsExamples::CsvMeasurementWriter::CsvMeasurementWriter(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map input collection");
   }
+  if (not m_cfg.trackingGeometry) {
+    throw std::invalid_argument("Missing tracking geometry");
+  }
 
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
@@ -109,7 +112,10 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           meas.local_key = 0;
           // Create a full set of parameters
           auto parameters = (m.expander() * m.parameters()).eval();
-          //parameters = surface->correctSign(parameters);
+
+          const Acts::Surface* surface =
+              m_cfg.trackingGeometry->findSurface(geoId);
+          parameters = surface->correctSign(parameters);
           meas.local0 = parameters[Acts::eBoundLoc0];
           meas.local1 = parameters[Acts::eBoundLoc1];
           meas.phi = parameters[Acts::eBoundPhi];

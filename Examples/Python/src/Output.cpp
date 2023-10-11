@@ -343,7 +343,7 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvMeasurementWriter, mex,
                              "CsvMeasurementWriter", inputMeasurements,
                              inputClusters, inputMeasurementSimHitsMap,
-                             outputDir, outputPrecision);
+                             outputDir, outputPrecision, trackingGeometry);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvPlanarClusterWriter, mex,
                              "CsvPlanarClusterWriter", inputClusters,
