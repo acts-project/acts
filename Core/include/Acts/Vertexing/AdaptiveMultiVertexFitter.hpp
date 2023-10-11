@@ -280,12 +280,12 @@ class AdaptiveMultiVertexFitter {
   std::vector<double> collectTrackToVertexCompatibilities(
       State& state, const InputTrack_t* trk) const;
 
-  /// @brief Determines if vertex position has shifted more than
-  /// m_cfg.maxRelativeShift in last iteration
+  /// @brief Determines if any vertex position has shifted more than
+  /// m_cfg.maxRelativeShift in the last iteration
   ///
   /// @param state Fitter state
   ///
-  /// @return False if shift was larger than maxRelativeShift
+  /// @return False if at least one shift was larger than maxRelativeShift
   bool checkSmallShift(State& state) const;
 
   /// @brief Updates tracks for current vertex with knowledge

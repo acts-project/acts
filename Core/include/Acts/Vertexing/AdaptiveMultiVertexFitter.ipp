@@ -58,16 +58,17 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // Store old position of vertex, i.e. seed position
       // in case of first iteration or position determined
       // in previous iteration afterwards
-      vtxInfo.position = vtx->fullPosition();
+      vtxInfo.oldPosition = vtx->fullPosition();
 
-      // Calculate the x-y-distance between the current vertex position and the
-      // linearization point of the track. If it is too large, we relinearize
-      // the tracks and recalculate their 3D impact parameters.
-      ActsVector<2> xyDiff = vtxInfo.position.template head<2>() -
+      // Calculate the x-y-distance between the current vertex position
+      // and the linearization point of the tracks. If it is too large,
+      // we relinearize the tracks and recalculate their 3D impact
+      // parameters.
+      ActsVector<2> xyDiff = vtx->position().template head<2>() -
                              vtxInfo.linPoint.template head<2>();
       double xyDist = std::hypot(xyDiff[0], xyDiff[1]);
       if (xyDist > m_cfg.maxDistToLinPoint) {
-        // Set flag for relinaerization
+        // Set flag for relinearization
         vtxInfo.relinearize = true;
         // Recalculate the track impact parameters at the current vertex
         // position
@@ -92,17 +93,19 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       vtx->setFullCovariance(vtx->fullCovariance() / weight);
 
       // Set vertexCompatibility for all TrackAtVertex objects
-      // at current vertex
+      // at the current vertex
       setAllVertexCompatibilities(state, vtx, vertexingOptions);
     }  // End loop over vertex collection
 
-    // Now after having estimated all compatibilities of all tracks at
-    // all vertices, run again over all vertices to set track weights
-    // and update the vertex
+    // Recalculate all track weights and update vertices
     setWeightsAndUpdate(state, linearizer, vertexingOptions);
+
+    // Cool the system down, i.e., reduce the temperature parameter. At lower
+    // temperatures, outlying tracks are downweighted more.
     if (!state.annealingState.equilibriumReached) {
       m_cfg.annealingTool.anneal(state.annealingState);
     }
+
     isSmallShift = checkSmallShift(state);
     ++nIter;
   }
@@ -200,7 +203,7 @@ Acts::Result<void> Acts::
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
   // Vertex position
-  const Vector3& pos = vtxInfo.position.template head<3>();
+  const Vector3& pos = vtxInfo.oldPosition.template head<3>();
 
   // Loop over all tracks at the vertex
   for (const auto& trk : vtxInfo.trackLinks) {
@@ -244,7 +247,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.template getVertexCompatibility<3>(
         vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
-        VectorHelpers::position(vtxInfo.position));
+        VectorHelpers::position(vtxInfo.oldPosition));
     if (!compRes.ok()) {
       return compRes.error();
     }
@@ -263,7 +266,11 @@ Acts::Result<void> Acts::
 
     const std::shared_ptr<PerigeeSurface> vtxPerigeeSurface =
         Surface::makeShared<PerigeeSurface>(
-            VectorHelpers::position(state.vtxInfoMap[vtx].position));
+            VectorHelpers::position(vtxInfo.oldPosition));
+
+    if (vtxInfo.relinearize) {
+      vtxInfo.linPoint = vtxInfo.oldPosition;
+    }
 
     for (const auto& trk : vtxInfo.trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
@@ -274,18 +281,15 @@ Acts::Result<void> Acts::
           collectTrackToVertexCompatibilities(state, trk));
 
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
-        // Check if linearization state exists or need to be relinearized
-        if (not trkAtVtx.isLinearized || state.vtxInfoMap[vtx].relinearize) {
+        // Check if track is already linearized and whether we need to
+        // relinearize
+        if (not trkAtVtx.isLinearized or vtxInfo.relinearize) {
           auto result = linearizer.linearizeTrack(
-              m_extractParameters(*trk), state.vtxInfoMap[vtx].position[3],
+              m_extractParameters(*trk), vtxInfo.oldPosition[3],
               *vtxPerigeeSurface, vertexingOptions.geoContext,
               vertexingOptions.magFieldContext, state.linearizerState);
           if (!result.ok()) {
             return result.error();
-          }
-
-          if (trkAtVtx.isLinearized) {
-            state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].position;
           }
 
           trkAtVtx.linearizedState = *result;
@@ -336,11 +340,10 @@ template <typename input_track_t, typename linearizer_t>
 bool Acts::AdaptiveMultiVertexFitter<
     input_track_t, linearizer_t>::checkSmallShift(State& state) const {
   for (auto vtx : state.vertexCollection) {
-    Vector3 diff = state.vtxInfoMap[vtx].position.template head<3>() -
-                   vtx->fullPosition().template head<3>();
-    SquareMatrix3 vtxWgt =
-        (vtx->fullCovariance().template block<3, 3>(0, 0)).inverse();
-    double relativeShift = diff.dot(vtxWgt * diff);
+    Vector3 diff =
+        state.vtxInfoMap[vtx].oldPosition.template head<3>() - vtx->position();
+    SquareMatrix3 vtxCov = vtx->covariance();
+    double relativeShift = diff.dot(vtxCov.inverse() * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
       return false;
     }
