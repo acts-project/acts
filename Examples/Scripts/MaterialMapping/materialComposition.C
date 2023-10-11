@@ -43,10 +43,10 @@ struct MaterialHistograms {
         (iA == 0) ? name + std::string("_l0_vs_eta_all")
                   : name + std::string("_l0_vs_eta_A") + std::to_string(iA);
 
-    x0_vs_eta = new TProfile(x0NameEta.c_str(), "X_{0} vs. #eta", bins, -eta,
-                             eta);
-    l0_vs_eta = new TProfile(l0NameEta.c_str(), "L_{0} vs. #eta", bins, -eta,
-                             eta);
+    x0_vs_eta =
+        new TProfile(x0NameEta.c_str(), "X_{0} vs. #eta", bins, -eta, eta);
+    l0_vs_eta =
+        new TProfile(l0NameEta.c_str(), "L_{0} vs. #eta", bins, -eta, eta);
 
     std::string x0NamePhi =
         (iA == 0) ? name + std::string("_x0_vs_phi_all")
@@ -55,10 +55,10 @@ struct MaterialHistograms {
         (iA == 0) ? name + std::string("_l0_vs_phi_all")
                   : name + std::string("_l0_vs_phi_A") + std::to_string(iA);
 
-    x0_vs_phi = new TProfile(x0NamePhi.c_str(), "X_{0} vs. #phi", bins, -M_PI,
-                             M_PI);
-    l0_vs_phi = new TProfile(l0NamePhi.c_str(), "L_{0} vs. #phi", bins, -M_PI,
-                             M_PI);
+    x0_vs_phi =
+        new TProfile(x0NamePhi.c_str(), "X_{0} vs. #phi", bins, -M_PI, M_PI);
+    l0_vs_phi =
+        new TProfile(l0NamePhi.c_str(), "L_{0} vs. #phi", bins, -M_PI, M_PI);
   }
 
   /// This fills the event into the histograms
@@ -99,8 +99,8 @@ struct Region {
   std::vector<std::tuple<float, float, float, float>> boxes;
 
   bool inside(float r, float z) const {
-    for (const auto[minR, maxR, minZ, maxZ] : boxes) {
-      if(minR < r && r < maxR && minZ < z && z < maxZ) {
+    for (const auto [minR, maxR, minZ, maxZ] : boxes) {
+      if (minR < r && r < maxR && minZ < z && z < maxZ) {
         return true;
       }
     }
@@ -198,7 +198,7 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
         float z = stepZ->at(is);
         float r = std::hypot(x, y);
 
-        if(!region.inside(r, z)) {
+        if (!region.inside(r, z)) {
           continue;
         }
 
@@ -215,7 +215,8 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
         // The current one
         auto currentIt = mCache.find(sA);
         if (currentIt == mCache.end()) {
-          throw std::runtime_error{"Unknown atomic number " +std::to_string(sA)};
+          throw std::runtime_error{"Unknown atomic number " +
+                                   std::to_string(sA)};
         }
         auto& current = currentIt->second;
         current.s_x0 += step / X0;
