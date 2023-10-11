@@ -89,9 +89,8 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
         vtx->setFullCovariance(constraint.fullCovariance());
       }
       // TODO understand why we calculate a weight for the vertex
-      double weight =
-          1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
-      vtx->setFullCovariance(vtx->fullCovariance() * weight);
+      double weight = m_cfg.annealingTool.getWeight(state.annealingState, 1.);
+      vtx->setFullCovariance(vtx->fullCovariance() / weight);
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
@@ -271,10 +270,9 @@ Acts::Result<void> Acts::
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
 
       // Set trackWeight for current track
-      double currentTrkWeight = m_cfg.annealingTool.getWeight(
+      trkAtVtx.trackWeight = m_cfg.annealingTool.getWeight(
           state.annealingState, trkAtVtx.vertexCompatibility,
           collectTrackToVertexCompatibilities(state, trk));
-      trkAtVtx.trackWeight = currentTrkWeight;
 
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
@@ -312,13 +310,23 @@ std::vector<double>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     collectTrackToVertexCompatibilities(State& state,
                                         const input_track_t* trk) const {
+  // Compatibilities of trk wrt all of its associated vertices
   std::vector<double> trkToVtxCompatibilities;
-  trkToVtxCompatibilities.reserve(state.vertexCollection.size());
+
+  // Range of vertices that are associated with trk. The range is
+  // represented via its bounds: range.first refers to the first
+  // iterator of the range; range.second refers to the iterator after the
+  // last iterator of the range.
   auto range = state.trackToVerticesMultiMap.equal_range(trk);
 
-  for (auto vtxIter = range.first; vtxIter != range.second; ++vtxIter) {
+  // Allocate space in memory for the vector of compatibilities
+  trkToVtxCompatibilities.reserve(std::distance(range.first, range.second));
+
+  for (auto it = range.first; it != range.second; ++it) {
+    // it->first corresponds to trk, it->second to one of its associated
+    // vertices
     trkToVtxCompatibilities.push_back(
-        state.tracksAtVerticesMap.at(std::make_pair(trk, vtxIter->second))
+        state.tracksAtVerticesMap.at(std::make_pair(trk, it->second))
             .vertexCompatibility);
   }
 

@@ -250,10 +250,10 @@ class AdaptiveMultiVertexFitter {
       State& state, Vertex<InputTrack_t>* vtx,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
-  /// @brief Sets vertexCompatibility for all TrackAtVertex objects
-  /// at current vertex
+  /// @brief Sets the vertexCompatibility for all TrackAtVertex objects
+  /// at the current vertex
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   /// @param currentVtx Current vertex
   /// @param vertexingOptions Vertexing options
   Result<void> setAllVertexCompatibilities(
@@ -263,19 +263,18 @@ class AdaptiveMultiVertexFitter {
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
   ///  and updates the vertices by calling the VertexUpdater
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   /// @param linearizer The track linearizer
   /// @param vertexingOptions Vertexing options
   Result<void> setWeightsAndUpdate(
       State& state, const Linearizer_t& linearizer,
       const VertexingOptions<input_track_t>& vertexingOptions) const;
 
-  /// @brief Collects all compatibility values of the track `trk`
-  /// at all vertices it is currently attached to and outputs
-  /// these values in a vector
+  /// @brief Collects the compatibility values of the track `trk`
+  /// wrt to all of its associated vertices
   ///
-  /// @param state The state object
-  /// @param trk The track
+  /// @param state Fitter state
+  /// @param trk Track
   ///
   /// @return Vector of compatibility values
   std::vector<double> collectTrackToVertexCompatibilities(
@@ -284,7 +283,7 @@ class AdaptiveMultiVertexFitter {
   /// @brief Determines if vertex position has shifted more than
   /// m_cfg.maxRelativeShift in last iteration
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   ///
   /// @return False if shift was larger than maxRelativeShift
   bool checkSmallShift(State& state) const;
@@ -292,7 +291,7 @@ class AdaptiveMultiVertexFitter {
   /// @brief Updates tracks for current vertex with knowledge
   /// of current vertex position
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   void doVertexSmoothing(State& state) const;
 };
 
