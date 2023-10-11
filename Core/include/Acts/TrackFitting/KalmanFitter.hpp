@@ -32,7 +32,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
-#include "Acts/TrackFitting/detail/FitterHelpers.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -717,14 +716,45 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
-        auto trackStateProxyRes = detail::getTrackStateProxy(
-            state, stepper, *surface, *result.fittedStates,
-            Acts::MultiTrajectoryTraits::kInvalid, false, logger(),
-            freeToBoundCorrection, TrackStatePropMask::All);
-        if (!trackStateProxyRes.ok()) {
-          return trackStateProxyRes.error();
+        auto fittedStates = *result.fittedStates;
+
+        // Add a <mask> TrackState entry multi trajectory. This allocates
+        // storage for all components, which we will set later.
+        TrackStatePropMask mask = TrackStatePropMask::All;
+        size_t currentTrackIndex = fittedStates.addTrackState(
+            mask, Acts::MultiTrajectoryTraits::kInvalid);
+
+        // now get track state proxy back
+        typename traj_t::TrackStateProxy trackStateProxy =
+            fittedStates.getTrackState(currentTrackIndex);
+
+        // Set the trackStateProxy components with the state from the ongoing
+        // propagation
+        {
+          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+          // Bind the transported state to the current surface
+          auto res = stepper.boundState(state.stepping, *surface, false,
+                                        freeToBoundCorrection);
+          if (!res.ok()) {
+            //            ACTS_ERROR("Propagate to surface " <<
+            //            surface.geometryId()
+            //                                               << " failed: " <<
+            //                                               res.error());
+            return res.error();
+          }
+          auto& [boundParams, jacobian, pathLength] = *res;
+
+          // Fill the track state
+          trackStateProxy.predicted() = std::move(boundParams.parameters());
+          if (boundParams.covariance().has_value()) {
+            trackStateProxy.predictedCovariance() =
+                std::move(*boundParams.covariance());
+          }
+
+          trackStateProxy.jacobian() = std::move(jacobian);
+          trackStateProxy.pathLength() = std::move(pathLength);
         }
-        auto& trackStateProxy = *trackStateProxyRes;
+
         // We have predicted parameters, so calibrate the uncalibrated input
         // measurement
         extensions.calibrator(state.geoContext, *calibrationContext,
