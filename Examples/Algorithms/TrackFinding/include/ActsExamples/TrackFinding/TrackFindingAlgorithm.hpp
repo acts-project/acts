@@ -98,7 +98,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Run backward finding
     bool backward = false;
     /// Maximum number of propagation steps
-    unsigned int maxSteps = 10000000;
+    unsigned int maxSteps = 100000;
   };
 
   /// Constructor of the track finding algorithm
