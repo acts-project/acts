@@ -45,7 +45,8 @@ auto kalmanHandleMeasurement(
   // Add a <mask> TrackState entry multi trajectory. This allocates storage for
   // all components, which we will set later.
   TrackStatePropMask mask = TrackStatePropMask::All;
-  size_t currentTrackIndex = fittedStates.addTrackState(mask, lastTrackIndex);
+  const size_t currentTrackIndex =
+      fittedStates.addTrackState(mask, lastTrackIndex);
 
   // now get track state proxy back
   typename traj_t::TrackStateProxy trackStateProxy =
@@ -120,7 +121,10 @@ auto kalmanHandleMeasurement(
 }
 
 /// This function encapsulates what actions should be performed on a
-/// MultiTrajectory when we have no measurement
+/// MultiTrajectory when we have no measurement.
+/// If there are no source links on surface, add either a hole or passive
+/// material TrackState entry multi trajectory. No storage allocation for
+/// uncalibrated/calibrated measurement and filtered parameter
 /// @tparam propagator_state_t The propagator state type
 /// @tparam stepper_t The stepper type
 /// @param state The propagator state
@@ -138,15 +142,12 @@ auto kalmanHandleNoMeasurement(
     const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
-  // No source links on surface, add either hole or passive material
-  // TrackState entry multi trajectory. No storage allocation for
-  // uncalibrated/calibrated measurement and filtered parameter
-
   // Add a <mask> TrackState entry multi trajectory. This allocates storage for
   // all components, which we will set later.
   TrackStatePropMask mask =
       ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
-  size_t currentTrackIndex = fittedStates.addTrackState(mask, lastTrackIndex);
+  const size_t currentTrackIndex =
+      fittedStates.addTrackState(mask, lastTrackIndex);
 
   // now get track state proxy back
   typename traj_t::TrackStateProxy trackStateProxy =
@@ -160,8 +161,6 @@ auto kalmanHandleNoMeasurement(
     auto res = stepper.boundState(state.stepping, surface, doCovTransport,
                                   freeToBoundCorrection);
     if (!res.ok()) {
-      ACTS_ERROR("Propagate to surface " << surface.geometryId()
-                                         << " failed: " << res.error());
       return res.error();
     }
     auto &[boundParams, jacobian, pathLength] = *res;

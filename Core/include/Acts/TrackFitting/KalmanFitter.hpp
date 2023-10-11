@@ -721,7 +721,7 @@ class KalmanFitter {
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.
         TrackStatePropMask mask = TrackStatePropMask::All;
-        size_t currentTrackIndex = fittedStates.addTrackState(
+        const size_t currentTrackIndex = fittedStates.addTrackState(
             mask, Acts::MultiTrajectoryTraits::kInvalid);
 
         // now get track state proxy back
@@ -736,10 +736,6 @@ class KalmanFitter {
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
           if (!res.ok()) {
-            //            ACTS_ERROR("Propagate to surface " <<
-            //            surface.geometryId()
-            //                                               << " failed: " <<
-            //                                               res.error());
             return res.error();
           }
           auto& [boundParams, jacobian, pathLength] = *res;
