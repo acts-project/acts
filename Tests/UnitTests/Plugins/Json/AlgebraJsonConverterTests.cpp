@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
                                         0.0997267,  0.994574,   -0.0296247,
                                         -0.0641331, 0.0361362,  0.997287};
 
-  // Test standard writig
+  // Test standard writing
   Transform3JsonConverter::Options standardOptions{true, false};
   nlohmann::json standardOut =
       Transform3JsonConverter::toJson(reference, standardOptions);

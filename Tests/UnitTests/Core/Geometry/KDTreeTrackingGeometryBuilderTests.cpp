@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
 
   auto logLevel = Acts::Logging::VERBOSE;
 
-  // Surface array creatorr
+  // Surface array creator
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
       Acts::SurfaceArrayCreator::Config(),
       Acts::getDefaultLogger("SurfaceArrayCreator", logLevel));
