@@ -65,12 +65,6 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     }
 
     auto signCorrected = surface->correctSign(trackState.predicted);
-
-    /*
-        InternalTrackState{
-            Eigen::Map(surface->correctSign(
-                Eigen::Map<BoundVector>(trackState.predicted().data()))),
-    */
     trackState.filtered =
         trackState.predicted + K * (calibrated - H * signCorrected);
     trackState.filteredCovariance = (BoundSquareMatrix::Identity() - K * H) *
