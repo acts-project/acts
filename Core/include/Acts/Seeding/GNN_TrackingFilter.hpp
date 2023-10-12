@@ -137,7 +137,6 @@ class TrigFTF_GNN_TrackingFilter {
 
     TrigFTF_GNN_EdgeState<external_spacepoint_t>* best = (*m_stateVec.begin());
 
-
     output.clone(*best);
     
     m_globalStateCounter = 0;
@@ -300,9 +299,7 @@ class TrigFTF_GNN_TrackingFilter {
 
     float sigma_rz = 0.0;
 
-    // int type = getLayerType(pS->m_n1->m_sp.layer());
     int type = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
-
 
     if(type == 0) {//barrel TO-DO: split into barrel Pixel and barrel SCT
       sigma_rz = sigma_y*sigma_y;
@@ -352,8 +349,10 @@ class TrigFTF_GNN_TrackingFilter {
   }
 
   int getLayerType(int l){
-    return m_geo.at(l).m_type;
+    auto iterator = find_if(m_geo.begin(), m_geo.end(),[l](auto n) { return n.m_subdet == l; }); //iterator to vector memeber with this id 
+    int index = std::distance(m_geo.begin(), iterator); 
 
+    return m_geo.at(index).m_type;
   }  
 
 

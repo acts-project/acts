@@ -44,22 +44,24 @@ class TrigFTF_GNN_Node {
   struct CompareByPhi {
     bool operator()(const TrigFTF_GNN_Node<space_point_t> *n1,
                     const TrigFTF_GNN_Node<space_point_t> *n2) {
-      // return n1->m_sp.phi() < n2->m_sp.phi();
-      // return (std::atan(n1->m_sp.x() / n1->m_sp.y())) <
-      //        (std::atan(n2->m_sp.x() / n1->m_sp.y()));
       return (n1->m_sp_FTF.phi() <
-             n1->m_sp_FTF.phi());
+             n2->m_sp_FTF.phi());
     }
   };
-  // want constructor to take simspace point
-  // TrigFTF_GNN_Node(const space_point_t &p, FTF_SP<space_point_t> FTF_sp, float minT = -100.0,
-  //                  float maxT = 100.0)
-  TrigFTF_GNN_Node(FTF_SP<space_point_t> FTF_sp, float minT = -100.0,
+
+  TrigFTF_GNN_Node(const FTF_SP<space_point_t> &FTF_sp, float minT = -100.0,
                    float maxT = 100.0)
       : m_sp_FTF(FTF_sp) , m_minCutOnTau(minT), m_maxCutOnTau(maxT) {
     m_in.clear();
     m_out.clear();
+
   }
+  // TrigFTF_GNN_Node(const space_point_t &p, FTF_SP<space_point_t> FTF_sp, float minT = -100.0,
+  //                  float maxT = 100.0)
+  //     : m_sp(p), m_sp_FTF(FTF_sp) , m_minCutOnTau(minT), m_maxCutOnTau(maxT) {
+  //   m_in.clear();
+  //   m_out.clear();
+  // }
 
   ~TrigFTF_GNN_Node() {}
 
@@ -88,9 +90,10 @@ class TrigFTF_GNN_Node {
       return false;
   }
 
-  // const space_point_t &m_sp;
-  FTF_SP<space_point_t> &m_sp_FTF ; //const gives weird error in run, but allows to compile 
+
+  const FTF_SP<space_point_t> &m_sp_FTF ; //const gives weird error in run, but allows to compile 
   // const FTF_SP<space_point_t> m_sp_FTF ; 
+  // const space_point_t &m_sp;
 
 
   std::vector<unsigned int> m_in;  // indices of the edges in the edge storage
@@ -171,9 +174,8 @@ class TrigFTF_GNN_DataStorage {
   ~TrigFTF_GNN_DataStorage() {}
 
   int addSpacePoint(const FTF_SP<space_point_t> &sp, bool useClusterWidth) {
-    // found needed to search by key which is the combined ID
     const TrigFTF_GNN_Layer<space_point_t> *pL =
-        m_geo.getTrigFTF_GNN_LayerByKey(sp.combined_ID);  // want combined ID
+        m_geo.getTrigFTF_GNN_LayerByKey(sp.combined_ID);
 
     if (pL == nullptr)
       return -1;
@@ -183,7 +185,7 @@ class TrigFTF_GNN_DataStorage {
     if (binIndex == -1) {
       return -2;
     }
-
+    
     bool isBarrel = (pL->m_layer.m_type == 0);
 
     if (isBarrel) {
@@ -200,7 +202,7 @@ class TrigFTF_GNN_DataStorage {
         max_tau =
             1.6 + 0.15 / (cluster_width + 0.2) + 6.1 * (cluster_width - 0.2);
       }
-      //*dereferences pointer to then pass as ref
+
       m_etaBins.at(binIndex).m_vn.push_back(
           new TrigFTF_GNN_Node<space_point_t>(sp, min_tau, max_tau)); //adding ftf memeber to nodes 
     } else {
@@ -233,16 +235,12 @@ class TrigFTF_GNN_DataStorage {
     return n;
   }
 
-  void getConnectingNodes(
-      std::vector<const TrigFTF_GNN_Node<space_point_t> *> &vn) {
+  void getConnectingNodes(std::vector<const TrigFTF_GNN_Node<space_point_t> *> &vn) {
     vn.clear();
     vn.reserve(numberOfNodes());
+    for (const auto &b : m_etaBins) { 
+      for (typename std::vector<TrigFTF_GNN_Node<space_point_t> *>::const_iterator nIt =b.m_vn.begin();nIt != b.m_vn.end(); ++nIt) { 
 
-    for (const auto &b : m_etaBins) {
-      for (typename std::vector<
-               TrigFTF_GNN_Node<space_point_t> *>::const_iterator nIt =
-               b.m_vn.begin();
-           nIt != b.m_vn.end(); ++nIt) {
         if ((*nIt)->m_in.empty())
           continue;
         if ((*nIt)->m_out.empty())

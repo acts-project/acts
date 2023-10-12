@@ -28,8 +28,7 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
     const SeedFinderFTFConfig<external_spacepoint_t> &config,
     const TrigFTF_GNN_Geometry<external_spacepoint_t> &GNNgeo)
     : m_config(config) {
-  m_storage = new TrigFTF_GNN_DataStorage(GNNgeo); //eventually gnngeo from config 
-  //m_storage = new TrigFTF_GNN_DataStorage(m_config.m_GNNgeo);
+  m_storage = new TrigFTF_GNN_DataStorage(GNNgeo); 
 }
 
 template <typename external_spacepoint_t>
@@ -40,23 +39,16 @@ SeedFinderFTF<external_spacepoint_t>::~SeedFinderFTF() {
 }
 
 // define loadspace points funciton
-// when calling put input of vector<simspacepoints>, now can call space_point_t
 template <typename external_spacepoint_t>
 void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(
     const std::vector<FTF_SP<external_spacepoint_t>> &FTF_SP_vect) {
-  for (auto &FTF_sp : FTF_SP_vect) {
+  for (const auto &FTF_sp : FTF_SP_vect) {
     bool is_Pixel = FTF_sp.isPixel() ; 
-    // if (FTF_sp.SP->sourceLinks().size() == 1) {  // pixels have 1 SL
-    //   is_Pixel = true;
-    // } else {
-    //   is_Pixel = false;
-    // }
     if (!is_Pixel) continue;
-    
-
     m_storage->addSpacePoint(
-        FTF_sp, (m_config.m_useClusterWidth > 0));  // add is a funciton FTFtype
+        FTF_sp, (m_config.m_useClusterWidth > 0)); 
   }
+
 
   m_config.m_phiSliceWidth = 2 * M_PI / m_config.m_nMaxPhiSlice;
 
@@ -67,7 +59,7 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(
 
 
 template <typename external_spacepoint_t>
-void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_TrigTracklet<external_spacepoint_t>>& vTracks, const Acts::RoiDescriptor& roi){
+void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_TrigTracklet<external_spacepoint_t>>& vTracks, const Acts::RoiDescriptor& roi, const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo){
   //long term move these to ftf finder config, then m_config. to access them 
   const int MaxEdges = 2000000;
 
@@ -91,12 +83,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
   int currentStage = 0;
 
-  //eventually want to make elsewhere as a mmeber of config 
-  std::ifstream ifstream(
-      m_config.fastrack_input_file.c_str(), std::ifstream::in);
-  const Acts::FasTrackConnector& conn(ifstream); //acces from gnngeo input to function 
-
-  // const FasTrackConnector& conn = *(m_config.m_fastrack); 
+  const Acts::FasTrackConnector& fastrack = *(gnngeo.fastrack()); 
 
 
   std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>> edgeStorage;
@@ -105,14 +92,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
   
   int nEdges = 0;
 
-  //gnngeo will be input to funciton 
-  // Acts::TrigFTF_GNN_Geometry<external_spacepoint_t> GNNgeo(m_config.input_vector, &conn); //long term make gnngeo memeber of config 
-  std::unique_ptr<Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>> GNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>>(
-      m_config.m_layerGeometry, &conn); //everywhere GNNgeo -> m_config.m_GNNgeo 
-
-  /////
-
-  for(std::map<int, std::vector<FasTrackConnector::LayerGroup> >::const_iterator it = conn.m_layerGroups.begin();it!=conn.m_layerGroups.end();++it, currentStage++) {
+  for(std::map<int, std::vector<FasTrackConnector::LayerGroup> >::const_iterator it = fastrack.m_layerGroups.begin();it!=fastrack.m_layerGroups.end();++it, currentStage++) {
     
     //loop over L1 layers for the current stage
 
@@ -120,7 +100,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
       
       unsigned int dst = layerGroup.m_dst;//n1 : inner nodes
       
-      const TrigFTF_GNN_Layer<external_spacepoint_t>* pL1 = GNNgeo->getTrigFTF_GNN_LayerByKey(dst);
+      const TrigFTF_GNN_Layer<external_spacepoint_t>* pL1 = gnngeo.getTrigFTF_GNN_LayerByKey(dst);
 
       if (pL1==nullptr) {
 	      continue; 
@@ -130,7 +110,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
         unsigned int src = conn->m_src;//n2 : the new connectors
 
-        const TrigFTF_GNN_Layer<external_spacepoint_t>* pL2 = GNNgeo->getTrigFTF_GNN_LayerByKey(src);
+        const TrigFTF_GNN_Layer<external_spacepoint_t>* pL2 = gnngeo.getTrigFTF_GNN_LayerByKey(src);
 
         if (pL2==nullptr) {
           continue; 
@@ -169,21 +149,17 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
             }
             
             unsigned int first_it = 0;
-
             for(typename std::vector<TrigFTF_GNN_Node<external_spacepoint_t>*>::const_iterator n1It = B1.m_vn.begin();n1It!=B1.m_vn.end();++n1It) {//loop over nodes in Layer 1
 
 	            TrigFTF_GNN_Node<external_spacepoint_t>* n1 = (*n1It);
 
               if(n1->m_in.size() >= MAX_SEG_PER_NODE) continue;
 	    
-              // float phi1 = n1->m_sp.phi();
-              float phi1 = n1->m_sp_FTF.phi() ; 
               float r1 = n1->m_sp_FTF.SP->r();
               float x1 = n1->m_sp_FTF.SP->x(); 
               float y1 = n1->m_sp_FTF.SP->y(); 
               float z1 = n1->m_sp_FTF.SP->z();
-              
-              //sliding window phi1 +/- deltaPhi
+              float phi1 =  std::atan(x1 /y1) ; 
               
               float minPhi = phi1 - deltaPhi;
               float maxPhi = phi1 + deltaPhi;
@@ -244,7 +220,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
                 float L2 = 1/(dx*dx+dy*dy);
                               
                 float D = (n2->m_sp_FTF.SP->y()*x1 - y1*n2->m_sp_FTF.SP->x())/(r1*r2);
-                // std::cout << "float D worked " << std::endl ; 
 
                 
                 float kappa = D*D*L2; 
@@ -266,7 +241,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
                 float exp_eta = std::sqrt(1+tau*tau)-tau;
 
                 bool isGood = n2->m_in.size() <= 2;//we must have enough incoming edges to decide
-                // std::cout << " is good worked " << std::endl ; 
 
                 if(!isGood) {
 
@@ -288,24 +262,24 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
                 float curv = D*std::sqrt(L2);//signed curvature
                 float dPhi2 = std::asin(curv*r2);
                 float dPhi1 = std::asin(curv*r1);
+                
 
                 if(nEdges < MaxEdges) {
 
                   edgeStorage.emplace_back(n1, n2, exp_eta, curv, phi1 + dPhi1, phi2 + dPhi2);
                   
-                  n1->addIn(nEdges);
+                  n1->addIn(nEdges); 
                   n2->addOut(nEdges);
 
                   nEdges++;		
                 }
 	            } //loop over n2 (outer) nodes
-	          } //loop over n1 (inner) nodes 
+            } //loop over n1 (inner) nodes 
 	        } //loop over source eta bins
 	      } //loop over dst eta bins
       } //loop over L2(L1) layers
     } //loop over dst layers
   } //loop over the stages of doublet making
-
 
   std::vector<const TrigFTF_GNN_Node<external_spacepoint_t>*> vNodes;
 
@@ -409,7 +383,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
   }
 
   for(;iter<maxIter;iter++) {
-
+    
     //generate proposals
     std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>*> v_new;
     v_new.clear();
@@ -466,6 +440,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
     if(pS->m_level < minLevel) continue;
 
     vSeeds.push_back(pS);
+
   }
 
   m_triplets.clear();
@@ -474,11 +449,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
   if(vSeeds.empty()) return;
 
-  //builds and runs from full chain up to here 
-
   //backtracking
-
-  // this used to be m_settings.m_layerGeometry = input_vector 
 
   TrigFTF_GNN_TrackingFilter<external_spacepoint_t> tFilter(m_config.m_layerGeometry, edgeStorage);
 
@@ -487,11 +458,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
     if(pS->m_level == -1) continue;
 
     TrigFTF_GNN_EdgeState<external_spacepoint_t> rs(false);
-    //builds and runs from full chain up to here 
 
     
     tFilter.followTrack(pS, rs); 
-
 
     if(!rs.m_initialized) {
       continue;
@@ -501,20 +470,18 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
     std::vector<const FTF_SP<external_spacepoint_t>*> vSP;
 
-
     for(typename std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>*>::reverse_iterator sIt=rs.m_vs.rbegin();sIt!=rs.m_vs.rend();++sIt) {
-            
+
       (*sIt)->m_level = -1;//mark as collected
 
       if(sIt == rs.m_vs.rbegin()) {
 	      vSP.push_back(&(*sIt)->m_n1->m_sp_FTF);
       }
       vSP.push_back(&(*sIt)->m_n2->m_sp_FTF);
+
     }
-    //want to loop through edges in the vector of edges beloging to edgestate object 
 
     if(vSP.size()<3) continue;
-
 
     //making triplets
 
@@ -525,7 +492,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
     for(unsigned int idx_m = 1;idx_m < vSP.size()-1;idx_m++) {
 
       const FTF_SP<external_spacepoint_t>& spM = *vSP.at(idx_m);
-      // const TrigSiSpacePointBase<external_spacepoint_t>& spM = *vSP.at(idx_m);
       const double pS_r = spM.SP->r();
       const double pS_x = spM.SP->x();
       const double pS_y = spM.SP->y();
@@ -535,7 +501,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
       for(unsigned int idx_o = idx_m+1; idx_o < vSP.size(); idx_o++) {
 
         const FTF_SP<external_spacepoint_t>& spO = *vSP.at(idx_o);
-        // const TrigSiSpacePointBase<external_spacepoint_t>& spO = *vSP.at(idx_o);
         
         double dx = spO.SP->x() - pS_x;
         double dy = spO.SP->y() - pS_y;
@@ -548,7 +513,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
 
         for(unsigned int idx_i = 0; idx_i < idx_m; idx_i++) {
-          // const TrigSiSpacePointBase<external_spacepoint_t>& spI = *vSP.at(idx_i);
           const FTF_SP<external_spacepoint_t>& spI = *vSP.at(idx_i);
 
 
@@ -587,9 +551,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
           if (!roi.isFullscan()) { 
             const double uc = 2*B*pS_r - A;
             const double phi0 = std::atan2(sinA - uc*cosA, cosA + uc*sinA);
-  //           if ( !RoiUtil::containsPhi( *roiDescriptor, phi0 ) ) {
-  //             continue;
-  //           }
+          //           if ( !RoiUtil::containsPhi( *roiDescriptor, phi0 ) ) {
+          //             continue;
+          //           }
           }
 
           //4. add new triplet 
@@ -606,7 +570,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
       }
       if(nTriplets >= m_config.m_maxTripletBufferLength) break;
     }
-    
+
     if(output.empty()) continue;
 
     vTracks.emplace_back(vSP, output);
@@ -618,13 +582,13 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
 
 template <typename external_spacepoint_t>
-void SeedFinderFTF<external_spacepoint_t>::createSeeds(const Acts::RoiDescriptor& roi){
+void SeedFinderFTF<external_spacepoint_t>::createSeeds(const Acts::RoiDescriptor& roi, const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo){
   
   std::vector<GNN_TrigTracklet<external_spacepoint_t>> vTracks; //make empty vector 
 
   vTracks.reserve(5000);
 
-  runGNN_TrackFinder(vTracks, roi); //returns filled vector 
+  runGNN_TrackFinder(vTracks, roi, gnngeo); //returns filled vector 
 
   if(vTracks.empty()) return;
 
@@ -634,24 +598,22 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(const Acts::RoiDescriptor
     for(auto& seed : track.m_seeds) { //access mmeber of GNN_TrigTracklet
 
       float newQ = seed.Q(); //function of TrigInDetTriplet
-      if (m_config.m_LRTmode) { //dont have settings, just bool for now? 
-	// In LRT mode penalize pixels in Triplets
-	if(seed.s1().isPixel()) newQ+=1000; //functions of TrigSiSpacePointBase
-	if(seed.s2().isPixel()) newQ+=1000;
-	if(seed.s3().isPixel()) newQ+=1000;
+      if (m_config.m_LRTmode) { 
+	      // In LRT mode penalize pixels in Triplets
+        if(seed.s1().isPixel()) newQ+=1000; //functions of TrigSiSpacePointBase
+        if(seed.s2().isPixel()) newQ+=1000;
+        if(seed.s3().isPixel()) newQ+=1000;
       } else {
-	// In normal (non LRT) mode penalise SSS by 1000, PSS (if enabled) and PPS by 10000
-	if(seed.s3().isSCT()) { //functions of TrigSiSpacePointBase
-	  newQ += seed.s1().isSCT() ? 1000.0 : 10000.0;
-	} 
+	    // In normal (non LRT) mode penalise SSS by 1000, PSS (if enabled) and PPS by 10000
+        if(seed.s3().isSCT()) { 
+          newQ += seed.s1().isSCT() ? 1000.0 : 10000.0;
+        } 
       }
       seed.Q(newQ);
       m_triplets.emplace_back(seed);
     }
   }
   vTracks.clear();
-
-
   
 }
 

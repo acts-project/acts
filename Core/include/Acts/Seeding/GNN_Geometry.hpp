@@ -246,13 +246,14 @@ protected:
 template <typename space_point_t> class TrigFTF_GNN_Geometry {
 public:
   TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer> &layers,
-                       const FasTrackConnector *conn)
-      : m_nEtaBins(0) {
+                       std::unique_ptr<Acts::FasTrackConnector> & conn)
+
+      : m_nEtaBins(0), m_fastrack(move(conn)){
 
     const float min_z0 = -168.0;
     const float max_z0 = 168.0;
 
-    m_etaBinWidth = conn->m_etaBin;
+    m_etaBinWidth = m_fastrack->m_etaBin;
     for (const auto &layer : layers) {
       const TrigFTF_GNN_Layer<space_point_t> *pL =
           addNewLayer(layer, m_nEtaBins);
@@ -262,8 +263,8 @@ public:
     // calculating bin tables in the connector...
 
     for (std::map<int, std::vector<FasTrackConnection *>>::const_iterator it =
-             conn->m_connMap.begin();
-         it != conn->m_connMap.end(); ++it) {
+             m_fastrack->m_connMap.begin();
+         it != m_fastrack->m_connMap.end(); ++it) {
 
       const std::vector<FasTrackConnection *> &vConn = (*it).second;
 
@@ -320,6 +321,7 @@ public:
 
     m_layMap.clear();
     m_layArray.clear();
+
   }
 
   const TrigFTF_GNN_Layer<space_point_t> *
@@ -343,6 +345,8 @@ public:
 
   int num_bins() const { return m_nEtaBins; }
 
+  Acts::FasTrackConnector* fastrack() const  { return m_fastrack.get(); }
+
 protected:
   const TrigFTF_GNN_Layer<space_point_t> *addNewLayer(const TrigInDetSiLayer &l,
                                                       int bin0) {
@@ -363,7 +367,8 @@ protected:
 
   std::map<unsigned int, TrigFTF_GNN_Layer<space_point_t> *> m_layMap;
   std::vector<TrigFTF_GNN_Layer<space_point_t> *> m_layArray;
-  //member of fastrack object m_fastrack
+
+  std::unique_ptr<Acts::FasTrackConnector> m_fastrack;
 
   int m_nEtaBins;
 };
