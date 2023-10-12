@@ -1199,10 +1199,6 @@ class CombinatorialKalmanFilter {
       // Obtain the smoothed parameters at first measurement state.
       auto trackState = result.fittedStates->getTrackState(firstStateIndex);
 
-      // The smoothed free params at the first measurement state
-      auto params = MultiTrajectoryHelpers::freeSmoothed(
-          state.options.geoContext, trackState);
-
       // Update the stepping parameters - in order to progress to destination.
       // At the same time, reverse navigation direction for further stepping.
       // @note The stepping parameters is updated to the smoothed parameters at
