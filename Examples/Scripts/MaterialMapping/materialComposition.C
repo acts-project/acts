@@ -44,9 +44,9 @@ struct MaterialHistograms {
                   : name + std::string("_l0_vs_eta_A") + std::to_string(iA);
 
     x0_vs_eta = new TProfile(x0NameEta.c_str(), "X_{0} vs. #eta", bins, -eta,
-                             eta, 0., 50.);
+                             eta);
     l0_vs_eta = new TProfile(l0NameEta.c_str(), "L_{0} vs. #eta", bins, -eta,
-                             eta, 0., 50.);
+                             eta);
 
     std::string x0NamePhi =
         (iA == 0) ? name + std::string("_x0_vs_phi_all")
@@ -56,9 +56,9 @@ struct MaterialHistograms {
                   : name + std::string("_l0_vs_phi_A") + std::to_string(iA);
 
     x0_vs_phi = new TProfile(x0NamePhi.c_str(), "X_{0} vs. #phi", bins, -M_PI,
-                             M_PI, 0., 50.);
+                             M_PI);
     l0_vs_phi = new TProfile(l0NamePhi.c_str(), "L_{0} vs. #phi", bins, -M_PI,
-                             M_PI, 0., 50.);
+                             M_PI);
   }
 
   /// This fills the event into the histograms
