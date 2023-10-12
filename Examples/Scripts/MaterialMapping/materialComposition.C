@@ -100,7 +100,7 @@ struct Region {
 
   bool inside(float r, float z) const {
     for (const auto& [minR, maxR, minZ, maxZ] : boxes) {
-      if (minR < r && r < maxR && minZ < z && z < maxZ) {
+      if (minR <= r && r < maxR && minZ <= z && z < maxZ) {
         return true;
       }
     }
