@@ -94,7 +94,19 @@ struct MaterialHistograms {
   }
 };
 
-using Region = std::tuple<std::string, float, float, float, float>;
+struct Region {
+  std::string name;
+  std::vector<std::tuple<float, float, float, float>> boxes;
+
+  bool inside(float r, float z) const {
+    for (const auto& [minR, maxR, minZ, maxZ] : boxes) {
+      if (minR <= r && r < maxR && minZ <= z && z < maxZ) {
+        return true;
+      }
+    }
+    return false;
+  }
+};
 
 /// Plot the material composition
 ///
@@ -157,7 +169,7 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
 
   // Loop of the regions
   for (auto& region : regions) {
-    const auto [rName, minR, maxR, minZ, maxZ] = region;
+    const auto rName = region.name;
 
     // The material histograms ordered by atomic mass
     std::map<unsigned int, MaterialHistograms> mCache;
@@ -186,7 +198,7 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
         float z = stepZ->at(is);
         float r = std::hypot(x, y);
 
-        if (minR > r or minZ > z or maxR < r or maxZ < z) {
+        if (!region.inside(r, z)) {
           continue;
         }
 
@@ -203,7 +215,8 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
         // The current one
         auto currentIt = mCache.find(sA);
         if (currentIt == mCache.end()) {
-          throw std::runtime_error{"Unknown atomic number " +std::to_string(sA)};
+          throw std::runtime_error{"Unknown atomic number " +
+                                   std::to_string(sA)};
         }
         auto& current = currentIt->second;
         current.s_x0 += step / X0;
