@@ -87,7 +87,6 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // correctly defined using the halflength
   Translation3 addTranslation(0., 0., 0.);
   if (transform.isApprox(Transform3::Identity())) {
-    // double shift = -(layerZ + envZShift);
     addTranslation = Translation3(0., 0., layerZ);
     ACTS_VERBOSE(" - layer z shift  = " << -layerZ);
   }
@@ -344,11 +343,14 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
       layerThickness = (protoLayer.max(binY) - protoLayer.min(binY));
       break;
     }
-    default: {
+    case BinningValue::binZ: {
       layerHalf1 = 0.5 * (protoLayer.max(binX) - protoLayer.min(binX));
       layerHalf2 = 0.5 * (protoLayer.max(binY) - protoLayer.min(binY));
       layerThickness = (protoLayer.max(binZ) - protoLayer.min(binZ));
+      break;
     }
+    default:
+      throw std::invalid_argument("Invalid binning value");
   }
 
   double centerX = 0.5 * (protoLayer.max(binX) + protoLayer.min(binX));
@@ -363,13 +365,15 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   ACTS_VERBOSE(" - from Y min/max   = " << protoLayer.min(binY) << " / "
                                         << protoLayer.max(binY));
   ACTS_VERBOSE(" - with Z thickness = " << layerThickness);
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[bValue][0u]
+                                        << " / "
+                                        << protoLayer.envelope[bValue][1u]);
 
   // create the layer transforms if not given
   // we need to transform in case centerX/centerY/centerZ != 0, so that the
   // layer will be correctly defined
   Translation3 addTranslation(0., 0., 0.);
   if (transform.isApprox(Transform3::Identity())) {
-    // double shift = (layerZ + envZShift);
     addTranslation = Translation3(centerX, centerY, centerZ);
     ACTS_VERBOSE(" - layer shift  = "
                  << "(" << centerX << ", " << centerY << ", " << centerZ
