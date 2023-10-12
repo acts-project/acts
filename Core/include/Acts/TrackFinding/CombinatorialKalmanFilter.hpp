@@ -255,8 +255,8 @@ struct CombinatorialKalmanFilterResult {
 
   Result<void> result{Result<void>::success()};
 
-  // TODO place into options and make them accessible?
-  AbortList<PathLimitReached, EndOfWorldReached> abortList;
+  /// Path limit aborter
+  PathLimitReached pathLimitReached;
 };
 
 /// Combinatorial Kalman filter to find tracks.
@@ -465,7 +465,8 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      if (result.abortList(state, stepper, navigator, result, logger())) {
+      if (endOfWorldReached(state, stepper, navigator, logger()) ||
+          result.pathLimitReached(state, stepper, navigator, logger())) {
         navigator.targetReached(state.navigation, false);
         if (result.activeTips.empty()) {
           // we are already done
@@ -530,7 +531,9 @@ class CombinatorialKalmanFilter {
             if (result.smoothed and
                 (smoothingTargetSurface == nullptr or
                  targetReached(state, stepper, navigator,
-                               *smoothingTargetSurface, logger()))) {
+                               *smoothingTargetSurface, logger()) or
+                 result.pathLimitReached(state, stepper, navigator,
+                                         logger()))) {
               ACTS_VERBOSE(
                   "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
@@ -542,7 +545,12 @@ class CombinatorialKalmanFilter {
                 if (!res.ok()) {
                   ACTS_ERROR("Error in finalize: " << res.error());
                   result.result = res.error();
-                  return;
+                } else {
+                  auto fittedState = *res;
+                  // Assign the fitted parameters
+                  result.fittedParameters.emplace(
+                      result.lastMeasurementIndices.at(result.iSmoothed),
+                      std::get<BoundTrackParameters>(fittedState));
                 }
 
                 auto fittedState = *res;
@@ -613,9 +621,8 @@ class CombinatorialKalmanFilter {
       materialInteractor(navigator.currentSurface(state.navigation), state,
                          stepper, navigator, MaterialUpdateStage::FullUpdate);
 
-      detail::setupLoopProtection(
-          state, stepper, result.abortList.template get<PathLimitReached>(),
-          logger());
+      detail::setupLoopProtection(state, stepper, result.pathLimitReached,
+                                  logger());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation:
@@ -1270,6 +1277,9 @@ class CombinatorialKalmanFilter {
           state.options.direction * stepper.direction(state.stepping), &surface,
           nullptr);
 
+      detail::setupLoopProtection(state, stepper, result.pathLimitReached,
+                                  logger());
+
       return Result<void>::success();
     }
 
@@ -1280,6 +1290,9 @@ class CombinatorialKalmanFilter {
 
     /// The Surface being targeted
     SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+
+    /// End of world aborter
+    EndOfWorldReached endOfWorldReached;
 
     /// Actor logger instance
     const Logger* actorLogger{nullptr};
@@ -1302,7 +1315,7 @@ class CombinatorialKalmanFilter {
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
-      if (!result.result.ok() or result.finished) {
+      if (result.finished) {
         return true;
       }
       return false;
@@ -1427,7 +1440,6 @@ class CombinatorialKalmanFilter {
                  << combKalmanResult.result.error().message()
                  << " with the initial parameters: \n"
                  << initialParameters.parameters());
-      return combKalmanResult.result.error();
     }
 
     std::vector<typename TrackContainer::TrackProxy> tracks;
@@ -1435,11 +1447,14 @@ class CombinatorialKalmanFilter {
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
       auto track = trackContainer.getTrack(trackContainer.addTrack());
       track.tipIndex() = tip;
-      const BoundTrackParameters& parameters =
-          combKalmanResult.fittedParameters.find(tip)->second;
-      track.parameters() = parameters.parameters();
-      track.covariance() = *parameters.covariance();
-      track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
+
+      if (auto it = combKalmanResult.fittedParameters.find(tip);
+          it != combKalmanResult.fittedParameters.end()) {
+        const BoundTrackParameters& parameters = it->second;
+        track.parameters() = parameters.parameters();
+        track.covariance() = *parameters.covariance();
+        track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
+      }
 
       calculateTrackQuantities(track);
 
