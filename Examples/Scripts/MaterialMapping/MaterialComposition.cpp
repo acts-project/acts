@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
       }
 
       std::ifstream ifs(config.string().c_str());
-      nlohmann::json j = nlohmann::json::parse(ifs);
+      nlohmann::ordered_json j = nlohmann::ordered_json::parse(ifs);
 
       for (const auto& [key, regions] : j.items()) {
         dRegion.push_back(Region{key, {}});
