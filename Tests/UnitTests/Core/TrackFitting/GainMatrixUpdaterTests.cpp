@@ -15,6 +15,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -73,11 +74,13 @@ BOOST_AUTO_TEST_CASE(Update) {
   BOOST_CHECK(ts.hasCalibrated());
 
   // Gain matrix update and filtered state
-  Acts::Surface* surface = nullptr;
-  BOOST_CHECK(GainMatrixUpdater()
-                  .
-                  operator()<VectorMultiTrajectory>(tgContext, surface, ts)
-                  .ok());
+  auto surface =
+      Surface::makeShared<Acts::DiscSurface>(Acts::Transform3::Identity());
+  BOOST_CHECK(
+      GainMatrixUpdater()
+          .
+          operator()<VectorMultiTrajectory>(tgContext, surface.get(), ts)
+          .ok());
 
   // Check for regression. This does NOT test if the math is correct, just that
   // the result is the same as when the test was written.
