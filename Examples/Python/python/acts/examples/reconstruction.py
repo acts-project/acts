@@ -121,8 +121,8 @@ TrackSelectorConfig = namedtuple(
 
 CkfConfig = namedtuple(
     "CkfConfig",
-    ["chi2CutOff", "numMeasurementsCutOff"],
-    defaults=[15.0, 10],
+    ["chi2CutOff", "numMeasurementsCutOff", "maxSteps"],
+    defaults=[15.0, 10, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -1004,6 +1004,9 @@ def addCKFTracks(
         outputTracks="ckfTracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
+        ),
+        **acts.examples.defaultKWArgs(
+            maxSteps=ckfConfig.maxSteps,
         ),
     )
     s.addAlgorithm(trackFinder)
