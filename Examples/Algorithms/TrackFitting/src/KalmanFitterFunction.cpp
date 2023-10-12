@@ -81,13 +81,13 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
 
-  IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
+  IndexSourceLink::SurfaceAccessor slSurfaceAccessor;
 
   KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
                            const Acts::TrackingGeometry& trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
-        m_slSurfaceAccessor{trkGeo} {}
+        slSurfaceAccessor{trkGeo} {}
 
   template <typename calibrator_t>
   auto makeKfOptions(const GeneralFitterOptions& options,
@@ -114,7 +114,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
         &calibrator);
     kfOptions.extensions.surfaceAccessor
         .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &m_slSurfaceAccessor);
+            &slSurfaceAccessor);
 
     return kfOptions;
   }
