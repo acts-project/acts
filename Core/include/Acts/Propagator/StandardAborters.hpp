@@ -65,9 +65,11 @@ struct PathLimitReached {
       return true;
     }
     // Check if the maximum allowed step size has to be updated
-    double distance = internalLimit - std::abs(state.stepping.pathAccumulated);
+    double distance =
+        std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
     double tolerance = state.options.targetTolerance;
-    if (std::abs(distance) < tolerance) {
+    bool limitReached = (std::abs(distance) < std::abs(tolerance));
+    if (limitReached) {
       ACTS_VERBOSE("Target: x | "
                    << "Path limit reached at distance " << distance);
       // reaching the target means navigation break
