@@ -55,7 +55,7 @@ The true Bethe-Heitler distribution compared with a gaussian mixture approximati
 To be able to handle this with the Kalman filter mechanics, this distribution is approximated by a gaussian mixture as well (see {numref}`figBetheHeitler`). The GSF Algorithm works then as follows (see also {numref}`figGsf`)
 
 * On a surface with material, the Bethe-Heitler energy-loss distribution is approximated with a fixed number of gaussian components for each component. Since this way the number of components would grow exponentially with each material interaction, components that are close in terms of their *Kullback–Leibler divergence* are merged to limit the computational cost.
-* On a measurement surface, for each component a Kalman update is performed. Afterwards, the component weights are corrected according to each components compatibility with the measurement.
+* On a measurement surface, for each component a Kalman update is performed. Afterwards, the component weights are corrected according to each component's compatibility with the measurement.
 
 (figGsf)=
 :::{figure} ../figures/gsf_overview.svg

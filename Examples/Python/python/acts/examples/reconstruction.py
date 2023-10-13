@@ -121,8 +121,8 @@ TrackSelectorConfig = namedtuple(
 
 CkfConfig = namedtuple(
     "CkfConfig",
-    ["chi2CutOff", "numMeasurementsCutOff"],
-    defaults=[15.0, 10],
+    ["chi2CutOff", "numMeasurementsCutOff", "maxSteps"],
+    defaults=[15.0, 10, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -773,7 +773,7 @@ def addHoughTransformSeeding(
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     ht = acts.examples.HoughTransformSeeder(config=config, level=logLevel)
     sequence.addAlgorithm(ht)
-    # potentially HT can be extended to also produce seeds, but it is not yet implemented yet
+    # potentially HT can be extended to also produce seeds, but it is not implemented yet
     # configuration option (outputSeeds) exists
     return ht.config.outputSeeds
 
@@ -1004,6 +1004,9 @@ def addCKFTracks(
         outputTracks="ckfTracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
+        ),
+        **acts.examples.defaultKWArgs(
+            maxSteps=ckfConfig.maxSteps,
         ),
     )
     s.addAlgorithm(trackFinder)

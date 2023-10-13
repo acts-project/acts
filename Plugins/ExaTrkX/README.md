@@ -41,7 +41,7 @@ The Examples of this plugin provide a python-script using the python-bindings to
 ./Examples/Scripts/Python/ExaTrkX.py torch    # tries to run torch
 ```
 
-In order that python can find the `acts.examples` module, setup your `PYTHONPATH` with `source <build>/python/setup.sh`.
+In order that python can find the `acts.examples` module, set up your `PYTHONPATH` with `source <build>/python/setup.sh`.
 
 ## Required files
 

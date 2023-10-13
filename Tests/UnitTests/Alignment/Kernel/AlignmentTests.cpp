@@ -89,7 +89,7 @@ KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
 /// @brief Construct a telescope-like detector
 ///
 struct TelescopeDetector {
-  /// Default constructor for the Cubit tracking geometry
+  /// Default constructor for the Cubic tracking geometry
   ///
   /// @param gctx the geometry context for this geometry at building time
   TelescopeDetector(std::reference_wrapper<const GeometryContext> gctx)
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, extensions,
                                 PropagatorPlainOptions());
 
-  // Construct an non-updating alignment updater
+  // Construct a non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
       [](DetectorElementBase* /*element*/, const GeometryContext& /*gctx*/,
          const Transform3& /*transform*/) { return true; };
