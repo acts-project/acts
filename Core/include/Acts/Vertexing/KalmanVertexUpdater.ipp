@@ -10,20 +10,29 @@
 
 #include <algorithm>
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::updateVertexWithTrack(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk) {
-  detail::update<input_track_t>(vtx, trk, 1);
+  static_assert(nDimVertex == 3 or nDimVertex == 4,
+                "The dimension of the vertex must either be 3 (vertexing "
+                "without time) or 4 (vertexing with time).");
+
+  detail::update<input_track_t, nDimVertex>(vtx, trk, 1);
 }
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::detail::update(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
+  static_assert(nDimVertex == 3 or nDimVertex == 4,
+                "The dimension of the vertex must either be 3 (vertexing "
+                "without time) or 4 (vertexing with time).");
+
   double trackWeight = trk.trackWeight;
 
-  MatrixCache matrixCache;
+  MatrixCache<nDimVertex> matrixCache;
 
-  updatePosition(vtx, trk.linearizedState, trackWeight, sign, matrixCache);
+  updatePosition<input_track_t, nDimVertex>(vtx, trk.linearizedState,
+                                            trackWeight, sign, matrixCache);
 
   // Get fit quality parameters wrt to old vertex
   std::pair fitQuality = vtx.fitQuality();
@@ -31,11 +40,12 @@ void Acts::KalmanVertexUpdater::detail::update(
   double ndf = fitQuality.second;
 
   // Chi2 wrt to track parameters
-  double trkChi2 = detail::trackParametersChi2<input_track_t>(
+  double trkChi2 = detail::trackParametersChi2<input_track_t, nDimVertex>(
       trk.linearizedState, matrixCache);
 
   // Calculate new chi2
-  chi2 += sign * (detail::vertexPositionChi2<input_track_t>(vtx, matrixCache) +
+  chi2 += sign * (detail::vertexPositionChi2<input_track_t, nDimVertex>(
+                      vtx, matrixCache) +
                   trackWeight * trkChi2);
 
   // Calculate ndf
@@ -60,81 +70,109 @@ void Acts::KalmanVertexUpdater::detail::update(
   }
 }
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::updatePosition(
     const Acts::Vertex<input_track_t>& vtx,
     const Acts::LinearizedTrack& linTrack, double trackWeight, int sign,
-    MatrixCache& matrixCache) {
-  // Retrieve linTrack information
-  const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
-  const ActsMatrix<5, 3> momJac =
-      linTrack.momentumJacobian.block<5, 3>(0, 0);  // B_k in comments below
-  const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
-  const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
-  // TODO we could use `linTrack.weightAtPCA` but only if we would use time
-  const ActsSquareMatrix<5> trkParamWeight =
-      linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
+    MatrixCache<nDimVertex>& matrixCache) {
+  static_assert(nDimVertex == 3 or nDimVertex == 4,
+                "The dimension of the vertex must either be 3 (vertexing "
+                "without time) or 4 (vertexing with time).");
+
+  // Number of track parameters. We have nDimVertex - 1 impact parameters (i.e.,
+  // d0, z0, and, in the case of time vertexing, t0). Additionally, we have 3
+  // parameters describing the momentum.
+  constexpr unsigned int nParams = nDimVertex + 2;
+  // Retrieve position and momentum Jacobian. posJack corresponds to A_k and
+  // momJack to B_k in the reference and the comments below.
+  const ActsMatrix<nParams, nDimVertex> posJac =
+      linTrack.positionJacobian.block<nParams, nDimVertex>(0, 0);
+  const ActsMatrix<nParams, 3> momJac =
+      linTrack.momentumJacobian.block<nParams, 3>(0, 0);
+  const ActsVector<nParams> trkParams =
+      linTrack.parametersAtPCA.head<nParams>();
+  const ActsVector<nParams> constTerm = linTrack.constantTerm.head<nParams>();
+  const ActsSquareMatrix<nParams> trkParamWeight =
+      linTrack.covarianceAtPCA.block<nParams, nParams>(0, 0).inverse();
 
   // Vertex to be updated
-  const Vector3& oldVtxPos = vtx.position();
+  const ActsVector<nDimVertex>& oldVtxPos =
+      vtx.fullPosition().template head<nDimVertex>();
   matrixCache.oldVertexWeight = (vtx.covariance()).inverse();
 
   // W_k matrix
   matrixCache.momWeightInv =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
-  // G_b = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
-  ActsSquareMatrix<5> gBmat =
+  // G_k^B = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
+  ActsSquareMatrix<nParams> gMat =
       trkParamWeight -
       trkParamWeight *
           (momJac * (matrixCache.momWeightInv * momJac.transpose())) *
           trkParamWeight.transpose();
 
-  // New vertex cov matrix
+  // New vertex weight matrix
   matrixCache.newVertexWeight =
       matrixCache.oldVertexWeight +
-      trackWeight * sign * posJac.transpose() * (gBmat * posJac);
+      trackWeight * sign * posJac.transpose() * (gMat * posJac);
   matrixCache.newVertexCov = matrixCache.newVertexWeight.inverse();
 
   // New vertex position
   matrixCache.newVertexPos =
       matrixCache.newVertexCov * (matrixCache.oldVertexWeight * oldVtxPos +
                                   trackWeight * sign * posJac.transpose() *
-                                      gBmat * (trkParams - constTerm));
+                                      gMat * (trkParams - constTerm));
 }
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
-    const Vertex<input_track_t>& oldVtx, const MatrixCache& matrixCache) {
-  Vector3 posDiff = matrixCache.newVertexPos - oldVtx.position();
+    const Vertex<input_track_t>& oldVtx,
+    const MatrixCache<nDimVertex>& matrixCache) {
+  static_assert(nDimVertex == 3 or nDimVertex == 4,
+                "The dimension of the vertex must either be 3 (vertexing "
+                "without time) or 4 (vertexing with time).");
+  ActsVector<nDimVertex> posDiff =
+      matrixCache.newVertexPos -
+      oldVtx.fullPosition().template head<nDimVertex>();
 
   // Calculate and return corresponding chi2
   return posDiff.transpose() * (matrixCache.oldVertexWeight * posDiff);
 }
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
-    const LinearizedTrack& linTrack, const MatrixCache& matrixCache) {
-  // Track properties
-  const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
-  const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
-  const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
-  const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
-  // TODO we could use `linTrack.weightAtPCA` but only if we would use time
-  const ActsSquareMatrix<5> trkParamWeight =
-      linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
+    const LinearizedTrack& linTrack,
+    const MatrixCache<nDimVertex>& matrixCache) {
+  static_assert(nDimVertex == 3 or nDimVertex == 4,
+                "The dimension of the vertex must either be 3 (vertexing "
+                "without time) or 4 (vertexing with time).");
+  // Number of track parameters. We have nDimVertex - 1 impact parameters (i.e.,
+  // d0, z0, and, in the case of time vertexing, t0). Additionally, we have 3
+  // parameters describing the momentum.
+  constexpr unsigned int nParams = nDimVertex + 2;
 
-  const ActsVector<5> jacVtx = posJac * matrixCache.newVertexPos;
+  const ActsMatrix<nParams, nDimVertex> posJac =
+      linTrack.positionJacobian.block<nParams, nDimVertex>(0, 0);
+  const ActsMatrix<nParams, 3> momJac =
+      linTrack.momentumJacobian.block<nParams, 3>(0, 0);
+  const ActsVector<nParams> trkParams =
+      linTrack.parametersAtPCA.head<nParams>();
+  const ActsVector<nParams> constTerm = linTrack.constantTerm.head<nParams>();
+  const ActsSquareMatrix<nParams> trkParamWeight =
+      linTrack.covarianceAtPCA.block<nParams, nParams>(0, 0).inverse();
+
+  const ActsVector<nParams> jacVtx = posJac * matrixCache.newVertexPos;
 
   // Refitted track momentum
   Vector3 newTrackMomentum = matrixCache.momWeightInv * momJac.transpose() *
                              trkParamWeight * (trkParams - constTerm - jacVtx);
 
   // Refitted track parameters
-  ActsVector<5> newTrkParams = constTerm + jacVtx + momJac * newTrackMomentum;
+  ActsVector<nParams> newTrkParams =
+      constTerm + jacVtx + momJac * newTrackMomentum;
 
   // Parameter difference
-  ActsVector<5> paramDiff = trkParams - newTrkParams;
+  ActsVector<nParams> paramDiff = trkParams - newTrkParams;
 
   // Return chi2
   return paramDiff.transpose() * (trkParamWeight * paramDiff);

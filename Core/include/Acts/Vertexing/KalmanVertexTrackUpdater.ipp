@@ -61,7 +61,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const SquareMatrix3 newTrkCov =
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
 
-  KalmanVertexUpdater::MatrixCache matrixCache;
+  KalmanVertexUpdater::MatrixCache<3> matrixCache;
 
   // Now determine the smoothed chi2 of the track in the following
   KalmanVertexUpdater::updatePosition<input_track_t>(

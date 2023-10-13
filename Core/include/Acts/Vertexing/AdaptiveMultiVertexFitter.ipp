@@ -294,9 +294,12 @@ Acts::Result<void> Acts::
           trkAtVtx.linearizedState = *result;
           trkAtVtx.isLinearized = true;
         }
+        // Number of vertex dimensions to consider in fit, i.e., 4 when using
+        // time information and 3 otherwise
+        // constexpr unsigned int nDimVertex = m_cfg.useTimeInformation ? 4 : 3;
         // Update the vertex with the new track
-        KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(*vtx,
-                                                                  trkAtVtx);
+        KalmanVertexUpdater::updateVertexWithTrack<input_track_t, 3>(*vtx,
+                                                                     trkAtVtx);
       } else {
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }
