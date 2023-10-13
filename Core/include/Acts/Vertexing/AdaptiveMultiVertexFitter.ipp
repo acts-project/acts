@@ -37,12 +37,11 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
   // Reset annealing tool
   state.annealingState = AnnealingUtility::State();
 
-  // Indicates how much the vertex positions have shifted
-  // in last fit iteration. Will be false if vertex position
-  // shift was too big. Needed if equilibrium is reached in
-  // annealing procedure but fitter has not fully converged
-  // yet and needs some more iterations until vertex position
-  // shifts between iterations are small (converged).
+  // Boolean indicating whether any of the vertices has moved more than
+  // m_cfg.maxRelativeShift during the last iteration. We will keep iterating
+  // until the equilibrium (i.e., the lowest temperature) is reached in
+  // the annealing procedure and isSmallShift is true (or until the maximum
+  // number of iterations is exceeded).
   bool isSmallShift = true;
 
   // Number of iterations counter
@@ -64,7 +63,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // and the linearization point of the tracks. If it is too large,
       // we relinearize the tracks and recalculate their 3D impact
       // parameters.
-      ActsVector<2> xyDiff = vtx->position().template head<2>() -
+      ActsVector<2> xyDiff = vtxInfo.oldPosition.template head<2>() -
                              vtxInfo.linPoint.template head<2>();
       double xyDist = std::hypot(xyDiff[0], xyDiff[1]);
       if (xyDist > m_cfg.maxDistToLinPoint) {
