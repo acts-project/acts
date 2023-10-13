@@ -28,7 +28,7 @@
 #include <cmath>
 #include <functional>
 
-// This is based original stepper code from the ATLAS RungeKuttePropagagor
+// This is based original stepper code from the ATLAS RungeKuttaPropagator
 namespace Acts {
 
 /// @brief the AtlasStepper implementation for the

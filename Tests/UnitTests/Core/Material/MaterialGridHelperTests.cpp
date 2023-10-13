@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {

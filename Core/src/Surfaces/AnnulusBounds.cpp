@@ -185,7 +185,7 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
       return true;
     }
 
-    // we need to rotated the locpo
+    // we need to rotate the locpo
     Vector2 locpo_rotated = m_rotationStripPC * lposition;
 
     // covariance is given in STRIP SYSTEM in PC

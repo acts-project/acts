@@ -176,7 +176,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
         // extract per-particle reconstruction counts
         // empty track hits counts could originate from a  buggy track finder
         // that results in empty tracks or from purely noise track where no hits
-        // is from a particle.
+        // are from a particle.
         if (not particleHitCounts.empty()) {
           auto it = majorityCount
                         .try_emplace(particleHitCounts.front().particleId, 0u)
