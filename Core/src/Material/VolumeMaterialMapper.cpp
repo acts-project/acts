@@ -286,7 +286,7 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   }
 
   if (remainder > 0) {
-    // We need to had an additional extra hit with the remainder length. Adjust
+    // We need to have an additional extra hit with the remainder length. Adjust
     // the thickness of the last extrapolated step
     properties.scaleThickness(remainder / properties.thickness());
     Vector3 extraPosition = position + volumeStep * direction;
@@ -430,7 +430,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
     if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
       // Check if the material point is past the entry point to the current
-      // volume (this prevent switching volume before the first volume has been
+      // volume (this prevents switching volume before the first volume has been
       // reached)
       double distVol = (volIter->position - mTrack.first.first).norm();
       double distMat = (rmIter->position - mTrack.first.first).norm();

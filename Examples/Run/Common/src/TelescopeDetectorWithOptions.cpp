@@ -22,7 +22,7 @@ void TelescopeDetectorWithOptions::addOptions(
   auto opt = desc.add_options();
   opt("geo-tele-positions",
       value<VariableReals>()->default_value({{0, 30, 60, 120, 150, 180}}),
-      "Telescope detector Input: the layers positions in the longidutinal "
+      "Telescope detector Input: the layers positions in the longitudinal "
       "direction in mm");
   opt("geo-tele-stereos",
       value<VariableReals>()->default_value({{0, 0, 0, 0, 0, 0}}),

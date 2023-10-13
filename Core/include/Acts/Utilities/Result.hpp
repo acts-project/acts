@@ -51,7 +51,7 @@ class Result {
 
   /// @brief Constructor from arbitrary value
   /// This constructor allows construction from any value. This constructor is
-  /// only enabled if T and E are unambiguous, meaning the cannot be implicitly
+  /// only enabled if T and E are unambiguous, meaning they cannot be implicitly
   /// converted and there is T cannot be constructed from E and vice-versa.
   /// This means that when this is invoked, the value can be propagated to the
   /// underlying variant, and the assignment will be correct, and error will be

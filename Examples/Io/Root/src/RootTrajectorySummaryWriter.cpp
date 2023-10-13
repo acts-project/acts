@@ -226,7 +226,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     // The trajectory entry indices
     const auto& trackTips = traj.tips();
 
-    // Dont write empty MultiTrajectory
+    // Don't write empty MultiTrajectory
     if (trackTips.empty()) {
       continue;
     }
@@ -255,7 +255,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       m_chi2Sum.push_back(trajState.chi2Sum);
       m_NDF.push_back(trajState.NDF);
       m_measurementChi2.push_back(trajState.measurementChi2);
-      m_outlierChi2.push_back(trajState.measurementChi2);
+      m_outlierChi2.push_back(trajState.outlierChi2);
       // They are stored as double (as the vector of vector of int is not known
       // to ROOT)
       m_measurementVolume.emplace_back(trajState.measurementVolume.begin(),

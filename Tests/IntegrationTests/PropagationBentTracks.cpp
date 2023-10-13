@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(without_boundary_check_no_bfield) {
   navCfg.boundaryCheckLayerResolving = false;
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.0_T);
 
-  // without befield we exit at the side so we don't hit the surfaces at x ~
+  // without bField we exit at the side so we don't hit the surfaces at x ~
   // 2000 and also not the boundary surface at x = 3000, regardless of the
   // boundary checking
   BOOST_CHECK(std::count(xPositions.begin(), xPositions.end(), 999.0) == 1);

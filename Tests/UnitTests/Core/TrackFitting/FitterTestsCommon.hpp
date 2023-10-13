@@ -169,7 +169,7 @@ struct FitterTester {
     auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
-    // this is the default option. set anyways for consistency
+    // this is the default option. set anyway for consistency
     options.referenceSurface = nullptr;
 
     Acts::ConstTrackAccessor<bool> reversed{"reversed"};
@@ -221,10 +221,10 @@ struct FitterTester {
     auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
-    // initial fitter options configured for backward filtereing mode
+    // initial fitter options configured for backward filtering mode
     // backward filtering requires a reference surface
     options.referenceSurface = &start.referenceSurface();
-    // this is the default option. set anyways for consistency
+    // this is the default option. set anyway for consistency
     options.propagatorPlainOptions.direction = Acts::Direction::Forward;
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},

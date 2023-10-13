@@ -215,16 +215,16 @@ struct CombinatorialKalmanFilterResult {
   // Fitted states that the actor has handled.
   traj_t* fittedStates{nullptr};
 
-  // These is used internally to store candidate trackstates
+  // This is used internally to store candidate trackstates
   std::shared_ptr<traj_t> stateBuffer;
   std::vector<typename traj_t::TrackStateProxy> trackStateCandidates;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
-  // This correspond to the last measurement state in the multitrajectory.
+  // This corresponds to the last measurement state in the multitrajectory.
   std::vector<MultiTrajectoryTraits::IndexType> lastMeasurementIndices;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
-  // This correspond to the last state in the multitrajectory.
+  // This corresponds to the last state in the multitrajectory.
   std::vector<MultiTrajectoryTraits::IndexType> lastTrackIndices;
 
   // The Parameters at the provided surface for separate tracks
@@ -299,7 +299,7 @@ class CombinatorialKalmanFilter {
  private:
   using KalmanNavigator = typename propagator_t::Navigator;
 
-  /// The propgator for the transport and material update
+  /// The propagator for the transport and material update
   propagator_t m_propagator;
 
   std::unique_ptr<const Logger> m_logger;
@@ -347,7 +347,7 @@ class CombinatorialKalmanFilter {
 
     /// @brief CombinatorialKalmanFilter actor operation
     ///
-    /// @tparam propagator_state_t Type of the Propagagor state
+    /// @tparam propagator_state_t Type of the Propagator state
     /// @tparam stepper_t Type of the stepper
     ///
     /// @param state is the mutable propagator state object
@@ -577,9 +577,9 @@ class CombinatorialKalmanFilter {
       }      // if filtering is done
     }
 
-    /// @brief Kalman actor operation : reset propagation
+    /// @brief Kalman actor operation: reset propagation
     ///
-    /// @tparam propagator_state_t Type of Propagagor state
+    /// @tparam propagator_state_t Type of Propagator state
     /// @tparam stepper_t Type of the stepper
     /// @tparam navigator_t Type of the navigator
     ///
@@ -618,12 +618,12 @@ class CombinatorialKalmanFilter {
           logger());
     }
 
-    /// @brief CombinatorialKalmanFilter actor operation :
+    /// @brief CombinatorialKalmanFilter actor operation:
     /// - filtering for all measurement(s) on surface
     /// - store selected track states in multiTrajectory
     /// - update propagator state to the (last) selected track state
     ///
-    /// @tparam propagator_state_t Type of the Propagagor state
+    /// @tparam propagator_state_t Type of the Propagator state
     /// @tparam stepper_t Type of the stepper
     /// @tparam navigator_t Type of the navigator
     ///
@@ -1017,7 +1017,7 @@ class CombinatorialKalmanFilter {
       return Result<void>::success();
     }
 
-    /// @brief CombinatorialKalmanFilter actor operation : add hole or material track state
+    /// @brief CombinatorialKalmanFilter actor operation: add a hole or material track state
     ///
     /// @param stateMask The bitmask that instructs which components to allocate
     /// @param boundState The bound state on current surface
@@ -1074,9 +1074,9 @@ class CombinatorialKalmanFilter {
       return currentTip;
     }
 
-    /// @brief CombinatorialKalmanFilter actor operation : material interaction
+    /// @brief CombinatorialKalmanFilter actor operation: material interaction
     ///
-    /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam propagator_state_t is the type of Propagator state
     /// @tparam stepper_t Type of the stepper
     /// @tparam navigator_t Type of the navigator
     ///
@@ -1084,7 +1084,7 @@ class CombinatorialKalmanFilter {
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
     /// @param navigator The navigator in use
-    /// @param updateStage The materal update stage
+    /// @param updateStage The material update stage
     ///
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
@@ -1136,9 +1136,9 @@ class CombinatorialKalmanFilter {
       }
     }
 
-    /// @brief Kalman actor operation : finalize
+    /// @brief Kalman actor operation: finalize
     ///
-    /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam propagator_state_t is the type of Propagator state
     /// @tparam stepper_t Type of the stepper
     /// @tparam navigator_t Type of the navigator
     ///

@@ -8,8 +8,8 @@
 
 // This is an example on how to access data from the test data directory.
 // It is not really an integration test, but since it does not use the
-// the unit test framework, placing it into the integration tests directory
-// is the least akward place.
+// unit test framework, placing it into the integration tests directory
+// is the least awkward place.
 
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 

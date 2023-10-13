@@ -59,14 +59,14 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     const fit_options_t& fitOptions,
     ActsAlignment::AlignmentResult& alignResult,
     const ActsAlignment::AlignmentMask& alignMask) const {
-  // The number of trajectories must be eual to the number of starting
+  // The number of trajectories must be equal to the number of starting
   // parameters
   assert(trajectoryCollection.size() == startParametersCollection.size());
 
   // The total alignment degree of freedom
   alignResult.alignmentDof =
       alignResult.idxedAlignSurfaces.size() * Acts::eAlignmentSize;
-  // Initialize derivative of chi2 w.r.t. aligment parameters for all tracks
+  // Initialize derivative of chi2 w.r.t. alignment parameters for all tracks
   Acts::ActsDynamicVector sumChi2Derivative =
       Acts::ActsDynamicVector::Zero(alignResult.alignmentDof);
   Acts::ActsDynamicMatrix sumChi2SecondDerivative =
@@ -97,7 +97,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     const auto& alignState = evaluateRes.value();
     for (const auto& [rowSurface, rows] : alignState.alignedSurfaces) {
       const auto& [dstRow, srcRow] = rows;
-      // Fill the results into full chi2 derivative matrixs
+      // Fill the results into full chi2 derivative matrix
       sumChi2Derivative.segment<Acts::eAlignmentSize>(dstRow *
                                                       Acts::eAlignmentSize) +=
           alignState.alignmentToChi2Derivative.segment(
@@ -262,7 +262,7 @@ ActsAlignment::Alignment<fitter_t>::align(
       if (std::abs(recentChi2ONdf.front() - alignResult.averageChi2ONdf) <=
           alignOptions.deltaAverageChi2ONdfCutOff.second) {
         ACTS_INFO(
-            "Alignment has converaged with change of chi2/ndf < "
+            "Alignment has converged with change of chi2/ndf < "
             << alignOptions.deltaAverageChi2ONdfCutOff.second << " in the last "
             << alignOptions.deltaAverageChi2ONdfCutOff.first << " iterations"
             << " after " << iIter << " iteration(s)");
@@ -273,7 +273,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     }
     // 2. or the average chi2/ndf (is this correct?)
     if (alignResult.averageChi2ONdf <= alignOptions.averageChi2ONdfCutOff) {
-      ACTS_INFO("Alignment has converaged with average chi2/ndf < "
+      ACTS_INFO("Alignment has converged with average chi2/ndf < "
                 << alignOptions.averageChi2ONdfCutOff << " after " << iIter
                 << " iteration(s)");
       converged = true;
@@ -320,7 +320,7 @@ ActsAlignment::Alignment<fitter_t>::align(
       ACTS_VERBOSE("Center (cenX, cenY, cenZ) = " << translation.transpose());
       ACTS_VERBOSE(
           "Euler angles (rotZ, rotY, rotX) = " << rotAngles.transpose());
-      ACTS_VERBOSE("Rotation marix = \n" << rotation);
+      ACTS_VERBOSE("Rotation matrix = \n" << rotation);
     }
   } else {
     ACTS_DEBUG("Alignment parameters is not updated.");
