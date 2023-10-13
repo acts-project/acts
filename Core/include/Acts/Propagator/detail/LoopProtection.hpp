@@ -47,10 +47,16 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
 
   // And set it as the loop limit
   const double previousLimit = pathAborter.internalLimit;
-  pathAborter.internalLimit = loopLimit;
-  ACTS_VERBOSE("Path aborter limit set to "
-               << loopLimit << " (full helix = " << helixPath
-               << ", previous limit = " << previousLimit << ")");
+  if (loopLimit < previousLimit) {
+    pathAborter.internalLimit = loopLimit;
+    ACTS_VERBOSE("Path aborter limit set to "
+                 << loopLimit << " (full helix = " << helixPath
+                 << ", previous limit = " << previousLimit << ")");
+  } else {
+    ACTS_VERBOSE("Path aborter limit not updated to "
+                 << loopLimit << " (full helix = " << helixPath
+                 << ", previous limit = " << previousLimit << ")");
+  }
 }
 
 }  // namespace detail
