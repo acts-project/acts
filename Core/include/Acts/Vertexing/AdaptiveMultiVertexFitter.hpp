@@ -35,7 +35,7 @@ namespace Acts {
 ///
 /// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
-template <typename input_track_t, typename linearizer_t>
+template <typename input_track_t, typename linearizer_t, bool useTime = false>
 class AdaptiveMultiVertexFitter {
   static_assert(LinearizerConcept<linearizer_t>,
                 "Linearizer does not fulfill linearizer concept.");
