@@ -552,12 +552,6 @@ class CombinatorialKalmanFilter {
                       result.lastMeasurementIndices.at(result.iSmoothed),
                       std::get<BoundTrackParameters>(fittedState));
                 }
-
-                auto fittedState = *res;
-                // Assign the fitted parameters
-                result.fittedParameters.emplace(
-                    result.lastMeasurementIndices.at(result.iSmoothed),
-                    std::get<BoundTrackParameters>(fittedState));
               }
 
               // If there are more trajectories to handle:
@@ -1445,16 +1439,18 @@ class CombinatorialKalmanFilter {
     std::vector<typename TrackContainer::TrackProxy> tracks;
 
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
+      if (auto it = combKalmanResult.fittedParameters.find(tip);
+          it == combKalmanResult.fittedParameters.end()) {
+        continue;
+      }
+
       auto track = trackContainer.getTrack(trackContainer.addTrack());
       track.tipIndex() = tip;
 
-      if (auto it = combKalmanResult.fittedParameters.find(tip);
-          it != combKalmanResult.fittedParameters.end()) {
-        const BoundTrackParameters& parameters = it->second;
-        track.parameters() = parameters.parameters();
-        track.covariance() = *parameters.covariance();
-        track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
-      }
+      const BoundTrackParameters& parameters = it->second;
+      track.parameters() = parameters.parameters();
+      track.covariance() = *parameters.covariance();
+      track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
 
       calculateTrackQuantities(track);
 
