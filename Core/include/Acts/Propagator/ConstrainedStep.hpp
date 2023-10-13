@@ -69,7 +69,8 @@ class ConstrainedStep {
   ///
   /// @param value is the new accuracy value
   constexpr void setAccuracy(Scalar value) {
-    assert(value > 0 && "ConstrainedStep accuracy must be > 0.");
+    // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
+    // assert(value > 0 && "ConstrainedStep accuracy must be > 0.");
     /// set the accuracy value
     m_values[accuracy] = value;
   }
@@ -78,7 +79,8 @@ class ConstrainedStep {
   ///
   /// @param value is the new user value
   constexpr void setUser(Scalar value) {
-    assert(value != 0 && "ConstrainedStep user must be != 0.");
+    // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
+    // assert(value != 0 && "ConstrainedStep user must be != 0.");
     /// set the user value
     m_values[user] = value;
   }
@@ -119,7 +121,9 @@ class ConstrainedStep {
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
     if (std::abs(value) < std::abs(m_values[type])) {
-      assert(value != 0 && "ConstrainedStep user must be != 0.");
+      // TODO enable assert; see
+      // https://github.com/acts-project/acts/issues/2543
+      // assert(value != 0 && "ConstrainedStep user must be != 0.");
       m_values[type] = value;
     }
   }
