@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -48,8 +48,6 @@ struct MatrixCache {
 /// when using time information and 3 otherwise
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
-/// @param useTimeInformation boolean indicating whether we
-/// use time information in the vertex fit
 template <typename input_track_t, unsigned int nDimVertex>
 void updateVertexWithTrack(Vertex<input_track_t>& vtx,
                            TrackAtVertex<input_track_t>& trk);

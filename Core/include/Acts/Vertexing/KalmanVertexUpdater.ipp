@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -92,6 +92,8 @@ void Acts::KalmanVertexUpdater::updatePosition(
   const ActsVector<nParams> trkParams =
       linTrack.parametersAtPCA.head<nParams>();
   const ActsVector<nParams> constTerm = linTrack.constantTerm.head<nParams>();
+  // TODO we could use `linTrack.weightAtPCA` but only if we would always use
+  // time in the fit
   const ActsSquareMatrix<nParams> trkParamWeight =
       linTrack.covarianceAtPCA.block<nParams, nParams>(0, 0).inverse();
 
@@ -158,6 +160,8 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
   const ActsVector<nParams> trkParams =
       linTrack.parametersAtPCA.head<nParams>();
   const ActsVector<nParams> constTerm = linTrack.constantTerm.head<nParams>();
+  // TODO we could use `linTrack.weightAtPCA` but only if we would always use
+  // time in the fit
   const ActsSquareMatrix<nParams> trkParamWeight =
       linTrack.covarianceAtPCA.block<nParams, nParams>(0, 0).inverse();
 
