@@ -1439,8 +1439,8 @@ class CombinatorialKalmanFilter {
     std::vector<typename TrackContainer::TrackProxy> tracks;
 
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
-      if (auto it = combKalmanResult.fittedParameters.find(tip);
-          it == combKalmanResult.fittedParameters.end()) {
+      auto it = combKalmanResult.fittedParameters.find(tip);
+      if (it == combKalmanResult.fittedParameters.end()) {
         continue;
       }
 
