@@ -212,48 +212,49 @@ struct CombinatorialKalmanFilterOptions {
 
 template <typename traj_t>
 struct CombinatorialKalmanFilterResult {
-  // Fitted states that the actor has handled.
+  /// Fitted states that the actor has handled.
   traj_t* fittedStates{nullptr};
 
-  // This is used internally to store candidate trackstates
+  /// This is used internally to store candidate trackstates
   std::shared_ptr<traj_t> stateBuffer;
   std::vector<typename traj_t::TrackStateProxy> trackStateCandidates;
 
-  // This is the indices of the 'tip' of the tracks stored in multitrajectory.
-  // This corresponds to the last measurement state in the multitrajectory.
+  /// This is the indices of the 'tip' of the tracks stored in multitrajectory.
+  /// This corresponds to the last measurement state in the multitrajectory.
   std::vector<MultiTrajectoryTraits::IndexType> lastMeasurementIndices;
 
-  // This is the indices of the 'tip' of the tracks stored in multitrajectory.
-  // This corresponds to the last state in the multitrajectory.
+  /// This is the indices of the 'tip' of the tracks stored in multitrajectory.
+  /// This corresponds to the last state in the multitrajectory.
   std::vector<MultiTrajectoryTraits::IndexType> lastTrackIndices;
 
-  // The Parameters at the provided surface for separate tracks
+  /// The Parameters at the provided surface for separate tracks
   std::unordered_map<MultiTrajectoryTraits::IndexType, BoundTrackParameters>
       fittedParameters;
 
-  // The indices of the 'tip' of the unfinished tracks
+  /// The indices of the 'tip' of the unfinished tracks
   std::vector<std::pair<MultiTrajectoryTraits::IndexType,
                         CombinatorialKalmanFilterTipState>>
       activeTips;
 
-  // The indices of track states and corresponding source links on different
-  // surfaces
+  /// The indices of track states and corresponding source links on different
+  /// surfaces
   std::unordered_map<const Surface*, std::unordered_map<size_t, size_t>>
       sourcelinkTips;
 
-  // Indicator if filtering has been done
+  /// Indicator if filtering has been done
   bool filtered = false;
 
-  // Indicator if smoothing has been done.
+  /// Indicator if smoothing has been done.
   bool smoothed = false;
 
-  // The index for the current smoothing track
+  /// The index for the current smoothing track
   MultiTrajectoryTraits::IndexType iSmoothed = 0;
 
-  // Indicator if track finding has been done
+  /// Indicator if track finding has been done
   bool finished = false;
 
-  Result<void> result{Result<void>::success()};
+  /// Last encountered error
+  Result<void> lastError{Result<void>::success()};
 
   /// Path limit aborter
   PathLimitReached pathLimitReached;
@@ -397,7 +398,7 @@ class CombinatorialKalmanFilter {
         auto res = filter(surface, state, stepper, navigator, result);
         if (!res.ok()) {
           ACTS_ERROR("Error in filter: " << res.error());
-          result.result = res.error();
+          result.lastError = res.error();
         }
       }
 
@@ -511,7 +512,7 @@ class CombinatorialKalmanFilter {
               auto res = finalize(state, stepper, navigator, result);
               if (!res.ok()) {
                 ACTS_ERROR("Error in finalize: " << res.error());
-                result.result = res.error();
+                result.lastError = res.error();
               }
               result.smoothed = true;
 
@@ -544,7 +545,7 @@ class CombinatorialKalmanFilter {
                     stepper.boundState(state.stepping, *smoothingTargetSurface);
                 if (!res.ok()) {
                   ACTS_ERROR("Error in finalize: " << res.error());
-                  result.result = res.error();
+                  result.lastError = res.error();
                 } else {
                   auto fittedState = *res;
                   // Assign the fitted parameters
@@ -1423,15 +1424,15 @@ class CombinatorialKalmanFilter {
     // This is regarded as a failure.
     // @TODO: Implement distinguishment between the above two cases if
     // necessary
-    if (combKalmanResult.result.ok() and not combKalmanResult.finished) {
-      combKalmanResult.result = Result<void>(
+    if (combKalmanResult.lastError.ok() and not combKalmanResult.finished) {
+      combKalmanResult.lastError = Result<void>(
           CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
     }
 
-    if (!combKalmanResult.result.ok()) {
+    if (!combKalmanResult.lastError.ok()) {
       ACTS_ERROR("CombinatorialKalmanFilter failed: "
-                 << combKalmanResult.result.error() << " "
-                 << combKalmanResult.result.error().message()
+                 << combKalmanResult.lastError.error() << " "
+                 << combKalmanResult.lastError.error().message()
                  << " with the initial parameters: \n"
                  << initialParameters.parameters());
     }
