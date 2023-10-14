@@ -68,10 +68,11 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
       vtx, linTrack, track.trackWeight, -1, matrixCache);
 
   // Corresponding weight matrix
-  const SquareMatrix3& reducedVtxWeight = matrixCache.newVertexWeight;
+  const SquareMatrix3& reducedVtxWeight =
+      matrixCache.newVertexWeight.block<3, 3>(0, 0);
 
   // Difference in positions
-  Vector3 posDiff = vtx.position() - matrixCache.newVertexPos;
+  Vector3 posDiff = vtx.position() - matrixCache.newVertexPos.head<3>();
 
   // Get smoothed params
   ActsVector<5> smParams =

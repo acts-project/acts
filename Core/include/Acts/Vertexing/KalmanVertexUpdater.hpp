@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,10 +24,10 @@ namespace KalmanVertexUpdater {
 
 /// Cache object to store matrix information
 struct MatrixCache {
-  Vector3 newVertexPos = Vector3::Zero();
-  SquareMatrix3 newVertexCov = SquareMatrix3::Zero();
-  SquareMatrix3 newVertexWeight = SquareMatrix3::Zero();
-  SquareMatrix3 oldVertexWeight = SquareMatrix3::Zero();
+  Vector4 newVertexPos = Vector4::Zero();
+  SquareMatrix4 newVertexCov = SquareMatrix4::Zero();
+  SquareMatrix4 newVertexWeight = SquareMatrix4::Zero();
+  SquareMatrix4 oldVertexWeight = SquareMatrix4::Zero();
   SquareMatrix3 momWeightInv = SquareMatrix3::Zero();
 };
 

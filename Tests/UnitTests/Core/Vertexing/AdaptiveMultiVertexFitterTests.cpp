@@ -471,7 +471,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // The constraint vertex position covariance
   SquareMatrix4 covConstr(SquareMatrix4::Identity());
   covConstr = covConstr * 1e+8;
-  covConstr(3, 3) = 0.;
 
   // Prepare first vertex
   Vector3 vtxPos1(0.15_mm, 0.15_mm, 2.9_mm);
