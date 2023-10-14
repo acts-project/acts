@@ -98,7 +98,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
   input[iInput++] = idxSourceLink.geometryId().volume();
   input[iInput++] = idxSourceLink.geometryId().layer();
 
-  const Acts::Surface& surf = trackState.referenceSurface();
+  const Acts::Surface& referenceSurface = trackState.referenceSurface();
 
   std::visit(
       [&](const auto& measurement) {
@@ -108,12 +108,19 @@ void ActsExamples::NeuralCalibrator::calibrate(
         Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
             E * measurement.covariance() * E.transpose();
 
-        Acts::Vector3 dir = Acts::makeDirectionFromPhiEta(
+        Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(
             fpar[Acts::eBoundPhi], fpar[Acts::eBoundTheta]);
-        Acts::Vector3 gpos =
-            surf.localToGlobal(gctx, fpar.segment<2>(Acts::eBoundLoc0), dir);
+        Acts::Vector3 globalPosition = referenceSurface.localToGlobal(
+            gctx, fpar.segment<2>(Acts::eBoundLoc0), dir);
+
+        // Rotation matrix. When applied to global coordinates, they
+        // are rotated into the local reference frame of the
+        // surface. Note that this such a rotation can be found by
+        // inverting a matrix whose columns correspond to the
+        // coordinate axes of the local coordinate system.
         Acts::RotationMatrix3 rot =
-            surf.referenceFrame(gctx, gpos, dir).inverse();
+            referenceSurface.referenceFrame(gctx, globalPosition, dir)
+                .inverse();
         std::pair<double, double> angles =
             Acts::VectorHelpers::incidentAngles(dir, rot);
 
