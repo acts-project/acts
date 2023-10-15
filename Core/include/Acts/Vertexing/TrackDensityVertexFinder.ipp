@@ -26,14 +26,14 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
-  SquareMatrix3 seedCov = vertexingOptions.constraint.covariance();
+  SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
   // Check if a constraint is provided and set the new z position constraint
-  if (seedCov != SquareMatrix3::Zero() && std::isnormal(zAndWidth.second)) {
+  if (seedCov != SquareMatrix4::Zero() && std::isnormal(zAndWidth.second)) {
     seedCov(eZ, eZ) = zAndWidth.second * zAndWidth.second;
   }
 
-  returnVertex.setCovariance(seedCov);
+  returnVertex.setFullCovariance(seedCov);
 
   std::vector<Vertex<InputTrack_t>> seedVec{returnVertex};
 

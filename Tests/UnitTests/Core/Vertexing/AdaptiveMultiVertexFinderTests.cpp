@@ -147,6 +147,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   // TODO: test without using beam spot constraint
   Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  // Set time covariance
+  SquareMatrix4 fullCovariance;
+  fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
+  fullCovariance(3, 3) = 100_ns;
+  bsConstr.setFullCovariance(fullCovariance);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, bsConstr);
 
@@ -305,12 +310,17 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     userTracksPtr.push_back(&trk);
   }
 
-  Vertex<InputTrack> constraintVtx;
-  constraintVtx.setPosition(std::get<BeamSpotData>(csvData).position());
-  constraintVtx.setCovariance(std::get<BeamSpotData>(csvData).covariance());
+  Vertex<InputTrack> bsConstr;
+  bsConstr.setPosition(std::get<BeamSpotData>(csvData).position());
+  bsConstr.setCovariance(std::get<BeamSpotData>(csvData).covariance());
+  // Set time covariance
+  SquareMatrix4 fullCovariance;
+  fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
+  fullCovariance(3, 3) = 100_ns;
+  bsConstr.setFullCovariance(fullCovariance);
 
   VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
-                                                constraintVtx);
+                                                bsConstr);
 
   auto findResult = finder.find(userTracksPtr, vertexingOptions, state);
 
@@ -440,6 +450,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   // TODO: test using beam spot constraint
   Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  // Set time covariance
+  SquareMatrix4 fullCovariance;
+  fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
+  fullCovariance(3, 3) = 100_ns;
+  bsConstr.setFullCovariance(fullCovariance);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, bsConstr);
 
@@ -587,6 +602,11 @@ BOOST_AUTO_TEST_CASE(
   }
 
   Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  // Set time covariance
+  SquareMatrix4 fullCovariance;
+  fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
+  fullCovariance(3, 3) = 100_ns;
+  bsConstr.setFullCovariance(fullCovariance);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, bsConstr);
 
