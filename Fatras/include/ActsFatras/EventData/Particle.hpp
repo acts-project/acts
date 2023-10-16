@@ -251,7 +251,7 @@ class Particle {
   ///
   /// @param surface reference surface
   Particle &setReferenceSurface(std::shared_ptr<const Acts::Surface> surface) {
-    m_referenceSurface = surface;
+    m_referenceSurface = std::move(surface);
     return *this;
   }
 
@@ -268,6 +268,10 @@ class Particle {
   /// Bound track parameters.
   Acts::Result<Acts::BoundTrackParameters> boundParameters(
       const Acts::GeometryContext &gctx) const {
+    if (!hasReferenceSurface()) {
+      return Acts::Result<Acts::BoundTrackParameters>::failure(
+          std::error_code());
+    }
     Acts::Result<Acts::Vector2> localResult =
         m_referenceSurface->globalToLocal(gctx, position(), direction());
     if (!localResult.ok()) {
