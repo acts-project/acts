@@ -68,21 +68,20 @@ struct PathLimitReached {
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
     double tolerance = state.options.targetTolerance;
-    stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
-                        false);
     bool limitReached = (std::abs(distance) < std::abs(tolerance));
     if (limitReached) {
       ACTS_VERBOSE("Target: x | "
                    << "Path limit reached at distance " << distance);
       // reaching the target means navigation break
       navigator.targetReached(state.navigation, true);
-    } else {
-      ACTS_VERBOSE("Target: 0 | "
-                   << "Target stepSize (path limit) updated to "
-                   << stepper.outputStepSize(state.stepping));
+      return true;
     }
-    // path limit check
-    return limitReached;
+    stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
+                        false);
+    ACTS_VERBOSE("Target: 0 | "
+                 << "Target stepSize (path limit) updated to "
+                 << stepper.outputStepSize(state.stepping));
+    return false;
   }
 };
 
