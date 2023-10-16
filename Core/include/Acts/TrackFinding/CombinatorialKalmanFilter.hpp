@@ -616,8 +616,8 @@ class CombinatorialKalmanFilter {
       materialInteractor(navigator.currentSurface(state.navigation), state,
                          stepper, navigator, MaterialUpdateStage::FullUpdate);
 
-      detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                  true, logger());
+      detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
+                                  logger());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation:
@@ -1272,7 +1272,7 @@ class CombinatorialKalmanFilter {
           state.options.direction * stepper.direction(state.stepping), &surface,
           nullptr);
 
-      detail::setupLoopProtection(state, stepper, result.pathLimitReached,
+      detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
                                   logger());
 
       return Result<void>::success();
