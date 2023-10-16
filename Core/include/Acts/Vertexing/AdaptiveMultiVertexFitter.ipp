@@ -212,10 +212,13 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     if (!res.ok()) {
       return res.error();
     }
-    if (hasIP) {
-      currentVtxInfo.impactParams3D.at(trk) = res.value();
-    } else {
-      currentVtxInfo.impactParams3D.emplace(trk, res.value());
+    // Try to create a new map entry. If "trk" already exists as key, the
+    // corresponding value will not be overwritten and the boolean "inserted"
+    // will be set to false ...
+    auto [it, inserted] = currentVtxInfo.impactParams3D.emplace(trk, *res);
+    // ... and we have to overwrite manually.
+    if (not inserted) {
+      it->second = *res;
     }
   }
   return {};
