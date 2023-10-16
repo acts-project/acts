@@ -346,7 +346,11 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
-    /// The current iteration of the fitter
+    /// The current iteration of the fitter.
+    /// The variable is updated in fit().
+    /// The actor needs to know the current iteration for adding new
+    /// trackStates. During the first iteration, each measurement surfaces will
+    /// be added to the track.
     size_t nUpdate = Acts::MultiTrajectoryTraits::kInvalid;
 
     /// @brief Gx2f actor operation
