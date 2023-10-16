@@ -617,7 +617,7 @@ class CombinatorialKalmanFilter {
                          stepper, navigator, MaterialUpdateStage::FullUpdate);
 
       detail::setupLoopProtection(state, stepper, result.pathLimitReached,
-                                  logger());
+                                  true, logger());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation:
