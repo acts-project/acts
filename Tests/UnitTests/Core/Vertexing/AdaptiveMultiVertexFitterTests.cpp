@@ -56,8 +56,7 @@ using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
 // Set up logger
-ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AMVFitterTests",
-                                         Acts::Logging::INFO));
+ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AMVFitterTests", Acts::Logging::INFO))
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
