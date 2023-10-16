@@ -256,14 +256,13 @@ class Particle {
   }
 
   /// Reference surface.
-  constexpr const std::shared_ptr<const Acts::Surface> &referenceSurface()
-      const {
+  const std::shared_ptr<const Acts::Surface> &referenceSurface() const {
     return m_referenceSurface;
   }
 
   /// Check if the particle has a reference surface.
-  constexpr bool hasReferenceSurface() const {
-    return m_referenceSurface != nullptr;
+  bool hasReferenceSurface() const {
+    return m_referenceSurface.operator bool();
   }
 
   /// Bound track parameters.
