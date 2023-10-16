@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(ComponentBuilderProxyTest) {
   BOOST_CHECK(rootProxy->parent == nullptr);
 
   // Works - add a child to the root proxy
-  auto firstChild = rootProxy->addChildVolumeProxy(
+  rootProxy->addChildVolumeProxy(
       "FirstChild", Transform3::Identity() * Translation3(0., 0., -50.),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 50.}, idcb);
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ComponentBuilderProxyTest) {
       rootProxy->holder));
 
   // Works - add a child container to the root proxy
-  auto secondChild = rootProxy->addChildContainerProxy(
+  rootProxy->addChildContainerProxy(
       "SecondChild", Transform3::Identity() * Translation3(0., 0., 50),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 50.});
 

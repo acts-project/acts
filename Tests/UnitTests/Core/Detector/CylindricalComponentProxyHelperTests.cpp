@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,11 +36,11 @@ BOOST_AUTO_TEST_CASE(CylindricalComponentProxyHelperTest_Z_Untoched) {
       "RootBuilder", Transform3::Identity(),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 100.}, {binZ});
 
-  auto child0 = rootProxy->addChildVolumeProxy(
+  rootProxy->addChildVolumeProxy(
       "Child0", Transform3::Identity() * Translation3(0., 0., -50.),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 50.}, idcb);
 
-  auto child1 = rootProxy->addChildVolumeProxy(
+  rootProxy->addChildVolumeProxy(
       "Child1", Transform3::Identity() * Translation3(0., 0., 50.),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 50.}, idcb);
 
@@ -61,11 +61,11 @@ BOOST_AUTO_TEST_CASE(CylindricalComponentProxyHelperTest_Z_OneSide) {
       "RootBuilder", Transform3::Identity(),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 100.}, {binZ});
 
-  auto child0 = rootProxy->addChildVolumeProxy(
+  rootProxy->addChildVolumeProxy(
       "Child0", Transform3::Identity() * Translation3(0., 0., -50.),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 50.}, idcb);
 
-  auto child1 = rootProxy->addChildVolumeProxy(
+  rootProxy->addChildVolumeProxy(
       "Child1", Transform3::Identity() * Translation3(0., 0., 50.),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 30.}, idcb);
 
@@ -86,11 +86,11 @@ BOOST_AUTO_TEST_CASE(CylindricalComponentProxyHelperTest_Z_BothSides) {
       "RootBuilder", Transform3::Identity(),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 100.}, {binZ});
 
-  auto child0 = rootProxy->addChildVolumeProxy(
+  rootProxy->addChildVolumeProxy(
       "Child0", Transform3::Identity() * Translation3(0., 0., -50.),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 20.}, idcb);
 
-  auto child1 = rootProxy->addChildVolumeProxy(
+  rootProxy->addChildVolumeProxy(
       "Child1", Transform3::Identity() * Translation3(0., 0., 50.),
       VolumeBounds::BoundsType::eCylinder, {0.0, 10., 20.}, idcb);
 
@@ -129,13 +129,13 @@ BOOST_AUTO_TEST_CASE(CylindricalComponentProxyHelperTest_R_Untouched) {
       "RootBuilder", Transform3::Identity(),
       VolumeBounds::BoundsType::eCylinder, {0.0, 50., 100.}, {binR});
 
-  auto child0 = rootProxy->addChildVolumeProxy(
-      "Child0", Transform3::Identity(), VolumeBounds::BoundsType::eCylinder,
-      {0.0, 10., 100.}, idcb);
+  rootProxy->addChildVolumeProxy("Child0", Transform3::Identity(),
+                                 VolumeBounds::BoundsType::eCylinder,
+                                 {0.0, 10., 100.}, idcb);
 
-  auto child1 = rootProxy->addChildVolumeProxy(
-      "Child1", Transform3::Identity(), VolumeBounds::BoundsType::eCylinder,
-      {10., 50., 100.}, idcb);
+  rootProxy->addChildVolumeProxy("Child1", Transform3::Identity(),
+                                 VolumeBounds::BoundsType::eCylinder,
+                                 {10., 50., 100.}, idcb);
 
   Experimental::detail::CylindricalComponentProxyHelper::addGapProxies(
       *rootProxy, Acts::Logging::VERBOSE);
@@ -154,13 +154,13 @@ BOOST_AUTO_TEST_CASE(CylindricalComponentProxyHelperTest_R_Inner) {
       "RootBuilder", Transform3::Identity(),
       VolumeBounds::BoundsType::eCylinder, {0.0, 50., 100.}, {binR});
 
-  auto child0 = rootProxy->addChildVolumeProxy(
-      "Child0", Transform3::Identity(), VolumeBounds::BoundsType::eCylinder,
-      {10., 20., 100.}, idcb);
+  rootProxy->addChildVolumeProxy("Child0", Transform3::Identity(),
+                                 VolumeBounds::BoundsType::eCylinder,
+                                 {10., 20., 100.}, idcb);
 
-  auto child1 = rootProxy->addChildVolumeProxy(
-      "Child1", Transform3::Identity(), VolumeBounds::BoundsType::eCylinder,
-      {20., 50., 100.}, idcb);
+  rootProxy->addChildVolumeProxy("Child1", Transform3::Identity(),
+                                 VolumeBounds::BoundsType::eCylinder,
+                                 {20., 50., 100.}, idcb);
 
   Experimental::detail::CylindricalComponentProxyHelper::addGapProxies(
       *rootProxy, Acts::Logging::VERBOSE);
@@ -183,13 +183,13 @@ BOOST_AUTO_TEST_CASE(CylindricalComponentProxyHelperTest_R_All) {
       "RootBuilder", Transform3::Identity(),
       VolumeBounds::BoundsType::eCylinder, {0.0, 50., 100.}, {binR});
 
-  auto child0 = rootProxy->addChildVolumeProxy(
-      "Child0", Transform3::Identity(), VolumeBounds::BoundsType::eCylinder,
-      {10., 20., 100.}, idcb);
+  rootProxy->addChildVolumeProxy("Child0", Transform3::Identity(),
+                                 VolumeBounds::BoundsType::eCylinder,
+                                 {10., 20., 100.}, idcb);
 
-  auto child1 = rootProxy->addChildVolumeProxy(
-      "Child1", Transform3::Identity(), VolumeBounds::BoundsType::eCylinder,
-      {40., 45., 100.}, idcb);
+  rootProxy->addChildVolumeProxy("Child1", Transform3::Identity(),
+                                 VolumeBounds::BoundsType::eCylinder,
+                                 {40., 45., 100.}, idcb);
 
   Experimental::detail::CylindricalComponentProxyHelper::addGapProxies(
       *rootProxy, Acts::Logging::VERBOSE);
