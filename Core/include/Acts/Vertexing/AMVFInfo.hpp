@@ -12,7 +12,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
-// TODO use unordered map?
 #include <map>
 
 namespace Acts {
