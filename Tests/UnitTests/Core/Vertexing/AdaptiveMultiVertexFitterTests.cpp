@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   int c = 0;
   for (auto& vtx : vtxPtrList) {
     c++;
-    ACTS_DEBUG(". vertex, with ptr: " << vtx);
+    ACTS_DEBUG(c << ". vertex, with ptr: " << vtx);
     for (auto& trk : state.vtxInfoMap[vtx].trackLinks) {
       ACTS_DEBUG("\t track ptr: " << trk);
     }
