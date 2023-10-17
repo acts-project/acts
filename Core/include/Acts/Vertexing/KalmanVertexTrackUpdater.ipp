@@ -145,9 +145,8 @@ Acts::KalmanVertexTrackUpdater::detail::calculateTrackCovariance(
   if constexpr (nDimVertex == 4) {
     freeTrkCov.block<3, 1>(0, 6) = vtxCov.template block<3, 1>(0, 3);
     freeTrkCov.block<1, 3>(6, 0) = vtxCov.template block<1, 3>(3, 0);
-    freeTrkCov.block<3, 1>(3, 6) =
-        (crossCovVP.template block<1, 3>(3, 0)).transpose();
-    freeTrkCov.block<1, 3>(6, 3) = crossCovVP.template block<1, 3>(3, 0);
+    freeTrkCov.block<3, 1>(4, 6) = crossCovVP.template block<3, 1>(0, 3);
+    freeTrkCov.block<1, 3>(6, 4) = crossCovVP.template block<1, 3>(3, 0);
     freeTrkCov(6, 6) = vtxCov(3, 3);
   }
 
