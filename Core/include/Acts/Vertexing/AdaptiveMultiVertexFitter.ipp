@@ -195,13 +195,18 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
   for (const auto& trk : currentVtxInfo.trackLinks) {
     // Track parameters
     auto trkParams = m_extractParameters(*trk);
+    // Type of the track reference surface
+    Surface::SurfaceType surfaceType = trkParams.referenceSurface().type();
     // Origin of the track reference surface
     Vector3 surfaceOrigin = trkParams.referenceSurface()
                                 .transform(vertexingOptions.geoContext)
                                 .translation();
-    // Skip the impact point estimation if the impact parameters of trk wrt the
-    // vertex position were already calculated
-    if (surfaceOrigin == vtxPosition) {
+    // During the impact point estimation, we calculate the 3D PCA wrt a plane
+    // surface with origin at the vertex position. If the track is defined wrt
+    // such a surface, we assume that its impact parameters already correspond
+    // to the 3D PCA and we don't recalculate them.
+    if (surfaceType == Surface::SurfaceType::Plane and
+        surfaceOrigin == vtxPosition) {
       continue;
     }
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
