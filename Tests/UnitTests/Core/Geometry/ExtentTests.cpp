@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   CHECK_CLOSE_ABS(gExt.min(binR), 0_mm, 1e-6);
   CHECK_CLOSE_ABS(gExt.max(binR), 18_mm, 1e-6);
 
-  // Take an Extent and add an xonstrain
+  // Take an Extent and add a constraint
   Extent gExtConst;
   gExtConst.set(binR, 0., 5.);
   Extent gExtNonConst;

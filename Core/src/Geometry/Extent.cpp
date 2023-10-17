@@ -32,7 +32,7 @@ void Acts::Extent::extend(const Vector3& vtx,
                           const std::vector<BinningValue>& bValues,
                           bool applyEnv, bool fillHistograms) {
   for (auto bValue : bValues) {
-    // Get the casted value given the binnin value description
+    // Get the casted value given the binning value description
     ActsScalar cValue = VectorHelpers::cast(vtx, bValue);
     if (fillHistograms) {
       m_valueHistograms[bValue].push_back(cValue);

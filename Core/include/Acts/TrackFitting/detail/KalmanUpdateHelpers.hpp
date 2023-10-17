@@ -70,7 +70,7 @@ auto kalmanHandleMeasurement(
   trackStateProxy.pathLength() = std::move(pathLength);
 
   // We have predicted parameters, so calibrate the uncalibrated input
-  // measuerement
+  // measurement
   extensions.calibrator(state.geoContext, calibrationContext, source_link,
                         trackStateProxy);
 
@@ -109,7 +109,7 @@ auto kalmanHandleMeasurement(
 }
 
 /// This function encapsulates what actions should be performed on a
-/// MultiTrajectory when we have no measuerement
+/// MultiTrajectory when we have no measurement
 /// @tparam propagator_state_t The propagator state type
 /// @tparam stepper_t The stepper type
 /// @param state The propagator state
