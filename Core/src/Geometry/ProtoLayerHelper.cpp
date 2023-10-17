@@ -10,9 +10,12 @@
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <iosfwd>
+#include <array>
+#include <ostream>
+#include <string>
 
 std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
@@ -26,7 +29,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   ///
   /// @param extent The test extent for finding the cluster
   ///
-  /// @return the referece of the SurfaceCluster for insertion
+  /// @return the reference of the SurfaceCluster for insertion
   auto findCluster = [&](const Extent& extent) -> SurfaceCluster& {
     for (auto& cluster : clusteredSurfaces) {
       if (cluster.first.intersects(extent, sorting.first)) {
@@ -70,8 +73,8 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
       auto pLayers = protoLayers(gctx, ssurfaces, sorting);
       ACTS_VERBOSE("-> Resulted in " << pLayers.size() << " ProtoLayers.");
       for (const auto& pLayer : pLayers) {
-        ACTS_VERBOSE("--> ProtoLayer containes " << pLayer.surfaces().size()
-                                                 << " surfaces.");
+        ACTS_VERBOSE("--> ProtoLayer contains " << pLayer.surfaces().size()
+                                                << " surfaces.");
         subSurfaces.push_back(pLayer.surfaces());
       }
     }

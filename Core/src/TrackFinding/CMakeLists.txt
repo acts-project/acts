@@ -5,4 +5,5 @@ target_sources(
     MeasurementSelector.cpp
     FasTrackConnector.cpp
     RoiDescriptor.cpp
+    AmbiguityTrackClustering.cpp
 )

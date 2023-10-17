@@ -60,8 +60,8 @@ struct NavigationState {
   /// The current absolute momentum
   ActsScalar absMomentum = 0.;
 
-  /// The current charge
-  ActsScalar charge = 0.;
+  /// The current absolute charge
+  ActsScalar absCharge = 0.;
 
   /// The current magnetic field
   Vector3 magneticField = Vector3(0., 0., 0.);
@@ -80,7 +80,7 @@ struct NavigationState {
 
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
-  SurfaceCandidates::iterator surfaceCandidate = surfaceCandidates.end();
+  SurfaceCandidates::const_iterator surfaceCandidate = surfaceCandidates.cend();
 
   /// Boundary directives for surfaces
   BoundaryCheck surfaceBoundaryCheck = true;
@@ -88,8 +88,8 @@ struct NavigationState {
   /// An overstep tolerance
   ActsScalar overstepTolerance = -0.1;
 
-  /// Auxilliary attached information
-  std::any auxilliary;
+  /// Auxiliary attached information
+  std::any auxiliary;
 };
 
 }  // namespace Experimental

@@ -97,7 +97,7 @@ CPUPROFILE=<path/to/profile> <path/to/binary> [binary args]
 ```
 
 This variable specifies where the profile will be written to.
-There are additional environemnt variables that modify the behaviour of the profiler.
+There are additional environment variables that modify the behaviour of the profiler.
 [Would you like to know more](https://github.com/gperftools/gperftools)?
 
 ## Produce a Memory Profile
@@ -122,7 +122,7 @@ The CPU profiler, memory profiler and heap checker can be used in tandem.
 
 ### View Profile as a Graph
 
-A graphical representaion of a profile can be produced using:
+A graphical representation of a profile can be produced using:
 
 ```
 pprof -pdf <path/to/binary> <path/to/profile> > <path/to/pdf>

@@ -51,12 +51,12 @@ class Result {
 
   /// @brief Constructor from arbitrary value
   /// This constructor allows construction from any value. This constructor is
-  /// only enabled if T and E are unambiguous, meaning the cannot be implicitly
+  /// only enabled if T and E are unambiguous, meaning they cannot be implicitly
   /// converted and there is T cannot be constructed from E and vice-versa.
   /// This means that when this is invoked, the value can be propagated to the
   /// underlying variant, and the assignment will be correct, and error will be
   /// an error, and a value will be a value.
-  /// @note If T and E are ambigious, use the `success` and `failure` static
+  /// @note If T and E are ambiguous, use the `success` and `failure` static
   /// factory methods.
   /// @tparam T2 Type of the potential assignment
   /// @param value The potential value, could be an actual valid value or an
@@ -233,7 +233,7 @@ class Result<void, E> {
   static Result<void, E> success() { return Result<void, E>(); }
 
   /// Static factory function to initialize the result in the error state.
-  /// @param error The errorr to initialize with.
+  /// @param error The error to initialize with.
   /// @return Result object, in error state.
   static Result<void, E> failure(E error) {
     return Result<void, E>(std::move(error));

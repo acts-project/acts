@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/Material.hpp"
 
 #include <iosfwd>
+#include <utility>
 #include <vector>
 
 namespace Acts {

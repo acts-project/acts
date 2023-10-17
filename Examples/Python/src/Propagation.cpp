@@ -6,6 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -16,39 +19,46 @@
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
+#include <algorithm>
+#include <array>
+#include <map>
 #include <memory>
 #include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+namespace Acts {
+class MagneticFieldProvider;
+}  // namespace Acts
+
 namespace py = pybind11;
 
 namespace {
-template <typename stepper_t>
-auto addStepper(const std::string& prefix, py::module_& m, py::module_& prop) {
-  auto stepper = py::class_<stepper_t>(m, (prefix + "Stepper").c_str());
 
-  using propagator_t = Acts::Propagator<stepper_t, Acts::Navigator>;
-  auto propagator =
-      py::class_<propagator_t>(prop, (prefix + "Propagator").c_str())
-          .def(py::init<>([=](stepper_t _stepper, Acts::Navigator navigator,
-                              Acts::Logging::Level level =
-                                  Acts::Logging::Level::INFO) {
+template <typename stepper_t, typename navigator_t>
+void addPropagator(py::module_& m, const std::string& prefix) {
+  using propagator_t = Acts::Propagator<stepper_t, navigator_t>;
+  py::class_<propagator_t>(m, (prefix + "Propagator").c_str())
+      .def(py::init<>(
+               [=](stepper_t stepper, navigator_t navigator,
+                   Acts::Logging::Level level = Acts::Logging::Level::INFO) {
                  return propagator_t{
-                     std::move(_stepper), std::move(navigator),
+                     std::move(stepper), std::move(navigator),
                      Acts::getDefaultLogger(prefix + "Propagator", level)};
                }),
-               py::arg("stepper"), py::arg("navigator"),
-               py::arg("level") = Acts::Logging::INFO);
+           py::arg("stepper"), py::arg("navigator"),
+           py::arg("level") = Acts::Logging::INFO);
 
   using prop_if_t = ActsExamples::ConcretePropagator<propagator_t>;
   py::class_<prop_if_t, ActsExamples::PropagatorInterface,
              std::shared_ptr<prop_if_t>>(
-      prop, (prefix + "ConcretePropagator").c_str())
+      m, (prefix + "ConcretePropagator").c_str())
       .def(py::init<propagator_t>());
-
-  return std::pair{stepper, propagator};
 }
 
 }  // namespace
@@ -78,22 +88,44 @@ void addPropagation(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
+  {
+    using Config = Acts::Experimental::DetectorNavigator::Config;
+    auto nav =
+        py::class_<Acts::Experimental::DetectorNavigator,
+                   std::shared_ptr<Acts::Experimental::DetectorNavigator>>(
+            m, "DetectorNavigator")
+            .def(py::init<>(
+                     [](Config cfg, Logging::Level level = Logging::INFO) {
+                       return Acts::Experimental::DetectorNavigator{
+                           cfg, getDefaultLogger("DetectorNavigator", level)};
+                     }),
+                 py::arg("cfg"), py::arg("level") = Logging::INFO);
+
+    auto c = py::class_<Config>(nav, "Config").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(resolveMaterial);
+    ACTS_PYTHON_MEMBER(resolvePassive);
+    ACTS_PYTHON_MEMBER(resolveSensitive);
+    ACTS_PYTHON_MEMBER(detector);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::PropagationAlgorithm, mex, "PropagationAlgorithm",
       propagatorImpl, randomNumberSvc, mode, sterileLogger, debugOutput,
       energyLoss, multipleScattering, recordMaterialInteractions, ntests,
       d0Sigma, z0Sigma, phiSigma, thetaSigma, qpSigma, tSigma, phiRange,
-      etaRange, ptRange, ptLoopers, maxStepSize, propagationStepCollection,
-      propagationMaterialCollection, covarianceTransport, covariances,
-      correlations);
+      etaRange, ptRange, particleHypothesis, ptLoopers, maxStepSize,
+      propagationStepCollection, propagationMaterialCollection,
+      covarianceTransport, covariances, correlations);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(
       mex, "PropagatorInterface");
 
   {
-    auto [stepper, propagator] =
-        addStepper<Acts::EigenStepper<>>("Eigen", m, prop);
+    auto stepper = py::class_<Acts::EigenStepper<>>(m, "EigenStepper");
     stepper.def(
         // Add custom constructor lambda so that not specifying the overstep
         // limit takes the default from C++ EigenStepper
@@ -107,18 +139,29 @@ void addPropagation(Context& ctx) {
               }
             }),
         py::arg("bField"), py::arg("overstepLimit") = std::nullopt);
+
+    addPropagator<Acts::EigenStepper<>, Acts::Navigator>(prop, "Eigen");
   }
 
   {
-    auto [stepper, propagator] =
-        addStepper<Acts::AtlasStepper>("Atlas", m, prop);
+    addPropagator<Acts::EigenStepper<>, Acts::Experimental::DetectorNavigator>(
+        prop, "EigenNext");
+  }
+
+  {
+    auto stepper = py::class_<Acts::AtlasStepper>(m, "AtlasStepper");
     stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
+
+    addPropagator<Acts::AtlasStepper, Acts::Navigator>(prop, "Atlas");
   }
 
   {
-    auto [stepper, propagator] =
-        addStepper<Acts::StraightLineStepper>("StraightLine", m, prop);
+    auto stepper =
+        py::class_<Acts::StraightLineStepper>(m, "StraightLineStepper");
     stepper.def(py::init<>());
+
+    addPropagator<Acts::StraightLineStepper, Acts::Navigator>(prop,
+                                                              "StraightLine");
   }
 }
 

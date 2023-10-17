@@ -122,7 +122,7 @@ def computeLoss(
 
 
 def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, float]:
-    """Run the MLP on a batch and compute the corresponding efficiency and loss. If an optimiser is specify train the MLP."""
+    """Run the MLP on a batch and compute the corresponding efficiency and loss. If an optimiser is specified train the MLP."""
     """
     @param[in] batch:  list of DataFrame, each element correspond to a batch 
     @param[in] Optimiser: Optimiser for the MLP, if one is specify the network will be train on batch. 
@@ -188,7 +188,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
         # Normalise the loss to the batch size
         batch_loss = batch_loss / len(b_data[0])
         loss += batch_loss
-        # Perform the gradient decend if an optimiser was specified
+        # Perform the gradient descend if an optimiser was specified
         if Optimiser:
             batch_loss.backward()
             Optimiser.step()

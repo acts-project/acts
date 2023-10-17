@@ -9,13 +9,24 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/Volume.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <ios>
-#include <iostream>
 #include <stdexcept>
+#include <type_traits>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -241,7 +252,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_v_phi = phi(mtrack.first.second);
     m_v_eta = eta(mtrack.first.second);
 
-    // an now loop over the material
+    // and now loop over the material
     for (const auto& mint : materialInteractions) {
       auto direction = mint.direction.normalized();
 
@@ -277,13 +288,15 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
           m_sur_y.push_back(mint.intersection.y());
           m_sur_z.push_back(mint.intersection.z());
         } else if (surface != nullptr) {
-          auto sfIntersection = surface->intersect(
-              ctx.geoContext, mint.position, mint.direction, true);
+          auto sfIntersection = surface
+                                    ->intersect(ctx.geoContext, mint.position,
+                                                mint.direction, true)
+                                    .closest();
           m_sur_id.push_back(surface->geometryId().value());
           m_sur_pathCorrection.push_back(1.0);
-          m_sur_x.push_back(sfIntersection.intersection.position.x());
-          m_sur_y.push_back(sfIntersection.intersection.position.y());
-          m_sur_z.push_back(sfIntersection.intersection.position.z());
+          m_sur_x.push_back(sfIntersection.position().x());
+          m_sur_y.push_back(sfIntersection.position().y());
+          m_sur_z.push_back(sfIntersection.position().z());
         } else {
           m_sur_id.push_back(Acts::GeometryIdentifier().value());
           m_sur_x.push_back(0);
@@ -319,10 +332,9 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
 
       // store volume information
       if (m_cfg.storeVolume) {
-        const Acts::Volume* volume = mint.volume;
         Acts::GeometryIdentifier vlayerID;
-        if (volume != nullptr) {
-          vlayerID = volume->geometryId();
+        if (not mint.volume.empty()) {
+          vlayerID = mint.volume.geometryId();
           m_vol_id.push_back(vlayerID.value());
         } else {
           vlayerID.setVolume(0);

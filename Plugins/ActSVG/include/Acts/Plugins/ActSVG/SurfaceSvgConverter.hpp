@@ -11,9 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "actsvg/core.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/core.hpp>
+#include <actsvg/meta.hpp>
 
 namespace Acts {
 
@@ -31,8 +30,6 @@ struct Options {
   Style style;
   /// Indicate if you want to draw this as a template surface
   bool templateSurface = false;
-  /// ACTS log level
-  Logging::Level logLevel = Logging::INFO;
 };
 
 /// Convert into a svg::proto surface
@@ -49,7 +46,7 @@ ProtoSurface convert(const GeometryContext& gctx, const Surface& surface,
 
 namespace View {
 
-/// Convert into an acts::svg::object with an XY view
+/// Convert into an acts::svg::object with an x-y view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -61,7 +58,7 @@ static inline actsvg::svg::object xy(const ProtoSurface& pSurface,
   return actsvg::display::surface(identification, pSurface, xyView, true);
 }
 
-/// Convert into an acts::svg::object with an Zr view
+/// Convert into an acts::svg::object with an z-r view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -71,6 +68,33 @@ static inline actsvg::svg::object zr(const ProtoSurface& pSurface,
                                      const std::string& identification) {
   actsvg::views::z_r zrView;
   return actsvg::display::surface(identification, pSurface, zrView, true);
+}
+
+/// Convert into an acts::svg::object with an z-phi view
+///
+/// @param pSurface is the proto object
+/// @param identification is the to be translated id_ for actsvg
+///
+/// @return an svg object that can be written out directly to disc
+static inline actsvg::svg::object zphi(const ProtoSurface& pSurface,
+                                       const std::string& identification) {
+  actsvg::views::z_phi zphiView;
+  return actsvg::display::surface(identification, pSurface, zphiView, true);
+}
+
+/// Convert into an acts::svg::object with an z-rphi view
+///
+/// @param pSurface is the proto object
+/// @param identification is the to be translated id_ for actsvg
+///
+/// @note it captures the radii[0u] element for plotting
+///
+/// @return an svg object that can be written out directly to disc
+static inline actsvg::svg::object zrphi(const ProtoSurface& pSurface,
+                                        const std::string& identification) {
+  actsvg::views::z_rphi zrphiView;
+  zrphiView._fixed_r = pSurface._radii[0u];
+  return actsvg::display::surface(identification, pSurface, zrphiView, true);
 }
 
 }  // namespace View

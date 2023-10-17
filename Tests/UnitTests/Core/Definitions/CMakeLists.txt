@@ -1,2 +1,2 @@
-add_unittest(Common CommonTests.cpp)
+add_unittest(Direction DirectionTests.cpp)
 add_unittest(Units UnitsTests.cpp)

@@ -8,7 +8,10 @@
 
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <TProfile.h>
 
 ActsExamples::TrackSummaryPlotTool::TrackSummaryPlotTool(
     const ActsExamples::TrackSummaryPlotTool::Config& cfg,
@@ -91,7 +94,7 @@ void ActsExamples::TrackSummaryPlotTool::fill(
     size_t nSharedHits) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
-  const auto& momentum = fittedParameters.momentum();
+  const auto momentum = fittedParameters.momentum();
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 

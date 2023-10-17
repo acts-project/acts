@@ -11,11 +11,18 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 #include "ActsExamples/MagneticField/ScalableBField.hpp"
 
 #include <memory>
 #include <variant>
+#include <vector>
 
 namespace ActsExamples {
 namespace detail {

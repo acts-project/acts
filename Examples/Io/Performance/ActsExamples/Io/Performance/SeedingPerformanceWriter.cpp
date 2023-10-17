@@ -8,17 +8,24 @@
 
 #include "SeedingPerformanceWriter.hpp"
 
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstddef>
+#include <ostream>
 #include <stdexcept>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <TFile.h>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     ActsExamples::SeedingPerformanceWriter::Config config,
@@ -69,6 +76,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
   float aveNDuplicatedSeeds =
       float(m_nTotalMatchedSeeds - m_nTotalMatchedParticles) /
       m_nTotalMatchedParticles;
+  float totalSeedPurity = float(m_nTotalMatchedSeeds) / m_nTotalSeeds;
   ACTS_DEBUG("nTotalSeeds               = " << m_nTotalSeeds);
   ACTS_DEBUG("nTotalMatchedSeeds        = " << m_nTotalMatchedSeeds);
   ACTS_DEBUG("nTotalParticles           = " << m_nTotalParticles);
@@ -77,6 +85,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
 
   ACTS_INFO("Efficiency (nMatchedParticles / nAllParticles) = " << eff);
   ACTS_INFO("Fake rate (nUnMatchedSeeds / nAllSeeds) = " << fakeRate);
+  ACTS_INFO("Total seed purity (nTotalMatchedSeeds / m_nTotalSeeds)	= "
+            << totalSeedPurity);
   ACTS_INFO(
       "Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) = "
       << duplicationRate);
@@ -121,7 +131,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
 
   int nMatchedParticles = 0;
   int nDuplicatedParticles = 0;
-  // Fill the effeciency and fake rate plots
+  // Fill the efficiency and fake rate plots
   for (const auto& particle : particles) {
     const auto it1 = truthCount.find(particle.particleId());
     bool isMatched = false;

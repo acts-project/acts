@@ -8,14 +8,15 @@
 
 #include "Acts/Surfaces/StrawSurface.hpp"
 
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-#include <iomanip>
-#include <iostream>
+#include <algorithm>
 #include <utility>
+#include <vector>
 
 Acts::StrawSurface::StrawSurface(const Transform3& transform, double radius,
                                  double halez)

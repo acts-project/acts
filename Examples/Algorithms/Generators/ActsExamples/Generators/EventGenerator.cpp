@@ -8,10 +8,12 @@
 
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
 #include <cstdint>
+#include <ostream>
 #include <stdexcept>
 
 ActsExamples::EventGenerator::EventGenerator(const Config& cfg,

@@ -213,13 +213,13 @@ The {func}`SeedFilter::filterSeeds_2SpFixed` function also includes a configurab
 classifies higher quality seeds as "quality confined" seeds if they fall within a predefined range of parameters ($d_0$, $z_0$ and $N_t$) that also
 depends on the region of the detector (i.e., forward or central region). If the seed is not
 classified as "quality confined" seed, it will only be accepted if its weight is greater
-then a certain threshold and no other high-quality seed has been found.
+than a certain threshold and no other high-quality seed has been found.
 
 The seed confirmation also sets a limit on the number of seeds produced for each middle SP,
 which retains only the higher quality seeds. If this limit is exceeded, the algorithm
 checks if there is any low-quality seed in the seed container of this middle SP that can be removed.
 
-:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (Acts::SpacePointData &spacePointData, CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&,std::size_t&,std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>>) const
+:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (Acts::SpacePointData &spacePointData, CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&,const std::size_t,std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>>) const
 :outline:
 :::
 

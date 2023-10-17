@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
@@ -18,13 +20,13 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <stdexcept>
+#include <type_traits>
+#include <utility>
 
 Acts::ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
                                          double outerAlpha, double outerOffsetZ,
@@ -99,13 +101,13 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
     auto innerCone =
         Surface::makeShared<ConeSurface>(innerConeTrans, m_innerConeBounds);
     oSurfaces.push_back(
-        OrientedSurface(std::move(innerCone), NavigationDirection::Forward));
+        OrientedSurface(std::move(innerCone), Direction::Forward));
   } else if (m_innerCylinderBounds != nullptr) {
     // Or alternatively the inner Cylinder
     auto innerCylinder =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
-    oSurfaces.push_back(OrientedSurface(std::move(innerCylinder),
-                                        NavigationDirection::Forward));
+    oSurfaces.push_back(
+        OrientedSurface(std::move(innerCylinder), Direction::Forward));
   }
 
   // Create an outer Cone
@@ -114,13 +116,13 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
     auto outerCone =
         Surface::makeShared<ConeSurface>(outerConeTrans, m_outerConeBounds);
     oSurfaces.push_back(
-        OrientedSurface(std::move(outerCone), NavigationDirection::Backward));
+        OrientedSurface(std::move(outerCone), Direction::Backward));
   } else if (m_outerCylinderBounds != nullptr) {
     // or alternatively an outer Cylinder
     auto outerCylinder =
         Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
-    oSurfaces.push_back(OrientedSurface(std::move(outerCylinder),
-                                        NavigationDirection::Backward));
+    oSurfaces.push_back(
+        OrientedSurface(std::move(outerCylinder), Direction::Backward));
   }
 
   // Set a disc at Zmin
@@ -130,7 +132,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
     auto negativeDisc = Surface::makeShared<DiscSurface>(negativeDiscTrans,
                                                          m_negativeDiscBounds);
     oSurfaces.push_back(
-        OrientedSurface(std::move(negativeDisc), NavigationDirection::Forward));
+        OrientedSurface(std::move(negativeDisc), Direction::Forward));
   }
 
   // Set a disc at Zmax
@@ -138,7 +140,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
   auto positiveDisc =
       Surface::makeShared<DiscSurface>(positiveDiscTrans, m_positiveDiscBounds);
   oSurfaces.push_back(
-      OrientedSurface(std::move(positiveDisc), NavigationDirection::Backward));
+      OrientedSurface(std::move(positiveDisc), Direction::Backward));
 
   if (m_sectorBounds) {
     RotationMatrix3 sectorRotation;
@@ -152,8 +154,8 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
     auto negSectorAbsTrans = transform * negSectorRelTrans;
     auto negSectorPlane =
         Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
-    oSurfaces.push_back(OrientedSurface(std::move(negSectorPlane),
-                                        NavigationDirection::Forward));
+    oSurfaces.push_back(
+        OrientedSurface(std::move(negSectorPlane), Direction::Positive));
 
     Transform3 posSectorRelTrans{sectorRotation};
     posSectorRelTrans.prerotate(
@@ -162,8 +164,8 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
     auto posSectorPlane =
         Surface::makeShared<PlaneSurface>(posSectorAbsTrans, m_sectorBounds);
 
-    oSurfaces.push_back(OrientedSurface(std::move(posSectorPlane),
-                                        NavigationDirection::Backward));
+    oSurfaces.push_back(
+        OrientedSurface(std::move(posSectorPlane), Direction::Negative));
   }
   return oSurfaces;
 }
@@ -192,7 +194,7 @@ bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   double z = pos.z();
   double zmin = z + tol;
   double zmax = z - tol;
-  // Quick check ouside z
+  // Quick check outside z
   if (zmin < -get(eHalfLengthZ) or zmax > get(eHalfLengthZ)) {
     return false;
   }

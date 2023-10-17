@@ -18,15 +18,15 @@ endif()
 
 find_path(
   OnnxRuntime_INCLUDE_DIR
-  NAMES core/session/onnxruntime_cxx_api.h #core/session/providers/cuda_provider_factory.h
+  NAMES onnxruntime_cxx_api.h
   PATHS ${onnxruntime_DIR}
-  PATH_SUFFIXES include include/onnxruntime
+  PATH_SUFFIXES include include/onnxruntime include/onnxruntime/core/session
   DOC "The ONNXRuntime include directory")
 
 if(NOT OnnxRuntime_INCLUDE_DIR)
   message(FATAL_ERROR "onnxruntime includes not found")
 else()
-  file(READ ${OnnxRuntime_INCLUDE_DIR}/core/session/onnxruntime_c_api.h ver)
+  file(READ ${OnnxRuntime_INCLUDE_DIR}/onnxruntime_c_api.h ver)
   string(REGEX MATCH "ORT_API_VERSION ([0-9]*)" _ ${ver})
   set(OnnxRuntime_API_VERSION ${CMAKE_MATCH_1})
   message(STATUS "Found OnnxRuntime includes at ${OnnxRuntime_INCLUDE_DIR} (API version: ${OnnxRuntime_API_VERSION})")

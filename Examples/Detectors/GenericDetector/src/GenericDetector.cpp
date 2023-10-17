@@ -8,11 +8,11 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
+#include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
+#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 auto GenericDetector::finalize(
     const Config& cfg,
@@ -25,8 +25,8 @@ auto GenericDetector::finalize(
           nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
           cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
           cfg.volumeLogLevel);
-  ContextDecorators gContextDeocrators = {};
+  ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(gGeometry), std::move(gContextDeocrators));
+      std::move(gGeometry), std::move(gContextDecorators));
 }

@@ -20,13 +20,13 @@
 namespace Acts::Python {
 
 struct Context {
-  std::unordered_map<std::string, pybind11::module_*> modules;
+  std::unordered_map<std::string, pybind11::module_> modules;
 
-  pybind11::module_& get(const std::string& name) { return *modules.at(name); }
+  pybind11::module_& get(const std::string& name) { return modules.at(name); }
 
   template <typename... Args, typename = std::enable_if_t<sizeof...(Args) >= 2>>
   auto get(Args&&... args) {
-    return std::make_tuple((*modules.at(args))...);
+    return std::make_tuple((modules.at(args))...);
   }
 };
 

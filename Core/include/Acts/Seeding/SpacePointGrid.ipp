@@ -26,6 +26,7 @@ Acts::SpacePointGridCreator::createGrid(
         "SpacePointGridCreator::createGrid");
   }
   using AxisScalar = Acts::Vector3::Scalar;
+  using namespace Acts::UnitLiterals;
 
   int phiBins = 0;
   // for no magnetic field, create 100 phi-bins
@@ -35,8 +36,9 @@ Acts::SpacePointGridCreator::createGrid(
     // calculate circle intersections of helix and max detector radius
     float minHelixRadius =
         config.minPt /
-        (300. * options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
-                                     // = pT[MeV] / (300 *Bz[kT])
+        (1_T * 1e6 *
+         options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
+                              // = pT[MeV] / (300 *Bz[kT])
 
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < config.rMax / 2) {
@@ -92,6 +94,11 @@ Acts::SpacePointGridCreator::createGrid(
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on this
     // number) of the maximum expected azimutal deflection.
+
+    // set protection for large number of bins, by default it is large
+    if (phiBins > config.maxPhiBins) {
+      phiBins = config.maxPhiBins;
+    }
   }
 
   Acts::detail::Axis<detail::AxisType::Equidistant,

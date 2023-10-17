@@ -25,7 +25,7 @@ static inline Acts::Svg::Style layerStyle() {
   lStyle.nSegments = 72u;
 
   return lStyle;
-};
+}
 
 static inline Acts::Svg::Style infoStyle() {
   Acts::Svg::Style iStyle;
@@ -34,7 +34,7 @@ static inline Acts::Svg::Style infoStyle() {
   iStyle.highlights = {};
   iStyle.fontSize = 40.;
   return iStyle;
-};
+}
 
 static inline Acts::Svg::Style backgroundStyle() {
   Acts::Svg::Style bgStyle;
@@ -45,7 +45,7 @@ static inline Acts::Svg::Style backgroundStyle() {
   bgStyle.strokeWidth = 0.5;
   bgStyle.nSegments = 72u;
   return bgStyle;
-};
+}
 
 static inline Acts::Svg::Style pointStyle() {
   Acts::Svg::Style pStyle;
@@ -58,7 +58,7 @@ static inline Acts::Svg::Style pointStyle() {
   pStyle.nSegments = 72u;
 
   return pStyle;
-};
+}
 
 static inline Acts::Svg::TrackingGeometryConverter::Options
 trackingGeometryOptions() {
@@ -77,7 +77,7 @@ trackingGeometryOptions() {
           {{geoID, lOptions}});
 
   return tgOptions;
-};
+}
 
 static inline Acts::Svg::TrackingGeometryConverter::Options
 backgroundGeometryOptions() {
@@ -100,7 +100,7 @@ backgroundGeometryOptions() {
           {{geoID, lOptions}});
 
   return tgOptions;
-};
+}
 
 }  // namespace
 

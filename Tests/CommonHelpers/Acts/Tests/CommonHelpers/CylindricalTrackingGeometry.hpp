@@ -55,19 +55,19 @@ struct CylindricalTrackingGeometry {
   /// Generator of surfaces for a ring
   ///
   /// @param detStore The DetectorStore for storing the modules
-  /// @param moduleHalfXminY The half lenght in X (at Y min) of the module
-  /// @param moduleHalfXmaxY The half lenght in X (at Y max) of the module
-  /// @param moduleHalfY The half lenght in Y of the module
+  /// @param moduleHalfXminY The half length in X (at Y min) of the module
+  /// @param moduleHalfXmaxY The half length in X (at Y max) of the module
+  /// @param moduleHalfY The half length in Y of the module
   /// @param moduleThickness The module thickness
   /// @param moduleTilt The tilt out of the plane for discs
   /// @param ringRadius The central radius of the ring
   /// @param ringZ The z position of the ring
-  /// @param zStagger The z offset of phi moudles
+  /// @param zStagger The z offset of phi modules
   /// @param nPhi The number of phi modules
   ///
   /// @return A vector of Surfaces
   std::vector<const Surface*> surfacesRing(
-      DetectorStore& detStore, double moduleHalfXminY, double moudleHalfXmaxY,
+      DetectorStore& detStore, double moduleHalfXminY, double moduleHalfXmaxY,
       double moduleHalfY, double moduleThickness, double moduleTilt,
       double ringRadius, double ringZ, double zStagger, int nPhi) {
     std::vector<const Surface*> layerSurfaces;
@@ -82,11 +82,11 @@ struct CylindricalTrackingGeometry {
 
     // The rectangle/trapezoid bounds for all modules
     std::shared_ptr<PlanarBounds> mBounds = nullptr;
-    if (moduleHalfXminY == moudleHalfXmaxY) {
+    if (moduleHalfXminY == moduleHalfXmaxY) {
       mBounds = std::make_shared<RectangleBounds>(moduleHalfXminY, moduleHalfY);
     } else {
       mBounds = std::make_shared<TrapezoidBounds>(moduleHalfXminY,
-                                                  moudleHalfXmaxY, moduleHalfY);
+                                                  moduleHalfXmaxY, moduleHalfY);
     }
 
     double phiStep = 2 * M_PI / nPhi;
@@ -114,11 +114,11 @@ struct CylindricalTrackingGeometry {
   /// Generator of surfaces for a cylindrical layer
   ///
   /// @param detStore The DetectorStore for storing the modules
-  /// @param moduleHalfX The half lenght in X of the module
-  /// @param moduleHalfY The half lenght in Y of the module
+  /// @param moduleHalfX The half length in X of the module
+  /// @param moduleHalfY The half length in Y of the module
   /// @param moduleThickness The module thickness
   /// @param moduleTilePhi The tilt in phi direction of the module
-  /// @param layerRadius The radius fo the cylindrical layer
+  /// @param layerRadius The radius of the cylindrical layer
   /// @param radialStagger The radial delta of modules next in z
   /// @param longitudinalOverlap The z overlap of modules next in z
   /// @param binningSchema The number of bins in phi/z

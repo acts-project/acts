@@ -185,7 +185,7 @@ The following options are available:
 	                                        TTree.
 	  -t [ --tree ] arg (=tracksummary)     Input TTree/TChain name.
 	  -o [ --output ] arg                   Output ROOT file with histograms
-	  --hist-bins arg (=61)                 Numer of bins for the residual/pull
+	  --hist-bins arg (=61)                 Number of bins for the residual/pull
 	                                        histograms
 	  --pull-range arg (=5)                 Number of sigmas for the pull range.
 	  --eta-bins arg (=10)                  Number of bins in eta.
@@ -194,9 +194,9 @@ The following options are available:
 	  --phi-range MIN:MAX (=-3.14159:3.14159)
 	                                        Range for the phi bins.
 	  --pt-borders arg                      Transverse momentum borders.
-	  --config-output arg                   (Optional) output histrogram
+	  --config-output arg                   (Optional) output histogram
 	                                        configuration json file.
-	  --config-input arg                    (Optional) input histrogram
+	  --config-input arg                    (Optional) input histogram
 	                                        configuration json file.
 	  --all                                 Process all residual/pull and auxiliary
 	                                        parameters

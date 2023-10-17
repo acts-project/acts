@@ -9,16 +9,27 @@
 #pragma once
 
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <cstddef>
 #include <string>
+#include <vector>
+
+namespace Acts {
+class PlanarModuleCluster;
+}  // namespace Acts
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Print hits within some geometric region-of-interest.
 class HitsPrinter : public IAlgorithm {

@@ -22,7 +22,7 @@
 /// @code
 /// printBField("FCChhBField.root","bField","printBField_FCC.root",-20.,20.,-30.,30.,400.)
 /// @endcode
-/// ro print out the ATLAS BField map pleas use
+/// ro print out the ATLAS BField map please use
 /// @code
 /// printBField("ATLASBField.root","bField","printBField_ATLAS.root",-10.,10.,-15.,15.,200.)
 /// @endcode
@@ -42,7 +42,7 @@
 /// @param nBins Number of bins which should be used for the histogram (on all
 /// axes)
 /// @note This script just writes out the values which are read in from the
-/// given input file. It does no interpolation inbetween the values. This means,
+/// given input file. It does no interpolation in between the values. This means,
 /// in case the binning is chosen too high, empty bins will appear.
 void
 printBField(std::string inFile,
@@ -74,7 +74,7 @@ printBField(std::string inFile,
   double x = 0., y = 0., z = 0., r = 0.;
   double Bx = 0., By = 0., Bz = 0., Br = 0.;
 
-  // find out if file is given in cylinder coordinates or cartesian corrdinates
+  // find out if file is given in cylinder coordinates or cartesian coordinates
   bool cylinderCoordinates = false;
   if (tree->FindBranch("r")) {
     cylinderCoordinates = true;
@@ -115,10 +115,10 @@ printBField(std::string inFile,
   for (int i = 0; i < entries; i++) {
     tree->GetEvent(i);
     if (cylinderCoordinates) {
-      float bFieldValue = sqrt(Br * Br + Bz * Bz);
+      float bFieldValue = std::hypot(Br, Bz);
       bField_rz->Fill(z / 1000., r / 1000., bFieldValue);
     } else {
-      float bFieldValue = sqrt(Bx * Bx + By * By + Bz * Bz);
+      float bFieldValue = std::hypot(Bx, By, Bz);
 
       bField_xy->Fill(x / 1000., y / 1000., bFieldValue);
       bField_yz->Fill(z / 1000., y / 1000., bFieldValue);

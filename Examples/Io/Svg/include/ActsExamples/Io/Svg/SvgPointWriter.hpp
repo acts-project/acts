@@ -8,13 +8,14 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Plugins/ActSVG/EventDataSvgConverter.hpp"
+#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/Plugins/ActSVG/EventDataSvgConverter.hpp>
-#include <Acts/Plugins/ActSVG/SvgUtils.hpp>
 
 #include <fstream>
 #include <mutex>
@@ -156,7 +157,7 @@ ActsExamples::ProcessCode ActsExamples::SvgPointWriter<T, Acc>::writeT(
   // Fill the space points
   unsigned int id = 0;
   for (const auto& data : pointCollection) {
-    // Use the accessor to build a x/y view
+    // Use the accessor to build an x/y view
     Acts::Vector3 point3D = {xyz.x(data), xyz.y(data), xyz.z(data)};
     // Draw the xy view
     if (m_cfg.projectionXY and point3D.z() >= m_cfg.zRangeXY[0] and

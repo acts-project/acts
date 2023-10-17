@@ -15,28 +15,24 @@ Acts::EigenStepper<E, A>::EigenStepper(
     : m_bField(std::move(bField)), m_overstepLimit(overstepLimit) {}
 
 template <typename E, typename A>
-template <typename charge_t>
 auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
-    const SingleBoundTrackParameters<charge_t>& par, NavigationDirection ndir,
-    double ssize, double stolerance) const -> State {
-  return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
+    const BoundTrackParameters& par, double ssize) const -> State {
+  return State{gctx, m_bField->makeCache(mctx), par, ssize};
 }
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundVector& boundParams,
-                                          const BoundSymMatrix& cov,
+                                          const BoundSquareMatrix& cov,
                                           const Surface& surface,
-                                          const NavigationDirection navDir,
                                           const double stepSize) const {
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                 boundParams),
          boundParams, cov, surface);
-  state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
 
@@ -55,7 +51,7 @@ auto Acts::EigenStepper<E, A>::boundState(
     -> Result<BoundState> {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars,
+      state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated, surface,
       freeToBoundCorrection);
 }
@@ -66,8 +62,8 @@ auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
     -> CurvilinearState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.covTransport && transportCov,
-      state.pathAccumulated);
+      state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.covTransport && transportCov, state.pathAccumulated);
 }
 
 template <typename E, typename A>
@@ -84,12 +80,12 @@ void Acts::EigenStepper<E, A>::update(State& state,
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
-                                      const Vector3& udirection, double up,
+                                      const Vector3& udirection, double qOverP,
                                       double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
-  state.pars[eFreeQOverP] = (state.q != 0. ? state.q / up : 1. / up);
+  state.pars[eFreeQOverP] = qOverP;
 }
 
 template <typename E, typename A>
@@ -147,7 +143,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     constexpr auto success = &Result<bool>::success;
     constexpr auto failure = &Result<bool>::failure;
 
-    const double h = step.value();
+    const double h = step.value() * state.options.direction;
     // State the square and half of the step size
     h2 = h * h;
     half_h = h * 0.5;
@@ -230,7 +226,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
 
   // use the adjusted step size
-  const double h = state.stepping.stepSize.value();
+  const double h = state.stepping.stepSize.value() * state.options.direction;
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {

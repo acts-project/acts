@@ -11,14 +11,26 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
+#include <functional>
+#include <memory>
+#include <vector>
+
 #include <DD4hep/DetElement.h>
 
 namespace Acts {
+class CylinderVolumeBuilder;
+class CylinderVolumeHelper;
+class IMaterialDecorator;
+class Logger;
+class TrackingGeometry;
 
 /// Sort function which sorts dd4hep::DetElement by their ID
 /// @param [in,out] det the dd4hep::DetElements to be sorted
@@ -43,7 +55,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be
 /// binned in a layer in phi direction.
 /// @note Possible binningtypes:
-/// 	- arbitrary   - of the sizes if the surfaces and the distance inbetween
+/// 	- arbitrary   - of the sizes if the surfaces and the distance in between
 /// 		vary. This mode finds out the bin boundaries by scanning through
 /// the 		surfaces.
 /// 	- equidistant - if the sensitive surfaces are placed equidistantly
@@ -64,7 +76,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 ///       However, to allow material layers (not containing surfaces) to be
 ///       attached to each other, this default thickness is needed. In this
 ///       way, the layer will be thin (with space to the next layer), but
-///       the material will have the'real' thickness.
+///       the material will have the 'real' thickness.
 /// @attention The default thickness should be set thin enough that no
 ///            touching or overlapping with the next layer can happen.
 /// @param [in] sortSubDetectors @c std::function which should be used in order to
@@ -73,7 +85,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 ///                              @c collectSubDetectors() ) from bottom to top to
 ///                              ensure correct wrapping of the volumes, which
 ///                              is needed for navigation. Therefore the
-///                              different hierachies need to be sorted
+///                              different hierarchies need to be sorted
 ///                              ascending. The default is sorting by ID.
 /// @param gctx The geometry context to use
 /// @param matDecorator is the material decorator that loads material maps
@@ -83,7 +95,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 /// @return std::unique_ptr to the full TrackingGeometry
 
 ///	* The Tracking geometry needs to be built from bottom to top to ensure
-/// Navigation. Therefore the different hierachies need to be sorted ascending.
+/// Navigation. Therefore the different hierarchies need to be sorted ascending.
 /// Per default the sub detectors are sorted by the id of their
 /// dd4hep::DetElement. In case another sorting needs to be applied, the users
 /// can provide their own function
@@ -113,7 +125,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be
 /// binned in a layer in phi direction.
 /// @note Possible binningtypes:
-/// 	- arbitrary   - of the sizes if the surfaces and the distance inbetween
+/// 	- arbitrary   - of the sizes if the surfaces and the distance in between
 /// 		vary. This mode finds out the bin boundaries by scanning through
 /// the 		surfaces.
 /// 	- equidistant - if the sensitive surfaces are placed equidistantly
@@ -134,7 +146,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 ///       However, to allow material layers (not containing surfaces) to be
 ///       attached to each other, this default thickness is needed. In this
 ///       way, the layer will be thin (with space to the next layer), but
-///       the material will have the'real' thickness.
+///       the material will have the 'real' thickness.
 /// @attention The default thickness should be set thin enough that no
 ///            touching or overlapping with the next layer can happen.
 /// @return std::shared_ptr the Acts::CylinderVolumeBuilder which can be used to

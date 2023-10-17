@@ -15,16 +15,22 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <memory>
-#include <random>
 #include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {
@@ -284,7 +290,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
   BOOST_TEST_CONTEXT("3D visualize") {
     Object o;
 
-    // lets make sure it also works in 3d
+    // let's make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
     Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
     BOOST_CHECK(bb3.intersect(ray3));
@@ -301,7 +307,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     using VertexType3 = ObjectBBox::VertexType;
     Object o;
 
-    // lets make sure it also works in 3d
+    // let's make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
     Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
     BOOST_CHECK(bb3.intersect(ray3));

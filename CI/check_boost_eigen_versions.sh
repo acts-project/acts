@@ -10,7 +10,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 SHOWACTSVERSION=$1
 
-BOOSTVER=$(< "$SCRIPT_DIR/../CMakeLists.txt" sed -n 's/^set(_acts_boost_version \(.*\))$/\1/p')
+BOOSTVER=$(< "$SCRIPT_DIR/../CMakeLists.txt" sed -n 's/^set(_acts_boost_recommended_version \(.*\))$/\1/p')
 EIGENVER=$(< "$SCRIPT_DIR/../CMakeLists.txt" sed -n 's/^set(_acts_eigen3_version \(.*\))$/\1/p')
 
 if ! $SHOWACTSVERSION | grep -q "Using Boost version $BOOSTVER"; then

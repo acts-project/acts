@@ -159,7 +159,7 @@ struct SimulationActor {
       //   it should in principle never happen, so probably it would be best
       //   to change to a model using transform() directly
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
-                                            before.unitDirection());
+                                            before.direction());
       if (lpResult.ok()) {
         Acts::Vector2 local = lpResult.value();
         Acts::MaterialSlab slab =
@@ -170,8 +170,7 @@ struct SimulationActor {
           auto normal = surface.normal(state.geoContext, local);
           // dot-product(unit normal, direction) = cos(incidence angle)
           // particle direction is normalized, not sure about surface normal
-          auto cosIncidenceInv =
-              normal.norm() / normal.dot(before.unitDirection());
+          auto cosIncidenceInv = normal.norm() / normal.dot(before.direction());
           // apply abs in case `normal` and `before` produce an angle > 90°
           slab.scaleThickness(std::abs(cosIncidenceInv));
           // run the interaction simulation
@@ -196,15 +195,15 @@ struct SimulationActor {
     }
 
     // continue the propagation with the modified parameters
-    stepper.update(state.stepping, after.position(), after.unitDirection(),
-                   after.absoluteMomentum(), after.time());
+    stepper.update(state.stepping, after.position(), after.direction(),
+                   after.qOverP(), after.time());
   }
 
   /// Construct the current particle state from the stepper state.
   template <typename stepper_t>
   Particle makeParticle(const Particle &previous, const stepper_t &stepper,
                         const typename stepper_t::State &state) const {
-    // a particle can loose energy and thus its gamma factor is not a constant
+    // a particle can lose energy and thus its gamma factor is not a constant
     // of motion. since the stepper provides only the lab time, we need to
     // compute the change in proper time for each step separately. this assumes
     // that the gamma factor is constant over one stepper step.
@@ -219,7 +218,7 @@ struct SimulationActor {
     return Particle(previous)
         .setPosition4(stepper.position(state), stepper.time(state))
         .setDirection(stepper.direction(state))
-        .setAbsoluteMomentum(stepper.momentum(state))
+        .setAbsoluteMomentum(stepper.absoluteMomentum(state))
         .setProperTime(properTime);
   }
 

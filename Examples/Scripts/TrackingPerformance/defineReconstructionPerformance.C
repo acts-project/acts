@@ -217,7 +217,7 @@ void defineReconstructionPerformance(
       }  // end of all selected truth-matched tracks
 
       // Loop over all truth particles in this event
-      // The effiency is define as the ratio of selected particles that have
+      // The efficiency is defined as the ratio of selected particles that have
       // been matched with reco
       for (const auto& particle : particles[i]) {
         auto nHits = particle.nHits;

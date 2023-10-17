@@ -11,23 +11,37 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/Material.hpp"
+#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <iostream>
 #include <memory>
+#include <optional>
+#include <random>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -91,7 +105,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // define start parameters
-  BoundSymMatrix cov;
+  BoundSquareMatrix cov;
   // take some major correlations (off-diagonals)
   // clang-format off
     cov <<
@@ -104,7 +118,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // clang-format on
   std::cout << cov.determinant() << std::endl;
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   cov);
+                                   cov, ParticleHypothesis::pion());
 
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor>;
@@ -155,9 +169,9 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // backward material test
   Options bwdOptions(tgContext, mfContext);
-  bwdOptions.maxStepSize = -25_cm;
+  bwdOptions.maxStepSize = 25_cm;
   bwdOptions.pathLimit = -25_cm;
-  bwdOptions.direction = NavigationDirection::Backward;
+  bwdOptions.direction = Direction::Backward;
 
   // get the material collector and configure it
   auto& bwdMaterialInteractor =
@@ -291,9 +305,9 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext);
 
-  bwdStepOptions.maxStepSize = -25_cm;
+  bwdStepOptions.maxStepSize = 25_cm;
   bwdStepOptions.pathLimit = -25_cm;
-  bwdStepOptions.direction = NavigationDirection::Backward;
+  bwdStepOptions.direction = Direction::Backward;
 
   // get the material collector and configure it
   auto& bwdStepMaterialInteractor =

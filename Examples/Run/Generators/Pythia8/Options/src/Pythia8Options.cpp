@@ -8,8 +8,8 @@
 
 #include "ActsExamples/Options/Pythia8Options.hpp"
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/Generators/MultiplicityGenerators.hpp"
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 #include "ActsExamples/Generators/VertexGenerators.hpp"

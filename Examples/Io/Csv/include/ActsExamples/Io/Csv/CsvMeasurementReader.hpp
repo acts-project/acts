@@ -11,19 +11,29 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace Acts {
 class Surface;
 }
 
 namespace ActsExamples {
+class IndexSourceLink;
+struct AlgorithmContext;
 
 /// Read in a measurement cluster collection in comma-separated-value format.
 ///
@@ -40,7 +50,7 @@ namespace ActsExamples {
 ///
 /// and each line in the file corresponds to one hit/cluster.
 ///
-/// One file per fevent: thread-safe for parallel event porcessing.
+/// One file per fevent: thread-safe for parallel event processing.
 class CsvMeasurementReader final : public IReader {
  public:
   struct Config {
@@ -54,6 +64,12 @@ class CsvMeasurementReader final : public IReader {
     std::string outputSourceLinks;
     /// Output cluster collection (optional).
     std::string outputClusters;
+
+    /// Input SimHits for measurement-particle map (optional)
+    std::string inputSimHits;
+    /// Output  measurement to particle collection (optional)
+    /// @note Only filled if inputSimHits is given
+    std::string outputMeasurementParticlesMap;
   };
 
   /// Construct the cluster reader.
@@ -90,6 +106,11 @@ class CsvMeasurementReader final : public IReader {
       this, "OutputSourceLinks"};
 
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
+
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_outputMeasurementParticlesMap{this, "OutputMeasurementParticlesMap"};
+
+  ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};
 };
 
 }  // namespace ActsExamples

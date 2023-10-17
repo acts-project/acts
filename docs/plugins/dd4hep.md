@@ -112,7 +112,7 @@ following conditions need to be met:
 
   These subdetectors need to be flagged using the correct `DetType`.
 
-- If a hierachy is not only a single barrel but is decomposed of a barrel
+- If a hierarchy is not only a single barrel but is decomposed of a barrel
   and its corresponding endcaps they need to be grouped together in an
   assembly using the `DD4hep_SubdetectorAssembly` constructor which is
   provided by DD4hep. Example of usage in xml file (where Barrel0, nEndCap0
@@ -135,7 +135,7 @@ following conditions need to be met:
   If a user wants to create his/her own constructor to group these
   volumes together the type needs to be set to "compound".
 
-- Since the translation walks trough the `DetElement` tree the following
+- Since the translation walks through the `DetElement` tree the following
   objects need to be declared as a DD4hep `DetElement`:
   - The subvolumes e.g. barrel, endcap, beampipe (they are usually built with
     different DD4hep constructors and are therefore DD4hep `DetElement`'s
@@ -258,7 +258,7 @@ ACTS geometry translation uses parameters attached to DD4hep detector elements v
 
 ## Usage
 
-To receive the {class}`Acts::TrackingGeometry` the the global function
+To receive the {class}`Acts::TrackingGeometry` the global function
 {func}`Acts::convertDD4hepDetector()` should be used, where the DD4hep world
 `DetElement` needs to be handed over. For a valid translation, that all
 prerequisites described above are met and that the right `VariantParameters`

@@ -149,11 +149,11 @@ def runMaterialMappingVariance(
     readCachedSurfaceInformation=False,
 ):
     """
-    Run the material mapping and compute the variance for each bin of each surfaces
+    Run the material mapping and compute the variance for each bin of each surface
     Return a dict with the GeometryId value of the surface as a key that stores
     a list of pairs corresponding to the variance and number of tracks associated with each bin of the surface
 
-    binMap : Map containning the binning for each surfaces
+    binMap : Map containing the binning for each surface
     events : Number of event to use in the mapping
     job : ID of the job
     inputPath : Directory containing the input geantino track and the json geometry
@@ -326,9 +326,9 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
     key : Id of the surface corresponding to this experiment
     nbJobs : Total number of jobs to be executed simultaneously
     pathDB : Path to the databases
-    pathResult : Path to the write the result of the optimisation
+    pathResult : Path to write the result of the optimisation
     pipeBin : Pipe use to send the experiment binning to the main python instance
-    pipeResult : Pipe to recive the result of the optimisation
+    pipeResult : Pipe to receive the result of the optimisation
     doPloting : true if we want to plot the result of the optimisation and obtain the optimal material map
     """
     # Create the database
@@ -389,7 +389,7 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
         score = pipeResult.recv()
         print(
             datetime.now().strftime("%H:%M:%S")
-            + "    Recieved score for job "
+            + "    Received score for job "
             + str(job)
             + " and surface "
             + str(key),
@@ -448,7 +448,7 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
 if "__main__" == __name__:
 
     print(datetime.now().strftime("%H:%M:%S") + "    Starting")
-    # Optimiser arguents
+    # Optimiser arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--numberOfJobs", nargs="?", default=2, type=int
@@ -498,7 +498,7 @@ if "__main__" == __name__:
     binDict = matMapDeco.binningMap()
     del detector, decorators
 
-    # Create the pipes that will be used to tranfer data to/from the jobs
+    # Create the pipes that will be used to transfer data to/from the jobs
     from multiprocessing import Process, Pipe
 
     binPipes_child = dict()

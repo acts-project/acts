@@ -23,7 +23,7 @@ class IGeant4PhysicalVolumeSelector {
   virtual ~IGeant4PhysicalVolumeSelector() = default;
   /// @brief  The main interface method
   /// @param g4Phys the physical volume to be checked
-  /// @return a boolen indicating if it should be selected or not
+  /// @return a boolean indicating if it should be selected or not
   virtual bool select(const G4VPhysicalVolume& g4Phys) const = 0;
 };
 

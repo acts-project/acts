@@ -8,9 +8,15 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -18,19 +24,31 @@
 
 #include <algorithm>
 #include <atomic>
-#include <cfenv>
+#include <cctype>
 #include <chrono>
+#include <cstdint>
+#include <cstdlib>
 #include <exception>
+#include <functional>
+#include <iterator>
 #include <limits>
 #include <numeric>
+#include <ostream>
+#include <ratio>
+#include <regex>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <typeinfo>
+
+#include <boost/stacktrace/stacktrace.hpp>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
 
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/core/demangle.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
@@ -58,6 +76,31 @@ size_t saturatedAdd(size_t a, size_t b) {
   return res;
 }
 
+/// Shorten some common but lengthy C++ constructs
+std::string demangleAndShorten(std::string name) {
+  name = boost::core::demangle(name.c_str());
+
+  // Remove std::allocator from vector
+  const static std::regex vector_pattern(
+      R"??(std::vector<(.*), std::allocator<(\1\s*)>\s*>)??");
+  name = std::regex_replace(name, vector_pattern, "std::vector<$1>");
+
+  // Shorten Acts::BoundVariantMeasurement
+  const static std::regex variant_pattern(
+      R"??(std::variant<(Acts::Measurement<Acts::BoundIndices, [0-9]ul>(,|)\s+)+>)??");
+  name = std::regex_replace(name, variant_pattern,
+                            "Acts::BoundVariantMeasurement");
+
+  // strip namespaces
+  boost::algorithm::replace_all(name, "std::", "");
+  boost::algorithm::replace_all(name, "boost::container::", "");
+  boost::algorithm::replace_all(name, "Acts::", "");
+  boost::algorithm::replace_all(name, "ActsExamples::", "");
+  boost::algorithm::replace_all(name, "ActsFatras::", "");
+
+  return name;
+}
+
 }  // namespace
 
 Sequencer::Sequencer(const Sequencer::Config& cfg)
@@ -75,6 +118,14 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
     ACTS_INFO("Create Sequencer with " << m_cfg.numThreads << " threads");
   }
 #endif
+
+  const char* envvar = std::getenv("ACTS_SEQUENCER_DISABLE_FPEMON");
+  if (envvar != nullptr) {
+    ACTS_INFO(
+        "Overriding FPE tracking Sequencer based on environment variable "
+        "ACTS_SEQUENCER_DISABLE_FPEMON");
+    m_cfg.trackFpes = false;
+  }
 }
 
 void Sequencer::addContextDecorator(
@@ -114,7 +165,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
 
-  m_sequenceElements.push_back(element);
+  m_sequenceElements.push_back({element});
 
   std::string elementType{getAlgorithmType(*element)};
   std::string elementTypeCapitalized = elementType;
@@ -126,7 +177,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
   }
 
   auto symbol = [&](const char* in) {
-    std::string s = boost::core::demangle(in);
+    std::string s = demangleAndShorten(in);
     size_t pos = 0;
     while (pos + 80 < s.size()) {
       ACTS_INFO("   " + s.substr(pos, pos + 80));
@@ -156,10 +207,9 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
                    << "\nat this point in the sequence (source: "
                    << source.fullName() << "),"
                    << "\nbut the type will be\n"
-                   << "'" << boost::core::demangle(source.typeInfo().name())
-                   << "'"
+                   << "'" << demangleAndShorten(source.typeInfo().name()) << "'"
                    << "\nand not\n"
-                   << "'" << boost::core::demangle(handle->typeInfo().name())
+                   << "'" << demangleAndShorten(handle->typeInfo().name())
                    << "'");
         valid = false;
       }
@@ -231,7 +281,7 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
   for (const auto& decorator : m_decorators) {
     names.push_back("Decorator:" + decorator->name());
   }
-  for (const auto& algorithm : m_sequenceElements) {
+  for (const auto& [algorithm, fpe] : m_sequenceElements) {
     names.push_back(std::string(getAlgorithmType(*algorithm)) + ":" +
                     algorithm->name());
   }
@@ -383,7 +433,7 @@ int Sequencer::run() {
   size_t nWriters = 0;
   size_t nReaders = 0;
   size_t nAlgorithms = 0;
-  for (const auto& alg : m_sequenceElements) {
+  for (const auto& [alg, fpe] : m_sequenceElements) {
     if (dynamic_cast<const IWriter*>(alg.get()) != nullptr) {
       nWriters++;
     } else if (dynamic_cast<const IReader*>(alg.get()) != nullptr) {
@@ -400,7 +450,7 @@ int Sequencer::run() {
   ACTS_INFO("  " << nWriters << " writers");
 
   ACTS_VERBOSE("Initialize sequence elements");
-  for (auto& alg : m_sequenceElements) {
+  for (auto& [alg, fpe] : m_sequenceElements) {
     ACTS_VERBOSE("Initialize " << getAlgorithmType(*alg) << ": "
                                << alg->name());
     if (alg->initialize() != ProcessCode::SUCCESS) {
@@ -444,7 +494,12 @@ int Sequencer::run() {
 
             ACTS_VERBOSE("Execute sequence elements");
 
-            for (auto& alg : m_sequenceElements) {
+            for (auto& [alg, fpe] : m_sequenceElements) {
+              std::optional<Acts::FpeMonitor> mon;
+              if (m_cfg.trackFpes) {
+                mon.emplace();
+                context.fpeMonitor = &mon.value();
+              }
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
                                       << alg->name());
@@ -453,6 +508,38 @@ int Sequencer::run() {
                                                 << ": " << alg->name());
                 throw std::runtime_error("Failed to process event data");
               }
+
+              if (mon) {
+                auto& local = fpe.local();
+
+                for (const auto& [count, type, st] :
+                     mon->result().stackTraces()) {
+                  auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+                  if (nMasked < count) {
+                    std::stringstream ss;
+                    ss << "FPE of type " << type
+                       << " exceeded configured per-event threshold of "
+                       << nMasked << " (mask: " << maskLoc
+                       << ") (seen: " << count << " FPEs)\n"
+                       << Acts::FpeMonitor::stackTraceToString(
+                              *st, m_cfg.fpeStackTraceLength);
+
+                    m_nUnmaskedFpe += (count - nMasked);
+
+                    if (m_cfg.failOnFirstFpe) {
+                      ACTS_ERROR(ss.str());
+                      local.merge(mon->result());  // merge so we get correct
+                                                   // results after throwing
+                      throw FpeFailure{ss.str()};
+                    } else if (!local.contains(type, *st)) {
+                      ACTS_INFO(ss.str());
+                    }
+                  }
+                }
+
+                local.merge(mon->result());
+              }
+              context.fpeMonitor = nullptr;
             }
 
             nProcessedEvents++;
@@ -477,7 +564,7 @@ int Sequencer::run() {
   });
 
   ACTS_VERBOSE("Finalize sequence elements");
-  for (auto& alg : m_sequenceElements) {
+  for (auto& [alg, fpe] : m_sequenceElements) {
     ACTS_VERBOSE("Finalize " << getAlgorithmType(*alg) << ": " << alg->name());
     if (alg->finalize() != ProcessCode::SUCCESS) {
       ACTS_FATAL("Failed to finalize " << getAlgorithmType(*alg) << ": "
@@ -485,6 +572,8 @@ int Sequencer::run() {
       throw std::runtime_error("Failed to process event data");
     }
   }
+
+  fpeReport();
 
   // summarize timing
   Duration totalWall = Clock::now() - clockWallStart;
@@ -505,7 +594,106 @@ int Sequencer::run() {
                 joinPaths(m_cfg.outputDir, m_cfg.outputTimingFile));
   }
 
+  if (m_nUnmaskedFpe > 0) {
+    return EXIT_FAILURE;
+  }
+
   return EXIT_SUCCESS;
+}
+
+void Sequencer::fpeReport() const {
+  if (!m_cfg.trackFpes) {
+    return;
+  }
+
+  for (auto& [alg, fpe] : m_sequenceElements) {
+    auto merged = std::accumulate(
+        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
+    if (!merged) {
+      // no FPEs to report
+      continue;
+    }
+    ACTS_INFO("-----------------------------------");
+    ACTS_INFO("FPE summary for " << getAlgorithmType(*alg) << ": "
+                                 << alg->name());
+    ACTS_INFO("-----------------------------------");
+
+    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+        sorted;
+    std::transform(
+        merged.stackTraces().begin(), merged.stackTraces().end(),
+        std::back_inserter(sorted),
+        [](const auto& f) -> const auto& { return f; });
+    std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
+      return a.get().count > b.get().count;
+    });
+
+    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+        remaining;
+
+    for (const auto& el : sorted) {
+      const auto& [count, type, st] = el.get();
+      auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+      ACTS_INFO("- " << type << ": (" << count << " times) "
+                     << (nMasked > 0 ? "[MASKED: " + std::to_string(nMasked) +
+                                           " per event by " + maskLoc + "]"
+                                     : "")
+                     << "\n"
+                     << Acts::FpeMonitor::stackTraceToString(
+                            *st, m_cfg.fpeStackTraceLength));
+    }
+  }
+
+  if (m_nUnmaskedFpe > 0) {
+    ACTS_ERROR("Encountered " << m_nUnmaskedFpe << " unmasked FPEs");
+  } else {
+    ACTS_INFO("No unmasked FPEs encountered");
+  }
+}
+
+std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
+    const boost::stacktrace::stacktrace& st, Acts::FpeType type) const {
+  for (const auto& frame : st) {
+    std::string loc = Acts::FpeMonitor::getSourceLocation(frame);
+    auto it = loc.find_last_of(':');
+    std::string locFile = loc.substr(0, it);
+    unsigned int locLine = std::stoi(loc.substr(it + 1));
+    for (const auto& [file, lines, fType, count] : m_cfg.fpeMasks) {
+      const auto [start, end] = lines;
+      if (boost::algorithm::ends_with(locFile, file) &&
+          (start <= locLine && locLine < end) && fType == type) {
+        std::string ls = start + 1 == end ? std::to_string(start)
+                                          : "(" + std::to_string(start) + ", " +
+                                                std::to_string(end) + "]";
+        return {file + ":" + ls, count};
+      }
+    }
+  }
+  return {"NONE", 0};
+}
+
+Acts::FpeMonitor::Result Sequencer::fpeResult() const {
+  Acts::FpeMonitor::Result merged;
+  for (auto& [alg, fpe] : m_sequenceElements) {
+    merged.merge(std::accumulate(
+        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); }));
+  }
+  return merged;
+}
+
+std::ostream& operator<<(std::ostream& os,
+                         const ActsExamples::Sequencer::FpeMask& m) {
+  os << "FpeMask(" << m.file << ":";
+
+  if (m.lines.first + 1 == m.lines.second) {
+    os << m.lines.first;
+  } else {
+    os << "(" << m.lines.first << ", " << m.lines.second << "]";
+  }
+  os << ", " << m.type << " <= " << m.count << ")";
+  return os;
 }
 
 }  // namespace ActsExamples

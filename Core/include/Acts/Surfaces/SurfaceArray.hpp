@@ -356,6 +356,10 @@ class SurfaceArray {
     SingleElementLookup(SurfaceVector::value_type element)
         : m_element({element}) {}
 
+    /// @brief Default constructor.
+    /// @param elements the surfaces that are provided through a single lookup
+    SingleElementLookup(const SurfaceVector& elements) : m_element(elements) {}
+
     /// @brief Lookup, always returns @c element
     /// @param position is ignored
     /// @return reference to vector containing only @c element
@@ -506,7 +510,7 @@ class SurfaceArray {
   /// @return Reference to @c SurfaceVector containing all surfaces
   /// @note This does not reflect the actual state of the grid. It only
   ///       returns what was given in the constructor, without any checks
-  ///       if that is actually whats in the grid.
+  ///       if that is actually what's in the grid.
   const SurfaceVector& surfaces() const { return m_surfacesRawPointers; }
 
   /// @brief Get vector of axes spanning the grid as @c AnyAxis

@@ -48,7 +48,7 @@ namespace detail {
 /// All types provide `.projectVector(...)` and `.exandVector(...)` methods to
 /// convert to/from the subspace. They also provide `.projector()` and
 /// `.expander()` methods to create projection and expansion matrices if they
-/// are required explicitely. For the specific subspace requirements listed
+/// are required explicitly. For the specific subspace requirements listed
 /// above, the projection and expansion matrices are transpose to each other. In
 /// the general case, this does not have to be the case and users are encouraged
 /// to use `.projector()` and `.expander()` instead of e.g.
@@ -129,7 +129,7 @@ class FixedSizeSubspace {
   constexpr bool contains(size_t index) const {
     bool isContained = false;
     // always iterate over all elements to avoid branching and hope the compiler
-    // can optimized this for us.
+    // can optimise this for us.
     for (auto a : m_axes) {
       isContained = (isContained or (a == index));
     }
@@ -138,7 +138,7 @@ class FixedSizeSubspace {
 
   /// Project a full vector into the subspace.
   ///
-  /// @tparam fullspace_vector_t Veector type in the full space
+  /// @tparam fullspace_vector_t Vector type in the full space
   /// @param full Vector in the full space
   /// @return Subspace vector w/ just the configured axis components
   ///

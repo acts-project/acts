@@ -92,7 +92,7 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
                                  callable_t&& extractFunction) {
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
-  // resize + operator[] is faster then reserve and push_back
+  // resize + operator[] is faster than reserve and push_back
   linCircleVec.resize(vec.size());
 
   float cosPhiM = xM / rM;
@@ -162,23 +162,19 @@ inline bool xyzCoordinateCheck(
 
   std::size_t index = sp.index();
 
-  const float& topHalfStripLength = spacePointData.getTopHalfStripLength(index);
-  const float& bottomHalfStripLength =
-      spacePointData.getBottomHalfStripLength(index);
-  const Acts::Vector3& topStripDirection =
-      spacePointData.getTopStripDirection(index);
-  const Acts::Vector3& bottomStripDirection =
-      spacePointData.getBottomStripDirection(index);
+  // prepare variables
+  const Acts::Vector3& topStripVector = spacePointData.getTopStripVector(index);
+  const Acts::Vector3& bottomStripVector =
+      spacePointData.getBottomStripVector(index);
   const Acts::Vector3& stripCenterDistance =
       spacePointData.getStripCenterDistance(index);
 
-  // prepare variables
-  double xTopStripVector = topHalfStripLength * topStripDirection[0];
-  double yTopStripVector = topHalfStripLength * topStripDirection[1];
-  double zTopStripVector = topHalfStripLength * topStripDirection[2];
-  double xBottomStripVector = bottomHalfStripLength * bottomStripDirection[0];
-  double yBottomStripVector = bottomHalfStripLength * bottomStripDirection[1];
-  double zBottomStripVector = bottomHalfStripLength * bottomStripDirection[2];
+  const double xTopStripVector = topStripVector[0];
+  const double yTopStripVector = topStripVector[1];
+  const double zTopStripVector = topStripVector[2];
+  const double xBottomStripVector = bottomStripVector[0];
+  const double yBottomStripVector = bottomStripVector[1];
+  const double zBottomStripVector = bottomStripVector[2];
 
   // cross product between top strip vector and spacepointPosition
   double d1[3] = {yTopStripVector * spacepointPosition[2] -
@@ -216,13 +212,13 @@ inline bool xyzCoordinateCheck(
     return false;
   }
 
-  // if arive here spacepointPosition is compatible with strip directions and
+  // if arrive here spacepointPosition is compatible with strip directions and
   // detector elements
 
   const Acts::Vector3& topStripCenterPosition =
       spacePointData.getTopStripCenterPosition(index);
 
-  // spacepointPosition corected with respect to the top strip position and
+  // spacepointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
   s0 = s0 / bd1;
   outputCoordinates[0] = topStripCenterPosition[0] + xTopStripVector * s0;

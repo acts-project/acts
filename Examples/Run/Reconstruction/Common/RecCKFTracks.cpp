@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #ifdef ACTS_PLUGIN_ONNX
 #include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
@@ -106,7 +107,7 @@ int runRecCKFTracks(
   for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
-  // Setup the magnetic field
+  // Set up the magnetic field
   auto magneticField = Options::readMagneticField(vm);
 
   // Read the sim hits
@@ -244,12 +245,8 @@ int runRecCKFTracks(
     paramsEstimationCfg.trackingGeometry = trackingGeometry;
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
-    paramsEstimationCfg.sigmaLoc0 = 25._um;
-    paramsEstimationCfg.sigmaLoc1 = 100._um;
-    paramsEstimationCfg.sigmaPhi = 0.02_degree;
-    paramsEstimationCfg.sigmaTheta = 0.02_degree;
-    paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
-    paramsEstimationCfg.sigmaT0 = 1400._s;
+    paramsEstimationCfg.initialSigmas = {25._um,      100._um,      0.02_degree,
+                                         0.02_degree, 0.1 / 1._GeV, 1400._s};
     paramsEstimationCfg.initialVarInflation =
         vm["ckf-initial-variance-inflation"].template as<Options::Reals<6>>();
 
@@ -259,7 +256,7 @@ int runRecCKFTracks(
     outputTrackParameters = paramsEstimationCfg.outputTrackParameters;
   }
 
-  // Setup the track finding algorithm with CKF
+  // Set up the track finding algorithm with CKF
   // It takes all the source links created from truth hit smearing, seeds from
   // truth particle smearing and source link selection config
   auto trackFindingCfg = Options::readTrackFindingConfig(vm);
@@ -269,7 +266,8 @@ int runRecCKFTracks(
   trackFindingCfg.outputTracks = "tracks";
   trackFindingCfg.computeSharedHits = true;
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
-      trackingGeometry, magneticField);
+      trackingGeometry, magneticField,
+      *Acts::getDefaultLogger("TrackFinder", logLevel));
   sequencer.addAlgorithm(
       std::make_shared<TrackFindingAlgorithm>(trackFindingCfg, logLevel));
 
@@ -284,7 +282,7 @@ int runRecCKFTracks(
   trackStatesWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   // @note The full particles collection is used here to avoid lots of warnings
   // since the unselected CKF track might have a majority particle not in the
-  // filtered particle collection. This could be avoided when a seperate track
+  // filtered particle collection. This could be avoided when a separate track
   // selection algorithm is used.
   trackStatesWriter.inputParticles = particleReader.outputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
@@ -302,7 +300,7 @@ int runRecCKFTracks(
   trackSummaryWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   // @note The full particles collection is used here to avoid lots of warnings
   // since the unselected CKF track might have a majority particle not in the
-  // filtered particle collection. This could be avoided when a seperate track
+  // filtered particle collection. This could be avoided when a separate track
   // selection algorithm is used.
   trackSummaryWriter.inputParticles = particleReader.outputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
@@ -318,9 +316,6 @@ int runRecCKFTracks(
   perfWriterCfg.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   perfWriterCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  // The bottom seed could be the first, second or third hits on the truth track
-  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
-  perfWriterCfg.ptMin = 0.4_GeV;
   perfWriterCfg.filePath = outputDir + "/performance_ckf.root";
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options

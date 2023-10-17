@@ -8,19 +8,26 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 
-#include <exception>
 #include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 /// Unpack to shared - simply to test the getSharedPtr mechanism
 ///
@@ -36,7 +43,7 @@ std::shared_ptr<referenced_type> unpackToShared(referenced_type& rt) {
 
 Acts::GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   Acts::ActsScalar r0 = 0.;
@@ -64,24 +71,24 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   auto cyl0 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0Bounds),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   auto cyl0nameDup = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0BoundsCopy),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   auto cyl1 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl1", nominal, std::move(cyl1Bounds),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   auto cyl2 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl2", nominal, std::move(cyl2Bounds),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 =
       {cyl0, cyl1, cyl2};
   auto det012 = Acts::Experimental::Detector::makeShared(
-      "Det012", volumes012, Acts::Experimental::tryAllVolumes());
+      "Det012", volumes012, Acts::Experimental::tryRootVolumes());
 
   // Check the basic return functions
   BOOST_CHECK(det012->name() == "Det012");
@@ -130,8 +137,39 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
       {cyl0, cyl0nameDup, cyl2};
   BOOST_CHECK_THROW(Acts::Experimental::Detector::makeShared(
                         "Det002_name_duplicate", volumes002,
-                        Acts::Experimental::tryAllVolumes()),
+                        Acts::Experimental::tryRootVolumes()),
                     std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(DetectorConstructionWithHierarchyMap) {
+  auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
+
+  std::vector<std::unique_ptr<Acts::Test::DetectorElementStub>> detStore;
+  std::vector<Acts::ActsScalar> radii = {100, 102, 104, 106, 108, 110};
+  auto cylinderVoumeBounds =
+      std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
+  std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
+  for (auto [ir, r] : Acts::enumerate(radii)) {
+    auto detElement = std::make_unique<Acts::Test::DetectorElementStub>(
+        Acts::Transform3::Identity(),
+        std::make_shared<Acts::CylinderBounds>(r, 190.), 0.1);
+    auto surface = detElement->surface().getSharedPtr();
+    surface->assignGeometryId(Acts::GeometryIdentifier{}.setSensitive(ir + 1));
+    surfaces.push_back(std::move(surface));
+    detStore.push_back(std::move(detElement));
+  }
+
+  auto cylVolume = Acts::Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "CylinderVolume", Acts::Transform3::Identity(),
+      std::move(cylinderVoumeBounds), surfaces, {},
+      Acts::Experimental::tryNoVolumes(),
+      Acts::Experimental::tryAllPortalsAndSurfaces());
+
+  auto det = Acts::Experimental::Detector::makeShared(
+      "DetWithSurfaces", {cylVolume}, Acts::Experimental::tryRootVolumes());
+
+  const auto& sensitiveHierarchyMap = det->sensitiveHierarchyMap();
+  BOOST_CHECK(sensitiveHierarchyMap.size() == 6u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

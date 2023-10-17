@@ -8,20 +8,29 @@
 
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <iterator>
+#include <ostream>
 #include <stdexcept>
+#include <variant>
 
 static inline int quant(double min, double max, unsigned nSteps, double val);
 static inline double unquant(double min, double max, unsigned nSteps, int step);
@@ -510,7 +519,7 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
       }
 
       for (auto& sourceLink : moduleSourceLinks) {
-        // extract a local position/covariance independent from the concrecte
+        // extract a local position/covariance independent of the concrete
         // measurement content. since we do not know if and where the local
         // parameters are contained in the measurement parameters vector, they
         // are transformed to the bound space where we do know their location.
@@ -520,12 +529,12 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
             [](const auto& meas) {
               auto expander = meas.expander();
               Acts::BoundVector par = expander * meas.parameters();
-              Acts::BoundSymMatrix cov =
+              Acts::BoundSquareMatrix cov =
                   expander * meas.covariance() * expander.transpose();
               // extract local position
               Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
               // extract local position covariance.
-              Acts::SymMatrix2 lcov =
+              Acts::SquareMatrix2 lcov =
                   cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
               return std::make_pair(lpar, lcov);
             },

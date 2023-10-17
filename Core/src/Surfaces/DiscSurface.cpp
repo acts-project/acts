@@ -10,16 +10,23 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cmath>
-#include <system_error>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 using Acts::VectorHelpers::perp;
@@ -51,10 +58,10 @@ Acts::DiscSurface::DiscSurface(const Transform3& transform,
                                std::shared_ptr<const DiscBounds> dbounds)
     : GeometryObject(), Surface(transform), m_bounds(std::move(dbounds)) {}
 
-Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
+Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
                                const DetectorElementBase& detelement)
-    : GeometryObject(), Surface(detelement), m_bounds(dbounds) {
-  throw_assert(dbounds, "nullptr as DiscBounds");
+    : GeometryObject(), Surface(detelement), m_bounds(std::move(dbounds)) {
+  throw_assert(m_bounds, "nullptr as DiscBounds");
 }
 
 Acts::DiscSurface& Acts::DiscSurface::operator=(const DiscSurface& other) {
@@ -122,7 +129,7 @@ Acts::Vector3 Acts::DiscSurface::localCartesianToGlobal(
 
 Acts::Vector2 Acts::DiscSurface::globalToLocalCartesian(
     const GeometryContext& gctx, const Vector3& position,
-    double /*momentum*/) const {
+    double /*direction*/) const {
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
   return Vector2(loc3Dframe.x(), loc3Dframe.y());
 }
@@ -150,6 +157,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
   bool toCenter = m_bounds->rMin() < s_onSurfaceTolerance;
   // If you have bounds you can create a polyhedron representation
   bool exactPolyhedron = (m_bounds->type() == SurfaceBounds::eDiscTrapezoid);
+  bool addCentreFromConvexFace = (m_bounds->type() != SurfaceBounds::eAnnulus);
   if (m_bounds) {
     auto vertices2D = m_bounds->vertices(lseg);
     vertices.reserve(vertices2D.size() + 1);
@@ -160,18 +168,19 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
     }
     // These are convex shapes, use the helper method
     // For rings there's a sweet spot when this stops working
-    if (m_bounds->type() == SurfaceBounds::eDiscTrapezoid or toCenter or
-        not fullDisc) {
+    if (exactPolyhedron or toCenter or not fullDisc) {
       // Transform them into the vertex frame
       wCenter *= 1. / vertices.size();
-      vertices.push_back(wCenter);
+      if (addCentreFromConvexFace) {
+        vertices.push_back(wCenter);
+      }
       auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices, true);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
-      // are needed to descibe the mesh, @todo investigate merging flag
+      // are needed to describe the mesh, @todo investigate merging flag
       auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
@@ -191,9 +200,8 @@ Acts::Vector2 Acts::DiscSurface::localPolarToCartesian(
 
 Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
     const Vector2& lcart) const {
-  return Vector2(sqrt(lcart[eBoundLoc0] * lcart[eBoundLoc0] +
-                      lcart[eBoundLoc1] * lcart[eBoundLoc1]),
-                 atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
+  return Vector2(std::hypot(lcart[eBoundLoc0], lcart[eBoundLoc1]),
+                 std::atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
@@ -251,14 +259,14 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
+  const double sinTheta = std::hypot(x, y);
   const double invSinTheta = 1. / sinTheta;
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 pos_loc = transform(gctx).inverse() * position;
   const double lr = perp(pos_loc);
   const double lphi = phi(pos_loc);
@@ -267,7 +275,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   // rotate into the polar coorindates
   auto lx = rframeT.block<1, 3>(0, 0);
   auto ly = rframeT.block<1, 3>(1, 0);
-  // Initalize the jacobian from global to local
+  // Initialize the jacobian from global to local
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Local position component
   jacToLocal.block<1, 3>(eBoundLoc0, eFreePos0) = lcphi * lx + lsphi * ly;
@@ -285,33 +293,38 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   return jacToLocal;
 }
 
-Acts::SurfaceIntersection Acts::DiscSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction);
+      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status != Intersection3D::Status::unreachable and bcheck and
-      m_bounds != nullptr) {
+  if (intersection.status() != Intersection3D::Status::unreachable and
+      bcheck and m_bounds != nullptr) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
-    const Vector3 vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
+    const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
     if (bcheck.type() == BoundaryCheck::Type::eAbsolute and
         m_bounds->coversFullAzimuth()) {
-      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc0];
+      double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc0];
       if (not m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
-                                           tolerance)) {
-        intersection.status = Intersection3D::Status::missed;
+                                           modifiedTolerance)) {
+        status = Intersection3D::Status::missed;
       }
     } else if (not insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
-      intersection.status = Intersection3D::Status::missed;
+      status = Intersection3D::Status::missed;
     }
   }
-  return {intersection, this};
+  return {{Intersection3D(intersection.position(), intersection.pathLength(),
+                          status),
+           Intersection3D::invalid()},
+          this};
 }
 
 Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
@@ -320,7 +333,7 @@ Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);
@@ -334,7 +347,7 @@ Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
 
 Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
                                         const Vector2& /*lposition*/) const {
-  // fast access via tranform matrix (and not rotation())
+  // fast access via transform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }

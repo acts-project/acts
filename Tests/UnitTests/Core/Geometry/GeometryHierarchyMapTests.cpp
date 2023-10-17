@@ -9,9 +9,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <iterator>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace {
 

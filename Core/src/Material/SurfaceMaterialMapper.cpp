@@ -9,7 +9,9 @@
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
@@ -23,21 +25,24 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/PropagatorError.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
+#include <ostream>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
+
+namespace Acts {
+struct EndOfWorldReached;
+}  // namespace Acts
 
 Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
     const Config& cfg, StraightLinePropagator propagator,
@@ -227,9 +232,10 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   std::map<GeometryIdentifier, unsigned int> assignedMaterial;
   using VectorHelpers::makeVector4;
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
-                                          mTrack.first.second,
-                                          1 / mTrack.first.second.norm());
+  NeutralCurvilinearTrackParameters start(
+      makeVector4(mTrack.first.first, 0), mTrack.first.second,
+      1 / mTrack.first.second.norm(), std::nullopt,
+      NeutralParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
@@ -365,19 +371,19 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
             break;
           }
           default: {
-            ACTS_ERROR("Incorect mapping type for the next surface : "
+            ACTS_ERROR("Incorrect mapping type for the next surface : "
                        << (sfIter + 1)->surface->geometryId());
           }
         }
       } else {
-        ACTS_ERROR("Incorect mapping type for surface : "
+        ACTS_ERROR("Incorrect mapping type for surface : "
                    << sfIter->surface->geometryId());
       }
     }
 
     // get the current Surface ID
     currentID = sfIter->surface->geometryId();
-    // We have work to do: the assignemnt surface has changed
+    // We have work to do: the assignment surface has changed
     if (not(currentID == lastID)) {
       // Let's (re-)assess the information
       lastID = currentID;

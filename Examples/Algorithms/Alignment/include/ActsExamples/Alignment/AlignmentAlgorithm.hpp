@@ -50,7 +50,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
   /// Create the alignment function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
+  /// contains shared_ptr anyway.
   static std::shared_ptr<AlignmentFunction> makeAlignmentFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
@@ -68,7 +68,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
     std::string outputAlignmentParameters;
     /// Type erased fitter function.
     std::shared_ptr<AlignmentFunction> align;
-    /// The alignd transform updater
+    /// The aligned transform updater
     ActsAlignment::AlignedTransformUpdater alignedTransformUpdater;
     /// The surfaces (with detector elements) to be aligned
     std::vector<Acts::DetectorElementBase*> alignedDetElements;
@@ -86,14 +86,14 @@ class AlignmentAlgorithm final : public IAlgorithm {
 
   /// Constructor of the alignment algorithm
   ///
-  /// @param cfg is the config struct to configure the algorihtm
+  /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
   AlignmentAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Framework execute method of the alignment algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
-  /// @return a process code to steer the algporithm flow
+  /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const override;
 

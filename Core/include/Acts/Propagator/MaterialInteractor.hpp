@@ -41,7 +41,7 @@ struct MaterialInteractor {
   /// multiple scattering and energy loss is applied  according to the
   /// configuration.
   ///
-  /// @tparam propagator_state_t is the type of Propagagor state
+  /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper of the propagation
   /// @tparam navigator_t Type of the navigator of the propagation
   ///
@@ -56,10 +56,10 @@ struct MaterialInteractor {
                   const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
     // In case of Volume material update the result of the previous step
-    if (recordInteractions && !result.materialInteractions.empty() &&
-        result.materialInteractions.back().volume != nullptr &&
+    if (recordInteractions and not result.materialInteractions.empty() and
+        not result.materialInteractions.back().volume.empty() and
         result.materialInteractions.back().updatedVolumeStep == false) {
-      UpdateResult(state, stepper, result);
+      updateResult(state, stepper, result);
     }
 
     // If we are on target, everything should have been done
@@ -94,8 +94,8 @@ struct MaterialInteractor {
 
       if (energyLoss) {
         using namespace UnitLiterals;
-        ACTS_VERBOSE(d.slab << " pdg=" << d.pdg << " mass=" << d.mass / 1_MeV
-                            << "MeV"
+        ACTS_VERBOSE(d.slab << " absPdg=" << d.absPdg
+                            << " mass=" << d.mass / 1_MeV << "MeV"
                             << " momentum=" << d.momentum / 1_GeV << "GeV"
                             << " energyloss=" << d.Eloss / 1_MeV << "MeV");
       }
@@ -106,9 +106,9 @@ struct MaterialInteractor {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       }
       // Change the noise updater depending on the navigation direction
-      NoiseUpdateMode mode =
-          (state.stepping.navDir == NavigationDirection::Forward) ? addNoise
-                                                                  : removeNoise;
+      NoiseUpdateMode mode = (state.options.direction == Direction::Forward)
+                                 ? addNoise
+                                 : removeNoise;
       // Apply the material interactions
       d.updateState(state, stepper, mode);
       // Record the result
@@ -146,7 +146,7 @@ struct MaterialInteractor {
       mi.sigmaTheta2 = d.varianceTheta;
       mi.sigmaQoP2 = d.varianceQoverP;
       mi.surface = d.surface;
-      mi.volume = nullptr;
+      mi.volume = InteractionVolume();
       mi.pathCorrection = d.pathCorrection;
       mi.materialSlab = d.slab;
       result.materialInteractions.push_back(std::move(mi));
@@ -177,7 +177,7 @@ struct MaterialInteractor {
   /// @param [in] stepper The stepper instance
   /// @param [in, out] result Result storage
   template <typename propagator_state_t, typename stepper_t>
-  void UpdateResult(propagator_state_t& state, const stepper_t& stepper,
+  void updateResult(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
     // Update the previous interaction
     Vector3 shift = stepper.position(state.stepping) -
@@ -193,6 +193,6 @@ struct MaterialInteractor {
     result.materialInL0 +=
         result.materialInteractions.back().materialSlab.thicknessInL0();
   }
-};  // namespace Acts
+};
 
 }  // namespace Acts

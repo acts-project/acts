@@ -17,7 +17,7 @@ namespace Acts {
 /// one of the explicit constructors manually to populate
 /// the internal std::any. You can then access and modify the any as desired.
 ///
-/// @note This is used for the context types, and should probably not used
+/// @note This is used for the context types, and should probably not be used
 /// outside of this use-case.
 class ContextType {
  public:

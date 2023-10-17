@@ -64,11 +64,11 @@ class BinnedSPGroupIterator {
   void findNotEmptyBin();
 
  private:
-  /// The group, it contains the grid and the bin finders
+  // The group, it contains the grid and the bin finders
   Acts::detail::RefHolder<BinnedSPGroup<external_spacepoint_t>> m_group;
-  /// Max Local Bins - limits of the grid
+  // Max Local Bins - limits of the grid
   std::array<std::size_t, 2> m_max_localBins;
-  /// Current Local Bins
+  // Current Local Bins
   std::array<std::size_t, 2> m_current_localBins{0, 0};
 };
 
@@ -85,7 +85,7 @@ class BinnedSPGroup {
   BinnedSPGroup() = delete;
 
   template <typename spacepoint_iterator_t, typename callable_t>
-  BinnedSPGroup<external_spacepoint_t>(
+  BinnedSPGroup(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
       callable_t&& toGlobal,
       std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>>
@@ -109,7 +109,13 @@ class BinnedSPGroup {
   BinnedSPGroupIterator<external_spacepoint_t> begin();
   BinnedSPGroupIterator<external_spacepoint_t> end();
 
-  Acts::SpacePointGrid<external_spacepoint_t>& grid() { return *m_grid.get(); }
+  Acts::SpacePointGrid<external_spacepoint_t>& grid() {
+    return *m_grid.get();
+  }
+
+  std::size_t skipZMiddleBin() {
+    return m_skipZMiddleBin;
+  }
 
  private:
   // grid with ownership of all InternalSpacePoint
@@ -120,7 +126,10 @@ class BinnedSPGroup {
   std::shared_ptr<const BinFinder<external_spacepoint_t>> m_topBinFinder;
   std::shared_ptr<const BinFinder<external_spacepoint_t>> m_bottomBinFinder;
 
+  // Order of z bins to loop over when searching for SPs
   std::vector<size_t> m_bins;
+  // Number of Z bins to skip the search for middle SP
+  std::size_t m_skipZMiddleBin;
 };
 
 }  // namespace Acts

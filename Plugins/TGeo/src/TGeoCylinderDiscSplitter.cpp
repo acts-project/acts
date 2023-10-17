@@ -8,13 +8,18 @@
 
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+
+#include <cmath>
+#include <cstdlib>
+#include <utility>
 
 Acts::TGeoCylinderDiscSplitter::TGeoCylinderDiscSplitter(
     const TGeoCylinderDiscSplitter::Config& cfg,

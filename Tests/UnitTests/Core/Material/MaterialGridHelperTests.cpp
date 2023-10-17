@@ -8,12 +8,22 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
-#include <limits>
-#include <random>
+#include <cmath>
+#include <functional>
+#include <memory>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -104,7 +114,7 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -196,7 +206,7 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -290,7 +300,7 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -388,7 +398,7 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {

@@ -9,7 +9,7 @@
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -25,9 +25,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
-#include <iosfwd>
 #include <iterator>
 #include <vector>
 
@@ -144,7 +144,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   // present)
   // --------------------------------------------------------------------------
   //
-  // possbile configurations are (so far only synchronised):
+  // possible configurations are (so far only synchronised):
   //
   // | Negative Endcap | Barrel | Positive Endcap | -  all layers present
   //                   | Barrel |                   -  barrel present
@@ -160,6 +160,15 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   wConfig.nVolumeConfig = analyzeContent(gctx, negativeLayers, {});  // TODO
   wConfig.cVolumeConfig = analyzeContent(gctx, centralLayers, centralVolumes);
   wConfig.pVolumeConfig = analyzeContent(gctx, positiveLayers, {});  // TODO
+
+  bool hasLayers = wConfig.nVolumeConfig.present ||
+                   wConfig.cVolumeConfig.present ||
+                   wConfig.pVolumeConfig.present;
+
+  if (!hasLayers) {
+    ACTS_INFO("No layers present, returning nullptr");
+    return nullptr;
+  }
 
   std::string layerConfiguration = "|";
   if (wConfig.nVolumeConfig) {

@@ -26,9 +26,9 @@ namespace Options {
 void addObjWriterOptions(boost::program_options::options_description& opt) {
   namespace po = boost::program_options;
   opt.add_options()("obj-precision", po::value<int>()->default_value(6),
-                    "Floating number output precission.")(
+                    "Floating number output precision.")(
       "obj-scalor", po::value<double>()->default_value(1.),
-      "Optional scaling from Acts units to ouput units.")(
+      "Optional scaling from Acts units to output units.")(
       "obj-container-view",
       po::value<Integers<5>>()->default_value({{0, 220, 220, 220, 0}}),
       "View configuration of container volumes (vis/novis, r, g, b, trimesh).")(

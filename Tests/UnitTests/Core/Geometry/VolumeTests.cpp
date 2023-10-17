@@ -13,8 +13,13 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
-#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <utility>
 
 namespace tt = boost::test_tools;
 

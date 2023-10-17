@@ -9,7 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -24,7 +24,6 @@
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
-#include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <algorithm>
 #include <random>
@@ -194,7 +193,7 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
     const auto pid = ActsFatras::Barcode().setVertexPrimary(42).setParticle(i);
     const auto particle =
         ActsFatras::Particle(pid, pdg)
-            .setDirection(Acts::makeDirectionUnitFromPhiEta(phi, eta))
+            .setDirection(Acts::makeDirectionFromPhiEta(phi, eta))
             .setAbsoluteMomentum(p);
     input.push_back(std::move(particle));
   }
@@ -221,12 +220,12 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
     BOOST_CHECK_EQUAL(initialParticle.mass(), finalParticle.mass());
   }
 
-  // we have no particle cuts and should not loose any particles.
+  // we have no particle cuts and should not lose any particles.
   // might end up with more due to secondaries
   BOOST_CHECK_LE(input.size(), simulatedInitial.size());
   BOOST_CHECK_LE(input.size(), simulatedFinal.size());
   // there should be some hits if we started with a charged particle
-  if (ActsFatras::findCharge(pdg) != 0) {
+  if (Acts::findCharge(pdg) != 0) {
     BOOST_CHECK_LT(0u, hits.size());
   }
 

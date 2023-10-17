@@ -10,7 +10,7 @@ from acts import UnitConstants as u
 if "__main__" == __name__:
     import os
     import sys
-    from digitization import configureDigitization
+    from digitization import runDigitization
     from acts.examples.reconstruction import addExaTrkX, ExaTrkXBackend
 
     backend = ExaTrkXBackend.Torch
@@ -31,11 +31,18 @@ if "__main__" == __name__:
         inputParticlePath = None
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
     geometrySelection = (
         srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
     )
     assert geometrySelection.exists()
+
+    digiConfigFile = (
+        srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    )
+    assert digiConfigFile.exists()
 
     if backend == ExaTrkXBackend.Torch:
         modelDir = Path.cwd() / "torchscript_models"
@@ -54,11 +61,12 @@ if "__main__" == __name__:
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(os.getcwd())
 
-    s = configureDigitization(
+    s = runDigitization(
         trackingGeometry,
         field,
         outputDir,
-        inputParticlePath,
+        digiConfigFile=digiConfigFile,
+        particlesInput=inputParticlePath,
         outputRoot=True,
         outputCsv=True,
         s=s,

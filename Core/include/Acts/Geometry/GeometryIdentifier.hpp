@@ -53,6 +53,8 @@ class GeometryIdentifier {
   constexpr Value layer() const { return getBits(kLayerMask); }
   /// Return the approach identifier.
   constexpr Value approach() const { return getBits(kApproachMask); }
+  /// Return the approach identifier.
+  constexpr Value passive() const { return getBits(kApproachMask); }
   /// Return the sensitive identifier.
   constexpr Value sensitive() const { return getBits(kSensitiveMask); }
   /// Return the extra identifier
@@ -76,6 +78,10 @@ class GeometryIdentifier {
   constexpr GeometryIdentifier& setApproach(Value approach) {
     return setBits(kApproachMask, approach);
   }
+  /// Set the approach identifier - shared with Passive
+  constexpr GeometryIdentifier& setPassive(Value approach) {
+    return setBits(kApproachMask, approach);
+  }
   /// Set the sensitive identifier.
   constexpr GeometryIdentifier& setSensitive(Value sensitive) {
     return setBits(kSensitiveMask, sensitive);
@@ -87,12 +93,19 @@ class GeometryIdentifier {
 
  private:
   // clang-format off
-  static constexpr Value kVolumeMask    = 0xff00000000000000; // (2^8)-1 = 255 volumes
-  static constexpr Value kBoundaryMask  = 0x00ff000000000000; // (2^8)-1 = 255 boundaries
-  static constexpr Value kLayerMask     = 0x0000fff000000000; // (2^12)-1 = 4095 layers
-  static constexpr Value kApproachMask  = 0x0000000ff0000000; // (2^8)-1 = 255 approach surfaces
-  static constexpr Value kSensitiveMask = 0x000000000fffff00; // (2^20)-1 = 1048575 sensitive surfaces
-  static constexpr Value kExtraMask     = 0x00000000000000ff; // (2^8)-1 = 255 extra values
+  /// (2^8)-1 = 255 volumes
+  static constexpr Value kVolumeMask    = 0xff00000000000000;
+  /// (2^8)-1 = 255 boundaries
+  static constexpr Value kBoundaryMask  = 0x00ff000000000000;
+  /// (2^12)-1 = 4095 layers
+  static constexpr Value kLayerMask     = 0x0000fff000000000;
+  /// (2^8)-1 = 255 approach surfaces
+  static constexpr Value kApproachMask  = 0x0000000ff0000000;
+  static constexpr Value kPassiveMask   = kApproachMask;
+  /// (2^20)-1 = 1048575 sensitive surfaces
+  static constexpr Value kSensitiveMask = 0x000000000fffff00;
+  /// (2^8)-1 = 255 extra values
+  static constexpr Value kExtraMask     = 0x00000000000000ff;
   // clang-format on
 
   Value m_value = 0;

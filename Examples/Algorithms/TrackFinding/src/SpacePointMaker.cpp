@@ -8,19 +8,26 @@
 
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
-#include <cmath>
+#include <functional>
+#include <iterator>
+#include <ostream>
 #include <stdexcept>
 #include <utility>
+#include <variant>
 
 ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
                                                Acts::Logging::Level lvl)
@@ -90,6 +97,12 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   auto spBuilderConfig = Acts::SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
 
+  m_slSurfaceAccessor.emplace(
+      IndexSourceLink::SurfaceAccessor{*m_cfg.trackingGeometry});
+  spBuilderConfig.slSurfaceAccessor
+      .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+          &m_slSurfaceAccessor.value());
+
   auto spConstructor =
       [](const Acts::Vector3& pos, const Acts::Vector2& cov,
          boost::container::static_vector<Acts::SourceLink, 2> slinks)
@@ -118,7 +131,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
         [](const auto& measurement) {
           auto expander = measurement.expander();
           Acts::BoundVector par = expander * measurement.parameters();
-          Acts::BoundSymMatrix cov =
+          Acts::BoundSquareMatrix cov =
               expander * measurement.covariance() * expander.transpose();
           return std::make_pair(par, cov);
         },

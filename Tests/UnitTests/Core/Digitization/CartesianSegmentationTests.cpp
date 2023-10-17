@@ -9,13 +9,18 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <cmath>
+#include <cstdlib>
+#include <memory>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -106,8 +111,8 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
 
   // Check the boundary surfaces are thickness away
   auto centerReadoutPL = boundariesPL[0]->center(tgContext);
-  auto centerCoutnerPL = boundariesPL[1]->center(tgContext);
-  double thicknessPL = abs((centerReadoutPL - centerCoutnerPL).z());
+  auto centerCounterPL = boundariesPL[1]->center(tgContext);
+  double thicknessPL = abs((centerReadoutPL - centerCounterPL).z());
 
   CHECK_CLOSE_REL(thicknessPL, 2 * hThickness, 10e-6);
 

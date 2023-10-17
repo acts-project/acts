@@ -9,16 +9,25 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
+
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -52,8 +61,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
   double rmin = 10.;
   double rmax = 11;
   double hz = 40.;
-  double phimin = -45.;
-  double phimax = 45.;
+  double phimin = 45.;
+  double phimax = -45.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -67,10 +76,11 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
 
   size_t icyl = 0;
   for (const auto &axes : allowedAxes) {
-    auto cylinder = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                    *gGeoIdentity, axes, 1);
+    auto [cylinder, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_CHECK_NE(cylinder, nullptr);
     BOOST_CHECK_EQUAL(cylinder->type(), Surface::Cylinder);
+    CHECK_CLOSE_ABS(thickness, rmax - rmin, s_epsilon);
 
     auto bounds = dynamic_cast<const CylinderBounds *>(&(cylinder->bounds()));
     BOOST_CHECK_NE(bounds, nullptr);
@@ -98,10 +108,11 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
     objVis.clear();
 
     if (icyl < 2) {
-      auto cylinderSegment = TGeoSurfaceConverter::toSurface(
+      auto [cylinderSegment, cThickness] = TGeoSurfaceConverter::toSurface(
           *vols->GetShape(), *gGeoIdentity, axes, 1);
       BOOST_CHECK_NE(cylinderSegment, nullptr);
       BOOST_CHECK_EQUAL(cylinderSegment->type(), Surface::Cylinder);
+      CHECK_CLOSE_ABS(cThickness, rmax - rmin, s_epsilon);
 
       auto boundsSegment =
           dynamic_cast<const CylinderBounds *>(&(cylinderSegment->bounds()));
@@ -149,8 +160,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
   double rmin = 5.;
   double rmax = 25;
   double hz = 2.;
-  double phimin = -45.;
-  double phimax = 45.;
+  double phimin = 45.;
+  double phimax = -45.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -165,10 +176,11 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
 
   size_t idisc = 0;
   for (const auto &axes : allowedAxes) {
-    auto disc = TGeoSurfaceConverter::toSurface(*vol->GetShape(), *gGeoIdentity,
-                                                axes, 1);
+    auto [disc, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_CHECK_NE(disc, nullptr);
     BOOST_CHECK_EQUAL(disc->type(), Surface::Disc);
+    CHECK_CLOSE_ABS(thickness, 2 * hz, s_epsilon);
 
     auto bounds = dynamic_cast<const RadialBounds *>(&(disc->bounds()));
     BOOST_CHECK_NE(bounds, nullptr);
@@ -192,10 +204,11 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
     objVis.clear();
 
     if (idisc < 2) {
-      auto discSegment = TGeoSurfaceConverter::toSurface(
+      auto [discSegment, dThickness] = TGeoSurfaceConverter::toSurface(
           *vols->GetShape(), *gGeoIdentity, axes, 1);
       BOOST_CHECK_NE(discSegment, nullptr);
       BOOST_CHECK_EQUAL(discSegment->type(), Surface::Disc);
+      CHECK_CLOSE_ABS(dThickness, 2 * hz, s_epsilon);
 
       auto boundsSegment =
           dynamic_cast<const RadialBounds *>(&(discSegment->bounds()));

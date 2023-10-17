@@ -26,7 +26,7 @@ namespace Acts {
 /// @brief ActionList implementation to be used with the propagator
 ///
 /// This is the ActionList struct that is used in the propagator
-/// to define a list of different actors_t that are eacch
+/// to define a list of different actors_t that are each
 /// executed during the stepping procedure
 template <typename... actors_t>
 struct ActionList : public detail::Extendable<actors_t...> {
@@ -37,7 +37,7 @@ struct ActionList : public detail::Extendable<actors_t...> {
   using detail::Extendable<actors_t...>::tuple;
 
  public:
-  // This uses the type collector and unpacks using the `R` meta funciton
+  // This uses the type collector and unpacks using the `R` meta function
   template <template <typename...> class R>
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::result_type_extractor, actors_t...>,

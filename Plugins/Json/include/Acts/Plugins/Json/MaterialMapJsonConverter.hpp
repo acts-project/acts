@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -21,8 +23,21 @@
 
 #include <map>
 #include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 namespace Acts {
+class ISurfaceMaterial;
+class ITrackingGeometryJsonDecorator;
+class IVolumeMaterial;
+class IVolumeMaterialJsonDecorator;
+class Surface;
+class TrackingGeometry;
+class TrackingVolume;
 
 using SurfaceAndMaterialWithContext =
     std::tuple<std::shared_ptr<const Acts::Surface>,
@@ -47,7 +62,7 @@ class MaterialMapJsonConverter {
   /// Configuration of the Converter
   class Config {
    public:
-    /// Default geometry context to extract surface tranforms
+    /// Default geometry context to extract surface transforms
     GeometryContext context = GeometryContext();
 
     /// Steering to handle sensitive data
@@ -99,7 +114,7 @@ class MaterialMapJsonConverter {
 
   /// Go through a volume to find subvolume, layers and surfaces.
   /// Store volumes and surfaces in two vector used to initialised the geometry
-  /// hierachy.
+  /// hierarchy.
   ///
   /// @param volumeHierarchy is a vector of volume to be filled
   /// @param surfaceHierarchy is a vector of surfaces to be filled

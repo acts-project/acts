@@ -8,8 +8,6 @@
 
 #include "Acts/Surfaces/DiamondBounds.hpp"
 
-#include "Acts/Utilities/ThrowAssert.hpp"
-
 #include <iomanip>
 #include <iostream>
 

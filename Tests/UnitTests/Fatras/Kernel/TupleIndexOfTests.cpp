@@ -12,6 +12,13 @@
 
 #include <tuple>
 
+namespace ActsFatras {
+namespace detail {
+template <class T, class Tuple>
+struct TupleIndexOf;
+}  // namespace detail
+}  // namespace ActsFatras
+
 using ActsFatras::detail::TupleIndexOf;
 
 BOOST_AUTO_TEST_SUITE(FatrasTupleIndexOf)

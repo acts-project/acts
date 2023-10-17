@@ -29,11 +29,12 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
   const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
-  const ActsSymMatrix<5> trkParamWeight =
-      linTrack.weightAtPCA.block<5, 5>(0, 0);
+  // TODO we could use `linTrack.weightAtPCA` but only if we would use time
+  const ActsSquareMatrix<5> trkParamWeight =
+      linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   // Calculate S matrix
-  ActsSymMatrix<3> sMat =
+  ActsSquareMatrix<3> sMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   const ActsVector<5> residual = linTrack.constantTerm.head<5>();
@@ -53,11 +54,11 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
 
   // Vertex covariance and weight matrices
-  const SymMatrix3 vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
-  const SymMatrix3 vtxWeight = vtxCov.inverse();
+  const SquareMatrix3 vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
+  const SquareMatrix3 vtxWeight = vtxCov.inverse();
 
   // New track covariance matrix
-  const SymMatrix3 newTrkCov =
+  const SquareMatrix3 newTrkCov =
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
 
   KalmanVertexUpdater::MatrixCache matrixCache;
@@ -67,7 +68,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
       vtx, linTrack, track.trackWeight, -1, matrixCache);
 
   // Corresponding weight matrix
-  const SymMatrix3& reducedVtxWeight = matrixCache.newVertexWeight;
+  const SquareMatrix3& reducedVtxWeight = matrixCache.newVertexWeight;
 
   // Difference in positions
   Vector3 posDiff = vtx.position() - matrixCache.newVertexPos;
@@ -86,10 +87,10 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   ActsMatrix<4, 3> newFullTrkCov(ActsMatrix<4, 3>::Zero());
   newFullTrkCov.block<3, 3>(0, 0) = newTrkCov;
 
-  SymMatrix4 vtxFullWeight(SymMatrix4::Zero());
+  SquareMatrix4 vtxFullWeight(SquareMatrix4::Zero());
   vtxFullWeight.block<3, 3>(0, 0) = vtxWeight;
 
-  SymMatrix4 vtxFullCov(SymMatrix4::Zero());
+  SquareMatrix4 vtxFullCov(SquareMatrix4::Zero());
   vtxFullCov.block<3, 3>(0, 0) = vtxCov;
 
   Acts::BoundMatrix fullPerTrackCov = detail::createFullTrackCovariance(
@@ -100,7 +101,8 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   BoundTrackParameters refittedPerigee = BoundTrackParameters(
-      perigeeSurface, newTrkParams, std::move(fullPerTrackCov));
+      perigeeSurface, newTrkParams, std::move(fullPerTrackCov),
+      track.fittedParams.particleHypothesis());
 
   // Set new properties
   track.fittedParams = refittedPerigee;
@@ -112,17 +114,17 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
 inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
-    const SymMatrix3& sMat, const ActsMatrix<4, 3>& newTrkCov,
-    const SymMatrix4& vtxWeight, const SymMatrix4& vtxCov,
+    const SquareMatrix3& sMat, const ActsMatrix<4, 3>& newTrkCov,
+    const SquareMatrix4& vtxWeight, const SquareMatrix4& vtxCov,
     const BoundVector& newTrkParams) {
   // Now new momentum covariance
-  ActsSymMatrix<3> momCov =
+  ActsSquareMatrix<3> momCov =
       sMat + (newTrkCov.block<3, 3>(0, 0)).transpose() *
                  (vtxWeight.block<3, 3>(0, 0) * newTrkCov.block<3, 3>(0, 0));
 
   // Full (x,y,z,phi, theta, q/p) covariance matrix
   // To be made 7d again after switching to (x,y,z,phi, theta, q/p, t)
-  ActsSymMatrix<6> fullTrkCov(ActsSymMatrix<6>::Zero());
+  ActsSquareMatrix<6> fullTrkCov(ActsSquareMatrix<6>::Zero());
 
   fullTrkCov.block<3, 3>(0, 0) = vtxCov.block<3, 3>(0, 0);
   fullTrkCov.block<3, 3>(0, 3) = newTrkCov.block<3, 3>(0, 0);

@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
   ActsExamples::Options::addRandomNumbersOptions(opt);
   // parse options from command line flags
   auto vm = ActsExamples::Options::parse(opt, argc, argv);
-  // an empty varaibles map indicates an error
+  // an empty variables map indicates an error
   if (vm.empty()) {
     return EXIT_FAILURE;
   }

@@ -1,0 +1,129 @@
+From 09ef584f1ca797d84c1c0af18ec06b33d6c0d2d0 Mon Sep 17 00:00:00 2001
+From: Paul Gessinger <paul.gessinger@cern.ch>
+Date: Thu, 24 Mar 2022 16:08:26 +0100
+Subject: [PATCH] fixes for C++20 build
+
+---
+ include/Pythia8/SusyLesHouches.h | 6 +++---
+ src/HadronWidths.cc              | 8 ++++----
+ src/NucleonExcitations.cc        | 8 ++++----
+ src/PythiaParallel.cc            | 2 +-
+ 4 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/include/Pythia8/SusyLesHouches.h b/include/Pythia8/SusyLesHouches.h
+index 2f1d9fd..5090c00 100644
+--- a/include/Pythia8/SusyLesHouches.h
++++ b/include/Pythia8/SusyLesHouches.h
+@@ -28,7 +28,7 @@ namespace Pythia8 {
+   public:
+ 
+     //Constructor.
+-    LHblock<T>() : idnow(0), qDRbar(), i(), val() {} ;
++    LHblock() : idnow(0), qDRbar(), i(), val() {} ;
+ 
+     //Does block exist?
+     bool exists() { return int(entry.size()) == 0 ? false : true ; };
+@@ -129,7 +129,7 @@ namespace Pythia8 {
+   template <int size> class LHmatrixBlock {
+   public:
+     //Constructor. Set uninitialized and explicitly zero.
+-    LHmatrixBlock<size>() : entry(), qDRbar(), val() {
++    LHmatrixBlock() : entry(), qDRbar(), val() {
+       initialized=false;
+       for (i=1;i<=size;i++) {
+         for (j=1;j<=size;j++) {
+@@ -208,7 +208,7 @@ namespace Pythia8 {
+   template <int size> class LHtensor3Block {
+   public:
+     //Constructor. Set uninitialized and explicitly zero.
+-    LHtensor3Block<size>() : entry(), qDRbar(), val() {
++    LHtensor3Block() : entry(), qDRbar(), val() {
+       initialized=false;
+       for (i=1;i<=size;i++) {
+         for (j=1;j<=size;j++) {
+diff --git a/src/HadronWidths.cc b/src/HadronWidths.cc
+index ccc5c72..95a5cb1 100644
+--- a/src/HadronWidths.cc
++++ b/src/HadronWidths.cc
+@@ -867,7 +867,7 @@ double HadronWidths::psSize(double eCM, ParticleDataEntryPtr prodA,
+       return 0.;
+ 
+     // Integrate mass of A.
+-    auto f = [=](double mA) {
++    auto f = [=,this](double mA) {
+       return pow(pCMS(eCM, mA, m0B), lType) * mDistr(idA, mA); };
+     if (!integrateGauss(result, f, mMinA, min(mMaxA, eCM - m0B)))
+       success = false;
+@@ -879,7 +879,7 @@ double HadronWidths::psSize(double eCM, ParticleDataEntryPtr prodA,
+       return 0.;
+ 
+     // Integrate mass of B.
+-    auto f = [=](double mB) {
++    auto f = [=,this](double mB) {
+       return pow(pCMS(eCM, m0A, mB), lType) * mDistr(idB, mB); };
+     if (!integrateGauss(result, f, mMinB, min(mMaxB, eCM - m0A)))
+       success = false;
+@@ -891,10 +891,10 @@ double HadronWidths::psSize(double eCM, ParticleDataEntryPtr prodA,
+       return 0.;
+ 
+     // Define integrand of outer integral.
+-    auto I = [=, &success](double mA) {
++    auto I = [=, &success, this](double mA) {
+ 
+       // Define integrand of inner integral.
+-      auto f = [=](double mB) {
++      auto f = [=,this](double mB) {
+         return pow(pCMS(eCM, mA, mB), lType)
+               * mDistr(idA, mA) * mDistr(idB, mB); };
+       double res;
+diff --git a/src/NucleonExcitations.cc b/src/NucleonExcitations.cc
+index b5eef8f..a82383a 100644
+--- a/src/NucleonExcitations.cc
++++ b/src/NucleonExcitations.cc
+@@ -502,7 +502,7 @@ double NucleonExcitations::psSize(double eCM, ParticleDataEntry& prodA,
+       return 0.;
+ 
+     // Integrate mass of A.
+-    auto f = [=](double mA) {
++    auto f = [=, this](double mA) {
+       return pCMS(eCM, mA, m0B) * hadronWidthsPtr->mDistr(idA, mA); };
+     if (!integrateGauss(result, f, mMinA, min(mMaxA, eCM - m0B)))
+       success = false;
+@@ -514,7 +514,7 @@ double NucleonExcitations::psSize(double eCM, ParticleDataEntry& prodA,
+       return 0.;
+ 
+     // Integrate mass of B.
+-    auto f = [=](double mB) {
++    auto f = [=,this](double mB) {
+       return pCMS(eCM, m0A, mB) * hadronWidthsPtr->mDistr(idB, mB); };
+     if (!integrateGauss(result, f, mMinB, min(mMaxB, eCM - m0A)))
+       success = false;
+@@ -526,10 +526,10 @@ double NucleonExcitations::psSize(double eCM, ParticleDataEntry& prodA,
+       return 0.;
+ 
+     // Define integrand of outer integral.
+-    auto I = [=, &success](double mA) {
++    auto I = [=, &success, this](double mA) {
+ 
+       // Define integrand of inner integral.
+-      auto f = [=](double mB) {
++      auto f = [=,this](double mB) {
+         return pCMS(eCM, mA, mB)
+               * hadronWidthsPtr->mDistr(idA, mA)
+               * hadronWidthsPtr->mDistr(idB, mB); };
+diff --git a/src/PythiaParallel.cc b/src/PythiaParallel.cc
+index 81450e2..7ec3a92 100644
+--- a/src/PythiaParallel.cc
++++ b/src/PythiaParallel.cc
+@@ -106,7 +106,7 @@ bool PythiaParallel::init(function<bool(Pythia&)> customInit) {
+   bool initSuccess = true;
+ 
+   for (int iPythia = 0; iPythia < numThreads; iPythia += 1) {
+-    initThreads.emplace_back([=, &seeds, &initSuccess]() {
++    initThreads.emplace_back([=, &seeds, &initSuccess, this]() {
+       Pythia* pythiaPtr = new Pythia(settings, particleData, false);
+       pythiaObjects[iPythia] = unique_ptr<Pythia>(pythiaPtr);
+       pythiaObjects[iPythia]->settings.flag("Print:quiet", true);
+-- 
+2.31.1
+

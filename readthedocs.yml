@@ -1,10 +1,14 @@
 version: 2
 # only build html pages
 formats: []
+
+build:
+  os: "ubuntu-22.04"
+  tools:
+    python: "3.10"
+
 python:
-  version: 3
   install:
     - requirements: docs/requirements.txt
-  system_packages: true
 sphinx:
   configuration: docs/conf.py

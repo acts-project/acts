@@ -11,9 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -29,12 +30,13 @@ template <typename T>
 struct IsReadOnlyTrackContainer;
 
 /// Track container interface class. This type represents a collections of
-/// tracks. It uses a backend to store bothe the actual tracks and the
+/// tracks. It uses a backend to store both the actual tracks and the
 /// associated track states.
 /// @tparam track_container_t the track container backend
 /// @tparam traj_t the track state container backend
 /// @tparam holder_t ownership management class for the backend
-template <typename track_container_t, typename traj_t,
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t,
           template <typename> class holder_t = detail::RefHolder>
 class TrackContainer {
  public:
@@ -47,8 +49,8 @@ class TrackContainer {
                 "Either both track container and track state container need to "
                 "be readonly or both have to be readwrite");
 
-  using IndexType = MultiTrajectoryTraits::IndexType;
-  static constexpr IndexType kInvalid = MultiTrajectoryTraits::kInvalid;
+  using IndexType = TrackIndexType;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
   using TrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, false>;
@@ -79,10 +81,27 @@ class TrackContainer {
   TrackContainer(track_container_t& container, traj_t& traj)
       : m_container{&container}, m_traj{&traj} {}
 
+  /// Constructor from const references to a track container backend and to a
+  /// track state container backend
+  /// @note The track container will not assume ownership over the backends in this case.
+  ///       You need to ensure suitable lifetime
+  /// @param container the track container backend
+  /// @param traj the track state container backend
+  template <
+      template <typename> class H = holder_t,
+      bool RO = (IsReadOnlyTrackContainer<track_container_t>::value &&
+                 IsReadOnlyMultiTrajectory<traj_t>::value),
+      typename = std::enable_if_t<
+          detail::is_same_template<H, detail::ConstRefHolder>::value && RO>>
+  TrackContainer(const track_container_t& container, const traj_t& traj)
+      : m_container{&container}, m_traj{&traj} {}
+
   /// Get a const track proxy for a track index
   /// @param itrack the track index in the container
   /// @return A const track proxy for the index
-  ConstTrackProxy getTrack(IndexType itrack) const { return {*this, itrack}; }
+  ConstTrackProxy getTrack(IndexType itrack) const {
+    return {*this, itrack};
+  }
 
   /// Get a mutable track proxy for a track index
   /// @param itrack the track index in the container
@@ -94,7 +113,9 @@ class TrackContainer {
 
   /// Get the size of the track container
   /// @return the sixe
-  constexpr IndexType size() const { return m_container->size_impl(); }
+  constexpr IndexType size() const {
+    return m_container->size_impl();
+  }
 
   /// Add a track to the container. Note this only creates the logical track and
   /// allocates memory. You can combine this with @c getTrack to obtain a track proxy
@@ -108,7 +129,7 @@ class TrackContainer {
 
   /// Remove a track at index @p itrack from the container
   /// @note This invalidates all track proxies!
-  /// @param itrack The index of the track to remmove
+  /// @param itrack The index of the track to remove
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void removeTrack(IndexType itrack) {
     m_container->removeTrack_impl(itrack);
@@ -142,7 +163,9 @@ class TrackContainer {
 
   /// Get a const reference to the track container backend
   /// @return a const reference to the backend
-  const auto& container() const { return *m_container; }
+  const auto& container() const {
+    return *m_container;
+  }
 
   /// Get a mutable reference to the track state container backend
   /// @return a mutable reference to the backend
@@ -160,11 +183,15 @@ class TrackContainer {
 
   /// Get a const reference to the track state container backend
   /// @return a const reference to the backend
-  const auto& trackStateContainer() const { return *m_traj; }
+  const auto& trackStateContainer() const {
+    return *m_traj;
+  }
 
   /// Retrieve the holder of the track state container
   /// @return The track state container including it's holder
-  const auto& trackStateContainerHolder() const { return m_traj; }
+  const auto& trackStateContainerHolder() const {
+    return m_traj;
+  }
 
   /// Get a mutable iterator to the first track in the container
   /// @return a mutable iterator to the first track
@@ -206,6 +233,13 @@ class TrackContainer {
             typename = std::enable_if_t<!RO>>
   void ensureDynamicColumns(const other_track_container_t& other) {
     container().ensureDynamicColumns_impl(other.container());
+  }
+
+  /// Clear the content of the track container
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void clear() {
+    m_container->clear();
+    m_traj->clear();
   }
 
  protected:
@@ -251,14 +285,31 @@ class TrackContainer {
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto trackStateRange(IndexType itrack) {
+  auto reverseTrackStateRange(IndexType itrack) {
     auto tip = component<IndexType, hashString("tipIndex")>(itrack);
-    return m_traj->trackStateRange(tip);
+    return m_traj->reverseTrackStateRange(tip);
   }
 
-  auto trackStateRange(IndexType itrack) const {
+  auto reverseTrackStateRange(IndexType itrack) const {
     auto tip = component<IndexType, hashString("tipIndex")>(itrack);
-    return m_traj->trackStateRange(tip);
+    return m_traj->reverseTrackStateRange(tip);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto forwardTrackStateRange(IndexType itrack) {
+    auto stem = component<IndexType, hashString("stemIndex")>(itrack);
+    if (stem == kInvalid) {
+      throw std::invalid_argument{"Track has no stem index"};
+    }
+    return m_traj->forwardTrackStateRange(stem);
+  }
+
+  auto forwardTrackStateRange(IndexType itrack) const {
+    auto stem = component<IndexType, hashString("stemIndex")>(itrack);
+    if (stem == kInvalid) {
+      throw std::invalid_argument{"Track has no stem index"};
+    }
+    return m_traj->forwardTrackStateRange(stem);
   }
 
  private:
@@ -271,11 +322,18 @@ class TrackContainer {
   detail_tc::ConstIf<holder_t<traj_t>, ReadOnly> m_traj;
 };
 
-template <typename track_container_t, typename traj_t>
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
-template <typename track_container_t, typename traj_t>
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t>
+TrackContainer(const track_container_t& container, const traj_t& traj)
+    -> TrackContainer<track_container_t, traj_t, detail::ConstRefHolder>;
+
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
 

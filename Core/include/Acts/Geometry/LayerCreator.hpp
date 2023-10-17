@@ -16,6 +16,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -33,7 +34,7 @@ using MutableLayerPtr = std::shared_ptr<Layer>;
 
 /// @class LayerCreator
 ///
-/// The LayerCreator is able to build cylinde,r disc layers or plane layers from
+/// The LayerCreator is able to build cylinder disc layers or plane layers from
 /// detector elements
 ///
 class LayerCreator {
@@ -45,9 +46,9 @@ class LayerCreator {
   struct Config {
     /// surface array helper
     std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
-    /// cylinder module z tolerance : it counts at same z, if ...
+    /// cylinder module z tolerance: it counts as same z, if ...
     double cylinderZtolerance{10.};
-    /// cylinder module phi tolerance : it counts at same phi, if ...
+    /// cylinder module phi tolerance: it counts as same phi, if ...
     double cylinderPhiTolerance{0.1};
     /// standard constructor
     Config() = default;
@@ -66,7 +67,7 @@ class LayerCreator {
 
   /// returning a cylindrical layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -90,7 +91,7 @@ class LayerCreator {
 
   /// returning a cylindrical layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -115,7 +116,7 @@ class LayerCreator {
 
   /// returning a disc layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -139,7 +140,7 @@ class LayerCreator {
 
   /// returning a disc layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -164,7 +165,7 @@ class LayerCreator {
 
   /// returning a plane layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param [in] surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -202,7 +203,7 @@ class LayerCreator {
   /// @param newLogger the logger instance
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
-  // associate surfaces contained by this layer to this layer
+  /// associate surfaces contained by this layer to this layer
   void associateSurfacesToLayer(Layer& layer) const;
 
  private:
@@ -217,7 +218,7 @@ class LayerCreator {
   /// configuration object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
   /// logging instance

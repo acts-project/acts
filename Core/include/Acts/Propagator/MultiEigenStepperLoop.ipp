@@ -22,18 +22,34 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
                                      transportCov, freeToBoundCorrection);
   }
 
-  SmallVector<std::tuple<double, BoundVector, BoundSymMatrix>> states;
+  SmallVector<std::tuple<double, BoundVector, BoundSquareMatrix>> states;
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
-    auto bs = SingleStepper::boundState(state.components[i].state, surface,
-                                        transportCov, freeToBoundCorrection);
+    auto& cmpState = state.components[i].state;
+
+    // Force the component to be on the surface
+    // This needs to be done because of the `averageOnSurface`-option of the
+    // `MultiStepperSurfaceReached`-Aborter, which can be configured to end the
+    // propagation when the mean of all components reached the destination
+    // surface. Thus, it is not garantueed that all states are actually
+    // onSurface.
+    cmpState.pars.template segment<3>(eFreePos0) =
+        surface
+            .intersect(state.geoContext,
+                       cmpState.pars.template segment<3>(eFreePos0),
+                       cmpState.pars.template segment<3>(eFreeDir0), false)
+            .closest()
+            .position();
+
+    auto bs = SingleStepper::boundState(cmpState, surface, transportCov,
+                                        freeToBoundCorrection);
 
     if (bs.ok()) {
       const auto& btp = std::get<BoundTrackParameters>(*bs);
       states.emplace_back(
           state.components[i].weight, btp.parameters(),
-          btp.covariance().value_or(Acts::BoundSymMatrix::Zero()));
+          btp.covariance().value_or(Acts::BoundSquareMatrix::Zero()));
       accumulatedPathLength +=
           std::get<double>(*bs) * state.components[i].weight;
     }
@@ -43,28 +59,17 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     return MultiStepperError::AllComponentsConversionToBoundFailed;
   }
 
-  const auto [mean, cov] =
-      detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-        return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
-      });
+  const auto [finalPars, cov] =
+      Acts::reduceGaussianMixture(states, surface, m_finalReductionMethod);
 
-  const auto finalPars =
-      (m_finalReductionMethod == FinalReductionMethod::eMaxWeight)
-          ? std::get<BoundVector>(*std::max_element(
-                states.begin(), states.end(),
-                [](const auto& a, const auto& b) {
-                  return std::get<double>(a) < std::get<double>(b);
-                }))
-          : mean;
-
-  std::optional<BoundSymMatrix> finalCov = std::nullopt;
-  if (cov != BoundSymMatrix::Zero()) {
+  std::optional<BoundSquareMatrix> finalCov = std::nullopt;
+  if (cov != BoundSquareMatrix::Zero()) {
     finalCov = cov;
   }
 
-  return BoundState{
-      BoundTrackParameters(surface.getSharedPtr(), finalPars, finalCov),
-      Jacobian::Zero(), accumulatedPathLength};
+  return BoundState{BoundTrackParameters(surface.getSharedPtr(), finalPars,
+                                         finalCov, particleHypothesis(state)),
+                    Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <typename E, typename R, typename A>
@@ -76,7 +81,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
   if (numberComponents(state) == 1) {
     return SingleStepper::curvilinearState(state.components.front().state,
                                            transportCov);
-  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
+  } else if (m_finalReductionMethod == MixtureReductionMethod::eMaxWeight) {
     auto cmpIt = std::max_element(
         state.components.begin(), state.components.end(),
         [](const auto& a, const auto& b) { return a.weight < b.weight; });
@@ -86,7 +91,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     Vector4 pos4 = Vector4::Zero();
     Vector3 dir = Vector3::Zero();
     ActsScalar qop = 0.0;
-    BoundSymMatrix cov = BoundSymMatrix::Zero();
+    BoundSquareMatrix cov = BoundSquareMatrix::Zero();
     ActsScalar pathLenth = 0.0;
     ActsScalar sumOfWeights = 0.0;
 
@@ -95,7 +100,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
           state.components[i].state, transportCov);
 
       pos4 += state.components[i].weight * cp.fourPosition(state.geoContext);
-      dir += state.components[i].weight * cp.unitDirection();
+      dir += state.components[i].weight * cp.direction();
       qop += state.components[i].weight * (cp.charge() / cp.absoluteMomentum());
       if (cp.covariance()) {
         cov += state.components[i].weight * *cp.covariance();
@@ -110,14 +115,15 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     pathLenth /= sumOfWeights;
     cov /= sumOfWeights;
 
-    std::optional<BoundSymMatrix> finalCov = std::nullopt;
-    if (cov != BoundSymMatrix::Zero()) {
+    std::optional<BoundSquareMatrix> finalCov = std::nullopt;
+    if (cov != BoundSquareMatrix::Zero()) {
       finalCov = cov;
     }
 
     return CurvilinearState{
-        CurvilinearTrackParameters(pos4, dir, qop, finalCov), Jacobian::Zero(),
-        pathLenth};
+        CurvilinearTrackParameters(pos4, dir, qop, finalCov,
+                                   particleHypothesis(state)),
+        Jacobian::Zero(), pathLenth};
   }
 }
 
@@ -129,9 +135,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   State& stepping = state.stepping;
   auto& components = stepping.components;
-
-  // @TODO: This needs to be a real logger
-  const Logger& logger = getDummyLogger();
+  const Logger& logger = *m_logger;
 
   // Update step count
   stepping.steps++;

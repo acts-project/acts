@@ -11,8 +11,15 @@
 
 #include "Acts/Clusterization/Clusterization.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cstdlib>
+#include <iostream>
+#include <iterator>
+#include <memory>
 #include <random>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include <boost/functional/hash.hpp>
