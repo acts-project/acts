@@ -241,23 +241,20 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
       vtxInfo.impactParams3D.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
+    Acts::Result<double> compatibilityResult(0.);
     if (m_cfg.useTime) {
-      auto compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<4>(
+      compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<4>(
           vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
           vtxInfo.oldPosition);
-      if (!compatibilityResult.ok()) {
-        return compatibilityResult.error();
-      }
-      trkAtVtx.vertexCompatibility = *compatibilityResult;
     } else {
-      auto compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<3>(
+      compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<3>(
           vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
           VectorHelpers::position(vtxInfo.oldPosition));
-      if (!compatibilityResult.ok()) {
-        return compatibilityResult.error();
-      }
-      trkAtVtx.vertexCompatibility = *compatibilityResult;
     }
+    if (!compatibilityResult.ok()) {
+      return compatibilityResult.error();
+    }
+    trkAtVtx.vertexCompatibility = *compatibilityResult;
   }
   return {};
 }
