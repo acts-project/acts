@@ -366,11 +366,7 @@ void Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t,
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
-        // Number of dimensions of the vertex position, i.e., 4 if we include
-        // time information in the vertex fit and 3 otherwise
-        constexpr unsigned int nDimVertex = useTime ? 4 : 3;
-        KalmanVertexTrackUpdater::update<input_track_t, nDimVertex>(trkAtVtx,
-                                                                    *vtx);
+        KalmanVertexTrackUpdater::update<input_track_t>(trkAtVtx, *vtx);
       }
     }
   }
