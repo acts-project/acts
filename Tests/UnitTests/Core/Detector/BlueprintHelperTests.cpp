@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
 }
 
 BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
-  // Detector dimentions
+  // Detector dimensions
   Acts::ActsScalar detectorIr = 0.;
   Acts::ActsScalar detectorOr = 120.;
   Acts::ActsScalar detectorHz = 400.;

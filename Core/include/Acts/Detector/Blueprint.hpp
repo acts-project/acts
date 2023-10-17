@@ -56,7 +56,7 @@ struct Node {
              [this](std::unique_ptr<Node>& c) { c->parent = this; });
   }
 
-  /// Leaf construtor
+  /// Leaf constructor
   ///
   /// @param n name of the node
   /// @param t the transform
@@ -78,7 +78,7 @@ struct Node {
   std::string name = "";
   /// Transform definition of this node
   Transform3 transform = Transform3::Identity();
-  /// Boundary definition of this noe
+  /// Boundary definition of this ndoe
   VolumeBounds::BoundsType boundsType = VolumeBounds::eOther;
   /// The boundary type
   std::vector<ActsScalar> boundaryValues = {};
@@ -88,7 +88,7 @@ struct Node {
   std::vector<std::unique_ptr<Node>> children = {};
   /// Branch definition binning
   std::vector<BinningValue> binning = {};
-  /// Internal structure builder - for leaf notes
+  /// Internal structure builder - for leaf nodes
   std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
 
   /// @brief Check if it is a leaf node
