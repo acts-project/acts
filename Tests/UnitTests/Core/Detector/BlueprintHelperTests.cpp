@@ -16,7 +16,7 @@
 
 namespace Acts {
 namespace Experimental {
-class InternalStructureBuilder {};
+class IInternalStructureBuilder {};
 }  // namespace Experimental
 }  // namespace Acts
 
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   auto layer = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "layer", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       layerBoundaries,
-      std::make_shared<Acts::Experimental::InternalStructureBuilder>());
+      std::make_shared<Acts::Experimental::IInternalStructureBuilder>());
 
   auto gap1 = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "gap1", Acts::Transform3::Identity() * Acts::Translation3(0., 0., 90.),
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   Acts::ActsScalar pixelEcHz = 50;
 
   auto innerBuilder =
-      std::make_shared<Acts::Experimental::InternalStructureBuilder>();
+      std::make_shared<Acts::Experimental::IInternalStructureBuilder>();
 
   // Create  root node
   std::vector<Acts::BinningValue> detectorBinning = {Acts::binR};
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
 
 BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapException) {
   auto innerBuilder =
-      std::make_shared<Acts::Experimental::InternalStructureBuilder>();
+      std::make_shared<Acts::Experimental::IInternalStructureBuilder>();
 
   // The root node - detector
   std::vector<Acts::ActsScalar> detectorBoundaries = {0., 50., 100.};

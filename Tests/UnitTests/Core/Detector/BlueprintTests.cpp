@@ -14,7 +14,7 @@
 
 namespace Acts {
 namespace Experimental {
-class InternalStructureBuilder {};
+class IInternalStructureBuilder {};
 }  // namespace Experimental
 }  // namespace Acts
 
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(BlueprintTest) {
   auto leaf2 = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "volume_2", Acts::Transform3::Identity(), Acts::VolumeBounds::eOther,
       bValues,
-      std::make_shared<Acts::Experimental::InternalStructureBuilder>());
+      std::make_shared<Acts::Experimental::IInternalStructureBuilder>());
 
   branch->add(std::move(leaf1));
   branch->add(std::move(leaf2));
