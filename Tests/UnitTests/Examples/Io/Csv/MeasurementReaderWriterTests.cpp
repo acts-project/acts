@@ -27,7 +27,7 @@
 using namespace ActsExamples;
 using namespace Acts::Test;
 
-BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
+BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
   IndexSourceLinkContainer sourceLinksOriginal;
   MeasurementContainer measOriginal;
   ClusterContainer clusterOriginal;
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
 
     // NOTE this fails:
     // auto m = Acts::makeMeasurement(sl, p, c, eBoundLoc0, eBoundTime)
-    // because we dont support non-consecutive parameters here for now
+    // because we don't support non-consecutive parameters here for now
     auto m = Acts::makeMeasurement(Acts::SourceLink{sl}, p, c, Acts::eBoundLoc0,
                                    Acts::eBoundLoc1);
 

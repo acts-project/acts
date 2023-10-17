@@ -54,7 +54,7 @@ struct ValueHolder {
   // a SEGFAULT in GCC11 (an up?). Re-evaluate down the line
   /* explicit */ ValueHolder(T&& _val) : val{std::move(_val)} {}
 
-  // Does it makes sense to allow copy operations?
+  // Does it make sense to allow copy operations?
 
   const T& operator*() const { return val; }
   T& operator*() { return val; }

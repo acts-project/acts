@@ -30,8 +30,7 @@ namespace Acts {
 /// 2. Create seeds from 3 spacepoints with a small deviation from a straigh
 /// line
 /// 3. Find a point with a minimal distance from either planes
-/// (minimalizeWRT="planes") or rays (minimalizeWRT="rays") defined by the the
-/// seeds
+/// (minimalizeWRT="planes") or rays (minimalizeWRT="rays") defined by the seeds
 /// 4. Returns the point position as the vertex
 template <typename spacepoint_t>
 class SingleSeedVertexFinder {

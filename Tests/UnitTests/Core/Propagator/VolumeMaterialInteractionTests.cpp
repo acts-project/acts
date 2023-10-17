@@ -43,7 +43,7 @@ struct NaivgatorState {
   TrackingVolume* currentVolume = nullptr;
 };
 
-/// @brief Simplified propgator state
+/// @brief Simplified propagator state
 struct State {
   struct {
     Direction direction = Direction::Forward;

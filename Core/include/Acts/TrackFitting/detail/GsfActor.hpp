@@ -101,7 +101,7 @@ struct GsfActor {
     /// Whether to abort immediately when an error occurs
     bool abortOnError = false;
 
-    /// We can stop the propagation if we reach this number of measuerement
+    /// We can stop the propagation if we reach this number of measurement
     /// states
     std::optional<std::size_t> numberMeasurements;
 
@@ -133,7 +133,7 @@ struct GsfActor {
 
   /// @brief GSF actor operation
   ///
-  /// @tparam propagator_state_t is the type of Propagagor state
+  /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
   ///
@@ -307,7 +307,7 @@ struct GsfActor {
       updateStepper(state, stepper, navigator, componentCache);
     }
 
-    // If we only done preUpdate before, now do postUpdate
+    // If we have only done preUpdate before, now do postUpdate
     if (haveMaterial && haveMeasurement) {
       applyMultipleScattering(state, stepper, navigator,
                               MaterialUpdateStage::PostUpdate);
@@ -524,7 +524,7 @@ struct GsfActor {
 
     // Boolean flag, to distinguish measurement and outlier states. This flag
     // is only modified by the valid-measurement-branch, so only if there
-    // isn't any valid measuerement state, the flag stays false and the state
+    // isn't any valid measurement state, the flag stays false and the state
     // is thus counted as an outlier
     bool is_valid_measurement = false;
 
@@ -545,7 +545,7 @@ struct GsfActor {
       const auto& trackStateProxy = *trackStateProxyRes;
 
       // If at least one component is no outlier, we consider the whole thing
-      // as a measuerementState
+      // as a measurementState
       if (trackStateProxy.typeFlags().test(
               Acts::TrackStateFlag::MeasurementFlag)) {
         is_valid_measurement = true;

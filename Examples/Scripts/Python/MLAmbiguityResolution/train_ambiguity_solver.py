@@ -122,7 +122,7 @@ def computeLoss(
 
 
 def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, float]:
-    """Run the MLP on a batch and compute the corresponding efficiency and loss. If an optimiser is specify train the MLP."""
+    """Run the MLP on a batch and compute the corresponding efficiency and loss. If an optimiser is specified train the MLP."""
     """
     @param[in] batch:  list of DataFrame, each element correspond to a batch 
     @param[in] Optimiser: Optimiser for the MLP, if one is specify the network will be train on batch. 

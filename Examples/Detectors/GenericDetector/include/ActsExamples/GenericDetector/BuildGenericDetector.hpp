@@ -815,7 +815,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   //-------------------------------------------------------------------------------------
   // create the tracking geometry
   Acts::TrackingGeometryBuilder::Config tgConfig;
-  // Add the builde call functions
+  // Add the build call functions
   for (auto& vb : volumeBuilders) {
     tgConfig.trackingVolumeBuilders.push_back(
         [=](const auto& context, const auto& inner, const auto&) {
