@@ -266,9 +266,6 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
     useTime>::setWeightsAndUpdate(State& state, const linearizer_t& linearizer,
                                   const VertexingOptions<input_track_t>&
                                       vertexingOptions) const {
-  // Number of dimensions of the vertex position, i.e., 4 if we include
-  // time information in the vertex fit and 3 otherwise
-  constexpr unsigned int nDimVertex = useTime ? 4 : 3;
   for (auto vtx : state.vertexCollection) {
     VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
 
