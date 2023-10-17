@@ -12,7 +12,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
-#include <unordered_map>
+// TODO use unordered map?
+#include <map>
 
 namespace Acts {
 
@@ -48,8 +49,7 @@ struct VertexInfo {
   // Vector of all tracks that are currently assigned to vertex
   std::vector<const input_track_t*> trackLinks;
 
-  std::unordered_map<const input_track_t*, const BoundTrackParameters>
-      impactParams3D;
+  std::map<const input_track_t*, const BoundTrackParameters> impactParams3D;
 };
 
 }  // namespace Acts
