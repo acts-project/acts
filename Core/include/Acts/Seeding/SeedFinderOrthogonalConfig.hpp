@@ -20,10 +20,6 @@ namespace Acts {
 template <typename T>
 class SeedFilter;
 
-inline bool noopExperimentCuts(float /*bottomRadius*/, float /*cotTheta*/) {
-  return true;
-}
-
 template <typename SpacePoint>
 struct SeedFinderOrthogonalConfig {
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
