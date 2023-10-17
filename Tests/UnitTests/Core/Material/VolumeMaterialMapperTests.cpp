@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   po.maxSteps = 1e6;
 
   const auto& result = prop.propagate(sctp, po).value();
-  const MaterialCollector::this_result& stepResult =
+  const MaterialCollector::result_type& stepResult =
       result.get<typename MaterialCollector::result_type>();
 
   // Collect the material as given by the grid and test it

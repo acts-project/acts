@@ -1017,13 +1017,14 @@ class KalmanFitter {
   template <typename parameters_t>
   class Aborter {
    public:
-    /// Broadcast the result_type
+    /// Broadcast the action type
     using action_type = Actor<parameters_t>;
 
     template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t, typename result_t>
+              typename navigator_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const result_t& result,
+                    const navigator_t& /*navigator*/,
+                    const typename action_type::result_type& result,
                     const Logger& /*logger*/) const {
       if (!result.result.ok() or result.finished) {
         return true;

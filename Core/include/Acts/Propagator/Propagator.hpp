@@ -37,8 +37,8 @@ namespace Acts {
 ///                      quantities
 template <typename parameters_t, typename... result_list>
 struct PropagatorResult : private detail::Extendable<result_list...> {
-  /// Accessor to additional propagation quantities
   using detail::Extendable<result_list...>::get;
+  using detail::Extendable<result_list...>::tuple;
 
   /// Final track parameters
   std::optional<parameters_t> endParameters = std::nullopt;
@@ -236,13 +236,14 @@ class Propagator final {
 
   /// @brief private Propagator state for navigation and debugging
   ///
-  /// @tparam parameters_t Type of the track parameters
   /// @tparam propagator_options_t Type of the Objections object
   ///
   /// This struct holds the common state information for propagating
   /// which is independent of the actual stepper implementation.
-  template <typename propagator_options_t>
-  struct State {
+  template <typename propagator_options_t, typename... extension_state_t>
+  struct State : private detail::Extendable<extension_state_t...> {
+    using options_type = propagator_options_t;
+
     /// Create the propagator state from the options
     ///
     /// @tparam propagator_options_t the type of the propagator options
@@ -257,6 +258,9 @@ class Propagator final {
           navigation{std::move(navigationIn)},
           geoContext(topts.geoContext) {}
 
+    using detail::Extendable<extension_state_t...>::get;
+    using detail::Extendable<extension_state_t...>::tuple;
+
     /// These are the options - provided for each propagation step
     propagator_options_t options;
 
@@ -268,13 +272,42 @@ class Propagator final {
 
     /// Context object for the geometry
     std::reference_wrapper<const GeometryContext> geoContext;
+
+    /// Number of propagation steps that were carried out
+    unsigned int steps = 0;
+
+    /// Signed distance over which the parameters were propagated
+    double pathLength = 0.;
   };
 
  private:
+  /// @brief Helper struct determining the state's type
+  ///
+  /// @tparam propagator_options_t Propagator options type
+  /// @tparam action_list_t List of propagation action types
+  ///
+  /// This helper struct provides type definitions to extract the correct
+  /// propagation state type from a given TrackParameter type and an
+  /// ActionList.
+  ///
+  template <typename propagator_options_t, typename action_list_t>
+  struct state_type_helper {
+    /// @brief Propagation state type for an arbitrary list of additional
+    ///        propagation states
+    ///
+    /// @tparam args Parameter pack specifying additional propagation states
+    ///
+    template <typename... args>
+    using this_state_type = State<propagator_options_t, args...>;
+
+    /// @brief Propagation result type derived from a given action list
+    using type = typename action_list_t::template result_type<this_state_type>;
+  };
+
   /// @brief Helper struct determining the result's type
   ///
   /// @tparam parameters_t Type of final track parameters
-  /// @tparam action_list_t    List of propagation action types
+  /// @tparam action_list_t List of propagation action types
   ///
   /// This helper struct provides type definitions to extract the correct
   /// propagation result type from a given TrackParameter type and an
@@ -295,6 +328,15 @@ class Propagator final {
   };
 
  public:
+  /// @brief Short-hand type definition for propagation state derived from
+  ///        an action list
+  ///
+  /// @tparam action_list_t List of propagation action types
+  ///
+  template <typename propagator_options_t, typename action_list_t>
+  using action_list_t_state_t =
+      typename state_type_helper<propagator_options_t, action_list_t>::type;
+
   /// @brief Short-hand type definition for propagation result derived from
   ///        an action list
   ///
@@ -304,28 +346,6 @@ class Propagator final {
   template <typename parameters_t, typename action_list_t>
   using action_list_t_result_t =
       typename result_type_helper<parameters_t, action_list_t>::type;
-
- private:
-  /// @brief Propagate track parameters
-  /// Private method with propagator and stepper state
-  ///
-  /// This function performs the propagation of the track parameters according
-  /// to the internal implementation object until at least one abort condition
-  /// is fulfilled, the destination surface is hit or the maximum number of
-  /// steps/path length as given in the propagation options is reached.
-  ///
-  /// @note Does not (yet) convert into  the return_type of the propagation
-  ///
-  /// @tparam result_t Type of the result object for this propagation
-  /// @tparam propagator_state_t Type of the propagator state with options
-  ///
-  /// @param [in,out] state the propagator state object
-  /// @param [in,out] result an existing result object to start from
-  ///
-  /// @return Propagation result
-  template <typename result_t, typename propagator_state_t>
-  Result<void> propagate_impl(propagator_state_t& state,
-                              result_t& result) const;
 
  public:
   /// @brief Propagate track parameters
@@ -441,6 +461,26 @@ class Propagator final {
       action_list_t_result_t<BoundTrackParameters,
                              typename propagator_options_t::action_list_type>
           inputResult) const;
+
+  /// @brief Propagate track parameters
+  ///
+  /// This function performs the propagation of the track parameters according
+  /// to the internal implementation object until at least one abort condition
+  /// is fulfilled, the destination surface is hit or the maximum number of
+  /// steps/path length as given in the propagation options is reached.
+  ///
+  /// @note Does not (yet) convert into the return_type of the propagation
+  ///
+  /// @tparam propagator_state_t Type of the propagator state with options
+  ///
+  /// @param [in,out] state the propagator state object
+  ///
+  /// @return Propagation result
+  template <typename propagator_state_t>
+  Result<void> propagate(propagator_state_t& state) const;
+
+  template <typename propagator_state_t, typename result_t>
+  void moveStateToResult(propagator_state_t& state, result_t& result) const;
 
  private:
   const Logger& logger() const { return *m_logger; }

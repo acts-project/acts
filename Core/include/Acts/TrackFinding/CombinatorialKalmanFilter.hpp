@@ -323,7 +323,6 @@ class CombinatorialKalmanFilter {
     using BoundState = std::tuple<parameters_t, BoundMatrix, double>;
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
-    // The source link container type
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<traj_t>;
 
@@ -353,7 +352,7 @@ class CombinatorialKalmanFilter {
     /// @param state is the mutable propagator state object
     /// @param stepper is the stepper in use
     /// @param navigator is the navigator in use
-    /// @param result is the mutable result state object
+    /// @param result is the mutable action state object
     /// @param _logger the logger object associated to the @c Propagator. CKF uses its own logger instance.
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
@@ -465,7 +464,7 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      if (result.abortList(state, stepper, navigator, result, logger())) {
+      if (result.abortList(state, stepper, navigator, logger())) {
         navigator.targetReached(state.navigation, false);
         if (result.activeTips.empty()) {
           // we are already done
@@ -828,7 +827,7 @@ class CombinatorialKalmanFilter {
 
     /// Create and fill track states for all source links
     /// @param gctx The current geometry context
-    /// @param result Reference to the result struct of the actor
+    /// @param state Reference to the state struct of the actor
     /// @param boundState Bound state from the propagation on this surface
     /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
     /// @param slBegin Begin iterator for sourcelinks
@@ -907,7 +906,7 @@ class CombinatorialKalmanFilter {
     /// @param gctx The current geometry context
     /// @param begin The start iterator for selected track states
     /// @param end The end iterator for selected track states
-    /// @param result Reference to the actor result struct
+    /// @param result Reference to the actor state struct
     /// @param isOutlier If this track state is a single outlier one
     /// @param prevTipState Tip state prior to this surface
     /// @param [in,out] nBranchesOnSurface Number of branches on surface, will be updated
@@ -1021,8 +1020,7 @@ class CombinatorialKalmanFilter {
     ///
     /// @param stateMask The bitmask that instructs which components to allocate
     /// @param boundState The bound state on current surface
-    /// @param result is the mutable result state object
-    /// and which to leave invalid
+    /// @param result is the mutable state state object and which to leave invalid
     /// @param isSensitive The surface is sensitive or passive
     /// @param prevTip The index of the previous state
     ///
@@ -1145,7 +1143,7 @@ class CombinatorialKalmanFilter {
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
     /// @param navigator The navigator in use
-    /// @param result is the mutable result state object
+    /// @param result is the mutable actor state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
@@ -1164,9 +1162,9 @@ class CombinatorialKalmanFilter {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);
         bool isOutlier = st.typeFlags().test(TrackStateFlag::OutlierFlag);
-        // We are excluding non measurement states and outlier here. Those can
-        // decrease resolution because only the smoothing corrected the very
-        // first prediction as filtering is not possible.
+        // We are excluding non measurement states and outlier here. Those
+        // can decrease resolution because only the smoothing corrected the
+        // very first prediction as filtering is not possible.
         if (isMeasurement && !isOutlier) {
           firstStateIndex = st.index();
         }
@@ -1294,13 +1292,14 @@ class CombinatorialKalmanFilter {
   template <typename source_link_accessor_t, typename parameters_t>
   class Aborter {
    public:
-    /// Broadcast the result_type
+    /// Broadcast the action type
     using action_type = Actor<source_link_accessor_t, parameters_t>;
 
     template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t, typename result_t>
+              typename navigator_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const result_t& result,
+                    const navigator_t& /*navigator*/,
+                    const typename action_type::result_type& result,
                     const Logger& /*logger*/) const {
       if (!result.result.ok() or result.finished) {
         return true;

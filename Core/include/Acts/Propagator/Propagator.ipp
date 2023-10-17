@@ -13,9 +13,8 @@
 #include <type_traits>
 
 template <typename S, typename N>
-template <typename result_t, typename propagator_state_t>
-auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
-                                            result_t& result) const
+template <typename propagator_state_t>
+auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     -> Result<void> {
   // Pre-stepping call to the navigator and action list
   ACTS_VERBOSE("Entering propagation.");
@@ -23,7 +22,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   // Navigator initialize state call
   m_navigator.initialize(state, m_stepper);
   // Pre-Stepping call to the action list
-  state.options.actionList(state, m_stepper, m_navigator, result, logger());
+  state.options.actionList(state, m_stepper, m_navigator, logger());
   // assume negative outcome, only set to true later if we actually have
   // a positive outcome.
 
@@ -31,15 +30,14 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   bool terminatedNormally = true;
 
   // Pre-Stepping: abort condition check
-  if (!state.options.abortList(state, m_stepper, m_navigator, result,
-                               logger())) {
+  if (!state.options.abortList(state, m_stepper, m_navigator, logger())) {
     // Stepping loop
     ACTS_VERBOSE("Starting stepping loop.");
 
     terminatedNormally = false;  // priming error condition
 
     // Propagation loop : stepping
-    for (; result.steps < state.options.maxSteps; ++result.steps) {
+    for (; state.steps < state.options.maxSteps; ++state.steps) {
       // Pre-Stepping: target setting
       m_navigator.preStep(state, m_stepper);
       // Perform a propagation step - it takes the propagation state
@@ -47,7 +45,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
       if (res.ok()) {
         // Accumulate the path length
         double s = *res;
-        result.pathLength += s;
+        state.pathLength += s;
         ACTS_VERBOSE("Step with size = " << s << " performed");
       } else {
         ACTS_ERROR("Step failed with " << res.error() << ": "
@@ -58,9 +56,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
       // Post-stepping:
       // navigator post step call - action list - aborter list
       m_navigator.postStep(state, m_stepper);
-      state.options.actionList(state, m_stepper, m_navigator, result, logger());
-      if (state.options.abortList(state, m_stepper, m_navigator, result,
-                                  logger())) {
+      state.options.actionList(state, m_stepper, m_navigator, logger());
+      if (state.options.abortList(state, m_stepper, m_navigator, logger())) {
         terminatedNormally = true;
         break;
       }
@@ -74,14 +71,14 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   if (!terminatedNormally) {
     m_navigator.navigationBreak(state.navigation, true);
     ACTS_ERROR("Propagation reached the step count limit of "
-               << state.options.maxSteps << " (did " << result.steps
+               << state.options.maxSteps << " (did " << state.steps
                << " steps)");
     return PropagatorError::StepCountLimitReached;
   }
 
   // Post-stepping call to the action list
   ACTS_VERBOSE("Stepping loop done.");
-  state.options.actionList(state, m_stepper, m_navigator, result, logger());
+  state.options.actionList(state, m_stepper, m_navigator, logger());
 
   // return progress flag here, decide on SUCCESS later
   return Result<void>::success();
@@ -144,7 +141,9 @@ auto Acts::Propagator<S, N>::propagate(
   auto eOptions = options.extend(abortList);
   using OptionsType = decltype(eOptions);
   // Initialize the internal propagator state
-  using StateType = State<OptionsType>;
+  using StateType =
+      action_list_t_state_t<OptionsType,
+                            typename propagator_options_t::action_list_type>;
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
@@ -162,8 +161,9 @@ auto Acts::Propagator<S, N>::propagate(
       state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
       false, logger());
   // Perform the actual propagation & check its outcome
-  auto result = propagate_impl<ResultType>(state, inputResult);
+  auto result = propagate<StateType>(state);
   if (result.ok()) {
+    moveStateToResult(state, inputResult);
     if (makeCurvilinear) {
       /// Convert into return type and fill the result object
       auto curvState = m_stepper.curvilinearState(state.stepping);
@@ -233,7 +233,9 @@ auto Acts::Propagator<S, N>::propagate(
   using OptionsType = decltype(eOptions);
 
   // Initialize the internal propagator state
-  using StateType = State<OptionsType>;
+  using StateType =
+      action_list_t_state_t<OptionsType,
+                            typename propagator_options_t::action_list_type>;
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
@@ -252,9 +254,11 @@ auto Acts::Propagator<S, N>::propagate(
       false, logger());
 
   // Perform the actual propagation
-  auto result = propagate_impl<ResultType>(state, inputResult);
+  auto result = propagate<StateType>(state);
 
   if (result.ok()) {
+    moveStateToResult(state, inputResult);
+
     // Compute the final results and mark the propagation as successful
     auto bsRes = m_stepper.boundState(state.stepping, target);
     if (!bsRes.ok()) {
@@ -273,4 +277,14 @@ auto Acts::Propagator<S, N>::propagate(
   } else {
     return result.error();
   }
+}
+
+template <typename S, typename N>
+template <typename propagator_state_t, typename result_t>
+void Acts::Propagator<S, N>::moveStateToResult(propagator_state_t& state,
+                                               result_t& result) const {
+  result.tuple() = std::move(state.tuple());
+
+  result.steps = state.steps;
+  result.pathLength = state.pathLength;
 }

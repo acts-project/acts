@@ -47,10 +47,11 @@ class DirectNavigator {
     /// The Surface sequence
     SurfaceSequence navSurfaces = {};
 
-    /// Actor result / state
+    /// Actor state
     struct this_result {
       bool initialized = false;
     };
+
     using result_type = this_result;
 
     /// Defaulting the constructor
@@ -66,14 +67,14 @@ class DirectNavigator {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, result_type& r,
+                    const navigator_t& /*navigator*/, result_type& result,
                     const Logger& /*logger*/) const {
       // Only act once
-      if (not r.initialized) {
+      if (not result.initialized) {
         // Initialize the surface sequence
         state.navigation.navSurfaces = navSurfaces;
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
-        r.initialized = true;
+        result.initialized = true;
       }
     }
   };

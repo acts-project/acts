@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
-  const StepCollector::this_result& stepResult =
+  const StepCollector::result_type& stepResult =
       result.get<typename StepCollector::result_type>();
 
   // Check that the propagation happened without interactions
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Launch and collect results
   const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
-  const StepCollector::this_result& stepResultDef =
+  const StepCollector::result_type& stepResultDef =
       resultDef.get<typename StepCollector::result_type>();
 
   // Check that the right extension was chosen
@@ -718,7 +718,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
-  const StepCollector::this_result& stepResult =
+  const StepCollector::result_type& stepResult =
       result.get<typename StepCollector::result_type>();
 
   // Check that there occurred interaction
@@ -759,7 +759,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Launch and collect results
   const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
-  const StepCollector::this_result& stepResultDense =
+  const StepCollector::result_type& stepResultDense =
       resultDense.get<typename StepCollector::result_type>();
 
   // Check that the right extension was chosen
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       propB(esB, naviMat);
 
   const auto& resultB = propB.propagate(sbtp, propOptsDense).value();
-  const StepCollector::this_result& stepResultB =
+  const StepCollector::result_type& stepResultB =
       resultB.get<typename StepCollector::result_type>();
 
   // Check that there occurred interaction
@@ -879,7 +879,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
-  const StepCollector::this_result& stepResult =
+  const StepCollector::result_type& stepResult =
       result.get<typename StepCollector::result_type>();
 
   // Manually set the extensions for each step and propagate through each
@@ -930,7 +930,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Launch and collect results
   const auto& resultDef =
       propDef.propagate(sbtp, *(surs[0]), propOptsDef).value();
-  const StepCollector::this_result& stepResultDef =
+  const StepCollector::result_type& stepResultDef =
       resultDef.get<typename StepCollector::result_type>();
 
   // Check the exit situation of the first volume
@@ -985,7 +985,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Launch and collect results
   const auto& resultDense =
       propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense).value();
-  const StepCollector::this_result& stepResultDense =
+  const StepCollector::result_type& stepResultDense =
       resultDense.get<typename StepCollector::result_type>();
 
   // Check the exit situation of the second volume
@@ -1118,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
-  const StepCollector::this_result& stepResult =
+  const StepCollector::result_type& stepResult =
       result.get<typename StepCollector::result_type>();
 
   // Test that momentum changes only occurred at the right detector parts

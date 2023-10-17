@@ -776,9 +776,12 @@ struct GsfActor {
 struct FinalStateCollector {
   using MultiPars = Acts::GsfConstants::FinalMultiComponentState;
 
-  struct result_type {
+  struct this_result {
     MultiPars pars;
   };
+
+  /// Broadcast the result_type
+  using result_type = this_result;
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
