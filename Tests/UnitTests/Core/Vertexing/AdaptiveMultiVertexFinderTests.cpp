@@ -72,7 +72,7 @@ const std::string toolString = "AMVF";
 /// @brief AMVF test with Gaussian seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // Set debug mode
-  bool debugMode = false;
+  bool debugMode = true;
   // Set up constant B-Field
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
 
