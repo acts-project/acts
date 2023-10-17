@@ -193,8 +193,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
 
   // Loop over all tracks at current vertex
   for (const auto& trk : currentVtxInfo.trackLinks) {
-    // Boolean indicating whether the impact parameters were already calculated
-    bool hasIP = currentVtxInfo.impactParams3D.count(trk) == 1;
     // Track parameters
     auto trkParams = m_extractParameters(*trk);
     // Origin of the track reference surface
@@ -203,7 +201,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
                                 .translation();
     // Skip the impact point estimation if the impact parameters of trk wrt the
     // vertex position were already calculated
-    if (hasIP and surfaceOrigin == vtxPosition) {
+    if (surfaceOrigin == vtxPosition) {
       continue;
     }
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
