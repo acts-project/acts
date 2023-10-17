@@ -20,7 +20,7 @@
 namespace Acts {
 namespace Experimental {
 
-class InternalStructureBuilder;
+class IInternalStructureBuilder;
 
 /// A Blueprint is an instruction tree that allows you to defina a tree sequence
 /// of volume building using the provided tools.
@@ -43,6 +43,7 @@ struct Node {
   /// @param bt the boundary type
   /// @param bv the boundary values
   /// @param bss the binning values
+  /// @param cs the children of the node
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
        const std::vector<ActsScalar>& bv, const std::vector<BinningValue>& bss,
        std::vector<std::unique_ptr<Node>> cs = {})
@@ -65,12 +66,12 @@ struct Node {
   /// @param isb the internal structure builder (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
        const std::vector<ActsScalar>& bv,
-       std::shared_ptr<const InternalStructureBuilder> ib = nullptr)
+       std::shared_ptr<const IInternalStructureBuilder> isb = nullptr)
       : name(n),
         transform(t),
         boundsType(bt),
         boundaryValues(bv),
-        internalsBuilder(ib) {}
+        internalsBuilder(isb) {}
 
   virtual ~Node() = default;
 
@@ -89,7 +90,7 @@ struct Node {
   /// Branch definition binning
   std::vector<BinningValue> binning = {};
   /// Internal structure builder - for leaf notes
-  std::shared_ptr<const InternalStructureBuilder> internalsBuilder = nullptr;
+  std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
 
   /// @brief Check if it is a leaf node
   bool isLeaf() const { return children.empty(); }
