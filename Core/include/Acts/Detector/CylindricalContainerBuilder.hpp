@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -93,6 +94,16 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   ///
   /// @return an outgoing detector component
   DetectorComponent construct(const GeometryContext& gctx) const final;
+
+  /// Create a new builder instance from a blueprint
+  ///
+  /// @param bpNode is the entry blue print node
+  /// @param logLevel is the logging output level for the builder tools
+  ///
+  /// @note no checking is being done on consistency of the blue print
+  static std::shared_ptr<const IDetectorComponentBuilder> create(
+      const Acts::Experimental::Blueprint::Node& bpNode,
+      Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
  private:
   /// configuration object

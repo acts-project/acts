@@ -232,3 +232,48 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   return Acts::Experimental::DetectorComponent{
       {}, rContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
 }
+
+std::shared_ptr<const Acts::Experimental::IDetectorComponentBuilder>
+Acts::Experimental::CylindricalContainerBuilder::create(
+    const Acts::Experimental::Blueprint::Node& bpNode,
+    Acts::Logging::Level logLevel) {
+  if (bpNode.boundsType != VolumeBounds::BoundsType::eCylinder) {
+    throw std::invalid_argument(
+        "CylindricalContainerBuilder: boundary type must be cylinder - for "
+        "building from a blueprint node.");
+  }
+
+  std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders;
+  for (const auto& child : bpNode.children) {
+    if (child->isLeaf()) {
+      // Volume structure
+      VolumeStructureBuilder::Config vsCfg;
+      vsCfg.transform = child->transform;
+      vsCfg.boundsType = child->boundsType;
+      vsCfg.boundValues = child->boundaryValues;
+      vsCfg.auxiliary = "*** acts auto-generated shape builder ***";
+      auto vsBuilder = std::make_shared<VolumeStructureBuilder>(
+          vsCfg, getDefaultLogger(child->name + "_shape", logLevel));
+      // Detector volume builder
+      DetectorVolumeBuilder::Config dvCfg;
+      dvCfg.externalsBuilder = vsBuilder;
+      dvCfg.internalsBuilder = child->internalsBuilder;
+      dvCfg.auxiliary = "*** acts auto-generated volume builder ***";
+      // Add the builder
+      builders.push_back(std::make_shared<DetectorVolumeBuilder>(
+          dvCfg, getDefaultLogger(child->name, logLevel)));
+    } else {
+      // This evokes the recursive stepping down the tree
+      builders.push_back(create(*child, logLevel));
+    }
+  }
+
+  // Create the contif and finally the container builder
+  Config cfg;
+  cfg.binning = bpNode.binning;
+  cfg.builders = builders;
+  cfg.auxiliary = "*** acts auto-generated from proxy ***";
+
+  return std::make_shared<CylindricalContainerBuilder>(
+      cfg, getDefaultLogger(bpNode.name, logLevel));
+}
