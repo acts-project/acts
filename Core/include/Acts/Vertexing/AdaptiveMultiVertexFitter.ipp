@@ -303,8 +303,9 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
           trkAtVtx.linearizedState = *result;
           trkAtVtx.isLinearized = true;
         }
-        KalmanVertexUpdater::updateVertexWithTrack<input_track_t, nDimVertex>(
-            *vtx, trkAtVtx);
+        // Update the vertex with the new track
+        KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(*vtx,
+                                                                  trkAtVtx);
       } else {
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }
