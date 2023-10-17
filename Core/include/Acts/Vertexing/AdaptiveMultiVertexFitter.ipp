@@ -10,9 +10,9 @@
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
+template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::fit(
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
     State& state, const std::vector<Vertex<input_track_t>*>& verticesToFit,
     const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
@@ -29,9 +29,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::fit(
   return {};
 }
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
+template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::fitImpl(
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     State& state, const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Reset annealing tool
@@ -87,7 +87,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::fitImpl(
       } else if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
         return VertexingError::NoCovariance;
       }
-      // TODO understand why we calculate a weight for the vertex
       double weight = m_cfg.annealingTool.getWeight(state.annealingState, 1.);
       vtx->setFullCovariance(vtx->fullCovariance() / weight);
 
@@ -118,12 +117,12 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::fitImpl(
   return {};
 }
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
+template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::
-    addVtxToFit(State& state, Vertex<input_track_t>& newVertex,
-                const linearizer_t& linearizer,
-                const VertexingOptions<input_track_t>& vertexingOptions) const {
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
+    State& state, Vertex<input_track_t>& newVertex,
+    const linearizer_t& linearizer,
+    const VertexingOptions<input_track_t>& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
     return VertexingError::EmptyInput;
   }
@@ -187,19 +186,18 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::
   return {};
 }
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
-bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::
+template <typename input_track_t, typename linearizer_t>
+bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     isAlreadyInList(Vertex<input_track_t>* vtx,
                     const std::vector<Vertex<input_track_t>*>& vertices) const {
   return std::find(vertices.begin(), vertices.end(), vtx) != vertices.end();
 }
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
-Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
-    input_track_t, linearizer_t,
-    useTime>::prepareVertexForFit(State& state, Vertex<input_track_t>* vtx,
-                                  const VertexingOptions<input_track_t>&
-                                      vertexingOptions) const {
+template <typename input_track_t, typename linearizer_t>
+Acts::Result<void> Acts::
+    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
+        State& state, Vertex<input_track_t>* vtx,
+        const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
   // Vertex position
@@ -219,17 +217,13 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
   return {};
 }
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
+template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
-
-  // Number of dimensions of the vertex position, i.e., 4 if we include
-  // time information in the vertex fit and 3 otherwise
-  constexpr unsigned int nDimVertex = useTime ? 4 : 3;
 
   // Loop over all tracks that are associated with vtx and estimate their
   // compatibility
@@ -249,23 +243,32 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::
       vtxInfo.impactParams3D.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
-    auto compRes = m_cfg.ipEst.template getVertexCompatibility<nDimVertex>(
-        vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
-        VectorHelpers::position(vtxInfo.oldPosition));
-    if (!compRes.ok()) {
-      return compRes.error();
+    if (m_cfg.useTime) {
+      auto compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<4>(
+          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
+          vtxInfo.oldPosition);
+      if (!compatibilityResult.ok()) {
+        return compatibilityResult.error();
+      }
+      trkAtVtx.vertexCompatibility = *compatibilityResult;
+    } else {
+      auto compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<3>(
+          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
+          VectorHelpers::position(vtxInfo.oldPosition));
+      if (!compatibilityResult.ok()) {
+        return compatibilityResult.error();
+      }
+      trkAtVtx.vertexCompatibility = *compatibilityResult;
     }
-    trkAtVtx.vertexCompatibility = *compRes;
   }
   return {};
 }
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
-Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
-    input_track_t, linearizer_t,
-    useTime>::setWeightsAndUpdate(State& state, const linearizer_t& linearizer,
-                                  const VertexingOptions<input_track_t>&
-                                      vertexingOptions) const {
+template <typename input_track_t, typename linearizer_t>
+Acts::Result<void> Acts::
+    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::setWeightsAndUpdate(
+        State& state, const linearizer_t& linearizer,
+        const VertexingOptions<input_track_t>& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
     VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
 
@@ -313,9 +316,9 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
   return {};
 }
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
+template <typename input_track_t, typename linearizer_t>
 std::vector<double>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     collectTrackToVertexCompatibilities(State& state,
                                         const input_track_t* trk) const {
   // Compatibilities of trk wrt all of its associated vertices
@@ -341,9 +344,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t, useTime>::
   return trkToVtxCompatibilities;
 }
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
+template <typename input_track_t, typename linearizer_t>
 bool Acts::AdaptiveMultiVertexFitter<
-    input_track_t, linearizer_t, useTime>::checkSmallShift(State& state) const {
+    input_track_t, linearizer_t>::checkSmallShift(State& state) const {
   for (auto vtx : state.vertexCollection) {
     Vector3 diff =
         state.vtxInfoMap[vtx].oldPosition.template head<3>() - vtx->position();
@@ -356,10 +359,9 @@ bool Acts::AdaptiveMultiVertexFitter<
   return true;
 }
 
-template <typename input_track_t, typename linearizer_t, bool useTime>
-void Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t,
-                                     useTime>::doVertexSmoothing(State& state)
-    const {
+template <typename input_track_t, typename linearizer_t>
+void Acts::AdaptiveMultiVertexFitter<
+    input_track_t, linearizer_t>::doVertexSmoothing(State& state) const {
   for (const auto vtx : state.vertexCollection) {
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));

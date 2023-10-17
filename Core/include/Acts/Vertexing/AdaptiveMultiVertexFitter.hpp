@@ -35,7 +35,7 @@ namespace Acts {
 ///
 /// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
-template <typename input_track_t, typename linearizer_t, bool useTime = false>
+template <typename input_track_t, typename linearizer_t>
 class AdaptiveMultiVertexFitter {
   static_assert(LinearizerConcept<linearizer_t>,
                 "Linearizer does not fulfill linearizer concept.");
@@ -135,6 +135,9 @@ class AdaptiveMultiVertexFitter {
 
     // Do smoothing after multivertex fit
     bool doSmoothing{false};
+
+    // Use time information when calculating the vertex compatibility
+    bool useTime{false};
   };
 
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
