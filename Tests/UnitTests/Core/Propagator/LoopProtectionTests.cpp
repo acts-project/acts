@@ -149,7 +149,7 @@ BOOST_DATA_TEST_CASE(
   auto initialLimit = pathLimit.internalLimit;
 
   detail::setupLoopProtection(
-      pState, pStepper, pathLimit,
+      pState, pStepper, pathLimit, false,
       *Acts::getDefaultLogger("LoopProt", Logging::INFO));
 
   auto updatedLimit =
