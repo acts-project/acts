@@ -92,6 +92,13 @@ struct SimulationActor {
       return;
     }
 
+    // check if we are still on the start surface and skip if so
+    if ((navigator.startSurface(state.navigation) != nullptr) &&
+        (navigator.startSurface(state.navigation) ==
+         navigator.currentSurface(state.navigation))) {
+      return;
+    }
+
     // update the particle state first. this also computes the proper time which
     // needs the particle state from the previous step for reference. that means
     // this must happen for every step (not just on surface) and before
