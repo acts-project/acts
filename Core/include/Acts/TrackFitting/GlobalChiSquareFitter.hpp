@@ -618,7 +618,10 @@ class Gx2Fitter {
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
 
-    GX2FResult gx2fResult;
+    // Create a index of the 'tip' of the track stored in multitrajectory. It is
+    // needed outside the update loop. It will be updated with each iteration
+    // and used for the final track
+    size_t tipIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
     ACTS_VERBOSE("params:\n" << params);
 
@@ -661,7 +664,7 @@ class Gx2Fitter {
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
       auto& propRes = *result;
-      gx2fResult = std::move(propRes.template get<GX2FResult>());
+      GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
       ACTS_VERBOSE("gx2fResult.collectorResiduals.size() = "
                    << gx2fResult.collectorResiduals.size());
@@ -708,6 +711,8 @@ class Gx2Fitter {
       ACTS_VERBOSE("bVector:\n" << bVector);
       ACTS_VERBOSE("deltaParams:\n" << deltaParams);
 
+      tipIndex = gx2fResult.lastMeasurementIndex;
+
       // TODO check delta params and abort
       // similar to:
       // if (sum(delta_params) < 1e-3) {
@@ -733,7 +738,7 @@ class Gx2Fitter {
 
     // Prepare track for return
     auto track = trackContainer.getTrack(trackContainer.addTrack());
-    track.tipIndex() = gx2fResult.lastMeasurementIndex;
+    track.tipIndex() = tipIndex;
     track.parameters() = params.parameters();
     track.covariance() = fullCovariancePredicted;
     track.setReferenceSurface(params.referenceSurface().getSharedPtr());
