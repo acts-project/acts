@@ -91,15 +91,15 @@ struct SingleParticleSimulation {
     actor.selectHitSurface = selectHitSurface;
     actor.initialParticle = particle;
 
-    // if (particle.hasReferenceSurface()) {
-    //   auto result = propagator.propagate(
-    //       particle.boundParameters(geoCtx).value(), options);
-    //   if (not result.ok()) {
-    //     return result.error();
-    //   }
-    //   auto &value = result.value().template get<Result>();
-    //   return std::move(value);
-    // }
+    if (particle.hasReferenceSurface()) {
+      auto result = propagator.propagate(
+          particle.boundParameters(geoCtx).value(), options);
+      if (not result.ok()) {
+        return result.error();
+      }
+      auto &value = result.value().template get<Result>();
+      return std::move(value);
+    }
 
     auto result =
         propagator.propagate(particle.curvilinearParameters(), options);
