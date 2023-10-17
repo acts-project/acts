@@ -43,6 +43,7 @@ struct Node {
   /// @param bt the boundary type
   /// @param bv the boundary values
   /// @param bss the binning values
+  /// @param cs the children of the node
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
        const std::vector<ActsScalar>& bv, const std::vector<BinningValue>& bss,
        std::vector<std::unique_ptr<Node>> cs = {})
@@ -65,12 +66,12 @@ struct Node {
   /// @param isb the internal structure builder (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
        const std::vector<ActsScalar>& bv,
-       std::shared_ptr<const IInternalStructureBuilder> ib = nullptr)
+       std::shared_ptr<const IInternalStructureBuilder> isb = nullptr)
       : name(n),
         transform(t),
         boundsType(bt),
         boundaryValues(bv),
-        internalsBuilder(ib) {}
+        internalsBuilder(isb) {}
 
   virtual ~Node() = default;
 
