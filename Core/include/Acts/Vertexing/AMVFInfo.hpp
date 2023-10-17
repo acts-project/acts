@@ -31,7 +31,7 @@ struct VertexInfo {
   // Vertex constraint
   Acts::Vertex<input_track_t> constraint;
 
-  // Point where all associated tracks are linearized (?)
+  // Point where all associated tracks are linearized
   Acts::Vector4 linPoint{Acts::Vector4::Zero()};
 
   // Vertex position from the last iteration of the fit
@@ -41,8 +41,8 @@ struct VertexInfo {
   // obtained by the vertex seed finder)
   Acts::Vector4 seedPosition{Acts::Vector4::Zero()};
 
-  // If set to true, the associated tracks need to be relinearized at a
-  // different point in space
+  // If set to true, the associated tracks need to be relinearized at a more
+  // recent vertex position
   bool relinearize = true;
 
   // Vector of all tracks that are currently assigned to vertex

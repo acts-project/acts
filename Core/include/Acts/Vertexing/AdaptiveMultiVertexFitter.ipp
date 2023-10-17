@@ -49,7 +49,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
 
   // Start iterating
   while (nIter < m_cfg.maxIterations and
-         (!state.annealingState.equilibriumReached or !isSmallShift)) {
+         (not state.annealingState.equilibriumReached or not isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
     for (auto vtx : state.vertexCollection) {
       VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
@@ -75,8 +75,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       }
 
       // Check if we use the constraint during the vertex fit
-      // TODO seems strange to set the vtx position to the constraint position
-      // at each iteration
       if (state.vtxInfoMap[vtx].constraint.fullCovariance() !=
           SquareMatrix4::Zero()) {
         Acts::Vertex<input_track_t> constraint =
