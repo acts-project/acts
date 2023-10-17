@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // TODO: test without using beam spot constraint
   Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
   // Set time covariance
-  SquareMatrix4 fullCovariance;
+  SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
   fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
   fullCovariance(3, 3) = 100_ns;
   bsConstr.setFullCovariance(fullCovariance);
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   bsConstr.setPosition(std::get<BeamSpotData>(csvData).position());
   bsConstr.setCovariance(std::get<BeamSpotData>(csvData).covariance());
   // Set time covariance
-  SquareMatrix4 fullCovariance;
+  SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
   fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
   fullCovariance(3, 3) = 100_ns;
   bsConstr.setFullCovariance(fullCovariance);
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   // TODO: test using beam spot constraint
   Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
   // Set time covariance
-  SquareMatrix4 fullCovariance;
+  SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
   fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
   fullCovariance(3, 3) = 100_ns;
   bsConstr.setFullCovariance(fullCovariance);
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(
 
   Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
   // Set time covariance
-  SquareMatrix4 fullCovariance;
+  SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
   fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
   fullCovariance(3, 3) = 100_ns;
   bsConstr.setFullCovariance(fullCovariance);
