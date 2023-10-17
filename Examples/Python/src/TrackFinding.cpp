@@ -271,7 +271,7 @@ void addTrackFinding(Context& ctx) {
 
     auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TrackFindingAlgorithm")
-                   .def(py::init<const Config& , Acts::Logging::Level>(),
+                   .def(py::init<const Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Alg::config)
                    .def_static("makeTrackFinderFunction",
@@ -343,4 +343,4 @@ void addTrackFinding(Context& ctx) {
                                 outputProtoTracks);
 }
 
-} // namespace Acts::Python
+}  // namespace Acts::Python
