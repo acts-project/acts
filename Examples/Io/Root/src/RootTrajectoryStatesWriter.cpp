@@ -314,7 +314,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     // The trajectory entry indices
     const auto& trackTips = traj.tips();
 
-    // Dont write empty MultiTrajectory
+    // Don't write empty MultiTrajectory
     if (trackTips.empty()) {
       continue;
     }
@@ -374,7 +374,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =
             averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
-        // momemtum averaging makes even less sense than averaging position and
+        // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         float truthQOP = 0.0f;
         if (not indices.empty()) {
@@ -492,7 +492,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
               auto H = state.effectiveProjector();
               auto V = state.effectiveCalibratedCovariance();
               auto resCov = V + H * covariance * H.transpose();
-              auto res = state.effectiveCalibrated() - H * parameters;
+              Acts::ActsDynamicVector res(state.calibratedSize());
+              res.setZero();
+
+              res = state.effectiveCalibrated() - H * parameters;
 
               m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
               m_err_x_hit.push_back(

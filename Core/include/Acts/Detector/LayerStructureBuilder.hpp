@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Detector/ProtoSupport.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/ISurfacesProvider.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -72,20 +73,6 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::vector<std::shared_ptr<Surface>> m_surfaces = {};
   };
 
-  /// @brief Support parameter definitions
-  struct Support {
-    /// Define whether you want to build support structures
-    std::array<ActsScalar, 5u> values = {};
-    /// The surface type to be built
-    Surface::SurfaceType type = Surface::SurfaceType::Other;
-    /// Define in which values the support should be constrained
-    std::vector<BinningValue> constraints = s_binningValues;
-    /// Potential splits into planar approximations
-    unsigned int splits = 1u;
-    /// The (optional) layer transform
-    std::optional<Transform3> transform = std::nullopt;
-  };
-
   /// @brief Configuration struct for the LayerStructureBuilder
   ///
   /// It contain:
@@ -96,7 +83,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     /// Connection point for a function to provide surfaces
     std::shared_ptr<ISurfacesProvider> surfacesProvider = nullptr;
     /// Definition of Supports
-    std::vector<Support> supports = {};
+    std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
     std::vector<ProtoBinning> binnings = {};
     /// Polyhedron approximations

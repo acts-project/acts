@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   BOOST_CHECK(volumes0.empty());
   BOOST_CHECK(volumeUpdator0.connected());
 
-  using LayerSupport = Acts::Experimental::LayerStructureBuilder::Support;
+  using LayerSupport = Acts::Experimental::ProtoSupport;
 
   lsConfig.auxiliary = "*** Endcap with 22 surfaces + 1 support disc ***";
   lsConfig.supports = {LayerSupport{
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   BOOST_CHECK(volumes0.empty());
   BOOST_CHECK(volumeUpdator0.connected());
 
-  using LayerSupport = Acts::Experimental::LayerStructureBuilder::Support;
+  using LayerSupport = Acts::Experimental::ProtoSupport;
 
   lsConfig.auxiliary = "*** Barrel with 448 surfaces + 1 support cylinder ***";
   lsConfig.supports = {LayerSupport{{15., 10., 10., 0., 0.},

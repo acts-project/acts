@@ -81,9 +81,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       } else if (currentVtx->fullCovariance() == SquareMatrix4::Zero()) {
         return VertexingError::NoCovariance;
       }
-      double weight =
-          1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
-      currentVtx->setFullCovariance(currentVtx->fullCovariance() * weight);
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at current vertex
@@ -239,7 +236,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
       currentVtxInfo.ip3dParams.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
-    auto compRes = m_cfg.ipEst.get3dVertexCompatibility(
+    auto compRes = m_cfg.ipEst.template getVertexCompatibility<3>(
         vertexingOptions.geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
         VectorHelpers::position(currentVtxInfo.oldPosition));
     if (!compRes.ok()) {

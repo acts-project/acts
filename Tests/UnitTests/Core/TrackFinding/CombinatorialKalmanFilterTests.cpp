@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   Fixture f(0_T);
 
   auto options = f.makeCkfOptions();
-  // this is the default option. set anyways for consistency
+  // this is the default option. set anyway for consistency
   options.propagatorPlainOptions.direction = Acts::Direction::Forward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
