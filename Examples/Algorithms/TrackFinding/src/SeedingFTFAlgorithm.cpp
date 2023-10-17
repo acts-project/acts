@@ -1,4 +1,3 @@
-// basing on seeding ortho
 #include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
 
 #include "Acts/Seeding/Seed.hpp"
@@ -7,7 +6,6 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-// might need for layer numbering funciton
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
@@ -117,8 +115,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
   Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0, 150.0); 
 
-  //want input of gnn geo 
-  finder.createSeeds(internalRoi, *mGNNgeo); //currently doesnt return anything 
+  finder.createSeeds(internalRoi, *mGNNgeo); 
 
   // still to develop
   SimSeedContainer seeds = finder.createSeeds_old(
@@ -331,7 +328,6 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
               input_vector.begin(), input_vector.end(),
               [combined_id](auto n) { return n.m_subdet == combined_id; });
           if (current_index != input_vector.end()) {  // not end so does exist
-            //   //add to old, need index. FTF ID and type stay same!
             size_t index = std::distance(input_vector.begin(), current_index);
             input_vector[index].m_refCoord += rc;
             input_vector[index].m_minBound += minBound;

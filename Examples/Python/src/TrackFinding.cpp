@@ -34,7 +34,7 @@ using namespace Acts;
 
 namespace Acts::Python {
 
-void addTrackFinding(Context &ctx) {
+void addTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
@@ -271,7 +271,7 @@ void addTrackFinding(Context &ctx) {
 
     auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TrackFindingAlgorithm")
-                   .def(py::init<const Config &, Acts::Logging::Level>(),
+                   .def(py::init<const Config& , Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Alg::config)
                    .def_static("makeTrackFinderFunction",
@@ -305,12 +305,12 @@ void addTrackFinding(Context &ctx) {
                            std::pair<GeometryIdentifier,
                                      std::tuple<std::vector<double>,
                                                 std::vector<double>,
-                                                std::vector<size_t>>>> &input) {
+                                                std::vector<size_t>>>>& input) {
       std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
           converted;
       converted.reserve(input.size());
-      for (const auto &[id, cuts] : input) {
-        const auto &[bins, chi2, num] = cuts;
+      for (const auto& [id, cuts] : input) {
+        const auto& [bins, chi2, num] = cuts;
         converted.emplace_back(id, MeasurementSelectorCuts{bins, chi2, num});
       }
       return std::make_unique<MeasurementSelector::Config>(converted);

@@ -3,7 +3,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-// #include "Acts/Seeding/GNN_DataStorage.hpp"
 #include "Acts/Seeding/TrigBase.hpp" //definition of Trigsispacepoint base and trigtriplets 
 
 
@@ -40,7 +39,7 @@ template <typename SpacePoint> struct SeedFinderFTFConfig {
   float m_nMaxPhiSlice;
   bool m_useClusterWidth = false;
   std::string fastrack_input_file;
-  std::vector<TrigInDetSiLayer> m_layerGeometry; //used to be input_vector 
+  std::vector<TrigInDetSiLayer> m_layerGeometry; 
 
   //for run funciton 
   //m_settings: 

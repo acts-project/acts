@@ -56,12 +56,6 @@ class TrigFTF_GNN_Node {
     m_out.clear();
 
   }
-  // TrigFTF_GNN_Node(const space_point_t &p, FTF_SP<space_point_t> FTF_sp, float minT = -100.0,
-  //                  float maxT = 100.0)
-  //     : m_sp(p), m_sp_FTF(FTF_sp) , m_minCutOnTau(minT), m_maxCutOnTau(maxT) {
-  //   m_in.clear();
-  //   m_out.clear();
-  // }
 
   ~TrigFTF_GNN_Node() {}
 
@@ -91,10 +85,7 @@ class TrigFTF_GNN_Node {
   }
 
 
-  const FTF_SP<space_point_t> &m_sp_FTF ; //const gives weird error in run, but allows to compile 
-  // const FTF_SP<space_point_t> m_sp_FTF ; 
-  // const space_point_t &m_sp;
-
+  const FTF_SP<space_point_t> &m_sp_FTF ; 
 
   std::vector<unsigned int> m_in;  // indices of the edges in the edge storage
   std::vector<unsigned int> m_out;
@@ -137,16 +128,12 @@ class TrigFTF_GNN_EtaBin {
 
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       TrigFTF_GNN_Node<space_point_t> *pN = m_vn.at(nIdx);
-      // float phi = pN->m_sp.phi();
-      // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
       float phi = pN->m_sp_FTF.phi();
       m_vPhiNodes.push_back(std::pair<float, unsigned int>(phi, nIdx));
     }
 
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       TrigFTF_GNN_Node<space_point_t> *pN = m_vn.at(nIdx);
-      // float phi = pN->m_sp.phi();
-      // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
       float phi = pN->m_sp_FTF.phi();
       if (phi >= -M_PI + dphi)
         break;

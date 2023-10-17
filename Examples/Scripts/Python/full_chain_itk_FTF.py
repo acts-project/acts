@@ -33,7 +33,7 @@ detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir)) 
 
 if not ttbar_pu200:
     addParticleGun(
@@ -73,7 +73,7 @@ addDigitization(
     s,
     trackingGeometry,
     field,
-    digiConfigFile=geo_dir / "itk-hgtd/itk-smearing-config.json",
+    digiConfigFile=geo_dir / "itk-hgtd/itk-smearing-config.json", #change this file to make it do digitization 
     outputDirRoot=outputDir,
     rnd=rnd,
 )
@@ -85,35 +85,37 @@ addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
     if ttbar_pu200
     else TruthSeedRanges(),
-    seedingAlgorithm=SeedingAlgorithm.Default,
+    seedingAlgorithm=SeedingAlgorithm.FTF,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
+    layerMappingConfigFile = geo_dir / "itk-hgtd/ACTS_FTF_mapinput.csv", 
+    fastrack_inputConfigFile = geo_dir / "itk-hgtd/binTables_ITK_RUN4.txt",
     outputDirRoot=outputDir,
 )
 
-addCKFTracks(
-    s,
-    trackingGeometry,
-    field,
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0)),
-    outputDirRoot=outputDir,
-)
+# addCKFTracks(
+#     s,
+#     trackingGeometry,
+#     field,
+#     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+#     TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0)),
+#     outputDirRoot=outputDir,
+# )
 
-addAmbiguityResolution(
-    s,
-    AmbiguityResolutionConfig(maximumSharedHits=3),
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    outputDirRoot=outputDir,
-)
+# addAmbiguityResolution(
+#     s,
+#     AmbiguityResolutionConfig(maximumSharedHits=3),
+#     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+#     outputDirRoot=outputDir,
+# )
 
-addVertexFitting(
-    s,
-    field,
-    vertexFinder=VertexFinder.Iterative,
-    outputDirRoot=outputDir,
-)
+# addVertexFitting(
+#     s,
+#     field,
+#     vertexFinder=VertexFinder.Iterative,
+#     outputDirRoot=outputDir,
+# )
 
 s.run()
