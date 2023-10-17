@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-from typing import Optional, Union
-
-from acts.examples import Sequencer, GenericDetector, RootParticleReader
+from typing import Optional
 
 import acts
+import acts.examples
 
 u = acts.UnitConstants
 
@@ -15,7 +14,6 @@ def runTruthTrackingGsf(
     digiConfigFile: Path,
     field,
     outputDir: Path,
-    outputCsv=True,
     inputParticlePath: Optional[Path] = None,
     decorators=[],
     s=None,
@@ -31,6 +29,7 @@ def runTruthTrackingGsf(
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
+        TruthSeedRanges,
         addTruthTrackingGsf,
     )
 
@@ -48,9 +47,9 @@ def runTruthTrackingGsf(
         addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
-            ParticleConfig(4, acts.PdgParticle.eElectron, True),
+            ParticleConfig(1, acts.PdgParticle.eElectron, True),
             PhiConfig(0.0, 360.0 * u.degree),
-            multiplicity=2,
+            multiplicity=1,
             rnd=rnd,
         )
     else:
@@ -59,7 +58,7 @@ def runTruthTrackingGsf(
         )
         assert inputParticlePath.exists()
         s.addReader(
-            RootParticleReader(
+            acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 particleCollection="particles_input",
@@ -87,20 +86,21 @@ def runTruthTrackingGsf(
         s,
         trackingGeometry,
         field,
+        rnd=rnd,
+        inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.electron,
+        truthSeedRanges=TruthSeedRanges(
+            pt=(1 * u.GeV, None),
+            nHits=(7, None),
+        ),
     )
 
-    truthTrkFndAlg = acts.examples.TruthTrackFinder(
-        level=acts.logging.INFO,
-        inputParticles="truth_seeds_selected",
-        inputMeasurementParticlesMap="measurement_particles_map",
-        outputProtoTracks="prototracks",
+    addTruthTrackingGsf(
+        s,
+        trackingGeometry,
+        field,
     )
-
-    s.addAlgorithm(truthTrkFndAlg)
-
-    addTruthTrackingGsf(s, trackingGeometry, field)
 
     # Output
     s.addWriter(
@@ -141,7 +141,7 @@ def runTruthTrackingGsf(
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -155,7 +155,6 @@ if "__main__" == __name__:
         field=field,
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        outputCsv=True,
         inputParticlePath=inputParticlePath,
         outputDir=Path.cwd(),
     ).run()

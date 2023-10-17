@@ -44,7 +44,7 @@ def runTruthTrackingKalman(
         addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
-            ParticleConfig(2, acts.PdgParticle.eMuon, False),
+            ParticleConfig(1, acts.PdgParticle.eMuon, False),
             multiplicity=1,
             rnd=rnd,
             outputDirRoot=outputDir,
@@ -55,7 +55,7 @@ def runTruthTrackingKalman(
         )
         assert inputParticlePath.exists()
         s.addReader(
-            RootParticleReader(
+            acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 particleCollection="particles_input",
@@ -83,11 +83,13 @@ def runTruthTrackingKalman(
         s,
         trackingGeometry,
         field,
-        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         rnd=rnd,
+        inputParticles="particles_input",
+        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        particleHypothesis=acts.ParticleHypothesis.muon,
         truthSeedRanges=TruthSeedRanges(
-            pt=(500 * u.MeV, None),
-            nHits=(9, None),
+            pt=(1 * u.GeV, None),
+            nHits=(7, None),
         ),
     )
 
