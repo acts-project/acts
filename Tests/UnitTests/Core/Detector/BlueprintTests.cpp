@@ -52,11 +52,33 @@ BOOST_AUTO_TEST_CASE(BlueprintTest) {
       bValues,
       std::make_shared<Acts::Experimental::IInternalStructureBuilder>());
 
+  // Keep around the pointers of the branch & leaves
+  auto* leaf0Ptr = leaf0.get();
+  auto* leaf1Ptr = leaf1.get();
+  auto* leaf2Ptr = leaf2.get();
+  auto* branchPtr = branch.get();
+
   branch->add(std::move(leaf1));
   branch->add(std::move(leaf2));
+
+  // Branch has two children
+  BOOST_CHECK(branch->children.size() == 2u);
+
+  // Parent of the leaves is the branch
+  BOOST_CHECK(leaf1Ptr->parent == branchPtr);
+  BOOST_CHECK(leaf2Ptr->parent == branchPtr);
+
   root->add(std::move(branch));
 
+  // Root stays root
+  BOOST_CHECK(root->isRoot());
+  // Parent of the branch is the root
+  BOOST_CHECK(branchPtr->parent == root.get());
+
   root->add(std::move(leaf0));
+
+  // Parent of the leaf is the root
+  BOOST_CHECK(leaf0Ptr->parent == root.get());
 
   std::ofstream fs("blueprint.dot");
   root->dotStream(fs);

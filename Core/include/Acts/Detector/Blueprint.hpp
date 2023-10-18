@@ -25,17 +25,17 @@ class IInternalStructureBuilder;
 /// A Blueprint is an instruction tree that allows you to defina a tree sequence
 /// of volume building using the provided tools.
 ///
-/// It follows tree nominclature and can define:
+/// It follows tree nomenclature and can define:
 ///
 /// - a root node (the top of the tree)
 /// - a branch node (also called inner node)
 /// - leaf node (also called terminal node)
 ///
 /// Leaf nodes can have internal builders attached, while all the external
-/// builder will be created when the blueprint is interpreted.
+/// builders will be created when the blueprint is interpreted.
 namespace Blueprint {
 
-struct Node {
+struct Node final {
   /// Branch constructor
   ///
   /// @param n name of the node
@@ -73,8 +73,6 @@ struct Node {
         boundaryValues(bv),
         internalsBuilder(std::move(isb)) {}
 
-  virtual ~Node() = default;
-
   /// Name identification of this node
   std::string name = "";
   /// Transform definition of this node
@@ -100,7 +98,7 @@ struct Node {
 
   /// @brief Method to add a child to this branch
   /// @param c the child to be added
-  virtual void add(std::unique_ptr<Node> c) {
+  void add(std::unique_ptr<Node> c) {
     c->parent = this;
     children.push_back(std::move(c));
   }
