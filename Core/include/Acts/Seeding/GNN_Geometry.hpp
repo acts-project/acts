@@ -1,35 +1,38 @@
-//TODO: update to C++17 style 
+// TODO: update to C++17 style
+#include "Acts/TrackFinding/FasTrackConnector.hpp"
+
 #include <algorithm>
 #include <map>
 #include <vector>
 
-#include "Acts/TrackFinding/FasTrackConnector.hpp"
-
 namespace Acts {
 class TrigInDetSiLayer {
-public:
-  int m_subdet; // combined ID
-  int m_type;   // 0: barrel, +/-n : endcap
+ public:
+  int m_subdet;  // combined ID
+  int m_type;    // 0: barrel, +/-n : endcap
   float m_refCoord;
   float m_minBound, m_maxBound;
 
   TrigInDetSiLayer(int subdet, short int type, float center, float min,
                    float max)
-      : m_subdet(subdet), m_type(type), m_refCoord(center), m_minBound(min),
+      : m_subdet(subdet),
+        m_type(type),
+        m_refCoord(center),
+        m_minBound(min),
         m_maxBound(max) {}
 };
 
-template <typename space_point_t> class TrigFTF_GNN_Layer {
-public:
+template <typename space_point_t>
+class TrigFTF_GNN_Layer {
+ public:
   TrigFTF_GNN_Layer(const TrigInDetSiLayer &ls, float ew, int bin0)
       : m_layer(ls), m_etaBinWidth(ew) {
-
-    if (m_layer.m_type == 0) { // barrel
+    if (m_layer.m_type == 0) {  // barrel
       m_r1 = m_layer.m_refCoord;
       m_r2 = m_layer.m_refCoord;
       m_z1 = m_layer.m_minBound;
       m_z2 = m_layer.m_maxBound;
-    } else { // endcap
+    } else {  // endcap
       m_r1 = m_layer.m_minBound;
       m_r2 = m_layer.m_maxBound;
       m_z1 = m_layer.m_refCoord;
@@ -50,8 +53,8 @@ public:
       m_maxEta = eta1;
     }
 
-    m_maxEta += 1e-6; // increasing them slightly to avoid range_check
-                      // exceptions
+    m_maxEta += 1e-6;  // increasing them slightly to avoid range_check
+                       // exceptions
     m_minEta -= 1e-6;
 
     float deltaEta = m_maxEta - m_minEta;
@@ -62,12 +65,12 @@ public:
       m_nBins = 1;
       m_bins.push_back(binCounter++);
       m_etaBin = deltaEta;
-      if (m_layer.m_type == 0) { // barrel
+      if (m_layer.m_type == 0) {  // barrel
         m_minRadius.push_back(m_layer.m_refCoord - 2.0);
         m_maxRadius.push_back(m_layer.m_refCoord + 2.0);
         m_minBinCoord.push_back(m_layer.m_minBound);
         m_maxBinCoord.push_back(m_layer.m_maxBound);
-      } else { // endcap
+      } else {  // endcap
         m_minRadius.push_back(m_layer.m_minBound - 2.0);
         m_maxRadius.push_back(m_layer.m_maxBound + 2.0);
         m_minBinCoord.push_back(m_layer.m_minBound);
@@ -83,36 +86,34 @@ public:
 
       if (m_nBins == 1) {
         m_bins.push_back(binCounter++);
-        if (m_layer.m_type == 0) { // barrel
+        if (m_layer.m_type == 0) {  // barrel
           m_minRadius.push_back(m_layer.m_refCoord - 2.0);
           m_maxRadius.push_back(m_layer.m_refCoord + 2.0);
           m_minBinCoord.push_back(m_layer.m_minBound);
           m_maxBinCoord.push_back(m_layer.m_maxBound);
-        } else { // endcap
+        } else {  // endcap
           m_minRadius.push_back(m_layer.m_minBound - 2.0);
           m_maxRadius.push_back(m_layer.m_maxBound + 2.0);
           m_minBinCoord.push_back(m_layer.m_minBound);
           m_maxBinCoord.push_back(m_layer.m_maxBound);
         }
       } else {
-
         float eta = m_minEta + 0.5 * m_etaBin;
 
         for (int i = 1; i <= m_nBins; i++) {
-
           m_bins.push_back(binCounter++);
 
           float e1 = eta - 0.5 * m_etaBin;
           float e2 = eta + 0.5 * m_etaBin;
 
-          if (m_layer.m_type == 0) { // barrel
+          if (m_layer.m_type == 0) {  // barrel
             m_minRadius.push_back(m_layer.m_refCoord - 2.0);
             m_maxRadius.push_back(m_layer.m_refCoord + 2.0);
             float z1 = m_layer.m_refCoord * std::sinh(e1);
             m_minBinCoord.push_back(z1);
             float z2 = m_layer.m_refCoord * std::sinh(e2);
             m_maxBinCoord.push_back(z2);
-          } else { // endcap
+          } else {  // endcap
             float r = m_layer.m_refCoord / std::sinh(e1);
             m_minBinCoord.push_back(r);
             m_minRadius.push_back(r - 2.0);
@@ -128,7 +129,6 @@ public:
   }
 
   int getEtaBin(float zh, float rh) const {
-
     if (m_bins.size() == 1)
       return m_bins.at(0);
 
@@ -142,7 +142,7 @@ public:
     if (idx >= static_cast<int>(m_bins.size()))
       idx = static_cast<int>(m_bins.size()) - 1;
 
-    return m_bins.at(idx); // index in the global storage
+    return m_bins.at(idx);  // index in the global storage
   }
 
   float getMinBinRadius(int idx) const {
@@ -167,12 +167,11 @@ public:
 
   bool verifyBin(const TrigFTF_GNN_Layer<space_point_t> *pL, int b1, int b2,
                  float min_z0, float max_z0) const {
-
     float z1min = m_minBinCoord.at(b1);
     float z1max = m_maxBinCoord.at(b1);
     float r1 = m_layer.m_refCoord;
 
-    if (m_layer.m_type == 0 && pL->m_layer.m_type == 0) { // barrel -> barrel
+    if (m_layer.m_type == 0 && pL->m_layer.m_type == 0) {  // barrel -> barrel
 
       const float tol = 5.0;
 
@@ -193,7 +192,7 @@ public:
       return true;
     }
 
-    if (m_layer.m_type == 0 && pL->m_layer.m_type != 0) { // barrel -> endcap
+    if (m_layer.m_type == 0 && pL->m_layer.m_type != 0) {  // barrel -> endcap
 
       const float tol = 10.0;
 
@@ -228,7 +227,7 @@ public:
   }
 
   const TrigInDetSiLayer &m_layer;
-  std::vector<int> m_bins; // eta-bin indices
+  std::vector<int> m_bins;  // eta-bin indices
   std::vector<float> m_minRadius;
   std::vector<float> m_maxRadius;
   std::vector<float> m_minBinCoord;
@@ -236,7 +235,7 @@ public:
 
   float m_minEta, m_maxEta;
 
-protected:
+ protected:
   float m_etaBinWidth, m_phiBinWidth;
 
   float m_r1, m_z1, m_r2, m_z2;
@@ -244,13 +243,13 @@ protected:
   float m_etaBin;
 };
 
-template <typename space_point_t> class TrigFTF_GNN_Geometry {
-public:
+template <typename space_point_t>
+class TrigFTF_GNN_Geometry {
+ public:
   TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer> &layers,
-                       std::unique_ptr<Acts::FasTrackConnector> & conn)
+                       std::unique_ptr<Acts::FasTrackConnector> &conn)
 
-      : m_nEtaBins(0), m_fastrack(move(conn)){
-
+      : m_nEtaBins(0), m_fastrack(move(conn)) {
     const float min_z0 = -168.0;
     const float max_z0 = 168.0;
 
@@ -266,15 +265,13 @@ public:
     for (std::map<int, std::vector<FasTrackConnection *>>::const_iterator it =
              m_fastrack->m_connMap.begin();
          it != m_fastrack->m_connMap.end(); ++it) {
-
       const std::vector<FasTrackConnection *> &vConn = (*it).second;
 
       for (std::vector<FasTrackConnection *>::const_iterator cIt =
                vConn.begin();
            cIt != vConn.end(); ++cIt) {
-
-        unsigned int src = (*cIt)->m_src; // n2 : the new connectors
-        unsigned int dst = (*cIt)->m_dst; // n1
+        unsigned int src = (*cIt)->m_src;  // n2 : the new connectors
+        unsigned int dst = (*cIt)->m_dst;  // n1
 
         const TrigFTF_GNN_Layer<space_point_t> *pL1 =
             getTrigFTF_GNN_LayerByKey(dst);
@@ -294,8 +291,8 @@ public:
 
         (*cIt)->m_binTable.resize(nSrcBins * nDstBins, 0);
 
-        for (int b1 = 0; b1 < nDstBins; b1++) {   // loop over bins in Layer 1
-          for (int b2 = 0; b2 < nSrcBins; b2++) { // loop over bins in Layer 2
+        for (int b1 = 0; b1 < nDstBins; b1++) {    // loop over bins in Layer 1
+          for (int b2 = 0; b2 < nSrcBins; b2++) {  // loop over bins in Layer 2
             if (!pL1->verifyBin(pL2, b1, b2, min_z0, max_z0))
               continue;
             int address = b1 + b2 * nDstBins;
@@ -313,7 +310,6 @@ public:
   TrigFTF_GNN_Geometry &operator=(const TrigFTF_GNN_Geometry &) = delete;
 
   ~TrigFTF_GNN_Geometry() {
-
     for (typename std::vector<TrigFTF_GNN_Layer<space_point_t> *>::iterator it =
              m_layArray.begin();
          it != m_layArray.end(); ++it) {
@@ -322,37 +318,33 @@ public:
 
     m_layMap.clear();
     m_layArray.clear();
-
   }
 
-  const TrigFTF_GNN_Layer<space_point_t> *
-  getTrigFTF_GNN_LayerByKey(unsigned int key) const {
+  const TrigFTF_GNN_Layer<space_point_t> *getTrigFTF_GNN_LayerByKey(
+      unsigned int key) const {
     typename std::map<unsigned int,
                       TrigFTF_GNN_Layer<space_point_t> *>::const_iterator it =
         m_layMap.find(key);
     if (it == m_layMap.end()) {
-
       return nullptr;
     }
 
     return (*it).second;
   }
 
-  const TrigFTF_GNN_Layer<space_point_t> *
-  getTrigFTF_GNN_LayerByIndex(int idx) const {
-
+  const TrigFTF_GNN_Layer<space_point_t> *getTrigFTF_GNN_LayerByIndex(
+      int idx) const {
     return m_layArray.at(idx);
   }
 
   int num_bins() const { return m_nEtaBins; }
 
-  Acts::FasTrackConnector* fastrack() const  { return m_fastrack.get(); }
+  Acts::FasTrackConnector *fastrack() const { return m_fastrack.get(); }
 
-protected:
+ protected:
   const TrigFTF_GNN_Layer<space_point_t> *addNewLayer(const TrigInDetSiLayer &l,
                                                       int bin0) {
-
-    unsigned int layerKey = l.m_subdet; // this should be combined ID
+    unsigned int layerKey = l.m_subdet;  // this should be combined ID
     float ew = m_etaBinWidth;
 
     TrigFTF_GNN_Layer<space_point_t> *pHL =
@@ -369,9 +361,10 @@ protected:
   std::map<unsigned int, TrigFTF_GNN_Layer<space_point_t> *> m_layMap;
   std::vector<TrigFTF_GNN_Layer<space_point_t> *> m_layArray;
 
+  int m_nEtaBins;
+
   std::unique_ptr<Acts::FasTrackConnector> m_fastrack;
 
-  int m_nEtaBins;
 };
 
-} // namespace Acts
+}  // namespace Acts

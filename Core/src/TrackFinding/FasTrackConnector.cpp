@@ -1,11 +1,11 @@
-//TODO: update to C++17 style 
+// TODO: update to C++17 style
 #include "Acts/TrackFinding/FasTrackConnector.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <list>
 #include <set>
 #include <unordered_map>
-
 
 namespace Acts {
 
@@ -13,7 +13,6 @@ FasTrackConnection::FasTrackConnection(unsigned int s, unsigned int d)
     : m_src(s), m_dst(d) {}
 
 FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
-
   m_layerGroups.clear();
 
   int nLinks;
@@ -21,7 +20,6 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
   inFile >> nLinks >> m_etaBin;
 
   for (int l = 0; l < nLinks; l++) {
-
     unsigned int stage, lIdx, src, dst, nEntries;
     int height, width;
 
@@ -33,7 +31,7 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
 
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++)
-        inFile >> dummy; // pC->m_binTable[j+i*width];
+        inFile >> dummy;  // pC->m_binTable[j+i*width];
     }
 
     int vol_id = src / 1000;
@@ -60,63 +58,65 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
       (*it).second.push_back(pC);
   }
 
-  //re-arrange the connection stages
+  // re-arrange the connection stages
 
-  std::list<const FasTrackConnection*> lConns;
+  std::list<const FasTrackConnection *> lConns;
 
-  std::map<int, std::vector<const FasTrackConnection*> > newConnMap;
-  
-  for(const auto& conn : m_connMap) {
-    std::copy(conn.second.begin(), conn.second.end(), std::back_inserter(lConns));
+  std::map<int, std::vector<const FasTrackConnection *>> newConnMap;
+
+  for (const auto &conn : m_connMap) {
+    std::copy(conn.second.begin(), conn.second.end(),
+              std::back_inserter(lConns));
   }
 
   int stageCounter = 0;
 
-  while(!lConns.empty()) {
+  while (!lConns.empty()) {
+    std::unordered_map<unsigned int, std::pair<int, int>>
+        mCounter;  // layerKey, nDst, nSrc
 
-    std::unordered_map<unsigned int, std::pair<int, int> > mCounter;//layerKey, nDst, nSrc
-
-    for(const auto& conn : lConns) {
+    for (const auto &conn : lConns) {
       auto entryIt = mCounter.find(conn->m_dst);
-      if(entryIt != mCounter.end()) {
-	      (*entryIt).second.first++;
-      }
-      else {
+      if (entryIt != mCounter.end()) {
+        (*entryIt).second.first++;
+      } else {
         int nDst = 1;
         int nSrc = 0;
-        mCounter.insert(std::make_pair(conn->m_dst, std::make_pair(nDst, nSrc)));
+        mCounter.insert(
+            std::make_pair(conn->m_dst, std::make_pair(nDst, nSrc)));
       }
 
       entryIt = mCounter.find(conn->m_src);
-      if(entryIt != mCounter.end()) {
-	      (*entryIt).second.second++;
-      }
-      else {
+      if (entryIt != mCounter.end()) {
+        (*entryIt).second.second++;
+      } else {
         int nDst = 0;
         int nSrc = 1;
-        mCounter.insert(std::make_pair(conn->m_src, std::make_pair(nDst, nSrc)));
+        mCounter.insert(
+            std::make_pair(conn->m_src, std::make_pair(nDst, nSrc)));
       }
     }
 
-    //find layers with nSrc = 0
+    // find layers with nSrc = 0
 
     std::set<unsigned int> zeroLayers;
 
-    for(const auto& layerCounts : mCounter) {
-      
-      if(layerCounts.second.second!=0) continue;
+    for (const auto &layerCounts : mCounter) {
+      if (layerCounts.second.second != 0)
+        continue;
 
       zeroLayers.insert(layerCounts.first);
     }
 
-    //remove connections which use zeroLayer as destination
+    // remove connections which use zeroLayer as destination
 
-    std::vector<const FasTrackConnection*> theStage;
+    std::vector<const FasTrackConnection *> theStage;
 
-    std::list<const FasTrackConnection*>::iterator cIt = lConns.begin();
+    std::list<const FasTrackConnection *>::iterator cIt = lConns.begin();
 
-    while(cIt!=lConns.end()) {
-      if(zeroLayers.find((*cIt)->m_dst) != zeroLayers.end()) {//check if contains
+    while (cIt != lConns.end()) {
+      if (zeroLayers.find((*cIt)->m_dst) !=
+          zeroLayers.end()) {  // check if contains
         theStage.push_back(*cIt);
         cIt = lConns.erase(cIt);
         continue;
@@ -127,48 +127,49 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
     stageCounter++;
   }
 
-  //create layer groups
+  // create layer groups
 
   int currentStage = 0;
 
-  //the doublet making is done using "outside-in" approach hence the reverse iterations
+  // the doublet making is done using "outside-in" approach hence the reverse
+  // iterations
 
-  for(std::map<int, std::vector<const FasTrackConnection*> >::reverse_iterator it = newConnMap.rbegin();it!=newConnMap.rend();++it, currentStage++) {
+  for (std::map<int, std::vector<const FasTrackConnection *>>::reverse_iterator
+           it = newConnMap.rbegin();
+       it != newConnMap.rend(); ++it, currentStage++) {
+    const std::vector<const FasTrackConnection *> &vConn = (*it).second;
 
-    const std::vector<const FasTrackConnection*> & vConn = (*it).second;
-    
-    //loop over links, extract all connections for the stage, group sources by L1 (dst) index
-    
-    std::map<unsigned int, std::vector<const FasTrackConnection*> > l1ConnMap;
+    // loop over links, extract all connections for the stage, group sources by
+    // L1 (dst) index
 
-    for(const auto* conn : vConn) {
+    std::map<unsigned int, std::vector<const FasTrackConnection *>> l1ConnMap;
 
+    for (const auto *conn : vConn) {
       unsigned int dst = conn->m_dst;
 
-      std::map<unsigned int, std::vector<const FasTrackConnection*> >::iterator l1MapIt = l1ConnMap.find(dst);
-      if(l1MapIt != l1ConnMap.end()) 
-	      (*l1MapIt).second.push_back(conn);
+      std::map<unsigned int, std::vector<const FasTrackConnection *>>::iterator
+          l1MapIt = l1ConnMap.find(dst);
+      if (l1MapIt != l1ConnMap.end())
+        (*l1MapIt).second.push_back(conn);
       else {
-        std::vector<const FasTrackConnection*> v = {conn};
+        std::vector<const FasTrackConnection *> v = {conn};
         l1ConnMap.insert(std::make_pair(dst, v));
-      } 
+      }
     }
 
     std::vector<LayerGroup> lgv;
 
     lgv.reserve(l1ConnMap.size());
 
-    for(const auto& l1Group : l1ConnMap) {
+    for (const auto &l1Group : l1ConnMap) {
       lgv.push_back(LayerGroup(l1Group.first, l1Group.second));
     }
-   
+
     m_layerGroups.insert(std::make_pair(currentStage, lgv));
   }
 
   newConnMap.clear();
-
 }
-
 
 FasTrackConnector::~FasTrackConnector() {
   m_layerGroups.clear();
@@ -181,4 +182,4 @@ FasTrackConnector::~FasTrackConnector() {
     }
   }
 }
-} // namespace Acts
+}  // namespace Acts

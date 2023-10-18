@@ -1,23 +1,21 @@
-//TODO: update to C++17 style 
+// TODO: update to C++17 style
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/TrigBase.hpp" //definition of Trigsispacepoint base and trigtriplets 
-
-
-
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Seeding/TrigBase.hpp"  //definition of Trigsispacepoint base and trigtriplets
 
 #include <memory>
 
 // core algorithm so in acts namespace
 namespace Acts {
 
-template <typename T> class SeedFilter;
+template <typename T>
+class SeedFilter;
 
-template <typename SpacePoint> struct SeedFinderFTFConfig {
-
+template <typename SpacePoint>
+struct SeedFinderFTFConfig {
   // // how many sigmas of scattering angle should be considered?
   float sigmaScattering = 5;
 
@@ -39,22 +37,23 @@ template <typename SpacePoint> struct SeedFinderFTFConfig {
   float m_nMaxPhiSlice;
   bool m_useClusterWidth = false;
   std::string fastrack_input_file;
-  std::vector<TrigInDetSiLayer> m_layerGeometry; 
+  std::vector<TrigInDetSiLayer> m_layerGeometry;
 
-  //for run funciton 
-  //m_settings: 
-  bool m_LRTmode = true ; //eventually want to set from full chaing 
-  bool m_useEtaBinning = true ; 
-  bool m_doubletFilterRZ = true ; 
-  float m_minDeltaRadius = 5.0 ; //eventaully set in config or to equivelant acts 2.0 but increasing to test loops 
-  // float m_maxDeltaRadius = 270.0 ; 
-  float m_tripletD0Max = 4.0 ; //m_settings 
-  unsigned int m_maxTripletBufferLength = 3 ;  
+  // for run function
+  // m_settings:
+  bool m_LRTmode = true;  // eventually want to set from full chain
+  bool m_useEtaBinning = true;
+  bool m_doubletFilterRZ = true;
+  float m_minDeltaRadius = 5.0;  // eventually set in config or to equivalent
+                                 // acts 2.0 but increasing to test loops
+  // float m_maxDeltaRadius = 270.0 ;
+  float m_tripletD0Max = 4.0;  // m_settings
+  unsigned int m_maxTripletBufferLength = 3;
 
-  //ROI: 
+  // ROI:
   bool containsPhi() {
-    return false; 
-    //need to implement this funciton 
+    return false;
+    // need to implement this function
   }
 
   ////
@@ -72,11 +71,11 @@ template <typename SpacePoint> struct SeedFinderFTFConfig {
     // throw statement if the isInternalUnits member is false, ie if dont call
     // this function
     SeedFinderFTFConfig config = *this;
-    // devides inputs by 1mm, all ones input
-    // changes memeber inInInternalUnits to true
+    // divides inputs by 1mm, all ones input
+    // changes member inInInternalUnits to true
     return config;
   }
 
-}; // end of config struct
+};  // end of config struct
 
-} // namespace Acts
+}  // namespace Acts

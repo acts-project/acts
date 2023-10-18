@@ -1,13 +1,13 @@
 #include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -25,7 +25,6 @@ template class Acts::TrigFTF_GNN_EtaBin<ActsExamples::SimSpacePoint>;
 template class Acts::FTF_SP<ActsExamples::SimSpacePoint>;
 template class Acts::TrigFTF_GNN_DataStorage<ActsExamples::SimSpacePoint>;
 template class Acts::TrigFTF_GNN_Edge<ActsExamples::SimSpacePoint>;
-
 
 // constructor:
 ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
@@ -65,27 +64,25 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
 
-
-  //map
+  // map
   m_cfg.ACTS_FTF_Map = Make_ACTS_FTF_Map();
-  //input trig vector 
+  // input trig vector
   m_cfg.seedFinderConfig.m_layerGeometry = LayerNumbering();
 
   std::ifstream input_ifstream(
       m_cfg.seedFinderConfig.fastrack_input_file.c_str(), std::ifstream::in);
-  
-  //fastrack 
-  std::unique_ptr<Acts::FasTrackConnector> input_fastrack = std::make_unique<Acts::FasTrackConnector>(input_ifstream);
 
+  // fastrack
+  std::unique_ptr<Acts::FasTrackConnector> input_fastrack =
+      std::make_unique<Acts::FasTrackConnector>(input_ifstream);
 
   mGNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>>(
-    m_cfg.seedFinderConfig.m_layerGeometry, input_fastrack);
+      m_cfg.seedFinderConfig.m_layerGeometry, input_fastrack);
 
-
-}  // this is not FTF config type because it is a meber of the algs config,
+}  // this is not FTF config type because it is a member of the algs config,
    // which is of type FTF cofig
 
-// exectute:
+// execute:
 ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
     const AlgorithmContext &ctx) const {
   std::vector<Acts::FTF_SP<SimSpacePoint>> FTF_spacePoints =
@@ -95,7 +92,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
     ACTS_DEBUG("FTF space points: "
                << " FTF_id: " << sp.FTF_ID << " z: " << sp.SP->z()
                << " r: " << sp.SP->r() << " ACTS volume:  "
-               << sp.SP->sourceLinks().front().get<IndexSourceLink>().geometryId().volume() << "\n");
+               << sp.SP->sourceLinks()
+                      .front()
+                      .get<IndexSourceLink>()
+                      .geometryId()
+                      .volume()
+               << "\n");
   }
 
   // this is now calling on a core algorithm
@@ -113,9 +115,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
   finder.loadSpacePoints(FTF_spacePoints);
 
-  Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0, 150.0); 
+  Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0,
+                                  150.0);
 
-  finder.createSeeds(internalRoi, *mGNNgeo); 
+  finder.createSeeds(internalRoi, *mGNNgeo);
 
   // still to develop
   SimSeedContainer seeds = finder.createSeeds_old(
@@ -170,14 +173,14 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
   // for loop filling space
   for (const auto &isp : m_inputSpacePoints) {
     for (const auto &spacePoint : (*isp)(ctx)) {
-      // fill originial space point vector
+      // fill original space point vector
       spacePoints.push_back(&spacePoint);
 
       // FTF space point vector
       // loop over space points, call on map
-      const auto& source_link = spacePoint.sourceLinks();
-      const auto& index_source_link = source_link.front().get<IndexSourceLink>() ; 
-
+      const auto &source_link = spacePoint.sourceLinks();
+      const auto &index_source_link =
+          source_link.front().get<IndexSourceLink>();
 
       // warning if source link empty
       if (source_link.empty()) {
@@ -198,7 +201,7 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
         continue;
       }
 
-      // Search for vol, lay and module=0, if doesnt esist (end) then search for
+      // Search for vol, lay and module=0, if doesn't esist (end) then search for
       // full thing
       // vol*100+lay as first number in pair then 0 or mod id
       auto ACTS_joint_id = ACTS_vol_id * 100 + ACTS_lay_id;
@@ -339,8 +342,8 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
             input_vector[index].m_maxBound += maxBound;
             count_vector[index] += 1;  // increase count at the index
 
-          } else {  // end so doesnt exists
-            // make new if one with FTF ID doesnt exist:
+          } else {  // end so doesn't exists
+            // make new if one with FTF ID doesn't exist:
             Acts::TrigInDetSiLayer new_FTF_ID(combined_id, barrel_ec, rc,
                                               minBound, maxBound);
             input_vector.push_back(new_FTF_ID);
@@ -352,7 +355,7 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
             fstream fout;
             fout.open("ACTS_modules.csv",
                       ios::out | ios::app);  // add to file each time
-            // print to csv for each module, no repeates so dont need to make
+            // print to csv for each module, no repeats so dont need to make
             // map for averaging
             fout << ACTS_vol_id << ", "  // vol
                  << ACTS_lay_id << ", "  // lay
@@ -366,7 +369,7 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
         });
   }
 
-  for (int i = 0; i < input_vector.size(); i++) {
+  for (auto i = 0; i < input_vector.size(); i++) {
     input_vector[i].m_refCoord = input_vector[i].m_refCoord / count_vector[i];
   }
 

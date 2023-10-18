@@ -1,4 +1,4 @@
-//TODO: update to C++17 style 
+// TODO: update to C++17 style
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Seeding/GNN_Geometry.hpp"
 
@@ -19,24 +19,18 @@ struct FTF_SP {
   int combined_ID;
   FTF_SP(const space_point_t *sp, int id, int combined_id)
       : SP(sp), FTF_ID(id), combined_ID{combined_id} {
-      if (SP->sourceLinks().size() == 1) {  // pixels have 1 SL
-        m_isPixel = true;
-      } 
-      else {
-        m_isPixel = false;
-      }
-      m_phi = std::atan(SP->x() / SP->y()) ; 
-       
-
+    if (SP->sourceLinks().size() == 1) {  // pixels have 1 SL
+      m_isPixel = true;
+    } else {
+      m_isPixel = false;
+    }
+    m_phi = std::atan(SP->x() / SP->y());
   };
-  bool  isPixel() const { return m_isPixel;} 
-  bool isSCT() const {return !m_isPixel;}
-  float phi() const {return m_phi;}
-  bool m_isPixel ; 
-  float m_phi ; 
-
-
-
+  bool isPixel() const { return m_isPixel; }
+  bool isSCT() const { return !m_isPixel; }
+  float phi() const { return m_phi; }
+  bool m_isPixel;
+  float m_phi;
 };
 
 template <typename space_point_t>
@@ -45,17 +39,13 @@ class TrigFTF_GNN_Node {
   struct CompareByPhi {
     bool operator()(const TrigFTF_GNN_Node<space_point_t> *n1,
                     const TrigFTF_GNN_Node<space_point_t> *n2) {
-      return (n1->m_sp_FTF.phi() <
-             n2->m_sp_FTF.phi());
+      return (n1->m_sp_FTF.phi() < n2->m_sp_FTF.phi());
     }
   };
 
   TrigFTF_GNN_Node(const FTF_SP<space_point_t> &FTF_sp, float minT = -100.0,
                    float maxT = 100.0)
-      : m_sp_FTF(FTF_sp) , m_minCutOnTau(minT), m_maxCutOnTau(maxT) {
-   
-
-  }
+      : m_sp_FTF(FTF_sp), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {}
 
   ~TrigFTF_GNN_Node() {}
 
@@ -84,8 +74,7 @@ class TrigFTF_GNN_Node {
       return false;
   }
 
-
-  const FTF_SP<space_point_t> &m_sp_FTF ; 
+  const FTF_SP<space_point_t> &m_sp_FTF;
 
   std::vector<unsigned int> m_in;  // indices of the edges in the edge storage
   std::vector<unsigned int> m_out;
@@ -141,11 +130,11 @@ class TrigFTF_GNN_EtaBin {
     }
   }
 
-  std::vector<TrigFTF_GNN_Node<space_point_t> *> m_vn; 
-  //TODO change to   std::vector<std::unique_ptr<TrigFTF_GNN_Node<space_point_t>>> m_vn;
+  std::vector<TrigFTF_GNN_Node<space_point_t> *> m_vn;
+  // TODO change to
+  // std::vector<std::unique_ptr<TrigFTF_GNN_Node<space_point_t>>> m_vn;
   std::vector<std::pair<float, unsigned int>> m_vPhiNodes;
 };
-
 
 template <typename space_point_t>
 class TrigFTF_GNN_DataStorage {
@@ -172,13 +161,13 @@ class TrigFTF_GNN_DataStorage {
     if (binIndex == -1) {
       return -2;
     }
-    
+
     bool isBarrel = (pL->m_layer.m_type == 0);
 
     if (isBarrel) {
       float min_tau = -100.0;
       float max_tau = 100.0;
-      // cant do this bit yet as dont have cluster width
+      // can't do this bit yet as dont have cluster width
       if (useClusterWidth) {
         //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
         //   const InDet::PixelCluster* pCL = dynamic_cast<const
@@ -190,8 +179,8 @@ class TrigFTF_GNN_DataStorage {
             1.6 + 0.15 / (cluster_width + 0.2) + 6.1 * (cluster_width - 0.2);
       }
 
-      m_etaBins.at(binIndex).m_vn.push_back(
-          new TrigFTF_GNN_Node<space_point_t>(sp, min_tau, max_tau)); //adding ftf memeber to nodes 
+      m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node<space_point_t>(
+          sp, min_tau, max_tau));  // adding ftf member to nodes
     } else {
       if (useClusterWidth) {
         //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
@@ -222,12 +211,15 @@ class TrigFTF_GNN_DataStorage {
     return n;
   }
 
-  void getConnectingNodes(std::vector<const TrigFTF_GNN_Node<space_point_t> *> &vn) {
+  void getConnectingNodes(
+      std::vector<const TrigFTF_GNN_Node<space_point_t> *> &vn) {
     vn.clear();
     vn.reserve(numberOfNodes());
-    for (const auto &b : m_etaBins) { 
-      for (typename std::vector<TrigFTF_GNN_Node<space_point_t> *>::const_iterator nIt =b.m_vn.begin();nIt != b.m_vn.end(); ++nIt) { 
-
+    for (const auto &b : m_etaBins) {
+      for (typename std::vector<
+               TrigFTF_GNN_Node<space_point_t> *>::const_iterator nIt =
+               b.m_vn.begin();
+           nIt != b.m_vn.end(); ++nIt) {
         if ((*nIt)->m_in.empty())
           continue;
         if ((*nIt)->m_out.empty())
@@ -269,15 +261,18 @@ class TrigFTF_GNN_Edge {
     }
   };
 
-
-  TrigFTF_GNN_Edge(TrigFTF_GNN_Node<space_point_t>* n1, TrigFTF_GNN_Node<space_point_t>* n2, float p1, float p2, float p3, float p4) : m_n1(n1), m_n2(n2), m_level(1), m_next(1), m_nNei(0) {
+  TrigFTF_GNN_Edge(TrigFTF_GNN_Node<space_point_t> *n1,
+                   TrigFTF_GNN_Node<space_point_t> *n2, float p1, float p2,
+                   float p3, float p4)
+      : m_n1(n1), m_n2(n2), m_level(1), m_next(1), m_nNei(0) {
     m_p[0] = p1;
     m_p[1] = p2;
     m_p[2] = p3;
     m_p[3] = p4;
   }
-  
-  TrigFTF_GNN_Edge()  : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1), m_nNei(0){};
+
+  TrigFTF_GNN_Edge()
+      : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1), m_nNei(0){};
 
   // TrigFTF_GNN_Edge(const TrigFTF_GNN_Edge<space_point_t> &e)
   //     : m_n1(e.m_n1), m_n2(e.m_n2){};
@@ -301,7 +296,5 @@ class TrigFTF_GNN_Edge {
 
   unsigned int m_vNei[N_SEG_CONNS]{};  // global indices of the connected edges
 };
-
-
 
 }  // namespace Acts

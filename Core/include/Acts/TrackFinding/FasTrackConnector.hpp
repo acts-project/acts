@@ -1,5 +1,5 @@
-//TODO: update to C++17 style 
-//Consider to moving to detail subdirectory 
+// TODO: update to C++17 style
+// Consider to moving to detail subdirectory
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -8,7 +8,7 @@
 namespace Acts {
 
 struct FasTrackConnection {
-public:
+ public:
   FasTrackConnection(unsigned int, unsigned int);
   ~FasTrackConnection(){};
 
@@ -17,13 +17,15 @@ public:
 };
 
 class FasTrackConnector {
-public:
-
+ public:
   struct LayerGroup {
-  LayerGroup(unsigned int l1Key, const std::vector<const Acts::FasTrackConnection*>& v) : m_dst(l1Key), m_sources(v) {};
+    LayerGroup(unsigned int l1Key,
+               const std::vector<const Acts::FasTrackConnection *> &v)
+        : m_dst(l1Key), m_sources(v){};
 
-    unsigned int m_dst;//the target layer of the group
-    std::vector<const Acts::FasTrackConnection*> m_sources;//the source layers of the group
+    unsigned int m_dst;  // the target layer of the group
+    std::vector<const Acts::FasTrackConnection *>
+        m_sources;  // the source layers of the group
   };
 
   FasTrackConnector(std::ifstream &);
@@ -32,9 +34,11 @@ public:
 
   float m_etaBin;
 
-  std::map<int, std::vector<struct LayerGroup> > m_layerGroups;
+  std::map<int, std::vector<struct LayerGroup>> m_layerGroups;
   std::map<int, std::vector<Acts::FasTrackConnection *>> m_connMap;
-  //TODO: change to std::map<int, std::vector<Acts::FasTrackConnection> > m_connMap; or   std::map<int, std::vector<std::unique_ptr<Acts::FasTrackConnection>> > m_connMap;
+  // TODO: change to std::map<int, std::vector<Acts::FasTrackConnection> >
+  // m_connMap; or   std::map<int,
+  // std::vector<std::unique_ptr<Acts::FasTrackConnection>> > m_connMap;
 };
 
-} // namespace Acts
+}  // namespace Acts
