@@ -52,7 +52,7 @@ enum class CombinatorialKalmanFilterTargetSurfaceStrategy {
   first,
   /// Use the last trackstate to reach target surface
   last,
-  /// Use the first or last trackstate to reach target surface depeding on the
+  /// Use the first or last trackstate to reach target surface depending on the
   /// distance
   firstOrLast,
 };
