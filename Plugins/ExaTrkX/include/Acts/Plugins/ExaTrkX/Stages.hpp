@@ -23,8 +23,9 @@ class GraphConstructionBase {
   /// Perform the graph construction
   ///
   /// @param inputValues Flattened input data
-  /// @param numNodes number of nodes. inputValues.size() / numNodes
+  /// @param numNodes Number of nodes. inputValues.size() / numNodes
   /// then gives the number of features
+  /// @param deviceHint Which GPU to pick. Not relevant for CPU-only builds
   ///
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
@@ -40,6 +41,7 @@ class EdgeClassificationBase {
   ///
   /// @param nodes Node tensor with shape (n_nodes, n_node_features)
   /// @param edges Edge-index tensor with shape (2, n_edges)
+  /// @param deviceHint Which GPU to pick. Not relevant for CPU-only builds
   ///
   /// @return (node_tensor, edge_tensor, score_tensor)
   virtual std::tuple<std::any, std::any, std::any> operator()(
@@ -56,6 +58,7 @@ class TrackBuildingBase {
   /// @param edges Edge-index tensor with shape (2, n_edges)
   /// @param edgeWeights Edge-weights of the previous edge classification phase
   /// @param spacepointIDs IDs of the nodes (must have size=n_nodes)
+  /// @param deviceHint Which GPU to pick. Not relevant for CPU-only builds
   ///
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
