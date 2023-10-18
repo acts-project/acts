@@ -43,8 +43,9 @@ struct GsfExtensions {
       Delegate<void(const GeometryContext &, const CalibrationContext &,
                     const SourceLink &, TrackStateProxy)>;
 
-  using Updater = Delegate<Result<void>(
-      const GeometryContext &, const Surface*, TrackStateProxy, Direction, const Logger &)>;
+  using Updater =
+      Delegate<Result<void>(const GeometryContext &, const Surface *,
+                            TrackStateProxy, Direction, const Logger &)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 

@@ -696,8 +696,8 @@ class CombinatorialKalmanFilter {
         }
         auto selectedTrackStateRange = *selectorResult;
 
-        auto procRes = processSelectedTrackStates(surface, 
-            state.geoContext, selectedTrackStateRange.first,
+        auto procRes = processSelectedTrackStates(
+            surface, state.geoContext, selectedTrackStateRange.first,
             selectedTrackStateRange.second, result, isOutlier, prevTipState,
             nBranchesOnSurface);
 
@@ -913,8 +913,8 @@ class CombinatorialKalmanFilter {
     /// @param isOutlier If this track state is a single outlier one
     /// @param prevTipState Tip state prior to this surface
     /// @param [in,out] nBranchesOnSurface Number of branches on surface, will be updated
-    Result<void> processSelectedTrackStates(const Surface* surface,
-        const Acts::GeometryContext& gctx,
+    Result<void> processSelectedTrackStates(
+        const Surface* surface, const Acts::GeometryContext& gctx,
         typename std::vector<typename traj_t::TrackStateProxy>::const_iterator
             begin,
         typename std::vector<typename traj_t::TrackStateProxy>::const_iterator

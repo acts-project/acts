@@ -56,7 +56,7 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// Number of decimal digits for floating point precision in output.
     int outputPrecision = std::numeric_limits<float>::max_digits10;
     /// Tracking geometry required to access surface type of the measurement.
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;    
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor with

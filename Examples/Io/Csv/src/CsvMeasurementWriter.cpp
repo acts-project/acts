@@ -113,9 +113,15 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           // Create a full set of parameters
           auto parameters = (m.expander() * m.parameters()).eval();
 
-          const Acts::Surface* surface =
-              m_cfg.trackingGeometry->findSurface(geoId);
-          parameters = surface->correctSign(parameters);
+          // Take a non-negative drfit distance measurement for Line Surface
+          Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+          const LineSurface* line = dynamic_cast<const LineSurface*>(surface);
+          if (line) {
+            if (parameters[eBoundLoc0] < 0) {
+              parameters[eBoundLoc0] *= -1.f;
+            }
+          }
+
           meas.local0 = parameters[Acts::eBoundLoc0];
           meas.local1 = parameters[Acts::eBoundLoc1];
           meas.phi = parameters[Acts::eBoundPhi];

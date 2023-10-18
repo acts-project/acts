@@ -97,7 +97,7 @@ class GainMatrixUpdater {
                 .data(),
             trackState.projector(),
             trackState.calibratedSize(),
-        }, 
+        },
         surface, direction, logger);
 
     trackState.chi2() = chi2;
@@ -107,8 +107,8 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      InternalTrackState trackState, const Surface* surface, Direction direction,
-      const Logger& logger) const;
+      InternalTrackState trackState, const Surface* surface,
+      Direction direction, const Logger& logger) const;
 };
 
 }  // namespace Acts

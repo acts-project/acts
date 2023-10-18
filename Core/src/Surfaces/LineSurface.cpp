@@ -277,13 +277,6 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
   return freeToPath;
 }
 
-Acts::BoundVector Acts::LineSurface::correctSign(
-    const BoundVector& boundParams) const {
-  BoundVector unsignedParams = boundParams;
-  unsignedParams[eBoundLoc0] = std::abs(unsignedParams[eBoundLoc0]);
-  return unsignedParams;
-}
-
 Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
