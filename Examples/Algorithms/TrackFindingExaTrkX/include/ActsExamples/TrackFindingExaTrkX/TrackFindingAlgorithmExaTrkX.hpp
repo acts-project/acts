@@ -22,6 +22,9 @@
 #include <string>
 #include <vector>
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+
 namespace ActsExamples {
 
 class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
@@ -83,13 +86,26 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final;
 
+  /// Finalize and print timing
+  ActsExamples::ProcessCode finalize() final;
+
   const Config& config() const { return m_cfg; }
 
  private:
-  // configuration
   Config m_cfg;
 
   Acts::ExaTrkXPipeline m_pipeline;
+  mutable std::mutex m_mutex;
+
+  using Accumulator = boost::accumulators::accumulator_set<
+      float, boost::accumulators::features<boost::accumulators::tag::mean,
+                                           boost::accumulators::tag::variance>>;
+
+  mutable struct {
+    Accumulator graphBuildingTime;
+    std::vector<Accumulator> classifierTimes;
+    Accumulator trackBuildingTime;
+  } m_timing;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};

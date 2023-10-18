@@ -28,7 +28,8 @@ class GraphConstructionBase {
   ///
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
-      std::vector<float> &inputValues, std::size_t numNodes) = 0;
+      std::vector<float> &inputValues, std::size_t numNodes,
+      int deviceHint = -1) = 0;
 
   virtual ~GraphConstructionBase() = default;
 };
@@ -42,7 +43,7 @@ class EdgeClassificationBase {
   ///
   /// @return (node_tensor, edge_tensor, score_tensor)
   virtual std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges) = 0;
+      std::any nodes, std::any edges, int deviceHint = -1) = 0;
 
   virtual ~EdgeClassificationBase() = default;
 };
@@ -59,7 +60,7 @@ class TrackBuildingBase {
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edgeWeights,
-      std::vector<int> &spacepointIDs) = 0;
+      std::vector<int> &spacepointIDs, int deviceHint = -1) = 0;
 
   virtual ~TrackBuildingBase() = default;
 };
