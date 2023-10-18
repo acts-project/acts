@@ -30,16 +30,19 @@ std::array<Acts::Vector3, 2u> cylEndpointsZ(
 
 void Acts::Experimental::detail::BlueprintHelper::sort(Blueprint::Node& node,
                                                        bool recursive) {
+  if (node.children.size() < 2u) {
+    return;
+  }
   // Sort along x, y, z
   if (node.binning.size() == 1) {
     auto bVal = node.binning.front();
     // x,y,z binning along the axis
     if (bVal == binX or bVal == binY or bVal == binZ) {
-      auto nodeCenter = node.transform.translation();
-      auto nodeSortAxis = node.transform.rotation().col(bVal);
+      Vector3 nodeCenter = node.transform.translation();
+      Vector3 nodeSortAxis = node.transform.rotation().col(bVal);
       std::sort(
           node.children.begin(), node.children.end(),
-          [nodeCenter, nodeSortAxis](const auto& a, const auto& b) {
+          [&](const auto& a, const auto& b) {
             return (a->transform.translation() - nodeCenter).dot(nodeSortAxis) <
                    (b->transform.translation() - nodeCenter).dot(nodeSortAxis);
           });
