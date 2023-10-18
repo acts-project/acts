@@ -10,13 +10,13 @@ u = acts.UnitConstants
 
 
 def runTruthTrackingGsf(
-    trackingGeometry,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
-    field,
     outputDir: Path,
     inputParticlePath: Optional[Path] = None,
-    decorators=[],
-    s=None,
+    decorators = [],
+    s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
         addParticleGun,
@@ -151,7 +151,6 @@ if "__main__" == __name__:
 
     runTruthTrackingGsf(
         trackingGeometry=trackingGeometry,
-        decorators=decorators,
         field=field,
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",

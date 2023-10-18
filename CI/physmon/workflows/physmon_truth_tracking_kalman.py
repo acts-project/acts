@@ -24,7 +24,7 @@ with tempfile.TemporaryDirectory() as temp:
     runTruthTrackingKalman(
         setup.trackingGeometry,
         setup.field,
-        digiConfigFile=setup.digiConfig,
+        setup.digiConfig,
         outputDir=tp,
         s=s,
     )

@@ -12,12 +12,13 @@ u = acts.UnitConstants
 def runTruthTrackingKalman(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    outputDir: Path,
     digiConfigFile: Path,
+    outputDir: Path,
+    inputParticlePath: Optional[Path] = None,
+    decorators = [],
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
-    inputParticlePath: Optional[Path] = None,
 ):
     from acts.examples.simulation import (
         addParticleGun,
@@ -36,6 +37,9 @@ def runTruthTrackingKalman(
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
+
+    for d in decorators:
+        s.addContextDecorator(d)
 
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(outputDir)
