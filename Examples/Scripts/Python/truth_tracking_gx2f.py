@@ -20,6 +20,7 @@ def runTruthTrackingGx2f(
 ):
     from acts.examples.simulation import (
         addParticleGun,
+        MomentumConfig,
         EtaConfig,
         ParticleConfig,
         addFatras,
@@ -33,7 +34,7 @@ def runTruthTrackingGx2f(
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=10000, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     rnd = acts.examples.RandomNumbers()
@@ -42,6 +43,7 @@ def runTruthTrackingGx2f(
     if inputParticlePath is None:
         addParticleGun(
             s,
+            MomentumConfig(100.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             EtaConfig(-2.0, 2.0),
             ParticleConfig(2, acts.PdgParticle.eMuon, False),
             multiplicity=1,
@@ -85,7 +87,7 @@ def runTruthTrackingGx2f(
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         rnd=rnd,
         truthSeedRanges=TruthSeedRanges(
-            pt=(500 * u.MeV, None),
+            pt=(1 * u.GeV, None),
             nHits=(9, None),
         ),
     )
@@ -120,27 +122,29 @@ def runTruthTrackingGx2f(
         )
     )
 
-    s.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
-            level=acts.logging.INFO,
-            inputProtoTracks="sorted_truth_particle_tracks"
-            if directNavigation
-            else "truth_particle_tracks",
-            inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDir / "performance_track_finder.root"),
-        )
-    )
-
-    s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
-            level=acts.logging.INFO,
-            inputTrajectories="trajectories",
-            inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDir / "performance_track_fitter.root"),
-        )
-    )
+    # s.addWriter(
+    #     acts.examples.TrackFinderPerformanceWriter(
+    #         level=acts.logging.INFO,
+    #         inputProtoTracks=
+    #         # "sorted_truth_particle_tracks"
+    #         # if directNavigation
+    #         # else
+    #         "truth_particle_tracks",
+    #         inputParticles="truth_seeds_selected",
+    #         inputMeasurementParticlesMap="measurement_particles_map",
+    #         filePath=str(outputDir / "performance_track_finder.root"),
+    #     )
+    # )
+    #
+    # s.addWriter(
+    #     acts.examples.TrackFitterPerformanceWriter(
+    #         level=acts.logging.INFO,
+    #         inputTrajectories="trajectories",
+    #         inputParticles="truth_seeds_selected",
+    #         inputMeasurementParticlesMap="measurement_particles_map",
+    #         filePath=str(outputDir / "performance_track_fitter.root"),
+    #     )
+    # )
 
     return s
 

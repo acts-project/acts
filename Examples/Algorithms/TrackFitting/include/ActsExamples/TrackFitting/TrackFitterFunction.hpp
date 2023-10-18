@@ -92,16 +92,14 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger);
 
-// TODO finish description
 /// Makes a fitter function object for the Global Chi Square Fitter (GX2F)
 ///
-/// \param trackingGeometry the trackingGeometry for the propagator
-/// \param magneticField the magnetic field for the propagator
-/// \param multipleScattering
-/// \param energyLoss
-/// \param freeToBoundCorrection
-/// \param logger
-/// \return
+/// @param trackingGeometry the trackingGeometry for the propagator
+/// @param magneticField the magnetic field for the propagator
+/// @param multipleScattering bool
+/// @param energyLoss bool
+/// @param freeToBoundCorrection bool
+/// @param logger a logger instance
 std::shared_ptr<TrackFitterFunction> makeGlobalChiSquareFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,

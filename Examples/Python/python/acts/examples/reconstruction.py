@@ -1078,7 +1078,7 @@ def addGx2fTracks(
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
         inputClusters=clusters if clusters is not None else "",
-        outputTracks="kfTracks",
+        outputTracks="gx2fTracks",
         pickTrack=-1,
         fit=acts.examples.makeGlobalChiSquareFitterFunction(
             trackingGeometry, field, **gx2fOptions
@@ -1091,7 +1091,7 @@ def addGx2fTracks(
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
         inputTracks=fitAlg.config.outputTracks,
-        outputTrajectories="kfTrajectories",
+        outputTrajectories="gx2fTrajectories",
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)

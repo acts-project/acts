@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// TODO We still use some Kalman Fitter functionalities. Check for replacement
+
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -20,7 +22,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"  /// removable?
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -104,7 +106,8 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
                       gx2fOptions, tracks);
   }
 
-  // TODO create directNavigator
+  // TODO create operator() for directNavigator
+  // We need a placeholder for the directNavigator overload, to safely compile.
   TrackFitterResult operator()(
       const std::vector<Acts::SourceLink>& sourceLinks,
       const TrackParameters& initialParameters,
