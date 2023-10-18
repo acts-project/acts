@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   detector->dotStream(fs);
   fs.close();
 
-  // Now sort
+  // Sort the detector
   Acts::Experimental::detail::BlueprintHelper::sort(*detector);
 
   // Test the recursive sort worked
