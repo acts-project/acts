@@ -46,11 +46,10 @@ class ConstrainedStep {
   using Scalar = ActsScalar;
 
   /// the types of constraints
-  /// from accuracy - this can vary up and down given a good step estimator
   /// from actor    - this would be a typical navigation step
   /// from aborter  - this would be a target condition
   /// from user     - this is user given for what reason ever
-  enum Type : int { accuracy = 0, actor = 1, aborter = 2, user = 3 };
+  enum Type : int { actor = 0, aborter = 1, user = 2 };
 
   /// Number of iterations needed by the stepsize finder
   /// (e.g. Runge-Kutta) of the stepper.
@@ -69,10 +68,9 @@ class ConstrainedStep {
   ///
   /// @param value is the new accuracy value
   constexpr void setAccuracy(Scalar value) {
-    // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
-    // assert(value > 0 && "ConstrainedStep accuracy must be > 0.");
-    /// set the accuracy value
-    m_values[accuracy] = value;
+    assert(value > 0 && "ConstrainedStep accuracy must be > 0.");
+    // set the accuracy value
+    m_accuracy = value;
   }
 
   /// set user by one Scalar
@@ -81,17 +79,15 @@ class ConstrainedStep {
   constexpr void setUser(Scalar value) {
     // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
     // assert(value != 0 && "ConstrainedStep user must be != 0.");
-    /// set the user value
+    // set the user value
     m_values[user] = value;
   }
 
   /// returns the min step size
   constexpr Scalar value() const {
-    Type minType = Type(std::min_element(m_values.begin(), m_values.end()) -
-                        m_values.begin());
-    Scalar min = m_values[minType];
+    Scalar min = *std::min_element(m_values.begin(), m_values.end());
     // accuracy is always positive and therefore handled separately
-    Scalar result = std::min(std::abs(min), m_values[accuracy]);
+    Scalar result = std::min(std::abs(min), m_accuracy);
     return std::signbit(min) ? -result : result;
   }
 
@@ -100,10 +96,20 @@ class ConstrainedStep {
   /// @param type is the requested parameter type
   constexpr Scalar value(Type type) const { return m_values[type]; }
 
+  /// Access the accuracy value
+  ///
+  /// @param type is the requested parameter type
+  constexpr Scalar accuracy() const { return m_accuracy; }
+
   /// release a certain constraint value
   ///
   /// @param type is the constraint type to be released
   constexpr void release(Type type) { m_values[type] = kNotSet; }
+
+  /// release accuracy
+  ///
+  /// @param type is the constraint type to be released
+  constexpr void releaseAccuracy() { m_accuracy = kNotSet; }
 
   /// Update the step size of a certain type
   ///
@@ -114,7 +120,6 @@ class ConstrainedStep {
   /// @param type is the constraint type
   /// @param releaseStep Allow step size to increase again
   constexpr void update(Scalar value, Type type, bool releaseStep = false) {
-    assert(type != accuracy && "Accuracy should not be updated.");
     if (releaseStep) {
       release(type);
     }
@@ -130,8 +135,7 @@ class ConstrainedStep {
 
   std::ostream& toStream(std::ostream& os) const {
     // Helper method to avoid unreadable screen output
-    auto streamValue = [&](Type type) {
-      Scalar val = value(type);
+    auto streamValue = [&](Scalar val) {
       os << std::setw(5);
       if (std::abs(val) == kNotSet) {
         os << (val > 0 ? "+∞" : "-∞");
@@ -141,13 +145,13 @@ class ConstrainedStep {
     };
 
     os << "(";
-    streamValue(accuracy);
+    streamValue(m_accuracy);
     os << ", ";
-    streamValue(actor);
+    streamValue(value(actor));
     os << ", ";
-    streamValue(aborter);
+    streamValue(value(aborter));
     os << ", ";
-    streamValue(user);
+    streamValue(value(user));
     os << ")";
 
     return os;
@@ -164,6 +168,8 @@ class ConstrainedStep {
 
   /// the step size tuple
   std::array<Scalar, 4> m_values = {kNotSet, kNotSet, kNotSet, kNotSet};
+  /// the accuracy value - this can vary up and down given a good step estimator
+  Scalar m_accuracy = kNotSet;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const ConstrainedStep& step) {

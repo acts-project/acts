@@ -153,7 +153,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_dy.push_back(direction.y());
       m_dz.push_back(direction.z());
 
-      double accuracy = step.stepSize.value(Acts::ConstrainedStep::accuracy);
+      double accuracy = step.stepSize.accuracy();
       double actor = step.stepSize.value(Acts::ConstrainedStep::actor);
       double aborter = step.stepSize.value(Acts::ConstrainedStep::aborter);
       double user = step.stepSize.value(Acts::ConstrainedStep::user);
