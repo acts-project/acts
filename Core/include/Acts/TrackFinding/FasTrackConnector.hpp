@@ -1,4 +1,5 @@
 //TODO: update to C++17 style 
+//Consider to moving to detail subdirectory 
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -33,6 +34,7 @@ public:
 
   std::map<int, std::vector<struct LayerGroup> > m_layerGroups;
   std::map<int, std::vector<Acts::FasTrackConnection *>> m_connMap;
+  //TODO: change to std::map<int, std::vector<Acts::FasTrackConnection> > m_connMap; or   std::map<int, std::vector<std::unique_ptr<Acts::FasTrackConnection>> > m_connMap;
 };
 
 } // namespace Acts

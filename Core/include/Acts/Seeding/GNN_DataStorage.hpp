@@ -53,8 +53,7 @@ class TrigFTF_GNN_Node {
   TrigFTF_GNN_Node(const FTF_SP<space_point_t> &FTF_sp, float minT = -100.0,
                    float maxT = 100.0)
       : m_sp_FTF(FTF_sp) , m_minCutOnTau(minT), m_maxCutOnTau(maxT) {
-    m_in.clear();
-    m_out.clear();
+   
 
   }
 
@@ -104,7 +103,6 @@ class TrigFTF_GNN_EtaBin {
          it != m_vn.end(); ++it) {
       delete (*it);
     }
-    m_vn.clear();
   }
 
   void sortByPhi() {
@@ -143,7 +141,8 @@ class TrigFTF_GNN_EtaBin {
     }
   }
 
-  std::vector<TrigFTF_GNN_Node<space_point_t> *> m_vn;
+  std::vector<TrigFTF_GNN_Node<space_point_t> *> m_vn; 
+  //TODO change to   std::vector<std::unique_ptr<TrigFTF_GNN_Node<space_point_t>>> m_vn;
   std::vector<std::pair<float, unsigned int>> m_vPhiNodes;
 };
 

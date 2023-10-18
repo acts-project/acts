@@ -1,6 +1,5 @@
 //TODO: update to C++17 style 
 #include "Acts/TrackFinding/FasTrackConnector.hpp"
-#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <list>
@@ -15,7 +14,6 @@ FasTrackConnection::FasTrackConnection(unsigned int s, unsigned int d)
 
 FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
 
-  m_connMap.clear();
   m_layerGroups.clear();
 
   int nLinks;
@@ -181,8 +179,6 @@ FasTrackConnector::~FasTrackConnector() {
          cIt != (*it).second.end(); ++cIt) {
       delete (*cIt);
     }
-    (*it).second.clear();
   }
-  m_connMap.clear();
 }
 } // namespace Acts
