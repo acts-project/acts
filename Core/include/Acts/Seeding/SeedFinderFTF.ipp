@@ -666,9 +666,9 @@ template <typename external_spacepoint_t>
 template <typename input_container_t, typename output_container_t,
           typename callable_t>
 void SeedFinderFTF<external_spacepoint_t>::createSeeds_old(
-    const Acts::SeedFinderOptions& options,
-    const input_container_t& spacePoints, output_container_t& out_cont,
-    callable_t&& extract_coordinates) const {}
+    const Acts::SeedFinderOptions& /*options*/,
+    const input_container_t& /*spacePoints*/, output_container_t& /*out_cont*/,
+    callable_t&& /*extract_coordinates*/) const {}
 
 template <typename external_spacepoint_t>
 template <typename input_container_t, typename callable_t>
