@@ -228,6 +228,19 @@ struct Gx2FitterResult {
 /// @param trackStateProxy is the current track state
 /// @param result is the mutable result/cache object
 /// @param logger a logger instance
+///
+/// @note This function uses the effectiveProjector(). This is not very
+/// efficient, because Eigen puts the memory on the heap. A better solution can
+/// be found in the GainMatrixUpdater.cpp, where the projector is created
+/// manually. In our case it could be created like
+/// auto projJacobian = result.jacobianFromStart
+///                     .template topLeftCorner<measDim, eBoundSize>().eval();
+/// , and similar for `projPredicted`. However, this doesn't work for the GX2F
+/// when using a measurement like `loc1` which would need a projector like
+/// [0 1 0 0 0 0] (no identity matrix in the top left corner). To properly
+/// construct the correct projector, we would need to know what kind of
+/// measurement we are looking at, but currently, we have that information only
+/// implicitly in the effectiveProjector().
 template <size_t measDim, typename traj_t>
 void collector(typename traj_t::TrackStateProxy& trackStateProxy,
                Gx2FitterResult<traj_t>& result, const Logger& logger) {
@@ -235,7 +248,7 @@ void collector(typename traj_t::TrackStateProxy& trackStateProxy,
   auto measurement = trackStateProxy.template calibrated<measDim>();
   auto covarianceMeasurement =
       trackStateProxy.template calibratedCovariance<measDim>();
-  // calculate residuals and return with covariances and jacobians
+  // Project Jacobian and predicted measurements into the measurement dimensions
   auto projJacobian =
       (trackStateProxy.effectiveProjector() * result.jacobianFromStart).eval();
   auto projPredicted =
@@ -248,6 +261,7 @@ void collector(typename traj_t::TrackStateProxy& trackStateProxy,
                << "\n\tProjected Jacobian:\t" << projJacobian
                << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
 
+  // Collect residuals, covariances, and projected jacobians
   for (size_t i = 0; i < measDim; i++) {
     if (covarianceMeasurement(i, i) < 1e-10) {
       ACTS_WARNING("Invalid covariance of measurement: cov(" << i << "," << i
