@@ -135,7 +135,7 @@ class GlobalNeighborHoodIndices {
     return result;
   }
 
-  // Collect the sequence of indices into an vector
+  // Collect the sequence of indices into a vector
   auto collect() const {
     boost::container::small_vector<size_t, ipow(3, DIM)> result;
     result.reserve(this->size());

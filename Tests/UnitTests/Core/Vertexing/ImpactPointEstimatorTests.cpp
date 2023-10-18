@@ -25,6 +25,7 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -54,10 +55,13 @@ using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
 using MagneticField = Acts::ConstantBField;
+using StraightPropagator = Acts::Propagator<StraightLineStepper>;
 using Stepper = Acts::EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper>;
 using Estimator =
     Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
+using StraightLineEstimator =
+    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, StraightPropagator>;
 
 const Acts::GeometryContext geoContext;
 const Acts::MagneticFieldContext magFieldContext;
@@ -95,7 +99,7 @@ Estimator makeEstimator(double bZ) {
   Estimator::Config cfg(field,
                         std::make_shared<Propagator>(
                             std::move(stepper), detail::VoidNavigator(),
-                            getDefaultLogger("Prop", Logging::Level::VERBOSE)));
+                            getDefaultLogger("Prop", Logging::Level::WARNING)));
   return Estimator(cfg);
 }
 
@@ -132,7 +136,7 @@ BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
 
 // Check `calculateDistance`, `estimate3DImpactParameters`, and
 // `getVertexCompatibility`.
-BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
+BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
                      l0, t0, phi, theta, p, q) {
   auto particleHypothesis = ParticleHypothesis::pion();
 
@@ -193,12 +197,24 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
 BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
                      q, vx0, vy0, vz0, vt0) {
   using Propagator = Acts::Propagator<Stepper>;
+  using StraightPropagator = Acts::Propagator<StraightLineStepper>;
+
+  // Set up quantities for constant B field
   auto field = std::make_shared<MagneticField>(Vector3(0, 0, 2_T));
   Stepper stepper(field);
   auto propagator = std::make_shared<Propagator>(std::move(stepper));
   Estimator::Config cfg(field, propagator);
   Estimator ipEstimator(cfg);
-  Estimator::State state(magFieldCache());
+  Estimator::State ipState(magFieldCache());
+
+  // Set up quantities for B = 0
+  auto zeroField = std::make_shared<MagneticField>(Vector3(0, 0, 0));
+  StraightLineStepper straightLineStepper;
+  auto straightLinePropagator =
+      std::make_shared<StraightPropagator>(straightLineStepper);
+  StraightLineEstimator::Config zeroFieldCfg(zeroField, straightLinePropagator);
+  StraightLineEstimator zeroFieldIPEstimator(zeroFieldCfg);
+  StraightLineEstimator::State zeroFieldIPState(magFieldCache());
 
   // Vertex position and vertex object
   Vector4 vtxPos(vx0, vy0, vz0, vt0);
@@ -240,7 +256,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   // Perigee surface at vertex position
   auto refPerigeeSurface = Surface::makeShared<PerigeeSurface>(refPoint);
 
-  // Propagate to the 2D PCA of the reference point
+  // Set up the propagator options (they are the same with and without B field)
   PropagatorOptions pOptions(geoContext, magFieldContext);
   auto intersection = refPerigeeSurface
                           ->intersect(geoContext, params.position(geoContext),
@@ -248,13 +264,21 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
                           .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
+
+  // Propagate to the 2D PCA of the reference point in a constant B field
   auto result = propagator->propagate(params, *refPerigeeSurface, pOptions);
   BOOST_CHECK(result.ok());
-
   const auto& refParams = *result->endParameters;
 
+  // Propagate to the 2D PCA of the reference point when B = 0
+  auto zeroFieldResult =
+      straightLinePropagator->propagate(params, *refPerigeeSurface, pOptions);
+  BOOST_CHECK(zeroFieldResult.ok());
+  const auto& zeroFieldRefParams = *zeroFieldResult->endParameters;
+
   BOOST_TEST_CONTEXT(
-      "Check time at 2D PCA (i.e., function getImpactParameters)") {
+      "Check time at 2D PCA (i.e., function getImpactParameters) for helical "
+      "tracks") {
     // Calculate impact parameters
     auto ipParams = ipEstimator
                         .getImpactParameters(refParams, vtx, geoContext,
@@ -270,14 +294,14 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
                          1e-3);
   }
 
-  BOOST_TEST_CONTEXT(
-      "Check time at 3D PCA (i.e., function getDistanceAndMomentum)") {
+  auto checkGetDistanceAndMomentum = [&vtxPos, &corrMomDir, corrTimeDiff](
+                                         const auto& ipe, const auto& rParams,
+                                         auto& state) {
     // Find 4D distance and momentum of the track at the vertex starting from
     // the perigee representation at the reference position
-    auto distAndMom =
-        ipEstimator
-            .getDistanceAndMomentum<4>(geoContext, refParams, vtxPos, state)
-            .value();
+    auto distAndMom = ipe.template getDistanceAndMomentum<4>(
+                             geoContext, rParams, vtxPos, state)
+                          .value();
 
     ActsVector<4> distVec = distAndMom.first;
     Vector3 momDir = distAndMom.second;
@@ -293,6 +317,18 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
     // Momentum direction should correspond to the momentum direction at the
     // vertex
     CHECK_CLOSE_OR_SMALL(momDir, corrMomDir, 1e-5, 1e-4);
+  };
+
+  BOOST_TEST_CONTEXT(
+      "Check time at 3D PCA (i.e., function getDistanceAndMomentum) for "
+      "straight tracks") {
+    checkGetDistanceAndMomentum(zeroFieldIPEstimator, zeroFieldRefParams,
+                                zeroFieldIPState);
+  }
+  BOOST_TEST_CONTEXT(
+      "Check time at 3D PCA (i.e., function getDistanceAndMomentum) for "
+      "helical tracks") {
+    checkGetDistanceAndMomentum(ipEstimator, refParams, ipState);
   }
 }
 

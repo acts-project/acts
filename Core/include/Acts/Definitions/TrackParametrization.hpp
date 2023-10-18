@@ -22,8 +22,8 @@
 namespace Acts {
 
 // Note:
-// The named indices are use to access raw data vectors and matrices at the
-// lowest level. Since the interpretation of some of the components, e.g. local
+// The named indices are used to access raw data vectors and matrices at the
+// lowest level. Since the interpretation of some components, e.g. local
 // position and the inverse-momentum-like component, depend on additional
 // information the names have some ambiguity. This can only be resolved at a
 // higher logical level and no attempt is made to resolve it here.

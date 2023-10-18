@@ -374,10 +374,10 @@ auto TGeoDetector::finalize(
   TrackingGeometryPtr tgeoTrackingGeometry = buildTGeoDetector(
       cfg, tGeoContext, detectorStore, std::move(mdecorator), *logger);
 
-  ContextDecorators tgeoContextDeocrators = {};
+  ContextDecorators tgeoContextDecorators = {};
   // Return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(tgeoTrackingGeometry), std::move(tgeoContextDeocrators));
+      std::move(tgeoTrackingGeometry), std::move(tgeoContextDecorators));
 }
 
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {

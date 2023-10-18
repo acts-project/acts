@@ -342,7 +342,7 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
         "(required) - returning 0 ");
     return nullptr;
   }
-  // Check whether it is a r-binned case or a z-binned case
+  // Check whether it is an r-binned case or a z-binned case
   bool rCase =
       std::abs(firstVolumeBounds->get(CylinderVolumeBounds::eMinR) -
                lastVolumeBounds->get(CylinderVolumeBounds::eMinR)) > 0.1;

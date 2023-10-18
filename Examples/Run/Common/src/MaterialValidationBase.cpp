@@ -37,7 +37,7 @@ namespace {
 /// @tparam bfield_t Type of the magnetic field
 ///
 /// @param sequencer The framework sequencer, Propagation algorithm to be added
-/// @param bfield The bfield object needed for the Stepper & propagagor
+/// @param bfield The bfield object needed for the stepper & propagator
 /// @param vm The program options for the log file
 /// @param randomNumberSvc The framework random number engine
 /// @param tGeometry The TrackingGeometry object
@@ -60,7 +60,7 @@ ActsExamples::ProcessCode setupPropagation(
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg);
 
-  // Resolve the bfield map template and create the propgator
+  // Resolve the bfield map template and create the propagator
   using Stepper = Acts::EigenStepper<
       Acts::StepperExtensionList<Acts::DefaultExtension,
                                  Acts::DenseEnvironmentExtension>,
