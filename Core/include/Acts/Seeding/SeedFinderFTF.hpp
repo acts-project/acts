@@ -1,4 +1,4 @@
-// basing on Ortho
+//TODO: update to C++17 style 
 
 #pragma once
 

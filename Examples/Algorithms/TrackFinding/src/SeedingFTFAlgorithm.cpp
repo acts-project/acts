@@ -95,7 +95,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
     ACTS_DEBUG("FTF space points: "
                << " FTF_id: " << sp.FTF_ID << " z: " << sp.SP->z()
                << " r: " << sp.SP->r() << " ACTS volume:  "
-               << sp.SP->sourceLinks().front().geometryId().volume() << "\n");
+               << sp.SP->sourceLinks().front().get<IndexSourceLink>().geometryId().volume() << "\n");
   }
 
   // this is now calling on a core algorithm
@@ -175,17 +175,22 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
 
       // FTF space point vector
       // loop over space points, call on map
-      auto source_link = spacePoint.sourceLinks();
+      const auto& source_link = spacePoint.sourceLinks();
+      const auto& index_source_link = source_link.front().get<IndexSourceLink>() ; 
+
+
       // warning if source link empty
       if (source_link.empty()) {
         // warning in officaial acts format
         ACTS_WARNING("warning source link vector is empty");
         continue;
       }
-
-      int ACTS_vol_id = source_link.front().geometryId().volume();
-      int ACTS_lay_id = source_link.front().geometryId().layer();
-      int ACTS_mod_id = source_link.front().geometryId().sensitive();
+      int ACTS_vol_id = index_source_link.geometryId().volume();
+      int ACTS_lay_id = index_source_link.geometryId().layer();
+      int ACTS_mod_id = index_source_link.geometryId().sensitive();
+      // int ACTS_vol_id = source_link.front().geometryId().volume();
+      // int ACTS_lay_id = source_link.front().geometryId().layer();
+      // int ACTS_mod_id = source_link.front().geometryId().sensitive();
 
       // dont want strips or HGTD, at the moment never called so commented out
       if (ACTS_vol_id == 2 or ACTS_vol_id == 22 or ACTS_vol_id == 23 or

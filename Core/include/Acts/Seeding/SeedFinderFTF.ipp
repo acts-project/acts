@@ -1,5 +1,5 @@
 // SeedFinderFTF.ipp
-// basing on ortho seed finder
+//TODO: update to C++17 style 
 
 #include "Acts/Definitions/Algebra.hpp"  //for M_PI
 #include "Acts/Geometry/Extent.hpp"
@@ -49,7 +49,7 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(
         FTF_sp, (m_config.m_useClusterWidth > 0)); 
   }
 
-
+  m_config.m_nMaxPhiSlice = 1 ; 
   m_config.m_phiSliceWidth = 2 * M_PI / m_config.m_nMaxPhiSlice;
 
   m_storage->sortByPhi();
