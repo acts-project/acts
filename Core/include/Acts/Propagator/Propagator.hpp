@@ -374,37 +374,6 @@ class Propagator final {
   propagate(const parameters_t& start, const propagator_options_t& options,
             bool makeCurvilinear = true) const;
 
-  /// @brief Propagate track parameters
-  ///
-  /// This function performs the propagation of the track parameters using the
-  /// internal stepper implementation, until at least one abort condition is
-  /// fulfilled or the maximum number of steps/path length provided in the
-  /// propagation options is reached.
-  ///
-  /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam propagator_options_t Type of the propagator options
-  /// @tparam path_aborter_t The path aborter type to be added
-  ///
-  /// @param [in] start initial track parameters to propagate
-  /// @param [in] options Propagation options, type Options<,>
-  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
-  /// @param [in] inputResult an existing result object to start from
-  ///
-  /// @return Propagation result containing the propagation status, final
-  ///         track parameters, and output of actions (if they produce any)
-  ///
-  template <typename parameters_t, typename propagator_options_t,
-            typename path_aborter_t = PathLimitReached>
-  Result<
-      action_list_t_result_t<CurvilinearTrackParameters,
-                             typename propagator_options_t::action_list_type>>
-  propagate(
-      const parameters_t& start, const propagator_options_t& options,
-      bool makeCurvilinear,
-      action_list_t_result_t<CurvilinearTrackParameters,
-                             typename propagator_options_t::action_list_type>&&
-          inputResult) const;
-
   /// @brief Propagate track parameters - User method
   ///
   /// This function performs the propagation of the track parameters according
@@ -431,37 +400,6 @@ class Propagator final {
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
-  /// @brief Propagate track parameters - User method
-  ///
-  /// This function performs the propagation of the track parameters according
-  /// to the internal implementation object until at least one abort condition
-  /// is fulfilled, the destination surface is hit or the maximum number of
-  /// steps/path length as given in the propagation options is reached.
-  ///
-  /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam propagator_options_t Type of the propagator options
-  /// @tparam target_aborter_t The target aborter type to be added
-  /// @tparam path_aborter_t The path aborter type to be added
-  ///
-  /// @param [in] start Initial track parameters to propagate
-  /// @param [in] target Target surface of to propagate to
-  /// @param [in] options Propagation options
-  /// @param [in] inputResult an existing result object to start from
-  ///
-  /// @return Propagation result containing the propagation status, final
-  ///         track parameters, and output of actions (if they produce any)
-  template <typename parameters_t, typename propagator_options_t,
-            typename target_aborter_t = SurfaceReached,
-            typename path_aborter_t = PathLimitReached>
-  Result<action_list_t_result_t<
-      BoundTrackParameters, typename propagator_options_t::action_list_type>>
-  propagate(
-      const parameters_t& start, const Surface& target,
-      const propagator_options_t& options,
-      action_list_t_result_t<BoundTrackParameters,
-                             typename propagator_options_t::action_list_type>
-          inputResult) const;
-
   /// @brief Propagate track parameters
   ///
   /// This function performs the propagation of the track parameters according
@@ -479,11 +417,39 @@ class Propagator final {
   template <typename propagator_state_t>
   Result<void> propagate(propagator_state_t& state) const;
 
-  template <typename propagator_state_t, typename result_t>
-  void moveStateToResult(propagator_state_t& state, result_t& result) const;
+  template <typename parameters_t, typename propagator_options_t,
+            typename path_aborter_t = PathLimitReached>
+  auto makeState(const parameters_t& start,
+                 const propagator_options_t& options) const;
+
+  template <typename parameters_t, typename propagator_options_t,
+            typename target_aborter_t = SurfaceReached,
+            typename path_aborter_t = PathLimitReached>
+  auto makeState(const parameters_t& start, const Surface& target,
+                 const propagator_options_t& options) const;
+
+  template <typename propagator_state_t, typename propagator_options_t>
+  Result<
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>>
+  makeResult(Result<void> result, propagator_state_t& state,
+             const propagator_options_t& options, bool makeCurvilinear) const;
+
+  template <typename propagator_state_t, typename propagator_options_t>
+  Result<action_list_t_result_t<
+      BoundTrackParameters, typename propagator_options_t::action_list_type>>
+  makeResult(Result<void> result, propagator_state_t& state,
+             const Surface& target, const propagator_options_t& options) const;
+
+  const stepper_t& stepper() const { return m_stepper; }
+
+  const navigator_t& navigator() const { return m_navigator; }
 
  private:
   const Logger& logger() const { return *m_logger; }
+
+  template <typename propagator_state_t, typename result_t>
+  void moveStateToResult(propagator_state_t& state, result_t& result) const;
 
   /// Implementation of propagation algorithm
   stepper_t m_stepper;

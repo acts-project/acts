@@ -157,11 +157,7 @@ struct Gx2FitterOptions {
   size_t nUpdateMax = 5;
 };
 
-template <typename traj_t>
 struct Gx2FitterResult {
-  // Fitted states that the actor has handled.
-  traj_t* fittedStates{nullptr};
-
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This corresponds to the last measurement state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
@@ -223,14 +219,13 @@ struct Gx2FitterResult {
 /// too small covariances for a stable fit.
 ///
 /// @tparam measDim Number of dimensions of the measurement
-/// @tparam traj_t The trajectory type
+/// @tparam track_state_proxy_t The track state proxy type
 ///
-/// @param trackStateProxy is the current track state
 /// @param result is the mutable result/cache object
 /// @param logger a logger instance
-template <size_t measDim, typename traj_t>
-void collector(typename traj_t::TrackStateProxy& trackStateProxy,
-               Gx2FitterResult<traj_t>& result, const Logger& logger) {
+template <size_t measDim, typename track_state_proxy_t>
+void collector(track_state_proxy_t& trackStateProxy, Gx2FitterResult& result,
+               const Logger& logger) {
   auto predicted = trackStateProxy.predicted();
   auto measurement = trackStateProxy.template calibrated<measDim>();
   auto covarianceMeasurement =
@@ -310,10 +305,13 @@ class Gx2Fitter {
   class Actor {
    public:
     /// Broadcast the result_type
-    using result_type = Gx2FitterResult<traj_t>;
+    using result_type = Gx2FitterResult;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
+
+    /// Fitted states that the actor has handled.
+    traj_t* fittedStates{nullptr};
 
     /// Allows retrieving measurements for a surface
     const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
@@ -360,7 +358,7 @@ class Gx2Fitter {
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, result_type& result,
                     const Logger& /*logger*/) const {
-      assert(result.fittedStates && "No MultiTrajectory set");
+      assert(fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
         return;
@@ -405,12 +403,11 @@ class Gx2Fitter {
 
           // add a full TrackState entry multi trajectory
           // (this allocates storage for all components, we will set them later)
-          auto fittedStates = *result.fittedStates;
-          const auto newTrackIndex = fittedStates.addTrackState(
+          const auto newTrackIndex = fittedStates->addTrackState(
               TrackStatePropMask::All, result.lastTrackIndex);
 
           // now get track state proxy back
-          auto trackStateProxy = fittedStates.getTrackState(newTrackIndex);
+          auto trackStateProxy = fittedStates->getTrackState(newTrackIndex);
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
           // assign the source link to the track state
           trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
@@ -551,21 +548,15 @@ class Gx2Fitter {
       // Set options for propagator
       PropagatorOptions propagatorOptions(geoCtx, magCtx);
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
+      gx2fActor.fittedStates = &trackContainer.trackStateContainer();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
 
-      typename propagator_t::template action_list_t_result_t<
-          CurvilinearTrackParameters, Actors>
-          inputResult;
-
-      auto& r = inputResult.template get<Gx2FitterResult<traj_t>>();
-
-      r.fittedStates = &trackContainer.trackStateContainer();
       // propagate with params and return jacobians and residuals
-      auto result = m_propagator.template propagate(
-          params, propagatorOptions, true, std::move(inputResult));
+      auto result =
+          m_propagator.template propagate(params, propagatorOptions, true);
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements

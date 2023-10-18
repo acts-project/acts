@@ -202,6 +202,8 @@ struct GaussianSumFitter {
       return error;
     };
 
+    auto& fittedStates = trackContainer.trackStateContainer();
+
     // Define directions based on input propagation direction. This way we can
     // refer to 'forward' and 'backward' regardless of the actual direction.
     const auto gsfForward = options.propagatorPlainOptions.direction;
@@ -253,6 +255,7 @@ struct GaussianSumFitter {
       // Catch the actor and set the measurements
       auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
       actor.setOptions(options);
+      actor.m_cfg.fittedStates = &fittedStates;
       actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
       actor.m_cfg.inReversePass = false;
@@ -264,14 +267,6 @@ struct GaussianSumFitter {
       using IsMultiParameters =
           detail::IsMultiComponentBoundParameters<start_parameters_t>;
 
-      typename propagator_t::template action_list_t_result_t<
-          CurvilinearTrackParameters, decltype(fwdPropOptions.actionList)>
-          inputResult;
-
-      auto& r = inputResult.template get<typename GsfActor::result_type>();
-
-      r.fittedStates = &trackContainer.trackStateContainer();
-
       // This allows the initialization with single- and multicomponent start
       // parameters
       if constexpr (not IsMultiParameters::value) {
@@ -280,11 +275,9 @@ struct GaussianSumFitter {
             sParameters.parameters(), sParameters.covariance(),
             sParameters.particleHypothesis());
 
-        return m_propagator.propagate(params, fwdPropOptions, false,
-                                      std::move(inputResult));
+        return m_propagator.propagate(params, fwdPropOptions, false);
       } else {
-        return m_propagator.propagate(sParameters, fwdPropOptions, false,
-                                      std::move(inputResult));
+        return m_propagator.propagate(sParameters, fwdPropOptions, false);
       }
     }();
 
@@ -321,7 +314,7 @@ struct GaussianSumFitter {
       auto bwdPropOptions = bwdPropInitializer(options);
 
       auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
-      actor.setOptions(options);
+      actor.m_cfg.fittedStates = &fittedStates;
       actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.inReversePass = true;
       actor.m_cfg.logger = m_actorLogger.get();
@@ -335,46 +328,32 @@ struct GaussianSumFitter {
 
       using PM = TrackStatePropMask;
 
-      typename propagator_t::template action_list_t_result_t<
-          BoundTrackParameters, decltype(bwdPropOptions.actionList)>
-          inputResult;
-
-      // Unfortunately we must construct the result type here to be able to
-      // return an error code
-      using ResultType =
-          decltype(m_propagator.template propagate<
-                   MultiComponentBoundTrackParameters, decltype(bwdPropOptions),
-                   MultiStepperSurfaceReached>(
-              std::declval<MultiComponentBoundTrackParameters>(),
-              std::declval<Acts::Surface&>(),
-              std::declval<decltype(bwdPropOptions)>(),
-              std::declval<decltype(inputResult)>()));
-
-      auto& r = inputResult.template get<typename GsfActor::result_type>();
-
-      r.fittedStates = &trackContainer.trackStateContainer();
+      const auto& params = *fwdGsfResult.lastMeasurementState;
+      auto state =
+          m_propagator.template makeState<MultiComponentBoundTrackParameters,
+                                          decltype(bwdPropOptions),
+                                          MultiStepperSurfaceReached>(
+              params, target, bwdPropOptions);
 
       assert(
           (fwdGsfResult.lastMeasurementTip != MultiTrajectoryTraits::kInvalid &&
            "tip is invalid"));
 
-      auto proxy =
-          r.fittedStates->getTrackState(fwdGsfResult.lastMeasurementTip);
+      auto proxy = fittedStates.getTrackState(fwdGsfResult.lastMeasurementTip);
       proxy.shareFrom(TrackStatePropMask::Filtered,
                       TrackStatePropMask::Smoothed);
 
+      auto& r = state.template get<typename GsfActor::result_type>();
       r.currentTip = fwdGsfResult.lastMeasurementTip;
       r.visitedSurfaces.push_back(&proxy.referenceSurface());
       r.surfacesVisitedBwdAgain.push_back(&proxy.referenceSurface());
       r.measurementStates++;
       r.processedStates++;
 
-      const auto& params = *fwdGsfResult.lastMeasurementState;
-
-      return m_propagator.template propagate<std::decay_t<decltype(params)>,
-                                             decltype(bwdPropOptions),
-                                             MultiStepperSurfaceReached>(
-          params, target, bwdPropOptions, std::move(inputResult));
+      auto propagationResult = m_propagator.propagate(state);
+      return m_propagator
+          .template makeResult<decltype(state), decltype(bwdPropOptions)>(
+              propagationResult, state, target, bwdPropOptions);
     }();
 
     if (!bwdResult.ok()) {
@@ -424,8 +403,8 @@ struct GaussianSumFitter {
     const auto& foundBwd = bwdGsfResult.surfacesVisitedBwdAgain;
     std::size_t measurementStatesFinal = 0;
 
-    for (auto state : fwdGsfResult.fittedStates->reverseTrackStateRange(
-             fwdGsfResult.currentTip)) {
+    for (auto state :
+         fittedStates.reverseTrackStateRange(fwdGsfResult.currentTip)) {
       const bool found = std::find(foundBwd.begin(), foundBwd.end(),
                                    &state.referenceSurface()) != foundBwd.end();
       if (not found && state.typeFlags().test(MeasurementFlag)) {

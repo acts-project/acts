@@ -93,37 +93,46 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
     -> Result<action_list_t_result_t<
         CurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
-  // Type of track parameters produced by the propagation
-  using ReturnParameterType = CurvilinearTrackParameters;
-
-  static_assert(std::is_copy_constructible<ReturnParameterType>::value,
+  static_assert(std::is_copy_constructible<CurvilinearTrackParameters>::value,
                 "return track parameter type must be copy-constructible");
 
-  // Type of the full propagation result, including output from actions
-  using ResultType =
-      action_list_t_result_t<ReturnParameterType,
-                             typename propagator_options_t::action_list_type>;
+  auto state = makeState<parameters_t, propagator_options_t, path_aborter_t>(
+      start, options);
 
-  return propagate<parameters_t, propagator_options_t, path_aborter_t>(
-      start, options, makeCurvilinear, ResultType{});
+  // Perform the actual propagation
+  auto propagationResult = propagate(state);
+
+  return makeResult(propagationResult, state, options, makeCurvilinear);
+}
+
+template <typename S, typename N>
+template <typename parameters_t, typename propagator_options_t,
+          typename target_aborter_t, typename path_aborter_t>
+auto Acts::Propagator<S, N>::propagate(
+    const parameters_t& start, const Surface& target,
+    const propagator_options_t& options) const
+    -> Result<action_list_t_result_t<
+        BoundTrackParameters,
+        typename propagator_options_t::action_list_type>> {
+  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+                "Parameters do not fulfill bound parameters concept.");
+
+  auto state = makeState<parameters_t, propagator_options_t, target_aborter_t,
+                         path_aborter_t>(start, target, options);
+
+  // Perform the actual propagation
+  auto propagationResult = propagate(state);
+
+  return makeResult(propagationResult, state, target, options);
 }
 
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const propagator_options_t& options,
-    bool makeCurvilinear,
-    action_list_t_result_t<CurvilinearTrackParameters,
-                           typename propagator_options_t::action_list_type>&&
-        inputResult) const
-    -> Result<action_list_t_result_t<
-        CurvilinearTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+auto Acts::Propagator<S, N>::makeState(
+    const parameters_t& start, const propagator_options_t& options) const {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
-
-  using ResultType = std::decay_t<decltype(inputResult)>;
 
   // Type of track parameters produced by the propagation
   using ReturnParameterType = CurvilinearTrackParameters;
@@ -160,67 +169,18 @@ auto Acts::Propagator<S, N>::propagate(
   detail::setupLoopProtection(
       state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
       false, logger());
-  // Perform the actual propagation & check its outcome
-  auto result = propagate<StateType>(state);
-  if (result.ok()) {
-    moveStateToResult(state, inputResult);
-    if (makeCurvilinear) {
-      /// Convert into return type and fill the result object
-      auto curvState = m_stepper.curvilinearState(state.stepping);
-      // Fill the end parameters
-      inputResult.endParameters =
-          std::get<CurvilinearTrackParameters>(curvState);
-      // Only fill the transport jacobian when covariance transport was done
-      if (state.stepping.covTransport) {
-        inputResult.transportJacobian = std::get<Jacobian>(curvState);
-      }
-    }
-    return Result<ResultType>::success(std::forward<ResultType>(inputResult));
-  } else {
-    return result.error();
-  }
+
+  return state;
 }
 
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename target_aborter_t, typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(
+auto Acts::Propagator<S, N>::makeState(
     const parameters_t& start, const Surface& target,
-    const propagator_options_t& options) const
-    -> Result<action_list_t_result_t<
-        BoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+    const propagator_options_t& options) const {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
-
-  // Type of track parameters produced at the end of the propagation
-  using return_parameter_type = BoundTrackParameters;
-
-  // Type of the full propagation result, including output from actions
-  using ResultType =
-      action_list_t_result_t<return_parameter_type,
-                             typename propagator_options_t::action_list_type>;
-
-  return propagate<parameters_t, propagator_options_t, target_aborter_t,
-                   path_aborter_t>(start, target, options, ResultType{});
-}
-
-template <typename S, typename N>
-template <typename parameters_t, typename propagator_options_t,
-          typename target_aborter_t, typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const Surface& target,
-    const propagator_options_t& options,
-    action_list_t_result_t<BoundTrackParameters,
-                           typename propagator_options_t::action_list_type>
-        inputResult) const
-    -> Result<action_list_t_result_t<
-        BoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
-                "Parameters do not fulfill bound parameters concept.");
-
-  using ResultType = std::decay_t<decltype(inputResult)>;
 
   // Type of provided options
   target_aborter_t targetAborter;
@@ -253,30 +213,87 @@ auto Acts::Propagator<S, N>::propagate(
       state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
       false, logger());
 
-  // Perform the actual propagation
-  auto result = propagate<StateType>(state);
+  return state;
+}
 
-  if (result.ok()) {
-    moveStateToResult(state, inputResult);
+template <typename S, typename N>
+template <typename propagator_state_t, typename propagator_options_t>
+auto Acts::Propagator<S, N>::makeResult(Result<void> propagationResult,
+                                        propagator_state_t& state,
+                                        const propagator_options_t& /*options*/,
+                                        bool makeCurvilinear) const
+    -> Result<action_list_t_result_t<
+        CurvilinearTrackParameters,
+        typename propagator_options_t::action_list_type>> {
+  // Type of track parameters produced by the propagation
+  using ReturnParameterType = CurvilinearTrackParameters;
 
-    // Compute the final results and mark the propagation as successful
-    auto bsRes = m_stepper.boundState(state.stepping, target);
-    if (!bsRes.ok()) {
-      return bsRes.error();
-    }
+  static_assert(std::is_copy_constructible<ReturnParameterType>::value,
+                "return track parameter type must be copy-constructible");
 
-    const auto& bs = *bsRes;
+  // Type of the full propagation result, including output from actions
+  using ResultType =
+      action_list_t_result_t<ReturnParameterType,
+                             typename propagator_options_t::action_list_type>;
 
+  if (!propagationResult.ok()) {
+    return propagationResult.error();
+  }
+
+  ResultType result{};
+  moveStateToResult(state, result);
+
+  if (makeCurvilinear) {
+    /// Convert into return type and fill the result object
+    auto curvState = m_stepper.curvilinearState(state.stepping);
     // Fill the end parameters
-    inputResult.endParameters = std::get<BoundTrackParameters>(bs);
+    result.endParameters = std::get<CurvilinearTrackParameters>(curvState);
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
-      inputResult.transportJacobian = std::get<Jacobian>(bs);
+      result.transportJacobian = std::get<Jacobian>(curvState);
     }
-    return Result<ResultType>::success(std::forward<ResultType>(inputResult));
-  } else {
-    return result.error();
   }
+
+  return Result<ResultType>::success(std::forward<ResultType>(result));
+}
+
+template <typename S, typename N>
+template <typename propagator_state_t, typename propagator_options_t>
+auto Acts::Propagator<S, N>::makeResult(
+    Result<void> propagationResult, propagator_state_t& state,
+    const Surface& target, const propagator_options_t& /*options*/) const
+    -> Result<action_list_t_result_t<
+        BoundTrackParameters,
+        typename propagator_options_t::action_list_type>> {
+  // Type of track parameters produced at the end of the propagation
+  using return_parameter_type = BoundTrackParameters;
+
+  // Type of the full propagation result, including output from actions
+  using ResultType =
+      action_list_t_result_t<return_parameter_type,
+                             typename propagator_options_t::action_list_type>;
+
+  if (!propagationResult.ok()) {
+    return propagationResult.error();
+  }
+
+  ResultType result{};
+  moveStateToResult(state, result);
+
+  // Compute the final results and mark the propagation as successful
+  auto bsRes = m_stepper.boundState(state.stepping, target);
+  if (!bsRes.ok()) {
+    return bsRes.error();
+  }
+  const auto& bs = *bsRes;
+
+  // Fill the end parameters
+  result.endParameters = std::get<BoundTrackParameters>(bs);
+  // Only fill the transport jacobian when covariance transport was done
+  if (state.stepping.covTransport) {
+    result.transportJacobian = std::get<Jacobian>(bs);
+  }
+  return Result<ResultType>::success(std::forward<ResultType>(result));
 }
 
 template <typename S, typename N>
