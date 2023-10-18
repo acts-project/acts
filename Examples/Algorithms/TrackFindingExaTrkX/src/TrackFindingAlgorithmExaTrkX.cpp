@@ -17,7 +17,6 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <mutex>
 #include <numeric>
 
 using namespace ActsExamples;

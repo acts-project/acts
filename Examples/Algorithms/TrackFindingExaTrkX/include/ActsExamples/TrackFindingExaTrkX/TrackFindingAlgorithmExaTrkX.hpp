@@ -21,6 +21,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
