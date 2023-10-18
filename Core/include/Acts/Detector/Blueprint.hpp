@@ -71,7 +71,7 @@ struct Node {
         transform(t),
         boundsType(bt),
         boundaryValues(bv),
-        internalsBuilder(isb) {}
+        internalsBuilder(std::move(isb)) {}
 
   virtual ~Node() = default;
 
@@ -79,7 +79,7 @@ struct Node {
   std::string name = "";
   /// Transform definition of this node
   Transform3 transform = Transform3::Identity();
-  /// Boundary definition of this ndoe
+  /// Boundary definition of this node
   VolumeBounds::BoundsType boundsType = VolumeBounds::eOther;
   /// The boundary type
   std::vector<ActsScalar> boundaryValues = {};
