@@ -17,6 +17,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -115,6 +116,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
       extensions, pOptions, pSurface.get());
+  options.smoothingTargetSurfaceStrategy =
+      Acts::CombinatorialKalmanFilterTargetSurfaceStrategy::first;
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()

@@ -47,6 +47,16 @@
 
 namespace Acts {
 
+enum class CombinatorialKalmanFilterTargetSurfaceStrategy {
+  /// Use the first trackstate to reach target surface
+  first,
+  /// Use the last trackstate to reach target surface
+  last,
+  /// Use the first or last trackstate to reach target surface depeding on the
+  /// distance
+  firstOrLast,
+};
+
 /// Track quality summary for one trajectory.
 ///
 /// This could be used to decide if a track is to be recorded when the
@@ -200,6 +210,11 @@ struct CombinatorialKalmanFilterOptions {
   /// The smoothing target surface
   const Surface* smoothingTargetSurface = nullptr;
 
+  /// Strategy to propagate to reference surface
+  CombinatorialKalmanFilterTargetSurfaceStrategy
+      smoothingTargetSurfaceStrategy =
+          CombinatorialKalmanFilterTargetSurfaceStrategy::firstOrLast;
+
   /// Whether to consider multiple scattering.
   bool multipleScattering = true;
 
@@ -332,6 +347,11 @@ class CombinatorialKalmanFilter {
 
     /// The smoothing target surface
     const Surface* smoothingTargetSurface = nullptr;
+
+    /// Strategy to propagate to reference surface
+    CombinatorialKalmanFilterTargetSurfaceStrategy
+        smoothingTargetSurfaceStrategy =
+            CombinatorialKalmanFilterTargetSurfaceStrategy::firstOrLast;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -1196,23 +1216,82 @@ class CombinatorialKalmanFilter {
         return Result<void>::success();
       }
 
-      // Obtain the smoothed parameters at first measurement state.
-      auto trackState = result.fittedStates->getTrackState(firstStateIndex);
+      // Obtain the smoothed parameters at first/last measurement state
+      auto firstCreatedState =
+          result.fittedStates->getTrackState(firstStateIndex);
+      auto lastCreatedMeasurement =
+          result.fittedStates->getTrackState(lastMeasurementIndex);
+
+      // Lambda to get the intersection of the free params on the target surface
+      auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
+        return smoothingTargetSurface
+            ->intersect(
+                state.geoContext, freeVector.segment<3>(eFreePos0),
+                state.options.direction * freeVector.segment<3>(eFreeDir0),
+                true, state.options.targetTolerance)
+            .closest();
+      };
+
+      // The smoothed free params at the first/last measurement state.
+      // (the first state can also be a material state)
+      auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
+          state.options.geoContext, firstCreatedState);
+      auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
+          state.options.geoContext, lastCreatedMeasurement);
+      // Get the intersections of the smoothed free parameters with the target
+      // surface
+      const auto firstIntersection = target(firstParams);
+      const auto lastIntersection = target(lastParams);
 
       // Update the stepping parameters - in order to progress to destination.
-      // At the same time, reverse navigation direction for further stepping.
+      // At the same time, reverse navigation direction for further stepping if
+      // necessary.
       // @note The stepping parameters is updated to the smoothed parameters at
-      // either the first measurement state or the last measurement state.
-      stepper.resetState(state.stepping, trackState.smoothed(),
-                         trackState.smoothedCovariance(),
-                         trackState.referenceSurface(),
-                         state.options.maxStepSize);
-      // Reverse the navigation direction
-      ACTS_VERBOSE(
-          "Reverse navigation direction after smoothing for reaching the "
-          "target surface");
-      state.options.direction = state.options.direction.invert();
-      const auto& surface = trackState.referenceSurface();
+      // either the first measurement state or the last measurement state. It
+      // assumes the target surface is not within the first and the last
+      // smoothed measurement state. Also, whether the intersection is on
+      // surface is not checked here.
+      bool useFirstTrackState = true;
+      switch (smoothingTargetSurfaceStrategy) {
+        case CombinatorialKalmanFilterTargetSurfaceStrategy::first:
+          useFirstTrackState = true;
+          break;
+        case CombinatorialKalmanFilterTargetSurfaceStrategy::last:
+          useFirstTrackState = false;
+          break;
+        case CombinatorialKalmanFilterTargetSurfaceStrategy::firstOrLast:
+          useFirstTrackState = std::abs(firstIntersection.pathLength()) <=
+                               std::abs(lastIntersection.pathLength());
+          break;
+        default:
+          ACTS_ERROR("Unknown target surface strategy");
+          return KalmanFitterError::SmoothFailed;
+      }
+      bool reverseDirection = false;
+      if (useFirstTrackState) {
+        stepper.resetState(state.stepping, firstCreatedState.smoothed(),
+                           firstCreatedState.smoothedCovariance(),
+                           firstCreatedState.referenceSurface(),
+                           state.options.maxStepSize);
+        reverseDirection = firstIntersection.pathLength() < 0;
+      } else {
+        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
+                           lastCreatedMeasurement.smoothedCovariance(),
+                           lastCreatedMeasurement.referenceSurface(),
+                           state.options.maxStepSize);
+        reverseDirection = lastIntersection.pathLength() < 0;
+      }
+      // Reverse the navigation direction if necessary
+      if (reverseDirection) {
+        ACTS_VERBOSE(
+            "Reverse navigation direction after smoothing for reaching the "
+            "target surface");
+        state.options.direction = state.options.direction.invert();
+      }
+      const auto& surface = useFirstTrackState
+                                ? firstCreatedState.referenceSurface()
+                                : lastCreatedMeasurement.referenceSurface();
+
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state to smoothed "
           "parameters at surface "
@@ -1322,6 +1401,8 @@ class CombinatorialKalmanFilter {
         propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
     combKalmanActor.filterTargetSurface = tfOptions.filterTargetSurface;
     combKalmanActor.smoothingTargetSurface = tfOptions.smoothingTargetSurface;
+    combKalmanActor.smoothingTargetSurfaceStrategy =
+        tfOptions.smoothingTargetSurfaceStrategy;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.smoothing = tfOptions.smoothing;

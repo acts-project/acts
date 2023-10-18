@@ -107,6 +107,8 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
         options.geoContext, options.magFieldContext, options.calibrationContext,
         extensions, options.propOptions, &(*options.referenceSurface));
 
+    kfOptions.referenceSurfaceStrategy =
+        Acts::KalmanFitterTargetSurfaceStrategy::first;
     kfOptions.multipleScattering = multipleScattering;
     kfOptions.energyLoss = energyLoss;
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
