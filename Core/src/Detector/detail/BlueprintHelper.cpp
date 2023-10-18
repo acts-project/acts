@@ -80,7 +80,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
     auto cHalfZ = node.boundaryValues[2];
 
     std::vector<std::unique_ptr<Blueprint::Node>> gaps;
-    // This part is only implemented now
+    // Only 1D binning implemented for the moment
     if (node.binning.size() == 1) {
       auto bVal = node.binning.front();
       if (bVal == binZ) {
