@@ -18,11 +18,11 @@ namespace {
 
 std::array<Acts::Vector3, 2u> cylEndpointsZ(
     const Acts::Experimental::Blueprint::Node& node) {
-  auto axisZ = node.transform.rotation().col(2);
+  Acts::Vector3 axisZ = node.transform.rotation().col(2);
   auto halfZ = node.boundaryValues[2];
-  auto center = node.transform.translation();
-  auto p0 = center - halfZ * axisZ;
-  auto p1 = center + halfZ * axisZ;
+  Acts::Vector3 center = node.transform.translation();
+  Acts::Vector3 p0 = center - halfZ * axisZ;
+  Acts::Vector3 p1 = center + halfZ * axisZ;
   return {p0, p1};
 }
 
