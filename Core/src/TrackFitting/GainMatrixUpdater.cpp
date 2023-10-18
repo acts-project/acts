@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
 #include <algorithm>
@@ -66,7 +67,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
 
     // Take a non-negative drfit distance measurement for Line Surface
     BoundVector newParam = trackState.predicted;
-    BoundCovariannce newCov = trackState.predictedCovariance;
+    BoundMatrix newCov = trackState.predictedCovariance;
     const LineSurface* line = dynamic_cast<const LineSurface*>(surface);
     if (line) {
       if (trackState.predicted[eBoundLoc0] < 0) {
