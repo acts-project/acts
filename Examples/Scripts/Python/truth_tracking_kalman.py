@@ -15,7 +15,7 @@ def runTruthTrackingKalman(
     digiConfigFile: Path,
     outputDir: Path,
     inputParticlePath: Optional[Path] = None,
-    decorators = [],
+    decorators=[],
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
@@ -154,7 +154,6 @@ def runTruthTrackingKalman(
 
 
 if "__main__" == __name__:
-
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     # detector, trackingGeometry, _ = getOpenDataDetector()

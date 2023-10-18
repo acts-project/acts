@@ -15,7 +15,7 @@ def runTruthTrackingGsf(
     digiConfigFile: Path,
     outputDir: Path,
     inputParticlePath: Optional[Path] = None,
-    decorators = [],
+    decorators=[],
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
