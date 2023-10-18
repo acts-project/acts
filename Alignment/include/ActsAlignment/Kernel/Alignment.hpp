@@ -74,7 +74,7 @@ struct AlignmentOptions {
   // The detector elements to be aligned
   std::vector<Acts::DetectorElementBase*> alignedDetElements;
 
-  // The alignment tolerance to determine if the alignment is coveraged
+  // The alignment tolerance to determine if the alignment is covered
   double averageChi2ONdfCutOff = 0.5;
 
   // The delta of average chi2/ndf within a couple of iterations to determine if
@@ -101,7 +101,7 @@ struct AlignmentResult {
   // The covariance of alignment parameters
   Acts::ActsDynamicMatrix alignmentCovariance;
 
-  // The avarage chi2/ndf (ndf is the measurement dim)
+  // The average chi2/ndf (ndf is the measurement dim)
   double averageChi2ONdf = std::numeric_limits<double>::max();
 
   // The delta chi2

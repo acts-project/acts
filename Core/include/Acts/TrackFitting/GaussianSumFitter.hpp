@@ -181,7 +181,7 @@ struct GaussianSumFitter {
 
   /// The generic implementation of the fit function.
   /// TODO check what this function does with the referenceSurface is e.g. the
-  /// first measuerementSurface
+  /// first measurementSurface
   template <typename source_link_it_t, typename start_parameters_t,
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t,
             typename track_container_t, template <typename> class holder_t>
@@ -223,7 +223,7 @@ struct GaussianSumFitter {
     }
 
     // To be able to find measurements later, we put them into a map
-    // We need to copy input SourceLinks anyways, so the map can own them.
+    // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(begin, end)
                               << " input measurements");
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
@@ -234,7 +234,7 @@ struct GaussianSumFitter {
     }
 
     ACTS_VERBOSE(
-        "Gsf: Final measuerement map size: " << inputMeasurements.size());
+        "Gsf: Final measurement map size: " << inputMeasurements.size());
 
     if (sParameters.covariance() == std::nullopt) {
       return GsfError::StartParametersHaveNoCovariance;
@@ -306,7 +306,7 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("Finished forward propagation");
     ACTS_VERBOSE("- visited surfaces: " << fwdGsfResult.visitedSurfaces.size());
     ACTS_VERBOSE("- processed states: " << fwdGsfResult.processedStates);
-    ACTS_VERBOSE("- measuerement states: " << fwdGsfResult.measurementStates);
+    ACTS_VERBOSE("- measurement states: " << fwdGsfResult.measurementStates);
 
     std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler;
 
@@ -416,7 +416,7 @@ struct GaussianSumFitter {
 
     // TODO should this be warning level? it happens quite often... Investigate!
     if (bwdGsfResult.measurementStates != fwdGsfResult.measurementStates) {
-      ACTS_DEBUG("Fwd and bwd measuerement states do not match");
+      ACTS_DEBUG("Fwd and bwd measurement states do not match");
     }
 
     // Go through the states and assign outliers / unset smoothed if surface not

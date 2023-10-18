@@ -60,7 +60,7 @@ auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
 
   auto [surfaces, elements] = convertGeant4Volumes(cfg, logger);
 
-  // Surface array creatorr
+  // Surface array creator
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
       Acts::SurfaceArrayCreator::Config(), logger.clone("SurfaceArrayCreator"));
   // Layer Creator

@@ -92,7 +92,7 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
                                  callable_t&& extractFunction) {
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
-  // resize + operator[] is faster then reserve and push_back
+  // resize + operator[] is faster than reserve and push_back
   linCircleVec.resize(vec.size());
 
   float cosPhiM = xM / rM;
