@@ -8,6 +8,8 @@
 
 #include "Acts/TrackFitting/GsfError.hpp"
 
+#include <string>
+
 namespace {
 
 class GsfErrorCategory : public std::error_category {
@@ -17,9 +19,11 @@ class GsfErrorCategory : public std::error_category {
 
   // Return what each enum means in text.
   std::string message(int c) const final {
-    using Acts::Experimental::GsfError;
+    using Acts::GsfError;
 
     switch (static_cast<GsfError>(c)) {
+      case GsfError::StartParametersHaveNoCovariance:
+        return "Start parameters have no Covariance";
       case GsfError::StartParametersNotOnStartSurface:
         return "Start parameters don't lie in the start surface";
       case GsfError::NoMeasurementStatesCreatedForward:
@@ -36,8 +40,7 @@ class GsfErrorCategory : public std::error_category {
 
 }  // namespace
 
-std::error_code Acts::Experimental::make_error_code(
-    Acts::Experimental::GsfError e) {
+std::error_code Acts::make_error_code(Acts::GsfError e) {
   static GsfErrorCategory c;
   return {static_cast<int>(e), c};
 }

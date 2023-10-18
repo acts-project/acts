@@ -328,7 +328,7 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
     pathDB : Path to the databases
     pathResult : Path to the write the result of the optimisation
     pipeBin : Pipe use to send the experiment binning to the main python instance
-    pipeResult : Pipe to recive the result of the optimisation
+    pipeResult : Pipe to receive the result of the optimisation
     doPloting : true if we want to plot the result of the optimisation and obtain the optimal material map
     """
     # Create the database
@@ -389,7 +389,7 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
         score = pipeResult.recv()
         print(
             datetime.now().strftime("%H:%M:%S")
-            + "    Recieved score for job "
+            + "    Received score for job "
             + str(job)
             + " and surface "
             + str(key),
@@ -448,7 +448,7 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
 if "__main__" == __name__:
 
     print(datetime.now().strftime("%H:%M:%S") + "    Starting")
-    # Optimiser arguents
+    # Optimiser arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--numberOfJobs", nargs="?", default=2, type=int
@@ -498,7 +498,7 @@ if "__main__" == __name__:
     binDict = matMapDeco.binningMap()
     del detector, decorators
 
-    # Create the pipes that will be used to tranfer data to/from the jobs
+    # Create the pipes that will be used to transfer data to/from the jobs
     from multiprocessing import Process, Pipe
 
     binPipes_child = dict()

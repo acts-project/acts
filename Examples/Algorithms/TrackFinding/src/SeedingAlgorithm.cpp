@@ -8,29 +8,46 @@
 
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/SpacePointData.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/FpeMonitor.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Range1D.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <cmath>
 #include <csignal>
+#include <cstddef>
+#include <iterator>
 #include <limits>
+#include <ostream>
 #include <stdexcept>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
+  // Seed Finder config requires Seed Filter object before conversion to
+  // internal units
+  m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
+  m_cfg.seedFinderConfig.seedFilter =
+      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
+
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
   m_cfg.seedFinderOptions =
       m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
           m_cfg.seedFinderConfig);
-  m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.gridConfig = m_cfg.gridConfig.toInternalUnits();
   m_cfg.gridOptions = m_cfg.gridOptions.toInternalUnits();
   if (m_cfg.inputSpacePoints.empty()) {
@@ -70,21 +87,25 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config deltaRMax");
   }
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
-                "Value of deltaRMaxTopSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
+      "Value of deltaRMaxTopSP must support NaN values");
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
-                "Value of deltaRMinTopSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
+      "Value of deltaRMinTopSP must support NaN values");
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
-                "Value of deltaRMaxBottomSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
+      "Value of deltaRMaxBottomSP must support NaN values");
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
-                "Value of deltaRMinBottomSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
+      "Value of deltaRMinBottomSP must support NaN values");
 
   if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxTopSP)) {
     m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.seedFinderConfig.deltaRMax;
@@ -208,8 +229,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_inputSpacePoints) {
     for (const auto& spacePoint : (*isp)(ctx)) {
-      // since the event store owns the space points, their pointers should be
-      // stable and we do not need to create local copies.
+      // since the event store owns the space
+      // points, their pointers should be stable and
+      // we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
     }
   }
@@ -259,14 +281,20 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
         std::size_t index = sp->index();
-        state.spacePointData.setTopHalfStripLength(
-            index, m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp()));
-        state.spacePointData.setBottomHalfStripLength(
-            index, m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp()));
-        state.spacePointData.setTopStripDirection(
-            index, m_cfg.seedFinderConfig.getTopStripDirection(sp->sp()));
-        state.spacePointData.setBottomStripDirection(
-            index, m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp()));
+
+        const float topHalfStripLength =
+            m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp());
+        const float bottomHalfStripLength =
+            m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp());
+        const Acts::Vector3 topStripDirection =
+            m_cfg.seedFinderConfig.getTopStripDirection(sp->sp());
+        const Acts::Vector3 bottomStripDirection =
+            m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp());
+
+        state.spacePointData.setTopStripVector(
+            index, topHalfStripLength * topStripDirection);
+        state.spacePointData.setBottomStripVector(
+            index, bottomHalfStripLength * bottomStripDirection);
         state.spacePointData.setStripCenterDistance(
             index, m_cfg.seedFinderConfig.getStripCenterDistance(sp->sp()));
         state.spacePointData.setTopStripCenterPosition(

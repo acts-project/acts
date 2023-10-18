@@ -11,11 +11,22 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <string>
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;

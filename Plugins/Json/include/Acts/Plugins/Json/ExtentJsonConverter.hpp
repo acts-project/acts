@@ -11,6 +11,8 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
+#include <nlohmann/json.hpp>
+
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 namespace Acts {

@@ -32,7 +32,7 @@ class SmallObjectCache {
         "Type needs to be move assignable and move constructible");
 
     /*T* ptr =*/new (cache.m_data.data()) T(std::forward<Args>(args)...);
-    static Handler<T> static_handler{};
+    static const Handler<T> static_handler{};
     cache.m_handler = &static_handler;
 
     return cache;
@@ -109,7 +109,7 @@ class SmallObjectCache {
   };
 
   alignas(std::max_align_t) std::array<char, 512> m_data{};
-  HandlerBase* m_handler{nullptr};
+  const HandlerBase* m_handler{nullptr};
 };
 
 }  // namespace detail

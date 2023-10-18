@@ -103,7 +103,7 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 /// ingredients
 template <typename traj_t, typename parameters_t = BoundTrackParameters>
 TrackAlignmentState trackAlignmentState(
-    const GeometryContext& gctx, const Acts::MultiTrajectory<traj_t>& multiTraj,
+    const GeometryContext& gctx, const traj_t& multiTraj,
     const size_t& entryIndex,
     const std::pair<ActsDynamicMatrix, std::unordered_map<size_t, size_t>>&
         globalTrackParamsCov,

@@ -8,6 +8,8 @@
 
 #include "Acts/Propagator/PropagatorError.hpp"
 
+#include <string>
+
 namespace {
 
 class PropagatorErrorCategory : public std::error_category {

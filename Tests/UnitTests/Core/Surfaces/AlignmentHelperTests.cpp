@@ -12,7 +12,9 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace Acts {
 namespace Test {

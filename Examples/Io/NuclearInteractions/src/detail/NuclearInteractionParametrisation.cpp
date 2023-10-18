@@ -8,11 +8,19 @@
 
 #include "ActsExamples/Io/NuclearInteractions/detail/NuclearInteractionParametrisation.hpp"
 
-#include <iostream>
+#include "Acts/Definitions/Common.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <cmath>
+#include <complex>
+#include <iterator>
 #include <limits>
+#include <memory>
 
 #include <Eigen/Eigenvalues>
 #include <TMath.h>
+#include <TVectorF.h>
+#include <TVectorT.h>
 
 namespace ActsExamples {
 namespace detail {

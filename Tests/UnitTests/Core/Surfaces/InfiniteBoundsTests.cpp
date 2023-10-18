@@ -11,7 +11,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
 namespace Acts {
 

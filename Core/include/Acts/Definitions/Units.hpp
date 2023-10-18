@@ -124,7 +124,7 @@ namespace Acts {
 ///    double bfield   = 3.9_T;
 ///
 ///    // convert output values (via unit constants)
-///    doube t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
+///    double t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
 ///    // convert output values (via unit user literals)
 ///    double x_in_mm   = trackPars.position()[ePos0] / 1_mm;
 ///    double p_in_TeV = trackPars.absoluteMomentum() / 1_TeV;
@@ -137,14 +137,14 @@ namespace Acts {
 
 namespace UnitConstants {
 // Length, native unit mm
-constexpr double fm = 1e-12;
-constexpr double pm = 1e-9;
-constexpr double um = 1e-3;
-constexpr double nm = 1e-6;
 constexpr double mm = 1.0;
-constexpr double cm = 10.0;
-constexpr double m = 1e3;
-constexpr double km = 1e6;
+constexpr double fm = 1e-12 * mm;
+constexpr double pm = 1e-9 * mm;
+constexpr double nm = 1e-6 * mm;
+constexpr double um = 1e-3 * mm;
+constexpr double cm = 1e1 * mm;
+constexpr double m = 1e3 * mm;
+constexpr double km = 1e6 * mm;
 // Shortcuts for commonly used area and volume units. This intentionally
 // contains not all possible combinations to avoid cluttering the namespace.
 // Missing area or volume units can always be defined on the fly using the
@@ -158,7 +158,8 @@ constexpr double mm3 = mm * mm * mm;
 constexpr double cm3 = cm * cm * cm;
 constexpr double m3 = m * m * m;
 // Time, native unit mm = [speed-of-light * time] = mm/s * s
-constexpr double s = 299792458000.0;
+/// @note Depends on speed of light in SI units
+constexpr double s = 299792458000.0;  // = 299792458.0 * (m / 1.0) * 1.0;
 constexpr double fs = 1e-15 * s;
 constexpr double ps = 1e-12 * s;
 constexpr double ns = 1e-9 * s;
@@ -169,15 +170,15 @@ constexpr double h = 3600.0 * s;
 // Angles, native unit radian
 constexpr double mrad = 1e-3;
 constexpr double rad = 1.0;
-constexpr double degree = 0.017453292519943295;  // pi / 180
+constexpr double degree = 0.017453292519943295;  // = M_PI / 180.0 * rad;
 // Energy/mass/momentum, native unit GeV
-constexpr double eV = 1e-9;
-constexpr double keV = 1e-6;
-constexpr double MeV = 1e-3;
 constexpr double GeV = 1.0;
-constexpr double TeV = 1e3;
+constexpr double eV = 1e-9 * GeV;
+constexpr double keV = 1e-6 * GeV;
+constexpr double MeV = 1e-3 * GeV;
+constexpr double TeV = 1e3 * GeV;
 constexpr double J = 6241509074.460763 * GeV;
-// atomic mass unit u
+/// atomic mass unit u
 constexpr double u = 0.93149410242;
 //     1eV/c² == 1.782662e-36kg
 //    1GeV/c² == 1.782662e-27kg
@@ -185,14 +186,14 @@ constexpr double u = 0.93149410242;
 // ->      1g == (1/(1e3*1.782662e-27))GeV/c²
 constexpr double g = 1.0 / 1.782662e-24;
 constexpr double kg = 1.0 / 1.782662e-27;
-// Charge, native unit e (elementary charge)
+/// Charge, native unit e (elementary charge)
 constexpr double e = 1.0;
-constexpr double C = J / eV;
-// Magnetic field, native unit GeV/(e*mm)
-constexpr double T = 0.000299792458;  // equivalent to c in appropriate SI units
+/// Magnetic field, native unit (eV*s)/(e*m²)
+/// @note Depends on speed of light in SI units
+constexpr double T = 0.000299792458;  // = eV * s / (e * m2);
 constexpr double Gauss = 1e-4 * T;
 constexpr double kGauss = 1e-1 * T;
-// Amount of substance, native unit mol
+/// Amount of substance, native unit mol
 constexpr double mol = 1.0;
 }  // namespace UnitConstants
 
@@ -240,7 +241,6 @@ ACTS_DEFINE_UNIT_LITERAL(u)
 ACTS_DEFINE_UNIT_LITERAL(g)
 ACTS_DEFINE_UNIT_LITERAL(kg)
 ACTS_DEFINE_UNIT_LITERAL(e)
-ACTS_DEFINE_UNIT_LITERAL(C)
 ACTS_DEFINE_UNIT_LITERAL(T)
 ACTS_DEFINE_UNIT_LITERAL(Gauss)
 ACTS_DEFINE_UNIT_LITERAL(kGauss)
@@ -253,6 +253,8 @@ ACTS_DEFINE_UNIT_LITERAL(mol)
 ///
 /// Unit constants are intentionally not listed.
 namespace PhysicalConstants {
+// Speed of light
+constexpr double c = 1.0;
 /// Reduced Planck constant h/2*pi.
 ///
 /// Computed from CODATA 2018 constants to double precision.

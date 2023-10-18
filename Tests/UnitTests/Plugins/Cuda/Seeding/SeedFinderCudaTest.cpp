@@ -46,7 +46,7 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
       float x, y, z, r, varianceR, varianceZ;
       if (linetype == "lxyz") {
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-        r = std::sqrt(x * x + y * y);
+        r = std::hypot(x, y);
         float f22 = varianceR;
         float wid = varianceZ;
         float cov = wid * wid * .08333;

@@ -53,7 +53,7 @@ template <typename... conditions>
 struct abort_list_impl;
 
 /// This is the check call on the a list of conditions
-/// it calls the aparant condition and broadcasts
+/// it calls the apparent condition and broadcasts
 /// the call to the remaining ones
 template <typename first, typename... others>
 struct abort_list_impl<first, others...> {

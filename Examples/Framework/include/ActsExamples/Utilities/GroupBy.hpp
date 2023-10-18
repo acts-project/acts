@@ -75,7 +75,7 @@ class GroupBy {
       ++(*this);
       return retval;
     }
-    /// Derefence operator that returns the pointed-to group of elements.
+    /// Dereference operator that returns the pointed-to group of elements.
     constexpr Group operator*() const {
       const Key key = (m_groupBegin != m_groupEnd)
                           ? m_groupBy.m_keyGetter(*m_groupBegin)

@@ -8,11 +8,11 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
+#include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
+#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 auto GenericDetector::finalize(
     const Config& cfg,

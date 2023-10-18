@@ -10,29 +10,24 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
-#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/LinearizedTrack.hpp"
-#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
-#include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <chrono>
 #include <memory>
+#include <optional>
+#include <ostream>
+#include <stdexcept>
+#include <system_error>
 
 #include "VertexingHelpers.hpp"
 
@@ -51,21 +46,42 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   if (m_cfg.outputVertices.empty()) {
     throw std::invalid_argument("Missing output vertices collection");
   }
-  if (m_cfg.outputTime.empty()) {
-    throw std::invalid_argument("Missing output reconstruction time");
-  }
 
   m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
   m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
 
   m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
   m_outputVertices.initialize(m_cfg.outputVertices);
-  m_outputTime.initialize(m_cfg.outputTime);
 }
 
 ActsExamples::ProcessCode
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
+    using Seeder = Acts::TrackDensityVertexFinder<
+        Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+    using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
+    Seeder seedFinder;
+    return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
+  } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
+    using Seeder = Acts::AdaptiveGridDensityVertexFinder<109, Fitter>;
+    using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
+    // The seeder config argument corresponds to the bin size in mm
+    Seeder::Config seederConfig(0.05);
+    Seeder seedFinder(seederConfig);
+    return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
+  } else {
+    return ActsExamples::ProcessCode::ABORT;
+  }
+}
+
+template <typename vseeder_t, typename vfinder_t>
+ActsExamples::ProcessCode
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
+    const ActsExamples::AlgorithmContext& ctx,
+    const vseeder_t& seedFinder) const {
+  using Finder = vfinder_t;
+
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
@@ -92,14 +108,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   fitterCfg.doSmoothing = true;
   Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
 
-  // Set up the vertex seed finder
-  SeedFinder seedFinder;
-
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), m_cfg.bField);
-  // We do not want to use a beamspot constraint here
-  finderConfig.useBeamSpotConstraint = false;
+  typename Finder::Config finderConfig(std::move(fitter), seedFinder,
+                                       ipEstimator, std::move(linearizer),
+                                       m_cfg.bField);
+  finderConfig.looseConstrValue = 1e2;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
+  finderConfig.maxIterations = 200;
 
   // Instantiate the finder
   Finder finder(finderConfig, logger().cloneWithSuffix("AMVFinder"));
@@ -109,27 +123,39 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   auto [inputTrackParameters, inputTrackPointers] =
       makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
 
+  if (inputTrackParameters.size() != inputTrackPointers.size()) {
+    ACTS_ERROR("Input track containers do not align: "
+               << inputTrackParameters.size()
+               << " != " << inputTrackPointers.size());
+  }
+
+  for (const auto& trk : inputTrackParameters) {
+    if (trk.covariance() && trk.covariance()->determinant() <= 0) {
+      // actually we should consider this as an error but I do not want the CI
+      // to fail
+      ACTS_WARNING("input track " << trk << " has det(cov) = "
+                                  << trk.covariance()->determinant());
+    }
+  }
+
   //////////////////////////////////////////////
   /* Full tutorial example code for reference */
   //////////////////////////////////////////////
 
   // The vertex finder state
-  Finder::State state;
+  typename Finder::State state;
 
   // Default vertexing options, this is where e.g. a constraint could be set
-  using VertexingOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
-  VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
+  Options finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   VertexCollection vertices;
-
-  auto t1 = std::chrono::high_resolution_clock::now();
 
   if (inputTrackParameters.empty()) {
     ACTS_DEBUG("Empty track parameter collection found, skipping vertexing");
   } else {
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
-    // find vertices and measure elapsed time
+    // find vertices
     auto result = finder.find(inputTrackPointers, finderOpts, state);
 
     if (result.ok()) {
@@ -138,8 +164,6 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
       ACTS_ERROR("Error in vertex finder: " << result.error().message());
     }
   }
-
-  auto t2 = std::chrono::high_resolution_clock::now();
 
   // show some debug output
   ACTS_INFO("Found " << vertices.size() << " vertices in event");
@@ -153,13 +177,6 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
 
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));
-
-  // time in milliseconds
-  int timeMS =
-      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  // store reconstruction time
-  m_outputTime(ctx,
-               std::move(timeMS));  // NOLINT(performance-move-const-arg)
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

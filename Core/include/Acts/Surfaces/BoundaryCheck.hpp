@@ -51,7 +51,7 @@ class BoundaryCheck {
   ///
   /// @param localCovariance Coverance matrix in local coordinates
   /// @param sigmaMax  Significance for the compatibility test
-  BoundaryCheck(const SymMatrix2& localCovariance, double sigmaMax = 1);
+  BoundaryCheck(const SquareMatrix2& localCovariance, double sigmaMax = 1);
 
   operator bool() const { return (m_type != Type::eNone); }
   bool operator!() const { return !bool(*this); }
@@ -119,11 +119,11 @@ class BoundaryCheck {
   const Vector2& tolerance() const;
 
   // Return the covariance matrix
-  SymMatrix2 covariance() const;
+  SquareMatrix2 covariance() const;
 
  private:
   /// Return a new BoundaryCheck with updated covariance.
-  /// @param jacobian Tranform Jacobian for the covariance
+  /// @param jacobian Transform Jacobian for the covariance
   /// @warning This currently only transforms the covariance and does not work
   ///          for the tolerance based check.
   BoundaryCheck transformed(const ActsMatrix<2, 2>& jacobian) const;
@@ -145,13 +145,13 @@ class BoundaryCheck {
       const Vector2& upperRight) const;
 
   /// metric weight matrix: identity for absolute mode or inverse covariance
-  SymMatrix2 m_weight;
+  SquareMatrix2 m_weight;
 
   /// dual use: absolute tolerances or relative chi2/ sigma cut.
   Vector2 m_tolerance;
   Type m_type;
 
-  // To acces the m_type
+  // To access the m_type
   friend class CylinderBounds;
   friend class RectangleBounds;
   // To be able to use `transformed`
@@ -171,23 +171,23 @@ inline const Acts::Vector2& Acts::BoundaryCheck::tolerance() const {
   return m_tolerance;
 }
 
-inline Acts::SymMatrix2 Acts::BoundaryCheck::covariance() const {
+inline Acts::SquareMatrix2 Acts::BoundaryCheck::covariance() const {
   return m_weight.inverse();
 }
 
 inline Acts::BoundaryCheck::BoundaryCheck(bool check)
-    : m_weight(SymMatrix2::Identity()),
+    : m_weight(SquareMatrix2::Identity()),
       m_tolerance(0, 0),
       m_type(check ? Type::eAbsolute : Type::eNone) {}
 
 inline Acts::BoundaryCheck::BoundaryCheck(bool checkLocal0, bool checkLocal1,
                                           double tolerance0, double tolerance1)
-    : m_weight(SymMatrix2::Identity()),
+    : m_weight(SquareMatrix2::Identity()),
       m_tolerance(checkLocal0 ? tolerance0 : DBL_MAX,
                   checkLocal1 ? tolerance1 : DBL_MAX),
       m_type(Type::eAbsolute) {}
 
-inline Acts::BoundaryCheck::BoundaryCheck(const SymMatrix2& localCovariance,
+inline Acts::BoundaryCheck::BoundaryCheck(const SquareMatrix2& localCovariance,
                                           double sigmaMax)
     : m_weight(localCovariance.inverse()),
       m_tolerance(sigmaMax, 0),

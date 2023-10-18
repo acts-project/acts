@@ -10,14 +10,20 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <array>
 #include <memory>
+#include <utility>
+
+namespace Acts {
+class PlanarBounds;
+}  // namespace Acts
 
 using namespace Acts::UnitLiterals;
 
@@ -32,7 +38,7 @@ struct AlignmentContext {
   /// Context index
   unsigned int alignmentIndex{0};
 
-  /// Default contructor
+  /// Default constructor
   AlignmentContext() = default;
 
   /// Constructor with Store and context index
@@ -62,8 +68,7 @@ class AlignableDetectorElement : public DetectorElementBase {
       : DetectorElementBase(),
         m_elementTransform(std::move(transform)),
         m_elementThickness(thickness) {
-    auto mutableSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
-    m_elementSurface = mutableSurface;
+    m_elementSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
   }
 
   ///  Destructor
@@ -79,6 +84,9 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// Return surface associated with this detector element
   const Surface& surface() const override;
 
+  /// Non-const access to the surface associated with this detector element
+  Surface& surface() override;
+
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const override;
 
@@ -86,7 +94,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// the transform for positioning in 3D space
   std::shared_ptr<const Transform3> m_elementTransform;
   /// the surface represented by it
-  std::shared_ptr<const Surface> m_elementSurface{nullptr};
+  std::shared_ptr<Surface> m_elementSurface{nullptr};
   /// the element thickness
   double m_elementThickness{0.};
 };
@@ -105,13 +113,17 @@ inline const Surface& AlignableDetectorElement::surface() const {
   return *m_elementSurface;
 }
 
+inline Surface& AlignableDetectorElement::surface() {
+  return *m_elementSurface;
+}
+
 inline double AlignableDetectorElement::thickness() const {
   return m_elementThickness;
 }
 
 /// Unit test for creating compliant/non-compliant Surface object
 BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
-  // The nominal and alingments
+  // The nominal and alignments
   Vector3 nominalCenter(0., 0., 0.);
   Vector3 negativeCenter(0., 0., -1.);
   Vector3 positiveCenter(0., 0., 1.);
@@ -124,7 +136,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   // Local position
   Vector2 localPosition(3., 3.);
 
-  // A position place holder and dymmy momentum
+  // A position placeholder and dummy momentum
   Vector3 globalPosition(100_cm, 100_cm, 100_cm);
   Vector3 dummyMomentum(4., 4., 4.);
 

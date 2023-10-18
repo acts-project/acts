@@ -8,9 +8,6 @@
 
 #include "Acts/Surfaces/RectangleBounds.hpp"
 
-#include "Acts/Utilities/ThrowAssert.hpp"
-
-#include <cmath>
 #include <iomanip>
 #include <iostream>
 

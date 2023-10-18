@@ -89,8 +89,6 @@ using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 We configure the vertex finder in such a way that we do *not* use a beam spot constraint here:
 ```cpp
 Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator, linearizer);
-// We do not want to use a beamspot constraint here
-finderConfig.useBeamSpotConstraint = false;
 ```
 Create the AMVF instance and a finder state to be passed to the `find()` method below:
 ```cpp
@@ -107,7 +105,7 @@ VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
  ```
 ### Deploying the vertex finder on the track collection
 
-Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The `find()` methods on ACTS vertex finders return an `Acts::Result` object that we can use to check if any errors occured and to retrieve the vertex collection:
+Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The `find()` methods on ACTS vertex finders return an `Acts::Result` object that we can use to check if any errors occurred and to retrieve the vertex collection:
 ```cpp
 // Find vertices
 auto res = finder.find(inputTrackPointers, finderOpts, state);

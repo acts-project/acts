@@ -34,18 +34,6 @@ class PropagatorInterface {
       const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
       const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const = 0;
-
-  ///@brief  Execute a propagation for neutral particle parameters
-  ///
-  ///@param context The algorithm context
-  ///@param cfg  The propagation algorithm configuration
-  ///@param logger A logger wrapper instance
-  ///@param startParameters The start parameters
-  ///@return PropagationOutput
-  virtual PropagationOutput execute(
-      const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      const Acts::Logger& logger,
-      const Acts::NeutralBoundTrackParameters& startParameters) const = 0;
 };
 
 ///@brief Concrete instance of a propagator
@@ -72,16 +60,9 @@ class ConcretePropagator : public PropagatorInterface {
     return executeTest(context, cfg, logger, startParameters);
   }
 
-  PropagationOutput execute(
-      const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      const Acts::Logger& logger,
-      const Acts::NeutralBoundTrackParameters& startParameters) const override {
-    return executeTest(context, cfg, logger, startParameters);
-  }
-
  private:
   /// Templated execute test method for
-  /// charged and netural particles
+  /// charged and neutral particles
   /// @param [in] context is the contextual data of this event
   /// @param [in] startParameters the start parameters
   /// @param [in] pathLength the maximal path length to go
@@ -112,7 +93,7 @@ class ConcretePropagator : public PropagatorInterface {
 
       // Activate loop protection at some pt value
       options.loopProtection =
-          (startParameters.transverseMomentum() < cfg.ptLoopers);
+          startParameters.transverseMomentum() < cfg.ptLoopers;
 
       // Switch the material interaction on/off & eventually into logging mode
       auto& mInteractor = options.actionList.get<MaterialInteractor>();

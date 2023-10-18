@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -24,10 +25,12 @@ namespace detail {
 /// @param freeParams Free track parameters vector
 /// @param surface Surface onto which the parameters are bound
 /// @param geoCtx Geometry context for the global-to-local transformation
+/// @param tolerance Tolerance used for globalToLocal
+///
 /// @return Bound track parameters vector on the given surface
 Result<BoundVector> transformFreeToBoundParameters(
     const FreeVector& freeParams, const Surface& surface,
-    const GeometryContext& geoCtx);
+    const GeometryContext& geoCtx, ActsScalar tolerance = s_onSurfaceTolerance);
 
 /// Convert position and direction to bound track parameters.
 ///
@@ -37,10 +40,13 @@ Result<BoundVector> transformFreeToBoundParameters(
 /// @param qOverP Charge-over-momentum-like parameter
 /// @param surface Surface onto which the parameters are bound
 /// @param geoCtx Geometry context for the global-to-local transformation
+/// @param tolerance Tolerance used for globalToLocal
+///
 /// @return Equivalent bound parameters vector on the given surface
 Result<BoundVector> transformFreeToBoundParameters(
     const Vector3& position, ActsScalar time, const Vector3& direction,
-    ActsScalar qOverP, const Surface& surface, const GeometryContext& geoCtx);
+    ActsScalar qOverP, const Surface& surface, const GeometryContext& geoCtx,
+    ActsScalar tolerance = s_onSurfaceTolerance);
 
 /// Convert direction to curvilinear track parameters.
 ///

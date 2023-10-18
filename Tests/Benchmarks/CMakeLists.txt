@@ -1,5 +1,5 @@
 # benchmarks tests are not registered with a common target
-# add an benchmark exectuable w/ default dependencies
+# add an benchmark executable w/ default dependencies
 macro(add_benchmark _name)
   # automatically prefix the target name
   set(_target "ActsBenchmark${_name}")

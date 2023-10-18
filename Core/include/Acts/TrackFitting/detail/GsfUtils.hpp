@@ -8,13 +8,23 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <iomanip>
 #include <map>
 #include <numeric>
+#include <ostream>
+#include <tuple>
+#include <vector>
 
 namespace Acts {
 
@@ -113,7 +123,7 @@ class ScopedGsfInfoPrinterAndChecker {
       : m_state(state),
         m_stepper(stepper),
         m_navigator(navigator),
-        m_p_initial(stepper.momentum(state.stepping)),
+        m_p_initial(stepper.absoluteMomentum(state.stepping)),
         m_logger{logger} {
     // Some initial printing
     checks(true);
@@ -122,19 +132,15 @@ class ScopedGsfInfoPrinterAndChecker {
                  << stepper.position(state.stepping).transpose()
                  << " with direction "
                  << stepper.direction(state.stepping).transpose()
-                 << " and momentum " << stepper.momentum(state.stepping)
+                 << " and momentum " << stepper.absoluteMomentum(state.stepping)
                  << " and charge " << stepper.charge(state.stepping));
-    ACTS_VERBOSE("Propagation is in "
-                 << (state.stepping.navDir == NavigationDirection::Forward
-                         ? "forward"
-                         : "backward")
-                 << " mode");
+    ACTS_VERBOSE("Propagation is in " << state.options.direction << " mode");
     print_component_stats();
   }
 
   ~ScopedGsfInfoPrinterAndChecker() {
     if (m_navigator.currentSurface(m_state.navigation)) {
-      const auto p_final = m_stepper.momentum(m_state.stepping);
+      const auto p_final = m_stepper.absoluteMomentum(m_state.stepping);
       ACTS_VERBOSE("Component status at end of step:");
       print_component_stats();
       ACTS_VERBOSE("Delta Momentum = " << std::setprecision(5)
@@ -156,10 +162,9 @@ ActsScalar calculateDeterminant(
 /// with non-Gaussian noise"`. See also the implementation in Athena at
 /// PosteriorWeightsCalculator.cxx
 /// @note The weights are not renormalized!
-template <typename D>
+template <typename traj_t>
 void computePosteriorWeights(
-    const MultiTrajectory<D> &mt,
-    const std::vector<MultiTrajectoryTraits::IndexType> &tips,
+    const traj_t &mt, const std::vector<MultiTrajectoryTraits::IndexType> &tips,
     std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
   // Helper Function to compute detR
 
@@ -213,7 +218,7 @@ inline std::ostream &operator<<(std::ostream &os, StatesType type) {
 /// and for now a std::map for the weights
 template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
-  const MultiTrajectory<traj_t> &mt;
+  const traj_t &mt;
   const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
 
   auto operator()(MultiTrajectoryTraits::IndexType idx) const {

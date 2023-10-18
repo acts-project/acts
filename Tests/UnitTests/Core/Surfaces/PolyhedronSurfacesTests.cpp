@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS((extent.range(binY).max() rhY, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binR).max()
-                    std::sqrt(rhX * rhX + rhY * rhY), 1e-6);
+                    std::hypot(rhX, rhY), 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
     BOOST_CHECK(rectangularPh.vertices.size() == 4);
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS((extent.range(binY).max() thY, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binR).max()
-                    std::sqrt(thX * thX + thY * thY), 1e-6);
+                    std::hypot(thX, thY), 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
     BOOST_CHECK(trapezoidalPh.vertices.size() == 4);
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS((extent.range(binY).max() hMaxY, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binR).max()
-                    std::sqrt(hMaxX * hMaxX + hMaxY * hMaxY), 1e-6);
+                    std::hypot(hMaxX, hMaxY), 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
   }

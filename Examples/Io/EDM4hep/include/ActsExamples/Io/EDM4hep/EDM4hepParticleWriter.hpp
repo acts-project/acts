@@ -13,9 +13,7 @@
 
 #include <string>
 
-#include "edm4hep/MCParticleCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTWriter.h"
+#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -57,10 +55,7 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
  private:
   Config m_cfg;
 
-  podio::ROOTWriter m_writer;
-  podio::EventStore m_store;
-
-  edm4hep::MCParticleCollection* m_mcParticleCollection;
+  podio::ROOTFrameWriter m_writer;
 };
 
 }  // namespace ActsExamples

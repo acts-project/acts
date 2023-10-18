@@ -83,8 +83,8 @@ struct VoidNavigator {
   ///
   /// Empty call, compiler should optimise that
   template <typename propagator_state_t, typename stepper_t>
-  void status(propagator_state_t& /*state*/,
-              const stepper_t& /*stepper*/) const {}
+  void initialize(propagator_state_t& /*state*/,
+                  const stepper_t& /*stepper*/) const {}
 
   /// Navigation call - void
   ///
@@ -93,8 +93,18 @@ struct VoidNavigator {
   ///
   /// Empty call, compiler should optimise that
   template <typename propagator_state_t, typename stepper_t>
-  void target(propagator_state_t& /*state*/,
-              const stepper_t& /*stepper*/) const {}
+  void preStep(propagator_state_t& /*state*/,
+               const stepper_t& /*stepper*/) const {}
+
+  /// Navigation call - void
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t Type of the Stepper
+  ///
+  /// Empty call, compiler should optimise that
+  template <typename propagator_state_t, typename stepper_t>
+  void postStep(propagator_state_t& /*state*/,
+                const stepper_t& /*stepper*/) const {}
 };
 
 }  // namespace detail

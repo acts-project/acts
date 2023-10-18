@@ -1,6 +1,6 @@
 # Documentation Markdown Cheatsheet
 
-Below there are some snippets for creating documentation with the Myst Markdown parser.  Some examples might not work correctely locally if you did not build the full API documentation with `make docs-with-api`. Some links for further reading:
+Below there are some snippets for creating documentation with the Myst Markdown parser.  Some examples might not work correctly locally if you did not build the full API documentation with `make docs-with-api`. Some links for further reading:
 
 * The full documentation of the Myst Parser can be found [here](https://myst-parser.readthedocs.io/en/latest/index.html).
 * A list of Sphinx directives can be found [here](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#directives).

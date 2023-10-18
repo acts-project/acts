@@ -22,6 +22,7 @@
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Event processing algorithm interface.
 ///

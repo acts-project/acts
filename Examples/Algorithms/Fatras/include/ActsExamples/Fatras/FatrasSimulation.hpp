@@ -10,18 +10,29 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+}  // namespace Acts
+
 namespace ActsExamples {
+class RandomNumbers;
+struct AlgorithmContext;
+
 namespace detail {
 struct FatrasSimulation;
 }

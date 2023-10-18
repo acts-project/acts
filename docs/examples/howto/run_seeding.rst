@@ -37,7 +37,7 @@ The following parameters for the seed finding are set in ``/acts/Examples/Run/Se
   seedingCfg.impactMax = 3.;
 
 
-You can run the seeding example with a comand like this:
+You can run the seeding example with a command like this:
 The detector volumes and layers used in the space point maker are configured using a json file in the source code.
 
 .. code-block:: console

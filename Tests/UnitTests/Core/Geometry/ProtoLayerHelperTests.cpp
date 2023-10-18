@@ -9,19 +9,24 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
-#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 
-#include <cmath>
+#include <cstddef>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
+class Surface;
 
 namespace Test {
 namespace Layers {

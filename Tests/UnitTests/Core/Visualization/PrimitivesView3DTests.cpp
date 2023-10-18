@@ -10,10 +10,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Visualization/EventDataView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
 
-#include <fstream>
+#include <array>
+#include <cmath>
 #include <iostream>
-#include <sstream>
+#include <string>
+#include <vector>
 
 #include "PrimitivesView3DBase.hpp"
 #include "Visualization3DTester.hpp"
@@ -28,8 +34,8 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 /// to catch any unexpected changes in the output format.
 ///
 BOOST_AUTO_TEST_CASE(Visualization3DHelpers) {
-  // No correlation, fully summetric
-  SymMatrix2 covariance;
+  // No correlation, fully symmetric
+  SquareMatrix2 covariance;
   covariance << 4., 0., 0., 4.;
   auto decops = Acts::EventDataView3D::decomposeCovariance(covariance);
   BOOST_CHECK(decops[0] == 4.);

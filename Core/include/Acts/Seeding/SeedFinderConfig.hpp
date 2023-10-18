@@ -29,8 +29,8 @@ struct SeedFinderConfig {
   // lower cutoff for seeds
   float minPt = 400. * Acts::UnitConstants::MeV;
   // cot of maximum theta angle
-  // equivalent to 2.7 eta (pseudorapidity)
-  float cotThetaMax = 7.40627;
+  // equivalent to 3 eta (pseudorapidity)
+  float cotThetaMax = 10.01788;
   // minimum distance in r between two measurements within one seed
   float deltaRMin = 5 * Acts::UnitConstants::mm;
   // maximum distance in r between two measurements within one seed
@@ -57,6 +57,10 @@ struct SeedFinderConfig {
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
+  // z of last layers to avoid iterations
+  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                           2700 * Acts::UnitConstants::mm};
+
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
@@ -64,15 +68,8 @@ struct SeedFinderConfig {
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
-  // use arithmetic average in the calculation of the squared error on the
-  // difference in tan(theta)
-  bool arithmeticAverageCotTheta = false;
-
   // non equidistant binning in z
   std::vector<float> zBinEdges;
-
-  // skip top SPs based on cotTheta sorting when producing triplets
-  bool skipPreviousTopSP = false;
 
   // seed confirmation
   bool seedConfirmation = false;
@@ -104,6 +101,10 @@ struct SeedFinderConfig {
   // xyz
   float toleranceParam = 1.1 * Acts::UnitConstants::mm;
 
+  // Parameter which can loosen the tolerance of the track seed to form to a
+  // helix, useful for (e.g.) misaligned seeding
+  float helixCut = 1.;
+
   // Geometry Settings
   // Detector ROI
   // limiting location of collision region in z
@@ -119,7 +120,10 @@ struct SeedFinderConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
+  // Order of z bins to loop over when searching for SPs
   std::vector<size_t> zBinsCustomLooping = {};
+  // Number of Z bins to skip the search for middle SPs
+  std::size_t skipZMiddleBinSearch = 0;
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
@@ -176,6 +180,19 @@ struct SeedFinderConfig {
       throw std::runtime_error(
           "Repeated conversion to internal units for SeedFinderConfig");
     }
+    // Make sure the shared ptr to the seed filter is not a nullptr
+    // And make sure the seed filter config is in internal units as well
+    if (not seedFilter) {
+      throw std::runtime_error(
+          "Invalid values for the seed filter inside the seed filter config: "
+          "nullptr");
+    }
+    if (not seedFilter->getSeedFilterConfig().isInInternalUnits) {
+      throw std::runtime_error(
+          "The internal Seed Filter configuration, contained in the seed "
+          "finder config, is not in internal units.");
+    }
+
     using namespace Acts::UnitLiterals;
     SeedFinderConfig config = *this;
     config.isInInternalUnits = true;
@@ -231,6 +248,7 @@ struct SeedFinderOptions {
   float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
   float pT2perRadius = std::numeric_limits<float>::quiet_NaN();
   float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
 
   bool isInInternalUnits = false;
 
@@ -251,6 +269,8 @@ struct SeedFinderOptions {
 
   template <typename Config>
   SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
+    using namespace Acts::UnitLiterals;
+
     if (!isInInternalUnits) {
       throw std::runtime_error(
           "Derived quantities in SeedFinderOptions can only be calculated from "
@@ -260,13 +280,15 @@ struct SeedFinderOptions {
     // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
     // millimeter
     // TODO: change using ACTS units
-    options.pTPerHelixRadius = 300. * options.bFieldInZ;
+    options.pTPerHelixRadius = 1_T * 1e6 * options.bFieldInZ;
     options.minHelixDiameter2 =
         std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2);
     options.pT2perRadius =
         std::pow(config.highland / options.pTPerHelixRadius, 2);
     options.sigmapT2perRadius =
         options.pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
+    options.multipleScattering2 =
+        config.maxScatteringAngle2 * std::pow(config.sigmaScattering, 2);
     return options;
   }
 };

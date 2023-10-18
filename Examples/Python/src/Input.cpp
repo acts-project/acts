@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
@@ -16,6 +17,7 @@
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
+#include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
 
 #include <memory>
@@ -53,10 +55,10 @@ void addInput(Context& ctx) {
                              "CsvParticleReader", inputDir, inputStem,
                              outputParticles);
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvMeasurementReader, mex,
-                             "CsvMeasurementReader", inputDir,
-                             outputMeasurements, outputMeasurementSimHitsMap,
-                             outputSourceLinks, outputClusters);
+  ACTS_PYTHON_DECLARE_READER(
+      ActsExamples::CsvMeasurementReader, mex, "CsvMeasurementReader", inputDir,
+      outputMeasurements, outputMeasurementSimHitsMap, outputSourceLinks,
+      outputClusters, outputMeasurementParticlesMap, inputSimHits);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvPlanarClusterReader, mex,
                              "CsvPlanarClusterReader", inputDir, outputClusters,
@@ -80,5 +82,9 @@ void addInput(Context& ctx) {
                              inputFilePath, outputTrackParameters,
                              outputTruthVtxParameters, outputRecoVtxParameters,
                              outputBeamspotConstraint);
+
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
+                             "RootSimHitReader", treeName, filePath,
+                             simHitCollection);
 }
 }  // namespace Acts::Python

@@ -8,12 +8,12 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <cstdint>
+#include <iomanip>
+#include <ostream>
 #include <type_traits>
 
 #include <boost/histogram.hpp>
@@ -30,12 +30,10 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   m_index.emplace_back();
   IndexData& p = m_index.back();
   IndexType index = m_index.size() - 1;
+  m_previous.emplace_back(iprevious);
+  m_next.emplace_back(kInvalid);
 
   p.allocMask = mask;
-
-  if (iprevious != kInvalid) {
-    p.iprevious = iprevious;
-  }
 
   // always set, but can be null
   m_referenceSurfaces.emplace_back(nullptr);
@@ -171,10 +169,14 @@ void VectorMultiTrajectory::unset_impl(TrackStatePropMask target,
 
 void VectorMultiTrajectory::clear_impl() {
   m_index.clear();
+  m_previous.clear();
+  m_next.clear();
   m_params.clear();
   m_cov.clear();
   m_meas.clear();
+  m_measOffset.clear();
   m_measCov.clear();
+  m_measCovOffset.clear();
   m_jac.clear();
   m_sourceLinks.clear();
   m_projectors.clear();
@@ -219,6 +221,26 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
       total += v;
     }
     p("total", total / 1024 / 1024, "M");
+  }
+}
+
+void VectorMultiTrajectory::reserve(std::size_t n) {
+  m_index.reserve(n);
+  m_previous.reserve(n);
+  m_next.reserve(n);
+  m_params.reserve(n * 2);
+  m_cov.reserve(n * 2);
+  m_meas.reserve(n * 2);
+  m_measOffset.reserve(n);
+  m_measCov.reserve(n * 2 * 2);
+  m_measCovOffset.reserve(n);
+  m_jac.reserve(n);
+  m_sourceLinks.reserve(n);
+  m_projectors.reserve(n);
+  m_referenceSurfaces.reserve(n);
+
+  for (auto& [key, vec] : m_dynamic) {
+    vec->reserve(n);
   }
 }
 

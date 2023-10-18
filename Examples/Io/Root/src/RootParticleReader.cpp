@@ -8,17 +8,19 @@
 
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
 
+#include <algorithm>
+#include <cstdint>
 #include <iostream>
+#include <stdexcept>
 
 #include <TChain.h>
-#include <TFile.h>
-#include <TMath.h>
+#include <TMathBase.h>
 
 ActsExamples::RootParticleReader::RootParticleReader(
     const ActsExamples::RootParticleReader::Config& config,
@@ -143,11 +145,18 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
     for (unsigned int i = 0; i < nParticles; i++) {
       SimParticle p;
 
+      p.setProcess(static_cast<ActsFatras::ProcessType>((*m_process)[i]));
+      p.setPdg(static_cast<Acts::PdgParticle>((*m_particleType)[i]));
+      p.setCharge((*m_q)[i] * Acts::UnitConstants::e);
+      p.setMass((*m_m)[i] * Acts::UnitConstants::GeV);
       p.setParticleId((*m_particleId)[i]);
-      p.setPosition4((*m_vx)[i], (*m_vy)[i], (*m_vz)[i], (*m_vt)[i]);
+      p.setPosition4((*m_vx)[i] * Acts::UnitConstants::mm,
+                     (*m_vy)[i] * Acts::UnitConstants::mm,
+                     (*m_vz)[i] * Acts::UnitConstants::mm,
+                     (*m_vt)[i] * Acts::UnitConstants::ns);
+      // NOTE: depends on the normalization done in setDirection
       p.setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
-      p.setAbsoluteMomentum((*m_p)[i]);
-      p.setCharge((*m_q)[i]);
+      p.setAbsoluteMomentum((*m_p)[i] * Acts::UnitConstants::GeV);
 
       particleContainer.insert(particleContainer.end(), p);
       priVtxCollection.push_back((*m_vertexPrimary)[i]);

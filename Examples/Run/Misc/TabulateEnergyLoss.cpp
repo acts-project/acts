@@ -8,12 +8,12 @@
 
 /// @brief compute energy loss tables using the Acts implementation
 
+#include "Acts/Definitions/ParticleData.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
-#include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <cstddef>
 #include <cstdlib>
@@ -37,7 +37,7 @@ static void printHeader(std::ostream& os, const Acts::MaterialSlab& slab,
   os << "# delta is the total energy loss\n";
   os << "# delta_ion is the energy loss due to ionisation and excitation\n";
   os << "# delta_rad is the energy loss due to radiative effects\n";
-  os << "# sigma is the width of the enery loss distribution\n";
+  os << "# sigma is the width of the energy loss distribution\n";
   // column names
   os << std::left;
   os << std::setw(width) << "momentum" << separator;
@@ -51,7 +51,7 @@ static void printHeader(std::ostream& os, const Acts::MaterialSlab& slab,
 
 static void printLine(std::ostream& os, float mass, float momentum, float delta,
                       float deltaIon, float deltaRad, float sigma) {
-  const auto energy = std::sqrt(mass * mass + momentum * momentum);
+  const auto energy = std::hypot(mass, momentum);
   const auto beta = momentum / energy;
   const auto betaGamma = momentum / mass;
   os << std::right << std::fixed << std::setprecision(precision);
@@ -80,8 +80,9 @@ int main(int argc, char const* argv[]) {
   }
   const auto thickness = atof(argv[1]) * 1_mm;
   const auto pdg = static_cast<Acts::PdgParticle>(atoi(argv[2]));
-  const auto mass = ActsFatras::findMass(pdg);
-  const auto charge = ActsFatras::findCharge(pdg);
+  const auto absPdg = Acts::makeAbsolutePdgParticle(pdg);
+  const auto mass = Acts::findMass(pdg).value_or(0);
+  const auto charge = Acts::findCharge(pdg).value_or(0);
   const auto pmin = atof(argv[3]) * 1_GeV;
   const auto pmax = atof(argv[4]) * 1_GeV;
   const auto deltap = (pmax - pmin) / atoi(argv[5]);
@@ -98,13 +99,14 @@ int main(int argc, char const* argv[]) {
     const auto qOverP = charge / p;
 
     // TODO make mean/mode configurable by command line
-    const auto delta = computeEnergyLossMean(slab, pdg, mass, qOverP, charge);
+    const auto delta =
+        computeEnergyLossMean(slab, absPdg, mass, qOverP, charge);
     const auto deltaIon =
-        Acts::computeEnergyLossBethe(slab, pdg, mass, qOverP, charge);
+        Acts::computeEnergyLossBethe(slab, mass, qOverP, charge);
     const auto deltaRad =
-        computeEnergyLossRadiative(slab, pdg, mass, qOverP, charge);
+        computeEnergyLossRadiative(slab, absPdg, mass, qOverP, charge);
     const auto sigma =
-        Acts::computeEnergyLossLandauSigma(slab, pdg, mass, qOverP, charge);
+        Acts::computeEnergyLossLandauSigma(slab, mass, qOverP, charge);
 
     printLine(std::cout, mass, p, delta, deltaIon, deltaRad, sigma);
   }

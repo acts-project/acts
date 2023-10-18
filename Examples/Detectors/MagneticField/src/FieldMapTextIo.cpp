@@ -11,7 +11,6 @@
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
 #include <fstream>
-#include <sstream>
 #include <vector>
 
 namespace {

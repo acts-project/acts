@@ -11,15 +11,37 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
+#include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <random>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -27,7 +49,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
@@ -124,13 +146,17 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat));
+    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat),
+                                ParticleHypothesis::pion());
+
+    std::shared_ptr<PerigeeSurface> perigee =
+        Surface::makeShared<PerigeeSurface>(Vector3::Zero());
 
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, Vector4::Zero(), geoContext,
-                            magFieldContext, state)
+            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
+                            state)
             .value();
 
     // Create TrackAtVertex
@@ -142,7 +168,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Create a vertex
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundTrackParameters> vtx(vtxPos);
-    vtx.setFullCovariance(SymMatrix4::Identity() * 0.01);
+    vtx.setFullCovariance(SquareMatrix4::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters>(vtx,

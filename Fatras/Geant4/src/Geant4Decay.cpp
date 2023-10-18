@@ -8,9 +8,14 @@
 
 #include "ActsFatras/Geant4/Geant4Decay.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Geant4/DummyDetectorConstruction.hpp"
+
+#include <cstdint>
+#include <utility>
 
 #include "G4DecayProducts.hh"
 #include "G4DecayTable.hh"

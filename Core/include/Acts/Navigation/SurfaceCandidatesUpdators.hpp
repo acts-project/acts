@@ -13,10 +13,13 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/MultiLayerSurfacesUpdator.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <memory>
 #include <tuple>
 
 namespace Acts {
@@ -38,28 +41,23 @@ inline static void updateCandidates(const GeometryContext& gctx,
   auto& nCandidates = nState.surfaceCandidates;
 
   for (auto& c : nCandidates) {
-    // Get the surface reprensentation: either native surfcae of portal
+    // Get the surface representation: either native surfcae of portal
     const Surface& sRep =
-        (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
+        c.surface != nullptr ? *c.surface : c.portal->surface();
 
     // Get the intersection @todo make a templated intersector
-    auto sIntersection =
-        sRep.intersect(gctx, position, direction, c.boundaryCheck);
-    // Re-order and swap if necessary
-    if (sIntersection.intersection.pathLength + s_onSurfaceTolerance <
-            nState.overstepTolerance and
-        sIntersection.alternative.status >= Intersection3D::Status::reachable) {
-      sIntersection.swapSolutions();
-    }
-    c.objectIntersection = sIntersection;
+    // TODO surface tolerance
+    auto sIntersection = sRep.intersect(gctx, position, direction,
+                                        c.boundaryCheck, s_onSurfaceTolerance);
+    c.objectIntersection = sIntersection[c.objectIntersection.index()];
   }
   // Sort and stuff non-allowed solutions to the end
   std::sort(
       nCandidates.begin(), nCandidates.end(),
       [&](const auto& a, const auto& b) {
         // The two path lengths
-        ActsScalar pathToA = a.objectIntersection.intersection.pathLength;
-        ActsScalar pathToB = b.objectIntersection.intersection.pathLength;
+        ActsScalar pathToA = a.objectIntersection.pathLength();
+        ActsScalar pathToB = b.objectIntersection.pathLength();
         if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
             std::abs(pathToA) < s_onSurfaceTolerance) {
           return false;
@@ -143,7 +141,7 @@ struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
 /// Generate a provider for all portals
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdator allPortals() {
+inline static SurfaceCandidatesUpdator tryAllPortals() {
   auto ap = std::make_unique<const AllPortalsImpl>();
   SurfaceCandidatesUpdator nStateUpdator;
   nStateUpdator.connect<&AllPortalsImpl::update>(std::move(ap));
@@ -156,7 +154,7 @@ inline static SurfaceCandidatesUpdator allPortals() {
 /// setup with many surfaces
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdator allPortalsAndSurfaces() {
+inline static SurfaceCandidatesUpdator tryAllPortalsAndSurfaces() {
   auto aps = std::make_unique<const AllPortalsAndSurfacesImpl>();
   SurfaceCandidatesUpdator nStateUpdator;
   nStateUpdator.connect<&AllPortalsAndSurfacesImpl::update>(std::move(aps));
@@ -184,10 +182,24 @@ struct AdditionalSurfacesImpl : public INavigationDelegate {
 
 /// @brief  An indexed surface implementation access
 ///
-/// @tparam grid_type is the grid type used for this
+/// @tparam grid_type is the grid type used for this indexed lookup
 template <typename grid_type>
 using IndexedSurfacesImpl =
     IndexedUpdatorImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
+
+/// @brief  An indexed multi layer surface implementation access
+///
+/// @tparam grid_type is the grid type used for this indexed lookup
+template <typename grid_type>
+using MultiLayerSurfacesImpl =
+    MultiLayerSurfacesUpdatorImpl<grid_type, PathGridSurfacesGenerator>;
+
+/// @brief An indexed surface implementation with portal access
+///
+///@tparam inexed_updator is the updator for the indexed surfaces
+template <typename grid_type, template <typename> class indexed_updator>
+using IndexedSurfacesAllPortalsImpl =
+    ChainedUpdatorImpl<AllPortalsImpl, indexed_updator<grid_type>>;
 
 }  // namespace Experimental
 }  // namespace Acts

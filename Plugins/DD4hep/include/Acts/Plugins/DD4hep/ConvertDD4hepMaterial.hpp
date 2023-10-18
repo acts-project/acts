@@ -9,7 +9,13 @@
 #pragma once
 
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetFactoryHelper.h>

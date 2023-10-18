@@ -8,6 +8,8 @@
 
 #include "ActsFatras/Utilities/LandauDistribution.hpp"
 
+#include <cmath>
+
 double ActsFatras::LandauDistribution::quantile(double z) {
   // LANDAU quantile : algorithm from CERNLIB G110 ranlan
   // Converted by Rene Brun from CERNLIB routine ranlan(G110),

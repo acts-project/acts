@@ -6,12 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
-#include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
 
 namespace Acts {
 
@@ -35,7 +39,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
     const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
     const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
     const ActsScalar z = direction(2);  // == cos(theta)
-    const ActsScalar c = std::sqrt(y * y + z * z);
+    const ActsScalar c = std::hypot(y, z);
     const ActsScalar invC = 1. / c;
     freeToCurvJacobian(eBoundLoc0, eFreePos1) = -z * invC;
     freeToCurvJacobian(eBoundLoc0, eFreePos2) = y * invC;

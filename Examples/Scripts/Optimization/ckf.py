@@ -133,7 +133,6 @@ def runCKFTracks(
         SeedFinderOptionsArg,
         SeedingAlgorithm,
         TruthEstimatedSeedingAlgorithmConfigArg,
-        CKFPerformanceConfig,
         addCKFTracks,
     )
 
@@ -221,7 +220,6 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
-        CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
         outputDirRoot=outputDir,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
     )

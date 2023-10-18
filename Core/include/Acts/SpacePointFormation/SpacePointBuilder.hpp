@@ -12,6 +12,7 @@
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
@@ -53,7 +54,7 @@ class SpacePointBuilder {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param sourceLinks vector of Sourcelink
-  /// @param opt option for the space point bulding. It contains the ends of the strips for strip SP building
+  /// @param opt option for the space point building. It contains the ends of the strips for strip SP building
   /// @param spacePointIt Output iterator for the space point
   template <template <typename...> typename container_t>
   void buildSpacePoint(
@@ -85,6 +86,7 @@ class SpacePointBuilder {
   std::function<spacepoint_t(Acts::Vector3, Acts::Vector2,
                              boost::container::static_vector<SourceLink, 2>)>
       m_spConstructor;
+
   /// the logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 

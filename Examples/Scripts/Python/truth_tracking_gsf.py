@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from pathlib import Path
 from typing import Optional, Union
 
@@ -19,7 +20,6 @@ def runTruthTrackingGsf(
     decorators=[],
     s=None,
 ):
-
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
@@ -88,6 +88,7 @@ def runTruthTrackingGsf(
         trackingGeometry,
         field,
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        particleHypothesis=acts.ParticleHypothesis.electron,
     )
 
     truthTrkFndAlg = acts.examples.TruthTrackFinder(

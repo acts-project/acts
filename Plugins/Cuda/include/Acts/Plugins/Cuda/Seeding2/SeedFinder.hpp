@@ -35,7 +35,7 @@ class SeedFinder {
   /// Create a CUDA backed seed finder object
   ///
   /// @param commonConfig Configuration shared with @c Acts::SeedFinder
-  /// @param seedFinderOptions options als shared with Acts::SeedFinder
+  /// @param seedFinderOptions options also shared with Acts::SeedFinder
   /// @param seedFilterConfig Configuration shared with @c Acts::SeedFilter
   /// @param tripletFilterConfig Configuration for the GPU based triplet
   ///        filtering
@@ -66,7 +66,7 @@ class SeedFinder {
 
   /// set logging instance
   ///
-  /// @param [in] newLogger is the logging istance to be set
+  /// @param [in] newLogger is the logging instance to be set
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
  private:

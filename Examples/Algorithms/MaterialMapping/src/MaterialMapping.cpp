@@ -8,11 +8,17 @@
 
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Material/AccumulatedMaterialSlab.hpp"
+#include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
+#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::MaterialMapping::MaterialMapping(
     const ActsExamples::MaterialMapping::Config& cfg,

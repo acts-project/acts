@@ -48,8 +48,7 @@ struct TestOutlierFinder {
   /// @retval False if the measurement is not an outlier
   /// @retval True if the measurement is an outlier
   template <typename traj_t>
-  bool operator()(typename Acts::MultiTrajectory<traj_t>::ConstTrackStateProxy
-                      state) const {
+  bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
     if (not state.hasCalibrated() or not state.hasPredicted()) {
       return false;
@@ -73,8 +72,7 @@ struct TestReverseFilteringLogic {
   /// @retval False if we don't use the reverse filtering for the smoothing of the track
   /// @retval True if we use the reverse filtering for the smoothing of the track
   template <typename traj_t>
-  bool operator()(typename Acts::MultiTrajectory<traj_t>::ConstTrackStateProxy
-                      state) const {
+  bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
     auto momentum = fabs(1 / state.filtered()[Acts::eBoundQOverP]);
     std::cout << "momentum : " << momentum << std::endl;
@@ -123,6 +121,8 @@ struct FitterTester {
   // detector geometry
   CubicTrackingGeometry geometryStore{geoCtx};
   std::shared_ptr<const Acts::TrackingGeometry> geometry = geometryStore();
+
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
 
   // expected number of measurements for the given detector
   constexpr static size_t nMeasurements = 6u;
@@ -225,8 +225,7 @@ struct FitterTester {
     // backward filtering requires a reference surface
     options.referenceSurface = &start.referenceSurface();
     // this is the default option. set anyways for consistency
-    options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::Forward;
+    options.propagatorPlainOptions.direction = Acts::Direction::Forward;
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
@@ -258,7 +257,7 @@ struct FitterTester {
     // count the number of `smoothed` states
     if (expected_reversed && expected_smoothed) {
       size_t nSmoothed = 0;
-      for (const auto ts : track.trackStates()) {
+      for (const auto ts : track.trackStatesReversed()) {
         nSmoothed += ts.hasSmoothed();
       }
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
@@ -281,12 +280,11 @@ struct FitterTester {
     Acts::Vector4 posOuter = start.fourPosition(geoCtx);
     posOuter[Acts::ePos0] = 3_m;
     Acts::CurvilinearTrackParameters startOuter(
-        posOuter, start.unitDirection(), start.absoluteMomentum(),
-        start.charge(), start.covariance());
+        posOuter, start.direction(), start.qOverP(), start.covariance(),
+        Acts::ParticleHypothesis::pion());
 
     options.referenceSurface = &startOuter.referenceSurface();
-    options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::Backward;
+    options.propagatorPlainOptions.direction = Acts::Direction::Backward;
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
@@ -314,7 +312,7 @@ struct FitterTester {
     // count the number of `smoothed` states
     if (expected_reversed && expected_smoothed) {
       size_t nSmoothed = 0;
-      for (const auto ts : track.trackStates()) {
+      for (const auto ts : track.trackStatesReversed()) {
         nSmoothed += ts.hasSmoothed();
       }
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
@@ -514,7 +512,7 @@ struct FitterTester {
       BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
       // count the number of outliers
       size_t nOutliers = 0;
-      for (const auto state : track.trackStates()) {
+      for (const auto state : track.trackStatesReversed()) {
         nOutliers += state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
       }
       BOOST_CHECK_EQUAL(nOutliers, 1u);
@@ -553,8 +551,9 @@ struct FitterTester {
     const auto& outlierSourceLinks = measurements.outlierSourceLinks;
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
     BOOST_REQUIRE_EQUAL(outlierSourceLinks.size(), nMeasurements);
-    // create a boundless target surface near the tracker exit
-    Acts::Vector3 center(3._m, 0., 0.);
+
+    // create a boundless target surface near the tracker entry
+    Acts::Vector3 center(-3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
     auto targetSurface =
         Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);

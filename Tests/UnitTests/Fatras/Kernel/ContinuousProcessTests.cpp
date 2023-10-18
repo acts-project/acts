@@ -11,11 +11,15 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/ContinuousProcess.hpp"
 
+#include <algorithm>
 #include <array>
+#include <iterator>
 #include <random>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsFatras;

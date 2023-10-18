@@ -9,17 +9,56 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
 namespace Acts {
 
 class Surface;
-class TrackingVolume;
+
+/// @brief The Material interaction volume struct
+/// It acts as a switch between detctor and tracking volume
+/// as long as those co-exist alongside
+struct InteractionVolume {
+  /// The tracking volume
+  const TrackingVolume* trackingVolume = nullptr;
+  /// The detector volume
+  const Experimental::DetectorVolume* detectorVolume = nullptr;
+
+  /// Empty constructor
+  InteractionVolume() = default;
+
+  /// Constructor from tracking volume
+  /// @param tv The tracking volume
+  InteractionVolume(const TrackingVolume* tv) : trackingVolume(tv) {}
+
+  /// Constructor from detector volume
+  /// @param dv The detector volume
+  InteractionVolume(const Experimental::DetectorVolume* dv)
+      : detectorVolume(dv) {}
+
+  /// Forward the geometry identifier
+  GeometryIdentifier geometryId() const {
+    if (trackingVolume != nullptr) {
+      return trackingVolume->geometryId();
+    } else if (detectorVolume != nullptr) {
+      return detectorVolume->geometryId();
+    } else {
+      return GeometryIdentifier();
+    }
+  }
+
+  /// Check if the volume is valid
+  bool empty() const {
+    return trackingVolume == nullptr and detectorVolume == nullptr;
+  }
+};
 
 /// @brief The Material interaction struct
 /// It records the surface  and the passed material
-/// This is only nessecary recorded when configured
+/// This is only necessary recorded when configured
 struct MaterialInteraction {
   /// The particle position at the interaction.
   Vector3 position = Vector3(0., 0., 0);
@@ -35,15 +74,15 @@ struct MaterialInteraction {
   double sigmaTheta2 = 0.0;
   /// Expected q/p variance due to the interactions.
   double sigmaQoP2 = 0.0;
-  /// The position where the interaction occured.
+  /// The position where the interaction occurred.
   Vector3 intersection = Vector3(0., 0., 0);
-  /// The ID where the interaction occured.
+  /// The ID where the interaction occurred.
   GeometryIdentifier intersectionID;
-  /// The surface where the interaction occured.
+  /// The surface where the interaction occurred.
   const Surface* surface = nullptr;
-  /// The volume where the interaction occured.
-  const TrackingVolume* volume = nullptr;
-  /// Update the volume step to implment the proper step size
+  /// The volume where the interaction occurred.
+  InteractionVolume volume{};
+  /// Update the volume step to implement the proper step size
   bool updatedVolumeStep = false;
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 1.;

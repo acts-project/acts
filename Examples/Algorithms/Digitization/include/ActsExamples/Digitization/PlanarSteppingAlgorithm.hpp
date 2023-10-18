@@ -8,18 +8,28 @@
 
 #pragma once
 
+#include "Acts/Digitization/DigitizationSourceLink.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
+
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace Acts {
 class DigitizationModule;
@@ -27,9 +37,13 @@ class IdentifiedDetectorElement;
 class PlanarModuleStepper;
 class Surface;
 class TrackingGeometry;
+class PlanarModuleCluster;
 }  // namespace Acts
 
 namespace ActsExamples {
+class IndexSourceLink;
+class RandomNumbers;
+struct AlgorithmContext;
 
 /// Create planar clusters from simulation hits.
 class PlanarSteppingAlgorithm final : public IAlgorithm {
