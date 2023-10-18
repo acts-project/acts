@@ -9,6 +9,7 @@
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 
 #include <array>
@@ -93,7 +94,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
         unsigned int igap = 0;
         for (auto& child : node.children) {
           auto [neg, pos] = cylEndpointsZ(*child);
-          if (not neg.isApprox(negC)) {
+          if ((neg - negC).norm() > s_onSurfaceTolerance) {
             // Fill a gap node
             auto gapName = node.name + "_gap_" + std::to_string(igap);
             auto gapTransform = Transform3::Identity();
@@ -109,7 +110,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
           negC = pos;
         }
         // Check if a last one needs to be filled
-        if (not negC.isApprox(posC)) {
+        if ((negC - posC).norm() > s_onSurfaceTolerance) {
           // Fill a gap node
           auto gapName = node.name + "_gap_" + std::to_string(igap);
           auto gapTransform = Transform3::Identity();
@@ -135,7 +136,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
         ActsScalar lastR = cInnerR;
         for (auto& child : node.children) {
           ActsScalar iR = child->boundaryValues[0];
-          if (iR > lastR) {
+          if (std::abs(iR - lastR) > s_onSurfaceTolerance) {
             auto gap = std::make_unique<Blueprint::Node>(
                 node.name + "_gap_" + std::to_string(igap), node.transform,
                 VolumeBounds::eCylinder,
@@ -147,7 +148,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
           lastR = child->boundaryValues[1];
         }
         // Check if a last one needs to be filled
-        if (lastR < cOuterR) {
+        if (std::abs(lastR - cOuterR) > s_onSurfaceTolerance) {
           auto gap = std::make_unique<Blueprint::Node>(
               node.name + "_gap_" + std::to_string(igap), node.transform,
               VolumeBounds::eCylinder,
