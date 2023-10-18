@@ -81,7 +81,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = 100000;
+  pOptions.maxSteps = m_cfg.maxSteps;
   pOptions.direction =
       m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
 

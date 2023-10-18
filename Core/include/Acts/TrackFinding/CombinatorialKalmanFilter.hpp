@@ -615,7 +615,7 @@ class CombinatorialKalmanFilter {
 
       detail::setupLoopProtection(
           state, stepper, result.abortList.template get<PathLimitReached>(),
-          logger());
+          true, logger());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation:
