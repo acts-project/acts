@@ -32,7 +32,7 @@ struct action_caller {
   }
 };
 
-/// The action caller struct, without stae object
+/// The action caller struct, without result object
 template <>
 struct action_caller<false> {
   template <typename actor_t, typename propagator_state_t, typename stepper_t,

@@ -221,11 +221,12 @@ struct Gx2FitterResult {
 /// @tparam measDim Number of dimensions of the measurement
 /// @tparam track_state_proxy_t The track state proxy type
 ///
+/// @param trackStateProxy is the track state proxy
 /// @param result is the mutable result/cache object
 /// @param logger a logger instance
 template <size_t measDim, typename track_state_proxy_t>
-void collector(track_state_proxy_t& trackStateProxy, Gx2FitterResult& result,
-               const Logger& logger) {
+void collector(const track_state_proxy_t& trackStateProxy,
+               Gx2FitterResult& result, const Logger& logger) {
   auto predicted = trackStateProxy.predicted();
   auto measurement = trackStateProxy.template calibrated<measDim>();
   auto covarianceMeasurement =

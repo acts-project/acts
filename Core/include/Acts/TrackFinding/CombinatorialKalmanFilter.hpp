@@ -830,7 +830,7 @@ class CombinatorialKalmanFilter {
 
     /// Create and fill track states for all source links
     /// @param gctx The current geometry context
-    /// @param state Reference to the state struct of the actor
+    /// @param result Reference to the state struct of the actor
     /// @param boundState Bound state from the propagation on this surface
     /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
     /// @param slBegin Begin iterator for sourcelinks
@@ -1022,7 +1022,6 @@ class CombinatorialKalmanFilter {
     ///
     /// @param stateMask The bitmask that instructs which components to allocate
     /// @param boundState The bound state on current surface
-    /// @param result is the mutable state state object and which to leave invalid
     /// @param isSensitive The surface is sensitive or passive
     /// @param prevTip The index of the previous state
     ///
