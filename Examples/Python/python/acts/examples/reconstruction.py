@@ -912,6 +912,7 @@ def addTruthTrackingGsf(
         calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
+    s.addWhiteboardAlias("tracks", gsfAlg.config.outputTracks)
 
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),

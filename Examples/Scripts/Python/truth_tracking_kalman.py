@@ -34,6 +34,7 @@ def runTruthTrackingKalman(
         SeedingAlgorithm,
         TruthSeedRanges,
         addKalmanTracks,
+        TrackSelectorConfig,
     )
 
     s = s or acts.examples.Sequencer(
@@ -112,7 +113,25 @@ def runTruthTrackingKalman(
         reverseFilteringMomThreshold,
     )
 
-    # Output
+    s.addAlgorithm(
+        acts.examples.TrackSelectorAlgorithm(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTracks="selected-tracks",
+            selectorConfig=acts.TrackSelector.Config(
+                minMeasurements=7,
+            ),
+        )
+    )
+    s.addAlgorithm(
+        acts.examples.TracksToTrajectories(
+            level=acts.logging.INFO,
+            inputTracks="selected-tracks",
+            outputTrajectories="trajectories-from-tracks",
+        )
+    )
+    s.addWhiteboardAlias("trajectories", "trajectories-from-tracks")
+
     s.addWriter(
         acts.examples.RootTrajectoryStatesWriter(
             level=acts.logging.INFO,
