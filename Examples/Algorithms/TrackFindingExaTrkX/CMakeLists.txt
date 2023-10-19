@@ -1,6 +1,8 @@
 add_library(
   ActsExamplesTrackFindingExaTrkX SHARED
   src/TrackFindingAlgorithmExaTrkX.cpp
+  src/PrototracksToParsAndSeeds.cpp
+  src/TrackFindingFromPrototrackAlgorithm.cpp
 )
 
 target_include_directories(
@@ -13,6 +15,7 @@ target_link_libraries(
   PUBLIC
     ActsPluginExaTrkX
     ActsExamplesFramework
+    ActsExamplesTrackFinding
 )
 
 install(
