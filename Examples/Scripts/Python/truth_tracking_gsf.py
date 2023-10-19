@@ -20,9 +20,10 @@ def runTruthTrackingGsf(
 ):
     from acts.examples.simulation import (
         addParticleGun,
+        ParticleConfig,
         EtaConfig,
         PhiConfig,
-        ParticleConfig,
+        MomentumConfig,
         addFatras,
         addDigitization,
     )
@@ -46,9 +47,14 @@ def runTruthTrackingGsf(
     if inputParticlePath is None:
         addParticleGun(
             s,
-            EtaConfig(-2.0, 2.0),
-            ParticleConfig(1, acts.PdgParticle.eElectron, True),
+            ParticleConfig(num=1, pdg=acts.PdgParticle.eElectron, randomizeCharge=True),
+            EtaConfig(-2.0, 2.0, uniform=True),
+            MomentumConfig(10.0 * u.GeV, 10.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(10.0 * u.um, 10.0 * u.um, 50.0 * u.mm, 1.0 * u.ns),
+            ),
             multiplicity=1,
             rnd=rnd,
         )
