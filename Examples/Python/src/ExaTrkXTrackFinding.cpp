@@ -213,7 +213,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::PrototracksToParameters, mex,
-                                "PrototracksToParsAndSeeds", inputProtoTracks,
+                                "PrototracksToParameters", inputProtoTracks,
                                 inputSpacePoints, outputSeeds, outputParameters,
                                 outputProtoTracks, geometry, buildTightSeeds);
 
