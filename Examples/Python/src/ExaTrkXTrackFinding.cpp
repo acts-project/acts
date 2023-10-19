@@ -103,7 +103,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
                    .def(py::init([](Logging::Level lvl) {
                           return std::make_shared<Alg>(
                               getDefaultLogger("EdgeClassifier", lvl));
-                        }), py::arg("level"));
+                        }),
+                        py::arg("level"));
   }
 #endif
 
