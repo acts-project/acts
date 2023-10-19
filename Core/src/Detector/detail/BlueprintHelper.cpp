@@ -86,11 +86,11 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
       if (bVal == binZ) {
         // adjust inner/outer radius
         if (adjustToParent) {
-          for_each(node.children.begin(), node.children.end(),
-                   [&](auto& child) {
-                     child->boundaryValues[0] = cInnerR;
-                     child->boundaryValues[1] = cOuterR;
-                   });
+          std::for_each(node.children.begin(), node.children.end(),
+                        [&](auto& child) {
+                          child->boundaryValues[0] = cInnerR;
+                          child->boundaryValues[1] = cOuterR;
+                        });
         }
         auto [negC, posC] = cylEndpointsZ(node);
         // Assume sorted along the local z axis
@@ -128,11 +128,11 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
       } else if (bVal == binR) {
         // We have binning in R present
         if (adjustToParent) {
-          for_each(node.children.begin(), node.children.end(),
-                   [&](auto& child) {
-                     child->transform = node.transform;
-                     child->boundaryValues[2] = cHalfZ;
-                   });
+          std::for_each(node.children.begin(), node.children.end(),
+                        [&](auto& child) {
+                          child->transform = node.transform;
+                          child->boundaryValues[2] = cHalfZ;
+                        });
         }
         // Fill the gaps in R
         unsigned int igap = 0;
