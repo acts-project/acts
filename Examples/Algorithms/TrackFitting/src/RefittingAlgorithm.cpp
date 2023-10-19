@@ -44,6 +44,7 @@ ActsExamples::RefittingAlgorithm::RefittingAlgorithm(Config config,
   }
 
   m_inputTracks.initialize(m_cfg.inputTracks);
+  m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(

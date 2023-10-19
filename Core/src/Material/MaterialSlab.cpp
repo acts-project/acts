@@ -35,7 +35,7 @@ Acts::MaterialSlab::MaterialSlab(const std::vector<MaterialSlab>& layers)
   //   layers are sorted by thickness/mass density. then, the later terms
   //   of the averaging are only small corrections to the large average of
   //   the initial layers. this could be enforced by sorting the layers first,
-  //   but i am not sure if this is actually a problem.
+  //   but I am not sure if this is actually a problem.
   // NOTE yes, this loop is exactly like std::reduce which apparently does not
   //   exist on gcc 8 although it is required by C++17.
   for (const auto& layer : layers) {

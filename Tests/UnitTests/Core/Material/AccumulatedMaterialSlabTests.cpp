@@ -186,9 +186,9 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentTracks) {
     CHECK_CLOSE_REL(average.material().L0(), 2 * unit.material().L0(), eps);
     CHECK_CLOSE_REL(average.material().molarDensity(),
                     0.5f * unit.material().molarDensity(), eps);
-    // averag atom is still the same species
+    // average atom is still the same species
     CHECK_CLOSE_REL(average.material().Ar(), unit.material().Ar(), eps);
-    // averag atomic number proportional to the thickness
+    // average atomic number proportional to the thickness
     CHECK_CLOSE_REL(average.material().Z(), 0.5 * unit.material().Z(), eps);
     // thickness in x0/l0 depends on density and thus halved as well
     BOOST_CHECK_EQUAL(average.thicknessInX0(), 1 * unit.thicknessInX0());

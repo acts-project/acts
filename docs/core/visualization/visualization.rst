@@ -1,11 +1,11 @@
 Visualization
 =============
 
-A very lightweight layer for visualiazing Acts geometry objects and event data model is provided within the Core component.
+A very lightweight layer for visualizing Acts geometry objects and event data model is provided within the Core component.
 Acts does not provide a viewer per se, but instead it was chosen to plug a visitor that can then be used for visualizing the given objects.
 The visitor has to implement the `IVisualization3D` interface and can then straight forwardly used with the visualization helper structs. 
 Two visualization helpers that implement industry standard 3D formats can be used from this component, 
-but evidently any other visitor can be plugged in as long as it satisfies the `IVsualization` interface.
+but evidently any other visitor can be plugged in as long as it satisfies the `IVisualization` interface.
 
 The two provided visualization visitors are:
  * `ObjVisualization3D` writing the `.obj` format, and an associated `.mtl` file for the color and material definitions
@@ -44,7 +44,7 @@ Example of a 2D cartesian error on a plane:
 
  .. image:: ../../figures/visualization/CartesianError.png
   :width: 800
-  :alt: Display of an cartesian error.
+  :alt: Display of a cartesian error.
 
 Example of track parameters on a plane:
 

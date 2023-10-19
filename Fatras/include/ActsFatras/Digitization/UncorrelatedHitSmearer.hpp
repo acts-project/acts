@@ -65,7 +65,7 @@ struct BoundParametersSmearer {
                     const Acts::GeometryContext& geoCtx) const {
     // We use the thickness of the detector element as tolerance, because Geant4
     // treats the Surfaces as volumes and thus it is not ensured, that each hit
-    // lies exactely on the Acts::Surface
+    // lies exactly on the Acts::Surface
     const auto tolerance =
         surface.associatedDetectorElement() != nullptr
             ? surface.associatedDetectorElement()->thickness()
