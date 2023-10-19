@@ -31,6 +31,10 @@ class IGeometryIdGenerator;
 /// and allows for DetectorVolume attachment in z/r/phi, such as wrapping
 /// of bevelled cylinder objects in z/r
 ///
+/// There exists an option to create this container builder (recursively)
+/// from a blueprint tree, which attempts to fill in the gap volumes
+/// accordingly.
+///
 /// @note the builder expects a fully consistent set of sub volume builders
 /// that will be executed in a chain
 ///
@@ -76,7 +80,9 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   /// @param bpNode is the entry blue print node
   /// @param logLevel is the logging output level for the builder tools
   ///
-  /// @note no checking is being done on consistency of the blue print
+  /// @note no checking is being done on consistency of the blueprint,
+  /// though gaps are being filled and the blueprint nodes are being
+  /// sorted according to the binning prescription
   static std::shared_ptr<const IDetectorComponentBuilder> create(
       const Acts::Experimental::Blueprint::Node& bpNode,
       Acts::Logging::Level logLevel = Acts::Logging::INFO);
