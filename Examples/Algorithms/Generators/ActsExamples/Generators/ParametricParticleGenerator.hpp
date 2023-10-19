@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/Required.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
 #include <array>
@@ -34,27 +35,28 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     /// Low, high (exclusive) for the transverse direction angle.
     double phiMin = -M_PI;
     double phiMax = M_PI;
-    /// Low, high (inclusive) for  the longitudinal direction angle.
-    ///
-    /// This intentionally uses theta instead of eta so it can represent the
-    /// full direction space with finite values.
+
+    /// Low, high (exclusive) for the pseudo rapidity.
     ///
     /// @note This is the standard generation, for detector performance
     /// classification, where a flat distribution in eta can be useful,
     /// this can be set by the etaUniform flag;
     ///
-    double thetaMin = std::numeric_limits<double>::min();
-    double thetaMax = M_PI - std::numeric_limits<double>::epsilon();
-    bool etaUniform = false;
+    Required<double> etaMin;
+    Required<double> etaMax;
+    Required<bool> etaUniform;
+
     /// Low, high (exclusive) for absolute/transverse momentum.
-    double pMin = 1 * Acts::UnitConstants::GeV;
-    double pMax = 10 * Acts::UnitConstants::GeV;
-    /// Indicate if the momentum referse to transverse momentum
-    bool pTransverse = false;
+    Required<double> pMin;
+    Required<double> pMax;
+    /// Indicate if the momentum referse to transverse momentum.
+    Required<bool> pTransverse;
+
     /// (Absolute) PDG particle number to identify the particle type.
-    Acts::PdgParticle pdg = Acts::PdgParticle::eMuon;
+    Required<Acts::PdgParticle> pdg;
     /// Randomize the charge and flip the PDG particle number sign accordingly.
-    bool randomizeCharge = false;
+    Required<bool> randomizeCharge;
+
     /// Number of particles.
     size_t numParticles = 1;
 
@@ -71,13 +73,12 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
 
  private:
   Config m_cfg;
-  // will be automatically set from PDG data tables
-  double m_charge;
-  double m_mass;
-  double m_cosThetaMin;
-  double m_cosThetaMax;
-  double m_etaMin;
-  double m_etaMax;
+
+  double m_cosThetaMin{};
+  double m_cosThetaMax{};
+
+  double m_charge{};
+  double m_mass{};
 };
 
 }  // namespace ActsExamples

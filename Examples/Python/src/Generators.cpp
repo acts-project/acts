@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/Required.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Generators/MultiplicityGenerators.hpp"
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
@@ -35,16 +36,6 @@ class IReader;
 }  // namespace ActsExamples
 
 namespace py = pybind11;
-
-namespace {
-double thetaToEta(double theta) {
-  assert(theta != 0);
-  return -1 * std::log(std::tan(theta / 2.));
-}
-double etaToTheta(double eta) {
-  return 2 * std::atan(std::exp(-eta));
-}
-}  // namespace
 
 namespace Acts::Python {
 
@@ -135,8 +126,8 @@ void addGenerators(Context& ctx) {
         .def(py::init<>())
         .def_readwrite("phiMin", &Config::phiMin)
         .def_readwrite("phiMax", &Config::phiMax)
-        .def_readwrite("thetaMin", &Config::thetaMin)
-        .def_readwrite("thetaMax", &Config::thetaMax)
+        .def_readwrite("etaMin", &Config::etaMin)
+        .def_readwrite("etaMax", &Config::etaMax)
         .def_readwrite("etaUniform", &Config::etaUniform)
         .def_readwrite("pMin", &Config::pMin)
         .def_readwrite("pMax", &Config::pMax)
@@ -147,41 +138,26 @@ void addGenerators(Context& ctx) {
         .def_readwrite("mass", &Config::mass)
         .def_readwrite("charge", &Config::charge)
         .def_property(
-            "p",
-            [](Config& cfg) {
-              return std::pair{cfg.pMin, cfg.pMax};
-            },
-            [](Config& cfg, std::pair<double, double> value) {
+            "p", [](Config& cfg) { return std::tie(cfg.pMin, cfg.pMax); },
+            [](Config& cfg, std::pair<ActsExamples::Required<double>,
+                                      ActsExamples::Required<double>>
+                                value) {
               cfg.pMin = value.first;
               cfg.pMax = value.second;
             })
         .def_property(
-            "phi",
-            [](Config& cfg) {
-              return std::pair{cfg.phiMin, cfg.phiMax};
-            },
+            "phi", [](Config& cfg) { return std::tie(cfg.phiMin, cfg.phiMax); },
             [](Config& cfg, std::pair<double, double> value) {
               cfg.phiMin = value.first;
               cfg.phiMax = value.second;
             })
         .def_property(
-            "theta",
-            [](Config& cfg) {
-              return std::pair{cfg.thetaMin, cfg.thetaMax};
-            },
-            [](Config& cfg, std::pair<double, double> value) {
-              cfg.thetaMin = value.first;
-              cfg.thetaMax = value.second;
-            })
-        .def_property(
-            "eta",
-            [](Config& cfg) {
-              return std::pair{thetaToEta(cfg.thetaMin),
-                               thetaToEta(cfg.thetaMax)};
-            },
-            [](Config& cfg, std::pair<double, double> value) {
-              cfg.thetaMin = etaToTheta(value.first);
-              cfg.thetaMax = etaToTheta(value.second);
+            "eta", [](Config& cfg) { return std::tie(cfg.etaMin, cfg.etaMax); },
+            [](Config& cfg, std::pair<ActsExamples::Required<double>,
+                                      ActsExamples::Required<double>>
+                                value) {
+              cfg.etaMin = value.first;
+              cfg.etaMax = value.second;
             });
   }
 
@@ -211,4 +187,5 @@ void addGenerators(Context& ctx) {
            py::arg("mean"))
       .def_readwrite("mean", &ActsExamples::PoissonMultiplicityGenerator::mean);
 }
+
 }  // namespace Acts::Python

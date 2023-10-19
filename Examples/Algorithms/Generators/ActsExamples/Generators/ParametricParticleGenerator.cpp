@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,22 +18,23 @@
 #include <random>
 #include <utility>
 
+namespace {
+double etaToCosTheta(double eta) {
+  const double theta = 2 * std::atan(std::exp(-eta));
+  return std::cos(theta);
+}
+}  // namespace
+
 ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
     const Config& cfg)
     : m_cfg(cfg),
-      m_charge(cfg.charge.value_or(Acts::findCharge(m_cfg.pdg).value_or(0))),
-      m_mass(cfg.mass.value_or(Acts::findMass(m_cfg.pdg).value_or(0))),
       // since we want to draw the direction uniform on the unit sphere, we must
       // draw from cos(theta) instead of theta. see e.g.
       // https://mathworld.wolfram.com/SpherePointPicking.html
-      m_cosThetaMin(std::cos(m_cfg.thetaMin)),
-      // ensure upper bound is included. see e.g.
-      // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
-      m_cosThetaMax(std::nextafter(std::cos(m_cfg.thetaMax),
-                                   std::numeric_limits<double>::max())),
-      // in case we force uniform eta generation
-      m_etaMin(-std::log(std::tan(0.5 * m_cfg.thetaMin))),
-      m_etaMax(-std::log(std::tan(0.5 * m_cfg.thetaMax))) {}
+      m_cosThetaMin(etaToCosTheta(m_cfg.etaMin.get())),
+      m_cosThetaMax(etaToCosTheta(m_cfg.etaMax.get())),
+      m_charge(cfg.charge.value_or(Acts::findCharge(m_cfg.pdg.get()).value())),
+      m_mass(cfg.mass.value_or(Acts::findMass(m_cfg.pdg.get()).value())) {}
 
 ActsExamples::SimParticleContainer
 ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
@@ -45,8 +46,8 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
   UniformIndex particleTypeChoice(0u, m_cfg.randomizeCharge ? 1u : 0u);
   // (anti-)particle choice is one random draw but defines two properties
   const Acts::PdgParticle pdgChoices[] = {
-      m_cfg.pdg,
-      static_cast<Acts::PdgParticle>(-m_cfg.pdg),
+      m_cfg.pdg.get(),
+      static_cast<Acts::PdgParticle>(-m_cfg.pdg.get()),
   };
   const double qChoices[] = {
       m_charge,
@@ -54,8 +55,8 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
   };
   UniformReal phiDist(m_cfg.phiMin, m_cfg.phiMax);
   UniformReal cosThetaDist(m_cosThetaMin, m_cosThetaMax);
-  UniformReal etaDist(m_etaMin, m_etaMax);
-  UniformReal pDist(m_cfg.pMin, m_cfg.pMax);
+  UniformReal etaDist(m_cfg.etaMin.get(), m_cfg.etaMax.get());
+  UniformReal pDist(m_cfg.pMin.get(), m_cfg.pMax.get());
 
   SimParticleContainer particles;
   particles.reserve(m_cfg.numParticles);

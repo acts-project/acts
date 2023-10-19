@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "ActsExamples/Framework/Required.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -16,6 +17,15 @@
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace PYBIND11_NAMESPACE {
+namespace detail {
+template <typename T>
+struct type_caster<ActsExamples::Required<T>>
+    : optional_caster<ActsExamples::Required<T>> {};
+}  // namespace detail
+}  // namespace PYBIND11_NAMESPACE
 
 namespace Acts::Python {
 
