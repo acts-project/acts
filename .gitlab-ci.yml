@@ -58,7 +58,7 @@ clang_tidy:
 
 build_exatrkx:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
     - docker
 
@@ -104,7 +104,7 @@ test_exatrkx_unittests:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
     - docker-gpu-nvidia
   script:
@@ -114,7 +114,7 @@ test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
     - docker-gpu-nvidia
   script:
