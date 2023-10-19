@@ -42,8 +42,6 @@ PrototracksToParsAndSeeds::PrototracksToParsAndSeeds(Config cfg,
     throw std::invalid_argument("No geometry given");
   }
 
-  // m_advancedSeeding = std::make_unique<SeedingImpl>(logger());
-
   // Set up the track parameters covariance (the same for all tracks)
   m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
       m_cfg.initialVarInflation[Acts::eBoundLoc0] * cfg.sigmaLoc0 *
