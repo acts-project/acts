@@ -51,11 +51,11 @@ def runTruthTrackingKalman(
             s,
             ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
             EtaConfig(-2.0, 2.0, uniform=True),
-            MomentumConfig(10.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+            MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
-                stddev=acts.Vector4(10.0 * u.um, 10.0 * u.um, 50.0 * u.mm, 1.0 * u.ns),
+                stddev=acts.Vector4(0, 0, 0, 0),
             ),
             multiplicity=1,
             rnd=rnd,
@@ -132,18 +132,6 @@ def runTruthTrackingKalman(
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_fitter.root"),
-        )
-    )
-
-    s.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
-            level=acts.logging.INFO,
-            inputProtoTracks="sorted_truth_particle_tracks"
-            if directNavigation
-            else "truth_particle_tracks",
-            inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDir / "performance_track_finder.root"),
         )
     )
 
