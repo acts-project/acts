@@ -1,3 +1,13 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
+
 // TODO: update to C++17 style
 #include "Acts/TrackFinding/FasTrackConnector.hpp"
 
@@ -239,7 +249,7 @@ class TrigFTF_GNN_Layer {
   float m_etaBinWidth, m_phiBinWidth;
 
   float m_r1, m_z1, m_r2, m_z2;
-  int m_nBins;
+  float m_nBins;
   float m_etaBin;
 };
 
@@ -364,7 +374,6 @@ class TrigFTF_GNN_Geometry {
   int m_nEtaBins;
 
   std::unique_ptr<Acts::FasTrackConnector> m_fastrack;
-
 };
 
 }  // namespace Acts

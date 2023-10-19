@@ -1,3 +1,11 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 // SeedFinderFTF.ipp
 // TODO: update to C++17 style
 
@@ -69,7 +77,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
   const float cut_tau_ratio_max = 0.007;
   const float min_z0 = -2800;  // roiDescriptor->zedMinus(); //blank for now,
                                // get from config eventually
-  const float max_z0 = 2800;  // roiDescriptor->zedPlus();
+  const float max_z0 = 2800;   // roiDescriptor->zedPlus();
 
   const float maxOuterRadius = 550.0;
   const float cut_zMinU =
@@ -588,8 +596,10 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
           // if (!roi.isFullscan()) {
           //   const double uc = 2 * B * pS_r - A;
-          //   // const double phi0 = std::atan2(sinA - uc * cosA, cosA + uc * sinA);
-          //   //           if ( !RoiUtil::containsPhi( *roiDescriptor, phi0 ) ) {
+          //   // const double phi0 = std::atan2(sinA - uc * cosA, cosA + uc *
+          //   sinA);
+          //   //           if ( !RoiUtil::containsPhi( *roiDescriptor, phi0 ) )
+          //   {
           //   //             continue;
           //   //           }
           // }
