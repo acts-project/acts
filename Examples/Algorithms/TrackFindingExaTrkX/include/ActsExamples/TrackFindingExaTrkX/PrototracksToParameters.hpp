@@ -36,7 +36,7 @@ class PrototracksToParameters final : public IAlgorithm {
     std::string outputProtoTracks = "remaining-prototracks";
     std::string outputParameters = "parameters";
 
-    /// Wether to make tight seeds (closest 3 hits to beampipe) or large
+    /// Whether to make tight seeds (closest 3 hits to beampipe) or large
     /// seeds (evenly spread across the prototrack)
     bool buildTightSeeds = false;
 
