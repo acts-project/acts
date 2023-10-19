@@ -32,7 +32,6 @@ def runTruthTrackingGsf(
         SeedingAlgorithm,
         TruthSeedRanges,
         addTruthTrackingGsf,
-        TrackSelectorConfig,
     )
 
     s = s or acts.examples.Sequencer(

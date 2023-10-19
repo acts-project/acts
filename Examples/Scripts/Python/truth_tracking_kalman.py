@@ -34,7 +34,6 @@ def runTruthTrackingKalman(
         SeedingAlgorithm,
         TruthSeedRanges,
         addKalmanTracks,
-        TrackSelectorConfig,
     )
 
     s = s or acts.examples.Sequencer(
