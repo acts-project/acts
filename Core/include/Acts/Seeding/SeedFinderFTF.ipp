@@ -630,9 +630,11 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 }
 
 template <typename external_spacepoint_t>
+template <typename output_container_t> 
 void SeedFinderFTF<external_spacepoint_t>::createSeeds(
     const Acts::RoiDescriptor& roi,
-    const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo) {
+    const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo,
+    output_container_t& out_cont) {
   std::vector<GNN_TrigTracklet<external_spacepoint_t>>
       vTracks;  // make empty vector
 
@@ -669,7 +671,37 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
     }
   }
   vTracks.clear();
+  //fill output_container_t& *out_cont will be of type std::vector<seed_t>
+  //push back objects seed_t = Seed<external_spacepoint_t>
+  //seed constructor 
+
+  for(auto&triplet : m_triplets) {
+    external_spacepoint_t S1 = triplet.s1().SP ;//triplet-> FTF_SP-> simspacepoint 
+    external_spacepoint_t S2 = triplet.s2().SP ;
+    external_spacepoint_t S3 = triplet.s3().SP ;
+    float Vertex = 0 ; 
+    float Quality = triplet.Q() ; 
+    //make a new seed, add to vector of seeds 
+    out_cont.emplace_back(S1,S2,S3,Vertex,Quality) ; 
+  }
+
 }
+
+
+//outer called in alg 
+template <typename external_spacepoint_t>
+std::vector<Seed<external_spacepoint_t>>
+SeedFinderFTF<external_spacepoint_t>::createSeeds(
+    const Acts::RoiDescriptor& roi,
+    const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo) const {
+  std::vector<seed_t> r;
+  createSeeds(roi, gnngeo, r);
+  return r;
+}
+
+
+
+
 
 // // still to be developed
 template <typename external_spacepoint_t>
@@ -692,5 +724,7 @@ SeedFinderFTF<external_spacepoint_t>::createSeeds_old(
                   std::forward<callable_t>(extract_coordinates));
   return r;
 }
+
+
 
 }  // namespace Acts
