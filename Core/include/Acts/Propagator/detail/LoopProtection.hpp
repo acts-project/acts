@@ -18,9 +18,15 @@ namespace detail {
 template <typename path_aborter_t, typename propagator_state_t,
           typename stepper_t>
 void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
-                         path_aborter_t& pathAborter, const Logger& logger) {
+                         path_aborter_t& pathAborter, bool releaseLimit,
+                         const Logger& logger) {
   if (!state.options.loopProtection) {
     return;
+  }
+
+  if (releaseLimit) {
+    pathAborter.internalLimit =
+        state.options.direction * std::numeric_limits<double>::max();
   }
 
   // Get the field at the start position
@@ -32,7 +38,7 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
     ACTS_WARNING("Field lookup was unsuccessful, this is very likely an error");
     return;
   }
-  Vector3 field = *fieldRes;
+  const Vector3 field = *fieldRes;
   const double B = field.norm();
   if (B == 0) {
     return;
@@ -43,13 +49,18 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
   // Calculate the full helix path
   const double helixPath = state.options.direction * 2 * M_PI * p / B;
   // And set it as the loop limit if it overwrites the internal limit
-  double loopLimit = state.options.loopFraction * helixPath;
-  double pathLimit = pathAborter.internalLimit;
-  if (std::abs(loopLimit) < std::abs(pathLimit)) {
+  const double loopLimit = state.options.loopFraction * helixPath;
+  const double previousLimit = pathAborter.internalLimit;
+  if (std::abs(loopLimit) < std::abs(previousLimit)) {
     pathAborter.internalLimit = loopLimit;
 
     ACTS_VERBOSE("Path aborter limit set to "
-                 << loopLimit << " (full helix =  " << helixPath << ")");
+                 << loopLimit << " (full helix = " << helixPath
+                 << ", previous limit = " << previousLimit << ")");
+  } else {
+    ACTS_VERBOSE("Path aborter limit not updated to "
+                 << loopLimit << " (full helix = " << helixPath
+                 << ", previous limit = " << previousLimit << ")");
   }
 }
 
