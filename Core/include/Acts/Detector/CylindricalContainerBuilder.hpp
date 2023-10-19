@@ -99,7 +99,9 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   /// @param bpNode is the entry blue print node
   /// @param logLevel is the logging output level for the builder tools
   ///
-  /// @note no checking is being done on consistency of the blue print
+  /// @note no checking is being done on consistency of the blueprint,
+  /// though gaps are being filled and the blueprint nodes are being
+  /// sorted according to the binning prescription
   static std::shared_ptr<const IDetectorComponentBuilder> create(
       const Acts::Experimental::Blueprint::Node& bpNode,
       Acts::Logging::Level logLevel = Acts::Logging::INFO);
