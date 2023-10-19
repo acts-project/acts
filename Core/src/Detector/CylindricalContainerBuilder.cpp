@@ -234,7 +234,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
 }
 
 std::shared_ptr<const Acts::Experimental::IDetectorComponentBuilder>
-Acts::Experimental::CylindricalContainerBuilder::create(
+Acts::Experimental::CylindricalContainerBuilder::createFromBlueprint(
     const Acts::Experimental::Blueprint::Node& bpNode,
     Acts::Logging::Level logLevel) {
   if (bpNode.boundsType != VolumeBounds::BoundsType::eCylinder) {
@@ -256,6 +256,7 @@ Acts::Experimental::CylindricalContainerBuilder::create(
           vsCfg, getDefaultLogger(child->name + "_shape", logLevel));
       // Detector volume builder
       DetectorVolumeBuilder::Config dvCfg;
+      dvCfg.name = child->name;
       dvCfg.externalsBuilder = vsBuilder;
       dvCfg.internalsBuilder = child->internalsBuilder;
       dvCfg.auxiliary = "*** acts auto-generated volume builder ***";
@@ -264,7 +265,7 @@ Acts::Experimental::CylindricalContainerBuilder::create(
           dvCfg, getDefaultLogger(child->name, logLevel)));
     } else {
       // This evokes the recursive stepping down the tree
-      builders.push_back(create(*child, logLevel));
+      builders.push_back(createFromBlueprint(*child, logLevel));
     }
   }
 
@@ -273,6 +274,8 @@ Acts::Experimental::CylindricalContainerBuilder::create(
   cfg.binning = bpNode.binning;
   cfg.builders = builders;
   cfg.auxiliary = "*** acts auto-generated from proxy ***";
+  cfg.geoIdGenerator = bpNode.geoIdGenerator;
+  cfg.rootVolumeFinderBuilder = bpNode.rootVolumeFinderBuilder;
 
   return std::make_shared<CylindricalContainerBuilder>(
       cfg, getDefaultLogger(bpNode.name, logLevel));
