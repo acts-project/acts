@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingExaTrkX/PrototracksToParsAndSeeds.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
@@ -29,8 +29,8 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-PrototracksToParsAndSeeds::PrototracksToParsAndSeeds(Config cfg,
-                                                     Acts::Logging::Level lvl)
+PrototracksToParameters::PrototracksToParameters(Config cfg,
+                                                 Acts::Logging::Level lvl)
     : IAlgorithm("PrototracksToParsAndSeeds", lvl), m_cfg(std::move(cfg)) {
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
@@ -43,30 +43,17 @@ PrototracksToParsAndSeeds::PrototracksToParsAndSeeds(Config cfg,
   }
 
   // Set up the track parameters covariance (the same for all tracks)
-  m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-      m_cfg.initialVarInflation[Acts::eBoundLoc0] * cfg.sigmaLoc0 *
-      m_cfg.sigmaLoc0;
-  m_covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-      m_cfg.initialVarInflation[Acts::eBoundLoc1] * cfg.sigmaLoc1 *
-      m_cfg.sigmaLoc1;
-  m_covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
-      m_cfg.initialVarInflation[Acts::eBoundPhi] * cfg.sigmaPhi *
-      m_cfg.sigmaPhi;
-  m_covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
-      m_cfg.initialVarInflation[Acts::eBoundTheta] * cfg.sigmaTheta *
-      m_cfg.sigmaTheta;
-  m_covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-      m_cfg.initialVarInflation[Acts::eBoundQOverP] * cfg.sigmaQOverP *
-      m_cfg.sigmaQOverP;
-  m_covariance(Acts::eBoundTime, Acts::eBoundTime) =
-      m_cfg.initialVarInflation[Acts::eBoundTime] * m_cfg.sigmaT0 *
-      m_cfg.sigmaT0;
+  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+    m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
+                         m_cfg.initialSigmas[i];
+  }
 }
 
-PrototracksToParsAndSeeds::~PrototracksToParsAndSeeds() {}
+PrototracksToParameters::~PrototracksToParameters() {}
 
-ProcessCode PrototracksToParsAndSeeds::execute(
+ProcessCode PrototracksToParameters::execute(
     const AlgorithmContext &ctx) const {
+  auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
   const auto &sps = m_inputSpacePoints(ctx);
   auto prototracks = m_inputProtoTracks(ctx);
 
@@ -162,16 +149,23 @@ ProcessCode PrototracksToParsAndSeeds::execute(
             : SimSeed(*tmpSps[0], *tmpSps[s / 2], *tmpSps[s - 1], z_vertex);
 
     // Compute parameters
-    const auto geoId = seed.sp()
-                           .front()
-                           ->sourceLinks()
+    const auto &bottomSP = seed.sp().front();
+    const auto geoId = bottomSP->sourceLinks()
                            .front()
                            .template get<IndexSourceLink>()
                            .geometryId();
     const auto &surface = *m_cfg.geometry->findSurface(geoId);
 
+    auto field = m_cfg.magneticField->getField(
+        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
+    if (!field.ok()) {
+      ACTS_ERROR("Field lookup error: " << field.error());
+      return ProcessCode::ABORT;
+    }
+
     auto pars = Acts::estimateTrackParamsFromSeed(
-        {}, seed.sp().begin(), seed.sp().end(), surface, {0., 0., 2_T}, 0.0);
+        ctx.geoContext, seed.sp().begin(), seed.sp().end(), surface, *field,
+        m_cfg.bFieldMin);
 
     if (not pars) {
       ACTS_WARNING("Skip track because of bad params");
@@ -179,9 +173,8 @@ ProcessCode PrototracksToParsAndSeeds::execute(
 
     seededTracks.push_back(track);
     seeds.emplace_back(std::move(seed));
-    parameters.push_back(
-        Acts::BoundTrackParameters(surface.getSharedPtr(), *pars, m_covariance,
-                                   Acts::ParticleHypothesis::pion()));
+    parameters.push_back(Acts::BoundTrackParameters(
+        surface.getSharedPtr(), *pars, m_covariance, m_cfg.particleHypothesis));
   }
 
   if (skippedTracks > 0) {

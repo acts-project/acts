@@ -15,7 +15,7 @@
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/PrototracksToParsAndSeeds.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
@@ -212,7 +212,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("timing") = nullptr);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::PrototracksToParsAndSeeds, mex,
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::PrototracksToParameters, mex,
                                 "PrototracksToParsAndSeeds", inputProtoTracks,
                                 inputSpacePoints, outputSeeds, outputParameters,
                                 outputProtoTracks, geometry, buildTightSeeds);

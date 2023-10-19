@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -16,7 +18,16 @@
 
 namespace ActsExamples {
 
-class PrototracksToParsAndSeeds final : public IAlgorithm {
+/// This algorithm computes track parameters for prototracks.
+/// Unfortunately, it is not possible to create first seeds from prototracks,
+/// and then use the more generic TrackParamEstimationAlgorithm.
+///
+/// The reason is, that in the end we need a consistent collection of parameters
+/// and prototracks. But if the parameter estimation fails for individual seeds,
+/// it is not possible to recover a matching set of prototracks afterwards.
+/// Therefore, these two steps must be unified into one algorithm.
+///
+class PrototracksToParameters final : public IAlgorithm {
  public:
   struct Config {
     std::string inputProtoTracks;
@@ -25,37 +36,36 @@ class PrototracksToParsAndSeeds final : public IAlgorithm {
     std::string outputProtoTracks = "remaining-prototracks";
     std::string outputParameters = "parameters";
 
-    // The tracking geometry
-    std::shared_ptr<Acts::TrackingGeometry> geometry;
-
-    // Wether to make tight seeds (closest hits to beampipe) or large seeds
+    /// Wether to make tight seeds (closest 3 hits to beampipe) or large
+    /// seeds (evenly spread across the prototrack)
     bool buildTightSeeds = false;
+
+    /// The tracking geometry
+    std::shared_ptr<const Acts::TrackingGeometry> geometry;
+    /// Magnetic field variant.
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
 
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
-    /// Constant term of the loc0 resolution.
-    double sigmaLoc0 = 25 * Acts::UnitConstants::um;
-    /// Constant term of the loc1 resolution.
-    double sigmaLoc1 = 100 * Acts::UnitConstants::um;
-    /// Phi angular resolution.
-    double sigmaPhi = 0.02 * Acts::UnitConstants::degree;
-    /// Theta angular resolution.
-    double sigmaTheta = 0.02 * Acts::UnitConstants::degree;
-    /// q/p resolution.
-    double sigmaQOverP = 0.1 / Acts::UnitConstants::GeV;
-    /// Time resolution.
-    double sigmaT0 = 10 * Acts::UnitConstants::ns;
+    /// Initial covariance matrix diagonal.
+    std::array<double, 6> initialSigmas = {
+        25 * Acts::UnitConstants::um,       100 * Acts::UnitConstants::um,
+        0.02 * Acts::UnitConstants::degree, 0.02 * Acts::UnitConstants::degree,
+        0.1 / Acts::UnitConstants::GeV,     10 * Acts::UnitConstants::ns};
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    /// Particle hypothesis.
+    Acts::ParticleHypothesis particleHypothesis =
+        Acts::ParticleHypothesis::pion();
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  PrototracksToParsAndSeeds(Config cfg, Acts::Logging::Level lvl);
+  PrototracksToParameters(Config cfg, Acts::Logging::Level lvl);
 
-  ~PrototracksToParsAndSeeds();
+  ~PrototracksToParameters();
 
   /// Run the algorithm.
   ///

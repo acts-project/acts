@@ -1,7 +1,7 @@
 add_library(
   ActsExamplesTrackFindingExaTrkX SHARED
   src/TrackFindingAlgorithmExaTrkX.cpp
-  src/PrototracksToParsAndSeeds.cpp
+  src/PrototracksToParameters.cpp
   src/TrackFindingFromPrototrackAlgorithm.cpp
 )
 
