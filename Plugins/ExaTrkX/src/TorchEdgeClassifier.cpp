@@ -43,10 +43,10 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges) {
+    std::any inputNodes, std::any inputEdges, int deviceHint) {
   ACTS_DEBUG("Start edge classification");
   c10::InferenceMode guard(true);
-  const torch::Device device(m_deviceType);
+  const torch::Device device(m_deviceType, deviceHint);
 
   auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
