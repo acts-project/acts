@@ -228,7 +228,6 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   detectorBpr->dotStream(fs, "blueprint2cylinder");
   fs.close();
 
-
   // ----------------------------- end of blueprint
 
   // Create a Cylindrical detector builder from this blueprint

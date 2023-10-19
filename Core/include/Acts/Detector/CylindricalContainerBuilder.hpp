@@ -50,7 +50,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     /// Binning prescription of attachment
     std::vector<BinningValue> binning = {};
     /// The root volume finder
-    std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder = nullptr;
+    std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
+        nullptr;
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// An eventual reverse geometry id generation
@@ -81,7 +82,7 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   /// @param logLevel is the logging output level for the builder tools
   ///
   /// @note no checking is being done on consistency of the blueprint,
-  /// it is assumed it has passed first through gap filling via the 
+  /// it is assumed it has passed first through gap filling via the
   /// blueprint helper.
   ///
   /// @return a cylindrical container builder representing this blueprint

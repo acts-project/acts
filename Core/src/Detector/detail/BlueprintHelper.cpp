@@ -106,7 +106,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
             gapTransform.translate(0.5 * (neg + negC));
             auto gap = std::make_unique<Blueprint::Node>(
                 gapName, gapTransform, VolumeBounds::eCylinder,
-                std::vector<ActsScalar>{cInnerR, cOuterR, 0.5*gapSpan});
+                std::vector<ActsScalar>{cInnerR, cOuterR, 0.5 * gapSpan});
             gaps.push_back(std::move(gap));
             ++igap;
           }
@@ -123,7 +123,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
           gapTransform.translate(0.5 * (negC + posC));
           auto gap = std::make_unique<Blueprint::Node>(
               gapName, gapTransform, VolumeBounds::eCylinder,
-              std::vector<ActsScalar>{cInnerR, cOuterR, 0.5*gapSpan});
+              std::vector<ActsScalar>{cInnerR, cOuterR, 0.5 * gapSpan});
           gaps.push_back(std::move(gap));
         }
 
