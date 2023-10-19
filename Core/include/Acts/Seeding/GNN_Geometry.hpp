@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <map>
 #include <vector>
+#include <memory>
+#include <cmath>
 
 namespace Acts {
 class TrigInDetSiLayer {
