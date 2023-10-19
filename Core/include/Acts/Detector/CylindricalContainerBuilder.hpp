@@ -100,7 +100,7 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   /// @param logLevel is the logging output level for the builder tools
   ///
   /// @note no checking is being done on consistency of the blueprint,
-  /// it is assumed it has passed first through gap filling via the 
+  /// it is assumed it has passed first through gap filling via the
   /// blueprint helper.
   ///
   /// @return a cylindrical container builder representing this blueprint
