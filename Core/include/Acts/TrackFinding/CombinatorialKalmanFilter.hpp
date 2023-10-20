@@ -1215,8 +1215,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Obtain the smoothed parameters at first/last measurement state
-      auto firstCreatedState =
-          result.fittedStates->getTrackState(firstStateIndex);
+      auto firstCreatedState = fittedStates->getTrackState(firstStateIndex);
       auto lastCreatedMeasurement =
           fittedStates->getTrackState(lastMeasurementIndex);
 
