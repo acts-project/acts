@@ -195,26 +195,26 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
   for (const auto& trk : currentVtxInfo.trackLinks) {
     // Track parameters
     auto trkParams = m_extractParameters(*trk);
-    // Type of the track reference surface
-    Surface::SurfaceType surfaceType = trkParams.referenceSurface().type();
+
     // Origin of the track reference surface
     Vector3 surfaceOrigin = trkParams.referenceSurface()
                                 .transform(vertexingOptions.geoContext)
                                 .translation();
-    // During the impact point estimation, we calculate the 3D PCA wrt a plane
-    // surface with origin at the vertex position. If the track is defined wrt
-    // such a surface, we assume that its impact parameters already correspond
-    // to the 3D PCA and we don't recalculate them.
-    if (surfaceType == Surface::SurfaceType::Plane and
-        surfaceOrigin == vtxPosition) {
+    // Skip the impact point estimation if the impact parameters of trk wrt the
+    // current vertex position were already calculated.
+    if (surfaceOrigin == vtxPosition &&
+        currentVtxInfo.impactParams3D.find(trk) !=
+            currentVtxInfo.impactParams3D.end()) {
       continue;
     }
+
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
         trkParams, vtxPosition, state.ipState);
     if (!res.ok()) {
       return res.error();
     }
+
     // Try to create a new map entry. If "trk" already exists as key, the
     // corresponding value will not be overwritten and the boolean "inserted"
     // will be set to false ...
