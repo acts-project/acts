@@ -238,7 +238,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                 if (ftau < n1->m_minCutOnTau) {
                   continue;
-                ]
+                }
                 if (ftau < n2->m_minCutOnTau) {
                   continue;
                 }

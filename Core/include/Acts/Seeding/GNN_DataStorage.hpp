@@ -234,10 +234,10 @@ class TrigFTF_GNN_DataStorage {
                TrigFTF_GNN_Node<space_point_t> *>::const_iterator nIt =
                b.m_vn.begin();
            nIt != b.m_vn.end(); ++nIt) {
-        if ((*nIt)->m_in.empty()){
+        if ((*nIt)->m_in.empty()) {
           continue;
         }
-        if ((*nIt)->m_out.empty()){
+        if ((*nIt)->m_out.empty()) {
           continue;
         }
         vn.push_back(*nIt);
@@ -246,7 +246,7 @@ class TrigFTF_GNN_DataStorage {
   }
 
   void sortByPhi() {
-    for (auto &b : m_etaBins){
+    for (auto &b : m_etaBins) {
       b.sortByPhi();
     }
   }

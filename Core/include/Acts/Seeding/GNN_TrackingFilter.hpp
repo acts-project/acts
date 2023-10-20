@@ -121,7 +121,7 @@ class TrigFTF_GNN_TrackingFilter {
 
   void followTrack(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS,
                    TrigFTF_GNN_EdgeState<external_spacepoint_t>& output) {
-    if (pS->m_level == -1){
+    if (pS->m_level == -1) {
       return;  // already collected
     }
     m_globalStateCounter = 0;
@@ -139,7 +139,7 @@ class TrigFTF_GNN_TrackingFilter {
 
     propagate(pS, *pInitState);
 
-    if (m_stateVec.empty()){
+    if (m_stateVec.empty()) {
       return;
     }
     std::sort(m_stateVec.begin(), m_stateVec.end(),
@@ -155,9 +155,9 @@ class TrigFTF_GNN_TrackingFilter {
  protected:
   void propagate(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS,
                  TrigFTF_GNN_EdgeState<external_spacepoint_t>& ts) {
-    if (m_globalStateCounter >= MAX_EDGE_STATE){
+    if (m_globalStateCounter >= MAX_EDGE_STATE) {
       return;
-    } 
+    }
     TrigFTF_GNN_EdgeState<external_spacepoint_t>* p_new_ts =
         &m_stateStore[m_globalStateCounter++];
 
@@ -168,7 +168,7 @@ class TrigFTF_GNN_TrackingFilter {
 
     bool accepted = update(pS, new_ts);  // update using n1 of the segment
 
-    if (!accepted){
+    if (!accepted) {
       return;  // stop further propagation
     }
     int level = pS->m_level;
@@ -182,9 +182,9 @@ class TrigFTF_GNN_TrackingFilter {
       Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pN =
           &(m_segStore.at(nextSegmentIdx));
 
-      if (pN->m_level == -1){
+      if (pN->m_level == -1) {
         continue;  // already collected
-      } 
+      }
       if (pN->m_level == level - 1) {
         lCont.push_back(pN);
       }
