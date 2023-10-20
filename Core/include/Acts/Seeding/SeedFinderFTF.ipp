@@ -676,13 +676,13 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
   //seed constructor 
 
   for(auto&triplet : m_triplets) {
-    external_spacepoint_t S1 = triplet.s1().SP ;//triplet-> FTF_SP-> simspacepoint 
-    external_spacepoint_t S2 = triplet.s2().SP ;
-    external_spacepoint_t S3 = triplet.s3().SP ;
+    const external_spacepoint_t* S1 = triplet.s1().SP ;//triplet-> FTF_SP-> simspacepoint 
+    const external_spacepoint_t* S2 = triplet.s2().SP ;
+    const external_spacepoint_t* S3 = triplet.s3().SP ;
     float Vertex = 0 ; 
     float Quality = triplet.Q() ; 
     //make a new seed, add to vector of seeds 
-    out_cont.emplace_back(S1,S2,S3,Vertex,Quality) ; 
+    out_cont.emplace_back(*S1,*S2,*S3,Vertex,Quality) ; 
   }
 
 }
@@ -693,7 +693,7 @@ template <typename external_spacepoint_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinderFTF<external_spacepoint_t>::createSeeds(
     const Acts::RoiDescriptor& roi,
-    const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo) const {
+    const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo) {
   std::vector<seed_t> r;
   createSeeds(roi, gnngeo, r);
   return r;
