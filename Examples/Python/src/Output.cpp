@@ -182,7 +182,7 @@ void addOutput(Context& ctx) {
                              treeNameParticles);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFitterPerformanceWriter, mex,
-                             "TrackFitterPerformanceWriter", inputTrajectories,
+                             "TrackFitterPerformanceWriter", inputTracks,
                              inputParticles, inputMeasurementParticlesMap,
                              filePath, resPlotToolConfig, effPlotToolConfig,
                              trackSummaryPlotToolConfig);

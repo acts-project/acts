@@ -183,7 +183,7 @@ int runRecTruthTracks(
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
 
   TrackFitterPerformanceWriter::Config perfFitter;
-  perfFitter.inputTrajectories = fitter.outputTracks;
+  perfFitter.inputTracks = fitter.outputTracks;
   perfFitter.inputParticles = inputParticles;
   perfFitter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
