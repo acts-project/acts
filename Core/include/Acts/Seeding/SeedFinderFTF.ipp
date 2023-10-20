@@ -51,8 +51,9 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(
     const std::vector<FTF_SP<external_spacepoint_t>>& FTF_SP_vect) {
   for (const auto& FTF_sp : FTF_SP_vect) {
     bool is_Pixel = FTF_sp.isPixel();
-    if (!is_Pixel)
+    if (!is_Pixel) {
       continue;
+    }
     m_storage->addSpacePoint(FTF_sp, (m_config.m_useClusterWidth > 0));
   }
 
@@ -137,8 +138,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
           const TrigFTF_GNN_EtaBin<external_spacepoint_t>& B1 =
               m_storage->getEtaBin(pL1->m_bins.at(b1));
 
-          if (B1.empty())
+          if (B1.empty()) {
             continue;
+          }
 
           float rb1 = pL1->getMinBinRadius(b1);
 
@@ -147,15 +149,17 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
           for (int b2 = 0; b2 < nSrcBins; b2++) {  // loop over bins in Layer 2
 
             if (m_config.m_useEtaBinning && (nSrcBins + nDstBins > 2)) {
-              if (conn->m_binTable[b1 + b2 * nDstBins] != 1)
+              if (conn->m_binTable[b1 + b2 * nDstBins] != 1) {
                 continue;  // using precomputed LUT
+              }
             }
 
             const TrigFTF_GNN_EtaBin<external_spacepoint_t>& B2 =
                 m_storage->getEtaBin(pL2->m_bins.at(b2));
 
-            if (B2.empty())
+            if (B2.empty()) {
               continue;
+            }
 
             float rb2 = pL2->getMaxBinRadius(b2);
 
@@ -178,8 +182,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
               TrigFTF_GNN_Node<external_spacepoint_t>* n1 = (*n1It);
 
-              if (n1->m_in.size() >= MAX_SEG_PER_NODE)
+              if (n1->m_in.size() >= MAX_SEG_PER_NODE) {
                 continue;
+              }
 
               float r1 = n1->m_sp_FTF.SP->r();
               float x1 = n1->m_sp_FTF.SP->x();
@@ -200,16 +205,19 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                   first_it = n2PhiIdx;
                   continue;
                 }
-                if (phi2 > maxPhi)
+                if (phi2 > maxPhi) {
                   break;
+                }
 
                 TrigFTF_GNN_Node<external_spacepoint_t>* n2 =
                     B2.m_vn.at(B2.m_vPhiNodes.at(n2PhiIdx).second);
 
-                if (n2->m_out.size() >= MAX_SEG_PER_NODE)
+                if (n2->m_out.size() >= MAX_SEG_PER_NODE) {
                   continue;
-                if (n2->isFull())
+                }
+                if (n2->isFull()) {
                   continue;
+                }
 
                 float r2 = n2->m_sp_FTF.SP->r();
 
@@ -228,25 +236,31 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                   continue;
                 }
 
-                if (ftau < n1->m_minCutOnTau)
+                if (ftau < n1->m_minCutOnTau) {
                   continue;
-                if (ftau < n2->m_minCutOnTau)
+                ]
+                if (ftau < n2->m_minCutOnTau) {
                   continue;
-                if (ftau > n1->m_maxCutOnTau)
+                }
+                if (ftau > n1->m_maxCutOnTau) {
                   continue;
-                if (ftau > n2->m_maxCutOnTau)
+                }
+                if (ftau > n2->m_maxCutOnTau) {
                   continue;
+                }
 
                 if (m_config.m_doubletFilterRZ) {
                   float z0 = z1 - r1 * tau;
 
-                  if (z0 < min_z0 || z0 > max_z0)
+                  if (z0 < min_z0 || z0 > max_z0) {
                     continue;
+                  }
 
                   float zouter = z0 + maxOuterRadius * tau;
 
-                  if (zouter < cut_zMinU || zouter > cut_zMaxU)
+                  if (zouter < cut_zMinU || zouter > cut_zMaxU) {
                     continue;
+                  }
                 }
 
                 float dx = n2->m_sp_FTF.SP->x() - x1;
@@ -294,8 +308,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                     break;
                   }
                 }
-                if (!isGood)
+                if (!isGood) {
                   continue;  // no moatch found, skip creating [n1 <- n2] edge
+                }
 
                 float curv = D * std::sqrt(L2);  // signed curvature
                 float dPhi2 = std::asin(curv * r2);
@@ -322,8 +337,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
   m_storage->getConnectingNodes(vNodes);
 
-  if (vNodes.empty())
+  if (vNodes.empty()) {
     return;
+  }
 
   int nNodes = vNodes.size();
 
@@ -383,15 +399,17 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
           last_out = out_idx;
           continue;
         }
-        if (tau_ratio > cut_tau_ratio_max)
+        if (tau_ratio > cut_tau_ratio_max) {
           break;
+        }
 
         float dPhi = pNS->m_p[3] - Phi1;
 
-        if (dPhi < -M_PI)
+        if (dPhi < -M_PI) {
           dPhi += 2 * M_PI;
-        else if (dPhi > M_PI)
+        } else if (dPhi > M_PI) {
           dPhi -= 2 * M_PI;
+        }
 
         if (dPhi < -cut_dphi_max || dPhi > cut_dphi_max) {
           continue;
@@ -405,8 +423,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
         }
 
         pS->m_vNei[pS->m_nNei++] = outEdgeIdx;
-        if (pS->m_nNei >= N_SEG_CONNS)
+        if (pS->m_nNei >= N_SEG_CONNS) {
           break;
+        }
       }
     }
   }
@@ -422,8 +441,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
   for (int edgeIndex = 0; edgeIndex < nEdges; edgeIndex++) {
     Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS =
         &(edgeStorage.at(edgeIndex));
-    if (pS->m_nNei == 0)
+    if (pS->m_nNei == 0) {
       continue;
+    }
     v_old.push_back(pS);  // TO-DO: increment level for segments as they already
                           // have at least one neighbour
   }
@@ -464,8 +484,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
       }
     }
 
-    if (nChanges == 0)
+    if (nChanges == 0) {
       break;
+    }
 
     v_old = std::move(v_new);
     v_new.clear();
@@ -481,8 +502,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
     Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS =
         &(edgeStorage.at(edgeIndex));
 
-    if (pS->m_level < minLevel)
+    if (pS->m_level < minLevel) {
       continue;
+    }
 
     vSeeds.push_back(pS);
   }
@@ -493,8 +515,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
       vSeeds.begin(), vSeeds.end(),
       typename Acts::TrigFTF_GNN_Edge<external_spacepoint_t>::CompareLevel());
 
-  if (vSeeds.empty())
+  if (vSeeds.empty()) {
     return;
+  }
 
   // backtracking
 
@@ -502,8 +525,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
       m_config.m_layerGeometry, edgeStorage);
 
   for (auto pS : vSeeds) {
-    if (pS->m_level == -1)
+    if (pS->m_level == -1) {
       continue;
+    }
 
     TrigFTF_GNN_EdgeState<external_spacepoint_t> rs(false);
 
@@ -513,8 +537,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
       continue;
     }
 
-    if (static_cast<int>(rs.m_vs.size()) < minLevel)
+    if (static_cast<int>(rs.m_vs.size()) < minLevel) {
       continue;
+    }
 
     std::vector<const FTF_SP<external_spacepoint_t>*> vSP;
 
@@ -529,8 +554,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
       vSP.push_back(&(*sIt)->m_n2->m_sp_FTF);
     }
 
-    if (vSP.size() < 3)
+    if (vSP.size() < 3) {
       continue;
+    }
 
     // making triplets
 
@@ -574,8 +600,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
           // 1. pT estimate
 
           const double du = uo - ui;
-          if (du == 0.0)
+          if (du == 0.0) {
             continue;
+          }
           const double A = (vo - vi) / du;
           const double B = vi - A * ui;
           const double R_squ = (1 + A * A) / (B * B);
@@ -612,18 +639,22 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
           nTriplets++;
 
-          if (nTriplets >= m_config.m_maxTripletBufferLength)
+          if (nTriplets >= m_config.m_maxTripletBufferLength) {
             break;
+          }
         }
-        if (nTriplets >= m_config.m_maxTripletBufferLength)
+        if (nTriplets >= m_config.m_maxTripletBufferLength) {
           break;
+        }
       }
-      if (nTriplets >= m_config.m_maxTripletBufferLength)
+      if (nTriplets >= m_config.m_maxTripletBufferLength) {
         break;
+      }
     }
 
-    if (output.empty())
+    if (output.empty()) {
       continue;
+    }
 
     vTracks.emplace_back(vSP, output);
   }
@@ -640,8 +671,9 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
 
   runGNN_TrackFinder(vTracks, roi, gnngeo);  // returns filled vector
 
-  if (vTracks.empty())
+  if (vTracks.empty()) {
     return;
+  }
 
   m_triplets.clear();  // member of class , saying not declared, maybe public?
 
@@ -651,12 +683,15 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
       float newQ = seed.Q();  // function of TrigInDetTriplet
       if (m_config.m_LRTmode) {
         // In LRT mode penalize pixels in Triplets
-        if (seed.s1().isPixel())
+        if (seed.s1().isPixel()) {
           newQ += 1000;  // functions of TrigSiSpacePointBase
-        if (seed.s2().isPixel())
+        }
+        if (seed.s2().isPixel()) {
           newQ += 1000;
-        if (seed.s3().isPixel())
+        }
+        if (seed.s3().isPixel()) {
           newQ += 1000;
+        }
       } else {
         // In normal (non LRT) mode penalise SSS by 1000, PSS (if enabled) and
         // PPS by 10000
