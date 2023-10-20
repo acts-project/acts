@@ -908,15 +908,15 @@ class TrackStateProxy {
   /// @note this overload is only enabled in case the proxy is not read-only
   /// @return Mutable reference to the chi2 value
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  double& chi2() {
-    return component<double, hashString("chi2")>();
+  float& chi2() {
+    return component<float, hashString("chi2")>();
   }
 
   /// Getter for the chi2 value associated with the track state.
   /// This overload returns a copy of the chi2 value, and thus does not allow
   /// modification of the value in the backing storage.
   /// @return the chi2 value of the track state
-  double chi2() const { return component<double, hashString("chi2")>(); }
+  float chi2() const { return component<float, hashString("chi2")>(); }
 
   /// Getter for the path length associated with the track state.
   /// This overloaded is only enabled if not read-only, and returns a mutable

@@ -418,7 +418,7 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL(ts.jacobian(), pc.jacobian);
     BOOST_CHECK_EQUAL(ts.pathLength(), pc.pathLength);
     // check that chi2 is set
-    BOOST_CHECK_EQUAL(ts.chi2(), pc.chi2);
+    BOOST_CHECK_EQUAL(ts.chi2(), static_cast<float>(pc.chi2));
 
     // check that the uncalibratedSourceLink source link is set
     BOOST_CHECK_EQUAL(
