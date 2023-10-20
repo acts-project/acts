@@ -235,11 +235,15 @@ void collector(typename traj_t::TrackStateProxy& trackStateProxy,
   auto measurement = trackStateProxy.template calibrated<measDim>();
   auto covarianceMeasurement =
       trackStateProxy.template calibratedCovariance<measDim>();
-  // calculate residuals and return with covariances and jacobians
-  auto projJacobian =
-      (trackStateProxy.effectiveProjector() * result.jacobianFromStart).eval();
-  auto projPredicted =
-      (trackStateProxy.effectiveProjector() * predicted).eval();
+  // Project Jacobian and predicted measurements into the measurement dimensions
+  auto projJacobian = (trackStateProxy.projector()
+                           .template topLeftCorner<measDim, eBoundSize>() *
+                       result.jacobianFromStart)
+                          .eval();
+  auto projPredicted = (trackStateProxy.projector()
+                            .template topLeftCorner<measDim, eBoundSize>() *
+                        predicted)
+                           .eval();
 
   ACTS_VERBOSE("Processing and collecting measurements in Actor:\n"
                << "\tMeasurement:\t" << measurement.transpose()
@@ -248,6 +252,7 @@ void collector(typename traj_t::TrackStateProxy& trackStateProxy,
                << "\n\tProjected Jacobian:\t" << projJacobian
                << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
 
+  // Collect residuals, covariances, and projected jacobians
   for (size_t i = 0; i < measDim; i++) {
     if (covarianceMeasurement(i, i) < 1e-10) {
       ACTS_WARNING("Invalid covariance of measurement: cov(" << i << "," << i
