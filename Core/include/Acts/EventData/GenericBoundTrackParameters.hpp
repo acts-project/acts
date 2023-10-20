@@ -83,6 +83,7 @@ class GenericBoundTrackParameters {
   /// @param qOverP Charge over momentum
   /// @param cov Bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
+  /// @param tolerance Tolerance used for globalToLocal
   ///
   /// @note The returned result indicates whether the free parameters could
   /// successfully be converted to on-surface parameters.
