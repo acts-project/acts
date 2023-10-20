@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
           .closest(),
       navDir, false);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
-  slsState.stepSize.setValue(navDir * stepSize);
+  slsState.stepSize.setUser(navDir * stepSize);
   sls.updateStepSize(
       slsState,
       targetSurface
