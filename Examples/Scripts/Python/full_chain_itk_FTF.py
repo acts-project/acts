@@ -32,7 +32,7 @@ detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir)) 
+s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
@@ -76,7 +76,8 @@ addDigitization(
     s,
     trackingGeometry,
     field,
-    digiConfigFile=geo_dir / "itk-hgtd/itk-smearing-config.json", #change this file to make it do digitization 
+    digiConfigFile=geo_dir
+    / "itk-hgtd/itk-smearing-config.json",  # change this file to make it do digitization
     outputDirRoot=outputDir,
     rnd=rnd,
 )
@@ -93,8 +94,8 @@ addSeeding(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
-    layerMappingConfigFile = geo_dir / "itk-hgtd/ACTS_FTF_mapinput.csv", 
-    fastrack_inputConfigFile = geo_dir / "itk-hgtd/binTables_ITK_RUN4.txt",
+    layerMappingConfigFile=geo_dir / "itk-hgtd/ACTS_FTF_mapinput.csv",
+    fastrack_inputConfigFile=geo_dir / "itk-hgtd/binTables_ITK_RUN4.txt",
     outputDirRoot=outputDir,
 )
 
