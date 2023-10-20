@@ -796,7 +796,6 @@ def addHoughTransformSeeding(
     return ht.config.outputSeeds
 
 
-
 def addFTFSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
