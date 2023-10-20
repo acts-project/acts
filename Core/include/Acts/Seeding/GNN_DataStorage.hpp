@@ -117,8 +117,9 @@ class TrigFTF_GNN_EtaBin {
       // float phi = pN->m_sp.phi();
       // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
       float phi = pN->m_sp_FTF.phi();
-      if (phi <= M_PI - dphi)
+      if (phi <= M_PI - dphi) {
         continue;
+      }
 
       m_vPhiNodes.push_back(
           std::pair<float, unsigned int>(phi - 2 * M_PI, nIdx));
