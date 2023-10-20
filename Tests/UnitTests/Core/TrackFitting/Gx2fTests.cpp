@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
 
   auto& track = *res;
   BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK(!track.hasReferenceSurface());
+  BOOST_CHECK(track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.parameters(), startParametersFit.parameters());
@@ -334,9 +334,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_REQUIRE(res.ok());
 
   auto& track = *res;
-  BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK(!track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
+  BOOST_CHECK(track.hasReferenceSurface());
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
@@ -444,9 +444,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_REQUIRE(res.ok());
 
   auto& track = *res;
-  BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK(!track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
+  BOOST_CHECK(track.hasReferenceSurface());
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
