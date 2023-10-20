@@ -16,7 +16,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
-#include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/ParticleSelectorOptions.hpp"
@@ -74,12 +74,12 @@ int main(int argc, char* argv[]) {
   sequencer.addAlgorithm(
       std::make_shared<ActsExamples::ParticleSelector>(select, logLevel));
 
-  RootTrajectorySummaryReader::Config trackSummaryReader;
+  RootTrackSummaryReader::Config trackSummaryReader;
   trackSummaryReader.outputTracks = "fittedTrackParameters";
   trackSummaryReader.outputParticles = "associatedTruthParticles";
   trackSummaryReader.filePath = inputDir + "/tracksummary_fitter.root";
-  sequencer.addReader(std::make_shared<RootTrajectorySummaryReader>(
-      trackSummaryReader, logLevel));
+  sequencer.addReader(
+      std::make_shared<RootTrackSummaryReader>(trackSummaryReader, logLevel));
 
   // Apply some primary vertexing selection cuts
   TrackParameterSelector::Config trackSelectorConfig;

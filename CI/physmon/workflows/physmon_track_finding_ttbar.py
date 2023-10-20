@@ -50,7 +50,7 @@ with tempfile.TemporaryDirectory() as temp:
             1,
         ),
         acts.examples.Sequencer.FpeMask(
-            "Examples/Io/Root/src/RootTrajectorySummaryWriter.cpp",
+            "Examples/Io/Root/src/RootTrackSummaryWriter.cpp",
             (371, 372),
             acts.FpeType.FLTINV,
             1,

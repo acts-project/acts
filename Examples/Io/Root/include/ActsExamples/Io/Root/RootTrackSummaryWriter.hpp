@@ -33,30 +33,28 @@ class Barcode;
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// @class RootTrajectorySummaryWriter
+/// @class RootTrackSummaryWriter
 ///
 /// Write out the information (including number of measurements, outliers, holes
-/// etc. , fitted track parameters and corresponding majority truth particle
-/// info) of the reconstructed trajectories into a TTree
+/// etc., fitted track parameters and corresponding majority truth particle
+/// info) of the reconstructed tracks into a TTree.
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 ///
-/// Each entry in the TTree corresponds to all reconstructed trajectories in one
+/// Each entry in the TTree corresponds to all reconstructed tracks in one
 /// single event. The event number is part of the written data.
 ///
-/// A common file can be provided for the writer to attach his TTree,
-/// this is done by setting the Config::rootFile pointer to an existing
-/// file
+/// A common file can be provided for the writer to attach his TTree, this is
+/// done by setting the Config::rootFile pointer to an existing file.
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrajectorySummaryWriter final
-    : public WriterT<TrajectoriesContainer> {
+class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
  public:
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
   struct Config {
-    /// Input (fitted) trajectories collection
-    std::string inputTrajectories;
+    /// Input (fitted) tracks collection
+    std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
@@ -75,8 +73,8 @@ class RootTrajectorySummaryWriter final
   ///
   /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrajectorySummaryWriter(const Config& config, Acts::Logging::Level level);
-  ~RootTrajectorySummaryWriter() override;
+  RootTrackSummaryWriter(const Config& config, Acts::Logging::Level level);
+  ~RootTrackSummaryWriter() override;
 
   /// End-of-run hook
   ProcessCode finalize() override;
@@ -87,9 +85,9 @@ class RootTrajectorySummaryWriter final
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
-  /// @param [in] trajectories are what to be written out
+  /// @param [in] tracks are what to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) override;
+                     const ConstTrackContainer& tracks) override;
 
  private:
   Config m_cfg;  ///< The config class

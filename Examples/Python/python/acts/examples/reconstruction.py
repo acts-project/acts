@@ -870,14 +870,6 @@ def addKalmanTracks(
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
 
-    trackConverter = acts.examples.TracksToTrajectories(
-        level=customLogLevel(),
-        inputTracks=fitAlg.config.outputTracks,
-        outputTrajectories="kfTrajectories",
-    )
-    s.addAlgorithm(trackConverter)
-    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
-
     return s
 
 
@@ -912,13 +904,6 @@ def addTruthTrackingGsf(
         calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
-
-    trackConverter = acts.examples.TracksToTrajectories(
-        level=customLogLevel(),
-        inputTracks=gsfAlg.config.outputTracks,
-        outputTrajectories="gsf_trajectories",
-    )
-    s.addAlgorithm(trackConverter)
 
     return s
 
@@ -1012,18 +997,10 @@ def addCKFTracks(
     s.addAlgorithm(trackFinder)
     s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
 
-    trackConverter = acts.examples.TracksToTrajectories(
-        level=customLogLevel(),
-        inputTracks=trackFinder.config.outputTracks,
-        outputTrajectories="trajectories-from-tracks",
-    )
-    s.addAlgorithm(trackConverter)
-    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
-
-    addTrajectoryWriters(
+    addTrackWriters(
         s,
         name="ckf",
-        trajectories="trajectories",
+        tracks=trackFinder.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
@@ -1038,11 +1015,10 @@ def addCKFTracks(
     return s
 
 
-def addTrajectoryWriters(
+def addTrackWriters(
     s: acts.examples.Sequencer,
     name: str,
-    trajectories: str = "trajectories",
-    outputDirCsv: Optional[Union[Path, str]] = None,
+    tracks: str = "tracks",
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeStates: bool = True,
     writeSummary: bool = True,
@@ -1061,9 +1037,9 @@ def addTrajectoryWriters(
 
         if writeStates:
             # write track states from CKF
-            trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
+            trackStatesWriter = acts.examples.RootTrackStatesWriter(
                 level=customLogLevel(),
-                inputTrajectories=trajectories,
+                inputTracks=tracks,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
                 # filtered particle collection. This could be avoided when a separate track
@@ -1079,9 +1055,9 @@ def addTrajectoryWriters(
 
         if writeSummary:
             # write track summary from CKF
-            trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
+            trackSummaryWriter = acts.examples.RootTrackSummaryWriter(
                 level=customLogLevel(),
-                inputTrajectories=trajectories,
+                inputTracks=tracks,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
                 # filtered particle collection. This could be avoided when a separate track
@@ -1099,7 +1075,7 @@ def addTrajectoryWriters(
             ckfPerfWriter = acts.examples.CKFPerformanceWriter(
                 level=customLogLevel(),
                 inputParticles="truth_seeds_selected",
-                inputTrajectories=trajectories,
+                inputTrajectories=tracks,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 filePath=str(outputDirRoot / f"performance_{name}.root"),
             )
@@ -1123,28 +1099,13 @@ def addTrajectoryWriters(
                 acts.examples.TrackFitterPerformanceWriter(
                     level=acts.logging.INFO,
                     inputParticles="truth_seeds_selected",
-                    inputTrajectories="trajectories",
+                    inputTracks=tracks,
                     inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(
                         outputDirRoot / f"performance_track_fitter_{name}.root"
                     ),
                 )
             )
-
-    if outputDirCsv is not None:
-        outputDirCsv = Path(outputDirCsv)
-        if not outputDirCsv.exists():
-            outputDirCsv.mkdir()
-
-        if writeSummary:
-            csvMTJWriter = acts.examples.CsvMultiTrajectoryWriter(
-                level=customLogLevel(),
-                inputTrajectories=trajectories,
-                inputMeasurementParticlesMap="measurement_particles_map",
-                outputDir=str(outputDirCsv),
-                fileName=str(f"tracks_{name}.csv"),
-            )
-            s.addWriter(csvMTJWriter)
 
 
 @acts.examples.NamedTypeArgs(
@@ -1335,18 +1296,10 @@ def addAmbiguityResolution(
     )
     s.addAlgorithm(alg)
 
-    trackConverter = acts.examples.TracksToTrajectories(
-        level=customLogLevel(),
-        inputTracks=alg.config.outputTracks,
-        outputTrajectories="ambiTrajectories",
-    )
-    s.addAlgorithm(trackConverter)
-    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
-
-    addTrajectoryWriters(
+    addTrackWriters(
         s,
         name="ambi",
-        trajectories="trajectories",
+        tracks=alg.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
@@ -1402,18 +1355,10 @@ def addAmbiguityResolutionML(
     s.addAlgorithm(algML)
     s.addAlgorithm(algGreedy)
 
-    trackConverter = acts.examples.TracksToTrajectories(
-        level=customLogLevel(),
-        inputTracks=algGreedy.config.outputTracks,
-        outputTrajectories="ambiTrajectories",
-    )
-    s.addAlgorithm(trackConverter)
-    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
-
-    addTrajectoryWriters(
+    addTrackWriters(
         s,
         name="ambiML",
-        trajectories="trajectories",
+        tracks=algGreedy.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
@@ -1456,18 +1401,10 @@ def addAmbiguityResolutionMLDBScan(
     )
     s.addAlgorithm(alg)
 
-    trackConverter = acts.examples.TracksToTrajectories(
-        level=customLogLevel(),
-        inputTracks=alg.config.outputTracks,
-        outputTrajectories="ambiTrajectories",
-    )
-    s.addAlgorithm(trackConverter)
-    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
-
-    addTrajectoryWriters(
+    addTrackWriters(
         s,
         name="ambiMLDBScan",
-        trajectories="trajectories",
+        trajectories=alg.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,

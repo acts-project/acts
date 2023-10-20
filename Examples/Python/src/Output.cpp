@@ -39,8 +39,8 @@
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
@@ -319,13 +319,12 @@ void addOutput(Context& ctx) {
                              fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::RootTrajectoryStatesWriter, mex,
-      "RootTrajectoryStatesWriter", inputTrajectories, inputParticles,
-      inputSimHits, inputMeasurementParticlesMap, inputMeasurementSimHitsMap,
-      filePath, treeName, fileMode);
+      ActsExamples::RootTrackStatesWriter, mex, "RootTrackStatesWriter",
+      inputTracks, inputParticles, inputSimHits, inputMeasurementParticlesMap,
+      inputMeasurementSimHitsMap, filePath, treeName, fileMode);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootTrajectorySummaryWriter, mex,
-                             "RootTrajectorySummaryWriter", inputTrajectories,
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootTrackSummaryWriter, mex,
+                             "RootTrackSummaryWriter", inputTracks,
                              inputParticles, inputMeasurementParticlesMap,
                              filePath, treeName, fileMode, writeCovMat);
 
@@ -370,7 +369,7 @@ void addOutput(Context& ctx) {
       writeBoundary, writeSurfaceGrid, writeLayerVolume, writePerEvent);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CKFPerformanceWriter, mex,
-                             "CKFPerformanceWriter", inputTrajectories,
+                             "CKFPerformanceWriter", inputTracks,
                              inputParticles, inputMeasurementParticlesMap,
                              filePath, fileMode, effPlotToolConfig,
                              fakeRatePlotToolConfig, duplicationPlotToolConfig,
