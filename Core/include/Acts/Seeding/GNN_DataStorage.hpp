@@ -117,9 +117,9 @@ class TrigFTF_GNN_EtaBin {
       // float phi = pN->m_sp.phi();
       // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
       float phi = pN->m_sp_FTF.phi();
-      if (phi <= M_PI - dphi)
+      if (phi <= M_PI - dphi){
         continue;
-
+      } 
       m_vPhiNodes.push_back(
           std::pair<float, unsigned int>(phi - 2 * M_PI, nIdx));
     }
@@ -133,8 +133,9 @@ class TrigFTF_GNN_EtaBin {
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       TrigFTF_GNN_Node<space_point_t> *pN = m_vn.at(nIdx);
       float phi = pN->m_sp_FTF.phi();
-      if (phi >= -M_PI + dphi)
+      if (phi >= -M_PI + dphi){
         break;
+      } 
       m_vPhiNodes.push_back(
           std::pair<float, unsigned int>(phi + 2 * M_PI, nIdx));
     }
@@ -163,9 +164,9 @@ class TrigFTF_GNN_DataStorage {
     const TrigFTF_GNN_Layer<space_point_t> *pL =
         m_geo.getTrigFTF_GNN_LayerByKey(sp.combined_ID);
 
-    if (pL == nullptr)
+    if (pL == nullptr){
       return -1;
-
+    }
     int binIndex = pL->getEtaBin(sp.SP->z(), sp.SP->r());
 
     if (binIndex == -1) {
@@ -198,8 +199,9 @@ class TrigFTF_GNN_DataStorage {
         //   InDet::PixelCluster*>(osp->clusterList().first);
         //   float cluster_width = pCL->width().widthPhiRZ().y();
         float cluster_width = 1;  // temporary while cluster width not available
-        if (cluster_width > 0.2)
+        if (cluster_width > 0.2){
           return -3;
+        }
       }
       m_etaBins.at(binIndex).m_vn.push_back(
           new TrigFTF_GNN_Node<space_point_t>(sp));
@@ -230,28 +232,33 @@ class TrigFTF_GNN_DataStorage {
                TrigFTF_GNN_Node<space_point_t> *>::const_iterator nIt =
                b.m_vn.begin();
            nIt != b.m_vn.end(); ++nIt) {
-        if ((*nIt)->m_in.empty())
+        if ((*nIt)->m_in.empty()){
           continue;
-        if ((*nIt)->m_out.empty())
+        }
+        if ((*nIt)->m_out.empty()){
           continue;
+        }
         vn.push_back(*nIt);
       }
     }
   }
 
   void sortByPhi() {
-    for (auto &b : m_etaBins)
+    for (auto &b : m_etaBins){
       b.sortByPhi();
+    }
   }
 
   void generatePhiIndexing(float dphi) {
-    for (auto &b : m_etaBins)
+    for (auto &b : m_etaBins){
       b.generatePhiIndexing(dphi);
+    }
   }
 
   const TrigFTF_GNN_EtaBin<space_point_t> &getEtaBin(int idx) const {
-    if (idx >= static_cast<int>(m_etaBins.size()))
+    if (idx >= static_cast<int>(m_etaBins.size())){
       idx = idx - 1;
+    }
     return m_etaBins.at(idx);
   }
 
