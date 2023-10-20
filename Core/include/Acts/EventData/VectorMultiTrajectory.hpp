@@ -151,7 +151,7 @@ class VectorMultiTrajectoryBase {
     IndexType ijacobian = kInvalid;
     IndexType iprojector = kInvalid;
 
-    double chi2 = 0;
+    float chi2 = 0;
     double pathLength = 0;
     TrackStateType::raw_type typeFlags{};
 
