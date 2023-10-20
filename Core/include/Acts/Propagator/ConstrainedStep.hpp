@@ -167,7 +167,7 @@ class ConstrainedStep {
   inline static constexpr auto kNotSet = std::numeric_limits<Scalar>::max();
 
   /// the step size tuple
-  std::array<Scalar, 4> m_values = {kNotSet, kNotSet, kNotSet, kNotSet};
+  std::array<Scalar, 3> m_values = {kNotSet, kNotSet, kNotSet};
   /// the accuracy value - this can vary up and down given a good step estimator
   Scalar m_accuracy = kNotSet;
 };
