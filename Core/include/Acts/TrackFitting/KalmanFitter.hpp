@@ -46,6 +46,16 @@
 
 namespace Acts {
 
+enum class KalmanFitterTargetSurfaceStrategy {
+  /// Use the first trackstate to reach target surface
+  first,
+  /// Use the last trackstate to reach target surface
+  last,
+  /// Use the first or last trackstate to reach target surface depending on the
+  /// distance
+  firstOrLast,
+};
+
 /// Extension struct which holds delegates to customise the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
@@ -156,6 +166,10 @@ struct KalmanFitterOptions {
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
+
+  /// Strategy to propagate to reference surface
+  KalmanFitterTargetSurfaceStrategy referenceSurfaceStrategy =
+      KalmanFitterTargetSurfaceStrategy::firstOrLast;
 
   /// Whether to consider multiple scattering
   bool multipleScattering = true;
@@ -287,6 +301,10 @@ class KalmanFitter {
 
     /// The target surface
     const Surface* targetSurface = nullptr;
+
+    /// Strategy to propagate to target surface
+    KalmanFitterTargetSurfaceStrategy targetSurfaceStrategy =
+        KalmanFitterTargetSurfaceStrategy::firstOrLast;
 
     /// Fitted states that the actor has handled.
     traj_t* fittedStates{nullptr};
@@ -913,10 +931,8 @@ class KalmanFitter {
         return KalmanFitterError::SmoothFailed;
       }
       // Screen output for debugging
-      if (logger().doPrint(Logging::VERBOSE)) {
-        ACTS_VERBOSE("Apply smoothing on " << nStates
-                                           << " filtered track states.");
-      }
+      ACTS_VERBOSE("Apply smoothing on " << nStates
+                                         << " filtered track states.");
 
       // Smooth the track states
       auto smoothRes =
@@ -959,18 +975,31 @@ class KalmanFitter {
       const auto lastIntersection = target(lastParams);
 
       // Update the stepping parameters - in order to progress to destination.
-      // At the same time, reverse navigation direction for further
-      // stepping if necessary.
+      // At the same time, reverse navigation direction for further stepping if
+      // necessary.
       // @note The stepping parameters is updated to the smoothed parameters at
       // either the first measurement state or the last measurement state. It
       // assumes the target surface is not within the first and the last
       // smoothed measurement state. Also, whether the intersection is on
       // surface is not checked here.
-      bool closerToFirstCreatedState =
-          std::abs(firstIntersection.pathLength()) <=
-          std::abs(lastIntersection.pathLength());
+      bool useFirstTrackState = true;
+      switch (targetSurfaceStrategy) {
+        case KalmanFitterTargetSurfaceStrategy::first:
+          useFirstTrackState = true;
+          break;
+        case KalmanFitterTargetSurfaceStrategy::last:
+          useFirstTrackState = false;
+          break;
+        case KalmanFitterTargetSurfaceStrategy::firstOrLast:
+          useFirstTrackState = std::abs(firstIntersection.pathLength()) <=
+                               std::abs(lastIntersection.pathLength());
+          break;
+        default:
+          ACTS_ERROR("Unknown target surface strategy");
+          return KalmanFitterError::SmoothFailed;
+      }
       bool reverseDirection = false;
-      if (closerToFirstCreatedState) {
+      if (useFirstTrackState) {
         stepper.resetState(state.stepping, firstCreatedState.smoothed(),
                            firstCreatedState.smoothedCovariance(),
                            firstCreatedState.referenceSurface(),
@@ -990,9 +1019,10 @@ class KalmanFitter {
             "target surface");
         state.options.direction = state.options.direction.invert();
       }
-      const auto& surface = closerToFirstCreatedState
+      const auto& surface = useFirstTrackState
                                 ? firstCreatedState.referenceSurface()
                                 : lastCreatedMeasurement.referenceSurface();
+
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state to smoothed "
           "parameters at surface "
@@ -1221,6 +1251,7 @@ class KalmanFitter {
     kalmanActor.fittedStates = &trackContainer.trackStateContainer();
     kalmanActor.inputMeasurements = &inputMeasurements;
     kalmanActor.targetSurface = kfOptions.referenceSurface;
+    kalmanActor.targetSurfaceStrategy = kfOptions.referenceSurfaceStrategy;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;

@@ -2,6 +2,7 @@ variables:
   CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
   CCACHE_MAXSIZE: 2G
   CCACHE_KEY_SUFFIX: r1
+  CTEST_OUTPUT_ON_FAILURE: 1
 
 clang_tidy:
   stage: build
@@ -58,7 +59,7 @@ clang_tidy:
 
 build_exatrkx:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
     - docker
 
@@ -104,7 +105,7 @@ test_exatrkx_unittests:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
     - docker-gpu-nvidia
   script:
@@ -114,7 +115,7 @@ test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
     - docker-gpu-nvidia
   script:
