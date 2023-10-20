@@ -224,10 +224,9 @@ struct SimulationActor {
     //     1/gamma = m / sqrt(m² + p²) = m / E
     const auto gammaInv = previous.mass() / previous.energy();
     const auto properTime = previous.properTime() + gammaInv * deltaLabTime;
-    std::shared_ptr<const Acts::Surface> currentSurface;
+    const Acts::Surface *currentSurface = nullptr;
     if (navigator.currentSurface(state.navigation) != nullptr) {
-      currentSurface =
-          navigator.currentSurface(state.navigation)->shared_from_this();
+      currentSurface = navigator.currentSurface(state.navigation);
     }
     // copy all properties and update kinematic state from stepper
     return Particle(previous)

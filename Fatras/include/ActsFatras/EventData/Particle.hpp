@@ -250,20 +250,16 @@ class Particle {
   /// Set the reference surface.
   ///
   /// @param surface reference surface
-  Particle &setReferenceSurface(std::shared_ptr<const Acts::Surface> surface) {
-    m_referenceSurface = std::move(surface);
+  Particle &setReferenceSurface(const Acts::Surface *surface) {
+    m_referenceSurface = surface;
     return *this;
   }
 
   /// Reference surface.
-  const std::shared_ptr<const Acts::Surface> &referenceSurface() const {
-    return m_referenceSurface;
-  }
+  const Acts::Surface *referenceSurface() const { return m_referenceSurface; }
 
   /// Check if the particle has a reference surface.
-  bool hasReferenceSurface() const {
-    return m_referenceSurface.operator bool();
-  }
+  bool hasReferenceSurface() const { return m_referenceSurface != nullptr; }
 
   /// Bound track parameters.
   Acts::Result<Acts::BoundTrackParameters> boundParameters(
@@ -279,8 +275,8 @@ class Particle {
     }
     Acts::BoundVector params;
     params << localResult.value(), phi(), theta(), qOverP(), time();
-    return Acts::BoundTrackParameters(referenceSurface(), params, std::nullopt,
-                                      hypothesis());
+    return Acts::BoundTrackParameters(referenceSurface()->getSharedPtr(),
+                                      params, std::nullopt, hypothesis());
   }
 
   Acts::CurvilinearTrackParameters curvilinearParameters() const {
@@ -309,7 +305,7 @@ class Particle {
   Scalar m_pathInX0 = Scalar(0);
   Scalar m_pathInL0 = Scalar(0);
   // reference surface
-  std::shared_ptr<const Acts::Surface> m_referenceSurface;
+  const Acts::Surface *m_referenceSurface{nullptr};
 };
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle);
