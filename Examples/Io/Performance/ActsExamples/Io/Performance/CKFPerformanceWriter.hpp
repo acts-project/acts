@@ -66,6 +66,9 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     DuplicationPlotTool::Config duplicationPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
 
+    /// Whether to do double matching or not
+    bool doubleMatching = false;
+
     /// Min reco-truth matching probability
     double truthMatchProbMin = 0.5;
 
