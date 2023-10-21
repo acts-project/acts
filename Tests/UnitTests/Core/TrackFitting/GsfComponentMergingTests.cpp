@@ -21,7 +21,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
+#include "Acts/TrackFitting/detail/MergeGaussianMixture.hpp"
 #include "Acts/Utilities/Identity.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -244,9 +244,7 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
         }
       }
 
-      const auto [mean_approx, cov_approx] =
-          detail::gaussianMixtureMeanCov(cmps, proj, desc);
-
+      const auto mean_approx = detail::computeMixtureMean(cmps, proj, desc);
       const auto mean_ref = meanFromFree(cmps, surface);
 
       CHECK_CLOSE_MATRIX(mean_approx, mean_ref, expectedError);
@@ -270,8 +268,10 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto mean_data = mean(samples);
   const auto boundCov_data = boundCov(samples, mean_data);
 
-  const auto [mean_test, boundCov_test] =
-      detail::gaussianMixtureMeanCov(cmps, Identity{}, std::tuple<>{});
+  const auto mean_test =
+      detail::computeMixtureMean(cmps, Identity{}, std::tuple<>{});
+  const auto boundCov_test = detail::computeMixtureCovariance(
+      cmps, mean_test, Identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
@@ -301,8 +301,9 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
 
   using detail::CyclicAngle;
   const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
-  const auto [mean_test, boundCov_test] =
-      detail::gaussianMixtureMeanCov(cmps, Identity{}, d);
+  const auto mean_test = detail::computeMixtureMean(cmps, Identity{}, d);
+  const auto boundCov_test =
+      detail::computeMixtureCovariance(cmps, mean_test, Identity{}, d);
 
   BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[0], mean_test[0],
                                                    2 * M_PI)) < 1.e-1);
@@ -380,8 +381,7 @@ BOOST_AUTO_TEST_CASE(test_mode_finding) {
     for (const auto &cmp : components) {
       const auto &[weight, mean, cov] = cmp;
       const auto a = std::sqrt(std::pow(2 * M_PI, D) * cov.determinant());
-      const auto b =
-          -0.5 * (x - mean).transpose() * cov.inverse() * (x - mean);
+      const auto b = -0.5 * (x - mean).transpose() * cov.inverse() * (x - mean);
       res += weight * a * std::exp(b);
     }
 
@@ -420,7 +420,8 @@ BOOST_AUTO_TEST_CASE(test_mode_finding) {
       x += d;
     }
 
-    const auto mode_test = detail::computeModeOfMixture(cmps, Identity{}, std::tuple<>{});
+    const auto mode_test =
+        detail::computeMixtureMode(cmps, Identity{}, std::tuple<>{});
 
     BOOST_CHECK(mode_test.has_value());
 

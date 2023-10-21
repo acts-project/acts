@@ -76,21 +76,24 @@ auto angleDescriptionSwitch(const Surface &surface, Callable &&callable) {
 
 template <int D, typename components_t, typename projector_t,
           typename angle_desc_t>
-auto gaussianMixtureCov(const components_t components,
-                        const ActsVector<D> &mean, double sumOfWeights,
-                        projector_t &&projector,
-                        const angle_desc_t &angleDesc) {
+auto computeMixtureCovariance(const components_t components,
+                              const ActsVector<D> &centralValue,
+                              projector_t &&projector,
+                              const angle_desc_t &angleDesc) {
   ActsSquareMatrix<D> cov = ActsSquareMatrix<D>::Zero();
+  ActsScalar sumOfWeights{0.0};
 
   for (const auto &cmp : components) {
     const auto &[weight_l, pars_l, cov_l] = projector(cmp);
 
     cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
+    sumOfWeights += weight_l;
 
-    ActsVector<D> diff = pars_l - mean;
+    ActsVector<D> diff = pars_l - centralValue;
 
     // Apply corrections for cyclic coordinates
-    auto handleCyclicCov = [&l = pars_l, &m = mean, &diff = diff](auto desc) {
+    auto handleCyclicCov = [&l = pars_l, &m = centralValue,
+                            &diff = diff](auto desc) {
       diff[desc.idx] =
           difference_periodic(l[desc.idx] / desc.constant,
                               m[desc.idx] / desc.constant, 2 * M_PI) *
@@ -106,9 +109,7 @@ auto gaussianMixtureCov(const components_t components,
   return cov;
 }
 
-/// @brief Combine multiple components into one representative track state
-/// object. The function takes iterators to allow for arbitrary ranges to be
-/// combined. The dimension of the vectors is infeared from the inputs.
+/// @brief Compute the mean of a Gaussian mixture.
 ///
 /// @note If one component does not contain a covariance, no covariance is
 /// computed.
@@ -125,9 +126,9 @@ auto gaussianMixtureCov(const components_t components,
 /// angles in the bound parameters
 template <typename components_t, typename projector_t = Identity,
           typename angle_desc_t = AngleDescription<Surface::Plane>::Desc>
-auto gaussianMixtureMeanCov(const components_t components,
-                            projector_t &&projector = projector_t{},
-                            const angle_desc_t &angleDesc = angle_desc_t{}) {
+auto computeMixtureMean(const components_t components,
+                        projector_t &&projector = projector_t{},
+                        const angle_desc_t &angleDesc = angle_desc_t{}) {
   // Extract the first component
   const auto &[beginWeight, beginPars, beginCov] =
       projector(components.front());
@@ -157,7 +158,7 @@ auto gaussianMixtureMeanCov(const components_t components,
 
   // Early return in case of range with length 1
   if (components.size() == 1) {
-    return RetType{beginPars / beginWeight, beginCov / beginWeight};
+    return ActsVector<D>{beginPars / beginWeight};
   }
 
   // Zero initialized values for aggregation
@@ -195,49 +196,47 @@ auto gaussianMixtureMeanCov(const components_t components,
 
   std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
 
-  // MARK: fpeMaskBegin(FLTUND, 1, #2347)
-  const auto cov =
-      gaussianMixtureCov(components, mean, sumOfWeights, projector, angleDesc);
-  // MARK: fpeMaskEnd(FLTUND)
-
-  return RetType{mean, cov};
-}
-
-
-template <typename components_t, typename projector_t>
-auto unevaluated_context_mean(const components_t &cmps, const projector_t &proj)
-{
-  const auto &[w, mean, c] = proj(cmps.front());
   return mean;
 }
 
-/// This function implements a mode-search using an iterative fixed-point algorithm
+template <typename components_t, typename projector_t>
+auto unevaluated_context_centralValue(const components_t &cmps,
+                                      const projector_t &proj) {
+  const auto &[w, centralValue, c] = proj(cmps.front());
+  return centralValue;
+}
+
+/// This function implements a mode-search using an iterative fixed-point
+/// algorithm
 /// TODO potential optimization: cache inverse covariances
 // https://faculty.ucmerced.edu/mcarreira-perpinan/papers/cs-99-03.pdf
 template <typename components_t, typename projector_t = Identity,
           typename angle_desc_t = AngleDescription<Surface::Plane>::Desc>
-auto computeModeOfMixture(const components_t components,
-                            projector_t &&proj = projector_t{},
-                            const angle_desc_t &desc = angle_desc_t{}) {
-  constexpr int D = [](){
-    using ParsType = decltype(unevaluated_context_mean(std::declval<components_t>(), std::declval<projector_t>()));
+auto computeMixtureMode(const components_t components,
+                        projector_t &&proj = projector_t{},
+                        const angle_desc_t &desc = angle_desc_t{}) {
+  constexpr int D = []() {
+    using ParsType = decltype(unevaluated_context_centralValue(
+        std::declval<components_t>(), std::declval<projector_t>()));
     return ParsType::RowsAtCompileTime;
   }();
 
   // Lambda used to correct cyclic coordinates in the computation
   auto cyclicDiff = [](auto d, auto &diff, const auto &a, const auto &b) {
-    diff[d.idx] =
-        difference_periodic(a[d.idx] / d.constant,
-                            b[d.idx] / d.constant, 2 * M_PI) *
-        d.constant;
+    diff[d.idx] = difference_periodic(a[d.idx] / d.constant,
+                                      b[d.idx] / d.constant, 2 * M_PI) *
+                  d.constant;
   };
 
   // Compute the value of the pdf of a single multivariate gaussian
-  auto single_pdf = [&](const auto &x, const auto &mean, const auto &cov) {
+  auto single_pdf = [&](const auto &x, const auto &centralValue,
+                        const auto &cov) {
     const auto a = 1.0 / std::sqrt(std::pow(2 * M_PI, D) * cov.determinant());
-    ActsVector<D> r = x - mean;
-    std::apply([&](auto... d) { (cyclicDiff(d, r, x, mean), ...); }, desc);
-    const auto b = -0.5 * (x - mean).transpose() * cov.inverse() * (x - mean);
+    ActsVector<D> r = x - centralValue;
+    std::apply([&](auto... d) { (cyclicDiff(d, r, x, centralValue), ...); },
+               desc);
+    const auto b = -0.5 * (x - centralValue).transpose() * cov.inverse() *
+                   (x - centralValue);
     return a * std::exp(b);
   };
 
@@ -246,8 +245,8 @@ auto computeModeOfMixture(const components_t components,
     double res = 0.0;
 
     for (const auto &cmp : components) {
-      const auto &[weight, mean, cov] = proj(cmp);
-      res += weight * single_pdf(x, mean, cov);
+      const auto &[weight, centralValue, cov] = proj(cmp);
+      res += weight * single_pdf(x, centralValue, cov);
     }
 
     return res;
@@ -261,11 +260,11 @@ auto computeModeOfMixture(const components_t components,
     ActsVector<D> b = ActsVector<D>::Zero();
 
     for (const auto &cmp : components) {
-      const auto &[weight, mean, cov] = proj(cmp);
-      const auto p_m_x = weight * single_pdf(x, mean, cov) / p_x;
+      const auto &[weight, centralValue, cov] = proj(cmp);
+      const auto p_m_x = weight * single_pdf(x, centralValue, cov) / p_x;
 
       a += p_m_x * cov.inverse();
-      b += p_m_x * (cov.inverse() * mean);
+      b += p_m_x * (cov.inverse() * centralValue);
     }
 
     return a.inverse() * b;
@@ -276,12 +275,13 @@ auto computeModeOfMixture(const components_t components,
     ActsSquareMatrix<D> h = ActsSquareMatrix<D>::Zero();
 
     for (const auto &cmp : components) {
-      const auto &[weight, mean, cov] = proj(cmp);
-      const auto a = weight * single_pdf(x, mean, cov);
-      ActsVector<D> r = x - mean;
-      std::apply([&, &mean = mean](auto... d) { (cyclicDiff(d, r, x, mean), ...); },
+      const auto &[weight, centralValue, cov] = proj(cmp);
+      const auto a = weight * single_pdf(x, centralValue, cov);
+      ActsVector<D> r = x - centralValue;
+      std::apply([&, &centralValue = centralValue](
+                     auto... d) { (cyclicDiff(d, r, x, centralValue), ...); },
                  desc);
-      const auto b = (x - mean) * (x - mean).transpose() - cov;
+      const auto b = (x - centralValue) * (x - centralValue).transpose() - cov;
       h += a * (cov.inverse() * b * cov.inverse());
     }
 
@@ -299,9 +299,9 @@ auto computeModeOfMixture(const components_t components,
 
   // The algorithm
   for (const auto &cmp : components) {
-    const auto &[weight, mean, cov] = proj(cmp);
+    const auto &[weight, centralValue, cov] = proj(cmp);
 
-    ActsVector<D> x = mean;
+    ActsVector<D> x = centralValue;
     ActsVector<D> x_old = ActsVector<D>::Zero();
 
     for (auto i = 0; i < iter_max; ++i) {
@@ -335,10 +335,10 @@ auto computeModeOfMixture(const components_t components,
 
 }  // namespace detail
 
-/// @enum MixtureReductionMethod
+/// @enum MixtureMergeMethod
 ///
 /// Available reduction methods for the reduction of a Gaussian mixture
-enum class MixtureReductionMethod { eMean, eMaxWeight, eMode };
+enum class MixtureMergeMethod { eMean, eMaxWeight, eMode };
 
 /// Reduce Gaussian mixture
 ///
@@ -350,41 +350,37 @@ enum class MixtureReductionMethod { eMean, eMaxWeight, eMode };
 ///
 /// @return parameters and covariance as std::tuple< BoundVector, BoundMatrix >
 template <typename mixture_t, typename projector_t = Acts::Identity>
-auto reduceGaussianMixture(const mixture_t &mixture, const Surface &surface,
-                           MixtureReductionMethod method,
-                           projector_t &&projector = projector_t{}) {
+auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
+                          MixtureMergeMethod method,
+                          projector_t &&projector = projector_t{}) {
   using R = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
-  const auto [mean, cov] =
-      detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-        return detail::gaussianMixtureMeanCov(mixture, projector, desc);
-      });
 
-  if(method == MixtureReductionMethod::eMean) {
-    return R{mean, cov};
-  } else if(method == MixtureReductionMethod::eMaxWeight) { 
-    const auto maxWeightIt = std::max_element(
-        mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
-          return std::get<0>(projector(a)) < std::get<0>(projector(b));
-        });
-    const BoundVector meanMaxWeight = std::get<1>(projector(*maxWeightIt));
-
-    return R{meanMaxWeight, cov};
-  } else {
-     auto mode =  detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-        return detail::computeModeOfMixture(mixture, projector, desc);
-      });
-
-     // In the error case use max weight
-     if( not mode) {
-      const auto maxWeightIt = std::max_element(
-          mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
-            return std::get<0>(projector(a)) < std::get<0>(projector(b));
-          });
-      mode = std::get<1>(projector(*maxWeightIt));
+  return detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
+    BoundVector parameters = BoundVector::Zero();
+    switch (method) {
+      case MixtureMergeMethod::eMean: {
+        parameters = detail::computeMixtureMean(mixture, projector, desc);
+      } break;
+      case MixtureMergeMethod::eMode: {
+        parameters =
+            detail::computeMixtureMode(mixture, projector, desc).value();
+      } break;
+      case MixtureMergeMethod::eMaxWeight: {
+        const auto maxWeightIt = std::max_element(
+            mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
+              return std::get<0>(projector(a)) < std::get<0>(projector(b));
+            });
+        parameters = std::get<1>(projector(*maxWeightIt));
+      }
     }
 
-     return R{*mode, cov};
-  }
+    // MARK: fpeMaskBegin(FLTUND, 1, #2347)
+    const auto covariance =
+        computeMixtureCovariance(mixture, parameters, projector, desc);
+    // MARK: fpeMaskEnd(FLTUND)
+
+    return R{parameters, covariance};
+  });
 }
 
 }  // namespace Acts

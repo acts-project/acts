@@ -10,7 +10,6 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
@@ -97,10 +96,10 @@ void addTrackFitting(Context& ctx) {
         },
         py::arg("path"));
 
-    py::enum_<Acts::MixtureReductionMethod>(mex, "FinalReductionMethod")
-        .value("mean", Acts::MixtureReductionMethod::eMean)
-        .value("maxWeight", Acts::MixtureReductionMethod::eMaxWeight)
-        .value("mode", Acts::MixtureReductionMethod::eMode);
+    py::enum_<Acts::MixtureMergeMethod>(mex, "MixtureMergeMethod")
+        .value("mean", Acts::MixtureMergeMethod::eMean)
+        .value("maxWeight", Acts::MixtureMergeMethod::eMaxWeight)
+        .value("mode", Acts::MixtureMergeMethod::eMode);
 
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles",
@@ -114,9 +113,9 @@ void addTrackFitting(Context& ctx) {
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-           double weightCutoff,
-           Acts::MixtureReductionMethod finalReductionMethod, bool abortOnError,
-           bool disableAllMaterialHandling, Logging::Level level) {
+           double weightCutoff, Acts::MixtureMergeMethod finalReductionMethod,
+           bool abortOnError, bool disableAllMaterialHandling,
+           Logging::Level level) {
           return ActsExamples::makeGsfFitterFunction(
               trackingGeometry, magneticField, betheHeitlerApprox,
               maxComponents, weightCutoff, finalReductionMethod, abortOnError,

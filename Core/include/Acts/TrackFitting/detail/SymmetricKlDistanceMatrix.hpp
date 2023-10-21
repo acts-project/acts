@@ -12,7 +12,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 
 namespace Acts::detail {
 
@@ -53,8 +52,9 @@ auto mergeComponents(const component_t &a, const component_t &b,
     return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
   };
 
-  auto [mergedPars, mergedCov] =
-      gaussianMixtureMeanCov(range, refProj, angle_desc);
+  const auto mergedPars = computeMixtureMean(range, refProj, angle_desc);
+  const auto mergedCov =
+      computeMixtureCovariance(range, mergedPars, refProj, angle_desc);
 
   component_t ret = a;
   proj(ret).boundPars = mergedPars;

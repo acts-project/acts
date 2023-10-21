@@ -114,7 +114,7 @@ struct GsfActor {
     bool inReversePass = false;
 
     /// How to reduce the states that are stored in the multi trajectory
-    MixtureReductionMethod reductionMethod = MixtureReductionMethod::eMaxWeight;
+    MixtureMergeMethod mixtureMergeMethod = MixtureMergeMethod::eMaxWeight;
 
     const Logger* logger{nullptr};
 
@@ -714,15 +714,15 @@ struct GsfActor {
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
 
-      auto [prtMean, prtCov] = reduceGaussianMixture(
-          tmpStates.tips, surface, m_cfg.reductionMethod,
+      auto [prtMean, prtCov] = mergeGaussianMixture(
+          tmpStates.tips, surface, m_cfg.mixtureMergeMethod,
           PrtProjector{tmpStates.traj, tmpStates.weights});
       proxy.predicted() = prtMean;
       proxy.predictedCovariance() = prtCov;
 
       if (isMeasurement) {
-        auto [fltMean, fltCov] = reduceGaussianMixture(
-            tmpStates.tips, surface, m_cfg.reductionMethod,
+        auto [fltMean, fltCov] = mergeGaussianMixture(
+            tmpStates.tips, surface, m_cfg.mixtureMergeMethod,
             FltProjector{tmpStates.traj, tmpStates.weights});
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
@@ -744,8 +744,8 @@ struct GsfActor {
               result.surfacesVisitedBwdAgain.push_back(&surface);
 
               if (trackState.hasSmoothed()) {
-                const auto [smtMean, smtCov] = reduceGaussianMixture(
-                    tmpStates.tips, surface, m_cfg.reductionMethod,
+                const auto [smtMean, smtCov] = mergeGaussianMixture(
+                    tmpStates.tips, surface, m_cfg.mixtureMergeMethod,
                     FltProjector{tmpStates.traj, tmpStates.weights});
 
                 trackState.smoothed() = smtMean;
@@ -766,7 +766,7 @@ struct GsfActor {
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
-    m_cfg.reductionMethod = options.stateReductionMethod;
+    m_cfg.mixtureMergeMethod = options.mixtureMergeMethod;
     m_cfg.calibrationContext = &options.calibrationContext.get();
   }
 };

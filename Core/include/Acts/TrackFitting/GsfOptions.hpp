@@ -13,6 +13,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/TrackFitting/detail/MergeGaussianMixture.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -99,8 +100,7 @@ struct GsfOptions {
 
   std::string_view finalMultiComponentStateColumn = "";
 
-  MixtureReductionMethod stateReductionMethod =
-      MixtureReductionMethod::eMaxWeight;
+  MixtureMergeMethod mixtureMergeMethod = MixtureMergeMethod::eMaxWeight;
 
 #if __cplusplus < 202002L
   GsfOptions() = delete;

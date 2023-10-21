@@ -24,7 +24,6 @@
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -81,8 +80,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   double weightCutoff = 0;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
-  Acts::MixtureReductionMethod reductionMethod =
-      Acts::MixtureReductionMethod::eMaxWeight;
+  Acts::MixtureMergeMethod mergeMethod = Acts::MixtureMergeMethod::eMaxWeight;
 
   IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
@@ -111,7 +109,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         weightCutoff,
         abortOnError,
         disableAllMaterialHandling};
-    gsfOptions.stateReductionMethod = reductionMethod;
+    gsfOptions.mixtureMergeMethod = mergeMethod;
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
@@ -170,7 +168,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::MixtureReductionMethod finalReductionMethod,
+    double weightCutoff, Acts::MixtureMergeMethod mixtureMergeMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {
   // Standard fitter
@@ -206,7 +204,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
   fitterFunction->weightCutoff = weightCutoff;
   fitterFunction->abortOnError = abortOnError;
   fitterFunction->disableAllMaterialHandling = disableAllMaterialHandling;
-  fitterFunction->reductionMethod = finalReductionMethod;
+  fitterFunction->mergeMethod = mixtureMergeMethod;
 
   return fitterFunction;
 }

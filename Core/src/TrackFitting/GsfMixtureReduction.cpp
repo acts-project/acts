@@ -8,6 +8,7 @@
 
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 
+#include "Acts/TrackFitting/detail/MergeGaussianMixture.hpp"
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
 template <typename proj_t, typename angle_desc_t>
