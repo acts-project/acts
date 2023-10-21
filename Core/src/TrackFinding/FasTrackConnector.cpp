@@ -23,19 +23,19 @@ FasTrackConnection::FasTrackConnection(unsigned int s, unsigned int d)
 FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
   m_layerGroups.clear();
 
-  int nLinks;
+  int nLinks{};
 
   inFile >> nLinks >> m_etaBin;
 
   for (int l = 0; l < nLinks; l++) {
-    unsigned int stage, lIdx, src, dst, nEntries;
-    int height, width;
+    unsigned int stage{}, lIdx{}, src{}, dst{}, nEntries{};
+    int height{}, width{};
 
     inFile >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
 
     FasTrackConnection *pC = new FasTrackConnection(src, dst);
 
-    int dummy;
+    int dummy{};
 
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
@@ -193,4 +193,5 @@ FasTrackConnector::~FasTrackConnector() {
     }
   }
 }
+
 }  // namespace Acts

@@ -30,6 +30,6 @@ Acts::RoiDescriptor::RoiDescriptor(double eta, double etaMinus, double etaPlus,
       m_roiId(0),
       m_roiWord(0) {}
 
-Acts::RoiDescriptor::~RoiDescriptor() {}
+Acts::RoiDescriptor::~RoiDescriptor() = default;
 
 }  // namespace Acts

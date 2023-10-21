@@ -479,8 +479,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
       if (pS->m_next != pS->m_level) {
         nChanges++;
         pS->m_level = pS->m_next;
-        if (maxLevel < pS->m_level)
+        if (maxLevel < pS->m_level) {
           maxLevel = pS->m_level;
+        }
       }
     }
 
