@@ -101,7 +101,7 @@ def runTruthTrackingKalman(
 
     # Output
     s.addWriter(
-        acts.examples.RootTracksStatesWriter(
+        acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
@@ -113,7 +113,7 @@ def runTruthTrackingKalman(
     )
 
     s.addWriter(
-        acts.examples.RootTracksSummaryWriter(
+        acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
@@ -137,7 +137,7 @@ def runTruthTrackingKalman(
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTrajectories="trajectories",
+            inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "performance_track_fitter.root"),

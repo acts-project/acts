@@ -483,6 +483,14 @@ def test_csv_multitrajectory_writer(tmp_path):
         s=s,
     )
 
+    s.addAlgorithm(
+        acts.examples.TracksToTrajectories(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTrajectories="trajectories",
+        )
+    )
+
     csv_dir = tmp_path / "csv"
     csv_dir.mkdir()
     s.addWriter(
@@ -680,6 +688,14 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
         ),
         outputDir=tmp_path,
         s=s,
+    )
+
+    s.addAlgorithm(
+        acts.examples.TracksToTrajectories(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTrajectories="trajectories",
+        )
     )
 
     out = tmp_path / "trajectories_edm4hep.root"

@@ -34,7 +34,7 @@ using namespace ROOT;
 /// Plot the bound parameter resolutions
 ///
 /// (loc1, phi, theta, q/p, t) at all track states from root file produced by
-/// the RootTracksStatesWriter
+/// the RootTrackStatesWriter
 ///
 /// @param inFile the input root file
 /// @param treeName the input tree name (default: 'trackstates)
