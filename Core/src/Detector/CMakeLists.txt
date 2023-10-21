@@ -1,6 +1,7 @@
 target_sources(
   ActsCore
   PRIVATE
+    detail/BlueprintHelper.cpp
     detail/CylindricalDetectorHelper.cpp
     detail/PortalHelper.cpp
     detail/SupportHelper.cpp
