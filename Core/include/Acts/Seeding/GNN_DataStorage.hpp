@@ -281,15 +281,14 @@ class TrigFTF_GNN_Edge {
   TrigFTF_GNN_Edge(TrigFTF_GNN_Node<space_point_t> *n1,
                    TrigFTF_GNN_Node<space_point_t> *n2, float p1, float p2,
                    float p3, float p4)
-      : m_n1(n1), m_n2(n2), m_level(1), m_next(1), m_nNei(0) {
+      : m_n1(n1), m_n2(n2), m_level(1), m_next(1) {
     m_p[0] = p1;
     m_p[1] = p2;
     m_p[2] = p3;
     m_p[3] = p4;
   }
 
-  TrigFTF_GNN_Edge()
-      : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1), m_nNei(0){};
+  TrigFTF_GNN_Edge() : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1) {}
 
   // TrigFTF_GNN_Edge(const TrigFTF_GNN_Edge<space_point_t> &e)
   //     : m_n1(e.m_n1), m_n2(e.m_n2){};
@@ -308,7 +307,7 @@ class TrigFTF_GNN_Edge {
 
   signed char m_level{}, m_next{};
 
-  unsigned char m_nNei{};
+  unsigned char m_nNei{0};
   float m_p[4]{};
 
   unsigned int m_vNei[N_SEG_CONNS]{};  // global indices of the connected edges

@@ -22,7 +22,7 @@ namespace Acts {
 class RoiDescriptor {
  public:
   // iterator
-  typedef std::vector<const RoiDescriptor*>::const_iterator roi_iterator;
+  using roi_iterator = std::vector<const RoiDescriptor*>::const_iterator;
   /// convenient
   static constexpr bool FULLSCAN = true;
   static constexpr bool ROI = false;
@@ -199,10 +199,10 @@ class RoiDescriptor {
   std::vector<const RoiDescriptor*> m_roiDescriptors;  //!< roi constituents
 
   // from trig
-  unsigned int m_l1Id{};     //!< lvl1 event number
-  unsigned int m_roiId{};    //!< RoI number
-  unsigned int m_roiWord{};  //!< lvl1 RoI word from which this RoI was
-                             //!< initially constructed
+  unsigned int m_l1Id{0};     //!< lvl1 event number
+  unsigned int m_roiId{0};    //!< RoI number
+  unsigned int m_roiWord{0};  //!< lvl1 RoI word from which this RoI was
+                              //!< initially constructed
 
   //   std::string str( const RoiDescriptor& d );                           //<!
   //   printing helper std::ostream& operator<<( std::ostream& m, const

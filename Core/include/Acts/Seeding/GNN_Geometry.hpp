@@ -265,7 +265,7 @@ class TrigFTF_GNN_Geometry {
   TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer> &layers,
                        std::unique_ptr<Acts::FasTrackConnector> &conn)
 
-      : m_nEtaBins(0), m_fastrack(std::move(conn)) {
+      : m_fastrack(std::move(conn)) {
     const float min_z0 = -168.0;
     const float max_z0 = 168.0;
 
@@ -320,7 +320,7 @@ class TrigFTF_GNN_Geometry {
     }
   }
 
-  TrigFTF_GNN_Geometry() : m_nEtaBins(0) {}
+  TrigFTF_GNN_Geometry() = default;
 
   // for safety to prevent passing as copy
   TrigFTF_GNN_Geometry(const TrigFTF_GNN_Geometry &) = delete;
@@ -378,7 +378,7 @@ class TrigFTF_GNN_Geometry {
   std::map<unsigned int, TrigFTF_GNN_Layer<space_point_t> *> m_layMap;
   std::vector<TrigFTF_GNN_Layer<space_point_t> *> m_layArray;
 
-  int m_nEtaBins{};
+  int m_nEtaBins{0};
 
   std::unique_ptr<Acts::FasTrackConnector> m_fastrack;
 };
