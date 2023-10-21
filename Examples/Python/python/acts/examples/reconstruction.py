@@ -1074,7 +1074,7 @@ def addTrackWriters(
             ckfPerfWriter = acts.examples.CKFPerformanceWriter(
                 level=customLogLevel(),
                 inputParticles="truth_seeds_selected",
-                inputTrajectories=tracks,
+                inputTracks=tracks,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 filePath=str(outputDirRoot / f"performance_{name}.root"),
             )
@@ -1420,12 +1420,12 @@ def addAmbiguityResolutionMLDBScan(
 def addVertexFitting(
     s,
     field,
-    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
-    trajectories: Optional[str] = "trajectories",
+    tracks: Optional[str] = "tracks",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
     outputProtoVertices: str = "protovertices",
     outputVertices: str = "fittedVertices",
+    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     vertexFinder: VertexFinder = VertexFinder.Truth,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -1438,12 +1438,12 @@ def addVertexFitting(
     s: Sequencer
         the sequencer module to which we add the Seeding steps (returned from addVertexFitting)
     field : magnetic field
-    seeder : enum member
-        determines vertex seeder, can be acts.seeder.GaussianSeeder or acts.seeder.AdaptiveGridSeeder
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     associatedParticles : str, "associatedTruthParticles"
         VertexPerformanceWriter.inputAssociatedTruthParticles
+    seeder : enum member
+        determines vertex seeder, can be acts.seeder.GaussianSeeder or acts.seeder.AdaptiveGridSeeder
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
     logLevel : acts.logging.Level, None
@@ -1457,28 +1457,33 @@ def addVertexFitting(
         VertexPerformanceWriter,
     )
 
-    trajectories = trajectories if trajectories is not None else ""
-    trackParameters = trackParameters if trackParameters is not None else ""
-    associatedParticles = associatedParticles if associatedParticles is not None else ""
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    if trackSelectorConfig is not None:
+    assert (tracks is None) != (
+        trackParameters is None
+    ), "Either tracks or trackParameters must be specified"
+
+    if tracks is not None and trackSelectorConfig is not None:
         trackSelector = addTrackSelection(
             s,
             trackSelectorConfig,
-            inputTrackParameters=trackParameters,
-            inputTrajectories=trajectories,
-            outputTrackParameters="selectedTrackParametersVertexing",
-            outputTrajectories="selectedTrajectoriesVertexing",
+            inputTracks=tracks,
+            outputTracks="selectedTracksVertexing",
             logLevel=customLogLevel(),
         )
+        tracks = trackSelector.config.outputTracks
 
-        trajectories = trackSelector.config.outputTrajectories if trajectories else ""
-        trackParameters = (
-            trackSelector.config.outputTrackParameters if trackParameters else ""
+    if trackParameters is None:
+        converter = acts.examples.TracksToParameters(
+            level=customLogLevel(),
+            inputTracks=tracks,
+            outputTrackParameters="selectedTracksParametersVertexing",
         )
+        s.addAlgorithm(converter)
+        trackParameters = converter.config.outputTrackParameters
 
+    tracks = tracks if tracks is not None else ""
+    associatedParticles = associatedParticles if associatedParticles is not None else ""
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
 
@@ -1493,7 +1498,6 @@ def addVertexFitting(
         fitVertices = VertexFitterAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrajectories=trajectories,
             inputTrackParameters=trackParameters,
             inputProtoVertices=findVertices.config.outputProtoVertices,
             outputVertices=outputVertices,
@@ -1503,7 +1507,6 @@ def addVertexFitting(
         findVertices = IterativeVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrajectories=trajectories,
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
@@ -1512,9 +1515,8 @@ def addVertexFitting(
     elif vertexFinder == VertexFinder.AMVF:
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
-            seedFinder=seeder,
             bField=field,
-            inputTrajectories=trajectories,
+            seedFinder=seeder,
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
@@ -1538,7 +1540,7 @@ def addVertexFitting(
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
                 inputMeasurementParticlesMap="measurement_particles_map",
-                inputTrajectories=trajectories,
+                inputTracks=tracks,
                 inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,

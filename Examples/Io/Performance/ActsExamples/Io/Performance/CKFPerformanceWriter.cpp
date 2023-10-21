@@ -168,9 +168,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
                    << track.tipIndex());
       continue;
     }
-    Acts::BoundTrackParameters fittedParameters(
-        track.referenceSurface().getSharedPtr(), track.parameters(),
-        track.covariance(), track.particleHypothesis());
+    Acts::BoundTrackParameters fittedParameters = track.boundParameters();
     // Fill the trajectory summary info
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                 track.nTrackStates(), track.nMeasurements(),

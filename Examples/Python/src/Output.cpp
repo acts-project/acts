@@ -330,8 +330,8 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
-      inputAllTruthParticles, inputSelectedTruthParticles, inputTrackParameters,
-      inputAssociatedTruthParticles, inputTrackParameters, inputTrajectories,
+      inputAllTruthParticles, inputSelectedTruthParticles,
+      inputAssociatedTruthParticles, inputTrackParameters, inputTracks,
       inputMeasurementParticlesMap, inputVertices, bField, filePath, treeName,
       fileMode, minTrackVtxMatchFraction, truthMatchProbMin, useTracks);
 

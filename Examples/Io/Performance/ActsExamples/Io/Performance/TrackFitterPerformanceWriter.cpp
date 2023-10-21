@@ -116,9 +116,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
       ACTS_WARNING("No fitted track parameters.");
       continue;
     }
-    Acts::BoundTrackParameters fittedParameters(
-        track.referenceSurface().getSharedPtr(), track.parameters(),
-        track.covariance(), track.particleHypothesis());
+    Acts::BoundTrackParameters fittedParameters = track.boundParameters();
 
     // Get the majority truth particle for this trajectory
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);

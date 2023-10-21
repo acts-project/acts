@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -80,12 +78,12 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
       if (!m_cfg.inputTrackParameters.empty()) {
         m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
       } else {
-        m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+        m_inputTracks.initialize(m_cfg.inputTracks);
       }
     } else {
       m_inputMeasurementParticlesMap.initialize(
           m_cfg.inputMeasurementParticlesMap);
-      m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+      m_inputTracks.initialize(m_cfg.inputTracks);
     }
   }
 
@@ -272,21 +270,6 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // parameters a priori:
   if (m_cfg.useTracks) {
     if (!m_cfg.inputAssociatedTruthParticles.empty()) {
-      if (!m_cfg.inputTrackParameters.empty()) {
-        trackParameters = m_inputTrackParameters(ctx);
-      } else {
-        const auto& inputTrajectories = m_inputTrajectories(ctx);
-
-        for (const auto& trajectories : inputTrajectories) {
-          for (auto tip : trajectories.tips()) {
-            if (!trajectories.hasTrackParameters(tip)) {
-              continue;
-            }
-            trackParameters.push_back(trajectories.trackParameters(tip));
-          }
-        }
-      }
-
       // Read track-associated truth particle input collection
       associatedTruthParticles =
           std::vector<SimParticle>(m_inputAssociatedTruthParticles(ctx).begin(),
@@ -320,46 +303,40 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // case. Equivalently, one could say that not all tracksAtVertex will be
     // assigned to a truth particle.
     else {
-      // Get active tips
-      const auto& inputTrajectories = m_inputTrajectories(ctx);
-
       std::vector<ParticleHitCount> particleHitCounts;
 
       const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
-      for (const auto& trajectories : inputTrajectories) {
-        for (auto tip : trajectories.tips()) {
-          if (!trajectories.hasTrackParameters(tip)) {
-            continue;
-          }
-
-          identifyContributingParticles(hitParticlesMap, trajectories, tip,
-                                        particleHitCounts);
-          ActsFatras::Barcode majorityParticleId =
-              particleHitCounts.front().particleId;
-          size_t nMajorityHits = particleHitCounts.front().hitCount;
-
-          auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-              trajectories.multiTrajectory(), tip);
-
-          if (nMajorityHits * 1. / trajState.nMeasurements <
-              m_cfg.truthMatchProbMin) {
-            continue;
-          }
-
-          auto it = std::find_if(allTruthParticles.begin(),
-                                 allTruthParticles.end(), [&](const auto& tp) {
-                                   return tp.particleId() == majorityParticleId;
-                                 });
-
-          if (it == allTruthParticles.end()) {
-            continue;
-          }
-
-          const auto& majorityParticle = *it;
-          trackParameters.push_back(trajectories.trackParameters(tip));
-          associatedTruthParticles.push_back(majorityParticle);
+      for (const auto& track : m_inputTracks(ctx)) {
+        if (!track.hasReferenceSurface()) {
+          continue;
         }
+
+        identifyContributingParticles(hitParticlesMap, track,
+                                      particleHitCounts);
+        ActsFatras::Barcode majorityParticleId =
+            particleHitCounts.front().particleId;
+        size_t nMajorityHits = particleHitCounts.front().hitCount;
+
+        if (nMajorityHits * 1. / track.nMeasurements() <
+            m_cfg.truthMatchProbMin) {
+          continue;
+        }
+
+        auto it = std::find_if(allTruthParticles.begin(),
+                               allTruthParticles.end(), [&](const auto& tp) {
+                                 return tp.particleId() == majorityParticleId;
+                               });
+
+        if (it == allTruthParticles.end()) {
+          continue;
+        }
+
+        trackParameters.emplace_back(track.referenceSurface().getSharedPtr(),
+                                     track.parameters(), track.covariance(),
+                                     track.particleHypothesis());
+        const auto& majorityParticle = *it;
+        associatedTruthParticles.push_back(majorityParticle);
       }
     }
   } else {

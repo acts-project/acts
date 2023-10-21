@@ -34,8 +34,6 @@ class TutorialVertexFinderAlgorithm final : public IAlgorithm {
   struct Config {
     /// Optional. Input track parameters collection
     std::string inputTrackParameters;
-    /// Optional. Input trajectories container.
-    std::string inputTrajectories;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// The magnetic field
@@ -58,9 +56,6 @@ class TutorialVertexFinderAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
       m_inputTrackParameters{this, "InputTrackParameters"};
-
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
 
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};
