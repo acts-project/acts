@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 template <typename E, typename A>
@@ -137,13 +138,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // size, going up to the point where it can return an estimate of the local
   // integration error. The results are stated in the local variables above,
   // allowing integration to continue once the error is deemed satisfactory
-  const auto tryRungeKuttaStep =
-      [&](const ConstrainedStep& step) -> Result<bool> {
+  const auto tryRungeKuttaStep = [&](const double h) -> Result<bool> {
     // helpers because bool and std::error_code are ambiguous
     constexpr auto success = &Result<bool>::success;
     constexpr auto failure = &Result<bool>::failure;
 
-    const double h = step.value() * state.options.direction;
     // State the square and half of the step size
     h2 = h * h;
     half_h = h * 0.5;
@@ -188,12 +187,14 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return success(error_estimate <= state.options.tolerance);
   };
 
-  double stepSizeScaling = 1.;
+  const double initialH =
+      state.stepping.stepSize.value() * state.options.direction;
+  double h = initialH;
   size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (true) {
-    auto res = tryRungeKuttaStep(state.stepping.stepSize);
+    auto res = tryRungeKuttaStep(h);
     if (!res.ok()) {
       return res.error();
     }
@@ -201,17 +202,16 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    stepSizeScaling =
+    const double stepSizeScaling =
         std::min(std::max(0.25f, std::sqrt(std::sqrt(static_cast<float>(
                                      state.options.tolerance /
                                      std::abs(2. * error_estimate))))),
                  4.0f);
-    state.stepping.stepSize.scale(stepSizeScaling);
+    h *= stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
     // place
-    if (std::abs(state.stepping.stepSize.value()) <
-        std::abs(state.options.stepSizeCutOff)) {
+    if (std::abs(h) < std::abs(state.options.stepSizeCutOff)) {
       // Not moving due to too low momentum needs an aborter
       return EigenStepperError::StepSizeStalled;
     }
@@ -224,9 +224,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
     nStepTrials++;
   }
-
-  // use the adjusted step size
-  const double h = state.stepping.stepSize.value() * state.options.direction;
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
@@ -257,16 +254,17 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
-  if (state.stepping.stepSize.currentType() ==
-      ConstrainedStep::Type::accuracy) {
-    stepSizeScaling = std::min(
-        std::max(0.25f,
-                 std::sqrt(std::sqrt(static_cast<float>(
-                     state.options.tolerance / std::abs(error_estimate))))),
-        4.0f);
-    state.stepping.stepSize.scale(stepSizeScaling);
+  const double stepSizeScaling = std::min(
+      std::max(0.25f,
+               std::sqrt(std::sqrt(static_cast<float>(
+                   state.options.tolerance / std::abs(error_estimate))))),
+      4.0f);
+  const double nextAccuracy = std::abs(h * stepSizeScaling);
+  const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());
+  const double initialStepLength = std::abs(initialH);
+  if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
+    state.stepping.stepSize.setAccuracy(nextAccuracy);
   }
-
   state.stepping.stepSize.nStepTrials = nStepTrials;
 
   return h;
