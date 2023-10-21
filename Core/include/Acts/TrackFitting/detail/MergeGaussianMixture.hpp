@@ -289,6 +289,7 @@ auto computeMixtureMode(const components_t components,
   };
 
   // We only store the highest mode
+  // TODO Replace with Acts::Result
   std::optional<ActsVector<D>> mode;
   double mode_val = 0;
 
@@ -362,6 +363,7 @@ auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
         parameters = detail::computeMixtureMean(mixture, projector, desc);
       } break;
       case MixtureMergeMethod::eMode: {
+        // TODO handle std::optional correctly
         parameters =
             detail::computeMixtureMode(mixture, projector, desc).value();
       } break;

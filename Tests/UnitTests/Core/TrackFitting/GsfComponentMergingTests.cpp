@@ -407,6 +407,10 @@ BOOST_AUTO_TEST_CASE(test_mode_finding) {
     return std::make_tuple(res_pos, res_val);
   };
 
+  // With d=2, the components are so close that the mode is between the
+  // individual component means.
+  // With d=4, the components are far enough from each other, that the global
+  // mode is also the mode of the mean of the largest component.
   for (auto d : {2.0, 4.0}) {
     std::vector<DummyComponent<D>> cmps;
 
@@ -420,12 +424,14 @@ BOOST_AUTO_TEST_CASE(test_mode_finding) {
       x += d;
     }
 
+    const auto [mode_ref, val_ref] = find_mode_ref(-d, 4 * d, 1.e-4, cmps);
+    std::cout << "mode ref " << mode_ref.transpose() << "\n";
+
     const auto mode_test =
         detail::computeMixtureMode(cmps, Identity{}, std::tuple<>{});
 
-    BOOST_CHECK(mode_test.has_value());
-
-    const auto [mode_ref, val_ref] = find_mode_ref(-d, 4 * d, 1.e-4, cmps);
+    BOOST_REQUIRE(mode_test.has_value());
+    std::cout << "mode test " << mode_test->transpose() << "\n";
 
     CHECK_CLOSE_MATRIX(*mode_test, mode_ref, 1.e-3);
   }
