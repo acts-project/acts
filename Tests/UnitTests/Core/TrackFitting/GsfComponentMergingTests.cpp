@@ -379,9 +379,9 @@ BOOST_AUTO_TEST_CASE(test_mode_finding) {
 
     for (const auto &cmp : components) {
       const auto &[weight, mean, cov] = cmp;
-      const auto a = std::sqrt(std::pow(2 * M_PI, D) * cov->determinant());
+      const auto a = std::sqrt(std::pow(2 * M_PI, D) * cov.determinant());
       const auto b =
-          -0.5 * (x - mean).transpose() * cov->inverse() * (x - mean);
+          -0.5 * (x - mean).transpose() * cov.inverse() * (x - mean);
       res += weight * a * std::exp(b);
     }
 
