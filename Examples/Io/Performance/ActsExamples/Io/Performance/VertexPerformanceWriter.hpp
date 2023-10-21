@@ -213,8 +213,8 @@ class VertexPerformanceWriter final
   ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
       this, "InputSelectedTruthParticles"};
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
 

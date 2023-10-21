@@ -80,8 +80,8 @@ class RootTrackSummaryReader : public IReader {
   /// The config class
   Config m_cfg;
 
-  WriteDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_outputTrackParameters{this, "OutputTrackParameters"};
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};

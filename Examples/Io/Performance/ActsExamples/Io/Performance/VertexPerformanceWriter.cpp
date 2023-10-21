@@ -262,7 +262,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   ACTS_VERBOSE("Total number of detector-accepted truth primary vertices : "
                << m_nVtxDetAcceptance);
 
-  std::vector<Acts::BoundTrackParameters> trackParameters;
+  TrackParametersContainer trackParameters;
   std::vector<SimParticle> associatedTruthParticles;
 
   // The i-th entry in associatedTruthParticles corresponds to the i-th entry in

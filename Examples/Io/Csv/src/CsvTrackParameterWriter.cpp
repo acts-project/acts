@@ -48,7 +48,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
     const AlgorithmContext& ctx) {
-  std::vector<Acts::BoundTrackParameters> inputTrackParameters;
+  TrackParametersContainer inputTrackParameters;
 
   if (!m_cfg.inputTrackParameters.empty()) {
     const auto& tmp = m_inputTrackParameters(ctx);

@@ -170,7 +170,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryReader::read(
             Acts::Vector3(0., 0., 0.));
 
     // The collection to be written
-    std::vector<Acts::BoundTrackParameters> trackParameterCollection;
+    TrackParametersContainer trackParameterCollection;
     SimParticleContainer truthParticleCollection;
 
     // Read the correct entry

@@ -92,8 +92,8 @@ class VertexFitterAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 
   ReadDataHandle<ProtoVertexContainer> m_inputProtoVertices{
       this, "InputProtoVertices"};

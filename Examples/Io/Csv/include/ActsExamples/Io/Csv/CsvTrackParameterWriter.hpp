@@ -72,8 +72,8 @@ class CsvTrackParameterWriter final : public IWriter {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
   ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
       this, "InputTrajectories"};
 };
