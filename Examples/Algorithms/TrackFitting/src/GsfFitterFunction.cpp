@@ -80,7 +80,8 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   double weightCutoff = 0;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
-  Acts::MixtureMergeMethod mergeMethod = Acts::MixtureMergeMethod::eMaxWeight;
+  Acts::ComponentMergeMethod mergeMethod =
+      Acts::ComponentMergeMethod::eMaxWeight;
 
   IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
@@ -109,7 +110,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         weightCutoff,
         abortOnError,
         disableAllMaterialHandling};
-    gsfOptions.mixtureMergeMethod = mergeMethod;
+    gsfOptions.componentMergeMethod = mergeMethod;
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
@@ -168,7 +169,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::MixtureMergeMethod mixtureMergeMethod,
+    double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {
   // Standard fitter
@@ -204,7 +205,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
   fitterFunction->weightCutoff = weightCutoff;
   fitterFunction->abortOnError = abortOnError;
   fitterFunction->disableAllMaterialHandling = disableAllMaterialHandling;
-  fitterFunction->mergeMethod = mixtureMergeMethod;
+  fitterFunction->mergeMethod = componentMergeMethod;
 
   return fitterFunction;
 }

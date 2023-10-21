@@ -100,7 +100,7 @@ struct GsfOptions {
 
   std::string_view finalMultiComponentStateColumn = "";
 
-  MixtureMergeMethod mixtureMergeMethod = MixtureMergeMethod::eMaxWeight;
+  ComponentMergeMethod componentMergeMethod = ComponentMergeMethod::eMaxWeight;
 
 #if __cplusplus < 202002L
   GsfOptions() = delete;

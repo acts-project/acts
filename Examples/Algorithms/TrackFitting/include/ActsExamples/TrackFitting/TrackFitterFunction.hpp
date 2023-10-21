@@ -89,7 +89,7 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::MixtureMergeMethod mixtureMergeMethod,
+    double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger);
 

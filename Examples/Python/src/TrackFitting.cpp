@@ -96,10 +96,10 @@ void addTrackFitting(Context& ctx) {
         },
         py::arg("path"));
 
-    py::enum_<Acts::MixtureMergeMethod>(mex, "MixtureMergeMethod")
-        .value("mean", Acts::MixtureMergeMethod::eMean)
-        .value("maxWeight", Acts::MixtureMergeMethod::eMaxWeight)
-        .value("mode", Acts::MixtureMergeMethod::eMode);
+    py::enum_<Acts::ComponentMergeMethod>(mex, "ComponentMergeMethod")
+        .value("mean", Acts::ComponentMergeMethod::eMean)
+        .value("maxWeight", Acts::ComponentMergeMethod::eMaxWeight)
+        .value("mode", Acts::ComponentMergeMethod::eMode);
 
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles",
@@ -113,18 +113,18 @@ void addTrackFitting(Context& ctx) {
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-           double weightCutoff, Acts::MixtureMergeMethod finalReductionMethod,
+           double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
            bool abortOnError, bool disableAllMaterialHandling,
            Logging::Level level) {
           return ActsExamples::makeGsfFitterFunction(
               trackingGeometry, magneticField, betheHeitlerApprox,
-              maxComponents, weightCutoff, finalReductionMethod, abortOnError,
+              maxComponents, weightCutoff, componentMergeMethod, abortOnError,
               disableAllMaterialHandling,
               *Acts::getDefaultLogger("GSFFunc", level));
         },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("betheHeitlerApprox"), py::arg("maxComponents"),
-        py::arg("weightCutoff"), py::arg("finalReductionMethod"),
+        py::arg("weightCutoff"), py::arg("componentMergeMethod"),
         py::arg("abortOnError"), py::arg("disableAllMaterialHandling"),
         py::arg("level"));
   }

@@ -336,10 +336,10 @@ auto computeMixtureMode(const components_t components,
 
 }  // namespace detail
 
-/// @enum MixtureMergeMethod
+/// @enum ComponentMergeMethod
 ///
 /// Available reduction methods for the reduction of a Gaussian mixture
-enum class MixtureMergeMethod { eMean, eMaxWeight, eMode };
+enum class ComponentMergeMethod { eMean, eMaxWeight, eMode };
 
 /// Reduce Gaussian mixture
 ///
@@ -352,22 +352,22 @@ enum class MixtureMergeMethod { eMean, eMaxWeight, eMode };
 /// @return parameters and covariance as std::tuple< BoundVector, BoundMatrix >
 template <typename mixture_t, typename projector_t = Acts::Identity>
 auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
-                          MixtureMergeMethod method,
+                          ComponentMergeMethod method,
                           projector_t &&projector = projector_t{}) {
   using R = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
 
   return detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
     BoundVector parameters = BoundVector::Zero();
     switch (method) {
-      case MixtureMergeMethod::eMean: {
+      case ComponentMergeMethod::eMean: {
         parameters = detail::computeMixtureMean(mixture, projector, desc);
       } break;
-      case MixtureMergeMethod::eMode: {
+      case ComponentMergeMethod::eMode: {
         // TODO handle std::optional correctly
         parameters =
             detail::computeMixtureMode(mixture, projector, desc).value();
       } break;
-      case MixtureMergeMethod::eMaxWeight: {
+      case ComponentMergeMethod::eMaxWeight: {
         const auto maxWeightIt = std::max_element(
             mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
               return std::get<0>(projector(a)) < std::get<0>(projector(b));

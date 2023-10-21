@@ -895,7 +895,7 @@ def addTruthTrackingGsf(
         "maxComponents": 12,
         "abortOnError": False,
         "disableAllMaterialHandling": False,
-        "finalReductionMethod": acts.examples.MixtureMergeMethod.maxWeight,
+        "finalReductionMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "weightCutoff": 1.0e-4,
         "level": customLogLevel(),
     }

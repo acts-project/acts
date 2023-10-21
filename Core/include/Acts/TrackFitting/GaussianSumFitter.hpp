@@ -451,7 +451,7 @@ struct GaussianSumFitter {
 
       const auto [finalPars, finalCov] = Acts::mergeGaussianMixture(
           params.components(), params.referenceSurface(),
-          options.mixtureMergeMethod, [](auto& t) {
+          options.componentMergeMethod, [](auto& t) {
             return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
           });
 
