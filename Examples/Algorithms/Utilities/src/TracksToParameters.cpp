@@ -36,7 +36,11 @@ ProcessCode TracksToParameters::execute(const AlgorithmContext& ctx) const {
   trackParameters.reserve(tracks.size());
 
   for (const auto& track : tracks) {
-    trackParameters.push_back(track.boundParameters());
+    if (!track.hasReferenceSurface()) {
+      ACTS_ERROR("Track has no reference surface");
+    } else {
+      trackParameters.push_back(track.boundParameters());
+    }
   }
 
   m_outputTrackParameters(ctx, std::move(trackParameters));

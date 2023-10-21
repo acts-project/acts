@@ -67,19 +67,18 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     throw std::invalid_argument(
         "Collection with selected truth particles missing");
   }
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument("Collection with track parameters missing");
+  }
 
   m_inputAllTruthParticles.initialize(m_cfg.inputAllTruthParticles);
   m_inputSelectedTruthParticles.initialize(m_cfg.inputSelectedTruthParticles);
 
   if (m_cfg.useTracks) {
+    m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
     if (!m_cfg.inputAssociatedTruthParticles.empty()) {
       m_inputAssociatedTruthParticles.initialize(
           m_cfg.inputAssociatedTruthParticles);
-      if (!m_cfg.inputTrackParameters.empty()) {
-        m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
-      } else {
-        m_inputTracks.initialize(m_cfg.inputTracks);
-      }
     } else {
       m_inputMeasurementParticlesMap.initialize(
           m_cfg.inputMeasurementParticlesMap);
@@ -269,6 +268,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // trackParameters. If we know the truth particles associated to the track
   // parameters a priori:
   if (m_cfg.useTracks) {
+    trackParameters = m_inputTrackParameters(ctx);
+
     if (!m_cfg.inputAssociatedTruthParticles.empty()) {
       // Read track-associated truth particle input collection
       associatedTruthParticles =
@@ -332,9 +333,6 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           continue;
         }
 
-        trackParameters.emplace_back(track.referenceSurface().getSharedPtr(),
-                                     track.parameters(), track.covariance(),
-                                     track.particleHypothesis());
         const auto& majorityParticle = *it;
         associatedTruthParticles.push_back(majorityParticle);
       }
