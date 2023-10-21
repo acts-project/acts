@@ -1459,10 +1459,6 @@ def addVertexFitting(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    assert (tracks is None) != (
-        trackParameters is None
-    ), "Either tracks or trackParameters must be specified"
-
     if tracks is not None and trackSelectorConfig is not None:
         trackSelector = addTrackSelection(
             s,
