@@ -67,7 +67,7 @@ struct CylindricalTrackingGeometry {
   ///
   /// @return A vector of Surfaces
   std::vector<const Surface*> surfacesRing(
-      DetectorStore& detStore, double moduleHalfXminY, double moudleHalfXmaxY,
+      DetectorStore& detStore, double moduleHalfXminY, double moduleHalfXmaxY,
       double moduleHalfY, double moduleThickness, double moduleTilt,
       double ringRadius, double ringZ, double zStagger, int nPhi) {
     std::vector<const Surface*> layerSurfaces;
@@ -82,11 +82,11 @@ struct CylindricalTrackingGeometry {
 
     // The rectangle/trapezoid bounds for all modules
     std::shared_ptr<PlanarBounds> mBounds = nullptr;
-    if (moduleHalfXminY == moudleHalfXmaxY) {
+    if (moduleHalfXminY == moduleHalfXmaxY) {
       mBounds = std::make_shared<RectangleBounds>(moduleHalfXminY, moduleHalfY);
     } else {
       mBounds = std::make_shared<TrapezoidBounds>(moduleHalfXminY,
-                                                  moudleHalfXmaxY, moduleHalfY);
+                                                  moduleHalfXmaxY, moduleHalfY);
     }
 
     double phiStep = 2 * M_PI / nPhi;

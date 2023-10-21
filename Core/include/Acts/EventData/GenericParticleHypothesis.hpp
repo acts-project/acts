@@ -84,8 +84,8 @@ class GenericParticleHypothesis {
     return m_chargeType.extractCharge(qOverP);
   }
 
-  /// Extracts the signed charge from the `q over p` track parameter using the
-  /// charge hypothesis.
+  /// Extracts the particle momentum from the `q over p` track parameter using
+  /// the charge hypothesis.
   ///
   /// @param qOverP the `q over p` track parameter.
   template <typename T>

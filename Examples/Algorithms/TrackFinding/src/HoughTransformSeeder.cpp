@@ -519,7 +519,7 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
       }
 
       for (auto& sourceLink : moduleSourceLinks) {
-        // extract a local position/covariance independent from the concrecte
+        // extract a local position/covariance independent of the concrete
         // measurement content. since we do not know if and where the local
         // parameters are contained in the measurement parameters vector, they
         // are transformed to the bound space where we do know their location.

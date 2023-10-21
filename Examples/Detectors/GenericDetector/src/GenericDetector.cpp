@@ -25,8 +25,8 @@ auto GenericDetector::finalize(
           nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
           cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
           cfg.volumeLogLevel);
-  ContextDecorators gContextDeocrators = {};
+  ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(gGeometry), std::move(gContextDeocrators));
+      std::move(gGeometry), std::move(gContextDecorators));
 }

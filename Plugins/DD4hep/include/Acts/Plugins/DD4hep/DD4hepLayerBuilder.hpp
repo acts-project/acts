@@ -76,7 +76,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
     ///       However, to allow material layers (not containing surfaces) to be
     ///       attached to each other, this default thickness is needed. In this
     ///       way, the layer will be thin (with space to the next layer), but
-    ///       the material will have the'real' thickness.
+    ///       the material will have the 'real' thickness.
     /// @attention The default thickness should be set thin enough that no
     ///            touching or overlapping with the next layer can happen.
     double defaultThickness = UnitConstants::fm;
