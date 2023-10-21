@@ -157,9 +157,18 @@ with tempfile.TemporaryDirectory() as temp:
         outputDirRoot=tp,
     )
 
+    s.addAlgorithm(
+        acts.examples.TracksToParameters(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTrackParameters="trackParameters",
+        )
+    )
+
     addVertexFitting(
         s,
         setup.field,
+        trackParameters="trackParameters",
         outputProtoVertices="amvf_protovertices",
         outputVertices="amvf_fittedVertices",
         seeder=acts.VertexSeedFinder.GaussianSeeder,
@@ -170,6 +179,7 @@ with tempfile.TemporaryDirectory() as temp:
     addVertexFitting(
         s,
         setup.field,
+        trackParameters="trackParameters",
         outputProtoVertices="amvf_gridseeder_protovertices",
         outputVertices="amvf_gridseeder_fittedVertices",
         seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
