@@ -244,8 +244,6 @@ void collector(typename traj_t::TrackStateProxy& trackStateProxy,
                         predicted)
                            .eval();
 
-  /// TODO change effectiveProjector because Eigen puts memory on the heap (ask
-  /// Paul)
   ACTS_VERBOSE("Processing and collecting measurements in Actor:\n"
                << "\tMeasurement:\t" << measurement.transpose()
                << "\n\tPredicted:\t" << predicted.transpose()
