@@ -26,10 +26,10 @@ class TrigInDetTriplet {
   TrigInDetTriplet(Acts::FTF_SP<space_point_t> s1,
                    Acts::FTF_SP<space_point_t> s2,
                    Acts::FTF_SP<space_point_t> s3, float Q)
-      : m_s1(std::move(s1)), m_s2(std::move(s2)), m_s3(std::move(s3)), m_Q(Q){};
+      : m_s1(std::move(s1)), m_s2(std::move(s2)), m_s3(std::move(s3)), m_Q(Q) {}
 
   TrigInDetTriplet(TrigInDetTriplet* t)
-      : m_s1(t->m_s1), m_s2(t->m_s2), m_s3(t->m_s3), m_Q(t->m_Q){};
+      : m_s1(t->m_s1), m_s2(t->m_s2), m_s3(t->m_s3), m_Q(t->m_Q) {}
 
   const Acts::FTF_SP<space_point_t>& s1() const { return m_s1; }
   const Acts::FTF_SP<space_point_t>& s2() const { return m_s2; }
