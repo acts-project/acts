@@ -41,6 +41,9 @@ PrototracksToParameters::PrototracksToParameters(Config cfg,
   if (m_cfg.geometry == nullptr) {
     throw std::invalid_argument("No geometry given");
   }
+  if (m_cfg.magneticField == nullptr) {
+    throw std::invalid_argument("No magnetic field given");
+  }
 
   // Set up the track parameters covariance (the same for all tracks)
   for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {

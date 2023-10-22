@@ -30,10 +30,16 @@ namespace ActsExamples {
 class PrototracksToParameters final : public IAlgorithm {
  public:
   struct Config {
+    /// The prototrack for that parameters should be computed
     std::string inputProtoTracks;
+    /// The spacepoint collection
     std::string inputSpacePoints;
+    /// The seeds created on-the-fly from which the parameters actually are
+    /// computed
     std::string outputSeeds = "seeds-from-prototracks";
+    /// The prototracks for which parameters where computed successfully
     std::string outputProtoTracks = "remaining-prototracks";
+    /// The output parameters
     std::string outputParameters = "parameters";
 
     /// Whether to make tight seeds (closest 3 hits to beampipe) or large
