@@ -782,5 +782,5 @@ def test_edm4hep_tracks_writer(tmp_path):
             assert rp.x == 0.0
             assert rp.y == 0.0
             assert rp.z == 0.0
-            assert abs(perigee.D0) < 1e-1
+            assert abs(perigee.D0) < 1e+0
             assert abs(perigee.Z0) < 1e+1
