@@ -37,7 +37,7 @@ class PrototracksToParameters final : public IAlgorithm {
     /// The seeds created on-the-fly from which the parameters actually are
     /// computed
     std::string outputSeeds = "seeds-from-prototracks";
-    /// The prototracks for which parameters where computed sucessfully
+    /// The prototracks for which parameters where computed successfully
     std::string outputProtoTracks = "remaining-prototracks";
     /// The output parameters
     std::string outputParameters = "parameters";
