@@ -1,7 +1,7 @@
 ACTS Material Mapping Auto-Tuning Tutorial
 ===========================================
 
-(This how to uses **deprecated** executables and will be uptaded soon)
+(This how to uses **deprecated** executables and will be updated soon)
 
 The material mapping can be quite a cumbersome process, especially when used on a detector with an evolving geometry. The point of the auto-tuning is to replace the person power needed to perform the optimisation by computing power and time.  This tutorial will present how to perform the auto-tuning of the material mapping process. It assumes the reader is familiar with the concepts related to the material mapping. For more information, refer yourself to the `run_material_mapping` how to guide. This page will explain how to perform the auto-tuning material mapping with the Open Data Detector (ODD) but it can be applied to any other detector (see the other how to change detector).
 
@@ -9,7 +9,7 @@ Prerequisites
 --------------
 The prerequisites are the same as for the material mapping, we will need the ACTS Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``). Depending on the type of detector we want to map, you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_TGEO`` are needed. The auto-tuning is implemented as part of the Acts python bindings, we will thus also need to have them installed (``ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS``).
 
-We will also need an optimisation library. The material mapping auto-tuning has been implemented using Orion (https://orion.readthedocs.io/en/stable/), it can be easily installed using the following pip command :
+We will also need an optimisation library. The material mapping auto-tuning has been implemented using Orion (https://orion.readthedocs.io/en/stable/), it can be easily installed using the following pip command:
 
 .. code-block:: console
 
@@ -39,7 +39,7 @@ As a rule of thumb, the material can be mapped on the approach surface of your s
 Geantino scan
 --------------
 
-The next step is to do a geantino scan of our detector. For this, we will use the ``MaterialRecording`` application :
+The next step is to do a geantino scan of our detector. For this, we will use the ``MaterialRecording`` application:
 
 .. code-block:: console
 
@@ -53,10 +53,10 @@ The result of the geantino scan will be a root file containing material tracks. 
 Material Mapping Optimisation 
 ------------------------------
 
-Once we have our json configuration file and our geantino material track file we can start the optimisation of the material map. For this, we will use the ``material_mapping_optimisation.py`` python binding file. This script file has five options that can be changed :
+Once we have our json configuration file and our geantino material track file we can start the optimisation of the material map. For this, we will use the ``material_mapping_optimisation.py`` python binding file. This script file has five options that can be changed:
 
 - ``numberOfJobs`` the number of simultaneous jobs executed (this can be as high as you want, but if you have enough Core 40 works quite well).
-- ``topNumberOfEvents`` the number of events from the input material track file used in the mapping can be changed (by default : 10000) it needs to be the same in all the calls to ``material_mapping_optimisation``.
+- ``topNumberOfEvents`` the number of events from the input material track file used in the mapping can be changed (by default: 10000) it needs to be the same in all the calls to ``material_mapping_optimisation``.
 - ``inputPath`` the path to the input directory
 - ``outputPath`` the path to the output directory
 - ``doPloting`` if added at the end of the optimisation script, the optimal material will be computed and result plots will be created. (Should be used at the end of the optimisation).

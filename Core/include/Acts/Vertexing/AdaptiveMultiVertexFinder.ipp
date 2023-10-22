@@ -203,7 +203,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
     newVtx.setFullCovariance(SquareMatrix4::Zero());
   }
 
-  auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
+  auto estRes = m_cfg.ipEstimator.getImpactParameters(
       m_extractParameters(*track), newVtx, vertexingOptions.geoContext,
       vertexingOptions.magFieldContext);
   if (!estRes.ok()) {
@@ -213,9 +213,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
   ImpactParametersAndSigma ipas = *estRes;
 
   double significance = 0.;
-  if (ipas.sigmad0 > 0 && ipas.sigmaz0 > 0) {
-    significance = std::sqrt(std::pow(ipas.IPd0 / ipas.sigmad0, 2) +
-                             std::pow(ipas.IPz0 / ipas.sigmaz0, 2));
+  if (ipas.sigmaD0 > 0 && ipas.sigmaZ0 > 0) {
+    significance = std::sqrt(std::pow(ipas.d0 / ipas.sigmaD0, 2) +
+                             std::pow(ipas.z0 / ipas.sigmaZ0, 2));
   }
 
   return significance;

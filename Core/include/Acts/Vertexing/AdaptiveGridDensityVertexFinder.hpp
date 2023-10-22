@@ -77,7 +77,7 @@ class AdaptiveGridDensityVertexFinder {
   ///
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
-    // Map from z from the z bin values to the corresponding track density
+    // Map from the z bin values to the corresponding track density
     DensityMap mainDensityMap;
 
     // Map from input track to corresponding track density map

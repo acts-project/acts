@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <cmath>
@@ -30,9 +31,14 @@ namespace Acts {
 /// covariance does return std::nullopt;
 /// TODO Add constructor from range and projector maybe?
 class MultiComponentBoundTrackParameters {
+ public:
   using Parameters = BoundTrackParameters;
   using ParticleHypothesis = Parameters::ParticleHypothesis;
+  using Scalar = typename Parameters::Scalar;
+  using ParametersVector = typename Parameters::ParametersVector;
+  using CovarianceMatrix = typename Parameters::CovarianceMatrix;
 
+ private:
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       m_components;
   std::shared_ptr<const Surface> m_surface;
@@ -62,10 +68,6 @@ class MultiComponentBoundTrackParameters {
   }
 
  public:
-  using Scalar = typename Parameters::Scalar;
-  using ParametersVector = typename Parameters::ParametersVector;
-  using CovarianceMatrix = typename Parameters::CovarianceMatrix;
-
   /// Construct from multiple components
   template <typename covariance_t>
   MultiComponentBoundTrackParameters(
@@ -222,6 +224,80 @@ class MultiComponentBoundTrackParameters {
   const ParticleHypothesis& particleHypothesis() const {
     return m_particleHypothesis;
   }
+};
+
+/// This class mimics the behaviour of the curvilinear parameters for ordinary
+/// track parameters. To adopt this concept, a "common surface" is constructed,
+/// and all parameters are projected onto this surface. The use of this is
+/// questionable, and if the result is reasonable depends largely on the initial
+/// multi component state. However, the propagator infrastructure forces the
+/// existence of this type
+/// @tparam charge_t Helper type to interpret the particle charge/momentum
+class MultiComponentCurvilinearTrackParameters
+    : public MultiComponentBoundTrackParameters {
+  using covariance_t = BoundSquareMatrix;
+
+ public:
+  using ConstructionTuple = std::tuple<double, Acts::Vector4, Acts::Vector3,
+                                       ActsScalar, covariance_t>;
+
+ private:
+  using Base = MultiComponentBoundTrackParameters;
+
+  using BaseConstructionTuple =
+      std::tuple<std::shared_ptr<Acts::Surface>,
+                 std::vector<std::tuple<double, BoundVector, covariance_t>>>;
+
+  /// We need this helper function in order to construct the base class properly
+  static BaseConstructionTuple construct(
+      const std::vector<ConstructionTuple>& curvi) {
+    // TODO where to get a geometry context here
+    Acts::GeometryContext gctx{};
+
+    // Construct and average surface
+    Acts::Vector3 avgPos = Acts::Vector3::Zero();
+    Acts::Vector3 avgDir = Acts::Vector3::Zero();
+    for (const auto& [w, pos4, dir, qop, cov] : curvi) {
+      avgPos += w * pos4.template segment<3>(0);
+      avgDir += w * dir;
+    }
+
+    auto s = Surface::makeShared<PlaneSurface>(avgPos, avgDir);
+
+    std::vector<std::tuple<double, BoundVector, covariance_t>> bound;
+    bound.reserve(curvi.size());
+
+    // Project the position onto the surface, keep everything else as is
+    for (const auto& [w, pos4, dir, qop, cov] : curvi) {
+      Vector3 newPos =
+          s->intersect(gctx, pos4.template segment<3>(eFreePos0), dir, false)
+              .closest()
+              .position();
+
+      BoundVector bv =
+          detail::transformFreeToCurvilinearParameters(pos4[eTime], dir, qop);
+
+      // Because of the projection this should never fail
+      bv.template segment<2>(eBoundLoc0) =
+          *(s->globalToLocal(gctx, newPos, dir));
+
+      bound.emplace_back(w, bv, cov);
+    }
+
+    return {s, bound};
+  }
+
+  /// Private constructor from a tuple
+  MultiComponentCurvilinearTrackParameters(
+      const BaseConstructionTuple& t, ParticleHypothesis particleHypothesis)
+      : Base(std::get<0>(t), std::get<1>(t), particleHypothesis) {}
+
+ public:
+  MultiComponentCurvilinearTrackParameters(
+      const std::vector<ConstructionTuple>& cmps,
+      ParticleHypothesis particleHypothesis)
+      : MultiComponentCurvilinearTrackParameters(construct(cmps),
+                                                 particleHypothesis) {}
 };
 
 }  // namespace Acts

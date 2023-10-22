@@ -34,7 +34,7 @@ struct TripletCandidate {
   /// @param q Whether the candidate is high or low quality
   TripletCandidate(external_space_point_t& b, external_space_point_t& m,
                    external_space_point_t& t, float w, float z, bool q)
-      : bottom(&b), middle(&m), top(&t), weight(w), zOrigin(z), isQuality(q){};
+      : bottom(&b), middle(&m), top(&t), weight(w), zOrigin(z), isQuality(q) {}
 
   /// @brief Copy operations
   TripletCandidate(const TripletCandidate&) = default;
@@ -189,7 +189,7 @@ class CandidatesForMiddleSp {
 
   // The following vectors store indexes to elements in the storage
   // They are sorted as a min heap tree, in which
-  // Each node is lower then its children
+  // Each node is lower than its children
   // Thus, it is guaranteed that the lower elements is at the front
   // Sorting criteria is the seed quality
   //

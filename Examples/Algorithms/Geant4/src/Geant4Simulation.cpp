@@ -199,10 +199,6 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     runManager().SetUserAction(primaryGeneratorAction);
   }
 
-  // Please note:
-  // The following two blocks rely on the fact that the Acts
-  // detector constructions cache the world volume
-
   // Particle action
   {
     // Clear tracking action if it exists
@@ -250,6 +246,10 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
 
   // Get the g4World cache
   G4VPhysicalVolume* g4World = m_detectorConstruction->Construct();
+
+  // Please note:
+  // The following two blocks rely on the fact that the Acts
+  // detector constructions cache the world volume
 
   // Set the magnetic field
   if (cfg.magneticField) {
@@ -358,6 +358,21 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
         prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
     // Set the primary generator action
     runManager().SetUserAction(primaryGeneratorAction);
+  }
+
+  // Particle action
+  {
+    // Clear tracking action if it exists
+    if (runManager().GetUserTrackingAction() != nullptr) {
+      delete runManager().GetUserTrackingAction();
+    }
+    ParticleTrackingAction::Config trackingCfg;
+    trackingCfg.eventStore = m_eventStore;
+    trackingCfg.keepParticlesWithoutHits = true;
+    // G4RunManager will take care of deletion
+    auto trackingAction = new ParticleTrackingAction(
+        trackingCfg, m_logger->cloneWithSuffix("ParticleTracking"));
+    runManager().SetUserAction(trackingAction);
   }
 
   // Stepping action
