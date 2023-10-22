@@ -100,7 +100,7 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
         targetGraph, logger.clone());
   }
 
-  ~ExamplesEdmHook(){};
+  ~ExamplesEdmHook() {}
 
   void operator()(const std::any& nodes, const std::any& edges) const override {
     ACTS_INFO("Metrics for total graph:");

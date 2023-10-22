@@ -35,8 +35,8 @@ struct GNN_TrigTracklet {
  public:
   GNN_TrigTracklet(std::vector<const FTF_SP<external_spacepoint_t> *> &vSP,
                    std::vector<TrigInDetTriplet<external_spacepoint_t>> &tbuf)
-      : m_track(vSP), m_seeds(tbuf){};
-  ~GNN_TrigTracklet(){};
+      : m_track(vSP), m_seeds(tbuf) {}
+  ~GNN_TrigTracklet() {}
 
   std::vector<const FTF_SP<external_spacepoint_t> *> m_track;
   std::vector<TrigInDetTriplet<external_spacepoint_t>> m_seeds;

@@ -20,7 +20,7 @@ namespace Acts {
 struct FasTrackConnection {
  public:
   FasTrackConnection(unsigned int, unsigned int);
-  ~FasTrackConnection(){};
+  ~FasTrackConnection() {}
 
   unsigned int m_src, m_dst;
   std::vector<int> m_binTable;
@@ -31,7 +31,7 @@ class FasTrackConnector {
   struct LayerGroup {
     LayerGroup(unsigned int l1Key,
                const std::vector<const Acts::FasTrackConnection *> &v)
-        : m_dst(l1Key), m_sources(v){};
+        : m_dst(l1Key), m_sources(v) {}
 
     unsigned int m_dst;  // the target layer of the group
     std::vector<const Acts::FasTrackConnection *>

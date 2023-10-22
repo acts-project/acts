@@ -28,11 +28,11 @@ struct TrigFTF_GNN_EdgeState {
     }
   };
 
-  TrigFTF_GNN_EdgeState(){};
+  TrigFTF_GNN_EdgeState() {}
 
-  TrigFTF_GNN_EdgeState(bool f) : m_initialized(f){};
+  TrigFTF_GNN_EdgeState(bool f) : m_initialized(f) {}
 
-  ~TrigFTF_GNN_EdgeState(){};
+  ~TrigFTF_GNN_EdgeState() {}
 
   void initialize(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS) {
     m_initialized = true;
@@ -117,7 +117,7 @@ class TrigFTF_GNN_TrackingFilter {
       const std::vector<Acts::TrigInDetSiLayer>& g,
       std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>>& sb)
       : m_geo(g), m_segStore(sb) {}
-  ~TrigFTF_GNN_TrackingFilter(){};
+  ~TrigFTF_GNN_TrackingFilter() {}
 
   void followTrack(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS,
                    TrigFTF_GNN_EdgeState<external_spacepoint_t>& output) {

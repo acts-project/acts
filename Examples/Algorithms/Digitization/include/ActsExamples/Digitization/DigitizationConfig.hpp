@@ -113,7 +113,7 @@ class DigitizationConfig {
   DigitizationConfig(bool merge, double sigma, bool commonCorner)
       : DigitizationConfig(
             merge, sigma, commonCorner,
-            Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+            Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {}
 
   DigitizationConfig(
       bool doMerge, double mergeNsigma, bool mergeCommonCorner,
