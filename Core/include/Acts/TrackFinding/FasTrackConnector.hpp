@@ -19,8 +19,7 @@ namespace Acts {
 
 struct FasTrackConnection {
  public:
-  FasTrackConnection(unsigned int, unsigned int);
-  ~FasTrackConnection(){};
+  FasTrackConnection(unsigned int s, unsigned int d);
 
   unsigned int m_src, m_dst;
   std::vector<int> m_binTable;
@@ -38,11 +37,11 @@ class FasTrackConnector {
         m_sources;  // the source layers of the group
   };
 
-  FasTrackConnector(std::ifstream &);
+  FasTrackConnector(std::ifstream &inFile);
 
   ~FasTrackConnector();
 
-  float m_etaBin;
+  float m_etaBin{};
 
   std::map<int, std::vector<struct LayerGroup>> m_layerGroups;
   std::map<int, std::vector<Acts::FasTrackConnection *>> m_connMap;

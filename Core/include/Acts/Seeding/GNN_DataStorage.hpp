@@ -57,8 +57,6 @@ class TrigFTF_GNN_Node {
                    float maxT = 100.0)
       : m_sp_FTF(FTF_sp), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {}
 
-  ~TrigFTF_GNN_Node() {}
-
   inline void addIn(int i) {
     if (m_in.size() < MAX_SEG_PER_NODE) {
       m_in.push_back(i);
@@ -72,16 +70,18 @@ class TrigFTF_GNN_Node {
   }
 
   inline bool isConnector() const {
-    if (m_in.empty() || m_out.empty())
+    if (m_in.empty() || m_out.empty()) {
       return false;
+    }
     return true;
   }
 
   inline bool isFull() const {
-    if (m_in.size() == MAX_SEG_PER_NODE && m_out.size() == MAX_SEG_PER_NODE)
+    if (m_in.size() == MAX_SEG_PER_NODE && m_out.size() == MAX_SEG_PER_NODE) {
       return true;
-    else
+    } else {
       return false;
+    }
   }
 
   const FTF_SP<space_point_t> &m_sp_FTF;
@@ -158,8 +158,6 @@ class TrigFTF_GNN_DataStorage {
       m_etaBins.emplace_back(TrigFTF_GNN_EtaBin<space_point_t>());
     }
   }
-
-  ~TrigFTF_GNN_DataStorage() {}
 
   int addSpacePoint(const FTF_SP<space_point_t> &sp, bool useClusterWidth) {
     const TrigFTF_GNN_Layer<space_point_t> *pL =
@@ -283,15 +281,14 @@ class TrigFTF_GNN_Edge {
   TrigFTF_GNN_Edge(TrigFTF_GNN_Node<space_point_t> *n1,
                    TrigFTF_GNN_Node<space_point_t> *n2, float p1, float p2,
                    float p3, float p4)
-      : m_n1(n1), m_n2(n2), m_level(1), m_next(1), m_nNei(0) {
+      : m_n1(n1), m_n2(n2), m_level(1), m_next(1) {
     m_p[0] = p1;
     m_p[1] = p2;
     m_p[2] = p3;
     m_p[3] = p4;
   }
 
-  TrigFTF_GNN_Edge()
-      : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1), m_nNei(0){};
+  TrigFTF_GNN_Edge() : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1) {}
 
   // TrigFTF_GNN_Edge(const TrigFTF_GNN_Edge<space_point_t> &e)
   //     : m_n1(e.m_n1), m_n2(e.m_n2){};
@@ -308,7 +305,7 @@ class TrigFTF_GNN_Edge {
   TrigFTF_GNN_Node<space_point_t> *m_n1{nullptr};
   TrigFTF_GNN_Node<space_point_t> *m_n2{nullptr};
 
-  signed char m_level{-1}, m_next{-1};
+  signed char m_level{}, m_next{};
 
   unsigned char m_nNei{0};
   float m_p[4]{};
