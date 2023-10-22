@@ -28,11 +28,9 @@ struct TrigFTF_GNN_EdgeState {
     }
   };
 
-  TrigFTF_GNN_EdgeState(){};
+  TrigFTF_GNN_EdgeState() = default;
 
-  TrigFTF_GNN_EdgeState(bool f) : m_initialized(f){};
-
-  ~TrigFTF_GNN_EdgeState(){};
+  TrigFTF_GNN_EdgeState(bool f) : m_initialized(f) {}
 
   void initialize(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS) {
     m_initialized = true;
@@ -117,7 +115,6 @@ class TrigFTF_GNN_TrackingFilter {
       const std::vector<Acts::TrigInDetSiLayer>& g,
       std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>>& sb)
       : m_geo(g), m_segStore(sb) {}
-  ~TrigFTF_GNN_TrackingFilter(){};
 
   void followTrack(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS,
                    TrigFTF_GNN_EdgeState<external_spacepoint_t>& output) {
@@ -266,9 +263,9 @@ class TrigFTF_GNN_TrackingFilter {
     float X[3], Y[2];
     float Cx[3][3], Cy[2][2];
 
-    float refX, refY, mx, my;
+    float refX{}, refY{}, mx{}, my{};
 
-    float x, y, z, r;
+    float x{}, y{}, z{}, r{};
 
     x = pS->m_n1->m_sp_FTF.SP->x();
     y = pS->m_n1->m_sp_FTF.SP->y();
@@ -345,10 +342,12 @@ class TrigFTF_GNN_TrackingFilter {
     float Kx[3] = {Dx * Cx[0][0], Dx * Cx[0][1], Dx * Cx[0][2]};
     float Ky[2] = {Dy * Cy[0][0], Dy * Cy[0][1]};
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++) {
       ts.m_X[i] = X[i] + Kx[i] * resid_x;
-    for (int i = 0; i < 2; i++)
+    }
+    for (int i = 0; i < 2; i++) {
       ts.m_Y[i] = Y[i] + Ky[i] * resid_y;
+    }
 
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; j++) {
