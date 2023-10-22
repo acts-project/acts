@@ -42,8 +42,8 @@ struct SeedFinderFTFConfig {
   /// for load space points
   unsigned int maxSeedsPerSpM = 5;
 
-  float m_phiSliceWidth;
-  float m_nMaxPhiSlice;
+  float m_phiSliceWidth{};
+  float m_nMaxPhiSlice{};
   bool m_useClusterWidth = false;
   std::string fastrack_input_file;
   std::vector<TrigInDetSiLayer> m_layerGeometry;
