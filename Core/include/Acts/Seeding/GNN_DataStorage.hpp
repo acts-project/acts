@@ -291,7 +291,7 @@ class TrigFTF_GNN_Edge {
   TrigFTF_GNN_Edge() : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1) {}
 
   // TrigFTF_GNN_Edge(const TrigFTF_GNN_Edge<space_point_t> &e)
-  //     : m_n1(e.m_n1), m_n2(e.m_n2){};
+  //     : m_n1(e.m_n1), m_n2(e.m_n2) {}
 
   // inline void initialize(TrigFTF_GNN_Node<space_point_t> *n1,
   //                        TrigFTF_GNN_Node<space_point_t> *n2) {
