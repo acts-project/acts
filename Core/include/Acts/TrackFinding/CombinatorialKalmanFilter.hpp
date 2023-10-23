@@ -567,7 +567,7 @@ class CombinatorialKalmanFilter {
                   ACTS_ERROR("Error in finalize: " << res.error());
                   result.lastError = res.error();
                 } else {
-                  auto fittedState = *res;
+                  const auto& fittedState = *res;
                   // Assign the fitted parameters
                   result.fittedParameters.emplace(
                       result.lastMeasurementIndices.at(result.iSmoothed),
