@@ -43,7 +43,7 @@ def runTruthTrackingKalman(
     for d in decorators:
         s.addContextDecorator(d)
 
-    rnd = acts.examples.RandomNumbers()
+    rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
