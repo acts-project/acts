@@ -57,7 +57,7 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
   if (m_cfg.measurementsMin > 0 or
       m_cfg.measurementsMax < std::numeric_limits<std::size_t>::max()) {
     m_inputMap.initialize(m_cfg.inputMeasurementParticlesMap);
-    ACTS_DEBUG("selection particle number of measurments ["
+    ACTS_DEBUG("selection particle number of measurements ["
                << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
   }
 }
@@ -96,7 +96,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
 
     nInvalidCharge += not validCharge;
 
-    // default valid measurment count to true and only change if we have loaded
+    // default valid measurement count to true and only change if we have loaded
     // the measurement particles map
     bool validMeasurementCount = true;
     if (particlesMeasMap) {

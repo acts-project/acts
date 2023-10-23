@@ -35,8 +35,6 @@ class ParticleSelector final : public IAlgorithm {
     std::string inputParticles;
     /// Input measurement particles map (Optional)
     std::string inputMeasurementParticlesMap;
-    /// Input measurements (Optional)
-    std::string inputMeasurements;
     /// The output particles collection.
     std::string outputParticles;
     // Minimum/maximum distance from the origin in the transverse plane.
@@ -86,8 +84,6 @@ class ParticleSelector final : public IAlgorithm {
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMap{
       this, "InputMeasurementParticlesMap"};
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
