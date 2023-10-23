@@ -170,7 +170,7 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 /// FPE "safe" functions
 ///
 /// Our main motivation for this is that users might have a strict FPE policy
-/// which would flag every single occurrence as a failure and then sombody has
+/// which would flag every single occurrence as a failure and then somebody has
 /// to investigate. Since we are processing a high number of events and floating
 /// point numbers sometimes work in mysterious ways the caller of this function
 /// might want to hide FPEs and handle them in a more controlled way.

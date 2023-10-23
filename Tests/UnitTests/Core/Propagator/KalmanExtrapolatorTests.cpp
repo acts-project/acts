@@ -69,7 +69,7 @@ struct StepWiseActor {
 
   /// @brief Kalman sequence operation
   ///
-  /// @tparam propagator_state_t is the type of Propagagor state
+  /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper used for the propagation
   /// @tparam navigator_t Type of the navigator used for the propagation
   ///
