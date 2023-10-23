@@ -445,7 +445,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
       if (Im <= m_config.impactMax) {
         top_valid.push_back(top[t]);
-        // inverse diameter is signed depending if the curvature is
+        // inverse diameter is signed depending on if the curvature is
         // positive/negative in phi
         curvatures.push_back(B / std::sqrt(S2));
         impactParameters.push_back(Im);

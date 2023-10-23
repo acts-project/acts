@@ -638,7 +638,7 @@ def addGeant4(
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     killVolume: acts.Volume, None
-        if given, particles are killed when going outside of this volume.
+        if given, particles are killed when going outside this volume.
     killAfterTime: float
         if given, particle are killed after the global time since event creation exceeds the given value
     killSecondaries: bool

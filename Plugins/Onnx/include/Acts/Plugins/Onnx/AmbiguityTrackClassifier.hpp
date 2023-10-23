@@ -29,7 +29,7 @@ class AmbiguityTrackClassifier {
   /// @param modelPath path to the model file
   AmbiguityTrackClassifier(const char* modelPath)
       : m_env(ORT_LOGGING_LEVEL_WARNING, "MLClassifier"),
-        m_duplicateClassifier(m_env, modelPath){};
+        m_duplicateClassifier(m_env, modelPath) {}
 
   /// Compute a score for each track to be used in the track selection
   ///
