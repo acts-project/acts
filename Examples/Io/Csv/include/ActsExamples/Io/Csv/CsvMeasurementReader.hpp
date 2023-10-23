@@ -65,7 +65,7 @@ class CsvMeasurementReader final : public IReader {
     /// Output cluster collection (optional).
     std::string outputClusters;
 
-    /// Input SimHits for measurment-particle map (optional)
+    /// Input SimHits for measurement-particle map (optional)
     std::string inputSimHits;
     /// Output  measurement to particle collection (optional)
     /// @note Only filled if inputSimHits is given

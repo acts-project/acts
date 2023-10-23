@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
     return {pos.x(), pos.y(), pos.z()};
   };
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {

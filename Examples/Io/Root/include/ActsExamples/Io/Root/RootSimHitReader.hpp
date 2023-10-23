@@ -103,7 +103,7 @@ class RootSimHitReader : public IReader {
   std::unordered_map<std::string_view, std::int32_t> m_int32Columns;
 
   // For some reason I need to use here `unsigned long long` instead of
-  // `uint64_t` to prevent a internal ROOT type mismatch...
+  // `uint64_t` to prevent an internal ROOT type mismatch...
   std::unordered_map<std::string_view, unsigned long long> m_uint64Columns;
 };
 

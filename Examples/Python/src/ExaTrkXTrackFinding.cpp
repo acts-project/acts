@@ -15,11 +15,9 @@
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/TrackFinding/MeasurementSelector.hpp"
-#include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
-#include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
 #include <memory>
 
@@ -170,9 +168,10 @@ void addExaTrkXTrackFinding(Context &ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
       "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
-      inputParticles, inputMeasurementSimhitsMap, outputProtoTracks,
-      graphConstructor, edgeClassifiers, trackBuilder, rScale, phiScale, zScale,
-      targetMinHits, targetMinPT);
+      inputParticles, inputClusters, inputMeasurementSimhitsMap,
+      outputProtoTracks, graphConstructor, edgeClassifiers, trackBuilder,
+      rScale, phiScale, zScale, cellCountScale, cellSumScale, clusterXScale,
+      clusterYScale, targetMinHits, targetMinPT);
 
   {
     auto cls =
@@ -208,8 +207,22 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("graphConstructor"), py::arg("edgeClassifiers"),
                  py::arg("trackBuilder"), py::arg("level"))
             .def("run", &ExaTrkXPipeline::run, py::arg("features"),
-                 py::arg("spacepoints"), py::arg("hook") = Acts::ExaTrkXHook{});
+                 py::arg("spacepoints"), py::arg("deviceHint") = -1,
+                 py::arg("hook") = Acts::ExaTrkXHook{},
+                 py::arg("timing") = nullptr);
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::PrototracksToParameters, mex, "PrototracksToParameters",
+      inputProtoTracks, inputSpacePoints, outputSeeds, outputParameters,
+      outputProtoTracks, geometry, magneticField, buildTightSeeds);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackFindingFromPrototrackAlgorithm, mex,
+      "TrackFindingFromPrototrackAlgorithm", inputProtoTracks,
+      inputMeasurements, inputSourceLinks, inputInitialTrackParameters,
+      outputTracks, measurementSelectorCfg, trackingGeometry, magneticField,
+      findTracks, tag);
 }
 
 }  // namespace Acts::Python

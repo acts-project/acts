@@ -149,7 +149,7 @@ Acts::Grid2D Acts::createGrid2D(
     throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
   }
 
-  // First we nee to create the 2 axis
+  // First we need to create the 2 axis
   MaterialGridAxisData gridAxis1{bu[0].min, bu[0].max, bu[0].bins()};
   MaterialGridAxisData gridAxis2{bu[1].min, bu[1].max, bu[1].bins()};
 
@@ -170,7 +170,7 @@ Acts::Grid3D Acts::createGrid3D(
     const Acts::BinUtility& bins,
     std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
-  // First we nee to create the 3 axis
+  // First we need to create the 3 axis
 
   bool isCartesian = false;
   bool isCylindrical = false;
