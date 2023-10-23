@@ -40,7 +40,7 @@ setup = makeSetup()
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=5,
+            events=500,
             numThreads=-1,
             logLevel=acts.logging.INFO,
             fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
@@ -67,7 +67,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-            multiplicity=10,
+            multiplicity=50,
             rnd=rnd,
         )
 
@@ -146,16 +146,43 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
+            outputProtoVertices="ivf_protovertices",
+            outputVertices="ivf_fittedVertices",
+            vertexFinder=VertexFinder.Iterative,
+            outputDirRoot=tp / "ivf",
+        )
+
+        addVertexFitting(
+            s,
+            setup.field,
+            seeder=acts.VertexSeedFinder.GaussianSeeder,
+            associatedParticles=None
+            if label in ["seeded", "orthogonal"]
+            else "particles_input",
             outputProtoVertices="amvf_protovertices",
             outputVertices="amvf_fittedVertices",
             vertexFinder=VertexFinder.AMVF,
             outputDirRoot=tp / "amvf",
         )
 
+        # Use the adaptive grid vertex seeder in combination with the AMVF
+        # To avoid having too many physmon cases, we only do this for the label "seeded"
+        if label == "seeded":
+            addVertexFitting(
+                s,
+                setup.field,
+                seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+                associatedParticles=None,
+                outputProtoVertices="amvf_gridseeder_protovertices",
+                outputVertices="amvf_gridseeder_fittedVertices",
+                vertexFinder=VertexFinder.AMVF,
+                outputDirRoot=tp / "amvf_gridseeder",
+            )
+
         s.run()
         del s
 
-        for vertexing in ["amvf",]:
+        for vertexing in ["ivf", "amvf"]:
             shutil.move(
                 tp / f"{vertexing}/performance_vertexing.root",
                 tp / f"performance_{vertexing}.root",
@@ -172,6 +199,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             [
                 "performance_ckf",
                 "tracksummary_ckf",
+                "performance_ivf",
                 "performance_amvf",
             ]
             + (["performance_amvf_gridseeder"] if label == "seeded" else [])
@@ -189,6 +217,9 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
 
 for truthSmearedSeeded, truthEstimatedSeeded, label in [
+    (True, False, "truth_smeared"),  # if first is true, second is ignored
+    (False, True, "truth_estimated"),
+    (False, False, "seeded"),
     (False, False, "orthogonal"),
 ]:
     run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
