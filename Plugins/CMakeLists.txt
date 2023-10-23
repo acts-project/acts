@@ -18,5 +18,6 @@ add_component_if(ExaTrkX PluginExaTrkX ACTS_BUILD_PLUGIN_EXATRKX)
 add_component_if(TGeo PluginTGeo ACTS_BUILD_PLUGIN_TGEO)
 add_component_if(DD4hep PluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)
 add_component_if(EDM4hep PluginEDM4hep ACTS_BUILD_PLUGIN_EDM4HEP)
+add_component_if(Podio PluginPodio ACTS_BUILD_PLUGIN_PODIO)
 
 propagate_components_to_parent()

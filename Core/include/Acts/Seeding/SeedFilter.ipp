@@ -196,9 +196,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // if we have not yet reached our max number of quality seeds we add the
         // new seed to outCont
 
-        // Internally, "push" will also checks the max number of quality seeds
+        // Internally, "push" will also check the max number of quality seeds
         // for a middle sp.
-        // If this is reached, we remove the seed with lowest weight.
+        // If this is reached, we remove the seed with the lowest weight.
         candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
                                   weight, zOrigin, true);
         if (seedFilterState.numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {

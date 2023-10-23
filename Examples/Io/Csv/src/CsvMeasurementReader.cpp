@@ -132,11 +132,11 @@ std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
 ActsExamples::ClusterContainer makeClusters(
     const std::unordered_multimap<std::size_t, ActsExamples::CellData>&
         cellDataMap,
-    std::size_t nMeasurments) {
+    std::size_t nMeasurements) {
   using namespace ActsExamples;
   ClusterContainer clusters;
 
-  for (auto index = 0ul; index < nMeasurments; ++index) {
+  for (auto index = 0ul; index < nMeasurements; ++index) {
     auto [begin, end] = cellDataMap.equal_range(index);
 
     // Fill the channels with the iterators
@@ -273,7 +273,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     measurements.emplace_back(std::move(meas));
   }
 
-  // Generate measurment-particles-map
+  // Generate measurement-particles-map
   if (m_inputHits.isInitialized() &&
       m_outputMeasurementParticlesMap.isInitialized()) {
     const auto hits = m_inputHits(ctx);
@@ -303,8 +303,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
   std::vector<ActsExamples::CellData> cellData;
 
-  // This allows seamless import of files created with a older version where
-  // the measurment_id-column is still named hit_id
+  // This allows seamless import of files created with an older version where
+  // the measurement_id-column is still named hit_id
   try {
     cellData = readEverything<ActsExamples::CellData>(
         m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);

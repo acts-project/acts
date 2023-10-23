@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
   double rmin = 10.;
   double rmax = 11;
   double hz = 40.;
-  double phimin = -45.;
-  double phimax = 45.;
+  double phimin = 45.;
+  double phimax = -45.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -160,8 +160,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
   double rmin = 5.;
   double rmax = 25;
   double hz = 2.;
-  double phimin = -45.;
-  double phimax = 45.;
+  double phimin = 45.;
+  double phimax = -45.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);

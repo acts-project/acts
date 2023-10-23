@@ -301,7 +301,7 @@ class Navigator {
 
   /// @brief Initialize call - start of propagation
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -575,9 +575,9 @@ class Navigator {
   /// If there are surfaces to be handled, check if the current
   /// state is on the surface
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
-  /// @tparam navigation_surfaces_t Type of the propagagor
+  /// @tparam navigation_surfaces_t Type of the propagator
   ///
   /// @param [in,out] state is the propagation state object
   /// @param [in] stepper Stepper in use
@@ -622,7 +622,7 @@ class Navigator {
   ///    then return with updated step size
   ///  - if an intersect is not valid, switch to next
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -739,7 +739,7 @@ class Navigator {
   /// If we unpack a surface, the step size is set to the path length
   /// to the first surface, as determined by straight line intersect.
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -912,7 +912,7 @@ class Navigator {
   /// line intersect is found, the boundary surface is skipped.
   /// If we are out of boundary surfaces, the navigation is terminated.
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -1046,7 +1046,7 @@ class Navigator {
   /// - attempted volume switch
   /// Target finding by association will not be done again
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -1117,7 +1117,7 @@ class Navigator {
 
   /// @brief Resolve the surfaces of this layer
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -1200,7 +1200,7 @@ class Navigator {
   /// This initializes the layer candidates when starting
   /// or when entering a new volume
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -1279,7 +1279,7 @@ class Navigator {
   /// This checks if a navigation break had been triggered or navigator
   /// is misconfigured
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -1292,7 +1292,7 @@ class Navigator {
     if (!m_cfg.trackingGeometry) {
       return true;
     }
-    // turn the navigator into void when you are intructed to do nothing
+    // turn the navigator into void when you are instructed to do nothing
     if (!m_cfg.resolveSensitive && !m_cfg.resolveMaterial &&
         !m_cfg.resolvePassive) {
       return true;

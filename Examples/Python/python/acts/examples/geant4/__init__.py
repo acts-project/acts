@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-# Cannot conveniently catch linker errors, so we launch a suprocess to
+# Cannot conveniently catch linker errors, so we launch a subprocess to
 # try importing and see if it works in order to provide a useful error message
 try:
     subprocess.check_call(

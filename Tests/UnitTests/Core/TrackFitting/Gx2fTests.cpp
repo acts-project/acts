@@ -136,31 +136,24 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
   for (auto& sCfg : surfaceConfig) {
     CuboidVolumeBuilder::LayerConfig cfg;
     cfg.surfaceCfg = {sCfg};
+    cfg.active = true;
+    cfg.envelopeX = {-0.1_mm, 0.1_mm};
+    cfg.envelopeY = {-0.1_mm, 0.1_mm};
+    cfg.envelopeZ = {-0.1_mm, 0.1_mm};
     layerConfig.push_back(cfg);
-  }
-
-  for (auto& cfg : layerConfig) {
-    cfg.surfaces = {};
   }
 
   // Inner Volume - Build volume configuration
   CuboidVolumeBuilder::VolumeConfig volumeConfig;
-  volumeConfig.position = {nSurfaces / 2. * 1_m, 0., 0.};
-  volumeConfig.length = {nSurfaces * 1_m, 1_m, 1_m};
+  volumeConfig.length = {(nSurfaces + 1) * 1_m, 1_m, 1_m};
+  volumeConfig.position = {volumeConfig.length.x() / 2, 0., 0.};
   volumeConfig.layerCfg = layerConfig;
   volumeConfig.name = "Test volume";
-  volumeConfig.volumeMaterial =
-      std::make_shared<HomogeneousVolumeMaterial>(makeBeryllium());
-
-  volumeConfig.layers.clear();
-  for (auto& lay : volumeConfig.layerCfg) {
-    lay.active = true;
-  }
 
   // Outer volume - Build TrackingGeometry configuration
   CuboidVolumeBuilder::Config config;
-  config.position = {nSurfaces / 2. * 1_m, 0., 0.};
-  config.length = {nSurfaces * 1_m, 1_m, 1_m};
+  config.length = {(nSurfaces + 1) * 1_m, 1_m, 1_m};
+  config.position = {volumeConfig.length.x() / 2, 0., 0.};
   config.volumeCfg = {volumeConfig};
 
   cvb.setConfig(config);
@@ -246,7 +239,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
 
   auto& track = *res;
   BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK(!track.hasReferenceSurface());
+  BOOST_CHECK(track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.parameters(), startParametersFit.parameters());
@@ -341,9 +334,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_REQUIRE(res.ok());
 
   auto& track = *res;
-  BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK(!track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
+  BOOST_CHECK(track.hasReferenceSurface());
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
@@ -425,7 +418,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
 
   using Gx2Fitter =
       Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-  Gx2Fitter Fitter(rPropagator, gx2fLogger->clone());
+  Gx2Fitter fitter(rPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -445,15 +438,15 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                         startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
   auto& track = *res;
-  BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK(!track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
+  BOOST_CHECK(track.hasReferenceSurface());
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
