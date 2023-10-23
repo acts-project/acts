@@ -338,7 +338,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
       int truthQ = 1.;
       identifyContributingParticles(hitParticlesMap, traj, trackTip,
                                     particleHitCounts);
-      if (not particleHitCounts.empty()) {
+      if (!particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
         auto barcode = particleHitCounts.front().particleId;
         // Find the truth particle via the barcode
@@ -360,7 +360,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
       mj.visitBackwards(trackTip, [&](const auto& state) {
         // we only fill the track states with non-outlier measurement
         auto typeFlags = state.typeFlags();
-        if (not typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+        if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
           return true;
         }
 
@@ -377,7 +377,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         float truthQOP = 0.0f;
-        if (not indices.empty()) {
+        if (!indices.empty()) {
           // we assume that the indices are within valid ranges so we do not
           // need to check their validity again.
           const auto simHitIdx0 = indices.begin()->second;

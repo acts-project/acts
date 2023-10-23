@@ -75,7 +75,7 @@ std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
 Acts::Experimental::detail::PortalHelper::attachedDetectorVolumes(
     Portal& portal) noexcept(false) {
   auto& attachedVolumes = portal.attachedDetectorVolumes();
-  if (not attachedVolumes[0u].empty() and not attachedVolumes[1u].empty()) {
+  if (!attachedVolumes[0u].empty() && !attachedVolumes[1u].empty()) {
     throw std::invalid_argument(
         "PortalHelper: trying to get attachedVolumes from already populated "
         "portal.");

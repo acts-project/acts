@@ -132,7 +132,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     auto trackTip = trackTips.front();
 
     // Select reco track with fitted parameters
-    if (not traj.hasTrackParameters(trackTip)) {
+    if (!traj.hasTrackParameters(trackTip)) {
       ACTS_WARNING("No fitted track parameters.");
       continue;
     }

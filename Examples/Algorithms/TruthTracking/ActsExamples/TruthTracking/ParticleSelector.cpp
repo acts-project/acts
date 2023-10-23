@@ -56,26 +56,26 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const AlgorithmContext& ctx) const {
   // helper functions to select tracks
   auto within = [](double x, double min, double max) {
-    return (min <= x) and (x < max);
+    return (min <= x) && (x < max);
   };
   auto isValidParticle = [&](const ActsFatras::Particle& p) {
     const auto eta = Acts::VectorHelpers::eta(p.direction());
     const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // define charge selection
-    const bool validNeutral = (p.charge() == 0) and not m_cfg.removeNeutral;
-    const bool validCharged = (p.charge() != 0) and not m_cfg.removeCharged;
-    const bool validCharge = validNeutral or validCharged;
-    const bool validSecondary = not m_cfg.removeSecondaries or !p.isSecondary();
-    return validCharge and validSecondary and
-           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
-           within(eta, m_cfg.etaMin, m_cfg.etaMax) and
-           within(phi, m_cfg.phiMin, m_cfg.phiMax) and
+    const bool validNeutral = (p.charge() == 0) && !m_cfg.removeNeutral;
+    const bool validCharged = (p.charge() != 0) && !m_cfg.removeCharged;
+    const bool validCharge = validNeutral || validCharged;
+    const bool validSecondary = !m_cfg.removeSecondaries || !p.isSecondary();
+    return validCharge && validSecondary &&
+           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
+           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
+           within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
+           within(phi, m_cfg.phiMin, m_cfg.phiMax) &&
            within(std::abs(p.position()[Acts::ePos2]), m_cfg.absZMin,
-                  m_cfg.absZMax) and
-           within(rho, m_cfg.rhoMin, m_cfg.rhoMax) and
-           within(p.time(), m_cfg.timeMin, m_cfg.timeMax) and
+                  m_cfg.absZMax) &&
+           within(rho, m_cfg.rhoMin, m_cfg.rhoMax) &&
+           within(p.time(), m_cfg.timeMin, m_cfg.timeMax) &&
            within(p.mass(), m_cfg.mMin, m_cfg.mMax);
   };
 

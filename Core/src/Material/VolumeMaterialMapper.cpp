@@ -444,7 +444,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         volIter->volume->inside(rmIter->position, s_epsilon)) {
       currentID = volIter->volume->geometryId();
       direction = rmIter->direction;
-      if (not(currentID == lastID)) {
+      if (!(currentID == lastID)) {
         // Let's (re-)assess the information
         lastID = currentID;
         lastPositionEnd = volIter->position;

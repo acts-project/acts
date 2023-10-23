@@ -171,7 +171,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
           Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
 
       // Check if the reco track has fitted track parameters
-      if (not traj.hasTrackParameters(trackTip)) {
+      if (!traj.hasTrackParameters(trackTip)) {
         ACTS_WARNING(
             "No fitted track parameters for trajectory with entry index = "
             << trackTip);
@@ -212,10 +212,10 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
           m_cfg.truthMatchProbMin;
 
       bool isFake = false;
-      if (not m_cfg.doubleMatching and recoMatched) {
+      if (!m_cfg.doubleMatching && recoMatched) {
         matched[majorityParticleId].push_back(
             {nMajorityHits, fittedParameters});
-      } else if (m_cfg.doubleMatching and recoMatched and truthMatched) {
+      } else if (m_cfg.doubleMatching && recoMatched && truthMatched) {
         matched[majorityParticleId].push_back(
             {nMajorityHits, fittedParameters});
       } else {

@@ -112,7 +112,7 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
   } else if (m_cfg.selectVolume != 0u) {
     geoSelection = selectVolume(clusters, m_cfg.selectVolume);
   }
-  if (not geoSelection.empty()) {
+  if (!geoSelection.empty()) {
     ACTS_INFO("event " << ctx.eventNumber << " collection '"
                        << m_cfg.inputClusters << "' contains "
                        << geoSelection.size() << " hits in volume "

@@ -300,7 +300,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                                     particleHitCounts);
       bool foundMajorityParticle = false;
       // Get the truth particle info
-      if (not particleHitCounts.empty()) {
+      if (!particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
         majorityParticleId = particleHitCounts.front().particleId;
         nMajorityHits = particleHitCounts.front().hitCount;
@@ -354,7 +354,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                      << " not found in the input collection!");
         }
       }
-      if (not foundMajorityParticle) {
+      if (!foundMajorityParticle) {
         ACTS_DEBUG("Truth particle for mj " << itraj << " subtraj " << isubtraj
                                             << " not found!");
       }

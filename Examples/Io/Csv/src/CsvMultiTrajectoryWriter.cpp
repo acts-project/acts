@@ -89,7 +89,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       }
 
       // Check if the reco track has fitted track parameters
-      if (not traj.hasTrackParameters(trackTip)) {
+      if (!traj.hasTrackParameters(trackTip)) {
         ACTS_WARNING(
             "No fitted track parameters for trajectory with entry index = "
             << trackTip);

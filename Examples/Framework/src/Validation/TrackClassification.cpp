@@ -69,13 +69,13 @@ void ActsExamples::identifyContributingParticles(
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
 
-  if (not trajectories.hasTrajectory(tip)) {
+  if (!trajectories.hasTrajectory(tip)) {
     return;
   }
 
   trajectories.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
     // no truth info with non-measurement state
-    if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       return true;
     }
     // register all particles that generated this hit

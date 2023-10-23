@@ -55,7 +55,7 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   // Check if event ranges match (should also catch missing files)
   auto checkRange = [&](const std::string& fileStem) {
     const auto hitmapRange = determineEventFilesRange(m_cfg.inputDir, fileStem);
-    if (hitmapRange.first > m_eventsRange.first or
+    if (hitmapRange.first > m_eventsRange.first ||
         hitmapRange.second < m_eventsRange.second) {
       throw std::runtime_error("event range mismatch for 'event**-" + fileStem +
                                "'");
@@ -63,7 +63,7 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   };
 
   checkRange("measurement-simhit-map.csv");
-  if (not m_cfg.outputClusters.empty()) {
+  if (!m_cfg.outputClusters.empty()) {
     checkRange("cells.csv");
   }
 }
@@ -158,7 +158,7 @@ ActsExamples::ClusterContainer makeClusters(
     // update the iterator
 
     // Compute cluster size
-    if (not cluster.channels.empty()) {
+    if (!cluster.channels.empty()) {
       auto compareX = [](const auto& a, const auto& b) {
         return a.bin[0] < b.bin[0];
       };

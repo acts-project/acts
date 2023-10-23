@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
     double diffZ = 1e5;
     int foundVtxIdx = -1;
     for (int i = 0; i < expNRecoVertices; i++) {
-      if (not vtxFound[i]) {
+      if (!vtxFound[i]) {
         if (std::abs(vtxZ - verticesInfo[i].position[2]) < diffZ) {
           diffZ = std::abs(vtxZ - verticesInfo[i].position[2]);
           foundVtxIdx = i;
@@ -634,7 +634,7 @@ BOOST_AUTO_TEST_CASE(
     double diffZ = 1e5;
     int foundVtxIdx = -1;
     for (int i = 0; i < expNRecoVertices; i++) {
-      if (not vtxFound[i]) {
+      if (!vtxFound[i]) {
         if (std::abs(vtxZ - verticesInfo[i].position[2]) < diffZ) {
           diffZ = std::abs(vtxZ - verticesInfo[i].position[2]);
           foundVtxIdx = i;
