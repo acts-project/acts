@@ -108,12 +108,13 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
 
   // We need a placeholder for the directNavigator overload. Otherwise, we would
   // have an unimplemented pure virtual method in a final class.
-  TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
-                               const TrackParameters&,
-                               const GeneralFitterOptions&,
-                               const RefittingCalibrator&,
-                               const std::vector<const Acts::Surface*>&,
-                               TrackContainer&) const override {
+  TrackFitterResult operator()(
+      const std::vector<Acts::SourceLink>& /*sourceLinks*/,
+      const TrackParameters& /*initialParameters*/,
+      const GeneralFitterOptions& /*options*/,
+      const RefittingCalibrator& /*calibrator*/,
+      const std::vector<const Acts::Surface*>& /*surfaceSequence*/,
+      TrackContainer& /*tracks*/) const override {
     throw std::runtime_error(
         "direct navigation with GX2 fitter is not implemented");
   }
