@@ -31,7 +31,6 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
     AlignedDetector,
-    RootParticleWriter,
 )
 
 from acts.examples.odd import getOpenDataDetector
