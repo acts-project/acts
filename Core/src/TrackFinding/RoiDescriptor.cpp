@@ -25,11 +25,8 @@ Acts::RoiDescriptor::RoiDescriptor(double eta, double etaMinus, double etaPlus,
       m_etaMinus(etaMinus),
       m_etaPlus(etaPlus),
       m_zedMinus(zedMinus),
-      m_zedPlus(zedPlus),
-      m_l1Id(0),
-      m_roiId(0),
-      m_roiWord(0) {}
+      m_zedPlus(zedPlus) {}
 
-Acts::RoiDescriptor::~RoiDescriptor() {}
+Acts::RoiDescriptor::~RoiDescriptor() = default;
 
 }  // namespace Acts
