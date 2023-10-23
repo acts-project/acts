@@ -2,6 +2,7 @@ variables:
   CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
   CCACHE_MAXSIZE: 2G
   CCACHE_KEY_SUFFIX: r1
+  CTEST_OUTPUT_ON_FAILURE: 1
 
 clang_tidy:
   stage: build
