@@ -258,7 +258,7 @@ ACTS geometry translation uses parameters attached to DD4hep detector elements v
 
 ## Usage
 
-To receive the {class}`Acts::TrackingGeometry` the the global function
+To receive the {class}`Acts::TrackingGeometry` the global function
 {func}`Acts::convertDD4hepDetector()` should be used, where the DD4hep world
 `DetElement` needs to be handed over. For a valid translation, that all
 prerequisites described above are met and that the right `VariantParameters`

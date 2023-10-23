@@ -252,7 +252,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_v_phi = phi(mtrack.first.second);
     m_v_eta = eta(mtrack.first.second);
 
-    // an now loop over the material
+    // and now loop over the material
     for (const auto& mint : materialInteractions) {
       auto direction = mint.direction.normalized();
 

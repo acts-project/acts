@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
   BOOST_TEST_CONTEXT("3D visualize") {
     Object o;
 
-    // lets make sure it also works in 3d
+    // let's make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
     Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
     BOOST_CHECK(bb3.intersect(ray3));
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     using VertexType3 = ObjectBBox::VertexType;
     Object o;
 
-    // lets make sure it also works in 3d
+    // let's make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
     Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
     BOOST_CHECK(bb3.intersect(ray3));

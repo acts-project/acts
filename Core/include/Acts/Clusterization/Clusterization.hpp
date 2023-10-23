@@ -16,8 +16,8 @@ namespace Acts::Ccl {
 using Label = int;
 constexpr Label NO_LABEL = 0;
 
-// When looking for a cell connected to a reference cluster, the the
-// code always loops backward, starting from the reference cell. Since
+// When looking for a cell connected to a reference cluster, the code
+// always loops backward, starting from the reference cell. Since
 // the cells are globally sorted column-wise, the connection function
 // can therefore tell when the search should be stopped.
 enum class ConnectResult {

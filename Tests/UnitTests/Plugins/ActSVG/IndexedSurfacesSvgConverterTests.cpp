@@ -34,7 +34,7 @@ CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 IndexedSurfacesConverter::Options generateDrawOptions() {
   // The converter options
   IndexedSurfacesConverter::Options isOptions;
-  // Sensitive surface stuyle
+  // Sensitive surface style
   Style sensitiveStyle;
   sensitiveStyle.fillColor = {51, 153, 255};
   sensitiveStyle.fillOpacity = 0.9;

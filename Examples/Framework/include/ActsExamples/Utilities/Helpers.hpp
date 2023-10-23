@@ -45,7 +45,7 @@ class Binning {
   }
 
   Binning(std::string title, std::vector<double> bins)
-      : m_title(std::move(title)), m_bins(std::move(bins)){};
+      : m_title(std::move(title)), m_bins(std::move(bins)) {}
 
   const auto& title() const { return m_title; }
   auto nBins() const { return m_bins.size() - 1; }

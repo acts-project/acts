@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -101,7 +101,7 @@ struct GsfActor {
     /// Whether to abort immediately when an error occurs
     bool abortOnError = false;
 
-    /// We can stop the propagation if we reach this number of measuerement
+    /// We can stop the propagation if we reach this number of measurement
     /// states
     std::optional<std::size_t> numberMeasurements;
 
@@ -133,7 +133,7 @@ struct GsfActor {
 
   /// @brief GSF actor operation
   ///
-  /// @tparam propagator_state_t is the type of Propagagor state
+  /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
   ///
@@ -307,7 +307,7 @@ struct GsfActor {
       updateStepper(state, stepper, navigator, componentCache);
     }
 
-    // If we only done preUpdate before, now do postUpdate
+    // If we have only done preUpdate before, now do postUpdate
     if (haveMaterial && haveMeasurement) {
       applyMultipleScattering(state, stepper, navigator,
                               MaterialUpdateStage::PostUpdate);
@@ -524,7 +524,7 @@ struct GsfActor {
 
     // Boolean flag, to distinguish measurement and outlier states. This flag
     // is only modified by the valid-measurement-branch, so only if there
-    // isn't any valid measuerement state, the flag stays false and the state
+    // isn't any valid measurement state, the flag stays false and the state
     // is thus counted as an outlier
     bool is_valid_measurement = false;
 
@@ -545,7 +545,7 @@ struct GsfActor {
       const auto& trackStateProxy = *trackStateProxyRes;
 
       // If at least one component is no outlier, we consider the whole thing
-      // as a measuerementState
+      // as a measurementState
       if (trackStateProxy.typeFlags().test(
               Acts::TrackStateFlag::MeasurementFlag)) {
         is_valid_measurement = true;
@@ -768,47 +768,6 @@ struct GsfActor {
     m_cfg.weightCutoff = options.weightCutoff;
     m_cfg.reductionMethod = options.stateReductionMethod;
     m_cfg.calibrationContext = &options.calibrationContext.get();
-  }
-};
-
-/// An actor that collects the final multi component state once the propagation
-/// finished
-struct FinalStateCollector {
-  using MultiPars = Acts::GsfConstants::FinalMultiComponentState;
-
-  struct result_type {
-    MultiPars pars;
-  };
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& /*logger*/) const {
-    if (not(navigator.targetReached(state.navigation) and
-            navigator.currentSurface(state.navigation))) {
-      return;
-    }
-
-    const auto& surface = *navigator.currentSurface(state.navigation);
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-        states;
-
-    for (auto cmp : stepper.componentIterable(state.stepping)) {
-      auto singleState = cmp.singleState(state);
-      auto bs = cmp.singleStepper(stepper).boundState(singleState.stepping,
-                                                      surface, true);
-
-      if (bs.ok()) {
-        const auto& btp = std::get<BoundTrackParameters>(*bs);
-        states.emplace_back(cmp.weight(), btp.parameters(), btp.covariance());
-      }
-    }
-
-    result.pars = typename MultiPars::value_type(
-        surface.getSharedPtr(), states,
-        stepper.particleHypothesis(state.stepping));
   }
 };
 

@@ -44,9 +44,9 @@ auto EmptyDetector::finalize(
       std::make_shared<Acts::TrackingGeometry>(std::move(worldVolume), nullptr);
 
   /// Empty decorators
-  ContextDecorators eContextDeocrators = {};
+  ContextDecorators eContextDecorators = {};
 
   // And return the pair with empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(tgGeometry), std::move(eContextDeocrators));
+      std::move(tgGeometry), std::move(eContextDecorators));
 }
