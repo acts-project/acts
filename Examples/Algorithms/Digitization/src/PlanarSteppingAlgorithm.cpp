@@ -168,7 +168,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
         continue;
       }
 
-      // lets create a cluster - centroid method
+      // Create a cluster - centroid method
       double localX = 0.;
       double localY = 0.;
       double totalPath = 0.;
