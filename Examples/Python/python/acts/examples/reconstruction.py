@@ -1148,18 +1148,6 @@ def addGx2fTracks(
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    ## TODO add and test directNavigation
-    # if directNavigation:
-    #     srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
-    #         level=customLogLevel(),
-    #         inputProtoTracks=inputProtoTracks,
-    #         inputSimHits="simhits",
-    #         inputMeasurementSimHitsMap="measurement_simhits_map",
-    #         outputProtoTracks="sorted_truth_particle_tracks",
-    #     )
-    #     s.addAlgorithm(srfSortAlg)
-    #     inputProtoTracks = srfSortAlg.config.outputProtoTracks
-
     gx2fOptions = {
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,

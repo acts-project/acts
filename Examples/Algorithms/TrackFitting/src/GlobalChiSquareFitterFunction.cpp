@@ -116,8 +116,8 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
       const std::vector<const Acts::Surface*>& surfaceSequence,
       TrackContainer& tracks) const override {
     const auto gx2fOptions = makeGx2fOptions(options, calibrator);
-    std::cout << "############# THIS SHOULD NOT HAPPEN - wrong operator() "
-              << std::endl;
+    throw std::runtime_error(
+        "direct navigation with GX2 fitter not yet implemented");
     (void)surfaceSequence;
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       gx2fOptions, tracks);
