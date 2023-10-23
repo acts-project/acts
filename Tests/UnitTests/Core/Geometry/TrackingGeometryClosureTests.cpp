@@ -128,20 +128,18 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
       // layers start are counted from 1 - n
       GeometryIdentifier::Value layer_id = 0;
       for (const auto& lay : vol.confinedLayers()->arrayObjects()) {
-        // check the layer volume id and layer layer id
+        // check the layer volume id and layer id
         auto lay_vol_id = lay->geometryId().volume();
         auto lay_lay_id = lay->geometryId().layer();
         BOOST_CHECK_EQUAL(++layer_id, lay_lay_id);
         BOOST_CHECK_EQUAL(geoid, lay_vol_id);
         // test the layer approach surfaces
         if (lay->approachDescriptor() != nullptr) {
-          // approach surfacesare counted from 1 - n
+          // approach surfaces are counted from 1 - n
           GeometryIdentifier::Value asurface_id = 0;
           for (const auto& asf :
                lay->approachDescriptor()->containedSurfaces()) {
-            // check the approach volume id, approach layer id, approach
-            // approach
-            // id
+            // check the approach volume id, approach layer id
             auto asf_vol_id = asf->geometryId().volume();
             auto asf_lay_id = asf->geometryId().layer();
             auto asf_asf_id = asf->geometryId().approach();
@@ -157,9 +155,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
           // sensitive surfaces are counted from 1 - n
           GeometryIdentifier::Value ssurface_id = 0;
           for (const auto& ssf : lay->surfaceArray()->surfaces()) {
-            // check the approach volume id, approach layer id, approach
-            // approach
-            // id
+            // check the approach volume id, approach layer id
             auto ssf_vol_id = ssf->geometryId().volume();
             auto ssf_lay_id = ssf->geometryId().layer();
             auto ssf_ssf_id = ssf->geometryId().sensitive();
@@ -245,7 +241,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
       // layers start are counted from 1 - n
       GeometryIdentifier::Value layer_id = 0;
       for (const auto& lay : vol.confinedLayers()->arrayObjects()) {
-        // check the layer volume id and layer layer id
+        // check the layer volume id and layer id
         auto lay_vol_id = lay->geometryId().volume();
         auto lay_lay_id = lay->geometryId().layer();
         BOOST_CHECK_EQUAL(++layer_id, lay_lay_id);
@@ -256,9 +252,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
           GeometryIdentifier::Value asurface_id = 0;
           for (const auto& asf :
                lay->approachDescriptor()->containedSurfaces()) {
-            // check the approach volume id, approach layer id, approach
-            // approach
-            // id
+            // check the approach volume id, approach layer id
             auto asf_vol_id = asf->geometryId().volume();
             auto asf_lay_id = asf->geometryId().layer();
             auto asf_asf_id = asf->geometryId().approach();
@@ -274,9 +268,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
           // sensitive surfaces are counted from 1 - n
           GeometryIdentifier::Value ssurface_id = 0;
           for (const auto& ssf : lay->surfaceArray()->surfaces()) {
-            // check the approach volume id, approach layer id, approach
-            // approach
-            // id
+            // check the approach volume id, approach layer id
             auto ssf_vol_id = ssf->geometryId().volume();
             auto ssf_lay_id = ssf->geometryId().layer();
             auto ssf_ssf_id = ssf->geometryId().sensitive();
@@ -317,7 +309,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometry_testVisitSurfaces) {
   TrackingGeometry tGeometry = makeTrackingGeometry(hook);
 
   // this will also cover TrackingVolume::visitSurfaces
-  // its a pretty bare bones test, and only asserts that the
+  // it's a pretty bare-bones test, and only asserts that the
   // method is called on the expected number of surfaces
   size_t nSurfaces = 0;
   tGeometry.visitSurfaces([&nSurfaces](const auto*) { nSurfaces++; });

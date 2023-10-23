@@ -15,7 +15,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -223,10 +223,6 @@ class MultiEigenStepperLoop
   /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
 
-  /// How to extract a single component state when calling .boundState() or
-  /// .curvilinearState()
-  MixtureReductionMethod m_finalReductionMethod = MixtureReductionMethod::eMean;
-
   /// The logger (used if no logger is provided by caller of methods)
   std::unique_ptr<const Acts::Logger> m_logger;
 
@@ -243,10 +239,16 @@ class MultiEigenStepperLoop
   using SingleState = typename SingleStepper::State;
 
   /// @brief Use the definitions from the Single-stepper
-  using typename SingleStepper::BoundState;
   using typename SingleStepper::Covariance;
-  using typename SingleStepper::CurvilinearState;
   using typename SingleStepper::Jacobian;
+
+  /// @brief Define an own bound state
+  using BoundState =
+      std::tuple<MultiComponentBoundTrackParameters, Jacobian, ActsScalar>;
+
+  /// @brief Define an own curvilinear state
+  using CurvilinearState = std::tuple<MultiComponentCurvilinearTrackParameters,
+                                      Jacobian, ActsScalar>;
 
   /// @brief The reducer type
   using Reducer = component_reducer_t;
@@ -256,12 +258,9 @@ class MultiEigenStepperLoop
 
   /// Constructor from a magnetic field and a optionally provided Logger
   MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
-                        MixtureReductionMethod finalReductionMethod =
-                            MixtureReductionMethod::eMean,
                         std::unique_ptr<const Logger> logger =
                             getDefaultLogger("GSF", Logging::INFO))
       : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
-        m_finalReductionMethod(finalReductionMethod),
         m_logger(std::move(logger)) {}
 
   struct State {
@@ -469,7 +468,7 @@ class MultiEigenStepperLoop
           cmp.state, state.navigation, state.options, state.geoContext);
     }
 
-    Result<BoundState> boundState(
+    Result<typename SingleStepper::BoundState> boundState(
         const Surface& surface, bool transportCov,
         const FreeToBoundCorrection& freeToBoundCorrection) {
       return detail::boundState(

@@ -203,7 +203,7 @@ struct SimulationActor {
   template <typename stepper_t>
   Particle makeParticle(const Particle &previous, const stepper_t &stepper,
                         const typename stepper_t::State &state) const {
-    // a particle can loose energy and thus its gamma factor is not a constant
+    // a particle can lose energy and thus its gamma factor is not a constant
     // of motion. since the stepper provides only the lab time, we need to
     // compute the change in proper time for each step separately. this assumes
     // that the gamma factor is constant over one stepper step.

@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Objects.h>
@@ -117,7 +120,7 @@ value_type getAttrValueOr(const dd4hep::xml::Component& node,
 ///
 /// @tparam value_type the primitive type allowed by variant parameters
 ///
-/// @param dd4hepElement the detector element w
+/// @param dd4hepElement the detector element with associated variant parameters
 /// @param bname The base name attribute of the variant parameter pack
 /// @param unitConversion is a conversion factor DD4hep -> ACTS
 ///
@@ -138,6 +141,27 @@ std::vector<value_type> extractSeries(const dd4hep::DetElement& dd4hepElement,
     series.push_back(val);
   }
   return series;
+}
+
+/// @brief A simple helper function to extract a transform
+///
+/// @param dd4hepElement the detector element with associated variant parameters
+/// @param bname The base name attribute of the variant parameter pack
+/// @param unitConversion is a conversion factor DD4hep -> ACTS
+///
+/// @return a transform extracted from parameters
+inline Transform3 extractTransform(const dd4hep::DetElement& dd4hepElement,
+                                   const std::string& bname,
+                                   const ActsScalar unitConversion = 1.) {
+  Transform3 transform = Transform3::Identity();
+  ActsScalar x =
+      unitConversion * getParamOr<ActsScalar>(bname + "_x", dd4hepElement, 0.);
+  ActsScalar y =
+      unitConversion * getParamOr<ActsScalar>(bname + "_y", dd4hepElement, 0.);
+  ActsScalar z =
+      unitConversion * getParamOr<ActsScalar>(bname + "_z", dd4hepElement, 0.);
+  transform.pretranslate(Vector3(x, y, z));
+  return transform;
 }
 
 }  // namespace Acts

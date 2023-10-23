@@ -276,7 +276,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       double timeOnTrack = trkParams.parameters()[BoundIndices::eBoundTime];
 
       ActsScalar m0 = trkParams.particleHypothesis().mass();
-      ActsScalar p = std::abs(absoluteCharge / qOvP);
+      ActsScalar p = trkParams.particleHypothesis().extractMomentum(qOvP);
 
       // Speed in units of c
       ActsScalar beta = p / std::hypot(p, m0);
@@ -350,7 +350,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     double tP = trkParams.parameters()[BoundIndices::eBoundTime];
 
     ActsScalar m0 = trkParams.particleHypothesis().mass();
-    ActsScalar p = std::abs(absoluteCharge / qOvP);
+    ActsScalar p = trkParams.particleHypothesis().extractMomentum(qOvP);
 
     // Speed in units of c
     ActsScalar beta = p / std::hypot(p, m0);
