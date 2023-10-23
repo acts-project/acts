@@ -673,19 +673,38 @@ class TrackProxy {
   /// "innermost" track state
   /// @note This is dangerous with branching track state sequences, as it will break them
   /// @note This also automatically forward-links the track!
+  /// @param invertJacobians Whether to invert the jacobians of the track states
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void reverseTrackStates() {
+  void reverseTrackStates(bool invertJacobians = false) {
     IndexType current = tipIndex();
     IndexType next = kInvalid;
     IndexType prev = kInvalid;
 
     stemIndex() = tipIndex();
 
+    auto getTrackState = [this](IndexType idx) {
+      return m_container->trackStateContainer().getTrackState(idx);
+    };
+
+    // @TODO: Maybe refactor to not need this variable if invertJacobians == false
+    BoundMatrix nextJ;
+
     while (current != kInvalid) {
-      auto ts = m_container->trackStateContainer().getTrackState(current);
+      auto ts = getTrackState(current);
       prev = ts.previous();
       ts.template component<IndexType>(hashString("next")) = prev;
       ts.previous() = next;
+      if (invertJacobians) {
+        if (next != kInvalid) {
+          // auto next_ts = getTrackState(next);
+          BoundMatrix curJ = ts.jacobian();
+          ts.jacobian() = nextJ.inverse();
+          nextJ = curJ;
+        } else {
+          nextJ = ts.jacobian();
+          ts.jacobian().setZero();
+        }
+      }
       next = current;
       tipIndex() = current;
       current = prev;

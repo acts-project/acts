@@ -28,6 +28,7 @@
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <iterator>
 #include <memory>
@@ -544,8 +545,9 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
 
   auto t = tc.getTrack(tc.addTrack());
 
-  for (size_t i = 0; i < 10; i++) {
-    t.appendTrackState();
+  for (size_t i = 0; i < 4; i++) {
+    auto ts = t.appendTrackState();
+    ts.jacobian() = Acts::BoundMatrix::Identity() * i;
   }
 
   std::vector<IndexType> exp;
@@ -555,6 +557,11 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
   std::transform(t.trackStatesReversed().begin(), t.trackStatesReversed().end(),
                  std::back_inserter(act),
                  [](const auto& ts) { return ts.index(); });
+
+  // jacobians count up
+  for (const auto [e, ts] : zip(exp, t.trackStatesReversed())) {
+    BOOST_CHECK_EQUAL(ts.jacobian(), Acts::BoundMatrix::Identity() * e);
+  }
 
   BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
 
@@ -567,6 +574,46 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
                  std::back_inserter(act),
                  [](const auto& ts) { return ts.index(); });
   BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
+
+  // jacobians stay with their track states
+  for (const auto [e, ts] : zip(exp, t.trackStatesReversed())) {
+    BOOST_CHECK_EQUAL(ts.jacobian(), Acts::BoundMatrix::Identity() * e);
+  }
+
+  // back to original!
+  t.reverseTrackStates();
+
+  // jacobians stay with their track states
+  for (const auto [e, ts] : zip(exp, t.trackStates())) {
+    BOOST_CHECK_EQUAL(ts.jacobian(), Acts::BoundMatrix::Identity() * e);
+  }
+
+  // reverse with jacobians
+  t.reverseTrackStates(true);
+
+  std::reverse(exp.begin(), exp.end());
+  std::rotate(exp.rbegin(), std::next(exp.rbegin()), exp.rend());
+
+  for (const auto [e, ts] : zip(exp, t.trackStates())) {
+    Acts::BoundMatrix expJac;
+    if (e == 0) {
+      expJac = Acts::BoundMatrix::Zero();
+    } else {
+      expJac = (Acts::BoundMatrix::Identity() * e).inverse();
+    }
+
+    BOOST_CHECK_EQUAL(ts.jacobian(), expJac);
+  }
+
+  // now back to original order, revert jacobians again
+  t.reverseTrackStates(true);
+
+  // reset exp to range(0, N)
+  std::iota(exp.begin(), exp.end(), 0);
+
+  for (const auto [e, ts] : zip(exp, t.trackStates())) {
+    BOOST_CHECK_EQUAL(ts.jacobian(), Acts::BoundMatrix::Identity() * e);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(EnsureDynamicColumns) {
