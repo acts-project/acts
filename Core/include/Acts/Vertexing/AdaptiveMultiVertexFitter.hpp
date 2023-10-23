@@ -185,7 +185,7 @@ class AdaptiveMultiVertexFitter {
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
-  /// 1. The 3D impacts parameters are calculated for all tracks associated
+  /// 1. The 3D impact parameters are calculated for all tracks associated
   /// with newVertex.
   /// 2. A list of all vertices that are connected with newVertex via shared
   /// tracks is created. It also considers indirect connections (e.g., vertex A
