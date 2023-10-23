@@ -14,7 +14,6 @@ def runTruthTrackingGx2f(
     field: acts.MagneticFieldProvider,
     outputDir: Path,
     digiConfigFile: Path,
-    # directNavigation=False,
     s: acts.examples.Sequencer = None,
     inputParticlePath: Optional[Path] = None,
 ):
@@ -122,14 +121,11 @@ def runTruthTrackingGx2f(
         )
     )
 
+    # TODO: PerformanceWriters are not tested yet
     # s.addWriter(
     #     acts.examples.TrackFinderPerformanceWriter(
     #         level=acts.logging.INFO,
-    #         inputProtoTracks=
-    #         # "sorted_truth_particle_tracks"
-    #         # if directNavigation
-    #         # else
-    #         "truth_particle_tracks",
+    #         inputProtoTracks="truth_particle_tracks",
     #         inputParticles="truth_seeds_selected",
     #         inputMeasurementParticlesMap="measurement_particles_map",
     #         filePath=str(outputDir / "performance_track_finder.root"),

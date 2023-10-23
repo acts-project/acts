@@ -106,21 +106,16 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
                       gx2fOptions, tracks);
   }
 
-  // TODO create operator() for directNavigator
-  // We need a placeholder for the directNavigator overload, to safely compile.
-  TrackFitterResult operator()(
-      const std::vector<Acts::SourceLink>& sourceLinks,
-      const TrackParameters& initialParameters,
-      const GeneralFitterOptions& options,
-      const RefittingCalibrator& calibrator,
-      const std::vector<const Acts::Surface*>& surfaceSequence,
-      TrackContainer& tracks) const override {
-    const auto gx2fOptions = makeGx2fOptions(options, calibrator);
+  // We need a placeholder for the directNavigator overload. Otherwise, we would
+  // have an unimplemented pure virtual method in a final class.
+  TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
+                               const TrackParameters&,
+                               const GeneralFitterOptions&,
+                               const RefittingCalibrator&,
+                               const std::vector<const Acts::Surface*>&,
+                               TrackContainer&) const override {
     throw std::runtime_error(
-        "direct navigation with GX2 fitter not yet implemented");
-    (void)surfaceSequence;
-    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
-                      gx2fOptions, tracks);
+        "direct navigation with GX2 fitter is not implemented");
   }
 };
 
