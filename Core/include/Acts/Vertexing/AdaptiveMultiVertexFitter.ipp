@@ -199,13 +199,13 @@ Acts::Result<void> Acts::
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
   // Vertex position
-  const Vector3& pos = vtxInfo.oldPosition.template head<3>();
+  const Vector3& seedPos = vtxInfo.seedPosition.template head<3>();
 
   // Loop over all tracks at the vertex
   for (const auto& trk : vtxInfo.trackLinks) {
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-        m_extractParameters(*trk), pos, state.ipState);
+        m_extractParameters(*trk), seedPos, state.ipState);
     if (!res.ok()) {
       return res.error();
     }
