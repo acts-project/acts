@@ -54,7 +54,7 @@ class MeasurementMapSelector final : public IAlgorithm {
     m_outputMap.initialize(m_cfg.outputMeasurementParticleMap);
   }
 
-  virtual ~MeasurementMapSelector() {}
+  virtual ~MeasurementMapSelector() = default;
 
   /// Filter the measurements
   ///
