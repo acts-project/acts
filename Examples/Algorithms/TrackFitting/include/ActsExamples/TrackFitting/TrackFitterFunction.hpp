@@ -35,9 +35,9 @@ class TrackFitterFunction {
   using TrackFitterResult = Acts::Result<TrackContainer::TrackProxy>;
 
   struct GeneralFitterOptions {
-    std::reference_wrapper<const Acts::GeometryContext> geoContext;
-    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
-    std::reference_wrapper<const Acts::CalibrationContext> calibrationContext;
+    std::reference_wrapper<const Acts::GeometryContext> geoContext{};
+    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext{};
+    std::reference_wrapper<const Acts::CalibrationContext> calibrationContext{};
     const Acts::Surface* referenceSurface = nullptr;
     Acts::PropagatorPlainOptions propOptions;
   };

@@ -52,7 +52,7 @@ class MaterialSlab {
 
   /// Check if the material is valid, i.e. it is finite and not vacuum.
   constexpr operator bool() const {
-    return m_material and (0.0f < m_thickness);
+    return m_material && (0.0f < m_thickness);
   }
 
   /// Access the (average) material parameters.
@@ -73,7 +73,7 @@ class MaterialSlab {
   friend constexpr bool operator==(const MaterialSlab& lhs,
                                    const MaterialSlab& rhs) {
     // t/X0 and t/L0 are dependent variables and need not be checked
-    return (lhs.m_material == rhs.m_material) and
+    return (lhs.m_material == rhs.m_material) &&
            (lhs.m_thickness == rhs.m_thickness);
   }
   friend constexpr bool operator!=(const MaterialSlab& lhs,

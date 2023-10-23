@@ -86,7 +86,7 @@ struct GaussTrunc {
                                                      RandomEngine& rnd) const {
     std::normal_distribution<> dist{0., sigma};
     double svalue = value + dist(rnd);
-    if (svalue >= range.first and svalue <= range.second) {
+    if (svalue >= range.first && svalue <= range.second) {
       return std::pair{svalue, dist.stddev()};
     }
     return ActsFatras::DigitizationError::SmearingOutOfRange;
@@ -122,7 +122,7 @@ struct GaussClipped {
     std::normal_distribution<> dist{0., sigma};
     for (size_t attempt = 0; attempt < maxAttemps; ++attempt) {
       double svalue = value + dist(rnd);
-      if (svalue >= range.first and svalue <= range.second) {
+      if (svalue >= range.first && svalue <= range.second) {
         return std::pair{svalue, dist.stddev()};
       }
     }
@@ -155,7 +155,7 @@ struct Uniform {
   /// @return a Result is uniformly distributed between bin borders
   Acts::Result<std::pair<double, double>> operator()(double value,
                                                      RandomEngine& rnd) const {
-    if (binningData.min < value and binningData.max > value) {
+    if (binningData.min < value && binningData.max > value) {
       auto bin = binningData.search(value);
       auto lower = binningData.boundaries()[bin];
       auto higher = binningData.boundaries()[bin + 1];
@@ -192,7 +192,7 @@ struct Digital {
   /// @return a Result is uniformly distributed between bin borders
   Acts::Result<std::pair<double, double>> operator()(
       double value, RandomEngine& /*rnd*/) const {
-    if (binningData.min < value and binningData.max > value) {
+    if (binningData.min < value && binningData.max > value) {
       auto bin = binningData.search(value);
       auto lower = binningData.boundaries()[bin];
       auto higher = binningData.boundaries()[bin + 1];

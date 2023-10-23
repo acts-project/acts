@@ -55,7 +55,8 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
   std::vector<BinningValue> otherConstrains;
 
   // Deal with the constituents
-  if (container.has_value() && !container.value().constituentVolumes.empty()) {
+  if (container.has_value() &&
+      ! container.value().constituentVolumes.empty()) {
     auto& cts = container.value();
 
     if (cts.constituentBinning.empty()) {
@@ -89,7 +90,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
     }
 
     // Legacy conversion - layers are kept untouched
-    if (!layersPresent) {
+    if (! layersPresent) {
       // Set the outer boundaries
       fVolume.extent.set(binValue, extent.min(binValue),
                          fVolume.extent.max(binValue));
@@ -112,7 +113,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
       }
       borders.push_back(cts.constituentVolumes.back().extent.max(binValue));
 
-    } else if (layersPresent && !legacy) {
+    } else if (layersPresent && ! legacy) {
       // Count the gaps
       std::size_t gaps = 0;
       std::vector<float> boundaries = {};
@@ -179,7 +180,7 @@ std::string Acts::ProtoVolume::toString(const std::string& indent) const {
   ss << extent.toString(indent) << '\n';
   if (container.has_value()) {
     auto& cts = container.value();
-    if (!cts.constituentVolumes.empty()) {
+    if (! cts.constituentVolumes.empty()) {
       ss << indent << "  container of " << cts.constituentVolumes.size()
          << " constituents. " << '\n';
       ss << indent << "  constituent binning:" << '\n';

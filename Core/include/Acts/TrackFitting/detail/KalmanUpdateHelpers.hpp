@@ -85,7 +85,7 @@ auto kalmanHandleMeasurement(
   // If not, run Kalman update, tag it as a
   // measurement and update the stepping state. Otherwise, just tag it as
   // an outlier
-  if (not extensions.outlierFinder(trackStateProxy)) {
+  if (! extensions.outlierFinder(trackStateProxy)) {
     // Run Kalman update
     auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
                                         state.options.direction, logger);

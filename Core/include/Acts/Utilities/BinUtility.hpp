@@ -133,7 +133,7 @@ class BinUtility {
 
   /// Equality operator
   bool operator==(const BinUtility& other) const {
-    return (m_transform.isApprox(other.m_transform) and
+    return (m_transform.isApprox(other.m_transform) &&
             m_binningData == other.binningData());
   }
 

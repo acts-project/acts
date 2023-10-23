@@ -79,9 +79,9 @@ struct GsfExtensions {
 
 template <typename traj_t>
 struct GsfOptions {
-  std::reference_wrapper<const GeometryContext> geoContext;
-  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-  std::reference_wrapper<const CalibrationContext> calibrationContext;
+  std::reference_wrapper<const GeometryContext> geoContext{};
+  std::reference_wrapper<const MagneticFieldContext> magFieldContext{};
+  std::reference_wrapper<const CalibrationContext> calibrationContext{};
 
   GsfExtensions<traj_t> extensions;
 
