@@ -181,7 +181,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
       break;
   }
 
-  auto fTransform = m_cfg.transform * eTransform;
+  Transform3 fTransform = m_cfg.transform * eTransform;
   ACTS_VERBOSE(" - translation: " << Acts::toString(fTransform.translation()));
   if (not fTransform.rotation().isApprox(
           Acts::Transform3::Identity().rotation())) {

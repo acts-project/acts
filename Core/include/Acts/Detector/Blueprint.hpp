@@ -154,7 +154,7 @@ struct Node final {
     }
 
     if (geoIdGenerator != nullptr) {
-      ss << name + "_geo"
+      ss << name + "_geoID"
          << " [shape=\"note\";style=\"filled\";fillcolor=\"azure\"];" << '\n';
       ss << name << " -> " << name + "_geoID"
          << ";" << '\n';

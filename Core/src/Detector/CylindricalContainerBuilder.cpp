@@ -116,6 +116,50 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   }
 }
 
+Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
+    const Acts::Experimental::Blueprint::Node& bpNode,
+    Acts::Logging::Level logLevel)
+    : IDetectorComponentBuilder(),
+      m_logger(getDefaultLogger(bpNode.name + "_cont", logLevel)) {
+  if (bpNode.boundsType != VolumeBounds::BoundsType::eCylinder) {
+    throw std::invalid_argument(
+        "CylindricalContainerBuilder: boundary type must be cylinder - for "
+        "building from a blueprint node.");
+  }
+
+  std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders;
+  for (const auto& child : bpNode.children) {
+    if (child->isLeaf()) {
+      // Volume structure
+      VolumeStructureBuilder::Config vsCfg;
+      vsCfg.transform = child->transform;
+      vsCfg.boundsType = child->boundsType;
+      vsCfg.boundValues = child->boundaryValues;
+      vsCfg.auxiliary = "*** acts auto-generated shape builder ***";
+      auto vsBuilder = std::make_shared<VolumeStructureBuilder>(
+          vsCfg, getDefaultLogger(child->name + "_shape", logLevel));
+      // Detector volume builder
+      DetectorVolumeBuilder::Config dvCfg;
+      dvCfg.name = child->name;
+      dvCfg.externalsBuilder = vsBuilder;
+      dvCfg.internalsBuilder = child->internalsBuilder;
+      dvCfg.auxiliary = "*** acts auto-generated volume builder ***";
+      // Add the builder
+      m_cfg.builders.push_back(std::make_shared<DetectorVolumeBuilder>(
+          dvCfg, getDefaultLogger(child->name, logLevel)));
+    } else {
+      // This evokes the recursive stepping down the tree
+      m_cfg.builders.push_back(
+          std::make_shared<CylindricalContainerBuilder>(*child, logLevel));
+    }
+  }
+
+  m_cfg.binning = bpNode.binning;
+  m_cfg.auxiliary = "*** acts auto-generated from proxy ***";
+  m_cfg.geoIdGenerator = bpNode.geoIdGenerator;
+  m_cfg.rootVolumeFinderBuilder = bpNode.rootVolumeFinderBuilder;
+}
+
 Acts::Experimental::DetectorComponent
 Acts::Experimental::CylindricalContainerBuilder::construct(
     const GeometryContext& gctx) const {
@@ -187,52 +231,4 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   // Return the container
   return Acts::Experimental::DetectorComponent{
       {}, rContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
-}
-
-std::shared_ptr<const Acts::Experimental::IDetectorComponentBuilder>
-Acts::Experimental::CylindricalContainerBuilder::createFromBlueprint(
-    const Acts::Experimental::Blueprint::Node& bpNode,
-    Acts::Logging::Level logLevel) {
-  if (bpNode.boundsType != VolumeBounds::BoundsType::eCylinder) {
-    throw std::invalid_argument(
-        "CylindricalContainerBuilder: boundary type must be cylinder - for "
-        "building from a blueprint node.");
-  }
-
-  std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders;
-  for (const auto& child : bpNode.children) {
-    if (child->isLeaf()) {
-      // Volume structure
-      VolumeStructureBuilder::Config vsCfg;
-      vsCfg.transform = child->transform;
-      vsCfg.boundsType = child->boundsType;
-      vsCfg.boundValues = child->boundaryValues;
-      vsCfg.auxiliary = "*** acts auto-generated shape builder ***";
-      auto vsBuilder = std::make_shared<VolumeStructureBuilder>(
-          vsCfg, getDefaultLogger(child->name + "_shape", logLevel));
-      // Detector volume builder
-      DetectorVolumeBuilder::Config dvCfg;
-      dvCfg.name = child->name;
-      dvCfg.externalsBuilder = vsBuilder;
-      dvCfg.internalsBuilder = child->internalsBuilder;
-      dvCfg.auxiliary = "*** acts auto-generated volume builder ***";
-      // Add the builder
-      builders.push_back(std::make_shared<DetectorVolumeBuilder>(
-          dvCfg, getDefaultLogger(child->name, logLevel)));
-    } else {
-      // This evokes the recursive stepping down the tree
-      builders.push_back(createFromBlueprint(*child, logLevel));
-    }
-  }
-
-  // Create the contif and finally the container builder
-  Config cfg;
-  cfg.binning = bpNode.binning;
-  cfg.builders = builders;
-  cfg.auxiliary = "*** acts auto-generated from proxy ***";
-  cfg.geoIdGenerator = bpNode.geoIdGenerator;
-  cfg.rootVolumeFinderBuilder = bpNode.rootVolumeFinderBuilder;
-
-  return std::make_shared<CylindricalContainerBuilder>(
-      cfg, getDefaultLogger(bpNode.name, logLevel));
 }

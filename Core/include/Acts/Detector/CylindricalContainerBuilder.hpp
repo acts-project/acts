@@ -60,7 +60,7 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     std::string auxiliary = "";
   };
 
-  /// Constructor with configuration arguments
+  /// Constructor with configuration struct
   ///
   /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output
@@ -69,14 +69,9 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("CylindricalContainerBuilder", Logging::INFO));
 
-  /// The final implementation of the cylindrical container builder
+  /// Constructor from blueprint and logging level
   ///
-  /// @param gctx The geometry context for this call
-  ///
-  /// @return an outgoing detector component
-  DetectorComponent construct(const GeometryContext& gctx) const final;
-
-  /// Create a new builder instance from a blueprint
+  /// It will create recursively the builders of sub volumes
   ///
   /// @param bpNode is the entry blue print node
   /// @param logLevel is the logging output level for the builder tools
@@ -85,10 +80,19 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   /// it is assumed it has passed first through gap filling via the
   /// blueprint helper.
   ///
+  /// @note that the naming of the builders is taken from the bluprint nodes
+  ///
   /// @return a cylindrical container builder representing this blueprint
-  static std::shared_ptr<const IDetectorComponentBuilder> createFromBlueprint(
+  CylindricalContainerBuilder(
       const Acts::Experimental::Blueprint::Node& bpNode,
       Acts::Logging::Level logLevel = Acts::Logging::INFO);
+
+  /// The final implementation of the cylindrical container builder
+  ///
+  /// @param gctx The geometry context for this call
+  ///
+  /// @return an outgoing detector component
+  DetectorComponent construct(const GeometryContext& gctx) const final;
 
  private:
   /// configuration object
