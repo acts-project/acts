@@ -87,7 +87,7 @@ static inline actsvg::svg::object zphi(const ProtoSurface& pSurface,
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
 ///
-/// @note it captures the the radii[0u] element for plotting
+/// @note it captures the radii[0u] element for plotting
 ///
 /// @return an svg object that can be written out directly to disc
 static inline actsvg::svg::object zrphi(const ProtoSurface& pSurface,

@@ -37,7 +37,7 @@ struct TupleIndexOf<T, std::tuple<U, Types...>> {
 
 // Construct an index sequence for a subset of the tuple elements.
 //
-// Whether an element is part of the subset is defined by a the predicate
+// Whether an element is part of the subset is defined by the predicate
 // template type. It must take the element type as its only template parameter
 // and must provide a static `value` member value. If the value evaluates to
 // `true`, then the corresponding index will be part of the index sequence.

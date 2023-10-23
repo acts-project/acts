@@ -46,7 +46,7 @@ class IVisualization3D {
   /// @note Depending on the helper implementation, out of plane vertices might
   /// be handled differently.
   /// @param vtxs The vertices that make up the faceS
-  /// @param faces The face presectiotions (i.e. connecting vertices)
+  /// @param faces The face presections (i.e. connecting vertices)
   /// @param color The color of the face
   ///
   virtual void faces(const std::vector<Vector3>& vtxs,
