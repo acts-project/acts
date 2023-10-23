@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
 
   using Gx2Fitter =
       Experimental::Gx2Fitter<SimPropagator, VectorMultiTrajectory>;
-  Gx2Fitter Fitter(simPropagator, gx2fLogger->clone());
+  Gx2Fitter fitter(simPropagator, gx2fLogger->clone());
 
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                         startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
@@ -280,13 +280,13 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   using RecoStepper = EigenStepper<>;
-  auto recoPropagator =
+  const auto recoPropagator =
       makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
 
   using RecoPropagator = decltype(recoPropagator);
   using Gx2Fitter =
       Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-  Gx2Fitter Fitter(recoPropagator, gx2fLogger->clone());
+  Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                         startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
@@ -383,13 +383,13 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   using RecoStepper = EigenStepper<>;
-  auto recoPropagator =
+  const auto recoPropagator =
       makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
 
   using RecoPropagator = decltype(recoPropagator);
   using Gx2Fitter =
       Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-  Gx2Fitter Fitter(recoPropagator, gx2fLogger->clone());
+  Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                         startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
