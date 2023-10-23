@@ -198,7 +198,7 @@ Acts::Result<void> Acts::
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
-  // Vertex position
+  // Vertex seed position
   const Vector3& seedPos = vtxInfo.seedPosition.template head<3>();
 
   // Loop over all tracks at the vertex
