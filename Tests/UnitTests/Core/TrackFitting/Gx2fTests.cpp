@@ -29,7 +29,6 @@
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
