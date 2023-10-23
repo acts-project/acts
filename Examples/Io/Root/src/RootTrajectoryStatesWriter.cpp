@@ -552,13 +552,17 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
                 std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, #2348)
                     Acts::eBoundLoc1, Acts::eBoundLoc1)));
             m_err_ePHI[ipar].push_back(
-                std::sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, #2348)
+                    Acts::eBoundPhi, Acts::eBoundPhi)));
             m_err_eTHETA[ipar].push_back(
-                std::sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, #2348)
+                    Acts::eBoundTheta, Acts::eBoundTheta)));
             m_err_eQOP[ipar].push_back(
-                std::sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, #2348)
+                    Acts::eBoundQOverP, Acts::eBoundQOverP)));
             m_err_eT[ipar].push_back(
-                std::sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, #2348)
+                    Acts::eBoundTime, Acts::eBoundTime)));
 
             // track parameters pull
             m_pull_eLOC0[ipar].push_back(
