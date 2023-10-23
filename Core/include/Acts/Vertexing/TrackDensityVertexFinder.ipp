@@ -28,8 +28,8 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
 
   SquareMatrix3 seedCov = vertexingOptions.constraint.covariance();
 
-  // Check if a constraint is provided and set the new z position constraint
-  if (seedCov != SquareMatrix3::Zero() && std::isnormal(zAndWidth.second)) {
+  // Set the new z position constraint if desired
+  if (vertexingOptions.useConstraintInFit && std::isnormal(zAndWidth.second)) {
     seedCov(eZ, eZ) = zAndWidth.second * zAndWidth.second;
   }
 
