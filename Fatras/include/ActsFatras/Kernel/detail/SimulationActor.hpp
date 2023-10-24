@@ -53,7 +53,7 @@ struct SimulationActor {
                               const result_type &result,
                               const Acts::Logger & /*logger*/) const {
       // must return true if the propagation should abort
-      return not result.isAlive;
+      return !result.isAlive;
     }
   };
 
@@ -88,7 +88,7 @@ struct SimulationActor {
     assert(generator and "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
-    if (not result.isAlive) {
+    if (!result.isAlive) {
       return;
     }
 
@@ -135,7 +135,7 @@ struct SimulationActor {
     }
 
     // arm the point-like interaction limits in the first step
-    if (std::isnan(result.x0Limit) or std::isnan(result.l0Limit)) {
+    if (std::isnan(result.x0Limit) || std::isnan(result.l0Limit)) {
       armPointLikeInteractions(initialParticle, result);
     }
 
@@ -144,7 +144,7 @@ struct SimulationActor {
       return;
     }
     // If we are not on a surface, there is nothing further for us to do
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
     const Acts::Surface &surface = *navigator.currentSurface(state.navigation);

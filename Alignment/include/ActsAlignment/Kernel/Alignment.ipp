@@ -200,7 +200,7 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
                  << deltaAlignmentParam);
     bool updated = alignedTransformUpdater(alignedDetElements.at(index), gctx,
                                            newTransform);
-    if (not updated) {
+    if (!updated) {
       ACTS_ERROR("Update alignment parameters for detector element failed");
       return AlignmentError::AlignmentParametersUpdateFailure;
     }
@@ -289,7 +289,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     auto updateRes = updateAlignmentParameters(
         alignOptions.fitOptions.geoContext, alignOptions.alignedDetElements,
         alignOptions.alignedTransformUpdater, alignResult);
-    if (not updateRes.ok()) {
+    if (!updateRes.ok()) {
       ACTS_ERROR("Update alignment parameters failed: " << updateRes.error());
       return updateRes.error();
     }
@@ -297,7 +297,7 @@ ActsAlignment::Alignment<fitter_t>::align(
   }  // end of all iterations
 
   // Alignment failure if not converged
-  if (not converged) {
+  if (!converged) {
     ACTS_ERROR("Alignment is not converged.");
     alignResult.result = AlignmentError::ConvergeFailure;
   }
