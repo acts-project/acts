@@ -11,7 +11,11 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <numeric>
+
 using namespace Acts;
+using namespace Acts::HashedStringLiteral;
+using MultiTrajectoryTraits::IndexType;
 
 BOOST_AUTO_TEST_SUITE(EventDataTrack)
 
