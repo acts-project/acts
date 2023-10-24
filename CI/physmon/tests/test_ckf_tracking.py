@@ -35,19 +35,6 @@ from helpers import failure_threshold
 u = acts.UnitConstants
 
 
-#  def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
-#  with tempfile.TemporaryDirectory() as temp:
-
-
-#  for truthSmearedSeeded, truthEstimatedSeeded, label in [
-#  (True, False, "truth_smeared"),  # if first is true, second is ignored
-#  (False, True, "truth_estimated"),
-#  (False, False, "seeded"),
-#  (False, False, "orthogonal"),
-#  ]:
-#  run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
-
-
 @pytest.mark.parametrize(
     "seeding_algorithm",
     [
