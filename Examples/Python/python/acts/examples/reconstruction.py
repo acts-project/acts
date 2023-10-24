@@ -1671,7 +1671,6 @@ def addVertexFitting(
                 inputSelectedTruthParticles=selectedParticles,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputTracks=tracks,
-                inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
                 bField=field,

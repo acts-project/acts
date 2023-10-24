@@ -51,9 +51,7 @@ class VertexPerformanceWriter final
     std::string inputAllTruthParticles;
     /// Selected input truth particle collection.
     std::string inputSelectedTruthParticles;
-    /// Optional. Input track parameters.
-    std::string inputTrackParameters;
-    /// Optional. Tracks object from track finidng.
+    /// Tracks object from track finidng.
     std::string inputTracks;
     /// Optional. Truth particles associated to tracks. Using 1:1 matching if
     /// given.
@@ -212,9 +210,6 @@ class VertexPerformanceWriter final
 
   ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
       this, "InputSelectedTruthParticles"};
-
-  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
-      this, "InputTrackParameters"};
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
 

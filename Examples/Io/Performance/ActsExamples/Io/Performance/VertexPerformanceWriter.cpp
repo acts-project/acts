@@ -67,15 +67,11 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     throw std::invalid_argument(
         "Collection with selected truth particles missing");
   }
-  if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument("Collection with track parameters missing");
-  }
 
   m_inputAllTruthParticles.initialize(m_cfg.inputAllTruthParticles);
   m_inputSelectedTruthParticles.initialize(m_cfg.inputSelectedTruthParticles);
 
   if (m_cfg.useTracks) {
-    m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
     if (!m_cfg.inputAssociatedTruthParticles.empty()) {
       m_inputAssociatedTruthParticles.initialize(
           m_cfg.inputAssociatedTruthParticles);
@@ -268,9 +264,16 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // trackParameters. If we know the truth particles associated to the track
   // parameters a priori:
   if (m_cfg.useTracks) {
-    trackParameters = m_inputTrackParameters(ctx);
-
     if (!m_cfg.inputAssociatedTruthParticles.empty()) {
+      for (const auto& track : m_inputTracks(ctx)) {
+        if (!track.hasReferenceSurface()) {
+          ACTS_ERROR("Track " << track.tipIndex()
+                              << " has no reference surface");
+        } else {
+          trackParameters.push_back(track.boundParameters());
+        }
+      }
+
       // Read track-associated truth particle input collection
       associatedTruthParticles =
           std::vector<SimParticle>(m_inputAssociatedTruthParticles(ctx).begin(),
@@ -333,9 +336,18 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           continue;
         }
 
+        trackParameters.push_back(track.boundParameters());
         const auto& majorityParticle = *it;
         associatedTruthParticles.push_back(majorityParticle);
       }
+    }
+
+    if (trackParameters.size() != associatedTruthParticles.size()) {
+      ACTS_ERROR(
+          "Number of track parameters and associated truth particles do not "
+          "match. ("
+          << trackParameters.size() << " != " << associatedTruthParticles.size()
+          << ").");
     }
   } else {
     // if not using tracks, then all truth particles

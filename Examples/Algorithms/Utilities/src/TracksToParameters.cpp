@@ -43,6 +43,9 @@ ProcessCode TracksToParameters::execute(const AlgorithmContext& ctx) const {
     }
   }
 
+  ACTS_INFO("Converted " << tracks.size() << " tracks to "
+                         << trackParameters.size() << " track parameters");
+
   m_outputTrackParameters(ctx, std::move(trackParameters));
 
   return ProcessCode::SUCCESS;
