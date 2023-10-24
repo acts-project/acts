@@ -745,30 +745,32 @@ class Gx2Fitter {
 
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
+    bool detAisZero = true;
     if (gx2fOptions.zeroField) {
       const size_t reducedMatrixSize = 4;
       if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
               .determinant() != 0) {
+        detAisZero = false;
         fullCovariancePredicted
             .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
             aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
                 .inverse();
-      } else if (gx2fOptions.nUpdateMax > 0) {
-        ACTS_ERROR("det(a) == 0. This should not happen ever.");
-        return Experimental::GlobalChiSquareFitterError::DetAIsZero;
       }
     } else {
       const size_t reducedMatrixSize = 5;
       if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
               .determinant() != 0) {
+        detAisZero = false;
         fullCovariancePredicted
             .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
             aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
                 .inverse();
-      } else if (gx2fOptions.nUpdateMax > 0) {
-        ACTS_ERROR("det(a) == 0. This should not happen ever.");
-        return Experimental::GlobalChiSquareFitterError::DetAIsZero;
       }
+    }
+
+    if (detAisZero && gx2fOptions.nUpdateMax > 0) {
+      ACTS_ERROR("det(a) == 0. This should not happen ever.");
+      return Experimental::GlobalChiSquareFitterError::DetAIsZero;
     }
 
     // Prepare track for return
