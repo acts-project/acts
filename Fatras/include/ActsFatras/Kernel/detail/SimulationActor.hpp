@@ -183,7 +183,7 @@ struct SimulationActor {
           // apply abs in case `normal` and `before` produce an angle > 90°
           slab.scaleThickness(std::abs(cosIncidenceInv));
           // run the interaction simulation
-          interact(slab, result);
+          interact(slab, result);  // MARK: fpeMask(FLTUND, 1, #2346)
         }
       }
     }
