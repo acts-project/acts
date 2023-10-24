@@ -9,11 +9,15 @@ histograms:
     min: -0.1
     max: 0.1
 
-  "pull.*":
+  "pullX|pullY|pullZ":
     nbins: 50
     min: -6
     max: 6
 
+ "pullT":
+    nbins: 50
+    min: -50
+    max: 50
 
   "trk_pull.*":
     nbins: 50
@@ -25,10 +29,10 @@ histograms:
     min: -0.0005
     max: 0.0005
 
-  "covX.*|covY.*|covZ.*":
+  "covTT":
     nbins: 100
-    min: -0.0005
-    max: 0.0005
+    min: 0.0
+    max: 100.
 
   "^n.*$":
     nbins: 250
