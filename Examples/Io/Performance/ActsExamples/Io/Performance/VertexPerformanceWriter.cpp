@@ -602,7 +602,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Perigee at the true vertex position
           const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
               Acts::Surface::makeShared<Acts::PerigeeSurface>(truePos.head(3));
-          // Setting the geometry/magnetic field context context for the event
+          // Setting the geometry/magnetic field context for the event
           Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
           // Lambda for propagating the tracks to the PCA
           auto propagateToVtx = [&](const auto& params)

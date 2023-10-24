@@ -34,7 +34,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   double thickness = static_cast<double>(slab1.thickness()) +
                      static_cast<double>(slab2.thickness());
 
-  // if the two materials are the same there is not need for additional
+  // if the two materials are the same there is no need for additional
   // computation
   if (mat1 == mat2) {
     return {mat1, static_cast<float>(thickness)};
@@ -72,7 +72,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   //
   //     A = (N1*A1 + N2*A2) / (N1+N2) = (N1/N)*A1 + (N2/N)*A2 = W1*A1 + W2*A2
   //
-  // the number of atoms/molecues in a given volume V with molar density rho is
+  // the number of atoms/molecules in a given volume V with molar density rho is
   //
   //     N = V * rho * Na
   //

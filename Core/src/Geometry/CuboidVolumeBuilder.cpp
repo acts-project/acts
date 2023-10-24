@@ -169,6 +169,9 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 
     LayerConfig lCfg;
     lCfg.surfaceCfg = {sCfg};
+    lCfg.envelopeX = {0.1 * UnitConstants::mm, 0.1 * UnitConstants::mm};
+    lCfg.envelopeY = {0.1 * UnitConstants::mm, 0.1 * UnitConstants::mm};
+    lCfg.envelopeZ = {0.1 * UnitConstants::mm, 0.1 * UnitConstants::mm};
 
     cfg.layerCfg.push_back(lCfg);
   }

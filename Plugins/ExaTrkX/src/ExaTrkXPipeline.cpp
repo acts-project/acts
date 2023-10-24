@@ -34,16 +34,31 @@ ExaTrkXPipeline::ExaTrkXPipeline(
 
 std::vector<std::vector<int>> ExaTrkXPipeline::run(
     std::vector<float> &features, std::vector<int> &spacepointIDs,
-    const ExaTrkXHook &hook) const {
-  auto [nodes, edges] = (*m_graphConstructor)(features, spacepointIDs.size());
+    int deviceHint, const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
+  auto t0 = std::chrono::high_resolution_clock::now();
+  auto [nodes, edges] =
+      (*m_graphConstructor)(features, spacepointIDs.size(), deviceHint);
+  auto t1 = std::chrono::high_resolution_clock::now();
+
+  if (timing != nullptr) {
+    timing->graphBuildingTime = t1 - t0;
+  }
 
   hook(nodes, edges);
 
   std::any edge_weights;
+  timing->classifierTimes.clear();
 
   for (auto edgeClassifier : m_edgeClassifiers) {
+    t0 = std::chrono::high_resolution_clock::now();
     auto [newNodes, newEdges, newWeights] =
-        (*edgeClassifier)(std::move(nodes), std::move(edges));
+        (*edgeClassifier)(std::move(nodes), std::move(edges), deviceHint);
+    t1 = std::chrono::high_resolution_clock::now();
+
+    if (timing != nullptr) {
+      timing->classifierTimes.push_back(t1 - t0);
+    }
+
     nodes = std::move(newNodes);
     edges = std::move(newEdges);
     edge_weights = std::move(newWeights);
@@ -51,8 +66,17 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     hook(nodes, edges);
   }
 
-  return (*m_trackBuilder)(std::move(nodes), std::move(edges),
-                           std::move(edge_weights), spacepointIDs);
+  t0 = std::chrono::high_resolution_clock::now();
+  auto res =
+      (*m_trackBuilder)(std::move(nodes), std::move(edges),
+                        std::move(edge_weights), spacepointIDs, deviceHint);
+  t1 = std::chrono::high_resolution_clock::now();
+
+  if (timing != nullptr) {
+    timing->trackBuildingTime = t1 - t0;
+  }
+
+  return res;
 }
 
 }  // namespace Acts

@@ -10,7 +10,8 @@ import acts.examples
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
-    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal HoughTransform"
+    "SeedingAlgorithm",
+    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform FTF",
 )
 
 TruthSeedRanges = namedtuple(
@@ -121,8 +122,8 @@ TrackSelectorConfig = namedtuple(
 
 CkfConfig = namedtuple(
     "CkfConfig",
-    ["chi2CutOff", "numMeasurementsCutOff"],
-    defaults=[15.0, 10],
+    ["chi2CutOff", "numMeasurementsCutOff", "maxSteps"],
+    defaults=[15.0, 10, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -167,6 +168,8 @@ def addSeeding(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
+    layerMappingConfigFile: Optional[Union[Path, str]] = None,
+    fastrack_inputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
@@ -314,6 +317,21 @@ def addSeeding(
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
+        elif seedingAlgorithm == SeedingAlgorithm.FTF:
+            logger.info("Using FTF seeding")
+            # output of algs changed, only one output now
+            seeds = addFTFSeeding(
+                s,
+                spacePoints,
+                seedFinderConfigArg,
+                seedFinderOptionsArg,
+                seedFilterConfigArg,
+                trackingGeometry,
+                logLevel,
+                layerMappingConfigFile,
+                geoSelectionConfigFile,
+                fastrack_inputConfigFile,
+            )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
 
@@ -773,9 +791,87 @@ def addHoughTransformSeeding(
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     ht = acts.examples.HoughTransformSeeder(config=config, level=logLevel)
     sequence.addAlgorithm(ht)
-    # potentially HT can be extended to also produce seeds, but it is not yet implemented yet
+    # potentially HT can be extended to also produce seeds, but it is not implemented yet
     # configuration option (outputSeeds) exists
     return ht.config.outputSeeds
+
+
+def addFTFSeeding(
+    sequence: acts.examples.Sequencer,
+    spacePoints: str,
+    seedFinderConfigArg: SeedFinderConfigArg,
+    seedFinderOptionsArg: SeedFinderOptionsArg,
+    seedFilterConfigArg: SeedFilterConfigArg,
+    trackingGeometry: acts.TrackingGeometry,
+    logLevel: acts.logging.Level = None,
+    layerMappingConfigFile: Union[Path, str] = None,
+    geoSelectionConfigFile: Union[Path, str] = None,
+    fastrack_inputConfigFile: Union[Path, str] = None,
+):
+    """FTF seeding"""
+
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    layerMappingFile = str(layerMappingConfigFile)  # turn path into string
+    fastrack_inputFile = str(fastrack_inputConfigFile)
+    seedFinderConfig = acts.SeedFinderFTFConfig(
+        **acts.examples.defaultKWArgs(
+            sigmaScattering=seedFinderConfigArg.sigmaScattering,
+            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+            minPt=seedFinderConfigArg.minPt,
+            fastrack_input_file=fastrack_inputFile,
+            m_useClusterWidth=False,
+        ),
+    )
+    seedFinderOptions = acts.SeedFinderOptions(
+        **acts.examples.defaultKWArgs(
+            beamPos=acts.Vector2(0.0, 0.0)
+            if seedFinderOptionsArg.beamPos == (None, None)
+            else acts.Vector2(
+                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+            ),
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+        )
+    )
+    seedFilterConfig = acts.SeedFilterConfig(
+        **acts.examples.defaultKWArgs(
+            maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
+            deltaRMin=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFilterConfigArg.deltaRMin is None
+                else seedFilterConfigArg.deltaRMin
+            ),
+            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
+            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
+            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
+            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
+            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
+            seedConfirmation=seedFilterConfigArg.seedConfirmation,
+            # curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
+            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
+            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
+            useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+        )
+    )
+
+    seedingAlg = acts.examples.SeedingFTFAlgorithm(
+        level=logLevel,
+        inputSpacePoints=[spacePoints],
+        outputSeeds="seeds",
+        seedFilterConfig=seedFilterConfig,
+        seedFinderConfig=seedFinderConfig,
+        seedFinderOptions=seedFinderOptions,
+        layerMappingFile=layerMappingFile,
+        geometrySelection=acts.examples.readJsonGeometryList(
+            str(geoSelectionConfigFile)
+        ),
+        inputSourceLinks="sourcelinks",
+        trackingGeometry=trackingGeometry,
+        fill_module_csv=False,
+    )
+
+    sequence.addAlgorithm(seedingAlg)
+    return seedingAlg.config.outputSeeds
 
 
 def addSeedPerformanceWriters(
@@ -1005,6 +1101,9 @@ def addCKFTracks(
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
         ),
+        **acts.examples.defaultKWArgs(
+            maxSteps=ckfConfig.maxSteps,
+        ),
     )
     s.addAlgorithm(trackFinder)
     s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
@@ -1031,6 +1130,55 @@ def addCKFTracks(
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )
+
+    return s
+
+
+def addGx2fTracks(
+    s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    # directNavigation: bool = False,
+    inputProtoTracks: str = "truth_particle_tracks",
+    multipleScattering: bool = False,
+    energyLoss: bool = False,
+    clusters: str = None,
+    calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    gx2fOptions = {
+        "multipleScattering": multipleScattering,
+        "energyLoss": energyLoss,
+        "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
+        "level": customLogLevel(),
+    }
+
+    fitAlg = acts.examples.TrackFittingAlgorithm(
+        level=customLogLevel(),
+        inputMeasurements="measurements",
+        inputSourceLinks="sourcelinks",
+        inputProtoTracks=inputProtoTracks,
+        inputInitialTrackParameters="estimatedparameters",
+        inputClusters=clusters if clusters is not None else "",
+        outputTracks="gx2fTracks",
+        pickTrack=-1,
+        fit=acts.examples.makeGlobalChiSquareFitterFunction(
+            trackingGeometry, field, **gx2fOptions
+        ),
+        calibrator=calibrator,
+    )
+    s.addAlgorithm(fitAlg)
+    s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
+
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=fitAlg.config.outputTracks,
+        outputTrajectories="gx2fTrajectories",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     return s
 
@@ -1323,7 +1471,7 @@ def addAmbiguityResolution(
     alg = GreedyAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks="tracks",
-        outputTracks="filteredTrajectories",
+        outputTracks="ambiTracks",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
@@ -1335,7 +1483,7 @@ def addAmbiguityResolution(
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
         inputTracks=alg.config.outputTracks,
-        outputTrajectories="trajectories-from-solved-tracks",
+        outputTrajectories="ambiTrajectories",
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
@@ -1379,7 +1527,7 @@ def addAmbiguityResolutionML(
         level=customLogLevel(),
         inputTracks="tracks",
         inputDuplicateNN=onnxModelFile,
-        outputTracks="filteredTrajectoriesML",
+        outputTracks="ambiTracksML",
         **acts.examples.defaultKWArgs(
             nMeasurementsMin=config.nMeasurementsMin,
         ),
@@ -1388,7 +1536,7 @@ def addAmbiguityResolutionML(
     algGreedy = GreedyAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=algML.config.outputTracks,
-        outputTracks="filteredTrajectoriesMLGreedy",
+        outputTracks="ambiTracksMLGreedy",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
@@ -1402,7 +1550,7 @@ def addAmbiguityResolutionML(
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
         inputTracks=algGreedy.config.outputTracks,
-        outputTrajectories="trajectories-from-solved-tracks",
+        outputTrajectories="ambiTrajectories",
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
@@ -1444,7 +1592,7 @@ def addAmbiguityResolutionMLDBScan(
         level=customLogLevel(),
         inputTracks="tracks",
         inputDuplicateNN=onnxModelFile,
-        outputTracks="filteredTrajectoriesMLDBScan",
+        outputTracks="ambiTracksMLDBScan",
         **acts.examples.defaultKWArgs(
             nMeasurementsMin=config.nMeasurementsMin,
             epsilonDBScan=config.epsilonDBScan,
@@ -1456,7 +1604,7 @@ def addAmbiguityResolutionMLDBScan(
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
         inputTracks=alg.config.outputTracks,
-        outputTrajectories="trajectories-from-solved-tracks",
+        outputTrajectories="ambiTrajectories",
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)

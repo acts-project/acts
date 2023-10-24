@@ -16,7 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include <Acts/EventData/Charge.hpp>
-#include <Acts/EventData/MultiComponentBoundTrackParameters.hpp>
+#include <Acts/EventData/MultiComponentTrackParameters.hpp>
 #include <Acts/Surfaces/PlaneSurface.hpp>
 
 #include <algorithm>
