@@ -117,8 +117,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           // Take a non-negative drfit distance measurement for Line Surface
           const Acts::Surface* surface =
               m_cfg.trackingGeometry->findSurface(geoId);
-          const Acts::LineSurface* line = dynamic_cast<const Acts::LineSurface*>(surface);
-          if (line) {
+          if (dynamic_cast<const Acts::LineSurface*>(surface) != nullptr) {
             if (parameters[Acts::eBoundLoc0] < 0) {
               parameters[Acts::eBoundLoc0] *= -1.f;
             }

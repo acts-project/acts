@@ -48,8 +48,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
                  .template topLeftCorner<kMeasurementSize, eBoundSize>()
                  .eval();
 
-    const LineSurface* line = dynamic_cast<const LineSurface*>(surface);
-    if (line) {
+    if (dynamic_cast<const LineSurface*>(surface) != nullptr) {
       if (trackState.predicted[eBoundLoc0] < 0) {
         H(0u, eBoundLoc0) = -1;
       }
@@ -75,8 +74,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     trackState.filtered =
         trackState.predicted + K * (calibrated - H * trackState.predicted);
 
-    trackState.filteredCovariance =
-        (BoundSquareMatrix::Identity() - K * H) * trackState.predictedCovariance;
+    trackState.filteredCovariance = (BoundSquareMatrix::Identity() - K * H) *
+                                    trackState.predictedCovariance;
     ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
     ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
 
