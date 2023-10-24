@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // Set time covariance
   SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
   fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
-  fullCovariance(3, 3) = 100_ns;
+  fullCovariance(eTime, eTime) = 100_ns;
   bsConstr.setFullCovariance(fullCovariance);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, bsConstr);
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   // Set time covariance
   SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
   fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
-  fullCovariance(3, 3) = 100_ns;
+  fullCovariance(eTime, eTime) = 100_ns;
   bsConstr.setFullCovariance(fullCovariance);
 
   VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   // Set time covariance
   SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
   fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
-  fullCovariance(3, 3) = 100_ns;
+  fullCovariance(eTime, eTime) = 100_ns;
   bsConstr.setFullCovariance(fullCovariance);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, bsConstr);
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(
   // Set time covariance
   SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
   fullCovariance.topLeftCorner<3, 3>() = bsConstr.covariance();
-  fullCovariance(3, 3) = 100_ns;
+  fullCovariance(eTime, eTime) = 100_ns;
   bsConstr.setFullCovariance(fullCovariance);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, bsConstr);

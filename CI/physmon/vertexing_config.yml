@@ -20,7 +20,12 @@ histograms:
     min: -10
     max: 10
 
-  "cov.*":
+  "covX.*|covY.*|covZ.*":
+    nbins: 100
+    min: -0.0005
+    max: 0.0005
+
+  "covX.*|covY.*|covZ.*":
     nbins: 100
     min: -0.0005
     max: 0.0005
