@@ -50,7 +50,7 @@ Acts::CurvilinearTrackParameters makeParameters(
     const ActsScalar x = 0.0_m, const ActsScalar y = 0.0_m,
     const ActsScalar z = 0.0_m, const ActsScalar w = 42_ns,
     const ActsScalar phi = 0_degree, const ActsScalar theta = 90_degree,
-    const ActsScalar p = 1_GeV, const ActsScalar q = 1_e) {
+    const ActsScalar p = 2_GeV, const ActsScalar q = 1_e) {
   // create covariance matrix from reasonable standard deviations
   Acts::BoundVector stddev;
   stddev[Acts::eBoundLoc0] = 100_um;
@@ -102,7 +102,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
     /// Shape of the surface
     // Boundaries of the surfaces
     cfg.rBounds =
-        std::make_shared<const RectangleBounds>(RectangleBounds(5_m, 5_m));
+        std::make_shared<const RectangleBounds>(RectangleBounds(1_m, 1_m));
 
     // Material of the surfaces
     MaterialSlab matProp(makeBeryllium(), 0.5_mm);
@@ -134,14 +134,14 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Inner Volume - Build volume configuration
   CuboidVolumeBuilder::VolumeConfig volumeConfig;
-  volumeConfig.length = {(nSurfaces + 1) * 1_m, 10_m, 10_m};
+  volumeConfig.length = {(nSurfaces + 1) * 1_m, 2_m, 2_m};
   volumeConfig.position = {volumeConfig.length.x() / 2, 0., 0.};
   volumeConfig.layerCfg = layerConfig;
   volumeConfig.name = "Test volume";
 
   // Outer volume - Build TrackingGeometry configuration
   CuboidVolumeBuilder::Config config;
-  config.length = {(nSurfaces + 1) * 1_m, 10_m, 10_m};
+  config.length = {(nSurfaces + 1) * 1_m, 2_m, 2_m};
   config.position = {volumeConfig.length.x() / 2, 0., 0.};
   config.volumeCfg = {volumeConfig};
 
@@ -200,6 +200,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
       simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
   auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
 
+  // Reuse the SimPropagator, since we will not actually use it
   using Gx2Fitter =
       Experimental::Gx2Fitter<SimPropagator, VectorMultiTrajectory>;
   Gx2Fitter Fitter(simPropagator, gx2fLogger->clone());
@@ -450,6 +451,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   ACTS_INFO("*** Test: MixedDetector -- Finish");
 }
 
+// This test checks if we can fit QOverP, when a magnetic field is introduced
 BOOST_AUTO_TEST_CASE(FitWithBfield) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: FitWithBfield -- Start");
@@ -478,8 +480,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
       {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   using SimStepper = EigenStepper<>;
-  const auto simPropagator = makeConstantFieldPropagator<SimStepper>(
-      detector.geometry, 0.1_T);  // 0.000001_T
+  const auto simPropagator =
+      makeConstantFieldPropagator<SimStepper>(detector.geometry, 0.3_T);
 
   auto measurements = createMeasurements(
       simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
@@ -495,14 +497,11 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
 
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
-  using RecoStepper = EigenStepper<>;
-  const auto recoPropagator =
-      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0.1_T);
-
-  using RecoPropagator = decltype(recoPropagator);
+  // Reuse the SimPropagator, since it already uses the EigenStepper<>
+  using SimPropagator = decltype(simPropagator);
   using Gx2Fitter =
-      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-  Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+      Experimental::Gx2Fitter<SimPropagator, VectorMultiTrajectory>;
+  Gx2Fitter fitter(simPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -539,9 +538,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-4, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 1., 1e-1);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 0.5, 2e-1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
-  BOOST_CHECK_CLOSE(track.covariance().determinant(), 8e-34, 4e0);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 8e-35, 4e0);
 
   ACTS_INFO("*** Test: FitWithBfield -- Finish");
 }
