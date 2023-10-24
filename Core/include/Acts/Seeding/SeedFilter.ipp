@@ -291,7 +291,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
 
     if (m_cfg.seedConfirmation) {
       // continue if higher-quality seeds were found
-      if (numQualitySeeds > 0 && not qualitySeed) {
+      if (numQualitySeeds > 0 && !qualitySeed) {
         continue;
       }
       if (bestSeedQuality < spacePointData.quality(bottom->index()) &&
