@@ -284,6 +284,8 @@ class TrigFTF_GNN_TrackingFilter {
     X[0] = ts.m_X[0] + ts.m_X[1] * A + ts.m_X[2] * B;
     X[1] = ts.m_X[1] + ts.m_X[2] * A;
     X[2] = ts.m_X[2];
+    
+    std::cout << " printing pre  arithmetic error B : " << B << std::endl ; 
 
     Cx[0][0] = ts.m_Cx[0][0] + 2 * ts.m_Cx[0][1] * A + 2 * ts.m_Cx[0][2] * B +
                A * A * ts.m_Cx[1][1] + 2 * A * B * ts.m_Cx[1][2] +
@@ -304,6 +306,8 @@ class TrigFTF_GNN_TrackingFilter {
     Cy[0][0] = ts.m_Cy[0][0] + 2 * ts.m_Cy[0][1] * dr + dr * dr * ts.m_Cy[1][1];
     Cy[0][1] = Cy[1][0] = ts.m_Cy[0][1] + dr * ts.m_Cy[1][1];
     Cy[1][1] = ts.m_Cy[1][1];
+   
+    std::cout << " printing after where arithmetic error is " << Cx[0][0] << std::endl ; 
 
     // chi2 test
 
@@ -314,10 +318,10 @@ class TrigFTF_GNN_TrackingFilter {
     float CHy[2] = {Cy[0][0], Cy[0][1]};
 
     float sigma_rz = 0.0;
-
+    
     int type = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
 
-    if (type == 0) {  // barrel TO-DO: split into barrel Pixel and barrel SCT
+    if (type == 0) {  // barrel TO-DO:c split into barrel Pixel and barrel SCT
       sigma_rz = sigma_y * sigma_y;
     } else {
       sigma_rz = sigma_y * ts.m_Y[1];
@@ -362,6 +366,7 @@ class TrigFTF_GNN_TrackingFilter {
     }
     ts.m_refX = refX;
     ts.m_refY = refY;
+
     return true;
   }
 
