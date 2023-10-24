@@ -44,14 +44,6 @@ s.addAlgorithm(
     )
 )
 
-s.addAlgorithm(
-    acts.examples.TracksToTrajectories(
-        level=acts.logging.INFO,
-        inputTracks="gsfTracks",
-        outputTrajectories="gsfTrajectories",
-    )
-)
-
 s.addWriter(
     acts.examples.TrackFitterPerformanceWriter(
         level=acts.logging.INFO,

@@ -122,14 +122,6 @@ def runTruthTrackingKalman(
             ),
         )
     )
-    s.addAlgorithm(
-        acts.examples.TracksToTrajectories(
-            level=acts.logging.INFO,
-            inputTracks="selected-tracks",
-            outputTrajectories="trajectories-from-tracks",
-        )
-    )
-    s.addWhiteboardAlias("trajectories", "trajectories-from-tracks")
 
     s.addWriter(
         acts.examples.RootTrackStatesWriter(
