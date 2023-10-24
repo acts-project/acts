@@ -15,7 +15,7 @@ from ambiguity_solver_network import prepareDataSet, DuplicateClassifier, Normal
 avg_mean = [0, 0, 0, 0, 0, 0, 0, 0]
 avg_sdv = [0, 0, 0, 0, 0, 0, 0, 0]
 events = 0
-
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
     """Read the dataset from the different files, remove the pure duplicate tracks and combine the datasets"""
@@ -151,6 +151,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
         if Optimiser:
             Optimiser.zero_grad()
         input = torch.tensor(b_data[1], dtype=torch.float32)
+        input = input.to(device)
         prediction = duplicateClassifier(input)
         # loop over all the track in the batch
         for index, pred, truth in zip(b_data[0], prediction, b_data[2]):
@@ -262,6 +263,7 @@ layers_dim = [10, 15, 10]
 duplicateClassifier = nn.Sequential(
     Normalise(avg_mean, avg_sdv), DuplicateClassifier(input_dim, layers_dim)
 )
+duplicateClassifier = duplicateClassifier.to(device)
 
 # Train the model and save it
 input = data.index, x_train, y_train
@@ -292,6 +294,7 @@ x_test, y_test = prepareTrainingData(test)
 output_predict = []
 
 x_test = torch.tensor(x_test, dtype=torch.float32)
+x_test = x_test.to(device)
 for x in x_test:
     output_predict.append(duplicateClassifier(x))
 
