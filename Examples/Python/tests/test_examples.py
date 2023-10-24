@@ -20,8 +20,6 @@ from helpers import (
     exatrkxEnabled,
     onnxEnabled,
     AssertCollectionExistsAlg,
-    isCI,
-    doHashChecks,
     failure_threshold,
 )
 
@@ -33,7 +31,6 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
     AlignedDetector,
-    RootParticleWriter,
 )
 
 from acts.examples.odd import getOpenDataDetector
@@ -569,7 +566,6 @@ def test_truth_tracking_kalman(
     root_files = [
         ("trackstates_fitter.root", "trackstates", 19),
         ("tracksummary_fitter.root", "tracksummary", 10),
-        ("performance_track_finder.root", "track_finder_tracks", 19),
         ("performance_track_fitter.root", None, -1),
     ]
 

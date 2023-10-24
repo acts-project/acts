@@ -111,9 +111,9 @@ struct DigiComponentsConfig {
 class DigitizationConfig {
  public:
   DigitizationConfig(bool merge, double sigma, bool commonCorner)
-      : DigitizationConfig(
-            merge, sigma, commonCorner,
-            Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+      : DigitizationConfig(merge, sigma, commonCorner,
+                           Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {
+  }
 
   DigitizationConfig(
       bool doMerge, double mergeNsigma, bool mergeCommonCorner,
