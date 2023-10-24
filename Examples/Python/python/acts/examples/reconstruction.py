@@ -1015,7 +1015,6 @@ def addCKFTracks(
     field: acts.MagneticFieldProvider,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     ckfConfig: CkfConfig = CkfConfig(),
-    outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1029,8 +1028,6 @@ def addCKFTracks(
         the sequencer module to which we add the Seeding steps (returned from addSeeding)
     trackingGeometry : tracking geometry
     field : magnetic field
-    outputDirCsv : Path|str, path, None
-        the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     trackSelectorConfig : TrackSelectorConfig(loc0, loc1, time, eta, absEta, pt, phi, minMeasurements)
@@ -1419,7 +1416,7 @@ def addExaTrkX(
 def addAmbiguityResolution(
     s,
     config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
-    outputDirCsv: Optional[Union[Path, str]] = None,
+    tracks: str = "tracks",
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1431,7 +1428,7 @@ def addAmbiguityResolution(
 
     alg = GreedyAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
-        inputTracks="tracks",
+        inputTracks=tracks,
         outputTracks="ambiTracks",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
@@ -1440,6 +1437,7 @@ def addAmbiguityResolution(
         ),
     )
     s.addAlgorithm(alg)
+    s.addWhiteboardAlias("tracks", alg.config.outputTracks)
 
     addTrackWriters(
         s,
@@ -1465,7 +1463,6 @@ def addAmbiguityResolutionML(
     s,
     config: AmbiguityResolutionMLConfig = AmbiguityResolutionMLConfig(),
     onnxModelFile: Optional[Union[Path, str]] = None,
-    outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1522,7 +1519,6 @@ def addAmbiguityResolutionMLDBScan(
     s,
     config: AmbiguityResolutionMLDBScanConfig = AmbiguityResolutionMLDBScanConfig(),
     onnxModelFile: Optional[Union[Path, str]] = None,
-    outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
