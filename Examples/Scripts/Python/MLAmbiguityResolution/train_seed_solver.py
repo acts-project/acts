@@ -14,7 +14,6 @@ from seed_solver_network import (
     prepareDataSet,
     DuplicateClassifier,
     Normalise,
-    EtaAnnotation,
 )
 
 avg_mean = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -120,25 +119,27 @@ def computeLoss(
     score_duplicate: list[torch.Tensor],
     score_fake: list[torch.Tensor],
     batch_loss: torch.Tensor,
-    margin: float = 0.1,
+    margin_duplicate: float = 0.3,
+    margin_fake: float = 0.9,
 ) -> torch.Tensor:
     """Compute one loss for each duplicate seed associated with the particle"""
     """
     @param[in] score_good: score return by the model for the good seed associated with this particle 
     @param[in] score_duplicate: list of the scores of all duplicate seed associated with this particle
-    @param[in] margin: Margin used in the computation of the MarginRankingLoss
+    @param[in] margin_duplicate: Margin used in the computation of the MarginRankingLoss for duplicate seeds
+    @param[in] margin_fake: Margin used in the computation of the MarginRankingLoss for fake seeds
     @return: return the updated loss
     """
     # Compute the losses using the MarginRankingLoss with respect to the good seed score
     batch_loss = batch_loss
     if score_duplicate:
         for s in score_duplicate:
-            batch_loss += F.relu(s - score_good + margin) / (
+            batch_loss += F.relu(s - score_good + margin_duplicate) / (
                 len(score_duplicate) + len(score_fake)
             )
     if score_fake:
         for s in score_fake:
-            batch_loss += F.relu(s - score_good + 3 * margin) / (
+            batch_loss += F.relu(s - score_good + margin_fake) / (
                 len(score_duplicate) + len(score_fake)
             )
     return batch_loss
@@ -191,7 +192,12 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
                 if max_match == 2:
                     nb_best_match += 1
                 batch_loss = computeLoss(
-                    score_good, score_duplicate, score_fake, batch_loss, margin=0.1
+                    score_good,
+                    score_duplicate,
+                    score_fake,
+                    batch_loss,
+                    margin_duplicate=0.3,
+                    margin_fake=0.9,
                 )
                 nb_part += 1
                 # Reinitialise the variable for the next particle
@@ -220,7 +226,12 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
         if max_score == 2:
             nb_best_match += 1
         batch_loss = computeLoss(
-            score_good, score_duplicate, score_fake, batch_loss, margin=0.1
+            score_good,
+            score_duplicate,
+            score_fake,
+            batch_loss,
+            margin_duplicate=0.3,
+            margin_fake=0.9,
         )
         nb_part += 1
         # Normalise the loss to the batch size
@@ -303,7 +314,7 @@ def train(
 
 # ==================================================================
 
-# ttbar events used as the training input, here we assume 1000 events are availables
+# ttbar events used as the training input, here we assume 160 events are availables
 CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-seed.csv"))
 CKF_files = sorted(glob.glob("odd_output" + "/event0000001[0-5][0-9]-seed.csv"))
 # CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-seed_cleaned.csv"))
@@ -315,7 +326,7 @@ x_train, y_train = prepareTrainingData(data)
 avg_mean = [x / events for x in avg_mean]
 avg_sdv = [x / events for x in avg_sdv]
 
-# Create our model
+# Create our model and chose the layers sizes
 input_dim = np.shape(x_train)[1]
 layers_dim = [80, 100, 80]
 
@@ -340,7 +351,7 @@ torch.onnx.export(
 )
 # ==================================================================
 
-# ttbar events for the test, here we assume 200 events are availables
+# ttbar events for the test, here we assume 40 events are availables
 CKF_files_test = sorted(glob.glob("odd_output" + "/event0000001[5-9][0-9]-seed.csv"))
 # CKF_files_test = sorted(glob.glob("odd_output" + "/event0000001[5-9][0-9]-seed_cleaned.csv"))
 
