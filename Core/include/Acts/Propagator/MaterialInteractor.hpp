@@ -56,8 +56,8 @@ struct MaterialInteractor {
                   const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
     // In case of Volume material update the result of the previous step
-    if (recordInteractions && ! result.materialInteractions.empty() &&
-        ! result.materialInteractions.back().volume.empty() &&
+    if (recordInteractions && !result.materialInteractions.empty() &&
+        !result.materialInteractions.back().volume.empty() &&
         result.materialInteractions.back().updatedVolumeStep == false) {
       updateResult(state, stepper, result);
     }
@@ -85,7 +85,7 @@ struct MaterialInteractor {
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (! d.evaluateMaterialSlab(state, navigator)) {
+      if (!d.evaluateMaterialSlab(state, navigator)) {
         return;
       }
 
@@ -118,7 +118,7 @@ struct MaterialInteractor {
       detail::VolumeMaterialInteraction d(volume, state, stepper);
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (! d.evaluateMaterialSlab(state, navigator)) {
+      if (!d.evaluateMaterialSlab(state, navigator)) {
         return;
       }
       // Record the result

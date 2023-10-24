@@ -376,7 +376,7 @@ class KalmanFitter {
 
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      if constexpr (! isDirectNavigator) {
+      if constexpr (!isDirectNavigator) {
         if (result.processedStates == 0) {
           for (auto measurementIt = inputMeasurements->begin();
                measurementIt != inputMeasurements->end(); measurementIt++) {
@@ -398,7 +398,7 @@ class KalmanFitter {
         // -> Perform the kalman update
         // -> Fill track state information & update stepper information
 
-        if (! result.smoothed && ! result.reversed) {
+        if (!result.smoothed && !result.reversed) {
           ACTS_VERBOSE("Perform " << direction << " filter step");
           auto res = filter(surface, state, stepper, navigator, result);
           if (!res.ok()) {
@@ -420,7 +420,7 @@ class KalmanFitter {
       // when all track states have been handled or the navigation is breaked,
       // reset navigation&stepping before run reversed filtering or
       // proceed to run smoothing
-      if (! result.smoothed && ! result.reversed) {
+      if (!result.smoothed && !result.reversed) {
         if (result.measurementStates == inputMeasurements->size() ||
             (result.measurementStates > 0 &&
              navigator.navigationBreak(state.navigation))) {
@@ -883,7 +883,7 @@ class KalmanFitter {
         }
       }
 
-      if (! hasMaterial) {
+      if (!hasMaterial) {
         // Screen out message
         ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
                                                         << " at update stage: "
@@ -1160,7 +1160,7 @@ class KalmanFitter {
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
-    if (kalmanResult.result.ok() && ! kalmanResult.measurementStates) {
+    if (kalmanResult.result.ok() && !kalmanResult.measurementStates) {
       kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
     }
 
@@ -1298,7 +1298,7 @@ class KalmanFitter {
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
-    if (kalmanResult.result.ok() && ! kalmanResult.measurementStates) {
+    if (kalmanResult.result.ok() && !kalmanResult.measurementStates) {
       kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
     }
 

@@ -40,8 +40,7 @@ class ElementFraction {
       : m_element(static_cast<uint8_t>(e)),
         m_fraction(static_cast<uint8_t>(f * UINT8_MAX)) {
     assert((0u < e) && ("The atomic number must be positive"));
-    assert((0.0f <= f) && (f <= 1.0f) &&
-           "Relative fraction must be in [0,1]");
+    assert((0.0f <= f) && (f <= 1.0f) && "Relative fraction must be in [0,1]");
   }
   /// Construct from atomic number and integer weight.
   ///

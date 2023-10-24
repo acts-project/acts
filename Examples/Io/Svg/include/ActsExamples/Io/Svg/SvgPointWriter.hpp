@@ -166,7 +166,7 @@ ActsExamples::ProcessCode ActsExamples::SvgPointWriter<T, Acc>::writeT(
                                                       m_cfg.spStyle, id);
       xyView.add_object(p);
       // Draw a connected text box
-      if (! m_cfg.infoBoxTitle.empty()) {
+      if (!m_cfg.infoBoxTitle.empty()) {
         auto xyIbox = Acts::Svg::infoBox(
             static_cast<actsvg::scalar>(point3D.x() + 10.),
             static_cast<actsvg::scalar>(point3D.y() - 10.), m_cfg.infoBoxTitle,

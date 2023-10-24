@@ -122,7 +122,7 @@ std::vector<Acts::Experimental::ProtoBinning> convertBinning(
   for (const auto &[ab, bVal] : allowedBinnings) {
     auto type =
         getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
-    if (! type.empty()) {
+    if (!type.empty()) {
       // Default binning is bound
       auto bType = Acts::detail::AxisBoundaryType::Bound;
       // Equidistant or variable binning

@@ -132,7 +132,7 @@ class GenericBoundTrackParameters {
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
   /// Covariance matrix of the spatial impact parameters (i.e., of d0 and z0)
   std::optional<ActsSquareMatrix<2>> spatialImpactParameterCovariance() const {
-    if (! m_cov.has_value()) {
+    if (!m_cov.has_value()) {
       return std::nullopt;
     }
 
@@ -142,7 +142,7 @@ class GenericBoundTrackParameters {
   /// Covariance matrix of the spatial and temporal impact parameters (i.e., of
   /// d0, z0, and t)
   std::optional<ActsSquareMatrix<3>> impactParameterCovariance() const {
-    if (! m_cov.has_value()) {
+    if (!m_cov.has_value()) {
       return std::nullopt;
     }
 

@@ -56,7 +56,7 @@ class AlignmentDecorator : public IContextDecorator {
   static void applyTransform(Acts::Transform3& trf, const Config& cfg,
                              RandomEngine& rng, unsigned int iov) {
     std::normal_distribution<double> gauss(0., 1.);
-    if (iov != 0 || ! cfg.firstIovNominal) {
+    if (iov != 0 || !cfg.firstIovNominal) {
       // the shifts in x, y, z
       double tx = cfg.gSigmaX != 0 ? cfg.gSigmaX * gauss(rng) : 0.;
       double ty = cfg.gSigmaY != 0 ? cfg.gSigmaY * gauss(rng) : 0.;

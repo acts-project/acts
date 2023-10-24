@@ -68,7 +68,7 @@ struct MaterialCollector {
     if (navigator.currentSurface(state.navigation)) {
       if (navigator.currentSurface(state.navigation) ==
               navigator.targetSurface(state.navigation) &&
-          ! navigator.targetReached(state.navigation)) {
+          !navigator.targetReached(state.navigation)) {
         return;
       }
 

@@ -217,7 +217,7 @@ inline void TGeoLayerBuilder::registerSplit(
       found = true;
     }
   }
-  if (! found) {
+  if (!found) {
     parameters.push_back(test);
   }
 }

@@ -94,7 +94,7 @@ struct SingleParticleSimulation {
         particle.fourPosition(), particle.direction(), particle.qOverP(),
         std::nullopt, particle.hypothesis());
     auto result = propagator.propagate(start, options);
-    if (! result.ok()) {
+    if (!result.ok()) {
       return result.error();
     }
     auto &value = result.value().template get<Result>();
@@ -191,7 +191,7 @@ struct Simulation {
 
     for (const Particle &inputParticle : inputParticles) {
       // only consider simulatable particles
-      if (! selectParticle(inputParticle)) {
+      if (!selectParticle(inputParticle)) {
         continue;
       }
       // required to allow correct particle id numbering for secondaries later
@@ -224,7 +224,7 @@ struct Simulation {
           result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
         }
 
-        if (! result.ok()) {
+        if (!result.ok()) {
           // remove particle from output container since it was not simulated.
           simulatedParticlesInitial.erase(
               std::next(simulatedParticlesInitial.begin(), iinitial));

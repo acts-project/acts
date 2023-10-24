@@ -50,7 +50,7 @@ inline static bool isEqual(const BinningData& ba, const BinningData& bb,
     for (size_t ib = 0; ib < ba.boundaries().size(); ++ib) {
       equalBoundaries =
           (std::abs(ba.boundaries()[ib] - bb.boundaries()[ib]) < tolerance);
-      if (! equalBoundaries) {
+      if (!equalBoundaries) {
         break;
       }
     }
