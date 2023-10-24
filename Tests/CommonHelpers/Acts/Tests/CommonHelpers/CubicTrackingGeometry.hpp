@@ -38,7 +38,7 @@ namespace Acts {
 namespace Test {
 
 struct CubicTrackingGeometry {
-  /// Default constructor for the Cubit tracking geometry
+  /// Default constructor for the Cubic tracking geometry
   ///
   /// @param gctx the geometry context for this geometry at building time
   CubicTrackingGeometry(const GeometryContext& gctx) : geoContext(gctx) {

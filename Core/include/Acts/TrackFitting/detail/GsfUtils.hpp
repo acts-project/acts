@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -134,7 +134,7 @@ class ScopedGsfInfoPrinterAndChecker {
                  << stepper.direction(state.stepping).transpose()
                  << " and momentum " << stepper.absoluteMomentum(state.stepping)
                  << " and charge " << stepper.charge(state.stepping));
-    ACTS_VERBOSE("Propagation is in " << state.stepping.navDir << " mode");
+    ACTS_VERBOSE("Propagation is in " << state.options.direction << " mode");
     print_component_stats();
   }
 

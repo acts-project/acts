@@ -119,9 +119,9 @@ if g4_simulation:
         trackingGeometry,
         field,
         preSelectParticles=ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
-            absZ=(0, 1e4),
-            rho=(0, 1e3),
             pt=(150 * u.MeV, None),
             removeNeutral=True,
         ),
@@ -137,12 +137,15 @@ else:
         trackingGeometry,
         field,
         preSelectParticles=ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
             pt=(150 * u.MeV, None),
             removeNeutral=True,
         )
         if ttbar
         else ParticleSelectorConfig(),
+        enableInteractions=True,
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
         rnd=rnd,
@@ -188,15 +191,18 @@ addCKFTracks(
         nMeasurementsMin=7,
     ),
     outputDirRoot=outputDir,
-    outputDirCsv=outputDir,
+    writeCovMat=True,
+    # outputDirCsv=outputDir,
 )
 
 if ambiguity_MLSolver:
     addAmbiguityResolutionML(
         s,
-        AmbiguityResolutionMLConfig(nMeasurementsMin=7),
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+        ),
         outputDirRoot=outputDir,
-        outputDirCsv=outputDir,
+        # outputDirCsv=outputDir,
         onnxModelFile=os.path.dirname(__file__)
         + "/MLAmbiguityResolution/duplicateClassifier.onnx",
     )
@@ -204,10 +210,12 @@ else:
     addAmbiguityResolution(
         s,
         AmbiguityResolutionConfig(
-            maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
         ),
         outputDirRoot=outputDir,
         outputDirCsv=outputDir,
+        writeCovMat=True,
+        # outputDirCsv=outputDir,
     )
 
 addVertexFitting(

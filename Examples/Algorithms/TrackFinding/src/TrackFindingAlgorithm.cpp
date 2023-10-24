@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -16,6 +17,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -80,7 +82,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = 100000;
+  pOptions.maxSteps = m_cfg.maxSteps;
+  pOptions.direction =
+      m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
 
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
@@ -111,7 +115,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions, &(*pSurface));
+      extensions, pOptions, pSurface.get());
+  options.smoothingTargetSurfaceStrategy =
+      Acts::CombinatorialKalmanFilterTargetSurfaceStrategy::first;
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()

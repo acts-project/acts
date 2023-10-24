@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,7 +25,7 @@ namespace Acts {
 /// Linearizes the track parameters at the PCA to a user-provided
 /// point (linPoint). The track parameters are written as a function
 /// of the global PCA position and the momentum of the particle at
-/// the PCA. The linearization then reads (see Eq. 5.7 in Ref(1)):
+/// the PCA. The linearization then reads (see Eq. 5.7 in Ref. (1)):
 ///
 /// q = A (r - r_0) + B (p - p_0) + c,
 ///
@@ -37,7 +37,7 @@ namespace Acts {
 ///
 /// This class computes A and B using the analytic formulae of Ref. (1).
 ///
-/// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
+/// Ref. (1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 ///
 /// @tparam propagator_t Propagator type
 /// @tparam propagator_options_t Propagator options type
@@ -79,10 +79,9 @@ class HelicalTrackLinearizer {
     // The propagator
     std::shared_ptr<const Propagator_t> propagator;
 
-    // Minimum q/p value
-    double minQoP = 1e-15;
-    // Maximum curvature value
-    double maxRho = 1e+15;
+    /// Tolerance determining how close we need to get to the Perigee surface to
+    /// reach it during propagation
+    ActsScalar targetTolerance = 1e-12;
   };
 
   /// @brief Constructor
@@ -98,16 +97,18 @@ class HelicalTrackLinearizer {
   /// the PCA to a given Perigee surface
   ///
   /// @param params Parameters to linearize
-  /// @param linPoint Point which defines the Perigee.
+  /// @param linPointTime Time associated to the linearization point
   /// @note Transverse plane of the Perigee corresponding to @p linPoint is
   /// parallel to the global x-y plane
+  /// @param perigeeSurface Perigee surface belonging to @p linPoint
   /// @param gctx Geometry context
   /// @param mctx Magnetic field context
   /// @param state Linearizer state object
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
-                                         const Vector4& linPoint,
+                                         double linPointTime,
+                                         const Surface& perigeeSurface,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::MagneticFieldContext& mctx,
                                          State& state) const;

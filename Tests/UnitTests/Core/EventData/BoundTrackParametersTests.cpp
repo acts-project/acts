@@ -14,8 +14,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -45,18 +45,17 @@ namespace {
 namespace bdata = boost::unit_test::data;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using AnyBoundTrackParameters = SingleBoundTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
-const BoundSymMatrix cov = BoundSymMatrix::Identity();
+const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
-template <typename charge_t>
-void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
-                     double l0, double l1, double time, double phi,
-                     double theta, double p, double q, const Vector3& pos,
-                     const Vector3& unitDir) {
-  const auto qOverP = (q != 0) ? (q / p) : (1 / p);
+void checkParameters(const BoundTrackParameters& params, double l0, double l1,
+                     double time, double phi, double theta, double p, double q,
+                     const Vector3& pos, const Vector3& unitDir) {
+  const auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(q));
+
+  const auto qOverP = particleHypothesis.qOverP(p, q);
   const auto pos4 = VectorHelpers::makeVector4(pos, time);
 
   // native values
@@ -71,7 +70,7 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
                        eps);
@@ -85,7 +84,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   phi = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
 
   // global direction for reference
-  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
   // convert local-to-global for reference
   const Vector2 loc(l0, l1);
   const Vector3 pos = surface->localToGlobal(geoCtx, loc, dir);
@@ -103,12 +102,14 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = 1 / p;
-    NeutralBoundTrackParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector, std::nullopt,
+                                ParticleHypothesis::pion0());
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(not params.covariance());
 
     // reassign w/ covariance
-    params = NeutralBoundTrackParameters(surface, vector, cov);
+    params =
+        BoundTrackParameters(surface, vector, cov, ParticleHypothesis::pion0());
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(params.covariance());
     BOOST_CHECK_EQUAL(params.covariance().value(), cov);
@@ -122,12 +123,14 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = -1_e / p;
-    BoundTrackParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector, std::nullopt,
+                                ParticleHypothesis::pion());
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
 
     // reassign w/ covariance
-    params = BoundTrackParameters(surface, vector, cov);
+    params =
+        BoundTrackParameters(surface, vector, cov, ParticleHypothesis::pion());
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
     BOOST_CHECK(params.covariance());
     BOOST_CHECK_EQUAL(params.covariance().value(), cov);
@@ -141,12 +144,14 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = 1_e / p;
-    BoundTrackParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector, std::nullopt,
+                                ParticleHypothesis::pion());
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
 
     // reassign w/ covariance
-    params = BoundTrackParameters(surface, vector, cov);
+    params =
+        BoundTrackParameters(surface, vector, cov, ParticleHypothesis::pion());
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
     BOOST_CHECK(params.covariance());
     BOOST_CHECK_EQUAL(params.covariance().value(), cov);
@@ -160,12 +165,14 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = -2_e / p;
-    AnyBoundTrackParameters params(surface, vector, -2_e);
+    BoundTrackParameters params(surface, vector, std::nullopt,
+                                ParticleHypothesis::pionLike(2_e));
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
     BOOST_CHECK(not params.covariance());
 
     // reassign w/ covariance
-    params = AnyBoundTrackParameters(surface, vector, -2_e, cov);
+    params = BoundTrackParameters(surface, vector, cov,
+                                  ParticleHypothesis::pionLike(2_e));
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
     BOOST_CHECK(params.covariance());
     BOOST_CHECK_EQUAL(params.covariance().value(), cov);
@@ -173,7 +180,8 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral parameters from global information
   {
     auto params =
-        NeutralBoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p)
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p,
+                                     std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(not params.covariance());
@@ -181,7 +189,8 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // negative charged parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, -1_e / p)
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, -1_e / p,
+                                     std::nullopt, ParticleHypothesis::pion())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
@@ -189,7 +198,8 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // positive charged parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1_e / p)
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1_e / p,
+                                     std::nullopt, ParticleHypothesis::pion())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
@@ -197,24 +207,27 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral any parameters from global information
   {
     auto params =
-        AnyBoundTrackParameters::create(surface, geoCtx, pos4, dir, p, 0_e)
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p,
+                                     std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
   // double-negative any parameters from global information
   {
-    auto params =
-        AnyBoundTrackParameters::create(surface, geoCtx, pos4, dir, p, -2_e)
-            .value();
+    auto params = BoundTrackParameters::create(
+                      surface, geoCtx, pos4, dir, -2_e / p, std::nullopt,
+                      ParticleHypothesis::pionLike(2_e))
+                      .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
   // triple-positive any parameters from global information
   {
-    auto params =
-        AnyBoundTrackParameters::create(surface, geoCtx, pos4, dir, p, 3_e)
-            .value();
+    auto params = BoundTrackParameters::create(
+                      surface, geoCtx, pos4, dir, 3_e / p, std::nullopt,
+                      ParticleHypothesis::pionLike(3_e))
+                      .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 3_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
@@ -222,7 +235,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
 
 // different surfaces
 // parameters must be chosen such that all possible local positions (as defined
-// in the datasets header) represent valid points on the surface.
+// in the dataset's header) represent valid points on the surface.
 const auto cones = bdata::make({
     Surface::makeShared<ConeSurface>(Transform3::Identity(),
                                      0.5 /* opening angle */),

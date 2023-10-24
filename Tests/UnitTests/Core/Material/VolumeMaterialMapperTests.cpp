@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -239,7 +238,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
     return {pos.x(), pos.y(), pos.z()};
   };
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -262,7 +261,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set some start parameters
   Vector4 pos4(0., 0., 0., 42_ns);
   Vector3 dir(1., 0., 0.);
-  NeutralCurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
+  CurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV, std::nullopt,
+                                  ParticleHypothesis::pion0());
 
   MagneticFieldContext mc;
   // Launch propagation and gather result

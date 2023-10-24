@@ -1,50 +1,51 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundTrackParameters& params, const Vector4& linPoint,
-        const Acts::GeometryContext& gctx,
+        const BoundTrackParameters& params, double linPointTime,
+        const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
         const Acts::MagneticFieldContext& mctx, State& state) const {
-  // Make Perigee surface at linPointPos, transverse plane of Perigee
-  // corresponds the global x-y plane
-  Vector3 linPointPos = VectorHelpers::position(linPoint);
-  const std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(linPointPos);
+  // Create propagator options
+  propagator_options_t pOptions(gctx, mctx);
+
+  // Length scale at which we consider to be sufficiently close to the Perigee
+  // surface to skip the propagation.
+  pOptions.targetTolerance = m_cfg.targetTolerance;
 
   // Get intersection of the track with the Perigee if the particle would
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
-                                                params.unitDirection(), false);
-
-  // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  auto intersection =
+      perigeeSurface
+          .intersect(gctx, params.position(gctx), params.direction(), false)
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above
   // We handle zero path length as forward propagation, but we could actually
   // skip the whole propagation in this case
   pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
-  // Propagate to the PCA of linPointPos
-  auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
+  // Propagate to the PCA of the reference point
+  auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
   if (not result.ok()) {
     return result.error();
   }
 
   // Extracting the track parameters at said PCA - this corresponds to the
-  // Perigee representation of the track wrt linPointPos
+  // Perigee representation of the track wrt the reference point
   const auto& endParams = *result->endParameters;
   BoundVector paramsAtPCA = endParams.parameters();
 
@@ -57,141 +58,154 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     pca[ePos2] = pos[ePos2];
     pca[eTime] = endParams.time();
   }
-  BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
+  BoundSquareMatrix parCovarianceAtPCA = endParams.covariance().value();
 
   // Extracting Perigee parameters and compute functions of them for later
   // usage
-  double phi = paramsAtPCA(BoundIndices::eBoundPhi);
-  double sinPhi = std::sin(phi);
-  double cosPhi = std::cos(phi);
+  ActsScalar d0 = paramsAtPCA(BoundIndices::eBoundLoc0);
 
-  double theta = paramsAtPCA(BoundIndices::eBoundTheta);
-  const double sinTheta = std::sin(theta);
-  const double tanTheta = std::tan(theta);
+  ActsScalar phi = paramsAtPCA(BoundIndices::eBoundPhi);
+  ActsScalar sinPhi = std::sin(phi);
+  ActsScalar cosPhi = std::cos(phi);
+
+  ActsScalar theta = paramsAtPCA(BoundIndices::eBoundTheta);
+  ActsScalar sinTheta = std::sin(theta);
+  ActsScalar tanTheta = std::tan(theta);
 
   // q over p
-  double qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
+  ActsScalar qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
+  // Rest mass
+  ActsScalar m0 = params.particleHypothesis().mass();
+  // Momentum
+  ActsScalar p = params.particleHypothesis().extractMomentum(qOvP);
 
-  // Charge of the particle, determines the sign of the helix radius rho
-  double sgnH = (qOvP < 0.) ? -1 : 1;
+  // Speed in units of c
+  ActsScalar beta = p / std::hypot(p, m0);
+  // Transverse speed (i.e., speed in the x-y plane)
+  ActsScalar betaT = beta * sinTheta;
 
-  // Momentu at the PCA
+  // Momentum direction at the PCA
   Vector3 momentumAtPCA(phi, theta, qOvP);
 
-  // Define Jacobians, which will be filled later
-  ActsMatrix<eBoundSize, 4> positionJacobian;
-  positionJacobian.setZero();
-  ActsMatrix<eBoundSize, 3> momentumJacobian;
-  momentumJacobian.setZero();
+  // Particle charge
+  ActsScalar absoluteCharge = params.particleHypothesis().absoluteCharge();
+
   // get the z-component of the B-field at the PCA
   auto field =
       m_cfg.bField->getField(VectorHelpers::position(pca), state.fieldCache);
   if (!field.ok()) {
     return field.error();
   }
-  double Bz = (*field)[eZ];
+  ActsScalar Bz = (*field)[eZ];
 
-  // If there is no magnetic field the particle has a straight trajectory
-  // If there is a constant magnetic field it has a helical trajectory
-  if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
-    // Fill position Jacobian, i.e., matrix A from Eq. 5.39 in Ref(1)
-    // First row
-    positionJacobian(0, 0) = -sinPhi;
-    positionJacobian(0, 1) = cosPhi;
+  // Complete Jacobian (consists of positionJacobian and momentumJacobian)
+  ActsMatrix<eBoundSize, eLinSize> completeJacobian =
+      ActsMatrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
 
-    // Second row
-    positionJacobian(1, 0) = -cosPhi / tanTheta;
-    positionJacobian(1, 1) = -sinPhi / tanTheta;
-    positionJacobian(1, 2) = 1.;
+  // The particle moves on a straight trajectory if its charge is 0 or if there
+  // is no B field. Conversely, if it has a charge and the B field is constant,
+  // it moves on a helical trajectory.
+  if (absoluteCharge == 0. or Bz == 0.) {
+    // Derivatives can be found in Eqs. 5.39 and 5.40 of Ref. (1).
+    // Since we propagated to the PCA (point P in Ref. (1)), we evaluate the
+    // Jacobians there. One can show that, in this case, RTilde = 0 and QTilde =
+    // -d0.
 
-    // TODO: include timing in track linearization - will be added
-    // in next PR
-    // Sixth row
-    positionJacobian(5, 3) = 1.;
+    // Derivatives of d0
+    completeJacobian(eBoundLoc0, eLinPos0) = -sinPhi;
+    completeJacobian(eBoundLoc0, eLinPos1) = cosPhi;
 
-    // Quantities from Eq. 5.41 and 5.42 in Ref (1)
-    double R = (pca(0) - linPointPos.x()) * cosPhi +
-               (pca(1) - linPointPos.y()) * sinPhi;
-    double Q = (pca(0) - linPointPos.x()) * sinPhi -
-               (pca(1) - linPointPos.y()) * cosPhi;
+    // Derivatives of z0
+    completeJacobian(eBoundLoc1, eLinPos0) = -cosPhi / tanTheta;
+    completeJacobian(eBoundLoc1, eLinPos1) = -sinPhi / tanTheta;
+    completeJacobian(eBoundLoc1, eLinPos2) = 1.;
+    completeJacobian(eBoundLoc1, eLinPhi) = -d0 / tanTheta;
 
-    // Fill momentum Jacobian, i.e., matrix B from Eq. 5.40 in Ref(1)
-    // First row
-    momentumJacobian(0, 0) = -R;
+    // Derivatives of phi
+    completeJacobian(eBoundPhi, eLinPhi) = 1.;
 
-    // Second row
-    momentumJacobian(1, 0) = Q / tanTheta;
-    momentumJacobian(1, 1) = R / (sinTheta * sinTheta);
+    // Derivatives of theta
+    completeJacobian(eBoundTheta, eLinTheta) = 1.;
 
-    // Third row
-    momentumJacobian(2, 0) = 1.;
+    // Derivatives of q/p
+    completeJacobian(eBoundQOverP, eLinQOverP) = 1.;
 
-    // Fourth row
-    momentumJacobian(3, 1) = 1.;
-
-    // Fifth row
-    momentumJacobian(4, 2) = 1.;
-
-    // TODO: Derivatives of time --> Next PR
+    // Derivatives of time
+    completeJacobian(eBoundTime, eLinPos0) = -cosPhi / betaT;
+    completeJacobian(eBoundTime, eLinPos1) = -sinPhi / betaT;
+    completeJacobian(eBoundTime, eLinTime) = 1.;
+    completeJacobian(eBoundTime, eLinPhi) = -d0 / betaT;
   } else {
     // Helix radius
-    double rho{sinTheta * (1. / qOvP) / Bz};
+    ActsScalar rho = sinTheta * (1. / qOvP) / Bz;
+    // Sign of helix radius
+    ActsScalar h = (rho < 0.) ? -1 : 1;
 
-    // Quantities from Eq. 5.34 in Ref(1) (see .hpp)
-    double X = pca(0) - linPointPos.x() + rho * sinPhi;
-    double Y = pca(1) - linPointPos.y() - rho * cosPhi;
-    const double S2 = (X * X + Y * Y);
-    // S is the 2D distance from the helix center to linPointPos
+    // Quantities from Eq. 5.34 in Ref. (1) (see .hpp)
+    ActsScalar X = pca(0) - perigeeSurface.center(gctx).x() + rho * sinPhi;
+    ActsScalar Y = pca(1) - perigeeSurface.center(gctx).y() - rho * cosPhi;
+    ActsScalar S2 = (X * X + Y * Y);
+    // S is the 2D distance from the helix center to the reference point
     // in the x-y plane
-    const double S = std::sqrt(S2);
+    ActsScalar S = std::sqrt(S2);
 
-    // Fill position Jacobian, i.e., matrix A from Eq. 5.36 in Ref(1)
-    // First row
-    positionJacobian(0, 0) = -sgnH * X / S;
-    positionJacobian(0, 1) = -sgnH * Y / S;
+    ActsScalar XoverS2 = X / S2;
+    ActsScalar YoverS2 = Y / S2;
+    ActsScalar rhoCotTheta = rho / tanTheta;
+    ActsScalar rhoOverBetaT = rho / betaT;
+    // Absolute value of rho over S
+    ActsScalar absRhoOverS = h * rho / S;
 
-    const double S2tanTheta = S2 * tanTheta;
+    // Derivatives can be found in Eq. 5.36 in Ref. (1)
+    // Since we propagated to the PCA (point P in Ref. (1)), the points
+    // P and V coincide, and thus deltaPhi = 0.
+    // One can show that if deltaPhi = 0 --> R = 0 and Q = h * S.
+    // As a consequence, many terms of the B matrix vanish.
 
-    // Second row
-    positionJacobian(1, 0) = rho * Y / S2tanTheta;
-    positionJacobian(1, 1) = -rho * X / S2tanTheta;
-    positionJacobian(1, 2) = 1.;
+    // Derivatives of d0
+    completeJacobian(eBoundLoc0, eLinPos0) = -h * X / S;
+    completeJacobian(eBoundLoc0, eLinPos1) = -h * Y / S;
 
-    // Third row
-    positionJacobian(2, 0) = -Y / S2;
-    positionJacobian(2, 1) = X / S2;
+    // Derivatives of z0
+    completeJacobian(eBoundLoc1, eLinPos0) = rhoCotTheta * YoverS2;
+    completeJacobian(eBoundLoc1, eLinPos1) = -rhoCotTheta * XoverS2;
+    completeJacobian(eBoundLoc1, eLinPos2) = 1.;
+    completeJacobian(eBoundLoc1, eLinPhi) = rhoCotTheta * (1. - absRhoOverS);
 
-    // TODO: include timing in track linearization - will be added
-    // in next PR
-    // Sixth row
-    positionJacobian(5, 3) = 1.;
+    // Derivatives of phi
+    completeJacobian(eBoundPhi, eLinPos0) = -YoverS2;
+    completeJacobian(eBoundPhi, eLinPos1) = XoverS2;
+    completeJacobian(eBoundPhi, eLinPhi) = absRhoOverS;
 
-    // Fill momentum Jacobian, i.e., B matrix from Eq. 5.36 in Ref(1).
-    // Since we propagated to the PCA (point P in Ref(1)), the points
-    // P and V coincide and we can choose deltaPhi = 0.
-    // One can show that if deltaPhi = 0 --> R = 0 and Q = sgnH * S.
-    // As a consequence, many terms of the B matrix from Eq. 5.36 vanish.
-    double rhoOverS{sgnH * rho / S};
+    // Derivatives of theta
+    completeJacobian(eBoundTheta, eLinTheta) = 1.;
 
-    // Second row
-    momentumJacobian(1, 0) = (1. - rhoOverS) * rho / tanTheta;
+    // Derivatives of q/p
+    completeJacobian(eBoundQOverP, eLinQOverP) = 1.;
 
-    // Third row
-    momentumJacobian(2, 0) = rhoOverS;
-
-    // Fourth and fifth row
-    momentumJacobian(3, 1) = 1.;
-    momentumJacobian(4, 2) = 1.;
-
-    // TODO: Derivatives of time --> Next PR
+    // Derivatives of time
+    completeJacobian(eBoundTime, eLinPos0) = rhoOverBetaT * YoverS2;
+    completeJacobian(eBoundTime, eLinPos1) = -rhoOverBetaT * XoverS2;
+    completeJacobian(eBoundTime, eLinTime) = 1.;
+    completeJacobian(eBoundTime, eLinPhi) = rhoOverBetaT * (1. - absRhoOverS);
   }
 
-  // const term in Talyor expansion from Eq. 5.38 in Ref(1)
+  // Extracting positionJacobian and momentumJacobian from the complete Jacobian
+  ActsMatrix<eBoundSize, eLinPosSize> positionJacobian =
+      completeJacobian.block<eBoundSize, eLinPosSize>(0, 0);
+  ActsMatrix<eBoundSize, eLinMomSize> momentumJacobian =
+      completeJacobian.block<eBoundSize, eLinMomSize>(0, eLinPosSize);
+
+  // const term in Taylor expansion from Eq. 5.38 in Ref. (1)
   BoundVector constTerm =
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+
+  Vector4 linPoint;
+  linPoint.head<3>() = perigeeSurface.center(gctx);
+  linPoint[3] = linPointTime;
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,

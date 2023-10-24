@@ -8,19 +8,20 @@
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/CugraphTrackBuilding.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/TrackFinding/MeasurementSelector.hpp"
-#include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
-#include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
 #include <memory>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -65,7 +66,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(spacepointFeatures);
+    ACTS_PYTHON_MEMBER(numFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
@@ -88,6 +89,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelPath);
+    ACTS_PYTHON_MEMBER(numFeatures);
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_MEMBER(nChunks);
     ACTS_PYTHON_MEMBER(undirected);
@@ -163,11 +165,64 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 #endif
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-                                "TrackFindingAlgorithmExaTrkX",
-                                inputSpacePoints, outputProtoTracks,
-                                graphConstructor, edgeClassifiers, trackBuilder,
-                                rScale, phiScale, zScale);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
+      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
+      inputParticles, inputClusters, inputMeasurementSimhitsMap,
+      outputProtoTracks, graphConstructor, edgeClassifiers, trackBuilder,
+      rScale, phiScale, zScale, cellCountScale, cellSumScale, clusterXScale,
+      clusterYScale, targetMinHits, targetMinPT);
+
+  {
+    auto cls =
+        py::class_<Acts::ExaTrkXHook, std::shared_ptr<Acts::ExaTrkXHook>>(
+            mex, "ExaTrkXHook");
+  }
+
+  {
+    using Class = Acts::TorchTruthGraphMetricsHook;
+
+    auto cls = py::class_<Class, Acts::ExaTrkXHook, std::shared_ptr<Class>>(
+                   mex, "TorchTruthGraphMetricsHook")
+                   .def(py::init(
+                       [](const std::vector<int64_t> &g, Logging::Level lvl) {
+                         return std::make_shared<Class>(
+                             g, getDefaultLogger("PipelineHook", lvl));
+                       }));
+  }
+
+  {
+    using Class = Acts::ExaTrkXPipeline;
+
+    auto cls =
+        py::class_<Class, std::shared_ptr<Class>>(mex, "ExaTrkXPipeline")
+            .def(py::init(
+                     [](std::shared_ptr<GraphConstructionBase> g,
+                        std::vector<std::shared_ptr<EdgeClassificationBase>> e,
+                        std::shared_ptr<TrackBuildingBase> t,
+                        Logging::Level lvl) {
+                       return std::make_shared<Class>(
+                           g, e, t, getDefaultLogger("MetricLearning", lvl));
+                     }),
+                 py::arg("graphConstructor"), py::arg("edgeClassifiers"),
+                 py::arg("trackBuilder"), py::arg("level"))
+            .def("run", &ExaTrkXPipeline::run, py::arg("features"),
+                 py::arg("spacepoints"), py::arg("deviceHint") = -1,
+                 py::arg("hook") = Acts::ExaTrkXHook{},
+                 py::arg("timing") = nullptr);
+  }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::PrototracksToParameters, mex, "PrototracksToParameters",
+      inputProtoTracks, inputSpacePoints, outputSeeds, outputParameters,
+      outputProtoTracks, geometry, magneticField, buildTightSeeds);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackFindingFromPrototrackAlgorithm, mex,
+      "TrackFindingFromPrototrackAlgorithm", inputProtoTracks,
+      inputMeasurements, inputSourceLinks, inputInitialTrackParameters,
+      outputTracks, measurementSelectorCfg, trackingGeometry, magneticField,
+      findTracks, tag);
 }
 
 }  // namespace Acts::Python

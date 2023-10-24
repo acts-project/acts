@@ -107,7 +107,7 @@ int runRecCKFTracks(
   for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
-  // Setup the magnetic field
+  // Set up the magnetic field
   auto magneticField = Options::readMagneticField(vm);
 
   // Read the sim hits
@@ -245,12 +245,8 @@ int runRecCKFTracks(
     paramsEstimationCfg.trackingGeometry = trackingGeometry;
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
-    paramsEstimationCfg.sigmaLoc0 = 25._um;
-    paramsEstimationCfg.sigmaLoc1 = 100._um;
-    paramsEstimationCfg.sigmaPhi = 0.02_degree;
-    paramsEstimationCfg.sigmaTheta = 0.02_degree;
-    paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
-    paramsEstimationCfg.sigmaT0 = 1400._s;
+    paramsEstimationCfg.initialSigmas = {25._um,      100._um,      0.02_degree,
+                                         0.02_degree, 0.1 / 1._GeV, 1400._s};
     paramsEstimationCfg.initialVarInflation =
         vm["ckf-initial-variance-inflation"].template as<Options::Reals<6>>();
 
@@ -260,7 +256,7 @@ int runRecCKFTracks(
     outputTrackParameters = paramsEstimationCfg.outputTrackParameters;
   }
 
-  // Setup the track finding algorithm with CKF
+  // Set up the track finding algorithm with CKF
   // It takes all the source links created from truth hit smearing, seeds from
   // truth particle smearing and source link selection config
   auto trackFindingCfg = Options::readTrackFindingConfig(vm);

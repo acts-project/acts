@@ -1,5 +1,6 @@
 set(SOURCES 
   src/buildEdges.cpp
+  src/ExaTrkXPipeline.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
@@ -15,6 +16,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
     src/TorchEdgeClassifier.cpp
     src/TorchMetricLearning.cpp
     src/BoostTrackBuilding.cpp
+    src/TorchTruthGraphMetricsHook.cpp
   )
 endif()
 

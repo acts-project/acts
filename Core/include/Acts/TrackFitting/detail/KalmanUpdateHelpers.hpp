@@ -12,6 +12,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
@@ -35,9 +36,9 @@ namespace detail {
 template <typename propagator_state_t, typename stepper_t,
           typename extensions_t, typename traj_t>
 auto kalmanHandleMeasurement(
-    propagator_state_t &state, const stepper_t &stepper,
-    const extensions_t &extensions, const Surface &surface,
-    const SourceLink &source_link, traj_t &fittedStates,
+    const CalibrationContext &calibrationContext, propagator_state_t &state,
+    const stepper_t &stepper, const extensions_t &extensions,
+    const Surface &surface, const SourceLink &source_link, traj_t &fittedStates,
     const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
@@ -59,9 +60,6 @@ auto kalmanHandleMeasurement(
 
   trackStateProxy.setReferenceSurface(surface.getSharedPtr());
 
-  // assign the source link to the track state
-  trackStateProxy.setUncalibratedSourceLink(source_link);
-
   // Fill the track state
   trackStateProxy.predicted() = std::move(boundParams.parameters());
   if (boundParams.covariance().has_value()) {
@@ -72,8 +70,9 @@ auto kalmanHandleMeasurement(
   trackStateProxy.pathLength() = std::move(pathLength);
 
   // We have predicted parameters, so calibrate the uncalibrated input
-  // measuerement
-  extensions.calibrator(state.geoContext, trackStateProxy);
+  // measurement
+  extensions.calibrator(state.geoContext, calibrationContext, source_link,
+                        trackStateProxy);
 
   // Get and set the type flags
   auto typeFlags = trackStateProxy.typeFlags();
@@ -89,7 +88,7 @@ auto kalmanHandleMeasurement(
   if (not extensions.outlierFinder(trackStateProxy)) {
     // Run Kalman update
     auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                        state.stepping.navDir, logger);
+                                        state.options.direction, logger);
     if (!updateRes.ok()) {
       ACTS_ERROR("Update step failed: " << updateRes.error());
       return updateRes.error();
@@ -110,7 +109,7 @@ auto kalmanHandleMeasurement(
 }
 
 /// This function encapsulates what actions should be performed on a
-/// MultiTrajectory when we have no measuerement
+/// MultiTrajectory when we have no measurement
 /// @tparam propagator_state_t The propagator state type
 /// @tparam stepper_t The stepper type
 /// @param state The propagator state

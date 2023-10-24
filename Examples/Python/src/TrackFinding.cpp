@@ -12,6 +12,7 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
@@ -20,10 +21,12 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
 #include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
@@ -123,6 +126,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinsCustomLooping);
+    ACTS_PYTHON_MEMBER(skipZMiddleBinSearch);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
@@ -133,7 +137,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
-    ACTS_PYTHON_MEMBER(arithmeticAverageCotTheta);
     ACTS_PYTHON_MEMBER(useDetailedDoubleMeasurementInfo);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
@@ -193,6 +196,24 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
+    using Config = Acts::SeedFinderFTFConfig<SimSpacePoint>;
+    auto c = py::class_<Config>(m, "SeedFinderFTFConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(minPt);
+    ACTS_PYTHON_MEMBER(sigmaScattering);
+    ACTS_PYTHON_MEMBER(highland);
+    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
+    ACTS_PYTHON_MEMBER(fastrack_input_file);
+    ACTS_PYTHON_MEMBER(m_phiSliceWidth);
+    ACTS_PYTHON_MEMBER(m_nMaxPhiSlice);
+    ACTS_PYTHON_MEMBER(m_useClusterWidth);
+    ACTS_PYTHON_MEMBER(m_layerGeometry);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
     using seedConf = Acts::SeedConfirmationRangeConfig;
     auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
                  .def(py::init<>());
@@ -223,6 +244,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
     ACTS_PYTHON_MEMBER(phiBinDeflectionCoverage);
+    ACTS_PYTHON_MEMBER(maxPhiBins);
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_STRUCT_END();
@@ -250,6 +272,12 @@ void addTrackFinding(Context& ctx) {
                                 seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SeedingFTFAlgorithm, mex, "SeedingFTFAlgorithm",
+      inputSpacePoints, outputSeeds, seedFilterConfig, seedFinderConfig,
+      seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks,
+      trackingGeometry, ACTS_FTF_Map, fill_module_csv);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
       inputSpacePoints, outputProtoTracks, inputSourceLinks, trackingGeometry,
       geometrySelection, inputMeasurements, subRegions, nLayers, xMin, xMax,
@@ -258,9 +286,10 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
-      "TrackParamsEstimationAlgorithm", inputSeeds, outputTrackParameters,
-      trackingGeometry, magneticField, bFieldMin, sigmaLoc0, sigmaLoc1,
-      sigmaPhi, sigmaTheta, sigmaQOverP, sigmaT0, initialVarInflation);
+      "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
+      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
+      magneticField, bFieldMin, initialSigmas, initialVarInflation,
+      particleHypothesis);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
@@ -296,6 +325,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_MEMBER(trackSelectorCfg);
+    ACTS_PYTHON_MEMBER(backward);
+    ACTS_PYTHON_MEMBER(maxSteps);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -347,6 +378,11 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::PrototracksToSeeds, mex, "PrototracksToSeeds",
       inputProtoTracks, inputSpacePoints, outputSeeds, outputProtoTracks);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::MeasurementMapSelector, mex, "MeasurementMapSelector",
+      inputMeasurementParticleMap, inputSourceLinks,
+      outputMeasurementParticleMap, geometrySelection);
 }
 
 }  // namespace Acts::Python

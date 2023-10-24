@@ -12,6 +12,9 @@
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#if __GNUC__ == 13
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #pragma GCC diagnostic pop
@@ -57,7 +60,7 @@ template <unsigned int kRows, unsigned int kCols>
 using ActsMatrix = Eigen::Matrix<ActsScalar, kRows, kCols>;
 
 template <unsigned int kSize>
-using ActsSymMatrix = Eigen::Matrix<ActsScalar, kSize, kSize>;
+using ActsSquareMatrix = Eigen::Matrix<ActsScalar, kSize, kSize>;
 
 using ActsDynamicVector = Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1>;
 
@@ -79,10 +82,10 @@ using Vector2 = ActsVector<2>;
 using Vector3 = ActsVector<3>;
 using Vector4 = ActsVector<4>;
 
-// symmetric matrices e.g. for coordinate covariance matrices
-using SymMatrix2 = ActsSymMatrix<2>;
-using SymMatrix3 = ActsSymMatrix<3>;
-using SymMatrix4 = ActsSymMatrix<4>;
+// square matrices e.g. for coordinate covariance matrices
+using SquareMatrix2 = ActsSquareMatrix<2>;
+using SquareMatrix3 = ActsSquareMatrix<3>;
+using SquareMatrix4 = ActsSquareMatrix<4>;
 
 // pure translation transformations
 using Translation2 = Eigen::Translation<ActsScalar, 2>;

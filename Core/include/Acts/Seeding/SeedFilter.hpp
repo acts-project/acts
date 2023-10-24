@@ -83,7 +83,7 @@ class SeedFilter {
       Acts::SpacePointData& spacePointData,
       CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
-      std::size_t& numQualitySeeds,
+      const std::size_t numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 
@@ -98,7 +98,7 @@ class SeedFilter {
       std::vector<typename CandidatesForMiddleSp<
           const InternalSpacePoint<external_spacepoint_t>>::value_type>&
           candidates,
-      std::size_t& numQualitySeeds,
+      const std::size_t numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 

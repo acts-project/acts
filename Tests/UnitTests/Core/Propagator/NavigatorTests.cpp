@@ -16,7 +16,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -67,7 +67,7 @@ struct PropagatorState {
   struct Stepper {
     // comply with concept
     using Jacobian = BoundMatrix;
-    using Covariance = BoundSymMatrix;
+    using Covariance = BoundSquareMatrix;
     using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, Jacobian, double>;
@@ -91,8 +91,8 @@ struct PropagatorState {
       /// Charge
       double q = 0;
 
-      /// the navigation direction
-      Direction navDir = Direction::Forward;
+      /// Particle hypothesis
+      ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
       // accummulated path length cache
       double pathAccumulated = 0.;
@@ -111,8 +111,8 @@ struct PropagatorState {
 
     /// State resetter
     void resetState(State& /*state*/, const BoundVector& /*boundParams*/,
-                    const BoundSymMatrix& /*cov*/, const Surface& /*surface*/,
-                    const Direction /*navDir*/,
+                    const BoundSquareMatrix& /*cov*/,
+                    const Surface& /*surface*/,
                     const double /*stepSize*/) const {}
 
     /// Global particle position accessor
@@ -145,17 +145,20 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    Intersection3D::Status updateSurfaceStatus(
-        State& state, const Surface& surface, const BoundaryCheck& bcheck,
-        const Logger& logger, ActsScalar surfaceTolerance) const {
+    Intersection3D::Status updateSurfaceStatus(State& state,
+                                               const Surface& surface,
+                                               Direction navDir,
+                                               const BoundaryCheck& bcheck,
+                                               ActsScalar surfaceTolerance,
+                                               const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(
-          *this, state, surface, bcheck, logger, surfaceTolerance);
+          *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
     }
 
     template <typename object_intersection_t>
     void updateStepSize(State& state,
                         const object_intersection_t& oIntersection,
-                        bool release = true) const {
+                        Direction /*direction*/, bool release = true) const {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
@@ -182,9 +185,9 @@ struct PropagatorState {
         State& state, const Surface& surface, bool /*transportCov*/,
         const FreeToBoundCorrection& /*freeToBoundCorrection*/
     ) const {
-      auto bound =
-          BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
-                                       state.pos4, state.dir, state.p, state.q);
+      auto bound = BoundTrackParameters::create(
+          surface.getSharedPtr(), tgContext, state.pos4, state.dir,
+          state.q / state.p, std::nullopt, state.particleHypothesis);
       if (!bound.ok()) {
         return bound.error();
       }
@@ -195,8 +198,9 @@ struct PropagatorState {
 
     CurvilinearState curvilinearState(State& state, bool /*transportCov*/
     ) const {
-      CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
-                                            state.q);
+      CurvilinearTrackParameters parameters(state.pos4, state.dir,
+                                            state.q / state.p, std::nullopt,
+                                            state.particleHypothesis);
       // Create the bound state
       CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
                                  state.pathAccumulated};
@@ -235,6 +239,8 @@ struct PropagatorState {
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
+
+    Direction direction = Direction::Forward;
 
     const Acts::Logger& logger = Acts::getDummyLogger();
 
@@ -506,7 +512,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK(state.navigation.navLayerIndex == 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayer().intersection.position);
+  double beamPipeR = perp(state.navigation.navLayer().position());
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);

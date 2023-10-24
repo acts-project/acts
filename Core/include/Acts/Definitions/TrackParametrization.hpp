@@ -22,8 +22,8 @@
 namespace Acts {
 
 // Note:
-// The named indices are use to access raw data vectors and matrices at the
-// lowest level. Since the interpretation of some of the components, e.g. local
+// The named indices are used to access raw data vectors and matrices at the
+// lowest level. Since the interpretation of some components, e.g. local
 // position and the inverse-momentum-like component, depend on additional
 // information the names have some ambiguity. This can only be resolved at a
 // higher logical level and no attempt is made to resolve it here.
@@ -116,14 +116,14 @@ static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continuous");
 // Shorthand vector/matrix types related to bound track parameters.
 using BoundVector = ActsVector<eBoundSize>;
 using BoundMatrix = ActsMatrix<eBoundSize, eBoundSize>;
-using BoundSymMatrix = ActsSymMatrix<eBoundSize>;
+using BoundSquareMatrix = ActsSquareMatrix<eBoundSize>;
 // Mapping from bound track parameters.
 using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
 
 // Shorthand vector/matrix types related to free track parameters.
 using FreeVector = ActsVector<eFreeSize>;
 using FreeMatrix = ActsMatrix<eFreeSize, eFreeSize>;
-using FreeSymMatrix = ActsSymMatrix<eFreeSize>;
+using FreeSquareMatrix = ActsSquareMatrix<eFreeSize>;
 // Mapping from free track parameters.
 using FreeToBoundMatrix = ActsMatrix<eBoundSize, eFreeSize>;
 using FreeToPathMatrix = ActsMatrix<1, eFreeSize>;

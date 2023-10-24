@@ -6,6 +6,11 @@ configure_file(
 add_library(
   ActsCore SHARED "")
 
+target_sources(
+  ActsCore
+  PRIVATE
+    src/ActsVersion.cpp)
+
 target_compile_features(
   ActsCore
   PUBLIC ${ACTS_CXX_STANDARD_FEATURE})
@@ -30,6 +35,12 @@ if(ACTS_PARAMETER_DEFINITIONS_HEADER)
   target_compile_definitions(
     ActsCore
     PUBLIC -DACTS_PARAMETER_DEFINITIONS_HEADER="${ACTS_PARAMETER_DEFINITIONS_HEADER}")
+endif()
+
+if(ACTS_SOURCELINK_SBO_SIZE)
+  target_compile_definitions(
+    ActsCore
+    PUBLIC -DACTS_SOURCELINK_SBO_SIZE=${ACTS_SOURCELINK_SBO_SIZE})
 endif()
 
 if(ACTS_CUSTOM_SCALARTYPE)

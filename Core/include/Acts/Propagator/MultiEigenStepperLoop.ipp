@@ -17,12 +17,8 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     -> Result<BoundState> {
   assert(!state.components.empty());
 
-  if (numberComponents(state) == 1) {
-    return SingleStepper::boundState(state.components.front().state, surface,
-                                     transportCov, freeToBoundCorrection);
-  }
-
-  SmallVector<std::tuple<double, BoundVector, BoundSymMatrix>> states;
+  std::vector<std::tuple<double, BoundVector, Covariance>> cmps;
+  cmps.reserve(numberComponents(state));
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
@@ -39,36 +35,29 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
             .intersect(state.geoContext,
                        cmpState.pars.template segment<3>(eFreePos0),
                        cmpState.pars.template segment<3>(eFreeDir0), false)
-            .intersection.position;
+            .closest()
+            .position();
 
     auto bs = SingleStepper::boundState(cmpState, surface, transportCov,
                                         freeToBoundCorrection);
 
     if (bs.ok()) {
       const auto& btp = std::get<BoundTrackParameters>(*bs);
-      states.emplace_back(
+      cmps.emplace_back(
           state.components[i].weight, btp.parameters(),
-          btp.covariance().value_or(Acts::BoundSymMatrix::Zero()));
+          btp.covariance().value_or(Acts::BoundSquareMatrix::Zero()));
       accumulatedPathLength +=
           std::get<double>(*bs) * state.components[i].weight;
     }
   }
 
-  if (states.empty()) {
+  if (cmps.empty()) {
     return MultiStepperError::AllComponentsConversionToBoundFailed;
   }
 
-  const auto [finalPars, cov] =
-      Acts::reduceGaussianMixture(states, surface, m_finalReductionMethod);
-
-  std::optional<BoundSymMatrix> finalCov = std::nullopt;
-  if (cov != BoundSymMatrix::Zero()) {
-    finalCov = cov;
-  }
-
-  return BoundState{
-      BoundTrackParameters(surface.getSharedPtr(), finalPars, finalCov),
-      Jacobian::Zero(), accumulatedPathLength};
+  return BoundState{MultiComponentBoundTrackParameters(
+                        surface.getSharedPtr(), cmps, state.particleHypothesis),
+                    Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <typename E, typename R, typename A>
@@ -77,52 +66,26 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     -> CurvilinearState {
   assert(!state.components.empty());
 
-  if (numberComponents(state) == 1) {
-    return SingleStepper::curvilinearState(state.components.front().state,
-                                           transportCov);
-  } else if (m_finalReductionMethod == MixtureReductionMethod::eMaxWeight) {
-    auto cmpIt = std::max_element(
-        state.components.begin(), state.components.end(),
-        [](const auto& a, const auto& b) { return a.weight < b.weight; });
+  std::vector<
+      std::tuple<double, Vector4, Vector3, ActsScalar, BoundSquareMatrix>>
+      cmps;
+  cmps.reserve(numberComponents(state));
+  double accumulatedPathLength = 0.0;
 
-    return SingleStepper::curvilinearState(cmpIt->state, transportCov);
-  } else {
-    Vector4 pos4 = Vector4::Zero();
-    Vector3 dir = Vector3::Zero();
-    ActsScalar qop = 0.0;
-    BoundSymMatrix cov = BoundSymMatrix::Zero();
-    ActsScalar pathLenth = 0.0;
-    ActsScalar sumOfWeights = 0.0;
+  for (auto i = 0ul; i < numberComponents(state); ++i) {
+    const auto [cp, jac, pl] = SingleStepper::curvilinearState(
+        state.components[i].state, transportCov);
 
-    for (auto i = 0ul; i < numberComponents(state); ++i) {
-      const auto [cp, jac, pl] = SingleStepper::curvilinearState(
-          state.components[i].state, transportCov);
-
-      pos4 += state.components[i].weight * cp.fourPosition(state.geoContext);
-      dir += state.components[i].weight * cp.unitDirection();
-      qop += state.components[i].weight * (cp.charge() / cp.absoluteMomentum());
-      if (cp.covariance()) {
-        cov += state.components[i].weight * *cp.covariance();
-      }
-      pathLenth += state.components[i].weight * pathLenth;
-      sumOfWeights += state.components[i].weight;
-    }
-
-    pos4 /= sumOfWeights;
-    dir /= sumOfWeights;
-    qop /= sumOfWeights;
-    pathLenth /= sumOfWeights;
-    cov /= sumOfWeights;
-
-    std::optional<BoundSymMatrix> finalCov = std::nullopt;
-    if (cov != BoundSymMatrix::Zero()) {
-      finalCov = cov;
-    }
-
-    return CurvilinearState{
-        CurvilinearTrackParameters(pos4, dir, qop, finalCov), Jacobian::Zero(),
-        pathLenth};
+    cmps.emplace_back(state.components[i].weight,
+                      cp.fourPosition(state.geoContext), cp.direction(),
+                      (cp.charge() / cp.absoluteMomentum()),
+                      cp.covariance().value_or(BoundSquareMatrix::Zero()));
+    accumulatedPathLength += state.components[i].weight * pl;
   }
+
+  return CurvilinearState{
+      MultiComponentCurvilinearTrackParameters(cmps, state.particleHypothesis),
+      Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <typename E, typename R, typename A>

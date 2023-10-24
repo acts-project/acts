@@ -90,13 +90,14 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const propagator_options_t& options) const
+auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
+                                       const propagator_options_t& options,
+                                       bool makeCurvilinear) const
     -> Result<action_list_t_result_t<
-        CurvilinearTrackParameters,
+        StepperCurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
   // Type of track parameters produced by the propagation
-  using ReturnParameterType = CurvilinearTrackParameters;
+  using ReturnParameterType = StepperCurvilinearTrackParameters;
 
   static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                 "return track parameter type must be copy-constructible");
@@ -107,7 +108,7 @@ auto Acts::Propagator<S, N>::propagate(
                              typename propagator_options_t::action_list_type>;
 
   return propagate<parameters_t, propagator_options_t, path_aborter_t>(
-      start, options, ResultType{});
+      start, options, makeCurvilinear, ResultType{});
 }
 
 template <typename S, typename N>
@@ -115,11 +116,12 @@ template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const propagator_options_t& options,
-    action_list_t_result_t<CurvilinearTrackParameters,
+    bool makeCurvilinear,
+    action_list_t_result_t<StepperCurvilinearTrackParameters,
                            typename propagator_options_t::action_list_type>&&
         inputResult) const
     -> Result<action_list_t_result_t<
-        CurvilinearTrackParameters,
+        StepperCurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
@@ -127,7 +129,7 @@ auto Acts::Propagator<S, N>::propagate(
   using ResultType = std::decay_t<decltype(inputResult)>;
 
   // Type of track parameters produced by the propagation
-  using ReturnParameterType = CurvilinearTrackParameters;
+  using ReturnParameterType = StepperCurvilinearTrackParameters;
 
   static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                 "return track parameter type must be copy-constructible");
@@ -146,7 +148,7 @@ auto Acts::Propagator<S, N>::propagate(
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.direction, eOptions.maxStepSize),
+                          eOptions.maxStepSize),
       m_navigator.makeState(&start.referenceSurface(), nullptr)};
 
   static_assert(
@@ -158,17 +160,20 @@ auto Acts::Propagator<S, N>::propagate(
   // Apply the loop protection - it resets the internal path limit
   detail::setupLoopProtection(
       state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
-      logger());
+      false, logger());
   // Perform the actual propagation & check its outcome
   auto result = propagate_impl<ResultType>(state, inputResult);
   if (result.ok()) {
-    /// Convert into return type and fill the result object
-    auto curvState = m_stepper.curvilinearState(state.stepping);
-    // Fill the end parameters
-    inputResult.endParameters = std::get<CurvilinearTrackParameters>(curvState);
-    // Only fill the transport jacobian when covariance transport was done
-    if (state.stepping.covTransport) {
-      inputResult.transportJacobian = std::get<Jacobian>(curvState);
+    if (makeCurvilinear) {
+      /// Convert into return type and fill the result object
+      auto curvState = m_stepper.curvilinearState(state.stepping);
+      // Fill the end parameters
+      inputResult.endParameters =
+          std::get<StepperCurvilinearTrackParameters>(curvState);
+      // Only fill the transport jacobian when covariance transport was done
+      if (state.stepping.covTransport) {
+        inputResult.transportJacobian = std::get<Jacobian>(curvState);
+      }
     }
     return Result<ResultType>::success(std::forward<ResultType>(inputResult));
   } else {
@@ -183,13 +188,13 @@ auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        BoundTrackParameters,
+        StepperBoundTrackParameters,
         typename propagator_options_t::action_list_type>> {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
   // Type of track parameters produced at the end of the propagation
-  using return_parameter_type = BoundTrackParameters;
+  using return_parameter_type = StepperBoundTrackParameters;
 
   // Type of the full propagation result, including output from actions
   using ResultType =
@@ -206,11 +211,11 @@ template <typename parameters_t, typename propagator_options_t,
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options,
-    action_list_t_result_t<BoundTrackParameters,
+    action_list_t_result_t<StepperBoundTrackParameters,
                            typename propagator_options_t::action_list_type>
         inputResult) const
     -> Result<action_list_t_result_t<
-        BoundTrackParameters,
+        StepperBoundTrackParameters,
         typename propagator_options_t::action_list_type>> {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
@@ -232,7 +237,7 @@ auto Acts::Propagator<S, N>::propagate(
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.direction, eOptions.maxStepSize),
+                          eOptions.maxStepSize),
       m_navigator.makeState(&start.referenceSurface(), &target)};
 
   static_assert(
@@ -244,7 +249,7 @@ auto Acts::Propagator<S, N>::propagate(
   // Apply the loop protection, it resets the internal path limit
   detail::setupLoopProtection(
       state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
-      logger());
+      false, logger());
 
   // Perform the actual propagation
   auto result = propagate_impl<ResultType>(state, inputResult);
@@ -259,7 +264,7 @@ auto Acts::Propagator<S, N>::propagate(
     const auto& bs = *bsRes;
 
     // Fill the end parameters
-    inputResult.endParameters = std::get<BoundTrackParameters>(bs);
+    inputResult.endParameters = std::get<StepperBoundTrackParameters>(bs);
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
       inputResult.transportJacobian = std::get<Jacobian>(bs);

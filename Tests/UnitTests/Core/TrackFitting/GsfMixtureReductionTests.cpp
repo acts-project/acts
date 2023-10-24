@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
+#include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
 #include <algorithm>
 #include <array>
@@ -23,20 +24,13 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::UnitLiterals;
-
-struct DummyComponent {
-  double weight = 0.0;
-  BoundVector boundPars = BoundVector::Zero();
-  BoundSymMatrix boundCov = BoundSymMatrix::Identity();
-};
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
-  std::vector<DummyComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSymMatrix::Identity()}};
+  std::vector<GsfComponent> cmps = {
+      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
   detail::SymmetricKLDistanceMatrix mat(cmps, proj);
@@ -47,11 +41,11 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
 }
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
-  std::vector<DummyComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSymMatrix::Identity()}};
+  std::vector<GsfComponent> cmps = {
+      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
   const std::size_t cmp_to_mask = 2;
@@ -72,11 +66,11 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
 }
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
-  std::vector<DummyComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSymMatrix::Identity()}};
+  std::vector<GsfComponent> cmps = {
+      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
   detail::SymmetricKLDistanceMatrix mat(cmps, proj);
@@ -121,20 +115,16 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
     return std::make_tuple(mean, sumOfWeights);
   };
 
-  // Do not bother with circular angles in this test
-  const auto desc = std::tuple<>{};
-
-  // Need this projection, since we need to write to the lvalue references which
-  // isn't possible through Identity / std::identity due to perfect forwarding
-  const auto proj = [](auto &a) -> decltype(auto) { return a; };
-
+  // Assume that the components are on a generic plane surface
+  auto surface = Acts::Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0},
+                                                         Vector3{1, 0, 0});
   const std::size_t NComps = 4;
-  std::vector<DummyComponent> cmps;
+  std::vector<GsfComponent> cmps;
 
   for (auto i = 0ul; i < NComps; ++i) {
-    DummyComponent a;
+    GsfComponent a;
     a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSymMatrix::Identity();
+    a.boundCov = BoundSquareMatrix::Identity();
     a.weight = 1.0 / NComps;
     cmps.push_back(a);
   }
@@ -151,7 +141,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
 
   // Reduce by factor of 2 and check if weights and QoP are correct
-  Acts::detail::reduceWithKLDistance(cmps, 2, proj, desc);
+  Acts::reduceMixtureWithKLDistance(cmps, 2, *surface);
 
   BOOST_CHECK(cmps.size() == 2);
 
@@ -167,7 +157,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
 
   // Reduce by factor of 2 and check if weights and QoP are correct
-  Acts::detail::reduceWithKLDistance(cmps, 1, proj, desc);
+  Acts::reduceMixtureWithKLDistance(cmps, 1, *surface);
 
   BOOST_CHECK(cmps.size() == 1);
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);

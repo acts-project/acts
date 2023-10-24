@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <ActsExamples/EventData/Index.hpp>
+
 #include <cstdint>
 
 #include <dfe/dfe_namedtuple.hpp>
@@ -139,9 +141,28 @@ struct MeasurementData {
 struct CellData {
   /// Hit surface identifier.
   uint64_t geometry_id = 0u;
-  /// Event-unique hit identifier. As defined for the simulated hit above and
-  /// used to link back to it; same value can appear multiple times for clusters
-  /// with more than one active cell.
+  /// Event-unique measurement identifier. As defined for the measurement above
+  /// and used to link back to it; same value can appear multiple times for
+  /// clusters with more than one active cell.
+  uint64_t measurement_id = 0;
+  /// Digital cell address/ channel
+  int32_t channel0 = 0, channel1 = 0;
+  /// Digital cell timestamp. Not available in the TrackML datasets.
+  float timestamp = 0;
+  /// (Digital) measured cell value, e.g. amplitude or time-over-threshold.
+  float value = 0;
+
+  DFE_NAMEDTUPLE(CellData, geometry_id, measurement_id, channel0, channel1,
+                 timestamp, value);
+};
+
+// uses hit id
+struct CellDataLegacy {
+  /// Hit surface identifier.
+  uint64_t geometry_id = 0u;
+  /// Event-unique measurement identifier. As defined for the measurement above
+  /// and used to link back to it; same value can appear multiple times for
+  /// clusters with more than one active cell.
   uint64_t hit_id = 0;
   /// Digital cell address/ channel
   int32_t channel0 = 0, channel1 = 0;
@@ -150,8 +171,8 @@ struct CellData {
   /// (Digital) measured cell value, e.g. amplitude or time-over-threshold.
   float value = 0;
 
-  DFE_NAMEDTUPLE(CellData, geometry_id, hit_id, channel0, channel1, timestamp,
-                 value);
+  DFE_NAMEDTUPLE(CellDataLegacy, geometry_id, hit_id, channel0, channel1,
+                 timestamp, value);
 };
 
 struct SurfaceData {
@@ -283,6 +304,14 @@ struct TrackParameterData {
                  cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop, cov_thetad0,
                  cov_thetaz0, cov_thetaphi, cov_thetaqop, cov_qopd0, cov_qopz0,
                  cov_qopphi, cov_qoptheta);
+};
+
+struct ProtoTrackData {
+  std::size_t trackId;
+  Index measurementId;
+  double x, y, z;
+
+  DFE_NAMEDTUPLE(ProtoTrackData, trackId, measurementId, x, y, z);
 };
 
 }  // namespace ActsExamples

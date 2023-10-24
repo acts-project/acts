@@ -472,71 +472,53 @@ Acts::TrackingVolume::compatibleBoundaries(
   auto excludeObject = options.startObject;
   boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
-  // The signed direction: solution (except overstepping) is positive
-  auto sDirection = options.navDir * direction;
-
   // The Limits: current, path & overstepping
   double pLimit = options.pathLimit;
   double oLimit = options.overstepLimit;
 
   // Helper function to test intersection
   auto checkIntersection =
-      [&](SurfaceIntersection& sIntersection,
+      [&](SurfaceMultiIntersection& smIntersection,
           const BoundarySurface* bSurface) -> BoundaryIntersection {
-    // Avoid doing anything if that's a rotten apple already
-    if (!sIntersection) {
-      return BoundaryIntersection();
-    }
+    for (const auto& sIntersection : smIntersection.split()) {
+      if (!sIntersection) {
+        continue;
+      }
 
-    if (options.forceIntersectBoundaries and
-        sIntersection.intersection.pathLength * options.navDir > 0) {
-      const bool coCriterion =
-          std::abs(sIntersection.intersection.pathLength) < std::abs(oLimit);
-      ACTS_VERBOSE("Forcing intersection with surface "
-                   << bSurface->surfaceRepresentation().geometryId());
-      if (coCriterion) {
-        ACTS_VERBOSE("Intersection forced successfully ");
+      if (options.forceIntersectBoundaries) {
+        const bool coCriterion =
+            std::abs(sIntersection.pathLength()) < std::abs(oLimit);
+        ACTS_VERBOSE("Forcing intersection with surface "
+                     << bSurface->surfaceRepresentation().geometryId());
+        if (coCriterion) {
+          ACTS_VERBOSE("Intersection forced successfully ");
+          ACTS_VERBOSE("- intersection path length "
+                       << std::abs(sIntersection.pathLength())
+                       << " < overstep limit " << std::abs(oLimit));
+          return BoundaryIntersection(sIntersection.intersection(), bSurface,
+                                      sIntersection.object(),
+                                      sIntersection.index());
+        }
+        ACTS_VERBOSE("Can't force intersection: ");
         ACTS_VERBOSE("- intersection path length "
-                     << std::abs(sIntersection.intersection.pathLength)
-                     << " < overstep limit " << std::abs(oLimit));
-        sIntersection.intersection.pathLength *= options.navDir;
-        return BoundaryIntersection(sIntersection.intersection, bSurface,
-                                    sIntersection.object);
+                     << std::abs(sIntersection.pathLength())
+                     << " > overstep limit " << std::abs(oLimit));
       }
-      ACTS_VERBOSE("Can't force intersection: ");
-      ACTS_VERBOSE("- intersection path length "
-                   << std::abs(sIntersection.intersection.pathLength)
-                   << " > overstep limit " << std::abs(oLimit));
-    }
 
-    ACTS_VERBOSE("Check intersection with surface "
-                 << bSurface->surfaceRepresentation().geometryId());
-    if (detail::checkIntersection<decltype(sIntersection.intersection),
-                                  decltype(logger)>(
-            sIntersection.intersection, pLimit, oLimit, s_onSurfaceTolerance,
-            logger)) {
-      sIntersection.intersection.pathLength *= options.navDir;
-      return BoundaryIntersection(sIntersection.intersection, bSurface,
-                                  sIntersection.object);
-    }
-
-    if (sIntersection.alternative) {
-      ACTS_VERBOSE("Consider alternative");
-      if (detail::checkIntersection<decltype(sIntersection.alternative),
+      ACTS_VERBOSE("Check intersection with surface "
+                   << bSurface->surfaceRepresentation().geometryId());
+      if (detail::checkIntersection<decltype(sIntersection.intersection()),
                                     decltype(logger)>(
-              sIntersection.alternative, pLimit, oLimit, s_onSurfaceTolerance,
-              logger)) {
-        sIntersection.alternative.pathLength *= options.navDir;
-        return BoundaryIntersection(sIntersection.alternative, bSurface,
-                                    sIntersection.object);
-        ;
+              sIntersection.intersection(), pLimit, oLimit,
+              s_onSurfaceTolerance, logger)) {
+        return BoundaryIntersection(sIntersection.intersection(), bSurface,
+                                    sIntersection.object(),
+                                    sIntersection.index());
       }
-    } else {
-      ACTS_VERBOSE("No alternative for intersection");
     }
 
     ACTS_VERBOSE("No intersection accepted");
-    return BoundaryIntersection();
+    return BoundaryIntersection::invalid();
   };
 
   /// Helper function to process boundary surfaces
@@ -553,7 +535,7 @@ Acts::TrackingVolume::compatibleBoundaries(
 
       // Exclude the boundary where you are on
       if (excludeObject != &bSurfaceRep) {
-        auto bCandidate = bSurfaceRep.intersect(gctx, position, sDirection,
+        auto bCandidate = bSurfaceRep.intersect(gctx, position, direction,
                                                 options.boundaryCheck);
         // Intersect and continue
         auto bIntersection = checkIntersection(bCandidate, bsIter.get());
@@ -595,20 +577,10 @@ Acts::TrackingVolume::compatibleBoundaries(
     return false;
   };
 
-  // Sort them accordingly to the navigation direction
-  if (options.navDir == Direction::Forward) {
-    std::sort(bIntersections.begin(), bIntersections.end(),
-              [&](const auto& a, const auto& b) {
-                return comparator(a.intersection.pathLength,
-                                  b.intersection.pathLength);
-              });
-  } else {
-    std::sort(bIntersections.begin(), bIntersections.end(),
-              [&](const auto& a, const auto& b) {
-                return comparator(-a.intersection.pathLength,
-                                  -b.intersection.pathLength);
-              });
-  }
+  std::sort(bIntersections.begin(), bIntersections.end(),
+            [&](const auto& a, const auto& b) {
+              return comparator(a.pathLength(), b.pathLength());
+            });
   return bIntersections;
 }
 
@@ -636,28 +608,24 @@ Acts::TrackingVolume::compatibleLayers(
         // layer on approach intersection
         auto atIntersection =
             tLayer->surfaceOnApproach(gctx, position, direction, options);
-        auto path = atIntersection.intersection.pathLength;
+        auto path = atIntersection.pathLength();
         bool withinLimit = std::abs(path) <= std::abs(options.pathLimit);
         // Intersection is ok - take it (move to surface on approach)
         if (atIntersection &&
-            (atIntersection.object != options.targetSurface) && withinLimit) {
+            (atIntersection.object() != options.targetSurface) && withinLimit) {
           // create a layer intersection
           lIntersections.push_back(LayerIntersection(
-              atIntersection.intersection, tLayer, atIntersection.object));
+              atIntersection.intersection(), tLayer, atIntersection.object(),
+              atIntersection.index()));
         }
       }
       // move to next one or break because you reached the end layer
-      tLayer =
-          (tLayer == options.endObject)
-              ? nullptr
-              : tLayer->nextLayer(gctx, position, options.navDir * direction);
+      tLayer = (tLayer == options.endObject)
+                   ? nullptr
+                   : tLayer->nextLayer(gctx, position, direction);
     }
-    // sort them accordingly to the navigation direction
-    if (options.navDir == Direction::Forward) {
-      std::sort(lIntersections.begin(), lIntersections.end());
-    } else {
-      std::sort(lIntersections.begin(), lIntersections.end(), std::greater<>());
-    }
+    std::sort(lIntersections.begin(), lIntersections.end(),
+              LayerIntersection::forwardOrder);
   }
   // and return
   return lIntersections;
@@ -710,16 +678,13 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
     return sIntersections;
   }
 
-  // The signed direction
-  Vector3 sdir = options.navDir * direction;
-
   std::vector<const Volume*> hits;
   if (angle == 0) {
     // use ray
-    Ray3D obj(position, sdir);
+    Ray3D obj(position, direction);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   } else {
-    Acts::Frustum<ActsScalar, 3, 4> obj(position, sdir, angle);
+    Acts::Frustum<ActsScalar, 3, 4> obj(position, direction, angle);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   }
 
@@ -730,20 +695,18 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
         boundarySurfaces = avol->boundarySurfaces();
     for (const auto& bs : boundarySurfaces) {
       const Surface& srf = bs->surfaceRepresentation();
-      auto sfi = srf.intersect(gctx, position, sdir, false);
-      if (sfi and sfi.intersection.pathLength > oLimit and
-          sfi.intersection.pathLength <= pLimit) {
-        sIntersections.push_back(std::move(sfi));
+      auto sfmi = srf.intersect(gctx, position, direction, false);
+      for (const auto& sfi : sfmi.split()) {
+        if (sfi and sfi.pathLength() > oLimit and sfi.pathLength() <= pLimit) {
+          sIntersections.push_back(sfi);
+        }
       }
     }
   }
 
   // Sort according to the path length
-  if (options.navDir == Direction::Forward) {
-    std::sort(sIntersections.begin(), sIntersections.end());
-  } else {
-    std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
-  }
+  std::sort(sIntersections.begin(), sIntersections.end(),
+            SurfaceIntersection::forwardOrder);
 
   return sIntersections;
 }

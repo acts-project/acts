@@ -173,17 +173,39 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
     out = tmp_path / "csv"
     out.mkdir()
 
-    config = CsvMeasurementWriter.Config(
-        inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=digiAlg.config.outputClusters,
-        inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
-        outputDir=str(out),
+    s.addWriter(
+        CsvMeasurementWriter(
+            level=acts.logging.INFO,
+            inputMeasurements=digiAlg.config.outputMeasurements,
+            inputClusters=digiAlg.config.outputClusters,
+            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            outputDir=str(out),
+        )
     )
-    s.addWriter(CsvMeasurementWriter(level=acts.logging.INFO, config=config))
+
+    # Write hits, so we can later construct the measurement-particles-map
+    s.addWriter(
+        CsvSimHitWriter(
+            level=acts.logging.INFO,
+            inputSimHits=simAlg.config.outputSimHits,
+            outputDir=str(out),
+            outputStem="hits",
+        )
+    )
+
     s.run()
 
     # read back in
     s = Sequencer(numThreads=1)
+
+    s.addReader(
+        CsvSimHitReader(
+            level=acts.logging.INFO,
+            outputSimHits=simAlg.config.outputSimHits,
+            inputDir=str(out),
+            inputStem="hits",
+        )
+    )
 
     s.addReader(
         conf_const(
@@ -192,13 +214,15 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
             outputSourceLinks="sourcelinks",
+            outputMeasurementParticlesMap="meas_ptcl_map",
+            inputSimHits=simAlg.config.outputSimHits,
             inputDir=str(out),
         )
     )
 
     algs = [
         AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap", "sourcelinks")
+        for k in ("measurements", "simhitsmap", "sourcelinks", "meas_ptcl_map")
     ]
     for alg in algs:
         s.addAlgorithm(alg)

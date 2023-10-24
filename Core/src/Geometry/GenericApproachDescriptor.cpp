@@ -23,25 +23,27 @@ void Acts::GenericApproachDescriptor::registerLayer(const Layer& lay) {
   }
 }
 
-Acts::ObjectIntersection<Acts::Surface>
-Acts::GenericApproachDescriptor::approachSurface(
+Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck, double pLimit,
+    double oLimit, double tolerance) const {
   // almost always 2
-  boost::container::small_vector<ObjectIntersection<Surface>, 2> sIntersections;
+  boost::container::small_vector<SurfaceIntersection, 2> sIntersections;
   sIntersections.reserve(m_surfaceCache.size());
-  for (auto& sf : m_surfaceCache) {
+  for (const auto& sf : m_surfaceCache) {
     auto sfIntersection = sf->intersect(gctx, position, direction, bcheck);
-    // Overstepping is not allowed for approach surfaces
-    if (sfIntersection.intersection.pathLength < 0. and
-        sfIntersection.alternative.pathLength > 0.) {
-      std::swap(sfIntersection.intersection, sfIntersection.alternative);
+    for (const auto& intersection : sfIntersection.split()) {
+      if (intersection &&
+          detail::checkIntersection(intersection, pLimit, oLimit, tolerance)) {
+        sIntersections.push_back(intersection);
+      }
     }
-    sIntersections.push_back(sfIntersection);
   }
-  // Sort them & return the closest
-  std::sort(sIntersections.begin(), sIntersections.end());
-  return (*sIntersections.begin());
+  if (sIntersections.empty()) {
+    return SurfaceIntersection::invalid();
+  }
+  return *std::min_element(sIntersections.begin(), sIntersections.end(),
+                           SurfaceIntersection::forwardOrder);
 }
 
 const std::vector<const Acts::Surface*>&

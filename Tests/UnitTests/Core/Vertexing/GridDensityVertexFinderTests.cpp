@@ -15,7 +15,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -48,7 +48,7 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -78,7 +78,17 @@ std::uniform_real_distribution<double> etaDist(-4., 4.);
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   bool debugMode = true;
 
-  const int mainGridSize = 3000;
+  // Note that the AdaptiveGridTrackDensity and the GaussianGridTrackDensity
+  // only furnish exactly the same results for uneven mainGridSize, where the
+  // binnings of the two track densities align. For even mainGridSize the
+  // binning of GaussianGridTrackDensity is:
+  // ..., [-binSize, 0), [0, binSize), ...
+  // and the binning of AdaptiveGridTrackDensity is:
+  // ..., [-0.5*binSize, 0.5*binSize), [0.5*binSize, 1.5*binSize), ...
+  // This is because the AdaptiveGridTrackDensity always has 0 as a bin center.
+  // As a consequence of these different binnings, results would be shifted for
+  // binSize/2 if mainGridSize is even.
+  const int mainGridSize = 3001;
   const int trkGridSize = 35;
 
   Covariance covMat = Covariance::Identity();
@@ -97,10 +107,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   Finder1 finder1(cfg1);
   Finder1::State state1;
 
-  using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
+  using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdapticeGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
-  AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
+  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30.01 * 1_mm);
+  AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
   Finder2::Config cfg2(adaptiveDensity);
@@ -127,9 +137,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
-    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
-    pos = intersection.intersection.position;
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
+    auto intersection =
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
+    pos = intersection.position();
 
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1
@@ -137,7 +148,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 
@@ -185,7 +197,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   bool debugMode = true;
 
-  const int mainGridSize = 3000;
+  const int mainGridSize = 3001;
   const int trkGridSize = 35;
 
   Covariance covMat = Covariance::Identity();
@@ -210,11 +222,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   cfg.cacheGridStateForTrackRemoval = true;
   Finder1 finder1(cfg);
 
-  using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
+  using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdapticeGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
+  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30.01 * 1_mm);
   adaptiveDensityConfig.useHighestSumZPosition = true;
-  AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
+  AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
   Finder2::Config cfg2(adaptiveDensity);
@@ -240,9 +252,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
-    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
-    pos = intersection.intersection.position;
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
+    auto intersection =
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
+    pos = intersection.position();
 
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1
@@ -250,7 +263,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 
@@ -350,7 +364,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   bool debugMode = true;
 
-  const int mainGridSize = 3000;
+  const int mainGridSize = 3001;
   const int trkGridSize = 35;
 
   Covariance covMat = Covariance::Identity();
@@ -363,8 +377,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
                                                           magFieldContext);
   Vertex<BoundTrackParameters> constraintVtx;
-  constraintVtx.setCovariance(SymMatrix3::Identity());
-  vertexingOptions.vertexConstraint = constraintVtx;
+  constraintVtx.setCovariance(SquareMatrix3::Identity());
+  vertexingOptions.constraint = constraintVtx;
 
   using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
   Finder1::Config cfg1;
@@ -373,10 +387,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   Finder1 finder1(cfg1);
   Finder1::State state1;
 
-  using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
+  using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdapticeGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
-  AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
+  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30.01 * 1_mm);
+  AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
   Finder2::Config cfg2(adaptiveDensity);
@@ -404,15 +418,17 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
-    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
-    pos = intersection.intersection.position;
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
+    auto intersection =
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
+    pos = intersection.position();
 
     pos[eZ] = z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 
@@ -430,7 +446,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   double covZZ1 = 0;
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
-    SymMatrix3 cov = (*res1).back().covariance();
+    SquareMatrix3 cov = (*res1).back().covariance();
     BOOST_CHECK(constraintVtx.covariance() != cov);
     BOOST_CHECK(cov(eZ, eZ) != 0.);
     covZZ1 = cov(eZ, eZ);
@@ -448,7 +464,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   double covZZ2 = 0;
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
-    SymMatrix3 cov = (*res2).back().covariance();
+    SquareMatrix3 cov = (*res2).back().covariance();
     BOOST_CHECK(constraintVtx.covariance() != cov);
     BOOST_CHECK(cov(eZ, eZ) != 0.);
     covZZ2 = cov(eZ, eZ);

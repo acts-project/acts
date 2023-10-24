@@ -519,7 +519,7 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
       }
 
       for (auto& sourceLink : moduleSourceLinks) {
-        // extract a local position/covariance independent from the concrecte
+        // extract a local position/covariance independent of the concrete
         // measurement content. since we do not know if and where the local
         // parameters are contained in the measurement parameters vector, they
         // are transformed to the bound space where we do know their location.
@@ -529,12 +529,12 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
             [](const auto& meas) {
               auto expander = meas.expander();
               Acts::BoundVector par = expander * meas.parameters();
-              Acts::BoundSymMatrix cov =
+              Acts::BoundSquareMatrix cov =
                   expander * meas.covariance() * expander.transpose();
               // extract local position
               Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
               // extract local position covariance.
-              Acts::SymMatrix2 lcov =
+              Acts::SquareMatrix2 lcov =
                   cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
               return std::make_pair(lpar, lcov);
             },

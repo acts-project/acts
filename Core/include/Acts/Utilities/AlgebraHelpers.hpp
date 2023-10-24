@@ -167,14 +167,16 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
   }
 }
 
-/// Calculate the inverse of an Eigen matrix after checking if it can be
-/// numerically inverted. This allows to catch potential FPEs before they occur.
+/// FPE "safe" functions
 ///
 /// Our main motivation for this is that users might have a strict FPE policy
-/// which would flag every single occurrence as a failure and then sombody has
+/// which would flag every single occurrence as a failure and then somebody has
 /// to investigate. Since we are processing a high number of events and floating
 /// point numbers sometimes work in mysterious ways the caller of this function
 /// might want to hide FPEs and handle them in a more controlled way.
+
+/// Calculate the inverse of an Eigen matrix after checking if it can be
+/// numerically inverted. This allows to catch potential FPEs before they occur.
 ///
 /// @tparam Derived Eigen derived concrete type
 /// @tparam Result Eigen result type defaulted to input type
@@ -194,6 +196,41 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
   }
 
   return std::nullopt;
+}
+
+/// Specialization of the exponent limit to be used for safe exponential,
+/// depending on the floating point type.
+/// See https://godbolt.org/z/z53Er6Mzf for reasoning for the concrete numbers.
+template <typename T>
+struct ExpSafeLimit {};
+template <>
+struct ExpSafeLimit<double> {
+  constexpr static double value = 500.0;
+};
+template <>
+struct ExpSafeLimit<float> {
+  constexpr static float value = 50.0;
+};
+
+/// Calculate the exponential function while avoiding FPEs.
+///
+/// @param val argument for which the exponential function should be evaluated.
+///
+/// @return 0 in the case of underflow, std::numeric_limits<T>::infinity in the
+/// case of overflow, std::exp(val) else
+template <typename T>
+constexpr T safeExp(T val) noexcept {
+  constexpr T maxExponent = ExpSafeLimit<T>::value;
+  constexpr T minExponent = -maxExponent;
+  if (val < minExponent) {
+    return 0.0;
+  }
+
+  if (val > maxExponent) {
+    return std::numeric_limits<T>::infinity();
+  }
+
+  return std::exp(val);
 }
 
 }  // namespace Acts

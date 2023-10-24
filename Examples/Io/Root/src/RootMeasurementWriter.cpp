@@ -11,6 +11,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
@@ -118,7 +119,8 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
 
     std::visit(
         [&](const auto& m) {
-          Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
+          Acts::GeometryIdentifier geoId =
+              m.sourceLink().template get<IndexSourceLink>().geometryId();
           // find the corresponding surface
           const Acts::Surface* surfacePtr =
               m_cfg.trackingGeometry->findSurface(geoId);
@@ -139,9 +141,16 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
           // Find the contributing simulated hits
           auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
           // Use average truth in the case of multiple contributing sim hits
-          auto [local, pos4, dir] =
-              averageSimHits(ctx.geoContext, surface, simHits, indices);
-          dTree->fillTruthParameters(local, pos4, dir);
+          auto [local, pos4, dir] = averageSimHits(ctx.geoContext, surface,
+                                                   simHits, indices, logger());
+          Acts::RotationMatrix3 rot =
+              surface
+                  .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0),
+                                  dir)
+                  .inverse();
+          std::pair<double, double> angles =
+              Acts::VectorHelpers::incidentAngles(dir, rot);
+          dTree->fillTruthParameters(local, pos4, dir, angles);
           dTree->fillBoundMeasurement(m);
           if (not clusters.empty()) {
             const auto& c = clusters[hitIdx];

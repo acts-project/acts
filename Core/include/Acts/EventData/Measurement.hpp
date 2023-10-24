@@ -41,7 +41,7 @@ namespace Acts {
 /// This means either, that there needs to be an additional variable type or
 /// that a pointer to a base object is stored (requiring a `dynamic_cast` later
 /// on). Both variants add additional complications. Since the geometry object
-/// is not required anyways (as discussed above), not storing it removes all
+/// is not required anyway (as discussed above), not storing it removes all
 /// these complications altogether.
 template <typename indices_t, size_t kSize>
 class Measurement {
@@ -54,7 +54,7 @@ class Measurement {
   /// Vector type containing for measured parameter values.
   using ParametersVector = ActsVector<kSize>;
   /// Matrix type for the measurement covariance.
-  using CovarianceMatrix = ActsSymMatrix<kSize>;
+  using CovarianceMatrix = ActsSquareMatrix<kSize>;
   /// Vector type containing all parameters in the same space.
   using FullParametersVector = ActsVector<kFullSize>;
   using ProjectionMatrix = ActsMatrix<kSize, kFullSize>;

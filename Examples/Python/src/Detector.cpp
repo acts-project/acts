@@ -81,6 +81,7 @@ void addDetector(Context& ctx) {
     py::class_<Config>(td, "Config")
         .def(py::init<>())
         .def_readwrite("positions", &Config::positions)
+        .def_readwrite("stereos", &Config::stereos)
         .def_readwrite("offsets", &Config::offsets)
         .def_readwrite("bounds", &Config::bounds)
         .def_readwrite("thickness", &Config::thickness)

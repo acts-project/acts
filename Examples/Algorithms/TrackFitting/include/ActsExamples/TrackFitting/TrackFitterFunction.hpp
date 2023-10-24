@@ -72,7 +72,7 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
 
 /// This type is used in the Examples framework for the Bethe-Heitler
 /// approximation
-using BetheHeitlerApprox = Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
+using BetheHeitlerApprox = Acts::AtlasBetheHeitlerApprox<6, 5>;
 
 /// Makes a fitter function object for the GSF
 ///
@@ -91,5 +91,22 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     double weightCutoff, Acts::MixtureReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger);
+
+/// Makes a fitter function object for the Global Chi Square Fitter (GX2F)
+///
+/// @param trackingGeometry the trackingGeometry for the propagator
+/// @param magneticField the magnetic field for the propagator
+/// @param multipleScattering bool
+/// @param energyLoss bool
+/// @param freeToBoundCorrection bool
+/// @param logger a logger instance
+std::shared_ptr<TrackFitterFunction> makeGlobalChiSquareFitterFunction(
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    bool multipleScattering = true, bool energyLoss = true,
+    Acts::FreeToBoundCorrection freeToBoundCorrection =
+        Acts::FreeToBoundCorrection(),
+    const Acts::Logger& logger = *Acts::getDefaultLogger("Gx2f",
+                                                         Acts::Logging::INFO));
 
 }  // namespace ActsExamples

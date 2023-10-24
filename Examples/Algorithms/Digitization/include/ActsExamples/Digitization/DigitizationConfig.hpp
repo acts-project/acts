@@ -62,7 +62,7 @@ struct GeometricConfig {
   ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
       chargeSmearer = Digitization::Exact{};
 
-  // The threshold below an cell activation is ignored
+  // The threshold below a cell activation is ignored
   double threshold = 0.;
 
   // Whether to assume digital readout (activation is either 0 or 1)
@@ -111,9 +111,9 @@ struct DigiComponentsConfig {
 class DigitizationConfig {
  public:
   DigitizationConfig(bool merge, double sigma, bool commonCorner)
-      : DigitizationConfig(
-            merge, sigma, commonCorner,
-            Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+      : DigitizationConfig(merge, sigma, commonCorner,
+                           Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {
+  }
 
   DigitizationConfig(
       bool doMerge, double mergeNsigma, bool mergeCommonCorner,
@@ -148,7 +148,8 @@ class DigitizationConfig {
   /// For a generic readout frontend we assume 1000 e/h pairs, in Si each
   /// e/h-pair requiers on average an energy of 3.65 eV (PDG  review 2023,
   /// Table 35.10)
-  double minEnergyDeposit = 1000 * 3.65 * Acts::UnitConstants::eV;
+  /// @NOTE The default is set to 0 because this works only well with Geant4
+  double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
   /// The digitizers per GeometryIdentifiers
   Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 

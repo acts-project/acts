@@ -10,16 +10,19 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
 #include <fstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(AlgebraJsonConverter)
+BOOST_AUTO_TEST_SUITE(AlgebraJsonConversion)
 
 BOOST_AUTO_TEST_CASE(TransformRoundTripTests) {
   Transform3 reference = Transform3::Identity();
@@ -87,6 +90,66 @@ BOOST_AUTO_TEST_CASE(TransformRoundTripTests) {
   from_json(fullIn, test);
 
   BOOST_CHECK(test.isApprox(reference));
+}
+
+BOOST_AUTO_TEST_CASE(TransformNullIdentity) {
+  // An identity matrix
+  Transform3 reference = Transform3::Identity();
+
+  // Test the identity transform with nulled
+  Transform3JsonConverter::Options nulledOption{false, false};
+  nlohmann::json nulledOut =
+      Transform3JsonConverter::toJson(reference, nulledOption);
+  BOOST_CHECK(nulledOut["translation"] == nullptr);
+  BOOST_CHECK(nulledOut["rotation"] == nullptr);
+
+  // Test with writing the identity
+  Transform3JsonConverter::Options writtenOption{true, false};
+  nlohmann::json writtenOut =
+      Transform3JsonConverter::toJson(reference, writtenOption);
+  BOOST_CHECK(writtenOut["translation"] != nullptr);
+  BOOST_CHECK(writtenOut["rotation"] != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(TransformTranspose) {
+  // An identity matrix
+  Transform3 reference = Transform3::Identity();
+  reference.pretranslate(Vector3(1., 2., 3.));
+  reference.rotate(Eigen::AngleAxis(0.12334, Vector3(1., 2., 3).normalized()));
+
+  std::vector<ActsScalar> referenceT = {1., 2., 3.};
+  std::vector<ActsScalar> referenceR = {0.992946,   -0.0975562, 0.0673888,
+                                        0.0997267,  0.994574,   -0.0296247,
+                                        -0.0641331, 0.0361362,  0.997287};
+
+  // Test standard writing
+  Transform3JsonConverter::Options standardOptions{true, false};
+  nlohmann::json standardOut =
+      Transform3JsonConverter::toJson(reference, standardOptions);
+  // Check translation read back in
+  BOOST_CHECK(standardOut["translation"].get<std::vector<ActsScalar>>() ==
+              referenceT);
+  // Check rotation read back in - not transposed
+  std::vector<ActsScalar> readR =
+      standardOut["rotation"].get<std::vector<ActsScalar>>();
+  for (auto [i, rr] : Acts::enumerate(referenceR)) {
+    CHECK_CLOSE_ABS(readR[i], rr, 1e-5);
+  }
+
+  // Test transposed writing
+  Transform3JsonConverter::Options transposeOptions{true, true};
+  nlohmann::json transposeOut =
+      Transform3JsonConverter::toJson(reference, transposeOptions);
+  // Check translation read back in
+  BOOST_CHECK(transposeOut["translation"].get<std::vector<ActsScalar>>() ==
+              referenceT);
+
+  // Check rotation read back in - transposed
+  std::vector<size_t> transposedIndices = {0, 3, 6, 1, 4, 7, 2, 5, 8};
+  readR = transposeOut["rotation"].get<std::vector<ActsScalar>>();
+  for (auto [i, rr] : Acts::enumerate(referenceR)) {
+    CHECK_CLOSE_ABS(readR[transposedIndices[i]], rr, 1e-5);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

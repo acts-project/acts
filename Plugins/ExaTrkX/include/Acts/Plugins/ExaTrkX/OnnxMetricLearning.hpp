@@ -34,8 +34,9 @@ class OnnxMetricLearning final : public Acts::GraphConstructionBase {
   OnnxMetricLearning(const Config& cfg, std::unique_ptr<const Logger> logger);
   ~OnnxMetricLearning();
 
-  std::tuple<std::any, std::any> operator()(
-      std::vector<float>& inputValues) override;
+  std::tuple<std::any, std::any> operator()(std::vector<float>& inputValues,
+                                            std::size_t numNodes,
+                                            int deviceHint = -1) override;
 
   Config config() const { return m_cfg; }
 

@@ -43,7 +43,7 @@ template <typename generator_t, size_t kSize>
 struct BoundParametersSmearer {
   using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
-  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.
@@ -65,7 +65,7 @@ struct BoundParametersSmearer {
                     const Acts::GeometryContext& geoCtx) const {
     // We use the thickness of the detector element as tolerance, because Geant4
     // treats the Surfaces as volumes and thus it is not ensured, that each hit
-    // lies exactely on the Acts::Surface
+    // lies exactly on the Acts::Surface
     const auto tolerance =
         surface.associatedDetectorElement() != nullptr
             ? surface.associatedDetectorElement()->thickness()
@@ -75,7 +75,7 @@ struct BoundParametersSmearer {
     // is easier to just create them all and then select the requested ones.
     Acts::Result<Acts::BoundVector> boundParamsRes =
         Acts::detail::transformFreeToBoundParameters(
-            hit.position(), hit.time(), hit.unitDirection(), 0, surface, geoCtx,
+            hit.position(), hit.time(), hit.direction(), 0, surface, geoCtx,
             tolerance);
 
     if (!boundParamsRes.ok()) {
@@ -114,7 +114,7 @@ template <typename generator_t, size_t kSize>
 struct FreeParametersSmearer {
   using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
-  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.
@@ -136,7 +136,7 @@ struct FreeParametersSmearer {
     Acts::FreeVector freeParams;
     freeParams.segment<3>(Acts::eFreePos0) = hit.position();
     freeParams[Acts::eFreeTime] = hit.time();
-    freeParams.segment<3>(Acts::eFreeDir0) = hit.unitDirection();
+    freeParams.segment<3>(Acts::eFreeDir0) = hit.direction();
     freeParams[Acts::eFreeQOverP] = 0;
 
     ParametersVector par = ParametersVector::Zero();

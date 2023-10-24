@@ -22,22 +22,18 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
         continue;
       }
       couldRemoveTracks = true;
-      auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
-      m_cfg.gridDensity.removeTrackGridFromMainGrid(
-          binAndTrackGrid.first, binAndTrackGrid.second, state.mainGridDensity,
-          state.mainGridZValues);
+      auto trackDensityMap = state.trackDensities.at(trk);
+      m_cfg.gridDensity.subtractTrack(trackDensityMap, state.mainDensityMap);
     }
     if (not couldRemoveTracks) {
       // No tracks were removed anymore
       // Return empty seed, i.e. vertex at constraint position
       // (Note: Upstream finder should check for this break condition)
-      std::vector<Vertex<InputTrack_t>> seedVec{
-          vertexingOptions.vertexConstraint};
+      std::vector<Vertex<InputTrack_t>> seedVec{vertexingOptions.constraint};
       return seedVec;
     }
   } else {
-    state.mainGridDensity.clear();
-    state.mainGridZValues.clear();
+    state.mainDensityMap.clear();
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_extractParameters(*trk);
@@ -48,11 +44,11 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
         }
         continue;
       }
-      auto binAndTrackGrid = m_cfg.gridDensity.addTrack(
-          trkParams, state.mainGridDensity, state.mainGridZValues);
+      auto trackDensityMap =
+          m_cfg.gridDensity.addTrack(trkParams, state.mainDensityMap);
       // Cache track density contribution to main grid if enabled
       if (m_cfg.cacheGridStateForTrackRemoval) {
-        state.binAndTrackGridMap[trk] = binAndTrackGrid;
+        state.trackDensities[trk] = trackDensityMap;
         state.trackSelectionMap[trk] = true;
       }
     }
@@ -61,36 +57,34 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
 
   double z = 0;
   double width = 0;
-  if (not state.mainGridDensity.empty()) {
+  if (not state.mainDensityMap.empty()) {
     if (not m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
-      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGridDensity,
-                                                       state.mainGridZValues);
+      auto maxZTRes = m_cfg.gridDensity.getMaxZTPosition(state.mainDensityMap);
 
-      if (!maxZres.ok()) {
-        return maxZres.error();
+      if (!maxZTRes.ok()) {
+        return maxZTRes.error();
       }
-      z = *maxZres;
+      z = (*maxZTRes).first;
     } else {
       // Get z value of highest density bin and width
-      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(
-          state.mainGridDensity, state.mainGridZValues);
+      auto maxZTResAndWidth =
+          m_cfg.gridDensity.getMaxZTPositionAndWidth(state.mainDensityMap);
 
-      if (!maxZres.ok()) {
-        return maxZres.error();
+      if (!maxZTResAndWidth.ok()) {
+        return maxZTResAndWidth.error();
       }
-      z = (*maxZres).first;
-      width = (*maxZres).second;
+      z = (*maxZTResAndWidth).first.first;
+      width = (*maxZTResAndWidth).second;
     }
   }
 
   // Construct output vertex
-  Vector3 seedPos =
-      vertexingOptions.vertexConstraint.position() + Vector3(0., 0., z);
+  Vector3 seedPos = vertexingOptions.constraint.position() + Vector3(0., 0., z);
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
-  SymMatrix4 seedCov = vertexingOptions.vertexConstraint.fullCovariance();
+  SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
   if (width != 0.) {
     // Use z-constraint from seed width

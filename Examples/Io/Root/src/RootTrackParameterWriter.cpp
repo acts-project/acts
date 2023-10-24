@@ -172,14 +172,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     // Get the sim hits via the measurement to sim hits map
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     auto [truthLocal, truthPos4, truthUnitDir] =
-        averageSimHits(ctx.geoContext, surface, simHits, indices);
+        averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
     // Get the truth track parameter at the first space point
     m_t_loc0 = truthLocal[Acts::ePos0];
     m_t_loc1 = truthLocal[Acts::ePos1];
     m_t_phi = phi(truthUnitDir);
     m_t_theta = theta(truthUnitDir);
     m_t_time = truthPos4[Acts::eTime];
-    // momemtum averaging makes even less sense than averaging position and
+    // momentum averaging makes even less sense than averaging position and
     // direction. use the first momentum or set q/p to zero
     if (not indices.empty()) {
       // we assume that the indices are within valid ranges so we do not

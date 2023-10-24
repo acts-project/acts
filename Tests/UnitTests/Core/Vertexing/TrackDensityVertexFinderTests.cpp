@@ -15,7 +15,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -48,7 +48,7 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -83,18 +83,21 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  auto params1a = BoundTrackParameters::create(perigeeSurface, geoContext,
-                                               makeVector4(pos1a, 0), mom1a,
-                                               mom1a.norm(), 1, covMat)
-                      .value();
-  auto params1b = BoundTrackParameters::create(perigeeSurface, geoContext,
-                                               makeVector4(pos1b, 0), mom1b,
-                                               mom1b.norm(), -1, covMat)
-                      .value();
-  auto params1c = BoundTrackParameters::create(perigeeSurface, geoContext,
-                                               makeVector4(pos1c, 0), mom1c,
-                                               mom1c.norm(), -1, covMat)
-                      .value();
+  auto params1a =
+      BoundTrackParameters::create(
+          perigeeSurface, geoContext, makeVector4(pos1a, 0), mom1a.normalized(),
+          1_e / mom1a.norm(), covMat, ParticleHypothesis::pion())
+          .value();
+  auto params1b =
+      BoundTrackParameters::create(
+          perigeeSurface, geoContext, makeVector4(pos1b, 0), mom1b.normalized(),
+          -1_e / mom1b.norm(), covMat, ParticleHypothesis::pion())
+          .value();
+  auto params1c =
+      BoundTrackParameters::create(
+          perigeeSurface, geoContext, makeVector4(pos1c, 0), mom1c.normalized(),
+          1_e / mom1c.norm(), covMat, ParticleHypothesis::pion())
+          .value();
 
   // Vectors of track parameters in different orders
   std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b,
@@ -139,18 +142,16 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
 
-  // Finder options
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
-  SymMatrix3 constrCov = ActsSymMatrix<3>::Identity();
+  SquareMatrix3 constrCov = ActsSquareMatrix<3>::Identity();
 
-  Vertex<BoundTrackParameters> vertexConstraint(constraintPos);
-  vertexConstraint.setCovariance(constrCov);
+  Vertex<BoundTrackParameters> constraint(constraintPos);
+  constraint.setCovariance(constrCov);
 
-  vertexingOptions.vertexConstraint = vertexConstraint;
+  // Finder options
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, constraint);
   using Finder =
       TrackDensityVertexFinder<DummyVertexFitter<>,
                                GaussianTrackDensity<BoundTrackParameters>>;
@@ -163,18 +164,21 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  auto params1a = BoundTrackParameters::create(perigeeSurface, geoContext,
-                                               makeVector4(pos1a, 0), mom1a,
-                                               mom1a.norm(), 1, covMat)
-                      .value();
-  auto params1b = BoundTrackParameters::create(perigeeSurface, geoContext,
-                                               makeVector4(pos1b, 0), mom1b,
-                                               mom1b.norm(), -1, covMat)
-                      .value();
-  auto params1c = BoundTrackParameters::create(perigeeSurface, geoContext,
-                                               makeVector4(pos1c, 0), mom1c,
-                                               mom1c.norm(), -1, covMat)
-                      .value();
+  auto params1a =
+      BoundTrackParameters::create(
+          perigeeSurface, geoContext, makeVector4(pos1a, 0), mom1a.normalized(),
+          1_e / mom1a.norm(), covMat, ParticleHypothesis::pion())
+          .value();
+  auto params1b =
+      BoundTrackParameters::create(
+          perigeeSurface, geoContext, makeVector4(pos1b, 0), mom1b.normalized(),
+          -1_e / mom1b.norm(), covMat, ParticleHypothesis::pion())
+          .value();
+  auto params1c =
+      BoundTrackParameters::create(
+          perigeeSurface, geoContext, makeVector4(pos1c, 0), mom1c.normalized(),
+          -1_e / mom1c.norm(), covMat, ParticleHypothesis::pion())
+          .value();
 
   // Vector of track parameters
   std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b,
@@ -251,9 +255,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
-    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
-    pos = intersection.intersection.position;
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
+    auto intersection =
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
+    pos = intersection.position();
 
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1
@@ -261,7 +266,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 
@@ -311,17 +317,16 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
 
-  // Finder options
-  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
-
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
-  SymMatrix3 constrCov = SymMatrix3::Identity();
+  SquareMatrix3 constrCov = SquareMatrix3::Identity();
 
-  Vertex<InputTrack> vertexConstraint(constraintPos);
-  vertexConstraint.setCovariance(constrCov);
+  Vertex<InputTrack> constraint(constraintPos);
+  constraint.setCovariance(constrCov);
 
-  vertexingOptions.vertexConstraint = vertexConstraint;
+  // Finder options
+  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
+                                                constraint);
 
   std::function<BoundTrackParameters(InputTrack)> extractParameters =
       [](const InputTrack& params) { return params.parameters(); };
@@ -340,15 +345,18 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // Test finder for some fixed track parameter values
   InputTrack params1a(BoundTrackParameters::create(perigeeSurface, geoContext,
                                                    makeVector4(pos1a, 0), mom1a,
-                                                   mom1a.norm(), 1, covMat)
+                                                   1_e / mom1a.norm(), covMat,
+                                                   ParticleHypothesis::pion())
                           .value());
   InputTrack params1b(BoundTrackParameters::create(perigeeSurface, geoContext,
                                                    makeVector4(pos1b, 0), mom1b,
-                                                   mom1b.norm(), -1, covMat)
+                                                   -1_e / mom1b.norm(), covMat,
+                                                   ParticleHypothesis::pion())
                           .value());
   InputTrack params1c(BoundTrackParameters::create(perigeeSurface, geoContext,
                                                    makeVector4(pos1c, 0), mom1c,
-                                                   mom1c.norm(), -1, covMat)
+                                                   -1_e / mom1c.norm(), covMat,
+                                                   ParticleHypothesis::pion())
                           .value());
 
   // Vector of track parameters

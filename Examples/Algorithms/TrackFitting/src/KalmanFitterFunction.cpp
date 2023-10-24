@@ -24,6 +24,7 @@
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
@@ -80,8 +81,13 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
 
-  KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
-      : fitter(std::move(f)), directFitter(std::move(df)) {}
+  IndexSourceLink::SurfaceAccessor slSurfaceAccessor;
+
+  KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
+                           const Acts::TrackingGeometry& trkGeo)
+      : fitter(std::move(f)),
+        directFitter(std::move(df)),
+        slSurfaceAccessor{trkGeo} {}
 
   template <typename calibrator_t>
   auto makeKfOptions(const GeneralFitterOptions& options,
@@ -101,11 +107,16 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
         options.geoContext, options.magFieldContext, options.calibrationContext,
         extensions, options.propOptions, &(*options.referenceSurface));
 
+    kfOptions.referenceSurfaceStrategy =
+        Acts::KalmanFitterTargetSurfaceStrategy::first;
     kfOptions.multipleScattering = multipleScattering;
     kfOptions.energyLoss = energyLoss;
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
+    kfOptions.extensions.surfaceAccessor
+        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+            &slSurfaceAccessor);
 
     return kfOptions;
   }
@@ -148,6 +159,7 @@ ActsExamples::makeKalmanFitterFunction(
   const Stepper stepper(std::move(magneticField));
 
   // Standard fitter
+  const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
@@ -167,7 +179,7 @@ ActsExamples::makeKalmanFitterFunction(
 
   // build the fitter function. owns the fitter object.
   auto fitterFunction = std::make_shared<KalmanFitterFunctionImpl>(
-      std::move(trackFitter), std::move(directTrackFitter));
+      std::move(trackFitter), std::move(directTrackFitter), geo);
   fitterFunction->multipleScattering = multipleScattering;
   fitterFunction->energyLoss = energyLoss;
   fitterFunction->reverseFilteringLogic.momentumThreshold =

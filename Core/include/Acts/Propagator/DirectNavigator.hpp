@@ -12,7 +12,6 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -130,8 +129,7 @@ class DirectNavigator {
   /// @param tsurface is the target surface
   void resetState(State& state, const GeometryContext& /*geoContext*/,
                   const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  Direction /*navDir*/, const Surface* ssurface,
-                  const Surface* tsurface) const {
+                  const Surface* ssurface, const Surface* tsurface) const {
     // Reset everything except the navSurfaces
     auto navSurfaces = state.navSurfaces;
     state = State();
@@ -170,6 +168,10 @@ class DirectNavigator {
 
   bool targetReached(const State& state) const { return state.targetReached; }
 
+  bool endOfWorldReached(State& state) const {
+    return state.currentVolume == nullptr;
+  }
+
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
   }
@@ -188,7 +190,7 @@ class DirectNavigator {
 
   /// @brief Initialize call - start of propagation
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -222,8 +224,9 @@ class DirectNavigator {
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish & update the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter, false, *m_logger,
-          state.options.targetTolerance);
+          state.stepping, **state.navigation.navSurfaceIter,
+          state.options.direction, false, state.options.targetTolerance,
+          *m_logger);
       if (surfaceStatus == Intersection3D::Status::unreachable) {
         ACTS_VERBOSE(
             "Surface not reachable anymore, switching to next one in "
@@ -270,8 +273,9 @@ class DirectNavigator {
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter, false, *m_logger,
-          state.options.targetTolerance);
+          state.stepping, **state.navigation.navSurfaceIter,
+          state.options.direction, false, state.options.targetTolerance,
+          *m_logger);
       if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;

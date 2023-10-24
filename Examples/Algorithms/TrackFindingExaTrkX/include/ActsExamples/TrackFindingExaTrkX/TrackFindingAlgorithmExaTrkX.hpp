@@ -8,14 +8,23 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <mutex>
 #include <string>
 #include <vector>
+
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 
 namespace ActsExamples {
 
@@ -24,6 +33,21 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   struct Config {
     /// Input spacepoints collection.
     std::string inputSpacePoints;
+
+    /// Input cluster information (Optional). If given, the following features
+    /// are added:
+    /// * cell count
+    /// * sum cell activations
+    /// * cluster size in local x
+    /// * cluster size in local y
+    std::string inputClusters;
+
+    /// Input simhits (Optional).
+    std::string inputSimHits;
+    /// Input measurement simhit map (Optional).
+    std::string inputParticles;
+    /// Input measurement simhit map (Optional).
+    std::string inputMeasurementSimhitsMap;
 
     /// Output protoTracks collection.
     std::string outputProtoTracks;
@@ -38,6 +62,14 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     float rScale = 1.f;
     float phiScale = 1.f;
     float zScale = 1.f;
+    float cellCountScale = 1.f;
+    float cellSumScale = 1.f;
+    float clusterXScale = 1.f;
+    float clusterYScale = 1.f;
+
+    /// Target graph properties
+    std::size_t targetMinHits = 3;
+    double targetMinPT = 500 * Acts::UnitConstants::MeV;
   };
 
   /// Constructor of the track finding algorithm
@@ -55,20 +87,39 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final;
 
+  /// Finalize and print timing
+  ActsExamples::ProcessCode finalize() final;
+
   const Config& config() const { return m_cfg; }
 
  private:
-  std::vector<std::vector<int>> runPipeline(
-      std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const;
-
-  // configuration
   Config m_cfg;
+
+  Acts::ExaTrkXPipeline m_pipeline;
+  mutable std::mutex m_mutex;
+
+  using Accumulator = boost::accumulators::accumulator_set<
+      float, boost::accumulators::features<boost::accumulators::tag::mean,
+                                           boost::accumulators::tag::variance>>;
+
+  mutable struct {
+    Accumulator graphBuildingTime;
+    std::vector<Accumulator> classifierTimes;
+    Accumulator trackBuildingTime;
+  } m_timing;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
+
+  // for truth graph
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementMap{
+      this, "InputMeasurementMap"};
 };
 
 }  // namespace ActsExamples
