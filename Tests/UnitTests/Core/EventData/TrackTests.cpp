@@ -28,7 +28,6 @@
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <iterator>
 #include <memory>
