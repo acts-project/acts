@@ -14,7 +14,7 @@ histograms:
     min: -6
     max: 6
 
- "pullT":
+  "pullT":
     nbins: 50
     min: -50
     max: 50
