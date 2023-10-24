@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <ActsExamples/EventData/Index.hpp>
+
 #include <cstdint>
 
 #include <dfe/dfe_namedtuple.hpp>
@@ -302,6 +304,14 @@ struct TrackParameterData {
                  cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop, cov_thetad0,
                  cov_thetaz0, cov_thetaphi, cov_thetaqop, cov_qopd0, cov_qopz0,
                  cov_qopphi, cov_qoptheta);
+};
+
+struct ProtoTrackData {
+  std::size_t trackId;
+  Index measurementId;
+  double x, y, z;
+
+  DFE_NAMEDTUPLE(ProtoTrackData, trackId, measurementId, x, y, z);
 };
 
 }  // namespace ActsExamples
