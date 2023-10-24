@@ -36,8 +36,8 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
   TorchEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any> operator()(std::any nodes,
-                                                      std::any edges) override;
+  std::tuple<std::any, std::any, std::any> operator()(
+      std::any nodes, std::any edges, int deviceHint = -1) override;
 
   Config config() const { return m_cfg; }
 

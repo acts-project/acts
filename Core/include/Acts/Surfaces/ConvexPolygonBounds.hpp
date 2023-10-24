@@ -142,6 +142,8 @@ constexpr int PolygonDynamic = -1;
 template <>
 class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
  public:
+  constexpr static int eSize = -1;
+
   /// Default constructor, deleted
   ConvexPolygonBounds() = delete;
 

@@ -12,17 +12,26 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <any>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <vector>
 
-#include <boost/multi_array.hpp>
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
+struct ExaTrkXTiming {
+  using Duration = std::chrono::duration<float, std::milli>;
+
+  Duration graphBuildingTime = Duration{0.f};
+  boost::container::small_vector<Duration, 3> classifierTimes;
+  Duration trackBuildingTime = Duration{0.f};
+};
+
 class ExaTrkXHook {
  public:
-  virtual ~ExaTrkXHook(){};
+  virtual ~ExaTrkXHook() {}
   virtual void operator()(const std::any &, const std::any &) const {};
 };
 
@@ -36,7 +45,9 @@ class ExaTrkXPipeline {
 
   std::vector<std::vector<int>> run(std::vector<float> &features,
                                     std::vector<int> &spacepointIDs,
-                                    const ExaTrkXHook &hook = {}) const;
+                                    int deviceHint = -1,
+                                    const ExaTrkXHook &hook = {},
+                                    ExaTrkXTiming *timing = nullptr) const;
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;

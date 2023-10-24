@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -99,7 +100,7 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
         targetGraph, logger.clone());
   }
 
-  ~ExamplesEdmHook(){};
+  ~ExamplesEdmHook() {}
 
   void operator()(const std::any& nodes, const std::any& edges) const override {
     ACTS_INFO("Metrics for total graph:");
@@ -145,11 +146,17 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 #endif
 
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 
   m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementSimhitsMap);
+
+  // reserve space for timing
+  m_timing.classifierTimes.resize(
+      m_cfg.edgeClassifiers.size(),
+      decltype(m_timing.classifierTimes)::value_type{0.f});
 }
 
 /// Allow access to features with nice names
@@ -233,7 +240,26 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_DEBUG("Avg activation: " << sumActivation / sumCells);
 
   // Run the pipeline
-  const auto trackCandidates = m_pipeline.run(features, spacepointIDs, *hook);
+  const auto trackCandidates = [&]() {
+    const int deviceHint = -1;
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    Acts::ExaTrkXTiming timing;
+    auto res =
+        m_pipeline.run(features, spacepointIDs, deviceHint, *hook, &timing);
+
+    m_timing.graphBuildingTime(timing.graphBuildingTime.count());
+
+    assert(timing.classifierTimes.size() == m_timing.classifierTimes.size());
+    for (auto [aggr, a] :
+         Acts::zip(m_timing.classifierTimes, timing.classifierTimes)) {
+      aggr(a.count());
+    }
+
+    m_timing.trackBuildingTime(timing.trackBuildingTime.count());
+
+    return res;
+  }();
 
   ACTS_DEBUG("Done with pipeline, received " << trackCandidates.size()
                                              << " candidates");
@@ -251,4 +277,26 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   m_outputProtoTracks(ctx, std::move(protoTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;
+}
+
+ActsExamples::ProcessCode TrackFindingAlgorithmExaTrkX::finalize() {
+  namespace ba = boost::accumulators;
+
+  ACTS_INFO("Exa.TrkX timing info");
+  {
+    const auto& t = m_timing.graphBuildingTime;
+    ACTS_INFO("- graph building: " << ba::mean(t) << " +- "
+                                   << std::sqrt(ba::variance(t)));
+  }
+  for (const auto& t : m_timing.classifierTimes) {
+    ACTS_INFO("- classifier:     " << ba::mean(t) << " +- "
+                                   << std::sqrt(ba::variance(t)));
+  }
+  {
+    const auto& t = m_timing.trackBuildingTime;
+    ACTS_INFO("- track building: " << ba::mean(t) << " +- "
+                                   << std::sqrt(ba::variance(t)));
+  }
+
+  return {};
 }

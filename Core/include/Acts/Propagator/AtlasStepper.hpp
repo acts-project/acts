@@ -291,7 +291,7 @@ class AtlasStepper {
   };
 
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
-      : m_bField(std::move(bField)){};
+      : m_bField(std::move(bField)) {}
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
@@ -1239,7 +1239,7 @@ class AtlasStepper {
       if (std::abs(EST) > std::abs(state.options.tolerance)) {
         h = h * .5;
         // neutralize the sign of h again
-        state.stepping.stepSize.setValue(h * state.options.direction);
+        state.stepping.stepSize.setAccuracy(h * state.options.direction);
         //        dltm = 0.;
         nStepTrials++;
         continue;

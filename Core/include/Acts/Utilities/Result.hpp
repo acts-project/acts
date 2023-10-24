@@ -39,7 +39,7 @@ class Result {
   Result<T, E>& operator=(const Result<T, E>& other) = delete;
 
   /// Move construction is allowed
-  Result(Result<T, E>&& other) : m_var(std::move(other.m_var)){};
+  Result(Result<T, E>&& other) : m_var(std::move(other.m_var)) {}
 
   /// Move assignment is allowed
   /// @param other The other result instance, rvalue reference
@@ -117,16 +117,32 @@ class Result {
   /// @return Reference to value stored in the variant.
   T& operator*() noexcept { return std::get<T>(m_var); }
 
+  /// Returns a reference into the variant to the valid value.
+  /// @note If `!res.ok()`, this method will abort (noexcept)
+  /// @return Reference to value stored in the variant.
+  const T& operator*() const noexcept { return std::get<T>(m_var); }
+
   /// Allows to access members of the stored object with `res->foo`
   /// similar to `std::optional`.
   /// @note If `!res.ok()`, this method will abort (noexcept)
   /// @return Pointer to value stored in the variant.
   T* operator->() noexcept { return &std::get<T>(m_var); }
 
+  /// Allows to access members of the stored object with `res->foo`
+  /// similar to `std::optional`.
+  /// @note If `!res.ok()`, this method will abort (noexcept)
+  /// @return Pointer to value stored in the variant.
+  const T* operator->() const noexcept { return &std::get<T>(m_var); }
+
   /// Returns a reference to the error stored in the result.
   /// @note If `res.ok()` this method will abort (noexcept)
   /// @return Reference to the error
   E& error() & noexcept { return std::get<E>(m_var); }
+
+  /// Returns a reference to the error stored in the result.
+  /// @note If `res.ok()` this method will abort (noexcept)
+  /// @return Reference to the error
+  const E& error() const& noexcept { return std::get<E>(m_var); }
 
   /// Returns the error by-value.
   /// @note If `res.ok()` this method will abort (noexcept)
@@ -137,18 +153,15 @@ class Result {
   /// @note This is the lvalue version, returns a reference to the value
   /// @return The valid value as a reference
   T& value() & {
-    if (m_var.index() != 0) {
-      if constexpr (std::is_same_v<E, std::error_code>) {
-        std::stringstream ss;
-        const auto& e = std::get<E>(m_var);
-        ss << "Value called on error value: " << e.category().name() << ": "
-           << e.message() << " [" << e.value() << "]";
-        throw std::runtime_error(ss.str());
-      } else {
-        throw std::runtime_error("Value called on error value");
-      }
-    }
+    checkValueAccess();
+    return std::get<T>(m_var);
+  }
 
+  /// Retrieves the valid value from the result object.
+  /// @note This is the lvalue version, returns a reference to the value
+  /// @return The valid value as a reference
+  const T& value() const& {
+    checkValueAccess();
     return std::get<T>(m_var);
   }
 
@@ -157,6 +170,14 @@ class Result {
   /// by-value and moves out of the variant.
   /// @return The valid value by value, moved out of the variant.
   T value() && {
+    checkValueAccess();
+    return std::move(std::get<T>(m_var));
+  }
+
+ private:
+  std::variant<T, E> m_var;
+
+  void checkValueAccess() const {
     if (m_var.index() != 0) {
       if constexpr (std::is_same_v<E, std::error_code>) {
         std::stringstream ss;
@@ -168,12 +189,7 @@ class Result {
         throw std::runtime_error("Value called on error value");
       }
     }
-
-    return std::move(std::get<T>(m_var));
   }
-
- private:
-  std::variant<T, E> m_var;
 };
 
 /// Template specialization for the void case.
@@ -202,7 +218,7 @@ class Result<void, E> {
 
   /// Move constructor
   /// @param other The other result object, rvalue ref
-  Result(Result<void, E>&& other) : m_opt(std::move(other.m_opt)){};
+  Result(Result<void, E>&& other) : m_opt(std::move(other.m_opt)) {}
 
   /// Move assignment operator
   /// @param other The other result object, rvalue ref
@@ -247,6 +263,11 @@ class Result<void, E> {
   /// @note If `res.ok()` this method will abort (noexcept)
   /// @return Reference to the error
   E& error() & noexcept { return m_opt.value(); }
+
+  /// Returns a reference to the error stored in the result.
+  /// @note If `res.ok()` this method will abort (noexcept)
+  /// @return Reference to the error
+  const E& error() const& noexcept { return m_opt.value(); }
 
   /// Returns the error by-value.
   /// @note If `res.ok()` this method will abort (noexcept)
