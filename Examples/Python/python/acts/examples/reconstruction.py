@@ -835,12 +835,19 @@ def addSeedFilterML(
     config: SeedFilterMLDBScanConfig = SeedFilterMLDBScanConfig(),
     onnxModelFile: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
 ) -> None:
-    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)()
     from acts.examples.onnx.mlpack import SeedFilterMLAlgorithm
 
+    inputParticles = "particles"
+    selectedParticles = "truth_seeds_selected"
+    seeds = "seeds"
+    estParams = "estimatedparameters"
+
     filterML = SeedFilterMLAlgorithm(
-        level=customLogLevel(),
+        level=customLogLevel,
         inputTrackParameters="estimatedparameters",
         inputSimSeeds="seeds",
         inputSeedFilterNN=onnxModelFile,
@@ -852,9 +859,48 @@ def addSeedFilterML(
         ),
     )
     s.addAlgorithm(filterML)
-    s.addWhiteboardAlias("seeds", "filtered-seeds")
+    s.addWhiteboardAlias(seeds, "filtered-seeds")
     s.addWhiteboardAlias("estimatedparameters", "filtered-parameters")
 
+    prototracks = "seed-prototracks-ML"
+    s.addAlgorithm(
+        acts.examples.SeedsToPrototracks(
+            level=customLogLevel,
+            inputSeeds=seeds,
+            outputProtoTracks=prototracks,
+        )
+    )
+
+    if outputDirRoot is not None:
+        addSeedPerformanceWriters(
+            s,
+            outputDirRoot,
+            seeds,
+            prototracks,
+            selectedParticles,
+            inputParticles,
+            estParams,
+            customLogLevel,
+        )
+
+    if outputDirCsv is not None:
+        outputDirCsv = Path(outputDirCsv)
+
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
+
+        CsvSeedWriter = acts.examples.CsvSeedWriter(
+            level=customLogLevel,
+            inputTrackParameters=estParams,
+            inputSimSeeds=seeds,
+            inputSimHits="simhits",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            outputDir=str(outputDirCsv),
+            fileName=str(f"seed.csv"),
+        )
+        s.addWriter(CsvSeedWriter)
+    
     return s
 
 
