@@ -477,11 +477,6 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   MeasurementResolutionMap resolutions = {
       {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
-  // simulation propagator
-  //  using SimPropagator =
-  //      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-  //  SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
-
   using SimStepper = EigenStepper<>;
   const auto simPropagator = makeConstantFieldPropagator<SimStepper>(
       detector.geometry, 0.1_T);  // 0.000001_T
