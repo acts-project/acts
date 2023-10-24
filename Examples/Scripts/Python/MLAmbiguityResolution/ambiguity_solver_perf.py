@@ -28,10 +28,10 @@ def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
 
 # CSV files to be compared, do not forget to sort them
 CKF_files_track = sorted(
-    glob.glob("odd_output_full_chain/20_ref" + "/event0000000[0-5][0-9]-tracks_ckf.csv")
+    glob.glob("odd_output_test/ref" + "/event0000000[0-5][0-9]-tracks_ckf.csv")
 )
 CKF_files_resolved = sorted(
-    glob.glob("odd_output_full_chain/" + "/event0000000[0-5][0-9]-tracks_ambi.csv")
+    glob.glob("odd_output_test/seed_filter/" + "/event0000000[0-5][0-9]-tracks_ckf.csv")
 )
 
 data_track = readDataSet(CKF_files_track)

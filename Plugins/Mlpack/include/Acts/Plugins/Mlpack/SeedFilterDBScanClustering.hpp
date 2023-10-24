@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <unordered_map>
 #include <vector>
@@ -39,8 +40,10 @@ std::vector<std::vector<int>> dbscanSeedClustering(
   // Get the input feature of the network for all the tracks
   for (const auto& param : input) {
     for (int i = 0; i < dim; i++) {
+      std::cout << param[i] << " ";
       data(i, trackID) = param[i];
     }
+    std::cout << std::endl;
     trackID++;
   }
   size_t clusterNb = dbscan.Cluster(data, assignments);

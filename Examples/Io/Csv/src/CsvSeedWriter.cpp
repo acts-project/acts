@@ -111,11 +111,11 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
       // Get the sim hits via the measurement to sim hits map
       auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
       // Get the truth particle direction from the sim hits
-      Acts::Vector3 truthUnitDir;
+      Acts::Vector3 truthUnitDir = {0, 0, 0};
       for (auto [_, simHitIdx] : indices) {
         const auto& simHit = *simHits.nth(simHitIdx);
         if (simHit.particleId() == majorityParticleId) {
-          truthUnitDir = simHit.unitDirection();
+          truthUnitDir = simHit.direction();
         }
       }
       // Compute the distance between the truth and estimated directions

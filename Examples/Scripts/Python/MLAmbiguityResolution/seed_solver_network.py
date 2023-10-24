@@ -20,6 +20,14 @@ def prepareDataSet(data: pd.DataFrame) -> pd.DataFrame:
     data = data.sort_values("particleId")
     # Set truth particle ID as index
     print(data.shape[0] / data["particleId"].nunique())
+    print(
+        data.loc[data["good/duplicate/fake"] == "duplicate"].shape[0]
+        / data["particleId"].nunique()
+    )
+    print(
+        data.loc[data["good/duplicate/fake"] == "fake"].shape[0]
+        / data["particleId"].nunique()
+    )
     print(data["particleId"].nunique())
     print(data.loc[data["good/duplicate/fake"] == "good"].shape[0])
     print("=====")

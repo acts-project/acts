@@ -29,11 +29,7 @@ struct SeedFinderConfig {
   // lower cutoff for seeds
   float minPt = 400. * Acts::UnitConstants::MeV;
   // cot of maximum theta angle
-<<<<<<< HEAD
-  // equivalent to 2.7 eta (pseudorapidity)
-=======
   // equivalent to 3 eta (pseudorapidity)
->>>>>>> upstream/main
   float cotThetaMax = 10.01788;
   // minimum distance in r between two measurements within one seed
   float deltaRMin = 5 * Acts::UnitConstants::mm;
