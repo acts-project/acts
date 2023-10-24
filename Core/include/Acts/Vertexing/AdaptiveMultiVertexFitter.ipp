@@ -48,8 +48,8 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
   unsigned int nIter = 0;
 
   // Start iterating
-  while (nIter < m_cfg.maxIterations and
-         (not state.annealingState.equilibriumReached or not isSmallShift)) {
+  while (nIter < m_cfg.maxIterations &&
+         (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
     for (auto vtx : state.vertexCollection) {
       VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
@@ -76,7 +76,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // Check if we use the constraint during the vertex fit
       if (state.vtxInfoMap[vtx].constraint.fullCovariance() !=
           SquareMatrix4::Zero()) {
-        Acts::Vertex<input_track_t> constraint =
+        const Acts::Vertex<input_track_t>& constraint =
             state.vtxInfoMap[vtx].constraint;
         vtx->setFullPosition(constraint.fullPosition());
         vtx->setFitQuality(constraint.fitQuality());
@@ -146,12 +146,12 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
           state.vtxInfoMap[lastIterAddedVertex].trackLinks;
       for (const auto& trk : trks) {
         // Range of vertices that are associated with trk. The range is
-        // represented via its bounds: range.first refers to the first
-        // iterator of the range; range.second refers to the iterator after the
-        // last iterator of the range.
-        auto range = state.trackToVerticesMultiMap.equal_range(trk);
+        // represented via its bounds: begin refers to the first iterator of the
+        // range; end refers to the iterator after the last iterator of the
+        // range.
+        auto [begin, end] = state.trackToVerticesMultiMap.equal_range(trk);
 
-        for (auto it = range.first; it != range.second; ++it) {
+        for (auto it = begin; it != end; ++it) {
           // it->first corresponds to trk, it->second to one of its associated
           // vertices
           auto vtxToFit = it->second;
@@ -285,7 +285,7 @@ Acts::Result<void> Acts::
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         // Check if track is already linearized and whether we need to
         // relinearize
-        if (not trkAtVtx.isLinearized or vtxInfo.relinearize) {
+        if (!trkAtVtx.isLinearized || vtxInfo.relinearize) {
           auto result = linearizer.linearizeTrack(
               m_extractParameters(*trk), vtxInfo.oldPosition[3],
               *vtxPerigeeSurface, vertexingOptions.geoContext,
@@ -319,15 +319,14 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
   std::vector<double> trkToVtxCompatibilities;
 
   // Range of vertices that are associated with trk. The range is
-  // represented via its bounds: range.first refers to the first
-  // iterator of the range; range.second refers to the iterator after the
-  // last iterator of the range.
-  auto range = state.trackToVerticesMultiMap.equal_range(trk);
+  // represented via its bounds: begin refers to the first iterator of the
+  // range; end refers to the iterator after the last iterator of the range.
+  auto [begin, end] = state.trackToVerticesMultiMap.equal_range(trk);
 
   // Allocate space in memory for the vector of compatibilities
-  trkToVtxCompatibilities.reserve(std::distance(range.first, range.second));
+  trkToVtxCompatibilities.reserve(std::distance(begin, end));
 
-  for (auto it = range.first; it != range.second; ++it) {
+  for (auto it = begin; it != end; ++it) {
     // it->first corresponds to trk, it->second to one of its associated
     // vertices
     trkToVtxCompatibilities.push_back(
@@ -344,7 +343,7 @@ bool Acts::AdaptiveMultiVertexFitter<
   for (auto vtx : state.vertexCollection) {
     Vector3 diff =
         state.vtxInfoMap[vtx].oldPosition.template head<3>() - vtx->position();
-    SquareMatrix3 vtxCov = vtx->covariance();
+    const SquareMatrix3& vtxCov = vtx->covariance();
     double relativeShift = diff.dot(vtxCov.inverse() * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
       return false;
