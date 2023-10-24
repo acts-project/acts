@@ -94,7 +94,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const bool validCharge = validNeutral or validCharged;
     const bool validSecondary = not m_cfg.removeSecondaries or !p.isSecondary();
 
-    nInvalidCharge += not validCharge;
+    nInvalidCharge += static_cast<std::size_t>(not validCharge);
 
     // default valid measurement count to true and only change if we have loaded
     // the measurement particles map
@@ -109,7 +109,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
                             << p.particleId());
     }
 
-    nInvalidMeasurementCount += not validMeasurementCount;
+    nInvalidMeasurementCount +=
+        static_cast<std::size_t>(not validMeasurementCount);
 
     return validCharge and validSecondary and validMeasurementCount and
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
