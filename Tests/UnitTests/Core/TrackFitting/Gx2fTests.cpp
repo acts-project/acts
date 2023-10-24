@@ -66,7 +66,6 @@ Acts::CurvilinearTrackParameters makeParameters(
                                           Acts::ParticleHypothesis::pion());
 }
 
-
 static std::vector<Acts::SourceLink> prepareSourceLinks(
     const std::vector<TestSourceLink>& sourceLinks) {
   std::vector<Acts::SourceLink> result;
