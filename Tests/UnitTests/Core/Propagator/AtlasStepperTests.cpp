@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
-  state.stepSize.setValue(navDir * stepSize);
+  state.stepSize.setUser(navDir * stepSize);
   stepper.updateStepSize(
       state,
       target
