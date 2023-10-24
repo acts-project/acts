@@ -89,12 +89,12 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // define charge selection
-    const bool validNeutral = (p.charge() == 0) && ! m_cfg.removeNeutral;
-    const bool validCharged = (p.charge() != 0) && ! m_cfg.removeCharged;
+    const bool validNeutral = (p.charge() == 0) && !m_cfg.removeNeutral;
+    const bool validCharged = (p.charge() != 0) && !m_cfg.removeCharged;
     const bool validCharge = validNeutral || validCharged;
-    const bool validSecondary = ! m_cfg.removeSecondaries || !p.isSecondary();
+    const bool validSecondary = !m_cfg.removeSecondaries || !p.isSecondary();
 
-    nInvalidCharge += static_cast<std::size_t>(! validCharge);
+    nInvalidCharge += static_cast<std::size_t>(!validCharge);
 
     // default valid measurement count to true and only change if we have loaded
     // the measurement particles map
@@ -110,7 +110,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     }
 
     nInvalidMeasurementCount +=
-        static_cast<std::size_t>(! validMeasurementCount);
+        static_cast<std::size_t>(!validMeasurementCount);
 
     return validCharge && validSecondary && validMeasurementCount &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
