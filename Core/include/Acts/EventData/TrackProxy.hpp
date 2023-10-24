@@ -682,21 +682,16 @@ class TrackProxy {
 
     stemIndex() = tipIndex();
 
-    auto getTrackState = [this](IndexType idx) {
-      return m_container->trackStateContainer().getTrackState(idx);
-    };
-
     // @TODO: Maybe refactor to not need this variable if invertJacobians == false
     BoundMatrix nextJ;
 
     while (current != kInvalid) {
-      auto ts = getTrackState(current);
+      auto ts = m_container->trackStateContainer().getTrackState(current);
       prev = ts.previous();
       ts.template component<IndexType>(hashString("next")) = prev;
       ts.previous() = next;
       if (invertJacobians) {
         if (next != kInvalid) {
-          // auto next_ts = getTrackState(next);
           BoundMatrix curJ = ts.jacobian();
           ts.jacobian() = nextJ.inverse();
           nextJ = curJ;
