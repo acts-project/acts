@@ -291,7 +291,7 @@ class AtlasStepper {
   };
 
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
-      : m_bField(std::move(bField)){};
+      : m_bField(std::move(bField)) {}
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
