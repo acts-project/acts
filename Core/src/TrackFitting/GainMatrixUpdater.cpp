@@ -44,9 +44,16 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     ACTS_VERBOSE("Calibrated measurement covariance:\n"
                  << calibratedCovariance);
 
-    const auto H = trackState.projector
-                       .template topLeftCorner<kMeasurementSize, eBoundSize>()
-                       .eval();
+    auto H = trackState.projector
+                 .template topLeftCorner<kMeasurementSize, eBoundSize>()
+                 .eval();
+
+    const LineSurface* line = dynamic_cast<const LineSurface*>(surface);
+    if (line) {
+      if (trackState.predicted[eBoundLoc0] < 0) {
+        H(0u, eBoundLoc0) = -1;
+      }
+    }
 
     ACTS_VERBOSE("Measurement projector H:\n" << H);
 
@@ -65,29 +72,11 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
       return false;                                           // abort execution
     }
 
-    // Take a non-negative drfit distance measurement for Line Surface
-    BoundVector newParam = trackState.predicted;
-    BoundMatrix newCov = trackState.predictedCovariance;
-    const LineSurface* line = dynamic_cast<const LineSurface*>(surface);
-    if (line) {
-      if (trackState.predicted[eBoundLoc0] < 0) {
-        newParam[eBoundLoc0] *= -1.f;
-
-        // @ Should we do flip the covariance?
-        // for (unsigned int idx = 0; idx < eBoundSize; idx++) {
-        //  if (idx != eBoundLoc0) {
-        //    newCov(eBoundLoc0, idx) *= -1.f;
-        //    newCov(idx, eBoundLoc0) *= -1.f;
-        //  }
-        //}
-      }
-    }
-
     trackState.filtered =
-        trackState.predicted + K * (calibrated - H * newParam);
+        trackState.predicted + K * (calibrated - H * trackState.predicted);
 
     trackState.filteredCovariance =
-        (BoundSquareMatrix::Identity() - K * H) * newCov;
+        (BoundSquareMatrix::Identity() - K * H) * trackState.predictedCovariance;
     ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
     ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
 

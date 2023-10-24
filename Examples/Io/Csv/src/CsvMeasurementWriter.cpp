@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/LineSurface.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -114,11 +115,12 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           auto parameters = (m.expander() * m.parameters()).eval();
 
           // Take a non-negative drfit distance measurement for Line Surface
-          Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-          const LineSurface* line = dynamic_cast<const LineSurface*>(surface);
+          const Acts::Surface* surface =
+              m_cfg.trackingGeometry->findSurface(geoId);
+          const Acts::LineSurface* line = dynamic_cast<const Acts::LineSurface*>(surface);
           if (line) {
-            if (parameters[eBoundLoc0] < 0) {
-              parameters[eBoundLoc0] *= -1.f;
+            if (parameters[Acts::eBoundLoc0] < 0) {
+              parameters[Acts::eBoundLoc0] *= -1.f;
             }
           }
 
