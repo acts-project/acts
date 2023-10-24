@@ -466,6 +466,7 @@ jobs:
           && sudo chown $USER /usr/local/acts
           && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.67dd08d.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
+          && python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v3
@@ -485,6 +486,7 @@ jobs:
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DPython_EXECUTABLE=$(command -v python3)
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
