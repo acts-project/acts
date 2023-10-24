@@ -17,6 +17,7 @@ avg_sdv = [0, 0, 0, 0, 0, 0, 0, 0]
 events = 0
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
     """Read the dataset from the different files, remove the pure duplicate tracks and combine the datasets"""
     """
