@@ -1000,6 +1000,7 @@ def addTruthTrackingGsf(
         calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
+    s.addWhiteboardAlias("tracks", gsfAlg.config.outputTracks)
 
     return s
 
