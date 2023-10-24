@@ -168,6 +168,7 @@ with tempfile.TemporaryDirectory() as temp:
     addVertexFitting(
         s,
         setup.field,
+        tracks="tracks",
         trackParameters="trackParameters",
         outputProtoVertices="amvf_protovertices",
         outputVertices="amvf_fittedVertices",
@@ -179,6 +180,7 @@ with tempfile.TemporaryDirectory() as temp:
     addVertexFitting(
         s,
         setup.field,
+        tracks="tracks",
         trackParameters="trackParameters",
         outputProtoVertices="amvf_gridseeder_protovertices",
         outputVertices="amvf_gridseeder_fittedVertices",

@@ -122,6 +122,7 @@ def runTruthTrackingKalman(
             ),
         )
     )
+    s.addWhiteboardAlias("tracks", "selected-tracks")
 
     s.addWriter(
         acts.examples.RootTrackStatesWriter(
