@@ -126,11 +126,11 @@ if g4_simulation:
             removeNeutral=True,
         ),
         outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
         rnd=rnd,
         killVolume=trackingGeometry.worldVolume,
         killAfterTime=25 * u.ns,
     )
-
 else:
     addFatras(
         s,
@@ -170,7 +170,7 @@ addSeeding(
     else TruthSeedRanges(),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
-    outputDirCsv=outputDir,
+    # outputDirCsv=outputDir,
 )
 if seedFilter_ML:
     addSeedFilterML(
@@ -213,7 +213,6 @@ else:
             maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
         ),
         outputDirRoot=outputDir,
-        outputDirCsv=outputDir,
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )

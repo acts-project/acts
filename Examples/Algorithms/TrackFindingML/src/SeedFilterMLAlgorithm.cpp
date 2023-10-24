@@ -51,7 +51,6 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
   Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
       networkInput(seeds.size(), 14);
   std::vector<std::vector<double>> clusteringParams;
-  std::vector<int> highPTSeeds;
   std::vector<int> mapSeepIndex;
   // Loop over the seed and parameters to fill the input for the clustering
   // and the NN
@@ -78,24 +77,20 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
       clusteringParams, m_cfg.epsilonDBScan, m_cfg.minPointsDBScan);
 
   // Select the ID of the track we want to keep
-  std::vector<int> goodTracks =
+  std::vector<int> goodSeed =
       m_seedClassifier.solveAmbuguity(cluster, networkInput);
 
   // Create the output seed collection
   SimSeedContainer outputSeeds;
-  outputSeeds.reserve(goodTracks.size());
+  outputSeeds.reserve(goodSeed.size());
 
   // Create the output track parameters collection
   TrackParametersContainer outputTrackParameters;
-  outputTrackParameters.reserve(goodTracks.size());
+  outputTrackParameters.reserve(goodSeed.size());
 
-  for (auto&& i : goodTracks) {
+  for (auto&& i : goodSeed) {
     outputSeeds.push_back(seeds[mapSeepIndex[i]]);
     outputTrackParameters.push_back(params[mapSeepIndex[i]]);
-  }
-  for (auto&& i : highPTSeeds) {
-    outputSeeds.push_back(seeds[i]);
-    outputTrackParameters.push_back(params[i]);
   }
 
   m_outputSimSeeds(ctx, SimSeedContainer{outputSeeds});

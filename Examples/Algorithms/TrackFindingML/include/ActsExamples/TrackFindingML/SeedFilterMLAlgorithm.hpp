@@ -18,7 +18,7 @@
 
 namespace ActsExamples {
 
-/// Evicts seeds that seem to be duplicated and fake.
+/// Removes seeds that seem to be duplicated and fake.
 ///
 /// The implementation works as follows:
 ///  1) Cluster together nearby seeds using a DBScan
