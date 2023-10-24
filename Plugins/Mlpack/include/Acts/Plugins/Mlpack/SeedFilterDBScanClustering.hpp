@@ -16,7 +16,7 @@
 
 namespace Acts {
 
-/// Clusterise seed based on their Z position, their direction and their
+/// Clusters seed based on their Z position, their direction and their
 /// momentum using DBScan
 ///
 /// @param input : Input parameters for the clustering (phi, eta, z, Pt/10)
@@ -26,7 +26,7 @@ namespace Acts {
 std::vector<std::vector<int>> dbscanSeedClustering(
     const std::vector<std::vector<double>>& input, float epsilon = 0.07,
     int minPoints = 2) {
-  // DBSCAN algoritm from MLpack used in the seed clustering
+  // DBSCAN algorithm from MLpack used in the seed clustering
   mlpack::DBSCAN dbscan(epsilon, minPoints);
 
   // Compute the space dimension of the input

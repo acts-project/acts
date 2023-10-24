@@ -63,7 +63,7 @@ def clusterSeed(
     @param[in] event: input DataFrame that contain all track in one event
     @param[in] DBSCAN_eps: minimum radius used by the DBSCAN to cluster track together
     @param[in] DBSCAN_min_samples: minimum number of tracks needed for DBSCAN to create a cluster
-    @return: DataFrame identical to the output with an added collumn with the cluster 
+    @return: DataFrame identical to the output with an added column with the cluster 
     """
     # Perform the DBSCAN clustering and sort the Db by cluster ID
     trackDir = event[["eta", "phi", "vertexZ", "pT"]].to_numpy()
@@ -152,7 +152,7 @@ for event in plotData:
     plt.clf()
 
 
-# Create historgram filled with the number of seed per cluster
+# Create histogram filled with the number of seed per cluster
 for event in plotData:
     event["nb_seed"] = 0
     event["nb_fake"] = 0
@@ -169,7 +169,7 @@ for event in plotData:
     plt.ylabel("nb cluster")
     plt.savefig("nb_seed.png")
     plt.clf()
-    # Create historgram filled with the number of fake seed per cluster
+    # Create histogram filled with the number of fake seed per cluster
     event.loc[event["good/duplicate/fake"] == "fake", "nb_fake"] = (
         event.loc[event["good/duplicate/fake"] == "fake"]
         .groupby(["cluster"])["cluster"]
@@ -180,7 +180,7 @@ for event in plotData:
     plt.ylabel("nb cluster")
     plt.savefig("nb_fake.png")
     plt.clf()
-    # Create historgram filled with the number of duplicate seed per cluster
+    # Create histogram filled with the number of duplicate seed per cluster
     event.loc[event["good/duplicate/fake"] == "duplicate", "nb_duplicate"] = (
         event.loc[event["good/duplicate/fake"] == "duplicate"]
         .groupby(["cluster"])["cluster"]
@@ -191,7 +191,7 @@ for event in plotData:
     plt.ylabel("nb cluster")
     plt.savefig("nb_duplicate.png")
     plt.clf()
-    # Create historgram filled with the number of good seed per cluster
+    # Create histogram filled with the number of good seed per cluster
     event.loc[event["good/duplicate/fake"] == "good", "nb_good"] = (
         event.loc[event["good/duplicate/fake"] == "good"]
         .groupby(["cluster"])["cluster"]
@@ -202,14 +202,14 @@ for event in plotData:
     plt.ylabel("nb cluster")
     plt.savefig("nb_good.png")
     plt.clf()
-    # Create historgram filled with the number of truth particle per cluster
+    # Create histogram filled with the number of truth particle per cluster
     event["nb_truth"] = event.groupby(["cluster"])["particleId"].transform("nunique")
     event["nb_truth"].hist(bins=10, range=[0, 10])
     plt.xlabel("nb truth")
     plt.ylabel("nb cluster")
     plt.savefig("nb_truth.png")
     plt.clf()
-    # Create historgram filled with the number of cluser per truth particle
+    # Create histogram filled with the number of cluster per truth particle
     event["nb_cluster"] = event.groupby(event.index)["cluster"].transform("nunique")
     event["nb_cluster"].hist(bins=30, weights=1 / event["nb_seed"], range=[0, 30])
     plt.xlabel("nb cluster")
@@ -217,7 +217,7 @@ for event in plotData:
     plt.savefig("nb_cluster.png")
     plt.clf()
 
-    # Create historgram filled with the number of good cluser with more than one
+    # Create histogram filled with the number of good cluster with more than one
     event["nb_good"].hist(bins=10, weights=(event["nb_seed"] > 1) / event["nb_seed"])
     plt.xlabel("nb good cluster with more than 1 seed")
     plt.ylabel("nb cluster")
@@ -234,7 +234,7 @@ for clusteredEvent in clusteredData:
     x = torch.tensor(x_test, dtype=torch.float32)
     output_predict = duplicateClassifier(x).detach().numpy()
 
-    # creat an array of random value between 0 and 1 of the same size as the output
+    # Create an array of random value between 0 and 1 of the same size as the output
     # output_predict = np.random.rand(len(x_test))
 
     clusteredEvent["score"] = output_predict
@@ -244,7 +244,7 @@ for clusteredEvent in clusteredData:
     )
     cleanedEvent = clusteredEvent[idx]
 
-    # For each cluster only keep the track with the higest score
+    # For each cluster only keep the track with the highest score
     idx = (
         cleanedEvent.groupby(["cluster"])["score"].transform(max)
         == cleanedEvent["score"]

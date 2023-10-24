@@ -70,7 +70,7 @@ class SeedClassifier {
   /// @param clusters is a map of clusters, each cluster correspond to a vector of seed ID
   /// @param networkInput input of the network
   /// @return a vector of seedID corresponding the the good seeds
-  std::vector<int> solveAmbuguity(std::vector<std::vector<int>>& clusters,
+  std::vector<int> solveAmbiguity(std::vector<std::vector<int>>& clusters,
                                   Acts::NetworkBatchInput& networkInput) const {
     std::vector<std::vector<float>> outputTensor = inferScores(networkInput);
     std::vector<int> goodSeeds = seedSelection(clusters, outputTensor);
@@ -78,7 +78,7 @@ class SeedClassifier {
   }
 
  private:
-  // ONNX environement
+  // ONNX environment
   Ort::Env m_env;
   // ONNX model for the duplicate neural network
   Acts::OnnxRuntimeBase m_duplicateClassifier;

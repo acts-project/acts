@@ -166,7 +166,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
     max_match = 1
     # loop over all the batch
     for b_data in batch:
-        # ID of the current particule
+        # ID of the current particle
         pid = b_data[0][0]
         # loss for the current batch
         batch_loss = 0
@@ -184,7 +184,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
         prediction = duplicateClassifier(input)
         # loop over all the seed in the batch
         for index, pred, truth in zip(b_data[0], prediction, b_data[2]):
-            # If we are changing particle uptade the loss
+            # If we are changing particle update the loss
             if index != pid:
                 # Starting a new particles, compute the loss for the previous one
                 if max_match == 0 or max_match == 2:
@@ -237,7 +237,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
         # Normalise the loss to the batch size
         batch_loss = batch_loss / len(b_data[0])
         loss += batch_loss
-        # Perform the gradient decend if an optimiser was specified
+        # Perform the gradient descent if an optimiser was specified
         if Optimiser:
             batch_loss.backward()
             Optimiser.step()
