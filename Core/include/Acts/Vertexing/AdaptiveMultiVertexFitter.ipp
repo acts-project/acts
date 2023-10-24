@@ -65,8 +65,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // parameters.
       ActsVector<2> xyDiff = vtxInfo.oldPosition.template head<2>() -
                              vtxInfo.linPoint.template head<2>();
-      double xyDist = std::hypot(xyDiff[0], xyDiff[1]);
-      if (xyDist > m_cfg.maxDistToLinPoint) {
+      if (xyDiff.norm() > m_cfg.maxDistToLinPoint) {
         // Set flag for relinearization
         vtxInfo.relinearize = true;
         // Recalculate the track impact parameters at the current vertex
