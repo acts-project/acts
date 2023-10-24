@@ -41,7 +41,6 @@ std::vector<std::vector<int>> dbscanSeedClustering(
     for (int i = 0; i < dim; i++) {
       data(i, trackID) = param[i];
     }
-    std::cout << std::endl;
     trackID++;
   }
   size_t clusterNb = dbscan.Cluster(data, assignments);
