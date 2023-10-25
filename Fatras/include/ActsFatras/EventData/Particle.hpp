@@ -11,7 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
@@ -19,6 +24,8 @@
 #include <cmath>
 #include <iosfwd>
 #include <limits>
+#include <memory>
+#include <optional>
 
 namespace ActsFatras {
 
@@ -191,6 +198,10 @@ class Particle {
   }
   /// Unit three-direction, i.e. the normalized momentum three-vector.
   const Vector3 &direction() const { return m_direction; }
+  /// Polar angle.
+  Scalar theta() const { return Acts::VectorHelpers::theta(direction()); }
+  /// Azimuthal angle.
+  Scalar phi() const { return Acts::VectorHelpers::phi(direction()); }
   /// Absolute momentum in the x-y plane.
   Scalar transverseMomentum() const {
     return m_absMomentum * m_direction.segment<2>(Acts::eMom0).norm();
@@ -236,6 +247,43 @@ class Particle {
   /// Accumulated path within material measured in interaction lengths.
   constexpr Scalar pathInL0() const { return m_pathInL0; }
 
+  /// Set the reference surface.
+  ///
+  /// @param surface reference surface
+  Particle &setReferenceSurface(const Acts::Surface *surface) {
+    m_referenceSurface = surface;
+    return *this;
+  }
+
+  /// Reference surface.
+  const Acts::Surface *referenceSurface() const { return m_referenceSurface; }
+
+  /// Check if the particle has a reference surface.
+  bool hasReferenceSurface() const { return m_referenceSurface != nullptr; }
+
+  /// Bound track parameters.
+  Acts::Result<Acts::BoundTrackParameters> boundParameters(
+      const Acts::GeometryContext &gctx) const {
+    if (!hasReferenceSurface()) {
+      return Acts::Result<Acts::BoundTrackParameters>::failure(
+          std::error_code());
+    }
+    Acts::Result<Acts::Vector2> localResult =
+        m_referenceSurface->globalToLocal(gctx, position(), direction());
+    if (!localResult.ok()) {
+      return localResult.error();
+    }
+    Acts::BoundVector params;
+    params << localResult.value(), phi(), theta(), qOverP(), time();
+    return Acts::BoundTrackParameters(referenceSurface()->getSharedPtr(),
+                                      params, std::nullopt, hypothesis());
+  }
+
+  Acts::CurvilinearTrackParameters curvilinearParameters() const {
+    return Acts::CurvilinearTrackParameters(
+        fourPosition(), direction(), qOverP(), std::nullopt, hypothesis());
+  }
+
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
@@ -256,6 +304,8 @@ class Particle {
   // accumulated material
   Scalar m_pathInX0 = Scalar(0);
   Scalar m_pathInL0 = Scalar(0);
+  // reference surface
+  const Acts::Surface *m_referenceSurface{nullptr};
 };
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle);
