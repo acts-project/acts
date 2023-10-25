@@ -384,7 +384,7 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvTrackParameterWriter, mex,
                              "CsvTrackParameterWriter", inputTrackParameters,
-                             inputTrajectories, outputDir, outputStem,
+                             inputTracks, outputDir, outputStem,
                              outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvProtoTrackWriter, mex,

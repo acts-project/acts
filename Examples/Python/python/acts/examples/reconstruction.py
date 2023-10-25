@@ -1254,7 +1254,7 @@ def addTrackWriters(
         if writeSummary:
             csvWriter = acts.examples.CsvTrackWriter(
                 level=customLogLevel(),
-                inputTrajectories=tracks,
+                inputTracks=tracks,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 outputDir=str(outputDirCsv),
                 fileName=str(f"tracks_{name}.csv"),
