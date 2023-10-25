@@ -68,9 +68,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       if (xyDiff.norm() > m_cfg.maxDistToLinPoint) {
         // Set flag for relinearization
         vtxInfo.relinearize = true;
-        // Recalculate the track impact parameters at the current vertex
-        // position
-        prepareVertexForFit(state, vtx, vertexingOptions);
       }
 
       // Check if we use the constraint during the vertex fit
@@ -190,12 +187,12 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     updateImpactParams3D(
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
-  // The current vertex info object
+  // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
   // Vertex position, i.e., point wrt which the impact parameters are estimated
   const Vector3& vtxPosition = vtxInfo.oldPosition.template head<3>();
 
-  // Loop over all tracks at current vertex
+  // Loop over all tracks at the vertex
   for (const auto& trk : vtxInfo.trackLinks) {
     // Track parameters
     auto trkParams = m_extractParameters(*trk);
