@@ -109,8 +109,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector,
-                                DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       std::vector<const Surface*> backwardSequence(
@@ -161,7 +160,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [this](const auto& opts) {
-      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
@@ -272,7 +271,7 @@ struct GaussianSumFitter {
       if constexpr (not IsMultiParameters::value) {
         MultiComponentBoundTrackParameters params(
             sParameters.referenceSurface().getSharedPtr(),
-            sParameters.parameters(), sParameters.covariance(),
+            sParameters.parameters(), *sParameters.covariance(),
             sParameters.particleHypothesis());
 
         return m_propagator.propagate(params, fwdPropOptions, false);
@@ -426,17 +425,23 @@ struct GaussianSumFitter {
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
-      track.parameters() = params.parameters();
-      track.covariance() = params.covariance().value();
+
+      const auto [finalPars, finalCov] = Acts::reduceGaussianMixture(
+          params.components(), params.referenceSurface(),
+          options.stateReductionMethod, [](auto& t) {
+            return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
+          });
+
+      track.parameters() = finalPars;
+      track.covariance() = finalCov;
+
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
 
       if (trackContainer.hasColumn(
               hashString(GsfConstants::kFinalMultiComponentStateColumn))) {
         ACTS_DEBUG("Add final multi-component state to track")
-        const auto& fsr = bwdResult->template get<
-            Acts::detail::FinalStateCollector::result_type>();
         track.template component<GsfConstants::FinalMultiComponentState>(
-            GsfConstants::kFinalMultiComponentStateColumn) = fsr.pars;
+            GsfConstants::kFinalMultiComponentStateColumn) = std::move(params);
       }
     }
 

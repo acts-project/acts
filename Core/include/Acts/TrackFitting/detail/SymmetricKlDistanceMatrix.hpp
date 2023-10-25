@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"

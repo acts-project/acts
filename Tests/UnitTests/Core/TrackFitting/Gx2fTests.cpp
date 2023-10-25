@@ -29,7 +29,6 @@
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -64,18 +63,6 @@ Acts::CurvilinearTrackParameters makeParameters(
   Acts::Vector4 mPos4(x, y, z, w);
   return Acts::CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
                                           Acts::ParticleHypothesis::pion());
-}
-
-// Construct a straight-line propagator.
-auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
-  Acts::Navigator::Config cfg{std::move(geo)};
-  cfg.resolvePassive = false;
-  cfg.resolveMaterial = true;
-  cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
-  Acts::StraightLineStepper stepper;
-  return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
-      stepper, std::move(navigator));
 }
 
 static std::vector<Acts::SourceLink> prepareSourceLinks(
@@ -196,8 +183,8 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
   auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(0.1_m, 0.1_m, 0.1_m, 42_ns,
-                                           10_degree, 80_degree, 1_GeV, 1_e);
+  auto startParametersFit = makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree,
+                                           80_degree, 1_GeV, 1_e);
 
   MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
   MeasurementResolutionMap resolutions = {
@@ -213,7 +200,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
 
   using Gx2Fitter =
       Experimental::Gx2Fitter<SimPropagator, VectorMultiTrajectory>;
-  Gx2Fitter Fitter(simPropagator, gx2fLogger->clone());
+  Gx2Fitter fitter(simPropagator, gx2fLogger->clone());
 
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
@@ -232,14 +219,14 @@ BOOST_AUTO_TEST_CASE(NoFit) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                         startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
   auto& track = *res;
   BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK(!track.hasReferenceSurface());
+  BOOST_CHECK(track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.parameters(), startParametersFit.parameters());
@@ -262,9 +249,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   ACTS_DEBUG("Go to propagator");
 
   auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(10_mm, 10_mm, 10_mm, 42_ns,
-                                           10_degree, 80_degree, 1_GeV, 1_e);
-  //  auto startParametersFit = parametersMeasurements;
+  auto startParametersFit = makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree,
+                                           80_degree, 1_GeV, 1_e);
+
   // Context objects
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
@@ -272,8 +259,6 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   std::default_random_engine rng(42);
 
   MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
-  // MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
-  // MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
   MeasurementResolutionMap resolutions = {
       {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
@@ -294,21 +279,14 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
-  Navigator::Config cfg{detector.geometry};
-  cfg.resolvePassive = false;
-  cfg.resolveMaterial = true;
-  cfg.resolveSensitive = true;
-  Navigator rNavigator(cfg);
-  // Configure propagation with deactivated B-field
-  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
   using RecoStepper = EigenStepper<>;
-  RecoStepper rStepper(bField);
-  using RecoPropagator = Propagator<RecoStepper, Navigator>;
-  RecoPropagator rPropagator(rStepper, rNavigator);
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
 
+  using RecoPropagator = decltype(recoPropagator);
   using Gx2Fitter =
       Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-  Gx2Fitter Fitter(rPropagator, gx2fLogger->clone());
+  Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -328,20 +306,20 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                         startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
   auto& track = *res;
-  BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK(!track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
+  BOOST_CHECK(track.hasReferenceSurface());
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -10., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -10., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
@@ -365,9 +343,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   ACTS_DEBUG("Go to propagator");
 
   auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(10_mm, 10_mm, 10_mm, 42_ns,
-                                           10_degree, 80_degree, 1_GeV, 1_e);
-  //  auto startParametersFit = parametersMeasurements;
+  auto startParametersFit = makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree,
+                                           80_degree, 1_GeV, 1_e);
+
   // Context objects
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
@@ -404,21 +382,14 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
 
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
-  Navigator::Config cfg{detector.geometry};
-  cfg.resolvePassive = false;
-  cfg.resolveMaterial = true;
-  cfg.resolveSensitive = true;
-  Navigator rNavigator(cfg);
-  // Configure propagation with deactivated B-field
-  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
   using RecoStepper = EigenStepper<>;
-  RecoStepper rStepper(bField);
-  using RecoPropagator = Propagator<RecoStepper, Navigator>;
-  RecoPropagator rPropagator(rStepper, rNavigator);
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
 
+  using RecoPropagator = decltype(recoPropagator);
   using Gx2Fitter =
       Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-  Gx2Fitter fitter(rPropagator, gx2fLogger->clone());
+  Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -444,14 +415,14 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_REQUIRE(res.ok());
 
   auto& track = *res;
-  BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK(!track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
+  BOOST_CHECK(track.hasReferenceSurface());
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -10., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -10., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);

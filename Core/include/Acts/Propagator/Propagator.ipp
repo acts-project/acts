@@ -91,10 +91,11 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
                                        const propagator_options_t& options,
                                        bool makeCurvilinear) const
     -> Result<action_list_t_result_t<
-        CurvilinearTrackParameters,
+        StepperCurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
-  static_assert(std::is_copy_constructible<CurvilinearTrackParameters>::value,
-                "return track parameter type must be copy-constructible");
+  static_assert(
+      std::is_copy_constructible<StepperCurvilinearTrackParameters>::value,
+      "return track parameter type must be copy-constructible");
 
   auto state = makeState<parameters_t, propagator_options_t, path_aborter_t>(
       start, options);
@@ -112,7 +113,7 @@ auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        BoundTrackParameters,
+        StepperBoundTrackParameters,
         typename propagator_options_t::action_list_type>> {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
@@ -135,7 +136,7 @@ auto Acts::Propagator<S, N>::makeState(
                 "Parameters do not fulfill bound parameters concept.");
 
   // Type of track parameters produced by the propagation
-  using ReturnParameterType = CurvilinearTrackParameters;
+  using ReturnParameterType = StepperCurvilinearTrackParameters;
 
   static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                 "return track parameter type must be copy-constructible");
@@ -223,10 +224,10 @@ auto Acts::Propagator<S, N>::makeResult(Result<void> propagationResult,
                                         const propagator_options_t& /*options*/,
                                         bool makeCurvilinear) const
     -> Result<action_list_t_result_t<
-        CurvilinearTrackParameters,
+        StepperCurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
   // Type of track parameters produced by the propagation
-  using ReturnParameterType = CurvilinearTrackParameters;
+  using ReturnParameterType = StepperCurvilinearTrackParameters;
 
   static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                 "return track parameter type must be copy-constructible");
@@ -247,7 +248,8 @@ auto Acts::Propagator<S, N>::makeResult(Result<void> propagationResult,
     /// Convert into return type and fill the result object
     auto curvState = m_stepper.curvilinearState(state.stepping);
     // Fill the end parameters
-    result.endParameters = std::get<CurvilinearTrackParameters>(curvState);
+    result.endParameters =
+        std::get<StepperCurvilinearTrackParameters>(curvState);
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
       result.transportJacobian = std::get<Jacobian>(curvState);
@@ -263,14 +265,14 @@ auto Acts::Propagator<S, N>::makeResult(
     Result<void> propagationResult, propagator_state_t& state,
     const Surface& target, const propagator_options_t& /*options*/) const
     -> Result<action_list_t_result_t<
-        BoundTrackParameters,
+        StepperBoundTrackParameters,
         typename propagator_options_t::action_list_type>> {
   // Type of track parameters produced at the end of the propagation
-  using return_parameter_type = BoundTrackParameters;
+  using ReturnParameterType = StepperBoundTrackParameters;
 
   // Type of the full propagation result, including output from actions
   using ResultType =
-      action_list_t_result_t<return_parameter_type,
+      action_list_t_result_t<ReturnParameterType,
                              typename propagator_options_t::action_list_type>;
 
   if (!propagationResult.ok()) {
@@ -288,7 +290,7 @@ auto Acts::Propagator<S, N>::makeResult(
   const auto& bs = *bsRes;
 
   // Fill the end parameters
-  result.endParameters = std::get<BoundTrackParameters>(bs);
+  result.endParameters = std::get<StepperBoundTrackParameters>(bs);
   // Only fill the transport jacobian when covariance transport was done
   if (state.stepping.covTransport) {
     result.transportJacobian = std::get<Jacobian>(bs);
