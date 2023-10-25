@@ -74,7 +74,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       }
 
       // Check if we use the constraint during the vertex fit
-      if (vertexinOptions.useConstraintInFit) {
+      if (vertexingOptions.useConstraintInFit) {
         const Acts::Vertex<input_track_t>& constraint =
             state.vtxInfoMap[vtx].constraint;
         vtx->setFullPosition(constraint.fullPosition());
