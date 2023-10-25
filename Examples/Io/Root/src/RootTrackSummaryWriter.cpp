@@ -242,19 +242,18 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
       std::vector<double> outlierVolume;
       std::vector<double> outlierLayer;
       for (const auto& state : track.trackStatesReversed()) {
+        const auto& geoID = state.referenceSurface().geometryId();
+        const auto& volume = geoID.volume();
+        const auto& layer = geoID.layer();
         if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
           measurementChi2.push_back(state.chi2());
-          auto sourceLink =
-              state.getUncalibratedSourceLink().get<IndexSourceLink>();
-          measurementVolume.push_back(sourceLink.geometryId().volume());
-          measurementLayer.push_back(sourceLink.geometryId().layer());
+          measurementVolume.push_back(volume);
+          measurementLayer.push_back(layer);
         }
         if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
           outlierChi2.push_back(state.chi2());
-          auto sourceLink =
-              state.getUncalibratedSourceLink().get<IndexSourceLink>();
-          outlierVolume.push_back(sourceLink.geometryId().volume());
-          outlierLayer.push_back(sourceLink.geometryId().layer());
+          outlierVolume.push_back(volume);
+          outlierLayer.push_back(layer);
         }
       }
       // IDs are stored as double (as the vector of vector of int is not known
