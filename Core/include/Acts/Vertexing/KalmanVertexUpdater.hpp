@@ -77,8 +77,7 @@ double vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
 /// @return Chi2
 template <typename input_track_t>
 double trackParametersChi2(const LinearizedTrack& linTrack,
-                           const MatrixCache& matrixCache,
-                           const double& trkWeight);
+                           const MatrixCache& matrixCache);
 
 /// @brief Adds or removes (depending on `sign`) tracks from vertex
 /// and updates the vertex
