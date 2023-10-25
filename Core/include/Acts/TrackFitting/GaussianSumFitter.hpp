@@ -201,8 +201,6 @@ struct GaussianSumFitter {
       return error;
     };
 
-    auto& fittedStates = trackContainer.trackStateContainer();
-
     // Define directions based on input propagation direction. This way we can
     // refer to 'forward' and 'backward' regardless of the actual direction.
     const auto gsfForward = options.propagatorPlainOptions.direction;
@@ -254,7 +252,6 @@ struct GaussianSumFitter {
       // Catch the actor and set the measurements
       auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
       actor.setOptions(options);
-      actor.m_cfg.fittedStates = &fittedStates;
       actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
       actor.m_cfg.inReversePass = false;
@@ -313,11 +310,10 @@ struct GaussianSumFitter {
       auto bwdPropOptions = bwdPropInitializer(options);
 
       auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
-      actor.m_cfg.fittedStates = &fittedStates;
+      actor.setOptions(options);
       actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.inReversePass = true;
       actor.m_cfg.logger = m_actorLogger.get();
-      actor.setOptions(options);
 
       bwdPropOptions.direction = gsfBackward;
 
@@ -338,11 +334,13 @@ struct GaussianSumFitter {
           (fwdGsfResult.lastMeasurementTip != MultiTrajectoryTraits::kInvalid &&
            "tip is invalid"));
 
-      auto proxy = fittedStates.getTrackState(fwdGsfResult.lastMeasurementTip);
+      auto proxy = trackContainer.trackStateContainer().getTrackState(
+          fwdGsfResult.lastMeasurementTip);
       proxy.shareFrom(TrackStatePropMask::Filtered,
                       TrackStatePropMask::Smoothed);
 
       auto& r = state.template get<typename GsfActor::result_type>();
+      r.fittedStates = &trackContainer.trackStateContainer();
       r.currentTip = fwdGsfResult.lastMeasurementTip;
       r.visitedSurfaces.push_back(&proxy.referenceSurface());
       r.surfacesVisitedBwdAgain.push_back(&proxy.referenceSurface());
@@ -402,8 +400,8 @@ struct GaussianSumFitter {
     const auto& foundBwd = bwdGsfResult.surfacesVisitedBwdAgain;
     std::size_t measurementStatesFinal = 0;
 
-    for (auto state :
-         fittedStates.reverseTrackStateRange(fwdGsfResult.currentTip)) {
+    for (auto state : fwdGsfResult.fittedStates->reverseTrackStateRange(
+             fwdGsfResult.currentTip)) {
       const bool found = std::find(foundBwd.begin(), foundBwd.end(),
                                    &state.referenceSurface()) != foundBwd.end();
       if (not found && state.typeFlags().test(MeasurementFlag)) {

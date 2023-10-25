@@ -156,7 +156,11 @@ struct Gx2FitterOptions {
   size_t nUpdateMax = 5;
 };
 
+template <typename traj_t>
 struct Gx2FitterResult {
+  // Fitted states that the actor has handled.
+  traj_t* fittedStates{nullptr};
+
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This corresponds to the last measurement state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
@@ -218,14 +222,14 @@ struct Gx2FitterResult {
 /// too small covariances for a stable fit.
 ///
 /// @tparam measDim Number of dimensions of the measurement
-/// @tparam track_state_proxy_t The track state proxy type
+/// @tparam traj_t The trajectory type
 ///
 /// @param trackStateProxy is the track state proxy
 /// @param result is the mutable result/cache object
 /// @param logger a logger instance
-template <size_t measDim, typename track_state_proxy_t>
-void collector(const track_state_proxy_t& trackStateProxy,
-               Gx2FitterResult& result, const Logger& logger) {
+template <size_t measDim, typename traj_t>
+void collector(const typename traj_t::TrackStateProxy& trackStateProxy,
+               Gx2FitterResult<traj_t>& result, const Logger& logger) {
   auto predicted = trackStateProxy.predicted();
   auto measurement = trackStateProxy.template calibrated<measDim>();
   auto covarianceMeasurement =
@@ -310,13 +314,10 @@ class Gx2Fitter {
   class Actor {
    public:
     /// Broadcast the result_type
-    using result_type = Gx2FitterResult;
+    using result_type = Gx2FitterResult<traj_t>;
 
     /// The target surface
     const Surface* targetSurface = nullptr;
-
-    /// Fitted states that the actor has handled.
-    traj_t* fittedStates{nullptr};
 
     /// Allows retrieving measurements for a surface
     const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
@@ -370,7 +371,7 @@ class Gx2Fitter {
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, result_type& result,
                     const Logger& /*logger*/) const {
-      assert(fittedStates && "No MultiTrajectory set");
+      assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
         return;
@@ -414,7 +415,7 @@ class Gx2Fitter {
               << "result.lastMeasurementIndex: " << result.lastMeasurementIndex
               << "\n\t"
               << "result.lastTrackIndex: " << result.lastTrackIndex << "\n\t"
-              << "result.fittedStates->size(): " << fittedStates->size())
+              << "result.fittedStates->size(): " << result.fittedStates->size())
 
           // TODO generalize the update of the currentTrackIndex
 
@@ -432,7 +433,7 @@ class Gx2Fitter {
             // Add a <mask> TrackState entry multi trajectory. This allocates
             // storage for all components, which we will set later.
             currentTrackIndex =
-                fittedStates->addTrackState(mask, result.lastTrackIndex);
+                result.fittedStates->addTrackState(mask, result.lastTrackIndex);
           } else {
             ACTS_VERBOSE("   processSurface: nUpdate > 0 decision");
 
@@ -441,15 +442,16 @@ class Gx2Fitter {
               currentTrackIndex = 0;
               ACTS_VERBOSE("   processSurface: currentTrackIndex (kInv->0) = "
                            << currentTrackIndex);
-            } else if (result.lastTrackIndex < fittedStates->size() - 1) {
+            } else if (result.lastTrackIndex <
+                       result.fittedStates->size() - 1) {
               currentTrackIndex = result.lastTrackIndex + 1;
               ACTS_VERBOSE("   processSurface: currentTrackIndex (n+1) = "
                            << currentTrackIndex);
             } else {
               // Add a <mask> TrackState entry multi trajectory. This allocates
               // storage for all components, which we will set later.
-              currentTrackIndex =
-                  fittedStates->addTrackState(mask, result.lastTrackIndex);
+              currentTrackIndex = result.fittedStates->addTrackState(
+                  mask, result.lastTrackIndex);
               ACTS_VERBOSE("   processSurface: currentTrackIndex (ADD NEW)= "
                            << currentTrackIndex);
             }
@@ -457,7 +459,7 @@ class Gx2Fitter {
 
           // now get track state proxy back
           typename traj_t::TrackStateProxy trackStateProxy =
-              fittedStates->getTrackState(currentTrackIndex);
+              result.fittedStates->getTrackState(currentTrackIndex);
 
           // Set the trackStateProxy components with the state from the ongoing
           // propagation
@@ -645,16 +647,21 @@ class Gx2Fitter {
       // Set options for propagator
       PropagatorOptions propagatorOptions(geoCtx, magCtx);
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
-      gx2fActor.fittedStates = &trackContainer.trackStateContainer();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.nUpdate = nUpdate;
 
-      // propagate with params and return jacobians and residuals
-      auto result =
-          m_propagator.template propagate(params, propagatorOptions, true);
+      auto propagatorState =
+          m_propagator.template makeState(params, propagatorOptions);
+
+      auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
+      r.fittedStates = &trackContainer.trackStateContainer();
+
+      auto result = m_propagator.template makeResult(
+          m_propagator.template propagate(propagatorState), propagatorState,
+          propagatorOptions, true);
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements

@@ -31,7 +31,11 @@
 namespace Acts {
 namespace detail {
 
+template <typename traj_t>
 struct GsfResult {
+  /// The multi-trajectory which stores the graph of components
+  traj_t* fittedStates{nullptr};
+
   /// The current top index of the MultiTrajectory
   MultiTrajectoryTraits::IndexType currentTip = MultiTrajectoryTraits::kInvalid;
 
@@ -69,13 +73,10 @@ struct GsfActor {
   using ComponentCache = Acts::GsfComponent;
 
   /// Broadcast the result_type
-  using result_type = GsfResult;
+  using result_type = GsfResult<traj_t>;
 
   // Actor configuration
   struct Config {
-    /// Fitted states that the actor has handled.
-    traj_t* fittedStates{nullptr};
-
     /// Maximum number of components which the GSF should handle
     std::size_t maxComponents = 16;
 
@@ -144,7 +145,7 @@ struct GsfActor {
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, result_type& result,
                   const Logger& /*logger*/) const {
-    assert(m_cfg.fittedStates && "No MultiTrajectory set");
+    assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
     if (not result.result.ok()) {
@@ -707,8 +708,8 @@ struct GsfActor {
               : TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted;
 
       result.currentTip =
-          m_cfg.fittedStates->addTrackState(mask, result.currentTip);
-      auto proxy = m_cfg.fittedStates->getTrackState(result.currentTip);
+          result.fittedStates->addTrackState(mask, result.currentTip);
+      auto proxy = result.fittedStates->getTrackState(result.currentTip);
 
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
@@ -736,7 +737,7 @@ struct GsfActor {
       assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
               "tip not valid"));
 
-      m_cfg.fittedStates->applyBackwards(
+      result.fittedStates->applyBackwards(
           result.currentTip, [&](auto trackState) {
             auto fSurface = &trackState.referenceSurface();
             if (fSurface == &surface) {
