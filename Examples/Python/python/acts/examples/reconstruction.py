@@ -1008,6 +1008,7 @@ def addTruthTrackingGsf(
         calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
+    s.addWhiteboardAlias("tracks", gsfAlg.config.outputTracks)
 
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
@@ -1130,6 +1131,55 @@ def addCKFTracks(
         logLevel=logLevel,
         writeCovMat=writeCovMat,
     )
+
+    return s
+
+
+def addGx2fTracks(
+    s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    # directNavigation: bool = False,
+    inputProtoTracks: str = "truth_particle_tracks",
+    multipleScattering: bool = False,
+    energyLoss: bool = False,
+    clusters: str = None,
+    calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    gx2fOptions = {
+        "multipleScattering": multipleScattering,
+        "energyLoss": energyLoss,
+        "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
+        "level": customLogLevel(),
+    }
+
+    fitAlg = acts.examples.TrackFittingAlgorithm(
+        level=customLogLevel(),
+        inputMeasurements="measurements",
+        inputSourceLinks="sourcelinks",
+        inputProtoTracks=inputProtoTracks,
+        inputInitialTrackParameters="estimatedparameters",
+        inputClusters=clusters if clusters is not None else "",
+        outputTracks="gx2fTracks",
+        pickTrack=-1,
+        fit=acts.examples.makeGlobalChiSquareFitterFunction(
+            trackingGeometry, field, **gx2fOptions
+        ),
+        calibrator=calibrator,
+    )
+    s.addAlgorithm(fitAlg)
+    s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
+
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=fitAlg.config.outputTracks,
+        outputTrajectories="gx2fTrajectories",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     return s
 
