@@ -84,8 +84,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       } else if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
         return VertexingError::NoCovariance;
       }
-      double weight = m_cfg.annealingTool.getWeight(state.annealingState, 1.);
-      vtx->setFullCovariance(vtx->fullCovariance() / weight);
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at the current vertex
