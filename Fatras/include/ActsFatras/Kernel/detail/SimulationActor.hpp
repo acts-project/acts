@@ -92,6 +92,13 @@ struct SimulationActor {
       return;
     }
 
+    // check if we are still on the start surface and skip if so
+    if ((navigator.startSurface(state.navigation) != nullptr) &&
+        (navigator.startSurface(state.navigation) ==
+         navigator.currentSurface(state.navigation))) {
+      return;
+    }
+
     // update the particle state first. this also computes the proper time which
     // needs the particle state from the previous step for reference. that means
     // this must happen for every step (not just on surface) and before
@@ -99,11 +106,13 @@ struct SimulationActor {
     if (std::isnan(result.properTimeLimit)) {
       // first step is special: there is no previous state and we need to arm
       // the decay simulation for all future steps.
-      result.particle = makeParticle(initialParticle, stepper, state.stepping);
+      result.particle =
+          makeParticle(initialParticle, state, stepper, navigator);
       result.properTimeLimit =
           decay.generateProperTimeLimit(*generator, initialParticle);
     } else {
-      result.particle = makeParticle(result.particle, stepper, state.stepping);
+      result.particle =
+          makeParticle(result.particle, state, stepper, navigator);
     }
 
     // decay check. needs to happen at every step, not just on surfaces.
@@ -174,7 +183,7 @@ struct SimulationActor {
           // apply abs in case `normal` and `before` produce an angle > 90°
           slab.scaleThickness(std::abs(cosIncidenceInv));
           // run the interaction simulation
-          interact(slab, result);
+          interact(slab, result);  // MARK: fpeMask(FLTUND, 1, #2346)
         }
       }
     }
@@ -199,27 +208,34 @@ struct SimulationActor {
                    after.qOverP(), after.time());
   }
 
-  /// Construct the current particle state from the stepper state.
-  template <typename stepper_t>
-  Particle makeParticle(const Particle &previous, const stepper_t &stepper,
-                        const typename stepper_t::State &state) const {
+  /// Construct the current particle state from the propagation state.
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  Particle makeParticle(const Particle &previous, propagator_state_t &state,
+                        stepper_t &stepper, navigator_t &navigator) const {
     // a particle can lose energy and thus its gamma factor is not a constant
     // of motion. since the stepper provides only the lab time, we need to
     // compute the change in proper time for each step separately. this assumes
     // that the gamma factor is constant over one stepper step.
-    const auto deltaLabTime = stepper.time(state) - previous.time();
+    const auto deltaLabTime = stepper.time(state.stepping) - previous.time();
     // proper-time = time / gamma = (1/gamma) * time
     //       beta² = p²/E²
     //       gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m
     //     1/gamma = m / sqrt(m² + p²) = m / E
     const auto gammaInv = previous.mass() / previous.energy();
     const auto properTime = previous.properTime() + gammaInv * deltaLabTime;
+    const Acts::Surface *currentSurface = nullptr;
+    if (navigator.currentSurface(state.navigation) != nullptr) {
+      currentSurface = navigator.currentSurface(state.navigation);
+    }
     // copy all properties and update kinematic state from stepper
     return Particle(previous)
-        .setPosition4(stepper.position(state), stepper.time(state))
-        .setDirection(stepper.direction(state))
-        .setAbsoluteMomentum(stepper.absoluteMomentum(state))
-        .setProperTime(properTime);
+        .setPosition4(stepper.position(state.stepping),
+                      stepper.time(state.stepping))
+        .setDirection(stepper.direction(state.stepping))
+        .setAbsoluteMomentum(stepper.absoluteMomentum(state.stepping))
+        .setProperTime(properTime)
+        .setReferenceSurface(currentSurface);
   }
 
   /// Prepare limits and process selection for the next point-like interaction.
