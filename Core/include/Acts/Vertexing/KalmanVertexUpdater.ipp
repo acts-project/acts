@@ -76,7 +76,7 @@ void Acts::KalmanVertexUpdater::updatePosition(
   // c_k
   const BoundVector& constTerm = linTrack.constantTerm;
   // G_k
-  const BoundSquareMatrix trkParamWeight = trackWeight * linTrack.weightAtPCA;
+  const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
   // Retrieve current position of the vertex and its current weight matrix
   const Vector4& oldVtxPos = vtx.fullPosition();
@@ -91,16 +91,18 @@ void Acts::KalmanVertexUpdater::updatePosition(
                            momJac.transpose() * trkParamWeight;
 
   // C_k^-1
+  // TODO should the trackWeight not be multiplied into G_k?
   matrixCache.newVertexWeight =
-      matrixCache.oldVertexWeight + sign * posJac.transpose() * gMat * posJac;
+      matrixCache.oldVertexWeight +
+      sign * trackWeight * posJac.transpose() * gMat * posJac;
   // C_k
   matrixCache.newVertexCov = matrixCache.newVertexWeight.inverse();
 
   // New vertex position
   matrixCache.newVertexPos =
-      matrixCache.newVertexCov *
-      (matrixCache.oldVertexWeight * oldVtxPos +
-       sign * posJac.transpose() * gMat * (trkParams - constTerm));
+      matrixCache.newVertexCov * (matrixCache.oldVertexWeight * oldVtxPos +
+                                  sign * trackWeight * posJac.transpose() *
+                                      gMat * (trkParams - constTerm));
 }
 
 template <typename input_track_t>
