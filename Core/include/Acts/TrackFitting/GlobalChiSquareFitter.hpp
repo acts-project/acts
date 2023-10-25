@@ -418,6 +418,7 @@ class Gx2Fitter {
               << "result.fittedStates->size(): " << result.fittedStates->size())
 
           // TODO generalize the update of the currentTrackIndex
+          auto& fittedStates = *result.fittedStates;
 
           // Mask for the track states. We don't need Smoothed and Filtered
           TrackStatePropMask mask =
@@ -433,7 +434,7 @@ class Gx2Fitter {
             // Add a <mask> TrackState entry multi trajectory. This allocates
             // storage for all components, which we will set later.
             currentTrackIndex =
-                result.fittedStates->addTrackState(mask, result.lastTrackIndex);
+                fittedStates.addTrackState(mask, result.lastTrackIndex);
           } else {
             ACTS_VERBOSE("   processSurface: nUpdate > 0 decision");
 
@@ -442,16 +443,15 @@ class Gx2Fitter {
               currentTrackIndex = 0;
               ACTS_VERBOSE("   processSurface: currentTrackIndex (kInv->0) = "
                            << currentTrackIndex);
-            } else if (result.lastTrackIndex <
-                       result.fittedStates->size() - 1) {
+            } else if (result.lastTrackIndex < fittedStates.size() - 1) {
               currentTrackIndex = result.lastTrackIndex + 1;
               ACTS_VERBOSE("   processSurface: currentTrackIndex (n+1) = "
                            << currentTrackIndex);
             } else {
               // Add a <mask> TrackState entry multi trajectory. This allocates
               // storage for all components, which we will set later.
-              currentTrackIndex = result.fittedStates->addTrackState(
-                  mask, result.lastTrackIndex);
+              currentTrackIndex =
+                  fittedStates.addTrackState(mask, result.lastTrackIndex);
               ACTS_VERBOSE("   processSurface: currentTrackIndex (ADD NEW)= "
                            << currentTrackIndex);
             }
@@ -459,7 +459,7 @@ class Gx2Fitter {
 
           // now get track state proxy back
           typename traj_t::TrackStateProxy trackStateProxy =
-              result.fittedStates->getTrackState(currentTrackIndex);
+              fittedStates.getTrackState(currentTrackIndex);
 
           // Set the trackStateProxy components with the state from the ongoing
           // propagation

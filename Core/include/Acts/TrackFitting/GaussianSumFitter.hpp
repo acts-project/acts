@@ -263,18 +263,31 @@ struct GaussianSumFitter {
       using IsMultiParameters =
           detail::IsMultiComponentBoundParameters<start_parameters_t>;
 
+      // dirty optional because parameters are not default constructible
+      std::optional<MultiComponentBoundTrackParameters> params;
+
       // This allows the initialization with single- and multicomponent start
       // parameters
       if constexpr (not IsMultiParameters::value) {
-        MultiComponentBoundTrackParameters params(
+        params = MultiComponentBoundTrackParameters(
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), *sParameters.covariance(),
             sParameters.particleHypothesis());
-
-        return m_propagator.propagate(params, fwdPropOptions, false);
       } else {
-        return m_propagator.propagate(sParameters, fwdPropOptions, false);
+        params = sParameters;
       }
+
+      auto state =
+          m_propagator.template makeState<MultiComponentBoundTrackParameters,
+                                          decltype(fwdPropOptions)>(
+              *params, fwdPropOptions);
+
+      auto& r = state.template get<typename GsfActor::result_type>();
+      r.fittedStates = &trackContainer.trackStateContainer();
+
+      return m_propagator
+          .template makeResult<decltype(state), decltype(fwdPropOptions)>(
+              m_propagator.propagate(state), state, fwdPropOptions, false);
     }();
 
     if (!fwdResult.ok()) {
@@ -347,10 +360,9 @@ struct GaussianSumFitter {
       r.measurementStates++;
       r.processedStates++;
 
-      auto propagationResult = m_propagator.propagate(state);
       return m_propagator
           .template makeResult<decltype(state), decltype(bwdPropOptions)>(
-              propagationResult, state, target, bwdPropOptions);
+              m_propagator.propagate(state), state, target, bwdPropOptions);
     }();
 
     if (!bwdResult.ok()) {
