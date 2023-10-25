@@ -274,7 +274,7 @@ class Navigator {
 
   bool targetReached(const State& state) const { return state.targetReached; }
 
-  bool endOfWorldReached(State& state) const {
+  bool endOfWorldReached(const State& state) const {
     return state.currentVolume == nullptr;
   }
 
