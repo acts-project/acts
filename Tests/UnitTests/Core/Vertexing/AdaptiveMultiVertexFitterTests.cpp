@@ -489,7 +489,16 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtxConstraint1.setFullPosition(vtx1Pos);
 
   // Prepare vtx info for fitter
+<<<<<<< HEAD
   VertexInfo<BoundTrackParameters> vtxInfo1(vtxConstraint1, vtx1Pos);
+=======
+  VertexInfo<BoundTrackParameters> vtxInfo1;
+  vtxInfo1.linPoint.setZero();
+  vtxInfo1.linPoint.head<3>() = vtxPos1;
+  vtxInfo1.constraint = vtx1Constr;
+  vtxInfo1.oldPosition = vtxInfo1.linPoint;
+  vtxInfo1.seedPosition = vtxInfo1.linPoint;
+>>>>>>> b4be75f217bcc57ceba6ecc5b03adac554a06d94
 
   for (const auto& trk : params1) {
     vtxInfo1.trackLinks.push_back(&trk);
@@ -510,7 +519,16 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtxConstraint2.setFullPosition(vtx2Pos);
 
   // Prepare vtx info for fitter
+<<<<<<< HEAD
   VertexInfo<BoundTrackParameters> vtxInfo2(vtxConstraint2, vtx2Pos);
+=======
+  VertexInfo<BoundTrackParameters> vtxInfo2;
+  vtxInfo2.linPoint.setZero();
+  vtxInfo2.linPoint.head<3>() = vtxPos2;
+  vtxInfo2.constraint = vtx2Constr;
+  vtxInfo2.oldPosition = vtxInfo2.linPoint;
+  vtxInfo2.seedPosition = vtxInfo2.linPoint;
+>>>>>>> b4be75f217bcc57ceba6ecc5b03adac554a06d94
 
   for (const auto& trk : params2) {
     vtxInfo2.trackLinks.push_back(&trk);
