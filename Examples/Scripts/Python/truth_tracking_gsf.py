@@ -1,36 +1,36 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
-from typing import Optional, Union
-
-from acts.examples import Sequencer, GenericDetector, RootParticleReader
+from typing import Optional
 
 import acts
+import acts.examples
 
 u = acts.UnitConstants
 
 
 def runTruthTrackingGsf(
-    trackingGeometry,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
-    field,
     outputDir: Path,
-    outputCsv=True,
     inputParticlePath: Optional[Path] = None,
     decorators=[],
-    s=None,
+    s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
         addParticleGun,
+        ParticleConfig,
         EtaConfig,
         PhiConfig,
-        ParticleConfig,
+        MomentumConfig,
         addFatras,
         addDigitization,
     )
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
+        TruthSeedRanges,
         addTruthTrackingGsf,
     )
 
@@ -47,10 +47,15 @@ def runTruthTrackingGsf(
     if inputParticlePath is None:
         addParticleGun(
             s,
-            EtaConfig(-2.0, 2.0),
-            ParticleConfig(4, acts.PdgParticle.eElectron, True),
+            ParticleConfig(num=1, pdg=acts.PdgParticle.eElectron, randomizeCharge=True),
+            EtaConfig(-3.0, 3.0, uniform=True),
+            MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
-            multiplicity=2,
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(0, 0, 0, 0),
+            ),
+            multiplicity=1,
             rnd=rnd,
         )
     else:
@@ -59,7 +64,7 @@ def runTruthTrackingGsf(
         )
         assert inputParticlePath.exists()
         s.addReader(
-            RootParticleReader(
+            acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 particleCollection="particles_input",
@@ -87,22 +92,41 @@ def runTruthTrackingGsf(
         s,
         trackingGeometry,
         field,
+        rnd=rnd,
+        inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.electron,
+        truthSeedRanges=TruthSeedRanges(
+            pt=(1 * u.GeV, None),
+            nHits=(7, None),
+        ),
     )
 
-    truthTrkFndAlg = acts.examples.TruthTrackFinder(
-        level=acts.logging.INFO,
-        inputParticles="truth_seeds_selected",
-        inputMeasurementParticlesMap="measurement_particles_map",
-        outputProtoTracks="prototracks",
+    addTruthTrackingGsf(
+        s,
+        trackingGeometry,
+        field,
     )
 
-    s.addAlgorithm(truthTrkFndAlg)
+    s.addAlgorithm(
+        acts.examples.TrackSelectorAlgorithm(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTracks="selected-tracks",
+            selectorConfig=acts.TrackSelector.Config(
+                minMeasurements=7,
+            ),
+        )
+    )
+    s.addAlgorithm(
+        acts.examples.TracksToTrajectories(
+            level=acts.logging.INFO,
+            inputTracks="selected-tracks",
+            outputTrajectories="trajectories-from-tracks",
+        )
+    )
+    s.addWhiteboardAlias("trajectories", "trajectories-from-tracks")
 
-    addTruthTrackingGsf(s, trackingGeometry, field)
-
-    # Output
     s.addWriter(
         acts.examples.RootTrajectoryStatesWriter(
             level=acts.logging.INFO,
@@ -141,7 +165,7 @@ def runTruthTrackingGsf(
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -151,11 +175,9 @@ if "__main__" == __name__:
 
     runTruthTrackingGsf(
         trackingGeometry=trackingGeometry,
-        decorators=decorators,
         field=field,
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        outputCsv=True,
         inputParticlePath=inputParticlePath,
         outputDir=Path.cwd(),
     ).run()
