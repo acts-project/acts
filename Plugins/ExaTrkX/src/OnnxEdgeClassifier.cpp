@@ -44,7 +44,7 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges) {
+    std::any inputNodes, std::any inputEdges, int) {
   Ort::AllocatorWithDefaultOptions allocator;
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -30,6 +31,10 @@ class IGeometryIdGenerator;
 /// and allows for DetectorVolume attachment in z/r/phi, such as wrapping
 /// of bevelled cylinder objects in z/r
 ///
+/// There exists an option to create this container builder (recursively)
+/// from a blueprint tree, which attempts to fill in the gap volumes
+/// accordingly.
+///
 /// @note the builder expects a fully consistent set of sub volume builders
 /// that will be executed in a chain
 ///
@@ -45,7 +50,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     /// Binning prescription of attachment
     std::vector<BinningValue> binning = {};
     /// The root volume finder
-    std::shared_ptr<IRootVolumeFinderBuilder> rootVolumeFinderBuilder = nullptr;
+    std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
+        nullptr;
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// An eventual reverse geometry id generation
@@ -54,7 +60,7 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     std::string auxiliary = "";
   };
 
-  /// Constructor with configuration arguments
+  /// Constructor with configuration struct
   ///
   /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output
@@ -62,6 +68,24 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("CylindricalContainerBuilder", Logging::INFO));
+
+  /// Constructor from blueprint and logging level
+  ///
+  /// It will create recursively the builders of sub volumes
+  ///
+  /// @param bpNode is the entry blue print node
+  /// @param logLevel is the logging output level for the builder tools
+  ///
+  /// @note no checking is being done on consistency of the blueprint,
+  /// it is assumed it has passed first through gap filling via the
+  /// blueprint helper.
+  ///
+  /// @note that the naming of the builders is taken from the bluprint nodes
+  ///
+  /// @return a cylindrical container builder representing this blueprint
+  CylindricalContainerBuilder(
+      const Acts::Experimental::Blueprint::Node& bpNode,
+      Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
   /// The final implementation of the cylindrical container builder
   ///

@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -50,14 +52,38 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
   ACTS_DEBUG("remove charged particles " << m_cfg.removeCharged);
   ACTS_DEBUG("remove neutral particles " << m_cfg.removeNeutral);
   ACTS_DEBUG("remove secondary particles " << m_cfg.removeSecondaries);
+
+  // We only initialize this if we actually select on this
+  if (m_cfg.measurementsMin > 0 or
+      m_cfg.measurementsMax < std::numeric_limits<std::size_t>::max()) {
+    m_inputMap.initialize(m_cfg.inputMeasurementParticlesMap);
+    ACTS_DEBUG("selection particle number of measurements ["
+               << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const AlgorithmContext& ctx) const {
+  using ParticlesMeasurmentMap =
+      boost::container::flat_multimap<ActsFatras::Barcode, Index>;
+
+  // prepare input/ output types
+  const auto& inputParticles = m_inputParticles(ctx);
+
+  // Make global particles measurement map if necessary
+  std::optional<ParticlesMeasurmentMap> particlesMeasMap;
+  if (m_inputMap.isInitialized()) {
+    particlesMeasMap = invertIndexMultimap(m_inputMap(ctx));
+  }
+
+  std::size_t nInvalidCharge = 0;
+  std::size_t nInvalidMeasurementCount = 0;
+
   // helper functions to select tracks
-  auto within = [](double x, double min, double max) {
+  auto within = [](auto x, auto min, auto max) {
     return (min <= x) and (x < max);
   };
+
   auto isValidParticle = [&](const ActsFatras::Particle& p) {
     const auto eta = Acts::VectorHelpers::eta(p.direction());
     const auto phi = Acts::VectorHelpers::phi(p.direction());
@@ -67,7 +93,26 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const bool validCharged = (p.charge() != 0) and not m_cfg.removeCharged;
     const bool validCharge = validNeutral or validCharged;
     const bool validSecondary = not m_cfg.removeSecondaries or !p.isSecondary();
-    return validCharge and validSecondary and
+
+    nInvalidCharge += static_cast<std::size_t>(not validCharge);
+
+    // default valid measurement count to true and only change if we have loaded
+    // the measurement particles map
+    bool validMeasurementCount = true;
+    if (particlesMeasMap) {
+      auto [b, e] = particlesMeasMap->equal_range(p.particleId());
+      validMeasurementCount =
+          within(static_cast<std::size_t>(std::distance(b, e)),
+                 m_cfg.measurementsMin, m_cfg.measurementsMax);
+
+      ACTS_VERBOSE("Found " << std::distance(b, e) << " measurements for "
+                            << p.particleId());
+    }
+
+    nInvalidMeasurementCount +=
+        static_cast<std::size_t>(not validMeasurementCount);
+
+    return validCharge and validSecondary and validMeasurementCount and
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
@@ -78,9 +123,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
            within(p.time(), m_cfg.timeMin, m_cfg.timeMax) and
            within(p.mass(), m_cfg.mMin, m_cfg.mMax);
   };
-
-  // prepare input/ output types
-  const auto& inputParticles = m_inputParticles(ctx);
 
   SimParticleContainer outputParticles;
   outputParticles.reserve(inputParticles.size());
@@ -97,6 +139,9 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
   ACTS_DEBUG("event " << ctx.eventNumber << " selected "
                       << outputParticles.size() << " from "
                       << inputParticles.size() << " particles");
+  ACTS_DEBUG("filtered out because of charge: " << nInvalidCharge);
+  ACTS_DEBUG("filtered out because of measurement count: "
+             << nInvalidMeasurementCount);
 
   m_outputParticles(ctx, std::move(outputParticles));
   return ProcessCode::SUCCESS;
