@@ -100,7 +100,10 @@ build_exatrkx:
       -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+
+    - ccache -z
     - cmake --build build -- -j3
+    - ccache -s
 
 test_exatrkx_unittests:
   stage: test
