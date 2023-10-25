@@ -81,7 +81,7 @@ class FatrasSimulation final : public IAlgorithm {
     /// Absolute maximum step size
     double maxStepSize = 1 * Acts::UnitConstants::m;
     /// Absolute maximum path length
-    double pathLimit = 10 * Acts::UnitConstants::m;
+    double pathLimit = 30 * Acts::UnitConstants::m;
 
     /// Expected average number of hits generated per particle.
     ///
