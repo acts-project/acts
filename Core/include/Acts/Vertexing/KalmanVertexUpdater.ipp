@@ -20,7 +20,7 @@ void Acts::KalmanVertexUpdater::updateVertexWithTrack(
 template <typename input_track_t>
 void Acts::KalmanVertexUpdater::detail::update(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
-  double trackWeight = trk.trackWeight;
+  const double& trackWeight = trk.trackWeight;
 
   MatrixCache matrixCache;
 
@@ -33,7 +33,7 @@ void Acts::KalmanVertexUpdater::detail::update(
 
   // Chi2 wrt to track parameters
   double trkChi2 = detail::trackParametersChi2<input_track_t>(
-      trk.linearizedState, matrixCache);
+      trk.linearizedState, matrixCache, trackWeight);
 
   // Calculate new chi2
   chi2 += sign * (detail::vertexPositionChi2<input_track_t>(vtx, matrixCache) +
@@ -47,9 +47,8 @@ void Acts::KalmanVertexUpdater::detail::update(
   vtx.setFullCovariance(matrixCache.newVertexCov);
   vtx.setFitQuality(chi2, ndf);
 
-  // Updates track at vertex if already there
-  // by removing it first and adding new one.
-  // Otherwise just adds track to existing list of tracks at vertex
+  // Updates track at vertex if already there by removing it first and adding
+  // new one. Otherwise just adds track to existing list of tracks at vertex.
   if (sign > 0) {
     // Update track
     trk.chi2Track = trkChi2;
@@ -114,28 +113,29 @@ double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
 
 template <typename input_track_t>
 double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
-    const LinearizedTrack& linTrack, const MatrixCache& matrixCache) {
+    const LinearizedTrack& linTrack, const MatrixCache& matrixCache,
+    const double& trkWeight) {
   // Track properties
   const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
   const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
   const BoundVector& trkParams = linTrack.parametersAtPCA;
   const BoundVector& constTerm = linTrack.constantTerm;
-  const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
+  const BoundSquareMatrix trkParamWeight = trkWeight * linTrack.weightAtPCA;
 
   // A_k * \tilde{x_k}
-  const BoundVector posJacTimesVtxPos = posJac * matrixCache.newVertexPos;
+  const BoundVector posJacVtxPos = posJac * matrixCache.newVertexPos;
 
-  // Refitted track momentum
+  // \tilde{q_k}
   Vector3 newTrackMomentum = matrixCache.wMat * momJac.transpose() *
                              trkParamWeight *
-                             (trkParams - constTerm - posJacTimesVtxPos);
+                             (trkParams - constTerm - posJacVtxPos);
 
-  // Linearized track parameters after the fit
-  BoundVector fittedTrkParams =
-      constTerm + posJacTimesVtxPos + momJac * newTrackMomentum;
+  // Updated linearized track parameters \tilde{p_k}
+  BoundVector linearizedTrkParams =
+      constTerm + posJacVtxPos + momJac * newTrackMomentum;
 
   // Parameter difference
-  BoundVector paramDiff = trkParams - fittedTrkParams;
+  BoundVector paramDiff = trkParams - linearizedTrkParams;
 
   // Return chi2
   return paramDiff.transpose() * (trkParamWeight * paramDiff);
