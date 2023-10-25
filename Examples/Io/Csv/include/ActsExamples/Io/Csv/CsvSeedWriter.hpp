@@ -92,14 +92,14 @@ class CsvSeedWriter : public WriterT<TrackParametersContainer> {
   struct seedInfo {
     size_t seedId = 0;
     ActsFatras::Barcode particleId;
-    float seedPt;
-    float seedPhi;
-    float seedEta;
-    float vertexZ;
-    float quality;
+    float seedPt = -1;
+    float seedPhi = 0;
+    float seedEta = 0;
+    float vertexZ = 0;
+    float quality = -1;
     std::vector<Acts::Vector3> globalPosition;
-    float truthDistance;
-    std::string seedType;
+    float truthDistance = -1;
+    std::string seedType = "unknown";
     ProtoTrack measurementsID;
   };  // trackInfo struct
 };

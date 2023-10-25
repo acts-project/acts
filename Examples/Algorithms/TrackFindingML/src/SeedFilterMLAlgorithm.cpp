@@ -78,7 +78,7 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
 
   // Select the ID of the track we want to keep
   std::vector<int> goodSeed =
-      m_seedClassifier.solveAmbuguity(cluster, networkInput);
+      m_seedClassifier.solveAmbiguity(cluster, networkInput);
 
   // Create the output seed collection
   SimSeedContainer outputSeeds;
