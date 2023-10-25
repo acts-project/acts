@@ -67,7 +67,7 @@ build_exatrkx:
   cache:
     key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
     paths:
-      - ${CI_PROJECT_DIR}/ccache_${CCACHE_KEY_SUFFIX}
+      - ${CI_PROJECT_DIR}/ccache
 
   artifacts:
     paths:
