@@ -14,9 +14,9 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
@@ -302,6 +302,17 @@ int runRecCKFTracks(
   trackSummaryWriter.treeName = "tracksummary";
   sequencer.addWriter(
       std::make_shared<RootTrackSummaryWriter>(trackSummaryWriter, logLevel));
+
+  if (vm["output-csv"].template as<bool>()) {
+    // Write the CKF track as Csv
+    CsvTrackWriter::Config trackWriterCsvConfig;
+    trackWriterCsvConfig.inputTracks = trackFindingCfg.outputTracks;
+    trackWriterCsvConfig.outputDir = outputDir;
+    trackWriterCsvConfig.inputMeasurementParticlesMap =
+        digiCfg.outputMeasurementParticlesMap;
+    sequencer.addWriter(
+        std::make_shared<CsvTrackWriter>(trackWriterCsvConfig, logLevel));
+  }
 
   // Write CKF performance data
   CKFPerformanceWriter::Config perfWriterCfg;

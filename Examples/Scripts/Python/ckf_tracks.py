@@ -17,6 +17,7 @@ def runCKFTracks(
     digiConfigFile: Path,
     field,
     outputDir: Path,
+    outputCsv=True,
     truthSmearedSeeded=False,
     truthEstimatedSeeded=False,
     inputParticlePath: Optional[Path] = None,
@@ -122,6 +123,7 @@ def runCKFTracks(
         trackingGeometry,
         field,
         outputDirRoot=outputDir,
+        outputDirCsv=outputDir / "csv" if outputCsv else None,
     )
 
     return s
@@ -150,4 +152,5 @@ if "__main__" == __name__:
         truthEstimatedSeeded=False,
         inputParticlePath=inputParticlePath,
         outputDir=Path.cwd(),
+        outputCsv=True,
     ).run()

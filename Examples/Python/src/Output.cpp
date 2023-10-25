@@ -15,13 +15,13 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
@@ -358,10 +358,10 @@ void addOutput(Context& ctx) {
                              "CsvSpacepointWriter", inputSpacepoints, outputDir,
                              outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::CsvMultiTrajectoryWriter, mex, "CsvMultiTrajectoryWriter",
-      inputTrajectories, outputDir, fileName, inputMeasurementParticlesMap,
-      outputPrecision, nMeasurementsMin, truthMatchProbMin, ptMin);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvTrackWriter, mex,
+                             "CsvTrackWriter", inputTracks, outputDir, fileName,
+                             inputMeasurementParticlesMap, outputPrecision,
+                             nMeasurementsMin, truthMatchProbMin, ptMin);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CsvTrackingGeometryWriter, mex, "CsvTrackingGeometryWriter",

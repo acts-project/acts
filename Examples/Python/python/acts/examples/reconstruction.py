@@ -1015,6 +1015,7 @@ def addCKFTracks(
     field: acts.MagneticFieldProvider,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     ckfConfig: CkfConfig = CkfConfig(),
+    outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1028,6 +1029,8 @@ def addCKFTracks(
         the sequencer module to which we add the Seeding steps (returned from addSeeding)
     trackingGeometry : tracking geometry
     field : magnetic field
+    outputDirCsv : Path|str, path, None
+        the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     trackSelectorConfig : TrackSelectorConfig(loc0, loc1, time, eta, absEta, pt, phi, minMeasurements)
@@ -1095,6 +1098,7 @@ def addCKFTracks(
         s,
         name="ckf",
         tracks=trackFinder.config.outputTracks,
+        outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
@@ -1153,6 +1157,7 @@ def addTrackWriters(
     s: acts.examples.Sequencer,
     name: str,
     tracks: str = "tracks",
+    outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeStates: bool = True,
     writeSummary: bool = True,
@@ -1240,6 +1245,21 @@ def addTrackWriters(
                     ),
                 )
             )
+
+    if outputDirCsv is not None:
+        outputDirCsv = Path(outputDirCsv)
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
+
+        if writeSummary:
+            csvWriter = acts.examples.CsvTrackWriter(
+                level=customLogLevel(),
+                inputTrajectories=tracks,
+                inputMeasurementParticlesMap="measurement_particles_map",
+                outputDir=str(outputDirCsv),
+                fileName=str(f"tracks_{name}.csv"),
+            )
+            s.addWriter(csvWriter)
 
 
 @acts.examples.NamedTypeArgs(
@@ -1409,6 +1429,7 @@ def addAmbiguityResolution(
     s,
     config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
     tracks: str = "tracks",
+    outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1435,6 +1456,7 @@ def addAmbiguityResolution(
         s,
         name="ambi",
         tracks=alg.config.outputTracks,
+        outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
@@ -1455,6 +1477,7 @@ def addAmbiguityResolutionML(
     s,
     config: AmbiguityResolutionMLConfig = AmbiguityResolutionMLConfig(),
     onnxModelFile: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1492,6 +1515,7 @@ def addAmbiguityResolutionML(
         s,
         name="ambiML",
         tracks=algGreedy.config.outputTracks,
+        outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
@@ -1511,6 +1535,7 @@ def addAmbiguityResolutionMLDBScan(
     s,
     config: AmbiguityResolutionMLDBScanConfig = AmbiguityResolutionMLDBScanConfig(),
     onnxModelFile: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1537,6 +1562,7 @@ def addAmbiguityResolutionMLDBScan(
         name="ambiMLDBScan",
         trajectories=alg.config.outputTracks,
         outputDirRoot=outputDirRoot,
+        outputDirCsv=outputDirCsv,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
         writeCKFperformance=True,
