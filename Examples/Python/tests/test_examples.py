@@ -605,11 +605,6 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         numThreads=1,
         fpeMasks=[
             (
-                "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:177",
-                acts.FpeType.FLTUND,
-                1,
-            ),
-            (
                 "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:197",
                 acts.FpeType.FLTUND,
                 1,
