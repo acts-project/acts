@@ -46,6 +46,12 @@ with tempfile.TemporaryDirectory() as temp:
         acts.examples.Sequencer.FpeMask(
             "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
             (235, 236),
+            acts.FpeType.FLTINV,
+            1,
+        ),
+        acts.examples.Sequencer.FpeMask(
+            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
+            (235, 236),
             acts.FpeType.FLTOVF,
             1,
         ),
