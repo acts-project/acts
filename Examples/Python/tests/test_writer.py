@@ -42,7 +42,7 @@ from acts.examples import (
     CsvParticleWriter,
     CsvPlanarClusterWriter,
     CsvSimHitWriter,
-    CsvMultiTrajectoryWriter,
+    CsvTrackWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
     PlanarSteppingAlgorithm,
@@ -389,7 +389,7 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
         CsvMeasurementWriter,
         CsvPlanarClusterWriter,
         CsvSimHitWriter,
-        CsvMultiTrajectoryWriter,
+        CsvTrackWriter,
         CsvTrackingGeometryWriter,
     ],
 )
@@ -482,20 +482,12 @@ def test_csv_multitrajectory_writer(tmp_path):
         s=s,
     )
 
-    s.addAlgorithm(
-        acts.examples.TracksToTrajectories(
-            level=acts.logging.INFO,
-            inputTracks="tracks",
-            outputTrajectories="trajectories",
-        )
-    )
-
     csv_dir = tmp_path / "csv"
     csv_dir.mkdir()
     s.addWriter(
-        CsvMultiTrajectoryWriter(
+        CsvTrackWriter(
             level=acts.logging.INFO,
-            inputTrajectories="trajectories",
+            inputTracks="tracks",
             inputMeasurementParticlesMap="measurement_particles_map",
             outputDir=str(csv_dir),
         )
