@@ -28,7 +28,8 @@ struct MatrixCache {
   SquareMatrix4 newVertexCov = SquareMatrix4::Zero();
   SquareMatrix4 newVertexWeight = SquareMatrix4::Zero();
   SquareMatrix4 oldVertexWeight = SquareMatrix4::Zero();
-  SquareMatrix3 momWeightInv = SquareMatrix3::Zero();
+  // W_k from the reference
+  SquareMatrix3 wMat = SquareMatrix3::Zero();
 };
 
 /// @brief Updates vertex with knowledge of new track

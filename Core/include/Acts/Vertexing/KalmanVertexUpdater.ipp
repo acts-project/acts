@@ -66,39 +66,42 @@ void Acts::KalmanVertexUpdater::updatePosition(
     const Acts::Vertex<input_track_t>& vtx,
     const Acts::LinearizedTrack& linTrack, double trackWeight, int sign,
     MatrixCache& matrixCache) {
-  // Retrieve linTrack information
-  const ActsMatrix<eBoundSize, 4> posJac = linTrack.positionJacobian;
-  const ActsMatrix<eBoundSize, 3> momJac =
-      linTrack.momentumJacobian;  // B_k in comments below
-  const BoundVector trkParams = linTrack.parametersAtPCA;
-  const BoundVector constTerm = linTrack.constantTerm;
-  const BoundSquareMatrix trkParamWeight = linTrack.weightAtPCA;
+  // Retrieve variables from the track linearization. The comments indicate the
+  // corresponding symbol used in the reference. A_k
+  const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
+  // B_k
+  const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
+  // p_k
+  const BoundVector& trkParams = linTrack.parametersAtPCA;
+  // c_k
+  const BoundVector& constTerm = linTrack.constantTerm;
+  // G_k
+  const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
-  // Vertex to be updated
+  // Retrieve current position of the vertex and its current weight matrix
   const Vector4& oldVtxPos = vtx.fullPosition();
   matrixCache.oldVertexWeight = (vtx.fullCovariance()).inverse();
 
-  // W_k matrix
-  matrixCache.momWeightInv =
-      (momJac.transpose() * (trkParamWeight * momJac)).inverse();
+  // W_k
+  matrixCache.wMat = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
-  // G_k^B = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
+  // G_k^B = G_k - G_k*B_k*W_k*B_k^(T)*G_k
   BoundSquareMatrix gMat =
-      trkParamWeight -
-      trkParamWeight *
-          (momJac * (matrixCache.momWeightInv * momJac.transpose())) *
-          trkParamWeight.transpose();
+      trkParamWeight - trkParamWeight * momJac * matrixCache.wMat *
+                           momJac.transpose() * trkParamWeight;
 
-  // New vertex cov matrix
+  // C_k^-1
+  // TODO should the trackWeight not be multiplied into G_k?
   matrixCache.newVertexWeight =
       matrixCache.oldVertexWeight +
-      trackWeight * sign * posJac.transpose() * (gMat * posJac);
+      sign * trackWeight * posJac.transpose() * gMat * posJac;
+  // C_k
   matrixCache.newVertexCov = matrixCache.newVertexWeight.inverse();
 
   // New vertex position
   matrixCache.newVertexPos =
       matrixCache.newVertexCov * (matrixCache.oldVertexWeight * oldVtxPos +
-                                  trackWeight * sign * posJac.transpose() *
+                                  sign * trackWeight * posJac.transpose() *
                                       gMat * (trkParams - constTerm));
 }
 
@@ -115,23 +118,26 @@ template <typename input_track_t>
 double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
     const LinearizedTrack& linTrack, const MatrixCache& matrixCache) {
   // Track properties
-  const ActsMatrix<eBoundSize, 4> posJac = linTrack.positionJacobian;
-  const ActsMatrix<eBoundSize, 3> momJac = linTrack.momentumJacobian;
-  const BoundVector trkParams = linTrack.parametersAtPCA;
-  const BoundVector constTerm = linTrack.constantTerm;
-  const BoundSquareMatrix trkParamWeight = linTrack.weightAtPCA;
+  const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
+  const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
+  const BoundVector& trkParams = linTrack.parametersAtPCA;
+  const BoundVector& constTerm = linTrack.constantTerm;
+  const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
-  const BoundVector jacVtx = posJac * matrixCache.newVertexPos;
+  // A_k * \tilde{x_k}
+  const BoundVector posJacTimesVtxPos = posJac * matrixCache.newVertexPos;
 
   // Refitted track momentum
-  Vector3 newTrackMomentum = matrixCache.momWeightInv * momJac.transpose() *
-                             trkParamWeight * (trkParams - constTerm - jacVtx);
+  Vector3 newTrackMomentum = matrixCache.wMat * momJac.transpose() *
+                             trkParamWeight *
+                             (trkParams - constTerm - posJacTimesVtxPos);
 
-  // Refitted track parameters
-  BoundVector newTrkParams = constTerm + jacVtx + momJac * newTrackMomentum;
+  // Linearized track parameters after the fit
+  BoundVector fittedTrkParams =
+      constTerm + posJacTimesVtxPos + momJac * newTrackMomentum;
 
   // Parameter difference
-  BoundVector paramDiff = trkParams - newTrkParams;
+  BoundVector paramDiff = trkParams - fittedTrkParams;
 
   // Return chi2
   return paramDiff.transpose() * (trkParamWeight * paramDiff);
