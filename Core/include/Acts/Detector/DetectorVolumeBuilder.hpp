@@ -10,8 +10,6 @@
 
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
-#include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
