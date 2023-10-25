@@ -12,17 +12,20 @@ u = acts.UnitConstants
 def runTruthTrackingKalman(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    outputDir: Path,
     digiConfigFile: Path,
+    outputDir: Path,
+    inputParticlePath: Optional[Path] = None,
+    decorators=[],
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
-    inputParticlePath: Optional[Path] = None,
 ):
     from acts.examples.simulation import (
         addParticleGun,
-        EtaConfig,
         ParticleConfig,
+        EtaConfig,
+        PhiConfig,
+        MomentumConfig,
         addFatras,
         addDigitization,
     )
@@ -37,17 +40,25 @@ def runTruthTrackingKalman(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
-    rnd = acts.examples.RandomNumbers()
+    for d in decorators:
+        s.addContextDecorator(d)
+
+    rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
         addParticleGun(
             s,
-            EtaConfig(-2.0, 2.0),
-            ParticleConfig(2, acts.PdgParticle.eMuon, False),
+            ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            EtaConfig(-3.0, 3.0, uniform=True),
+            MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
+            PhiConfig(0.0, 360.0 * u.degree),
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(0, 0, 0, 0),
+            ),
             multiplicity=1,
             rnd=rnd,
-            outputDirRoot=outputDir,
         )
     else:
         acts.logging.getLogger("Truth tracking example").info(
@@ -55,7 +66,7 @@ def runTruthTrackingKalman(
         )
         assert inputParticlePath.exists()
         s.addReader(
-            RootParticleReader(
+            acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 particleCollection="particles_input",
@@ -83,11 +94,13 @@ def runTruthTrackingKalman(
         s,
         trackingGeometry,
         field,
-        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         rnd=rnd,
+        inputParticles="particles_input",
+        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        particleHypothesis=acts.ParticleHypothesis.muon,
         truthSeedRanges=TruthSeedRanges(
-            pt=(500 * u.MeV, None),
-            nHits=(9, None),
+            pt=(1 * u.GeV, None),
+            nHits=(7, None),
         ),
     )
 
@@ -99,7 +112,25 @@ def runTruthTrackingKalman(
         reverseFilteringMomThreshold,
     )
 
-    # Output
+    s.addAlgorithm(
+        acts.examples.TrackSelectorAlgorithm(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTracks="selected-tracks",
+            selectorConfig=acts.TrackSelector.Config(
+                minMeasurements=7,
+            ),
+        )
+    )
+    s.addAlgorithm(
+        acts.examples.TracksToTrajectories(
+            level=acts.logging.INFO,
+            inputTracks="selected-tracks",
+            outputTrajectories="trajectories-from-tracks",
+        )
+    )
+    s.addWhiteboardAlias("trajectories", "trajectories-from-tracks")
+
     s.addWriter(
         acts.examples.RootTrajectoryStatesWriter(
             level=acts.logging.INFO,
@@ -123,18 +154,6 @@ def runTruthTrackingKalman(
     )
 
     s.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
-            level=acts.logging.INFO,
-            inputProtoTracks="sorted_truth_particle_tracks"
-            if directNavigation
-            else "truth_particle_tracks",
-            inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDir / "performance_track_finder.root"),
-        )
-    )
-
-    s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTrajectories="trajectories",
@@ -148,7 +167,6 @@ def runTruthTrackingKalman(
 
 
 if "__main__" == __name__:
-
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     # detector, trackingGeometry, _ = getOpenDataDetector()
