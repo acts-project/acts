@@ -101,7 +101,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   return;
 }
 
-Acts::BoundMatrix
+inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::calculateTrackCovariance(
     const SquareMatrix3& sMat, const ActsMatrix<4, 3>& crossCovVP,
     const SquareMatrix4& vtxWeight, const SquareMatrix4& vtxCov,

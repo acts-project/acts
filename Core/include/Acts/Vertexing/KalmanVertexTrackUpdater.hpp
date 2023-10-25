@@ -40,11 +40,11 @@ namespace detail {
 /// @param vtxWeight Vertex weight matrix
 /// @param vtxCov Vertex covariance matrix
 /// @param newTrkParams New track parameter
-BoundMatrix calculateTrackCovariance(const SquareMatrix3& sMat,
-                                     const ActsMatrix<4, 3>& crossCovVP,
-                                     const SquareMatrix4& vtxWeight,
-                                     const SquareMatrix4& vtxCov,
-                                     const BoundVector& newTrkParams);
+inline BoundMatrix calculateTrackCovariance(const SquareMatrix3& sMat,
+                                            const ActsMatrix<4, 3>& crossCovVP,
+                                            const SquareMatrix4& vtxWeight,
+                                            const SquareMatrix4& vtxCov,
+                                            const BoundVector& newTrkParams);
 
 }  // Namespace detail
 
