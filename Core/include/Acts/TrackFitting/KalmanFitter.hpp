@@ -734,31 +734,40 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
-        // Bind the transported state to the current surface
-        auto res = stepper.boundState(state.stepping, *surface, false);
-        if (!res.ok()) {
-          return res.error();
+        auto fittedStates = *result.fittedStates;
+
+        // Add a <mask> TrackState entry multi trajectory. This allocates
+        // storage for all components, which we will set later.
+        TrackStatePropMask mask = TrackStatePropMask::All;
+        const size_t currentTrackIndex = fittedStates.addTrackState(
+            mask, Acts::MultiTrajectoryTraits::kInvalid);
+
+        // now get track state proxy back
+        typename traj_t::TrackStateProxy trackStateProxy =
+            fittedStates.getTrackState(currentTrackIndex);
+
+        // Set the trackStateProxy components with the state from the ongoing
+        // propagation
+        {
+          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+          // Bind the transported state to the current surface
+          auto res = stepper.boundState(state.stepping, *surface, false,
+                                        freeToBoundCorrection);
+          if (!res.ok()) {
+            return res.error();
+          }
+          auto& [boundParams, jacobian, pathLength] = *res;
+
+          // Fill the track state
+          trackStateProxy.predicted() = std::move(boundParams.parameters());
+          if (boundParams.covariance().has_value()) {
+            trackStateProxy.predictedCovariance() =
+                std::move(*boundParams.covariance());
+          }
+
+          trackStateProxy.jacobian() = std::move(jacobian);
+          trackStateProxy.pathLength() = std::move(pathLength);
         }
-
-        auto& [boundParams, jacobian, pathLength] = *res;
-
-        // Create a detached track state proxy
-        auto tempTrackTip =
-            result.fittedStates->addTrackState(TrackStatePropMask::All);
-
-        // Get the detached track state proxy back
-        auto trackStateProxy = result.fittedStates->getTrackState(tempTrackTip);
-
-        trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-        // Fill the track state
-        trackStateProxy.predicted() = std::move(boundParams.parameters());
-        if (boundParams.covariance().has_value()) {
-          trackStateProxy.predictedCovariance() =
-              std::move(*boundParams.covariance());
-        }
-        trackStateProxy.jacobian() = std::move(jacobian);
-        trackStateProxy.pathLength() = std::move(pathLength);
 
         // We have predicted parameters, so calibrate the uncalibrated input
         // measurement
