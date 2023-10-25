@@ -1075,10 +1075,6 @@ def test_digitization_config_example(trk_geo, tmp_path):
 def test_ckf_tracks_example(
     tmp_path, assert_root_hash, truthSmeared, truthEstimated, detector_config
 ):
-    csv = tmp_path / "csv"
-
-    assert not csv.exists()
-
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     events = 100
     s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
@@ -1115,7 +1111,6 @@ def test_ckf_tracks_example(
         detector_config.trackingGeometry,
         detector_config.decorators,
         field=field,
-        outputCsv=True,
         outputDir=tmp_path,
         geometrySelection=detector_config.geometrySelection,
         digiConfigFile=detector_config.digiConfigFile,
@@ -1128,17 +1123,11 @@ def test_ckf_tracks_example(
 
     del s  # files are closed in destructors, not great
 
-    assert csv.exists()
     for rf, tn in root_files:
         rp = tmp_path / rf
         assert rp.exists()
         if tn is not None:
             assert_root_hash(rf, rp)
-
-    assert (
-        len([f for f in csv.iterdir() if f.name.endswith("tracks_ckf.csv")]) == events
-    )
-    assert all([f.stat().st_size > 300 for f in csv.iterdir()])
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")

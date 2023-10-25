@@ -19,11 +19,9 @@ def runCKFTracks(
     outputDir: Path,
     truthSmearedSeeded=False,
     truthEstimatedSeeded=False,
-    outputCsv=True,
     inputParticlePath: Optional[Path] = None,
     s=None,
 ):
-
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
@@ -124,7 +122,6 @@ def runCKFTracks(
         trackingGeometry,
         field,
         outputDirRoot=outputDir,
-        outputDirCsv=outputDir / "csv" if outputCsv else None,
     )
 
     return s
@@ -149,7 +146,6 @@ if "__main__" == __name__:
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
         inputParticlePath=inputParticlePath,
