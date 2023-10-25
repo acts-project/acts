@@ -130,7 +130,7 @@ with tempfile.TemporaryDirectory() as temp:
             minPt=500 * u.MeV,
             impactMax=3 * u.mm,
         ),
-        SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
+        SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
         seedingAlgorithm=SeedingAlgorithm.Default,
         geoSelectionConfigFile=setup.geoSel,
         outputDirRoot=tp,
