@@ -42,7 +42,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   if (not m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
-  ACTS_DEBUG("Building a volume with name " << m_cfg.name);
+  ACTS_DEBUG("Building a volume with name '" << m_cfg.name << "'.");
 
   // Get transform and bounds from the volume
   auto [transform, bounds, portalGenerator] =

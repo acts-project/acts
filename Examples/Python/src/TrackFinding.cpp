@@ -26,6 +26,7 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
 #include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
@@ -377,6 +378,11 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::PrototracksToSeeds, mex, "PrototracksToSeeds",
       inputProtoTracks, inputSpacePoints, outputSeeds, outputProtoTracks);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::MeasurementMapSelector, mex, "MeasurementMapSelector",
+      inputMeasurementParticleMap, inputSourceLinks,
+      outputMeasurementParticleMap, geometrySelection);
 }
 
 }  // namespace Acts::Python
