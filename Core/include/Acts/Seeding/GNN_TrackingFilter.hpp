@@ -372,7 +372,6 @@ class TrigFTF_GNN_TrackingFilter {
     }
     ts.m_refX = refX;
     ts.m_refY = refY;
-
     return true;
   }
 
