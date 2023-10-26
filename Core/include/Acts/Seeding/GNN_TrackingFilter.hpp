@@ -285,14 +285,14 @@ class TrigFTF_GNN_TrackingFilter {
     X[1] = ts.m_X[1] + ts.m_X[2] * A;
     X[2] = ts.m_X[2];
     
-    std::cout << " printing pre  arithmetic error 00 : " << ts.m_Cx[0][0] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 01 : " << ts.m_Cx[0][1] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 02 : " << ts.m_Cx[0][2] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 11 : " << ts.m_Cx[1][1] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 12 : " << ts.m_Cx[1][2] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 22 : " << ts.m_Cx[2][2] << std::endl ; 
-    std::cout << " printing pre  arithmetic error A : " << A << std::endl ; 
-    std::cout << " printing pre  arithmetic error B : " << B << std::endl ; 
+    // std::cout << " printing pre  arithmetic error 00 : " << ts.m_Cx[0][0] << std::endl ; 
+    // std::cout << "  printing pre  arithmetic error 01 : " << ts.m_Cx[0][1] << std::endl ; 
+    // std::cout << "  printing pre  arithmetic error 02 : " << ts.m_Cx[0][2] << std::endl ; 
+    // std::cout << "  printing pre  arithmetic error 11 : " << ts.m_Cx[1][1] << std::endl ; 
+    // std::cout << "  printing pre  arithmetic error 12 : " << ts.m_Cx[1][2] << std::endl ; 
+    // std::cout << "  printing pre  arithmetic error 22 : " << ts.m_Cx[2][2] << std::endl ; 
+    // std::cout << " printing pre  arithmetic error A : " << A << std::endl ; 
+    // std::cout << " printing pre  arithmetic error B : " << B << std::endl ; 
 
     Cx[0][0] = ts.m_Cx[0][0] + 2 * ts.m_Cx[0][1] * A + 2 * ts.m_Cx[0][2] * B +
                A * A * ts.m_Cx[1][1] + 2 * A * B * ts.m_Cx[1][2] +
