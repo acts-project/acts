@@ -54,15 +54,15 @@ class TrapezoidBounds : public PlanarBounds {
         m_boundingBox(std::max(halfXnegY, halfXposY), halfY) {
     checkConsistency();
   }
-  
+
   /// Constructor for symmetric Trapezoid with rotation
   ///
   /// @param halfXnegY minimal half length X, definition at negative Y
   /// @param halfXposY maximal half length X, definition at positive Y
   /// @param halfY half length Y - defined at x=0
   /// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
-  TrapezoidBounds(double halfXnegY, double halfXposY,
-                  double halfY, double rotAngle) noexcept(false)
+  TrapezoidBounds(double halfXnegY, double halfXposY, double halfY,
+                  double rotAngle) noexcept(false)
       : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
         m_boundingBox(std::max(halfXnegY, halfXposY), halfY),
         m_rotMat{Eigen::Rotation2D<double>(rotAngle)} {
@@ -157,7 +157,6 @@ class TrapezoidBounds : public PlanarBounds {
   std::array<double, eSize> m_values;
   RectangleBounds m_boundingBox;
   RotationMatrix2 m_rotMat{RotationMatrix2::Identity()};
-
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given

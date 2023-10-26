@@ -270,14 +270,16 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 }
 
 BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
-    constexpr double shortHalfX{100.}, longHalfX{200.}, halfY{300.}, rotAngle{45. * (M_PI/ 180)};
-    std::shared_ptr<TrapezoidBounds> bounds = std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halY, rotAngle);
+  constexpr double shortHalfX{100.}, longHalfX{200.}, halfY{300.},
+      rotAngle{45. * (M_PI / 180)};
+  std::shared_ptr<TrapezoidBounds> bounds =
+      std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halY, rotAngle);
 
-    Vector2D edgePoint{shortHalfX - 10., halfY};
+  Vector2D edgePoint{shortHalfX - 10., halfY};
 
-    BOOST_CHECK_EQUAL(bounds->inside(edgePoint), false);    
-    BOOST_CHECK_EQUAL(bounds->inside(Eigen::Rotation2D{-rotAngle}*edgePoint), true);
-    
+  BOOST_CHECK_EQUAL(bounds->inside(edgePoint), false);
+  BOOST_CHECK_EQUAL(bounds->inside(Eigen::Rotation2D{-rotAngle} * edgePoint),
+                    true);
 }
 
 /// Unit test for testing PlaneSurface alignment derivatives
