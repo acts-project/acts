@@ -64,6 +64,16 @@ std::string getWorkingDirectory() {
 
 }  // namespace
 
+namespace Acts {
+namespace Experimental {
+ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
+ViewConfig s_viewPassive = ViewConfig({240, 280, 0});
+ViewConfig s_viewVolume = ViewConfig({220, 220, 0});
+ViewConfig s_viewGrid = ViewConfig({220, 0, 0});
+ViewConfig s_viewLine = ViewConfig({0, 0, 220});
+}  // namespace Experimental
+}  // namespace Acts
+
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
                                           const ViewConfig& viewConfig) {
