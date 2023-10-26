@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,32 +42,40 @@ auto kalmanHandleMeasurement(
     const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
-  // Bind the transported state to the current surface
-  auto res = stepper.boundState(state.stepping, surface, doCovTransport,
-                                freeToBoundCorrection);
-  if (!res.ok()) {
-    return res.error();
-  }
-  auto &[boundParams, jacobian, pathLength] = *res;
-
-  // add a full TrackState entry multi trajectory
-  // (this allocates storage for all components, we will set them later)
-  const auto newTrackIndex =
-      fittedStates.addTrackState(TrackStatePropMask::All, lastTrackIndex);
+  // Add a <mask> TrackState entry multi trajectory. This allocates storage for
+  // all components, which we will set later.
+  TrackStatePropMask mask = TrackStatePropMask::All;
+  const size_t currentTrackIndex =
+      fittedStates.addTrackState(mask, lastTrackIndex);
 
   // now get track state proxy back
-  auto trackStateProxy = fittedStates.getTrackState(newTrackIndex);
+  typename traj_t::TrackStateProxy trackStateProxy =
+      fittedStates.getTrackState(currentTrackIndex);
 
-  trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+  // Set the trackStateProxy components with the state from the ongoing
+  // propagation
+  {
+    trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+    // Bind the transported state to the current surface
+    auto res = stepper.boundState(state.stepping, surface, doCovTransport,
+                                  freeToBoundCorrection);
+    if (!res.ok()) {
+      ACTS_ERROR("Propagate to surface " << surface.geometryId()
+                                         << " failed: " << res.error());
+      return res.error();
+    }
+    auto &[boundParams, jacobian, pathLength] = *res;
 
-  // Fill the track state
-  trackStateProxy.predicted() = std::move(boundParams.parameters());
-  if (boundParams.covariance().has_value()) {
-    trackStateProxy.predictedCovariance() =
-        std::move(*boundParams.covariance());
+    // Fill the track state
+    trackStateProxy.predicted() = std::move(boundParams.parameters());
+    if (boundParams.covariance().has_value()) {
+      trackStateProxy.predictedCovariance() =
+          std::move(*boundParams.covariance());
+    }
+
+    trackStateProxy.jacobian() = std::move(jacobian);
+    trackStateProxy.pathLength() = std::move(pathLength);
   }
-  trackStateProxy.jacobian() = std::move(jacobian);
-  trackStateProxy.pathLength() = std::move(pathLength);
 
   // We have predicted parameters, so calibrate the uncalibrated input
   // measurement
@@ -75,41 +83,48 @@ auto kalmanHandleMeasurement(
                         trackStateProxy);
 
   // Get and set the type flags
-  auto typeFlags = trackStateProxy.typeFlags();
-  typeFlags.set(TrackStateFlag::ParameterFlag);
-  if (surface.surfaceMaterial() != nullptr) {
-    typeFlags.set(TrackStateFlag::MaterialFlag);
-  }
-
-  // Check if the state is an outlier.
-  // If not, run Kalman update, tag it as a
-  // measurement and update the stepping state. Otherwise, just tag it as
-  // an outlier
-  if (not extensions.outlierFinder(trackStateProxy)) {
-    // Run Kalman update
-    auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                        state.options.direction, logger);
-    if (!updateRes.ok()) {
-      ACTS_ERROR("Update step failed: " << updateRes.error());
-      return updateRes.error();
+  {
+    auto typeFlags = trackStateProxy.typeFlags();
+    typeFlags.set(TrackStateFlag::ParameterFlag);
+    if (surface.surfaceMaterial() != nullptr) {
+      typeFlags.set(TrackStateFlag::MaterialFlag);
     }
-    // Set the measurement type flag
-    typeFlags.set(TrackStateFlag::MeasurementFlag);
-  } else {
-    ACTS_VERBOSE(
-        "Filtering step successful. But measurement is determined "
-        "to be an outlier. Stepping state is not updated.")
-    // Set the outlier type flag
-    typeFlags.set(TrackStateFlag::OutlierFlag);
-    trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
-                              TrackStatePropMask::Filtered);
+
+    // Check if the state is an outlier.
+    // If not:
+    // - run Kalman update
+    // - tag it as a measurement
+    // - update the stepping state.
+    // Else, just tag it as an outlier
+    if (not extensions.outlierFinder(trackStateProxy)) {
+      // Run Kalman update
+      auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
+                                          state.options.direction, logger);
+      if (!updateRes.ok()) {
+        ACTS_ERROR("Update step failed: " << updateRes.error());
+        return updateRes.error();
+      }
+      // Set the measurement type flag
+      typeFlags.set(TrackStateFlag::MeasurementFlag);
+    } else {
+      ACTS_VERBOSE(
+          "Filtering step successful. But measurement is determined "
+          "to be an outlier. Stepping state is not updated.")
+      // Set the outlier type flag
+      typeFlags.set(TrackStateFlag::OutlierFlag);
+      trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
+                                TrackStatePropMask::Filtered);
+    }
   }
 
   return trackStateProxy;
 }
 
 /// This function encapsulates what actions should be performed on a
-/// MultiTrajectory when we have no measurement
+/// MultiTrajectory when we have no measurement.
+/// If there are no source links on surface, add either a hole or passive
+/// material TrackState entry multi trajectory. No storage allocation for
+/// uncalibrated/calibrated measurement and filtered parameter
 /// @tparam propagator_state_t The propagator state type
 /// @tparam stepper_t The stepper type
 /// @param state The propagator state
@@ -127,18 +142,44 @@ auto kalmanHandleNoMeasurement(
     const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
-  // No source links on surface, add either hole or passive material
-  // TrackState entry multi trajectory. No storage allocation for
-  // uncalibrated/calibrated measurement and filtered parameter
-  const auto newTrackIndex = fittedStates.addTrackState(
-      ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
-      lastTrackIndex);
+  // Add a <mask> TrackState entry multi trajectory. This allocates storage for
+  // all components, which we will set later.
+  TrackStatePropMask mask =
+      ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
+  const size_t currentTrackIndex =
+      fittedStates.addTrackState(mask, lastTrackIndex);
 
   // now get track state proxy back
-  auto trackStateProxy = fittedStates.getTrackState(newTrackIndex);
+  typename traj_t::TrackStateProxy trackStateProxy =
+      fittedStates.getTrackState(currentTrackIndex);
 
-  // Set the surface
-  trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+  // Set the trackStateProxy components with the state from the ongoing
+  // propagation
+  {
+    trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+    // Bind the transported state to the current surface
+    auto res = stepper.boundState(state.stepping, surface, doCovTransport,
+                                  freeToBoundCorrection);
+    if (!res.ok()) {
+      return res.error();
+    }
+    auto &[boundParams, jacobian, pathLength] = *res;
+
+    // Fill the track state
+    trackStateProxy.predicted() = std::move(boundParams.parameters());
+    if (boundParams.covariance().has_value()) {
+      trackStateProxy.predictedCovariance() =
+          std::move(*boundParams.covariance());
+    }
+
+    trackStateProxy.jacobian() = std::move(jacobian);
+    trackStateProxy.pathLength() = std::move(pathLength);
+
+    // Set the filtered parameter index to be the same with predicted
+    // parameter
+    trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
+                              TrackStatePropMask::Filtered);
+  }
 
   // Set the track state flags
   auto typeFlags = trackStateProxy.typeFlags();
@@ -153,30 +194,6 @@ auto kalmanHandleNoMeasurement(
   } else if (surface.surfaceMaterial() != nullptr) {
     ACTS_VERBOSE("Detected in-sensitive surface " << surface.geometryId());
   }
-
-  // Transport & bind the state to the current surface
-  auto res = stepper.boundState(state.stepping, surface, doCovTransport,
-                                freeToBoundCorrection);
-  if (!res.ok()) {
-    ACTS_ERROR("Propagate to surface " << surface.geometryId()
-                                       << " failed: " << res.error());
-    return res.error();
-  }
-  auto &[boundParams, jacobian, pathLength] = *res;
-
-  // Fill the track state
-  trackStateProxy.predicted() = std::move(boundParams.parameters());
-  if (boundParams.covariance().has_value()) {
-    trackStateProxy.predictedCovariance() =
-        std::move(*boundParams.covariance());
-  }
-  trackStateProxy.jacobian() = std::move(jacobian);
-  trackStateProxy.pathLength() = std::move(pathLength);
-
-  // Set the filtered parameter index to be the same with predicted
-  // parameter
-  trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
-                            TrackStatePropMask::Filtered);
 
   return trackStateProxy;
 }
