@@ -60,7 +60,7 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param halfXnegY minimal half length X, definition at negative Y
   /// @param halfXposY maximal half length X, definition at positive Y
   /// @param halfY half length Y - defined at x=0
-  /// @param rot: rotation angle of the bounds w.r.t coordinate axes
+  /// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
   TrapezoidBounds(double halfXnegY, double halfXposY,
                   double halfY, double rotAngle) noexcept(false)
       : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
