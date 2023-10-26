@@ -78,7 +78,6 @@ class DD4hepBlueprint {
   /// @param mother the mother node
   /// @param dd4hepElement the detector element at current level
   /// @param hiearchyLevel the current hierarchy level
-  /// @param options the options struct
   void recursiveParse(Cache& cache, Blueprint::Node& mother,
                       const dd4hep::DetElement& dd4hepElement,
                       unsigned int hiearchyLevel = 0) const;
