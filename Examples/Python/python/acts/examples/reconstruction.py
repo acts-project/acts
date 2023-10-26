@@ -1144,6 +1144,7 @@ def addGx2fTracks(
     energyLoss: bool = False,
     nUpdateMax: int = 5,
     zeroField: bool = False,
+    relChi2changeCutOff: float = 1e-7,
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
@@ -1156,6 +1157,7 @@ def addGx2fTracks(
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "nUpdateMax": nUpdateMax,
         "zeroField": zeroField,
+        "relChi2changeCutOff": relChi2changeCutOff,
         "level": customLogLevel(),
     }
 
