@@ -103,6 +103,7 @@ class DD4hepBlueprint {
   ///
   /// @param dd4hepStore the store for the created dd4hep detector elements
   /// @param dd4hepElement the DD4hep element
+  /// @param baseName the base name of the acts type, e.g. "acts_volume", "acts_container", ...
   ///
   /// @note The auxiliary information is returned as well for each of them
   ///

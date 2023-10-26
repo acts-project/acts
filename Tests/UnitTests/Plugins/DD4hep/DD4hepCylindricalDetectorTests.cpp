@@ -284,7 +284,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   cxml.close();
 
   return dStore;
-};
+}
 
 }  // namespace
 
