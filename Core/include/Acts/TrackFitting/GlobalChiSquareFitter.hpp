@@ -103,6 +103,7 @@ struct Gx2FitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   /// @param nUpdateMax_ Max number of iterations for updating the parameters
+  /// @param zeroField_ Disables the QoP fit in case of missing B-field
   Gx2FitterOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
                    std::reference_wrapper<const CalibrationContext> cctx,
@@ -112,7 +113,7 @@ struct Gx2FitterOptions {
                    bool eLoss = false,
                    const FreeToBoundCorrection& freeToBoundCorrection_ =
                        FreeToBoundCorrection(false),
-                   const size_t nUpdateMax_ = 5)
+                   const size_t nUpdateMax_ = 5, const bool zeroField_ = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -122,7 +123,8 @@ struct Gx2FitterOptions {
         multipleScattering(mScattering),
         energyLoss(eLoss),
         freeToBoundCorrection(freeToBoundCorrection_),
-        nUpdateMax(nUpdateMax_) {}
+        nUpdateMax(nUpdateMax_),
+        zeroField(zeroField_) {}
 
   /// Contexts are required and the options must not be default-constructible.
   Gx2FitterOptions() = delete;
@@ -154,6 +156,9 @@ struct Gx2FitterOptions {
 
   /// Max number of iterations during the fit
   size_t nUpdateMax = 5;
+
+  /// Disables the QoP fit in case of missing B-field
+  bool zeroField = false;
 };
 
 template <typename traj_t>
@@ -614,15 +619,14 @@ class Gx2Fitter {
 
     using PropagatorOptions = Acts::PropagatorOptions<Actors, Aborters>;
 
-    const size_t reducedMatrixSize = 4;
     start_parameters_t params = sParameters;
     BoundVector deltaParams = BoundVector::Zero();
     double chi2sum = 0;
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
 
-    // Create a index of the 'tip' of the track stored in multitrajectory. It is
-    // needed outside the update loop. It will be updated with each iteration
+    // Create an index of the 'tip' of the track stored in multitrajectory. It
+    // is needed outside the update loop. It will be updated with each iteration
     // and used for the final track
     size_t tipIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
@@ -700,13 +704,26 @@ class Gx2Fitter {
 
       // calculate delta params [a] * delta = b
       deltaParams = BoundVector::Zero();
-      const ActsVector<reducedMatrixSize> deltaParamsReduced =
-          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-              .colPivHouseholderQr()
-              .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+      if (gx2fOptions.zeroField) {
+        const size_t reducedMatrixSize = 4;
+        const ActsVector<reducedMatrixSize> deltaParamsReduced =
+            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+                .colPivHouseholderQr()
+                .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
 
-      for (size_t idp = 0; idp < reducedMatrixSize; idp++) {
-        deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
+        for (size_t idp = 0; idp < reducedMatrixSize; idp++) {
+          deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
+        }
+      } else {
+        const size_t reducedMatrixSize = 5;
+        const ActsVector<reducedMatrixSize> deltaParamsReduced =
+            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+                .colPivHouseholderQr()
+                .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+
+        for (size_t idp = 0; idp < reducedMatrixSize; idp++) {
+          deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
+        }
       }
 
       ACTS_VERBOSE("chi2sum = " << chi2sum);
@@ -728,13 +745,30 @@ class Gx2Fitter {
 
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
-    if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-            .determinant() != 0) {
-      fullCovariancePredicted
-          .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-              .inverse();
-    } else if (gx2fOptions.nUpdateMax > 0) {
+    bool detAisZero = true;
+    if (gx2fOptions.zeroField) {
+      const size_t reducedMatrixSize = 4;
+      if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+              .determinant() != 0) {
+        detAisZero = false;
+        fullCovariancePredicted
+            .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+                .inverse();
+      }
+    } else {
+      const size_t reducedMatrixSize = 5;
+      if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+              .determinant() != 0) {
+        detAisZero = false;
+        fullCovariancePredicted
+            .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+                .inverse();
+      }
+    }
+
+    if (detAisZero && gx2fOptions.nUpdateMax > 0) {
       ACTS_ERROR("det(a) == 0. This should not happen ever.");
       return Experimental::GlobalChiSquareFitterError::DetAIsZero;
     }
