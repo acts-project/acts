@@ -124,11 +124,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0,
                                   150.0);
 
-  finder.createSeeds(internalRoi, *mGNNgeo);
+  // finder.createSeeds(internalRoi, *mGNNgeo);
 
-  // still to develop
-  SimSeedContainer seeds = finder.createSeeds_old(
-      m_cfg.seedFinderOptions, FTF_spacePoints, create_coordinates);
+  //new version returns seeds 
+  SimSeedContainer seeds = finder.createSeeds(internalRoi, *mGNNgeo);
+
+  // // still to develop
+  // SimSeedContainer seeds = finder.createSeeds_old(
+  //     m_cfg.seedFinderOptions, FTF_spacePoints, create_coordinates);
 
   m_outputSeeds(ctx, std::move(seeds));
 
