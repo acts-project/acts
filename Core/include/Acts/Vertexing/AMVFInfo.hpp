@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,34 +21,31 @@ template <typename input_track_t>
 struct VertexInfo {
   VertexInfo() = default;
 
-  VertexInfo(const Acts::Vertex<input_track_t>& constr,
-             const Acts::Vector4& pos)
-      : constraint(constr),
+  VertexInfo(const Acts::Vertex<input_track_t>& vtx, const Acts::Vector4& pos)
+      : constraintVertex(vtx),
         linPoint(pos),
         oldPosition(pos),
         seedPosition(pos) {}
 
-  // Vertex constraint
-  Acts::Vertex<input_track_t> constraint;
+  // The constraint vertex
+  Acts::Vertex<input_track_t> constraintVertex;
 
-  // Point where all associated tracks are linearized
+  // The linearization point
   Acts::Vector4 linPoint{Acts::Vector4::Zero()};
 
-  // Vertex position from the last iteration of the fit
+  // Old position from last iteration
   Acts::Vector4 oldPosition{Acts::Vector4::Zero()};
 
-  // The seed position (i.e., the first estimate for the vertex position as
-  // obtained by the vertex seed finder)
+  // The seed position
   Acts::Vector4 seedPosition{Acts::Vector4::Zero()};
 
-  // If set to true, the associated tracks need to be relinearized at a more
-  // recent vertex position
+  // Needs relinearization bool
   bool relinearize = true;
 
-  // Vector of all tracks that are currently assigned to vertex
+  // Vector of all track currently held by vertex
   std::vector<const input_track_t*> trackLinks;
 
-  std::map<const input_track_t*, const BoundTrackParameters> impactParams3D;
+  std::map<const input_track_t*, const BoundTrackParameters> ip3dParams;
 };
 
 }  // namespace Acts
