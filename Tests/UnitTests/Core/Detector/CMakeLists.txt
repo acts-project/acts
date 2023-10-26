@@ -1,11 +1,8 @@
 add_unittest(Blueprint BlueprintTests.cpp)
 add_unittest(BlueprintHelper BlueprintHelperTests.cpp)
 add_unittest(CylindricalContainerBuilder CylindricalContainerBuilderTests.cpp)
-<<<<<<< HEAD
 add_unittest(CylindricalDetectorFromBlueprint CylindricalDetectorFromBlueprintTests.cpp)
 add_unittest(CylindricalDetectorHelper CylindricalDetectorHelperTests.cpp)
-=======
->>>>>>> 8897afe95 (refine blueprint test)
 add_unittest(CylindricalDetectorFromBlueprint CylindricalDetectorFromBlueprintTests.cpp)
 add_unittest(CylindricalDetectorHelper CylindricalDetectorHelperTests.cpp)
 add_unittest(GridAxisGenerators GridAxisGeneratorsTests.cpp)
