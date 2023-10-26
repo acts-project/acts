@@ -78,8 +78,7 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
   } else {
     // I/O parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
-    m_outputTree->Branch("multiTraj_nr", &m_multiTrajNr);
-    m_outputTree->Branch("subTraj_nr", &m_subTrajNr);
+    m_outputTree->Branch("track_nr", &m_trackNr);
 
     m_outputTree->Branch("nStates", &m_nStates);
     m_outputTree->Branch("nMeasurements", &m_nMeasurements);
@@ -220,9 +219,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
   m_eventNr = ctx.eventNumber;
 
   for (const auto& track : tracks) {
-    // These are remnants of the multi-trajectory writers
-    m_multiTrajNr.push_back(track.index());
-    m_subTrajNr.push_back(0);
+    m_trackNr.push_back(track.index());
 
     // Collect the trajectory summary info
     m_nStates.push_back(track.nTrackStates());
@@ -492,8 +489,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
   // fill the variables
   m_outputTree->Fill();
 
-  m_multiTrajNr.clear();
-  m_subTrajNr.clear();
+  m_trackNr.clear();
   m_nStates.clear();
   m_nMeasurements.clear();
   m_nOutliers.clear();

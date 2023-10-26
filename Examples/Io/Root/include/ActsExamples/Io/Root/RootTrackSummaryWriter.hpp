@@ -97,13 +97,10 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
       this, "InputMeasurementParticlesMaps"};
 
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  TFile* m_outputFile{nullptr};  ///< The output file
-  TTree* m_outputTree{nullptr};  ///< The output tree
-  uint32_t m_eventNr{0};         ///< The event number
-  std::vector<uint32_t>
-      m_multiTrajNr;  ///< The multi-trajectory numbers in event
-  std::vector<unsigned int>
-      m_subTrajNr;  ///< The multi-trajectory sub-trajectory number in event
+  TFile* m_outputFile{nullptr};     ///< The output file
+  TTree* m_outputTree{nullptr};     ///< The output tree
+  uint32_t m_eventNr{0};            ///< The event number
+  std::vector<uint32_t> m_trackNr;  ///< The track number in event
 
   std::vector<unsigned int> m_nStates;        ///< The number of states
   std::vector<unsigned int> m_nMeasurements;  ///< The number of measurements

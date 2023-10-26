@@ -106,8 +106,7 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
   uint32_t m_eventNr{0};         ///< the event number
-  uint32_t m_multiTrajNr{0};     ///< the multi-trajectory number
-  unsigned int m_subTrajNr{0};   ///< the multi-trajectory sub-trajectory number
+  uint32_t m_trackNr{0};         ///< the track number
 
   std::vector<float> m_t_x;  ///< Global truth hit position x
   std::vector<float> m_t_y;  ///< Global truth hit position y
