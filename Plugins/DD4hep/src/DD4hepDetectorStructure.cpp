@@ -54,7 +54,7 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
 
   // Draw the raw graph
   if (options.blueprintDot) {
-    ACTS_DEBUG("Writing the initial bluepring to file befoer gap filling.")
+    ACTS_DEBUG("Writing the initial bluepring to file before gap filling.")
     std::ofstream bpi(dd4hepBlueprint->name + "_initial.dot");
     detail::BlueprintDrawer::dotStream(bpi, *dd4hepBlueprint);
     bpi.close();
@@ -66,7 +66,7 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
     // Now fill the gaps
     detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
 
-    // Draw the sychronized graph
+    // Draw the synchronized graph
     if (options.blueprintDot) {
       ACTS_DEBUG("Writing the final bluepring to file.")
       std::ofstream bpf(dd4hepBlueprint->name + "_final.dot");

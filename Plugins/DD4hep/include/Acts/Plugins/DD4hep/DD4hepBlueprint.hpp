@@ -59,7 +59,7 @@ class DD4hepBlueprint {
       Cache& cache, const dd4hep::DetElement& dd4hepElement) const;
 
  private:
-  /// @brief  auto-calculate the unit length conversion
+  /// @brief auto-calculate the unit length conversion
   static constexpr ActsScalar unitLength =
       Acts::UnitConstants::mm / dd4hep::millimeter;
 

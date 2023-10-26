@@ -59,7 +59,7 @@ void Acts::Experimental::DD4hepBlueprint::recursiveParse(
     bool ntt = getParamOr<bool>(nType, dd4hepElement, false);
     if (ntt) {
       ACTS_VERBOSE(ofs << "ACTS node '" << nType
-                       << "' atached to dd4hep element '"
+                       << "' attached to dd4hep element '"
                        << dd4hepElement.name() << "',");
       // Extract the bounds type, values and binning
       auto [transform, bValueType, bValues, binning, auxExt] =

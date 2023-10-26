@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   // 1 : endcap
   // 2 : barrel
   // 1 : endcap
-  BOOST_TEST(bpCache.dd4hepStore.size(), 5u);
+  BOOST_CHECK(bpCache.dd4hepStore.size(), 5u);
 
   // Now fill the gaps
   Acts::Experimental::detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   // 3 : negative encap
   // 7 : barrel
   // 3 : positive encap
-  BOOST_TEST(detector->volumes().size(), 14u);
+  BOOST_CHECK(detector->volumes().size(), 14u);
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();
@@ -385,13 +385,13 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
   // 3 : negative endcap
   // 7 : barrel
   // 3 : positive endcap
-  BOOST_TEST(detector->volumes().size(), 14u);
+  BOOST_CHECK(detector->volumes().size(), 14u);
 
   // We should have 5 store entries now
   // 1 : endcap
   // 2 : barrel
   // 1 : endcap
-  BOOST_TEST(detectorStore.size(), 5u);
+  BOOST_CHECK(detectorStore.size(), 5u);
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();

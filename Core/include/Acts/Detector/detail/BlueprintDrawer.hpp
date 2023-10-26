@@ -51,7 +51,7 @@ struct Options {
   Node roots = Node{"box", "darkkhaki"};
 };
 
-/// @brief Geneate the shape string
+/// @brief Generate the shape string
 /// @param s the shape of the object
 /// @param c the color of the object
 /// @return a string with the shape and color
@@ -62,7 +62,7 @@ std::string shapeStr(const Options::Node& node) {
 
 /// @brief Generate text output
 ///
-/// @param node the node otions
+/// @param node the node options
 /// @param label the label text
 /// @param info the info text
 std::string labelStr(const Options::Node& node, const std::string& label,
