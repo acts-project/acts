@@ -19,8 +19,10 @@ Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
   return SurfaceBounds::eTrapezoid;
 }
 
-bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
+bool Acts::TrapezoidBounds::inside(const Acts::Vector2& extPosition,
                                    const Acts::BoundaryCheck& bcheck) const {
+  
+  const Acts::Vector2 lposition = m_rotMat * extPosition;
   const double x = lposition[0];
   const double y = lposition[1];
 
