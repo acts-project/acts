@@ -318,11 +318,12 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
       bpCfg, Acts::getDefaultLogger("DD4hepBlueprint", Acts::Logging::VERBOSE));
   auto dd4hepBlueprint = bp.create(bpCache, world);
 
-  // We should have 5 store entries now
+  // We should have 6 store entries now
+  // 1 : beam pipe (empty)
   // 1 : endcap
   // 2 : barrel
   // 1 : endcap
-  BOOST_CHECK(bpCache.dd4hepStore.size() == 5u);
+  BOOST_CHECK(bpCache.dd4hepStore.size() == 6u);
 
   // Now fill the gaps
   Acts::Experimental::detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
@@ -385,13 +386,35 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
   // 3 : negative endcap
   // 7 : barrel
   // 3 : positive endcap
-  BOOST_CHECK(detector->volumes().size() == 4u);
+  BOOST_CHECK(detector->volumes().size() == 14u);
 
-  // We should have 5 store entries now
+  // We should have 6 store entries now
+  // 1 : beam pipe (empty)
   // 1 : endcap
-  // 2 : barrel
+  // 3 : barrel
   // 1 : endcap
-  BOOST_CHECK(detectorStore.size() == 5u);
+  BOOST_CHECK(detectorStore.size() == 6u);
+
+  int elements = 0;
+  for (auto [key, value] : detectorStore) {
+    elements += value.size();
+  }
+
+  // There should be 1488 elements
+  // NegEndcapLayer_0 has : 44 detector elements.
+  // PixelBarrel_0 has : 224 detector elements.
+  // PixelBarrel_1 has : 448 detector elements.
+  // PixelBarrel_2 has : 728 detector elements.
+  // PosEndcapLayer_0 has : 44 detector elements.
+  BOOST_CHECK(elements == 1488);
+
+  // Cross-check with the surfaces
+  int surfaces = 0;
+  for (const auto& v : detector->volumes()) {
+    surfaces += v->surfaces().size();
+  }
+  // Sensitives + 1 (beampipe)
+  BOOST_CHECK(surfaces == 1489);
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();
