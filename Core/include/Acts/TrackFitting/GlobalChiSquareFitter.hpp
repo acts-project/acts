@@ -113,7 +113,8 @@ struct Gx2FitterOptions {
                    bool eLoss = false,
                    const FreeToBoundCorrection& freeToBoundCorrection_ =
                        FreeToBoundCorrection(false),
-                   const size_t nUpdateMax_ = 5, const bool zeroField_ = false)
+                   const size_t nUpdateMax_ = 5, const bool zeroField_ = false,
+                   double relChi2changeCutOff_ = 1e-5)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -124,7 +125,8 @@ struct Gx2FitterOptions {
         energyLoss(eLoss),
         freeToBoundCorrection(freeToBoundCorrection_),
         nUpdateMax(nUpdateMax_),
-        zeroField(zeroField_) {}
+        zeroField(zeroField_),
+        relChi2changeCutOff(relChi2changeCutOff_) {}
 
   /// Contexts are required and the options must not be default-constructible.
   Gx2FitterOptions() = delete;
@@ -154,11 +156,14 @@ struct Gx2FitterOptions {
   /// transformation
   FreeToBoundCorrection freeToBoundCorrection;
 
-  /// Max number of iterations during the fit
+  /// Max number of iterations during the fit (abort condition)
   size_t nUpdateMax = 5;
 
   /// Disables the QoP fit in case of missing B-field
   bool zeroField = false;
+
+  /// Check for convergence (abort condition). Set to 0 to skip.
+  double relChi2changeCutOff = 1e-7;
 };
 
 template <typename traj_t>
@@ -622,6 +627,7 @@ class Gx2Fitter {
     start_parameters_t params = sParameters;
     BoundVector deltaParams = BoundVector::Zero();
     double chi2sum = 0;
+    double oldChi2sum = DBL_MAX;
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
 
@@ -726,18 +732,27 @@ class Gx2Fitter {
         }
       }
 
-      ACTS_VERBOSE("chi2sum = " << chi2sum);
-      ACTS_VERBOSE("aMatrix:\n" << aMatrix);
-      ACTS_VERBOSE("bVector:\n" << bVector);
-      ACTS_VERBOSE("deltaParams:\n" << deltaParams);
+      ACTS_VERBOSE("aMatrix:\n"
+                   << aMatrix << "\n"
+                   << "bVector:\n"
+                   << bVector << "\n"
+                   << "deltaParams:\n"
+                   << deltaParams << "\n"
+                   << "oldChi2sum = " << oldChi2sum << "\n"
+                   << "chi2sum = " << chi2sum);
 
       tipIndex = gx2fResult.lastMeasurementIndex;
 
-      // TODO check delta params and abort
-      // similar to:
-      // if (sum(delta_params) < 1e-3) {
-      //   break;
-      // }
+      if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
+          (std::abs(chi2sum / oldChi2sum - 1) <
+           gx2fOptions.relChi2changeCutOff)) {
+        ACTS_VERBOSE("Abort with relChi2changeCutOff after "
+                     << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
+                     << " iterations.");
+        break;
+      }
+
+      oldChi2sum = chi2sum;
     }
     ACTS_DEBUG("Finished to iterate");
     ACTS_VERBOSE("final params:\n" << params);
