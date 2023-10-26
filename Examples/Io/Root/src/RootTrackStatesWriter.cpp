@@ -305,13 +305,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
   // Get the event number
   m_eventNr = ctx.eventNumber;
 
-  // This is a remnant of multi-trajectories and does not exist in the context
-  // of track containers
-  m_multiTrajNr = 0;
-
   for (const auto& track : tracks) {
-    // The subtrajectory index point to the tip index
-    m_subTrajNr = track.tipIndex();
+    // These are remnants of the multi-trajectory writers
+    m_multiTrajNr = track.index();
+    m_subTrajNr = 0;
 
     // Collect the track summary info
     m_nMeasurements = track.nMeasurements();

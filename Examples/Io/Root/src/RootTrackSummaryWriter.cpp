@@ -219,12 +219,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
   // Get the event number
   m_eventNr = ctx.eventNumber;
 
-  // The trajectory index
-  m_multiTrajNr.push_back(0);
-
   for (const auto& track : tracks) {
-    // The subtrajectory index
-    m_subTrajNr.push_back(track.tipIndex());
+    // These are remnants of the multi-trajectory writers
+    m_multiTrajNr.push_back(track.index());
+    m_subTrajNr.push_back(0);
 
     // Collect the trajectory summary info
     m_nStates.push_back(track.nTrackStates());
