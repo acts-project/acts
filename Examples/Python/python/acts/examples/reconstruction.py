@@ -1139,10 +1139,11 @@ def addGx2fTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    # directNavigation: bool = False,
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = False,
     energyLoss: bool = False,
+    nUpdateMax: int = 5,
+    zeroField: bool = False,
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
@@ -1153,6 +1154,8 @@ def addGx2fTracks(
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
+        "nUpdateMax": nUpdateMax,
+        "zeroField": zeroField,
         "level": customLogLevel(),
     }
 

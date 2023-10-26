@@ -95,7 +95,7 @@ def runTruthTrackingGx2f(
         s,
         trackingGeometry,
         field,
-        # directNavigation,
+        nUpdateMax=17,
     )
 
     # Output
