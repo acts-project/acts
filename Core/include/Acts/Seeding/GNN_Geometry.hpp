@@ -265,7 +265,7 @@ class TrigFTF_GNN_Geometry {
   TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer> &layers,
                        std::unique_ptr<Acts::FasTrackConnector> &conn)
 
-      : m_nEtaBins(0), m_fastrack(move(conn)) {
+      : m_nEtaBins(0), m_fastrack(std::move(conn)) {
     const float min_z0 = -168.0;
     const float max_z0 = 168.0;
 
