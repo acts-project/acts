@@ -154,7 +154,7 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
   const vertex_array_type fr_vmax = m_vmax - fr.origin();
 
   // For each plane, find the p-vertex, which is the vertex that is at the
-  // furthest distance from the plane *along* it's normal direction.
+  // furthest distance from the plane *along* its normal direction.
   // See Fig. 2 in [2].
   VertexType p_vtx;
   // for loop, we could eliminate this, probably,

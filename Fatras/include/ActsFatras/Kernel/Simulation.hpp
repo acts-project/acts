@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -82,8 +83,6 @@ struct SingleParticleSimulation {
 
     // Construct per-call options.
     PropagatorOptions options(geoCtx, magCtx);
-    options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
-    options.mass = particle.mass();
     // setup the interactor as part of the propagator options
     auto &actor = options.actionList.template get<Actor>();
     actor.generator = &generator;
@@ -91,16 +90,23 @@ struct SingleParticleSimulation {
     actor.interactions = interactions;
     actor.selectHitSurface = selectHitSurface;
     actor.initialParticle = particle;
-    // use AnyCharge to be able to handle neutral and charged parameters
-    Acts::GenericCurvilinearTrackParameters<Acts::AnyCharge> start(
-        particle.fourPosition(), particle.direction(),
-        particle.absoluteMomentum(), particle.charge());
-    auto result = propagator.propagate(start, options);
+
+    if (particle.hasReferenceSurface()) {
+      auto result = propagator.propagate(
+          particle.boundParameters(geoCtx).value(), options);
+      if (not result.ok()) {
+        return result.error();
+      }
+      auto &value = result.value().template get<Result>();
+      return std::move(value);
+    }
+
+    auto result =
+        propagator.propagate(particle.curvilinearParameters(), options);
     if (not result.ok()) {
       return result.error();
     }
     auto &value = result.value().template get<Result>();
-
     return std::move(value);
   }
 };

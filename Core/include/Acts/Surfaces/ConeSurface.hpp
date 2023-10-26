@@ -181,8 +181,8 @@ class ConeSurface : public Surface {
   ///
   /// If possible returns both solutions for the cylinder
   ///
-  /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceIntersection intersect(
+  /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
+  SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck = false,
       double tolerance = s_onSurfaceTolerance) const final;

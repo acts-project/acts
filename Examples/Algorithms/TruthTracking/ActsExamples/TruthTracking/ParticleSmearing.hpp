@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -20,6 +21,7 @@
 #include <array>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace ActsExamples {
@@ -57,10 +59,15 @@ class ParticleSmearing final : public IAlgorithm {
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative momentum resolution.
     double sigmaPRel = 0.05;
+    /// Optional. Initial covariance matrix diagonal. Overwrites the default if
+    /// set.
+    std::optional<std::array<double, 6>> initialSigmas = std::nullopt;
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
+    /// Optional particle hypothesis override.
+    std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
   };
 
   ParticleSmearing(const Config& config, Acts::Logging::Level level);

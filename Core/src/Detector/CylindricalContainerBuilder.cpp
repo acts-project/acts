@@ -9,7 +9,11 @@
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 
 #include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
+#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
+#include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
 #include <algorithm>
@@ -112,6 +116,50 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   }
 }
 
+Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
+    const Acts::Experimental::Blueprint::Node& bpNode,
+    Acts::Logging::Level logLevel)
+    : IDetectorComponentBuilder(),
+      m_logger(getDefaultLogger(bpNode.name + "_cont", logLevel)) {
+  if (bpNode.boundsType != VolumeBounds::BoundsType::eCylinder) {
+    throw std::invalid_argument(
+        "CylindricalContainerBuilder: boundary type must be cylinder - for "
+        "building from a blueprint node.");
+  }
+
+  std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders;
+  for (const auto& child : bpNode.children) {
+    if (child->isLeaf()) {
+      // Volume structure
+      VolumeStructureBuilder::Config vsCfg;
+      vsCfg.transform = child->transform;
+      vsCfg.boundsType = child->boundsType;
+      vsCfg.boundValues = child->boundaryValues;
+      vsCfg.auxiliary = "*** acts auto-generated shape builder ***";
+      auto vsBuilder = std::make_shared<VolumeStructureBuilder>(
+          vsCfg, getDefaultLogger(child->name + "_shape", logLevel));
+      // Detector volume builder
+      DetectorVolumeBuilder::Config dvCfg;
+      dvCfg.name = child->name;
+      dvCfg.externalsBuilder = vsBuilder;
+      dvCfg.internalsBuilder = child->internalsBuilder;
+      dvCfg.auxiliary = "*** acts auto-generated volume builder ***";
+      // Add the builder
+      m_cfg.builders.push_back(std::make_shared<DetectorVolumeBuilder>(
+          dvCfg, getDefaultLogger(child->name, logLevel)));
+    } else {
+      // This evokes the recursive stepping down the tree
+      m_cfg.builders.push_back(
+          std::make_shared<CylindricalContainerBuilder>(*child, logLevel));
+    }
+  }
+
+  m_cfg.binning = bpNode.binning;
+  m_cfg.auxiliary = "*** acts auto-generated from proxy ***";
+  m_cfg.geoIdGenerator = bpNode.geoIdGenerator;
+  m_cfg.rootVolumeFinderBuilder = bpNode.rootVolumeFinderBuilder;
+}
+
 Acts::Experimental::DetectorComponent
 Acts::Experimental::CylindricalContainerBuilder::construct(
     const GeometryContext& gctx) const {
@@ -152,6 +200,34 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     // Connect containers
     rContainer = connect(gctx, containers, m_cfg.binning, logger().level());
   }
+  ACTS_VERBOSE("Number of root volumes: " << rootVolumes.size());
+
+  // Check if a root volume finder is provided
+  if (m_cfg.rootVolumeFinderBuilder) {
+    // Return the container
+    return Acts::Experimental::DetectorComponent{
+        {},
+        rContainer,
+        RootDetectorVolumes{
+            rootVolumes,
+            m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
+  }
+
+  // Geometry Id generation
+  if (m_cfg.geoIdGenerator != nullptr) {
+    ACTS_DEBUG("Assigning geometry ids to the detector");
+    auto cache = m_cfg.geoIdGenerator->generateCache();
+    if (m_cfg.geoIdReverseGen) {
+      std::for_each(rootVolumes.rbegin(), rootVolumes.rend(), [&](auto& v) {
+        m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+      });
+    } else {
+      std::for_each(rootVolumes.begin(), rootVolumes.end(), [&](auto& v) {
+        m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+      });
+    }
+  }
+
   // Return the container
   return Acts::Experimental::DetectorComponent{
       {}, rContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};

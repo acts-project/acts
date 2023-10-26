@@ -125,6 +125,7 @@ struct MockStepper {
 
 struct MockNavigatorState {
   bool targetReached = false;
+  Acts::Surface *startSurface = nullptr;
   Acts::Surface *currentSurface = nullptr;
 };
 
@@ -132,6 +133,11 @@ struct MockNavigator {
   bool targetReached(const MockNavigatorState &state) const {
     return state.targetReached;
   }
+
+  const Acts::Surface *startSurface(const MockNavigatorState &state) const {
+    return state.startSurface;
+  }
+
   const Acts::Surface *currentSurface(const MockNavigatorState &state) const {
     return state.currentSurface;
   }

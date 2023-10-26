@@ -34,7 +34,7 @@ struct TripletCandidate {
   /// @param q Whether the candidate is high or low quality
   TripletCandidate(external_space_point_t& b, external_space_point_t& m,
                    external_space_point_t& t, float w, float z, bool q)
-      : bottom(&b), middle(&m), top(&t), weight(w), zOrigin(z), isQuality(q){};
+      : bottom(&b), middle(&m), top(&t), weight(w), zOrigin(z), isQuality(q) {}
 
   /// @brief Copy operations
   TripletCandidate(const TripletCandidate&) = default;
@@ -121,7 +121,7 @@ class CandidatesForMiddleSp {
   /// @param isQuality Whether the triplet candidate is high or low quality
   /// @returns whether the triplet candidate has been added or not to the collection
   bool push(std::vector<std::size_t>& indices, std::size_t& n,
-            const std::size_t& n_max, external_space_point_t& SpB,
+            const std::size_t n_max, external_space_point_t& SpB,
             external_space_point_t& SpM, external_space_point_t& SpT,
             float weight, float zOrigin, bool isQuality);
 
@@ -130,7 +130,7 @@ class CandidatesForMiddleSp {
   /// @param n Index of the requested element
   /// @param max_size Number of elements currently stored in the collection
   /// @returns Whether the element exists
-  bool exists(const std::size_t& n, const std::size_t& max_size) const;
+  bool exists(const std::size_t n, const std::size_t max_size) const;
 
   /// @brief Pop an element from a collection. The removal of the element from the collection
   /// does not imply its destruction. In fact, the number of stored elements is
@@ -171,7 +171,7 @@ class CandidatesForMiddleSp {
   /// @param n_max The maximum number of elements that can be stored in the collection
   /// @param element The element that must be added to the collection
   void addToCollection(std::vector<std::size_t>& indices, std::size_t& n,
-                       const std::size_t& n_max, value_type&& element);
+                       const std::size_t n_max, value_type&& element);
 
  private:
   // sizes
@@ -189,7 +189,7 @@ class CandidatesForMiddleSp {
 
   // The following vectors store indexes to elements in the storage
   // They are sorted as a min heap tree, in which
-  // Each node is lower then its children
+  // Each node is lower than its children
   // Thus, it is guaranteed that the lower elements is at the front
   // Sorting criteria is the seed quality
   //

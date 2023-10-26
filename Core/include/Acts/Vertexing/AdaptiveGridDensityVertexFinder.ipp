@@ -60,22 +60,22 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
   if (not state.mainDensityMap.empty()) {
     if (not m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
-      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainDensityMap);
+      auto maxZTRes = m_cfg.gridDensity.getMaxZTPosition(state.mainDensityMap);
 
-      if (!maxZres.ok()) {
-        return maxZres.error();
+      if (!maxZTRes.ok()) {
+        return maxZTRes.error();
       }
-      z = *maxZres;
+      z = (*maxZTRes).first;
     } else {
       // Get z value of highest density bin and width
-      auto maxZres =
-          m_cfg.gridDensity.getMaxZPositionAndWidth(state.mainDensityMap);
+      auto maxZTResAndWidth =
+          m_cfg.gridDensity.getMaxZTPositionAndWidth(state.mainDensityMap);
 
-      if (!maxZres.ok()) {
-        return maxZres.error();
+      if (!maxZTResAndWidth.ok()) {
+        return maxZTResAndWidth.error();
       }
-      z = (*maxZres).first;
-      width = (*maxZres).second;
+      z = (*maxZTResAndWidth).first.first;
+      width = (*maxZTResAndWidth).second;
     }
   }
 

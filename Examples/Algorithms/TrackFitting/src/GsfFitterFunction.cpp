@@ -21,6 +21,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/GaussianMixtureReduction.hpp"
@@ -61,12 +62,11 @@ using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
-using Fitter =
-    Acts::Experimental::GaussianSumFitter<Propagator, BetheHeitlerApprox,
-                                          Acts::VectorMultiTrajectory>;
+using Fitter = Acts::GaussianSumFitter<Propagator, BetheHeitlerApprox,
+                                       Acts::VectorMultiTrajectory>;
 using DirectFitter =
-    Acts::Experimental::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
-                                          Acts::VectorMultiTrajectory>;
+    Acts::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
+                            Acts::VectorMultiTrajectory>;
 using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
@@ -95,12 +95,12 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   template <typename calibrator_t>
   auto makeGsfOptions(const GeneralFitterOptions& options,
                       const calibrator_t& calibrator) const {
-    Acts::Experimental::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
+    Acts::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &updater);
 
-    Acts::Experimental::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
+    Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
         options.geoContext,
         options.magFieldContext,
         options.calibrationContext,
@@ -111,12 +111,15 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         weightCutoff,
         abortOnError,
         disableAllMaterialHandling};
+    gsfOptions.stateReductionMethod = reductionMethod;
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
     gsfOptions.extensions.surfaceAccessor
         .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
             &m_slSurfaceAccessor);
+    gsfOptions.extensions.mixtureReducer
+        .connect<&Acts::reduceMixtureWithKLDistance>();
 
     return gsfOptions;
   }
@@ -128,7 +131,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
                                TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
-    using namespace Acts::Experimental::GsfConstants;
+    using namespace Acts::GsfConstants;
     if (not tracks.hasColumn(
             Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
@@ -148,7 +151,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
-    using namespace Acts::Experimental::GsfConstants;
+    using namespace Acts::GsfConstants;
     if (not tracks.hasColumn(
             Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
@@ -171,8 +174,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {
   // Standard fitter
-  MultiStepper stepper(magneticField, finalReductionMethod,
-                       logger.cloneWithSuffix("Step"));
+  MultiStepper stepper(magneticField, logger.cloneWithSuffix("Step"));
   const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
@@ -186,7 +188,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
                      logger.cloneWithSuffix("GSF"));
 
   // Direct fitter
-  MultiStepper directStepper(std::move(magneticField), finalReductionMethod,
+  MultiStepper directStepper(std::move(magneticField),
                              logger.cloneWithSuffix("Step"));
   Acts::DirectNavigator directNavigator{
       logger.cloneWithSuffix("DirectNavigator")};

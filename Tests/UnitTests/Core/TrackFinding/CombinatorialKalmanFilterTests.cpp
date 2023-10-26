@@ -73,6 +73,8 @@ namespace {
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 
+static const auto pion = Acts::ParticleHypothesis::pion();
+
 struct Detector {
   // expected number of measurements for the given detector
   size_t numMeasurements = 6u;
@@ -228,17 +230,17 @@ struct Fixture {
     Acts::Vector4 mStartPos1(-3_m, -15_mm, -15_mm, 2_ns);
     Acts::Vector4 mStartPos2(-3_m, 15_mm, 15_mm, -1_ns);
     startParameters = {
-        {mStartPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov},
-        {mStartPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov},
-        {mStartPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov},
+        {mStartPos0, 0_degree, 90_degree, 1_e / 1_GeV, cov, pion},
+        {mStartPos1, -1_degree, 91_degree, 1_e / 1_GeV, cov, pion},
+        {mStartPos2, 1_degree, 89_degree, -1_e / 1_GeV, cov, pion},
     };
     Acts::Vector4 mEndPos0(3_m, 0.0, 0.0, 1_ns);
     Acts::Vector4 mEndPos1(3_m, -100_mm, -100_mm, 2_ns);
     Acts::Vector4 mEndPos2(3_m, 100_mm, 100_mm, -1_ns);
     endParameters = {
-        {mEndPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov * 100},
-        {mEndPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov * 100},
-        {mEndPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov * 100},
+        {mEndPos0, 0_degree, 90_degree, 1_e / 1_GeV, cov * 100, pion},
+        {mEndPos1, -1_degree, 91_degree, 1_e / 1_GeV, cov * 100, pion},
+        {mEndPos2, 1_degree, 89_degree, -1_e / 1_GeV, cov * 100, pion},
     };
 
     // create some measurements
@@ -299,7 +301,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   Fixture f(0_T);
 
   auto options = f.makeCkfOptions();
-  // this is the default option. set anyways for consistency
+  // this is the default option. set anyway for consistency
   options.propagatorPlainOptions.direction = Acts::Direction::Forward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
@@ -339,7 +341,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    for (const auto trackState : track.trackStates()) {
+    for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =
           trackState.getUncalibratedSourceLink().template get<TestSourceLink>();
@@ -395,7 +397,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    for (const auto trackState : track.trackStates()) {
+    for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =
           trackState.getUncalibratedSourceLink().template get<TestSourceLink>();

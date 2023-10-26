@@ -114,6 +114,10 @@ class DetectorNavigator {
 
   bool targetReached(const State& state) const { return state.targetReached; }
 
+  bool endOfWorldReached(State& state) const {
+    return state.currentVolume == nullptr;
+  }
+
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
   }
@@ -137,7 +141,7 @@ class DetectorNavigator {
 
   /// Initialize call - start of propagation
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -177,6 +181,7 @@ class DetectorNavigator {
                  << posInfo(state, stepper) << "Entering navigator::preStep.");
 
     auto& nState = state.navigation;
+    fillNavigationState(state, stepper, nState);
 
     if (inactive()) {
       ACTS_VERBOSE(volInfo(state)
@@ -374,7 +379,7 @@ class DetectorNavigator {
   /// - attempted volume switch
   /// Target finding by association will not be done again
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -406,6 +411,18 @@ class DetectorNavigator {
     }
 
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
+
+    // Sort properly the surface candidates
+    auto& nCandidates = nState.surfaceCandidates;
+    std::sort(nCandidates.begin(), nCandidates.end(),
+              [&](const auto& a, const auto& b) {
+                // The two path lengths
+                ActsScalar pathToA = a.objectIntersection.pathLength();
+                ActsScalar pathToB = b.objectIntersection.pathLength();
+                return pathToA < pathToB;
+              });
+    // Set the surface candidate
+    nState.surfaceCandidate = nCandidates.begin();
   }
 
   template <typename propagator_state_t, typename stepper_t>

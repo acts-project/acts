@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -50,27 +51,17 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   }
 
   m_inputSeeds.initialize(m_cfg.inputSeeds);
+  m_inputTracks.maybeInitialize(m_cfg.inputProtoTracks);
+
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
+  m_outputSeeds.maybeInitialize(m_cfg.outputSeeds);
+  m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 
   // Set up the track parameters covariance (the same for all tracks)
-  m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-      m_cfg.initialVarInflation[Acts::eBoundLoc0] * cfg.sigmaLoc0 *
-      m_cfg.sigmaLoc0;
-  m_covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-      m_cfg.initialVarInflation[Acts::eBoundLoc1] * cfg.sigmaLoc1 *
-      m_cfg.sigmaLoc1;
-  m_covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
-      m_cfg.initialVarInflation[Acts::eBoundPhi] * cfg.sigmaPhi *
-      m_cfg.sigmaPhi;
-  m_covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
-      m_cfg.initialVarInflation[Acts::eBoundTheta] * cfg.sigmaTheta *
-      m_cfg.sigmaTheta;
-  m_covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-      m_cfg.initialVarInflation[Acts::eBoundQOverP] * cfg.sigmaQOverP *
-      m_cfg.sigmaQOverP;
-  m_covariance(Acts::eBoundTime, Acts::eBoundTime) =
-      m_cfg.initialVarInflation[Acts::eBoundTime] * m_cfg.sigmaT0 *
-      m_cfg.sigmaT0;
+  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+    m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
+                         m_cfg.initialSigmas[i];
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
@@ -80,6 +71,24 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   TrackParametersContainer trackParameters;
   trackParameters.reserve(seeds.size());
+
+  std::optional<SimSeedContainer> outputSeeds;
+  if (m_outputSeeds.isInitialized()) {
+    outputSeeds->reserve(seeds.size());
+  }
+
+  const ProtoTrackContainer* inputTracks = nullptr;
+  std::optional<ProtoTrackContainer> outputTracks;
+  if (m_inputTracks.isInitialized() && m_outputTracks.isInitialized()) {
+    const auto& inputTracksRef = m_inputTracks(ctx);
+    if (seeds.size() != inputTracksRef.size()) {
+      ACTS_FATAL("Inconsistent number of seeds and prototracks");
+      return ProcessCode::ABORT;
+    }
+    inputTracks = &inputTracksRef;
+    outputTracks.emplace();
+    outputTracks->reserve(seeds.size());
+  }
 
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
 
@@ -122,14 +131,27 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       continue;
     } else {
       const auto& params = optParams.value();
-      double charge = std::copysign(1, params[Acts::eBoundQOverP]);
-      trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
-                                   m_covariance);
+      trackParameters.emplace_back(surface->getSharedPtr(), params,
+                                   m_covariance, m_cfg.particleHypothesis);
+      if (outputSeeds) {
+        outputSeeds->push_back(seed);
+      }
+      if (outputTracks && inputTracks != nullptr) {
+        outputTracks->push_back(inputTracks->at(iseed));
+      }
     }
   }
 
   ACTS_VERBOSE("Estimated " << trackParameters.size() << " track parameters");
 
   m_outputTrackParameters(ctx, std::move(trackParameters));
+  if (m_outputSeeds.isInitialized()) {
+    m_outputSeeds(ctx, std::move(*outputSeeds));
+  }
+
+  if (m_outputTracks.isInitialized()) {
+    m_outputTracks(ctx, std::move(*outputTracks));
+  }
+
   return ProcessCode::SUCCESS;
 }

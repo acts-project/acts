@@ -68,7 +68,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   if (topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
     std::sort(topSPIndexVec.begin(), topSPIndexVec.end(),
-              [&invHelixDiameterVec](const size_t& i1, const size_t& i2) {
+              [&invHelixDiameterVec](const size_t i1, const size_t i2) {
                 return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
               });
   }
@@ -125,7 +125,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
       bool newCompSeed = true;
-      for (const float& previousDiameter : compatibleSeedR) {
+      for (const float previousDiameter : compatibleSeedR) {
         // original ATLAS code uses higher min distance for 2nd found compatible
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all
@@ -196,9 +196,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // if we have not yet reached our max number of quality seeds we add the
         // new seed to outCont
 
-        // Internally, "push" will also checks the max number of quality seeds
+        // Internally, "push" will also check the max number of quality seeds
         // for a middle sp.
-        // If this is reached, we remove the seed with lowest weight.
+        // If this is reached, we remove the seed with the lowest weight.
         candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
                                   weight, zOrigin, true);
         if (seedFilterState.numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
@@ -248,7 +248,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     Acts::SpacePointData& spacePointData,
     CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
-    std::size_t& numQualitySeeds,
+    const std::size_t numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
   // retrieve all candidates
@@ -265,7 +265,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::vector<typename CandidatesForMiddleSp<
         const InternalSpacePoint<external_spacepoint_t>>::value_type>&
         candidates,
-    std::size_t& numQualitySeeds,
+    const std::size_t numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
   if (m_experimentCuts != nullptr) {

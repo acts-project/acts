@@ -67,9 +67,9 @@ class PlaneSurface : public Surface {
 
   /// Constructor from DetectorElementBase : Element proxy
   ///
-  /// @param pbounds are the provided planar bounds (shared)
+  /// @param pbounds are the provided planar bounds
   /// @param detelement is the linked detector element to this surface
-  PlaneSurface(const std::shared_ptr<const PlanarBounds>& pbounds,
+  PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
                const DetectorElementBase& detelement);
 
   /// Constructor for Planes with (optional) shared bounds object
@@ -186,8 +186,8 @@ class PlaneSurface : public Surface {
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return the SurfaceIntersection object
-  SurfaceIntersection intersect(
+  /// @return the @c SurfaceMultiIntersection object
+  SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck = false,
       ActsScalar tolerance = s_onSurfaceTolerance) const final;

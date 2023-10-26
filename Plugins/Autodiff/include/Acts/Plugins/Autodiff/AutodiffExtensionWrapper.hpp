@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Plugins/Autodiff/AutodiffHelper.hpp"
 
 #include <autodiff/forward/dual.hpp>
 #include <autodiff/forward/dual/eigen.hpp>
@@ -70,17 +72,24 @@ struct AutodiffExtensionWrapper {
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const navigator_t& navigator, const double h,
                 FreeMatrix& D) const {
+#if defined(__GNUC__) && __GNUC__ == 12 && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuse-after-free"
+#endif
     m_doubleExtension.finalize(state, stepper, navigator, h);
     return transportMatrix(state, stepper, navigator, h, D);
+#if defined(__GNUC__) && __GNUC__ == 12 && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
   }
 
  private:
   // A fake stepper-state
   struct FakeStepperState {
+    // dummy defaults which will/should be overwritten
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
     AutodiffFreeVector pars;
     AutodiffFreeVector derivative;
-    double q = 0;
-    double absCharge = 0;
     bool covTransport = false;
   };
 
@@ -94,16 +103,21 @@ struct AutodiffExtensionWrapper {
 
   // A fake stepper
   struct FakeStepper {
-    auto charge(const FakeStepperState& s) const { return s.q; }
-    auto qOverP(const FakeStepperState& s) const { return s.pars(eFreeQOverP); }
-    auto absoluteMomentum(const FakeStepperState& s) const {
-      return s.q / s.pars(eFreeQOverP);
+    auto position(const FakeStepperState& s) const {
+      return s.pars.template segment<3>(eFreePos0);
     }
     auto direction(const FakeStepperState& s) const {
       return s.pars.template segment<3>(eFreeDir0);
     }
-    auto position(const FakeStepperState& s) const {
-      return s.pars.template segment<3>(eFreePos0);
+    auto qOverP(const FakeStepperState& s) const { return s.pars(eFreeQOverP); }
+    auto absoluteMomentum(const FakeStepperState& s) const {
+      return particleHypothesis(s).extractMomentum(qOverP(s));
+    }
+    auto charge(const FakeStepperState& s) const {
+      return particleHypothesis(s).extractCharge(qOverP(s));
+    }
+    auto particleHypothesis(const FakeStepperState& s) const {
+      return s.particleHypothesis;
     }
   };
 
@@ -120,8 +134,8 @@ struct AutodiffExtensionWrapper {
     ThisFakePropState fstate{FakeStepperState(), state.options,
                              state.navigation};
 
-    fstate.stepping.q = stepper.charge(state.stepping);
-    fstate.stepping.absCharge = state.stepping.absCharge;
+    fstate.stepping.particleHypothesis =
+        stepper.particleHypothesis(state.stepping);
 
     // Init dependent values for autodiff
     AutodiffFreeVector initial_params;
