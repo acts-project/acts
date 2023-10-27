@@ -46,6 +46,12 @@ with tempfile.TemporaryDirectory() as temp:
         acts.examples.Sequencer.FpeMask(
             "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
             (235, 236),
+            acts.FpeType.FLTINV,
+            1,
+        ),
+        acts.examples.Sequencer.FpeMask(
+            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
+            (235, 236),
             acts.FpeType.FLTOVF,
             1,
         ),
@@ -119,9 +125,8 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-        ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
         SeedFinderConfigArg(
-            r=(None, 200 * u.mm),  # rMin=default, 33mm
+            r=(33 * u.mm, 200 * u.mm),
             deltaR=(1 * u.mm, 60 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
@@ -131,11 +136,9 @@ with tempfile.TemporaryDirectory() as temp:
             minPt=500 * u.MeV,
             impactMax=3 * u.mm,
         ),
-        SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
-        TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
+        SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
         seedingAlgorithm=SeedingAlgorithm.Default,
         geoSelectionConfigFile=setup.geoSel,
-        rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         outputDirRoot=tp,
     )
 

@@ -207,7 +207,7 @@ int runRecCKFTracks(
       seedingCfg.gridConfig.minPt = 500._MeV;
       seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
 
-      seedingCfg.gridOptions.bFieldInZ = 1.99724_T;
+      seedingCfg.gridOptions.bFieldInZ = 2_T;
 
       seedingCfg.seedFinderOptions.bFieldInZ = seedingCfg.gridOptions.bFieldInZ;
       seedingCfg.seedFinderOptions.beamPos = {0_mm, 0_mm};

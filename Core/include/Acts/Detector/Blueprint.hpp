@@ -20,7 +20,9 @@
 namespace Acts {
 namespace Experimental {
 
+class IGeometryIdGenerator;
 class IInternalStructureBuilder;
+class IRootVolumeFinderBuilder;
 
 /// A Blueprint is an instruction tree that allows you to defina a tree sequence
 /// of volume building using the provided tools.
@@ -87,6 +89,12 @@ struct Node final {
   std::vector<std::unique_ptr<Node>> children = {};
   /// Branch definition binning
   std::vector<BinningValue> binning = {};
+
+  /// Builders and helper tools that can be attached
+  std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
+      nullptr;
+  /// Geometry id generator
+  std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
   /// Internal structure builder - for leaf nodes
   std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
 
@@ -144,6 +152,22 @@ struct Node final {
       ss << name << " -> " << name + "_int"
          << ";" << '\n';
     }
+
+    if (geoIdGenerator != nullptr) {
+      ss << name + "_geoID"
+         << " [shape=\"note\";style=\"filled\";fillcolor=\"azure\"];" << '\n';
+      ss << name << " -> " << name + "_geoID"
+         << ";" << '\n';
+    }
+
+    if (rootVolumeFinderBuilder != nullptr) {
+      ss << name + "_roots"
+         << " [shape=\"Msquare\";style=\"filled\";fillcolor=\"darkkhaki\"];"
+         << '\n';
+      ss << name << " -> " << name + "_roots"
+         << ";" << '\n';
+    }
+
     if (isRoot()) {
       ss << "}" << '\n';
     }
