@@ -341,7 +341,7 @@ static Ref_t create_endcap_detector(Detector &dd, xml_h xml,
       xml_comp_t x_det_layer = layer;
       auto layerElement =
           addDiscLayer(dd, detectorAssembly, x_det_layer, sens, layerID++);
-      // Add is to the detector element
+      // Add the layer element to the detector element
       detectorElement.add(layerElement);
     }
   }
