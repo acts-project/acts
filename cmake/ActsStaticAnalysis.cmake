@@ -43,6 +43,6 @@ if(ACTS_RUN_CLANG_TIDY)
 
     set(CLANG_TIDY_HEADER_FILTER ".*")
 
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-checks=${CLANG_TIDY_CHECKS};-header-filter=${CLANG_TIDY_HEADER_FILTER};-warnings-as-errors=${CLANG_TIDY_ERRORS};-fix")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-checks=${CLANG_TIDY_CHECKS};-header-filter=${CLANG_TIDY_HEADER_FILTER};-warnings-as-errors=${CLANG_TIDY_ERRORS}")
   endif()
 endif()
