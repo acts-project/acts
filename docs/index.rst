@@ -39,3 +39,5 @@ Key features:
    codeguide
    authors
    license
+
+   whitepapers

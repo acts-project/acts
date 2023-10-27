@@ -1,0 +1,6 @@
+rich
+toml
+requests
+typer
+pydantic
+jinja2
