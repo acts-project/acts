@@ -26,10 +26,10 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection =
-      perigeeSurface
-          .intersect(gctx, params.position(gctx), params.direction(), false)
-          .closest();
+  auto intersection = perigeeSurface
+                          .intersect(gctx, params.position(gctx),
+                                     params.direction(), BoundaryCheck(false))
+                          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above

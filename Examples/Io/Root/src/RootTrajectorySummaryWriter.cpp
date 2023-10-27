@@ -334,7 +334,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
             auto intersection =
                 pSurface
                     ->intersect(ctx.geoContext, particle.position(),
-                                particle.direction(), false)
+                                particle.direction(),
+                                Acts::BoundaryCheck(false))
                     .closest();
             auto position = intersection.position();
 

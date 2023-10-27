@@ -288,10 +288,11 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
           m_sur_y.push_back(mint.intersection.y());
           m_sur_z.push_back(mint.intersection.z());
         } else if (surface != nullptr) {
-          auto sfIntersection = surface
-                                    ->intersect(ctx.geoContext, mint.position,
-                                                mint.direction, true)
-                                    .closest();
+          auto sfIntersection =
+              surface
+                  ->intersect(ctx.geoContext, mint.position, mint.direction,
+                              Acts::BoundaryCheck(true))
+                  .closest();
           m_sur_id.push_back(surface->geometryId().value());
           m_sur_pathCorrection.push_back(1.0);
           m_sur_x.push_back(sfIntersection.position().x());

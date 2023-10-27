@@ -90,7 +90,7 @@ class ConeBounds : public SurfaceBounds {
   /// @param bcheck is the boundary check directive
   /// @return is a boolean indicating if the position is inside
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck = true) const final;
+              const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
 
   /// Output Method for std::ostream
   ///
