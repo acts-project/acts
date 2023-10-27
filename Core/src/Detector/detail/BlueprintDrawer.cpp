@@ -93,7 +93,7 @@ void Acts::Experimental::detail::BlueprintDrawer::dotStream(
   ss << node.name << " -> " << node.name + "_shape [ arrowhead = \"none\" ];"
      << '\n';
 
-  // Sub node dection
+  // Sub node detection
   if (node.internalsBuilder != nullptr) {
     ss << node.name + "_int " << shapeStr(options.internals) << '\n';
     ss << node.name << " -> " << node.name + "_int;" << '\n';
