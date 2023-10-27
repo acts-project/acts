@@ -130,7 +130,7 @@ def runTruthTrackingGsf(
     s.addWriter(
         acts.examples.RootTrajectoryStatesWriter(
             level=acts.logging.INFO,
-            inputTrajectories="gsf_trajectories",
+            inputTrajectories="trajectories",
             inputParticles="truth_seeds_selected",
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -142,7 +142,7 @@ def runTruthTrackingGsf(
     s.addWriter(
         acts.examples.RootTrajectorySummaryWriter(
             level=acts.logging.INFO,
-            inputTrajectories="gsf_trajectories",
+            inputTrajectories="trajectories",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_gsf.root"),
@@ -152,7 +152,7 @@ def runTruthTrackingGsf(
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTrajectories="gsf_trajectories",
+            inputTrajectories="trajectories",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "performance_gsf.root"),
