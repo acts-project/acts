@@ -30,7 +30,7 @@ namespace Experimental {
 
 class DD4hepBlueprint {
  public:
-  /// @brief Nexted config object
+  /// @brief Nested config object
   struct Config {
     std::shared_ptr<Experimental::DD4hepLayerStructure> layerStructure =
         nullptr;
