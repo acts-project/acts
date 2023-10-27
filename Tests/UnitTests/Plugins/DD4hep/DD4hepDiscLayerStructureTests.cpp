@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
     // Kill that instance before going into the next test
     lcdd->destroyInstance();
 
-    // Incrase test counter
+    // Increase test counter
     ++itest;
   }
 }
