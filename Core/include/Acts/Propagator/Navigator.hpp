@@ -15,6 +15,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -123,9 +124,16 @@ class Navigator {
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
 
+    /// Whether to perform boundary checks for surface resolving (improves
+    /// navigation for bended tracks and track finding)
+    BoundaryCheck boundaryCheckSurfaceResolving = true;
     /// Whether to perform boundary checks for layer resolving (improves
     /// navigation for bended tracks)
     BoundaryCheck boundaryCheckLayerResolving = true;
+
+    /// Whether to perform boundary checks for surface targeting (improves
+    /// navigation for bended tracks and track finding)
+    BoundaryCheck boundaryCheckSurfaceTargeting = true;
   };
 
   /// Nested State struct
@@ -170,6 +178,8 @@ class Navigator {
     const Surface* startSurface = nullptr;
     /// Navigation state - external state: the current surface
     const Surface* currentSurface = nullptr;
+    /// Navigation state - external state: the current surfaces
+    std::vector<const Surface*> currentSurfaces;
     /// Navigation state: the current volume
     const TrackingVolume* currentVolume = nullptr;
     /// Navigation state: the target volume
@@ -594,19 +604,27 @@ class Navigator {
     if (navSurfaces.empty() or navIndex == navSurfaces.size()) {
       return false;
     }
-    // Take the current surface
-    auto surface = navSurfaces.at(navIndex).representation();
-    // Check if we are at a surface
-    // If we are on the surface pointed at by the index, we can make
-    // it the current one to pass it to the other actors
-    auto surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, *surface, state.options.direction, true,
-        state.options.targetTolerance, logger());
-    if (surfaceStatus == Intersection3D::Status::onSurface) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Status Surface successfully hit, storing it.");
-      // Set in navigation state, so actors and aborters can access it
-      state.navigation.currentSurface = surface;
+    state.navigation.currentSurfaces.clear();
+    for (std::size_t i = navIndex; i < navSurfaces.size(); ++i) {
+      // Take the current surface
+      auto surface = navSurfaces.at(navIndex).representation();
+      // Check if we are at a surface
+      // If we are on the surface pointed at by the index, we can make
+      // it the current one to pass it to the other actors
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, *surface, state.options.direction,
+          m_cfg.boundaryCheckSurfaceTargeting, state.options.targetTolerance,
+          logger());
+      if (surfaceStatus == Intersection3D::Status::onSurface) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Status Surface successfully hit, storing it.");
+        // Set in navigation state, so actors and aborters can access it
+        state.navigation.currentSurfaces.push_back(surface);
+      }
+    }
+    if (!state.navigation.currentSurfaces.empty()) {
+      state.navigation.currentSurface =
+          state.navigation.currentSurfaces.front();
       if (state.navigation.currentSurface) {
         ACTS_VERBOSE(volInfo(state)
                      << "Current surface set to surface "
@@ -682,7 +700,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
       // Estimate the surface status
-      bool boundaryCheck = true;
+      BoundaryCheck boundaryCheck = m_cfg.boundaryCheckSurfaceTargeting;
       for (auto it = externalSurfaceRange.first;
            it != externalSurfaceRange.second; it++) {
         if (surface->geometryId() == it->second) {
@@ -1137,6 +1155,7 @@ class Navigator {
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
     // Use navigation parameters and NavigationOptions
     NavigationOptions<Surface> navOpts;
+    navOpts.boundaryCheck = m_cfg.boundaryCheckSurfaceResolving;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
