@@ -15,6 +15,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -74,6 +75,10 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
+  cfg.boundaryCheckSurfaceResolving = Acts::BoundaryCheck(
+      true, true, 10 * Acts::UnitConstants::mm, 10 * Acts::UnitConstants::mm);
+  cfg.boundaryCheckSurfaceTargeting = Acts::BoundaryCheck(
+      true, true, 10 * Acts::UnitConstants::mm, 10 * Acts::UnitConstants::mm);
   Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
   Propagator propagator(std::move(stepper), std::move(navigator),
                         logger.cloneWithSuffix("Propagator"));

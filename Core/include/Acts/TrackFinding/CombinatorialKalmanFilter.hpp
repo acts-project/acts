@@ -39,6 +39,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <cstddef>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -415,7 +416,8 @@ class CombinatorialKalmanFilter {
         // 3) The surface is neither in the measurement map nor with material
         // -> Do nothing
         ACTS_VERBOSE("Perform filter step");
-        auto res = filter(surface, state, stepper, navigator, result);
+        const auto& surfaces = navigator.currentSurfaces(state.navigation);
+        auto res = filter(surface, surfaces, state, stepper, navigator, result);
         if (!res.ok()) {
           ACTS_ERROR("Error in filter: " << res.error());
           result.lastError = res.error();
@@ -656,19 +658,23 @@ class CombinatorialKalmanFilter {
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    Result<void> filter(const Surface* surface, propagator_state_t& state,
-                        const stepper_t& stepper, const navigator_t& navigator,
+    Result<void> filter(const Surface* surface,
+                        const std::vector<const Surface*>& surfaces,
+                        propagator_state_t& state, const stepper_t& stepper,
+                        const navigator_t& navigator,
                         result_type& result) const {
       // Initialize the number of branches on current surface
       size_t nBranchesOnSurface = 0;
 
-      // Count the number of source links on the surface
-      auto [slBegin, slEnd] = m_sourcelinkAccessor(*surface);
-      if (slBegin != slEnd) {
-        // Screen output message
-        ACTS_VERBOSE("Measurement surface " << surface->geometryId()
-                                            << " detected.");
+      std::size_t sourceLinks = 0;
+      for (auto s : surfaces) {
+        auto [slBegin, slEnd] = m_sourcelinkAccessor(*s);
+        for (auto i = slBegin; i != slEnd; ++i) {
+          ++sourceLinks;
+        }
+      }
 
+      if (sourceLinks > 0) {
         // Transport the covariance to the surface
         stepper.transportCovarianceToBound(state.stepping, *surface);
 
@@ -676,16 +682,9 @@ class CombinatorialKalmanFilter {
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
-        // Bind the transported state to the current surface
-        auto boundStateRes =
-            stepper.boundState(state.stepping, *surface, false);
-        if (!boundStateRes.ok()) {
-          return boundStateRes.error();
-        }
-        auto boundState = *boundStateRes;
-
         // Retrieve the previous tip and its state
-        // The states created on this surface will have the common previous tip
+        // The states created on this surface will have the common previous
+        // tip
         size_t prevTip = SIZE_MAX;
         TipState prevTipState;
         if (not result.activeTips.empty()) {
@@ -695,10 +694,31 @@ class CombinatorialKalmanFilter {
           result.activeTips.erase(result.activeTips.end() - 1);
         }
 
-        // Create trackstates for all source links (will be filtered later)
-        // Results are stored in result => no return value
-        createSourceLinkTrackStates(state.geoContext, result, boundState,
-                                    prevTip, slBegin, slEnd);
+        result.trackStateCandidates.clear();
+        result.stateBuffer->clear();
+
+        for (auto s : surfaces) {
+          // Screen output message
+          ACTS_VERBOSE("Measurement surface " << surface->geometryId()
+                                              << " detected.");
+
+          auto [slBegin, slEnd] = m_sourcelinkAccessor(*s);
+          if (slBegin == slEnd) {
+            continue;
+          }
+
+          // Bind the transported state to the current surface
+          auto boundStateRes = stepper.boundState(state.stepping, *s, false);
+          if (!boundStateRes.ok()) {
+            return boundStateRes.error();
+          }
+          auto boundState = *boundStateRes;
+
+          // Create trackstates for all source links (will be filtered later)
+          // Results are stored in result => no return value
+          createSourceLinkTrackStates(state.geoContext, result, boundState,
+                                      prevTip, slBegin, slEnd);
+        }
 
         // Invoke the measurement selector to select compatible measurements
         // with the predicted track parameter.
@@ -738,7 +758,8 @@ class CombinatorialKalmanFilter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, ts),
-                         ts.filtered(), ts.filteredCovariance(), *surface);
+                         ts.filtered(), ts.filteredCovariance(),
+                         ts.referenceSurface());
           ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
           ACTS_VERBOSE("-> " << ts.filtered().transpose()
                              << " of track state with tip = "
@@ -864,15 +885,12 @@ class CombinatorialKalmanFilter {
                                      source_link_iterator_t slEnd) const {
       const auto& [boundParams, jacobian, pathLength] = boundState;
 
-      result.trackStateCandidates.clear();
       if constexpr (std::is_same_v<
                         typename std::iterator_traits<
                             source_link_iterator_t>::iterator_category,
                         std::random_access_iterator_tag>) {
         result.trackStateCandidates.reserve(std::distance(slBegin, slEnd));
       }
-
-      result.stateBuffer->clear();
 
       using PM = TrackStatePropMask;
 

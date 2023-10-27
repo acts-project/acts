@@ -263,6 +263,10 @@ class Navigator {
     return state.currentSurface;
   }
 
+  const std::vector<const Surface*>& currentSurfaces(const State& state) const {
+    return state.currentSurfaces;
+  }
+
   const TrackingVolume* currentVolume(const State& state) const {
     return state.currentVolume;
   }
@@ -607,7 +611,7 @@ class Navigator {
     state.navigation.currentSurfaces.clear();
     for (std::size_t i = navIndex; i < navSurfaces.size(); ++i) {
       // Take the current surface
-      auto surface = navSurfaces.at(navIndex).representation();
+      auto surface = navSurfaces.at(i).representation();
       // Check if we are at a surface
       // If we are on the surface pointed at by the index, we can make
       // it the current one to pass it to the other actors
