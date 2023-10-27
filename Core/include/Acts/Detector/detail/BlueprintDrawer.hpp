@@ -53,7 +53,7 @@ struct Options {
   Node roots = Node{"box", "darkkhaki"};
 };
 
-/// @brief  Turn into a dot output by writin into a stream
+/// @brief  Turn into a dot output by writing into a stream
 ///
 /// @tparam the stream type to be used
 ///
