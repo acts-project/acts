@@ -11,6 +11,7 @@ in ACTS.
 
 ## {{ whp.metadata.title }} ([GitHub]({{ whp.repository }}))
 
+
 :::{admonition} Authors
 :class: note
 {% for author in whp.metadata.authors %}
@@ -18,7 +19,13 @@ in ACTS.
 {% endfor %}
 :::
 
+```{image} {{ whp.slug }}.png
+:width: 200px
+:align: right
+```
 
 {{ whp.metadata.description }}
+
+<span style="clear:both;"></span>
 
 {% endfor %}

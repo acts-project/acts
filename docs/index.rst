@@ -40,4 +40,5 @@ Key features:
    authors
    license
 
-   whitepapers
+   whitepapers/whitepapers.md
+

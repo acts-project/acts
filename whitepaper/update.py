@@ -2,9 +2,13 @@
 import base64
 from dataclasses import dataclass
 from pathlib import Path
+import shutil
+import subprocess
+from subprocess import run
 from typing import List
 import re
 import textwrap
+import tempfile
 
 import typer
 import toml
@@ -28,6 +32,17 @@ class MetaData(pydantic.BaseModel):
 class WhitePaper(pydantic.BaseModel):
     repository: str
     metadata: MetaData | None = None
+
+    @property
+    def repo(self) -> str:
+        m = re.match(r"^https://github.com/(.*/.*)$", self.repository)
+        assert m is not None
+        return m.group(1)
+
+    @property
+    def slug(self) -> str:
+        owner, name = self.repo.split("/")
+        return f"{owner}_{name}"
 
 
 class Config(pydantic.BaseModel):
@@ -59,32 +74,97 @@ def parse_metadata(content: str) -> MetaData:
     return MetaData(authors=authors, title=title, description=description)
 
 
+def which(cmd: str) -> Path:
+    exe = (
+        run(["command", "-v", cmd], check=True, capture_output=True)
+        .stdout.decode()
+        .strip()
+    )
+    return Path(exe)
+
+
 @app.command()
 def pull(config_file: Path = Path(__file__).parent / "config.toml"):
     console = rich.console.Console()
+
+    git = which("git")
+    latexmk = which("latexmk")
+    convert = which("convert")
 
     with console.status("[bold green]Loading config...") as status:
         config = Config(**toml.load(config_file))
 
         for whp in config.whitepapers:
             status.update(f"Loading {whp.repository}...")
-            m = re.match(r"^https://github.com/(.*/.*)$", whp.repository)
 
-            repo = m.group(1)
+            repo = whp.repo
+            slug = whp.slug
 
             r = requests.get(f"{API_URL}/repos/{repo}")
             repo_data = r.json()
 
-            r = requests.get(f"{API_URL}/repos/{repo}/contents/metadata.tex")
-            metadata_data = r.json()
-            content = base64.b64decode(metadata_data["content"]).decode("utf-8")
+            with tempfile.TemporaryDirectory() as tmpdir:
+                tmpdir = Path(tmpdir)
+                checkout = tmpdir / slug
+                status.update(f"\[{repo}] Cloning repo {repo_data['clone_url']}...")
+                run(
+                    [git, "clone", repo_data["clone_url"], checkout],
+                    check=True,
+                    cwd=tmpdir,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
 
-            metadata = parse_metadata(content)
-            console.print(
-                rich.panel.Panel(rich.pretty.Pretty(metadata), title=whp.repository)
-            )
+                status.update(f"\[{repo}] Compiling PDF...")
+                run(
+                    [latexmk],
+                    check=True,
+                    cwd=checkout,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
 
-            whp.metadata = metadata
+                build_dir = checkout / "build"
+                output_file = build_dir / "main.pdf"
+                assert output_file.exists(), "PDF not found"
+
+                title_page = build_dir / "title_page.png"
+
+                status.update(f"\[{repo}] Converting PDF to PNG...")
+                run(
+                    [
+                        convert,
+                        "-density",
+                        "300",
+                        f"{output_file}[0]",
+                        "-background",
+                        "white",
+                        "-alpha",
+                        "remove",
+                        "-alpha",
+                        "off",
+                        "-depth",
+                        "2",
+                        str(title_page),
+                    ],
+                    cwd=tmpdir,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
+
+                shutil.copyfile(title_page, config_file.parent / f"{slug}.png")
+
+            #  r = requests.get(f"{API_URL}/repos/{repo}/contents/metadata.tex")
+            #  metadata_data = r.json()
+            #  content = base64.b64decode(metadata_data["content"]).decode("utf-8")
+
+            #  metadata = parse_metadata(content)
+            #  console.print(
+            #  rich.panel.Panel(rich.pretty.Pretty(metadata), title=whp.repository)
+            #  )
+
+            #  whp.metadata = metadata
 
         status.update("Updating config...")
 
@@ -96,13 +176,19 @@ def pull(config_file: Path = Path(__file__).parent / "config.toml"):
 def render(config_file: Path = Path(__file__).parent / "config.toml"):
     config = Config(**toml.load(config_file))
     template_file = Path(__file__).parent / "template.md"
-    target_file = Path(__file__).parent.parent / "docs" / "whitepapers.md"
+    docs_path = Path(__file__).parent.parent / "docs" / "whitepapers"
+    docs_path.mkdir(parents=True, exist_ok=True)
+    target_file = docs_path / "whitepapers.md"
 
     tpl = Template(template_file.read_text())
 
     target_file.write_text(tpl.render(config=config))
 
-    #  for whp in config.whitepapers:
+    for whp in config.whitepapers:
+        shutil.copyfile(
+            config_file.parent / f"{whp.slug}.png",
+            docs_path / f"{whp.slug}.png",
+        )
 
 
 if "__main__" == __name__:
