@@ -549,12 +549,13 @@ class CombinatorialKalmanFilter {
 
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
-            if (result.smoothed and
-                (smoothingTargetSurface == nullptr or
-                 targetReached(state, stepper, navigator,
-                               *smoothingTargetSurface, logger()) or
-                 result.pathLimitReached(state, stepper, navigator,
-                                         logger()))) {
+            bool isTargetReached =
+                (smoothingTargetSurface == nullptr) or
+                targetReached(state, stepper, navigator,
+                              *smoothingTargetSurface, logger());
+            bool isPathLimitReached =
+                result.pathLimitReached(state, stepper, navigator, logger());
+            if (result.smoothed and (isTargetReached or isPathLimitReached)) {
               ACTS_VERBOSE(
                   "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
@@ -564,7 +565,14 @@ class CombinatorialKalmanFilter {
                 auto res =
                     stepper.boundState(state.stepping, *smoothingTargetSurface);
                 if (!res.ok()) {
-                  ACTS_ERROR("Error in finalize: " << res.error());
+                  if (isPathLimitReached) {
+                    ACTS_ERROR("Target surface not reached due to path limit: "
+                               << res.error() << " " << res.error().message());
+                  } else {
+                    ACTS_ERROR(
+                        "Error while acquiring bound state for target surface: "
+                        << res.error() << " " << res.error().message());
+                  }
                   result.lastError = res.error();
                 } else {
                   auto fittedState = *res;
