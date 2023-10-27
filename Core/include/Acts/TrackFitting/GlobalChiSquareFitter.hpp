@@ -705,25 +705,17 @@ class Gx2Fitter {
       // calculate delta params [a] * delta = b
       deltaParams = BoundVector::Zero();
       if (gx2fOptions.zeroField) {
-        const size_t reducedMatrixSize = 4;
-        const ActsVector<reducedMatrixSize> deltaParamsReduced =
+        constexpr size_t reducedMatrixSize = 4;
+        deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
             aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
                 .colPivHouseholderQr()
                 .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-
-        for (size_t idp = 0; idp < reducedMatrixSize; idp++) {
-          deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
-        }
       } else {
-        const size_t reducedMatrixSize = 5;
-        const ActsVector<reducedMatrixSize> deltaParamsReduced =
+        constexpr size_t reducedMatrixSize = 5;
+        deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
             aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
                 .colPivHouseholderQr()
                 .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-
-        for (size_t idp = 0; idp < reducedMatrixSize; idp++) {
-          deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
-        }
       }
 
       ACTS_VERBOSE("chi2sum = " << chi2sum);
@@ -747,22 +739,22 @@ class Gx2Fitter {
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
     bool detAisZero = true;
     if (gx2fOptions.zeroField) {
-      const size_t reducedMatrixSize = 4;
+      constexpr size_t reducedMatrixSize = 4;
       if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
               .determinant() != 0) {
         detAisZero = false;
         fullCovariancePredicted
-            .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
             aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
                 .inverse();
       }
     } else {
-      const size_t reducedMatrixSize = 5;
+      constexpr size_t reducedMatrixSize = 5;
       if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
               .determinant() != 0) {
         detAisZero = false;
         fullCovariancePredicted
-            .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
             aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
                 .inverse();
       }
