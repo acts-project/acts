@@ -234,7 +234,7 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
       // Direct definition of a child surface
       if (x_passive_xml.hasChild(_Unicode(tubs))) {
         xml_comp_t x_tubs_t = x_passive_xml.child(_Unicode(tubs));
-        // Crete the corresponding detector element
+        // Create the corresponding detector element
         DetElement passiveElement(layerName + "_passiveEl", x_layer.id());
         Tube passiveShape(layerName + "_passiveShape", x_tubs_t.rmin(),
                           x_tubs_t.rmax(), x_tubs_t.dz());
