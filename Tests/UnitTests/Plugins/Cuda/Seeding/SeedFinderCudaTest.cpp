@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
   config = config.toInternalUnits();
 
   Acts::SeedFinderOptions options;
-  options.bFieldInZ = 1.99724_T;
+  options.bFieldInZ = 2_T;
   options.beamPos = {-.5_mm, -.5_mm};
   options = options.toInternalUnits().calculateDerivedQuantities(config);
 

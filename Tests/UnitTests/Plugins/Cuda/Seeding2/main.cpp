@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
   sfConfig.minPt = 500._MeV;
   sfConfig.impactMax = 10._mm;
   Acts::SeedFinderOptions sfOptions;
-  sfOptions.bFieldInZ = 1.99724_T;
+  sfOptions.bFieldInZ = 2_T;
   sfOptions.beamPos = {-.5_mm, -.5_mm};
 
   // Use a size slightly smaller than what modern GPUs are capable of. This is

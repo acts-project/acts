@@ -31,7 +31,6 @@ enum struct TrackStatePropMask : std::uint8_t {
   Filtered = 1 << 1,
   Smoothed = 1 << 2,
   Jacobian = 1 << 3,
-
   Calibrated = 1 << 4,
 
   All = std::numeric_limits<std::uint8_t>::max(),  // should be all ones

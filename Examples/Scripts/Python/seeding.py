@@ -8,6 +8,7 @@ import acts.examples
 
 u = acts.UnitConstants
 
+
 # Graciously taken from https://stackoverflow.com/a/60750535/4280680
 class EnumAction(argparse.Action):
     """
@@ -50,7 +51,6 @@ def runSeeding(
     s=None,
     seedingAlgorithm=SeedingAlgorithm.Default,
 ):
-
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
@@ -122,7 +122,7 @@ def runSeeding(
             impactMax=3 * u.mm,
         ),
         SeedFinderOptionsArg(
-            bFieldInZ=1.99724 * u.T,
+            bFieldInZ=2 * u.T,
         ),
         acts.logging.VERBOSE,
         seedingAlgorithm=seedingAlgorithm,
