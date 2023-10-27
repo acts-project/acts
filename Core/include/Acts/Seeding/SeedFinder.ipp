@@ -95,7 +95,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // break because SPs are sorted in r
         break;
       }
-    } else if (not m_config.rRangeMiddleSP.empty()) {
+    } else if (! m_config.rRangeMiddleSP.empty()) {
       /// get zBin position of the middle SP
       auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
                                    m_config.zBinEdges.end(), spM->z());
