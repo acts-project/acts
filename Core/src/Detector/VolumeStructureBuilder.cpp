@@ -17,6 +17,7 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
     const Acts::Experimental::VolumeStructureBuilder::Config& cfg,
@@ -140,6 +141,10 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         boundValues.push_back(M_PI);
         boundValues.push_back(0.);
       }
+      ACTS_VERBOSE(" - cylindrical shape with [iR, oR, hZ, sPhi, mPhi] = "
+                   << boundValues[0] << ", " << boundValues[1] << ", "
+                   << boundValues[2] << ", " << boundValues[3] << ", "
+                   << boundValues[4]);
       auto bArray =
           to_array<CylinderVolumeBounds::BoundValues::eSize>(boundValues);
       volumeBounds = std::make_unique<CylinderVolumeBounds>(bArray);
@@ -175,8 +180,14 @@ Acts::Experimental::VolumeStructureBuilder::construct(
     default:
       break;
   }
+
+  Transform3 fTransform = m_cfg.transform * eTransform;
+  ACTS_VERBOSE(" - translation: " << Acts::toString(fTransform.translation()));
+  if (not fTransform.rotation().isApprox(
+          Acts::Transform3::Identity().rotation())) {
+    ACTS_VERBOSE(" - rotation: " << Acts::toString(fTransform.rotation()));
+  }
   // Return the transform, the volume bounds, and some default portal
   // generators
-  return {Transform3(m_cfg.transform * eTransform), std::move(volumeBounds),
-          defaultPortalGenerator()};
+  return {fTransform, std::move(volumeBounds), defaultPortalGenerator()};
 }

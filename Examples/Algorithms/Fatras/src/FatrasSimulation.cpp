@@ -157,6 +157,11 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
     simulation.charged.selectHitSurface.sensitive = cfg.generateHitsOnSensitive;
     simulation.charged.selectHitSurface.material = cfg.generateHitsOnMaterial;
     simulation.charged.selectHitSurface.passive = cfg.generateHitsOnPassive;
+
+    simulation.charged.maxStepSize = cfg.maxStepSize;
+    simulation.charged.pathLimit = cfg.pathLimit;
+    simulation.neutral.maxStepSize = cfg.maxStepSize;
+    simulation.neutral.pathLimit = cfg.pathLimit;
   }
   ~FatrasSimulationT() final = default;
 

@@ -474,7 +474,7 @@ Acts::TrackingVolume::compatibleBoundaries(
 
   // The Limits: current, path & overstepping
   double pLimit = options.pathLimit;
-  double oLimit = options.overstepLimit;
+  double oLimit = 0;
 
   // Helper function to test intersection
   auto checkIntersection =
