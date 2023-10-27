@@ -566,7 +566,7 @@ class CombinatorialKalmanFilter {
                     stepper.boundState(state.stepping, *smoothingTargetSurface);
                 if (!res.ok()) {
                   if (isPathLimitReached) {
-                    ACTS_ERROR("Target surface not seached due to path limit: "
+                    ACTS_ERROR("Target surface not reached due to path limit: "
                                << res.error() << " " << res.error().message());
                   } else {
                     ACTS_ERROR(
