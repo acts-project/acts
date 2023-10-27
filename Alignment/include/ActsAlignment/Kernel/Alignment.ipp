@@ -29,7 +29,7 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   // Perform the fit
   auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
 
-  if (not fitRes.ok()) {
+  if (!fitRes.ok()) {
     ACTS_WARNING("Fit failure");
     return fitRes.error();
   }
@@ -89,7 +89,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     auto evaluateRes = evaluateTrackAlignmentState(
         fitOptions.geoContext, sourcelinks, sParameters,
         fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask);
-    if (not evaluateRes.ok()) {
+    if (!evaluateRes.ok()) {
       ACTS_DEBUG("Evaluation of alignment state for track " << iTraj
                                                             << " failed");
       continue;

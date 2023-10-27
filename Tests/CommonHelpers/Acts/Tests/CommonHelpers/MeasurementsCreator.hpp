@@ -78,7 +78,7 @@ struct MeasurementsCreator {
     using namespace Acts::UnitLiterals;
 
     // only generate measurements on surfaces
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
     const Acts::Surface& surface = *navigator.currentSurface(state.navigation);

@@ -148,7 +148,7 @@ struct GsfActor {
     assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
-    if (not result.result.ok()) {
+    if (!result.result.ok()) {
       ACTS_WARNING("result.result not ok, return!")
       return;
     }
@@ -168,7 +168,7 @@ struct GsfActor {
                                                          navigator, logger());
 
     // We only need to do something if we are on a surface
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
 

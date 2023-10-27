@@ -128,7 +128,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   h2_geo_dim->Write();
 
   // Save the plots on screen
-  if (not saveAs.empty()) {
+  if (!saveAs.empty()) {
     geometryCanvas->SaveAs((std::string("all_vol_lay_ids.") + saveAs).c_str());
   }
 
@@ -657,7 +657,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
           legend->AddEntry(res_flt[name], "filtered", "l");
         }
         if (predicted) {
-          std::string drawOptions = (smoothed or filtered) ? "same" : "";
+          std::string drawOptions = (smoothed || filtered) ? "same" : "";
           res_prt[name]->DrawNormalized(drawOptions.c_str());
           res_prt[name]->Write();
           legend->AddEntry(res_prt[name], "predicted", "l");
@@ -732,7 +732,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         }
 
         if (predicted) {
-          auto drawOptions = (smoothed or filtered) ? "pe same" : "pe";
+          auto drawOptions = (smoothed || filtered) ? "pe same" : "pe";
 
           auto scale = 1. / pull_prt[name]->Integral("width");
           pull_prt[name]->Scale(scale);

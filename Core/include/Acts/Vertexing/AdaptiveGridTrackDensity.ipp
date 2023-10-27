@@ -83,7 +83,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
 
   // Get seed width estimate
   auto widthRes = estimateSeedWidth(densityMap, maxZT);
-  if (not widthRes.ok()) {
+  if (!widthRes.ok()) {
     return widthRes.error();
   }
   float width = *widthRes;
