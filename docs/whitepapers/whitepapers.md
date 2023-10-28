@@ -9,25 +9,28 @@ in ACTS.
 
 
 
+(acts-project_whitepaper-template)=
 ## A whitepaper about a topic ([GitHub](https://github.com/acts-project/whitepaper-template))
 
+:::{image} ../figures/whitepapers/acts-project_whitepaper-template.png
+:width: 200px
+:align: right
+:::
 
-:::{admonition} Authors
-:class: note
+### Authors
 
 - First Author
 
 - Second Author
 
-:::
 
-```{image} acts-project_whitepaper-template.png
-:width: 200px
-:align: right
-```
 
+### Description
 This is a whitepaper example. It contains a number of example
-patterns, layouts etc.
+	patterns, layouts etc.
+    Simple math like $a + b = c$ or even $\sqrt{s} = 14$ TeV is supported!
 
-<span style="clear:both;"></span>
+<span style="display:block;clear:both;"></span>
+
+
 

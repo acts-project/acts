@@ -152,19 +152,18 @@ def pull(config_file: Path = Path(__file__).parent / "config.toml"):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                 )
-
+                assert title_page.exists(), "PNG not found"
                 shutil.copyfile(title_page, config_file.parent / f"{slug}.png")
 
-            #  r = requests.get(f"{API_URL}/repos/{repo}/contents/metadata.tex")
-            #  metadata_data = r.json()
-            #  content = base64.b64decode(metadata_data["content"]).decode("utf-8")
+                metadata_file = checkout / "metadata.tex"
 
-            #  metadata = parse_metadata(content)
-            #  console.print(
-            #  rich.panel.Panel(rich.pretty.Pretty(metadata), title=whp.repository)
-            #  )
+                metadata = parse_metadata(metadata_file.read_text())
 
-            #  whp.metadata = metadata
+            console.print(
+                rich.panel.Panel(rich.pretty.Pretty(metadata), title=whp.repository)
+            )
+
+            whp.metadata = metadata
 
         status.update("Updating config...")
 
@@ -179,15 +178,19 @@ def render(config_file: Path = Path(__file__).parent / "config.toml"):
     docs_path = Path(__file__).parent.parent / "docs" / "whitepapers"
     docs_path.mkdir(parents=True, exist_ok=True)
     target_file = docs_path / "whitepapers.md"
+    image_path = Path(__file__).parent.parent / "docs" / "figures" / "whitepapers"
+    image_path.mkdir(parents=True, exist_ok=True)
 
     tpl = Template(template_file.read_text())
 
-    target_file.write_text(tpl.render(config=config))
+    target_file.write_text(
+        tpl.render(config=config, image_path="../figures/whitepapers")
+    )
 
     for whp in config.whitepapers:
         shutil.copyfile(
             config_file.parent / f"{whp.slug}.png",
-            docs_path / f"{whp.slug}.png",
+            f"{whp.slug}.png",
         )
 
 

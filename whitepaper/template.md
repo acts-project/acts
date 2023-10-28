@@ -9,23 +9,27 @@ in ACTS.
 
 {% for whp in config.whitepapers %}
 
+({{ whp.slug }})=
 ## {{ whp.metadata.title }} ([GitHub]({{ whp.repository }}))
 
+:::{image} {{ image_path }}/{{ whp.slug }}.png
+:width: 200px
+:align: right
+:::
 
-:::{admonition} Authors
-:class: note
+### Authors
 {% for author in whp.metadata.authors %}
 - {{ author }}
 {% endfor %}
-:::
 
-```{image} {{ whp.slug }}.png
-:width: 200px
-:align: right
-```
 
+### Description
 {{ whp.metadata.description }}
 
-<span style="clear:both;"></span>
+<span style="display:block;clear:both;"></span>
+
+{% if not loop.last %}
+---
+{% endif %}
 
 {% endfor %}

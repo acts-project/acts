@@ -4,4 +4,4 @@ repository = "https://github.com/acts-project/whitepaper-template"
 [whitepapers.metadata]
 authors = [ "First Author", "Second Author",]
 title = "A whitepaper about a topic"
-description = "This is a whitepaper example. It contains a number of example\npatterns, layouts etc."
+description = "This is a whitepaper example. It contains a number of example\n\tpatterns, layouts etc.\n    Simple math like $a + b = c$ or even $\\sqrt{s} = 14$ TeV is supported!"
