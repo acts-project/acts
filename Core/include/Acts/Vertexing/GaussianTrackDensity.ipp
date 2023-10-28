@@ -19,7 +19,7 @@ Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
     const std::function<BoundTrackParameters(input_track_t)>& extractParameters)
     const {
   auto result = addTracks(state, trackList, extractParameters);
-  if (not result.ok()) {
+  if (!result.ok()) {
     return std::make_pair(0., 0.);
   }
 

@@ -76,7 +76,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     getMaxZTPositionAndWidth(DensityMap& densityMap) const {
   // Get z value where the density is the highest
   auto maxZTRes = getMaxZTPosition(densityMap);
-  if (not maxZTRes.ok()) {
+  if (!maxZTRes.ok()) {
     return maxZTRes.error();
   }
   ZTPosition maxZT = *maxZTRes;
