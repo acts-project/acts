@@ -20,6 +20,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
+#include <cstddef>
 #include <iomanip>
 #include <iterator>
 #include <sstream>
@@ -439,6 +440,7 @@ class Navigator {
 
     // Navigator target always resets the current surface
     state.navigation.currentSurface = nullptr;
+    state.navigation.currentSurfaces.clear();
   }
 
   /// @brief Navigator post step call, will be called in two modes
@@ -480,6 +482,12 @@ class Navigator {
     // Try finding status of surfaces
     if (surfaceStatus(state, stepper, state.navigation.navSurfaces,
                       state.navigation.navSurfaceIndex)) {
+      for (std::size_t i = state.navigation.navSurfaceIndex + 1;
+           i < state.navigation.navSurfaces.size(); ++i) {
+        surfaceStatus(state, stepper, state.navigation.navSurfaces, i);
+      }
+      state.navigation.currentSurface =
+          state.navigation.currentSurfaces.front();
       ACTS_VERBOSE(volInfo(state) << "Post step: in surface handling.");
       if (state.navigation.currentSurface) {
         ACTS_VERBOSE(volInfo(state)
@@ -608,28 +616,22 @@ class Navigator {
     if (navSurfaces.empty() or navIndex == navSurfaces.size()) {
       return false;
     }
-    state.navigation.currentSurfaces.clear();
-    for (std::size_t i = navIndex; i < navSurfaces.size(); ++i) {
-      // Take the current surface
-      auto surface = navSurfaces.at(i).representation();
-      // Check if we are at a surface
-      // If we are on the surface pointed at by the index, we can make
-      // it the current one to pass it to the other actors
-      auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, *surface, state.options.direction,
-          m_cfg.boundaryCheckSurfaceTargeting, state.options.targetTolerance,
-          logger());
-      if (surfaceStatus == Intersection3D::Status::onSurface) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Status Surface successfully hit, storing it.");
-        // Set in navigation state, so actors and aborters can access it
-        state.navigation.currentSurfaces.push_back(surface);
-      }
-    }
-    if (!state.navigation.currentSurfaces.empty()) {
-      state.navigation.currentSurface =
-          state.navigation.currentSurfaces.front();
+    // Take the current surface
+    auto surface = navSurfaces.at(navIndex).representation();
+    // Check if we are at a surface
+    // If we are on the surface pointed at by the index, we can make
+    // it the current one to pass it to the other actors
+    auto surfaceStatus = stepper.updateSurfaceStatus(
+        state.stepping, *surface, state.options.direction,
+        m_cfg.boundaryCheckSurfaceTargeting, state.options.targetTolerance,
+        logger());
+    if (surfaceStatus == Intersection3D::Status::onSurface) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Status Surface successfully hit, storing it.");
+      // Set in navigation state, so actors and aborters can access it
+      state.navigation.currentSurface = surface;
       if (state.navigation.currentSurface) {
+        state.navigation.currentSurfaces.push_back(surface);
         ACTS_VERBOSE(volInfo(state)
                      << "Current surface set to surface "
                      << state.navigation.currentSurface->geometryId());
