@@ -486,8 +486,8 @@ class Navigator {
            i < state.navigation.navSurfaces.size(); ++i) {
         surfaceStatus(state, stepper, state.navigation.navSurfaces, i);
       }
-      state.navigation.currentSurface =
-          state.navigation.currentSurfaces.front();
+      surfaceStatus(state, stepper, state.navigation.navSurfaces,
+                    state.navigation.navSurfaceIndex);
       ACTS_VERBOSE(volInfo(state) << "Post step: in surface handling.");
       if (state.navigation.currentSurface) {
         ACTS_VERBOSE(volInfo(state)
