@@ -765,7 +765,7 @@ class Gx2Fitter {
     }
 
     if (!aMatrixIsInvertible && gx2fOptions.nUpdateMax > 0) {
-      ACTS_ERROR("aMatrix is not invertible. This should not happen ever.");
+      ACTS_ERROR("aMatrix is not invertible.");
       return Experimental::GlobalChiSquareFitterError::AIsNotInvertible;
     }
 
