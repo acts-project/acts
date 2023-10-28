@@ -29,10 +29,10 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection =
-      perigeeSurface
-          .intersect(gctx, params.position(gctx), params.direction(), false)
-          .closest();
+  auto intersection = perigeeSurface
+                          .intersect(gctx, params.position(gctx),
+                                     params.direction(), BoundaryCheck(false))
+                          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above.
@@ -116,10 +116,10 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
         paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
-    intersection =
-        perigeeSurface
-            .intersect(gctx, paramVecCopy.template head<3>(), wiggledDir, false)
-            .closest();
+    intersection = perigeeSurface
+                       .intersect(gctx, paramVecCopy.template head<3>(),
+                                  wiggledDir, BoundaryCheck(false))
+                       .closest();
     pOptions.direction =
         Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
