@@ -25,6 +25,7 @@ struct MockTrack {
   double m_time;
   double m_nMeasurements;
 
+  bool hasReferenceSurface() const { return true; }
   double theta() const { return m_theta; }
   double phi() const { return m_phi; }
   double transverseMomentum() const { return m_pt; }

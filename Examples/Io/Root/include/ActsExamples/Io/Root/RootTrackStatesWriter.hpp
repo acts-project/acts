@@ -34,29 +34,27 @@ class Barcode;
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// @class RootTrajectoryStatesWriter
+/// @class RootTrackStatesWriter
 ///
-/// Write out a trajectory (i.e. a vector of
-/// trackState at the moment) into a TTree
-///
-/// Safe to use from multiple writer threads - uses a std::mutex lock.
-///
-/// Each entry in the TTree corresponds to one trajectory for optimum
-/// writing speed. The event number is part of the written data.
-///
-/// A common file can be provided for the writer to attach his TTree,
-/// this is done by setting the Config::rootFile pointer to an existing
-/// file
+/// Write out tracks (i.e. a vector of trackState at the moment) into a TTree
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
+///
+/// Each entry in the TTree corresponds to one track for optimum writing speed.
+/// The event number is part of the written data.
+///
+/// A common file can be provided for the writer to attach his TTree, this is
+/// done by setting the Config::rootFile pointer to an existing file.
+///
+/// Safe to use from multiple writer threads - uses a std::mutex lock.
+class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
  public:
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
 
   struct Config {
-    /// Input (fitted) trajectories collection
-    std::string inputTrajectories;
+    /// Input (fitted) tracks collection
+    std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input collection of simulated hits.
@@ -77,9 +75,9 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   ///
   /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrajectoryStatesWriter(const Config& config, Acts::Logging::Level level);
+  RootTrackStatesWriter(const Config& config, Acts::Logging::Level level);
 
-  ~RootTrajectoryStatesWriter() override;
+  ~RootTrackStatesWriter() override;
 
   /// End-of-run hook
   ProcessCode finalize() override;
@@ -90,9 +88,9 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
-  /// @param [in] trajectories are what to be written out
+  /// @param [in] tracks are what to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) override;
+                     const ConstTrackContainer& tracks) override;
 
  private:
   Config m_cfg;  ///< The config class
@@ -108,8 +106,7 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
   uint32_t m_eventNr{0};         ///< the event number
-  uint32_t m_multiTrajNr{0};     ///< the multi-trajectory number
-  unsigned int m_subTrajNr{0};   ///< the multi-trajectory sub-trajectory number
+  uint32_t m_trackNr{0};         ///< the track number
 
   std::vector<float> m_t_x;  ///< Global truth hit position x
   std::vector<float> m_t_y;  ///< Global truth hit position y
