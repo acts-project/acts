@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,42 +15,40 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <limits>
 #include <string>
 
 namespace ActsExamples {
+
 struct AlgorithmContext;
 
-/// Select tracks by applying some selection cuts.
-class TrackModifier final : public IAlgorithm {
+class TracksToParameters final : public IAlgorithm {
  public:
   struct Config {
-    /// Input track collection.
-    std::string inputTracks;
-    /// Output track collection.
-    std::string outputTracks;
-
-    /// When turned on, only keep the diagonal of the cov matrix.
-    bool dropCovariance{false};
-    /// Scale cov matrix;
-    double covScale{1};
-    /// Remove all time components
-    bool killTime{false};
+    std::string inputTracks = "tracks";
+    std::string outputTrackParameters = "parameters-from-tracks";
   };
 
-  TrackModifier(const Config& config, Acts::Logging::Level level);
+  /// Construct the algorithm.
+  ///
+  /// @param cfg is the algorithm configuration
+  /// @param lvl is the logging level
+  TracksToParameters(Config cfg, Acts::Logging::Level lvl);
 
+  /// Run the algorithm.
+  ///
+  /// @param ctx is the algorithm context with event information
+  /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
-  /// Get readonly access to the config parameters
+  /// Const access to the config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-
-  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 };
 
 }  // namespace ActsExamples
