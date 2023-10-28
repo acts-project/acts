@@ -737,33 +737,39 @@ class Gx2Fitter {
 
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
-    bool detAisZero = true;
+    bool aMatrixIsInvertible = false;
     if (gx2fOptions.zeroField) {
       constexpr size_t reducedMatrixSize = 4;
-      if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-              .determinant() != 0) {
-        detAisZero = false;
+      Eigen::FullPivLU<
+          Eigen::Matrix<double, reducedMatrixSize, reducedMatrixSize>>
+          aMatrixReduced(
+              aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>());
+      if (aMatrixReduced.isInvertible()) {
+        aMatrixIsInvertible = true;
         fullCovariancePredicted
             .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-                .inverse();
+            aMatrixReduced.inverse();
       }
     } else {
       constexpr size_t reducedMatrixSize = 5;
-      if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-              .determinant() != 0) {
-        detAisZero = false;
+      Eigen::FullPivLU<
+          Eigen::Matrix<double, reducedMatrixSize, reducedMatrixSize>>
+          aMatrixReduced(
+              aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>());
+      if (aMatrixReduced.isInvertible()) {
+        aMatrixIsInvertible = true;
         fullCovariancePredicted
             .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-                .inverse();
+            aMatrixReduced.inverse();
       }
     }
 
-    if (detAisZero && gx2fOptions.nUpdateMax > 0) {
-      ACTS_ERROR("det(a) == 0. This should not happen ever.");
-      return Experimental::GlobalChiSquareFitterError::DetAIsZero;
+    if (!aMatrixIsInvertible && gx2fOptions.nUpdateMax > 0) {
+      ACTS_ERROR("aMatrix is not invertible. This should not happen ever.");
+      return Experimental::GlobalChiSquareFitterError::AIsNotInvertible;
     }
+
+    ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
 
     // Prepare track for return
     auto track = trackContainer.getTrack(trackContainer.addTrack());
