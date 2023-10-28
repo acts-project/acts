@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 
 #include <array>
 #include <memory>
@@ -56,7 +56,9 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    py::class_<Acts::DD4hepFieldAdapter, Acts::MagneticFieldProvider, std::shared_ptr<Acts::DD4hepFieldAdapter>>(m, "DD4hepFieldAdapter");
+    py::class_<Acts::DD4hepFieldAdapter, Acts::MagneticFieldProvider,
+               std::shared_ptr<Acts::DD4hepFieldAdapter>>(m,
+                                                          "DD4hepFieldAdapter");
   }
 
   {
