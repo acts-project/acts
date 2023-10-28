@@ -194,9 +194,7 @@ void computePosteriorWeights(
             .data(),
         state.predictedCovariance(), state.projector(), state.calibratedSize());
 
-    // MARK: fpeMaskBegin(FLTUND, 1, #2589)
-    const auto factor = std::sqrt(1. / detR) * std::exp(-0.5 * chi2);
-    // MARK: fpeMaskEnd(FLTUND)
+    const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 
     // If something is not finite here, just leave the weight as it is
     if (std::isfinite(factor)) {
