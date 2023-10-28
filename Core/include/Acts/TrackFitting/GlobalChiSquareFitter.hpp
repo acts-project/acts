@@ -740,18 +740,18 @@ class Gx2Fitter {
     bool aMatrixIsInvertible = false;
     if (gx2fOptions.zeroField) {
       constexpr size_t reducedMatrixSize = 4;
-      Eigen::FullPivLU<
-          Eigen::Matrix<double, reducedMatrixSize, reducedMatrixSize>>
-          aMatrixReduced(
-              aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>());
-      if (aMatrixReduced.isInvertible()) {
+
+      auto safeReducedCovariance = safeInverse(
+          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+      if (safeReducedCovariance) {
         aMatrixIsInvertible = true;
         fullCovariancePredicted
             .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-            aMatrixReduced.inverse();
+            *safeReducedCovariance;
       }
     } else {
       constexpr size_t reducedMatrixSize = 5;
+
       Eigen::FullPivLU<
           Eigen::Matrix<double, reducedMatrixSize, reducedMatrixSize>>
           aMatrixReduced(
