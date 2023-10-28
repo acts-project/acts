@@ -19,11 +19,11 @@ Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
   return SurfaceBounds::eTrapezoid;
 }
 
-bool Acts::TrapezoidBounds::inside(const Acts::Vector2& extPosition,
+bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
                                    const Acts::BoundaryCheck& bcheck) const {
-  const Acts::Vector2 lposition = m_rotMat * extPosition;
-  const double x = lposition[0];
-  const double y = lposition[1];
+  const Acts::Vector2 extPosition = m_rotMat * lposition;
+  const double x = extPosition[0];
+  const double y = extPosition[1];
 
   const double hlY = get(TrapezoidBounds::eHalfLengthY);
   const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
@@ -71,9 +71,9 @@ const Acts::RectangleBounds& Acts::TrapezoidBounds::boundingBox() const {
 std::ostream& Acts::TrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY) = "
+  sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
      << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
-     << get(eHalfLengthY) << ")";
+     << get(eHalfLengthY) << ", " << get(eRotationAngle) ")";
   sl << std::setprecision(-1);
   return sl;
 }
