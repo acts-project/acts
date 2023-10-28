@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
@@ -38,8 +39,8 @@ class CsvTrackParameterWriter final : public IWriter {
   struct Config {
     /// Optional. Input track parameters collection
     std::string inputTrackParameters;
-    /// Optional. Input trajectories container.
-    std::string inputTrajectories;
+    /// Optional. Input track container.
+    std::string inputTracks;
     /// Where to place output files
     std::string outputDir;
     /// Input filename stem.
@@ -72,10 +73,9 @@ class CsvTrackParameterWriter final : public IWriter {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
 };
 
 }  // namespace ActsExamples
