@@ -9,7 +9,6 @@ from acts.examples.simulation import (
     addFatras,
     addDigitization,
 )
-
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
@@ -34,57 +33,10 @@ setup = makeSetup()
 
 
 with tempfile.TemporaryDirectory() as temp:
-    fpeMasks = acts.examples.Sequencer.FpeMask.fromFile(
-        Path(__file__).parent.parent / "fpe_masks.yml"
-    ) + [
-        acts.examples.Sequencer.FpeMask(
-            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
-            (172, 173),
-            acts.FpeType.FLTINV,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
-            (235, 236),
-            acts.FpeType.FLTINV,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
-            (235, 236),
-            acts.FpeType.FLTOVF,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Examples/Io/Root/src/RootTrajectorySummaryWriter.cpp",
-            (371, 372),
-            acts.FpeType.FLTINV,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Core/src/Utilities/AnnealingUtility.cpp",
-            (38, 39),
-            acts.FpeType.FLTUND,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp",
-            (110, 111),
-            acts.FpeType.FLTINV,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Fatras/include/ActsFatras/Kernel/Simulation.hpp",
-            (96, 97),
-            acts.FpeType.FLTOVF,
-            1,
-        ),
-    ]
     s = acts.examples.Sequencer(
         events=3,
         numThreads=-1,
         logLevel=acts.logging.INFO,
-        fpeMasks=fpeMasks,
     )
 
     tp = Path(temp)
@@ -160,12 +112,22 @@ with tempfile.TemporaryDirectory() as temp:
         outputDirRoot=tp,
     )
 
+    s.addAlgorithm(
+        acts.examples.TracksToParameters(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTrackParameters="trackParameters",
+        )
+    )
+
     addVertexFitting(
         s,
         setup.field,
-        seeder=acts.VertexSeedFinder.GaussianSeeder,
+        tracks="tracks",
+        trackParameters="trackParameters",
         outputProtoVertices="amvf_protovertices",
         outputVertices="amvf_fittedVertices",
+        seeder=acts.VertexSeedFinder.GaussianSeeder,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf",
     )
@@ -173,9 +135,11 @@ with tempfile.TemporaryDirectory() as temp:
     addVertexFitting(
         s,
         setup.field,
-        seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+        tracks="tracks",
+        trackParameters="trackParameters",
         outputProtoVertices="amvf_gridseeder_protovertices",
         outputVertices="amvf_gridseeder_fittedVertices",
+        seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gridseeder",
     )

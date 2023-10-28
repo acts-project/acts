@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
@@ -616,6 +617,14 @@ class TrackProxy {
   /// @return the track index
   IndexType index() const {
     return m_index;
+  }
+
+  /// Return the track parameters at the reference surface
+  /// @note The parameters are created on the fly
+  /// @return the track parameters
+  BoundTrackParameters createParametersAtReference() const {
+    return BoundTrackParameters(referenceSurface().getSharedPtr(), parameters(),
+                                covariance(), particleHypothesis());
   }
 
   /// Return a reference to the track container backend, mutable version.

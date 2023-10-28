@@ -470,9 +470,6 @@ struct GaussianSumFitter {
 
     calculateTrackQuantities(track);
 
-    track.nMeasurements() = measurementStatesFinal;
-    track.nHoles() = fwdGsfResult.measurementHoles;
-
     return track;
   }
 };
