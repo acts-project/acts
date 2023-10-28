@@ -44,6 +44,10 @@ template <typename propagator_t, typename interactions_t,
 struct SingleParticleSimulation {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
+  /// Absolute maximum step size
+  double maxStepSize = std::numeric_limits<double>::max();
+  /// Absolute maximum path length
+  double pathLimit = std::numeric_limits<double>::max();
   /// Decay module.
   decay_t decay;
   /// Interaction list containing the simulated interactions.
@@ -83,6 +87,8 @@ struct SingleParticleSimulation {
 
     // Construct per-call options.
     PropagatorOptions options(geoCtx, magCtx);
+    options.maxStepSize = maxStepSize;
+    options.pathLimit = pathLimit;
     // setup the interactor as part of the propagator options
     auto &actor = options.actionList.template get<Actor>();
     actor.generator = &generator;

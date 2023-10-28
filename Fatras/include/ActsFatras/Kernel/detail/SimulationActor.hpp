@@ -10,6 +10,7 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -17,6 +18,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <limits>
 
 namespace ActsFatras {
@@ -84,11 +86,16 @@ struct SimulationActor {
             typename navigator_t>
   void operator()(propagator_state_t &state, stepper_t &stepper,
                   navigator_t &navigator, result_type &result,
-                  const Acts::Logger & /*logger*/) const {
+                  const Acts::Logger &logger) const {
     assert(generator and "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
     if (not result.isAlive) {
+      return;
+    }
+
+    if (Acts::EndOfWorldReached{}(state, stepper, navigator, logger)) {
+      result.isAlive = false;
       return;
     }
 
@@ -116,8 +123,9 @@ struct SimulationActor {
     }
 
     // decay check. needs to happen at every step, not just on surfaces.
-    if (result.properTimeLimit - result.particle.properTime() <
-        result.properTimeLimit * properTimeRelativeTolerance) {
+    if (std::isfinite(result.properTimeLimit) &&
+        (result.properTimeLimit - result.particle.properTime() <
+         result.properTimeLimit * properTimeRelativeTolerance)) {
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
         result.generatedParticles.emplace_back(std::move(descendant));
@@ -128,6 +136,7 @@ struct SimulationActor {
 
     // Regulate the step size
     if (std::isfinite(result.properTimeLimit)) {
+      assert(result.particle.mass() > 0.0 && "Particle must have mass");
       //    beta² = p²/E²
       //    gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m = E / m
       //     time = proper-time * gamma

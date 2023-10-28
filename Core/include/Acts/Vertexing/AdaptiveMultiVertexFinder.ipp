@@ -116,8 +116,10 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
         break;
       }
     }
+    // MARK: fpeMaskBegin(FLTUND, 1, #2590)
     bool keepVertex = isGoodVertex &&
                       keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
+    // MARK: fpeMaskEnd(FLTUND)
     ACTS_DEBUG("New vertex will be saved: " << keepVertex);
 
     // Delete vertex from allVertices list again if it's not kept
