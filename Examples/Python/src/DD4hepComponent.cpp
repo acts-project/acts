@@ -11,6 +11,7 @@
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 
 #include <array>
 #include <memory>
@@ -55,12 +56,17 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
+    py::class_<Acts::DD4hepFieldAdapter, Acts::MagneticFieldProvider, std::shared_ptr<Acts::DD4hepFieldAdapter>>(m, "DD4hepFieldAdapter");
+  }
+
+  {
     py::class_<DD4hep::DD4hepDetector, std::shared_ptr<DD4hep::DD4hepDetector>>(
         m, "DD4hepDetector")
         .def(py::init<>())
         .def("finalize",
              py::overload_cast<DD4hep::DD4hepGeometryService::Config,
                                std::shared_ptr<const Acts::IMaterialDecorator>>(
-                 &DD4hep::DD4hepDetector::finalize));
+                 &DD4hep::DD4hepDetector::finalize))
+        .def_property_readonly("field", &DD4hep::DD4hepDetector::field);
   }
 }
