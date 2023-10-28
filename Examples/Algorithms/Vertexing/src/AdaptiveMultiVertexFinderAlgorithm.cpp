@@ -118,6 +118,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   // retrieve input tracks and convert into the expected format
 
   const auto& inputTrackParameters = m_inputTrackParameters(ctx);
+  // TODO change this from pointers to tracks parameters to actual tracks
   auto inputTrackPointers =
       makeTrackParametersPointerContainer(inputTrackParameters);
 

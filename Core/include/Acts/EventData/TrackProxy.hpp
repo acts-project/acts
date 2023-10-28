@@ -622,7 +622,7 @@ class TrackProxy {
   /// Return the track parameters at the reference surface
   /// @note The parameters are created on the fly
   /// @return the track parameters
-  BoundTrackParameters boundParameters() const {
+  BoundTrackParameters createParametersAtReference() const {
     return BoundTrackParameters(referenceSurface().getSharedPtr(), parameters(),
                                 covariance(), particleHypothesis());
   }

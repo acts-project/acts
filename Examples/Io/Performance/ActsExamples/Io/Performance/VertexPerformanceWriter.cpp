@@ -270,7 +270,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           ACTS_ERROR("Track " << track.tipIndex()
                               << " has no reference surface");
         } else {
-          trackParameters.push_back(track.boundParameters());
+          trackParameters.push_back(track.createParametersAtReference());
         }
       }
 
@@ -336,7 +336,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           continue;
         }
 
-        trackParameters.push_back(track.boundParameters());
+        trackParameters.push_back(track.createParametersAtReference());
         const auto& majorityParticle = *it;
         associatedTruthParticles.push_back(majorityParticle);
       }

@@ -168,7 +168,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
                    << track.tipIndex());
       continue;
     }
-    Acts::BoundTrackParameters fittedParameters = track.boundParameters();
+    Acts::BoundTrackParameters fittedParameters =
+        track.createParametersAtReference();
     // Fill the trajectory summary info
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                 track.nTrackStates(), track.nMeasurements(),

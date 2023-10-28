@@ -60,7 +60,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
       if (!track.hasReferenceSurface()) {
         continue;
       }
-      auto trackParam = track.boundParameters();
+      auto trackParam = track.createParametersAtReference();
       inputTrackParameters.push_back(trackParam);
     }
   }

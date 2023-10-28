@@ -39,7 +39,7 @@ ProcessCode TracksToParameters::execute(const AlgorithmContext& ctx) const {
     if (!track.hasReferenceSurface()) {
       ACTS_ERROR("Track has no reference surface");
     } else {
-      trackParameters.push_back(track.boundParameters());
+      trackParameters.push_back(track.createParametersAtReference());
     }
   }
 

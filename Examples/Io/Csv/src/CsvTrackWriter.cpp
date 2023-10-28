@@ -94,7 +94,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     }
 
     // Requirement on the pT of the track
-    auto params = track.boundParameters();
+    auto params = track.createParametersAtReference();
     const auto momentum = params.momentum();
     const auto pT = Acts::VectorHelpers::perp(momentum);
     if (pT < m_cfg.ptMin) {
