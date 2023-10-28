@@ -439,6 +439,7 @@ class Navigator {
 
     // Navigator target always resets the current surface
     state.navigation.currentSurface = nullptr;
+    state.navigation.currentSurfaces.clear();
   }
 
   /// @brief Navigator post step call, will be called in two modes
@@ -609,7 +610,7 @@ class Navigator {
     if (navSurfaces.empty() or navIndex == navSurfaces.size()) {
       return false;
     }
-    for (std::size_t i = navSurfaces.size() - 1; i >= navIndex; --i) {
+    for (int i = navSurfaces.size() - 1; i >= (int)navIndex; --i) {
       // Take the current surface
       auto surface = navSurfaces.at(i).representation();
       // Check if we are at a surface
