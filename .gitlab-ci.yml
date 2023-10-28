@@ -50,6 +50,7 @@ clang_tidy:
         clang-tidy/clang-tidy.log 
         clang-tidy/clang-tidy.json 
         --exclude "*thirdparty*"
+        --exclude "*ActsPodioEdm*"
 
     # Check the combined report against the defined limits
     - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
@@ -61,12 +62,12 @@ build_exatrkx:
   stage: build
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
-    - docker
+    - large
 
   cache:
     key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
     paths:
-      - ${CI_PROJECT_DIR}/ccache_${CCACHE_KEY_SUFFIX}
+      - ${CI_PROJECT_DIR}/ccache
 
   artifacts:
     paths:
@@ -99,7 +100,10 @@ build_exatrkx:
       -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+
+    - ccache -z
     - cmake --build build -- -j3
+    - ccache -s
 
 test_exatrkx_unittests:
   stage: test
@@ -133,8 +137,6 @@ test_exatrkx_python:
 build_linux_ubuntu:
   stage: build
   image: ghcr.io/acts-project/ubuntu2204:v41
-  tags:
-    - docker
 
   cache:
     key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
@@ -187,8 +189,6 @@ linux_test_examples:
   stage: test
   image: ghcr.io/acts-project/ubuntu2204:v41
   needs: [build_linux_ubuntu]
-  tags:
-    - docker
 
   script:
     - apt-get update && apt-get install -y git-lfs
@@ -215,8 +215,6 @@ linux_physmon:
   stage: test
   image: ghcr.io/acts-project/ubuntu2204:v41
   needs: [build_linux_ubuntu]
-  tags:
-    - docker
 
   artifacts:
     when: always
@@ -255,8 +253,6 @@ linux_physmon:
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
 
   stage: build
-  tags:
-    - docker
 
   cache:
     key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
@@ -342,7 +338,6 @@ linux_ubuntu_2204_clang:
   image: ghcr.io/acts-project/${OS}-base:sha-ca76a1f2
   stage: build
   tags:
-    - docker
     - cvmfs
 
   variables:
