@@ -821,6 +821,7 @@ class MultiEigenStepperLoop
   /// Release the step-size for all components
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
+  /// @param [in] stype The step size type to be released
   void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
     for (auto& component : state.components) {
       SingleStepper::releaseStepSize(component.state, stype);
