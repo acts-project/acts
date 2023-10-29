@@ -35,7 +35,8 @@ class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
       MagneticFieldProvider::Cache& cache) const override;
 
  private:
-  double m_conversionFactor;
+  double m_fieldConversionFactor;
+  double m_lengthConversionFactor;
   std::unique_ptr<dd4hep::OverlayedField> m_field;
 };
 

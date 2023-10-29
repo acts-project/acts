@@ -22,7 +22,10 @@ namespace Acts {
 
 DD4hepFieldAdapter::DD4hepFieldAdapter(dd4hep::OverlayedField field)
     : m_field{std::make_unique<dd4hep::OverlayedField>(field)} {
-  m_conversionFactor = dd4hep::_toDouble("1/tesla") * Acts::UnitConstants::T;
+  m_fieldConversionFactor =
+      dd4hep::_toDouble("1/tesla") * Acts::UnitConstants::T;
+  m_lengthConversionFactor =
+      dd4hep::_toDouble("1*mm") / Acts::UnitConstants::mm;
 }
 
 MagneticFieldProvider::Cache DD4hepFieldAdapter::makeCache(
@@ -32,12 +35,17 @@ MagneticFieldProvider::Cache DD4hepFieldAdapter::makeCache(
 
 Result<Vector3> DD4hepFieldAdapter::getField(
     const Vector3& position, MagneticFieldProvider::Cache& /*cache*/) const {
-  const auto direction = m_field->combinedMagnetic(
-      dd4hep::Position(position.x(), position.y(), position.z()));
+  dd4hep::Position dd4hepPosition{position.x(), position.y(), position.z()};
+
+  // ACTS mm -> dd4hep mm
+  dd4hepPosition *= m_lengthConversionFactor;
+
+  const auto direction = m_field->combinedMagnetic(dd4hepPosition);
 
   Vector3 result{direction.x(), direction.y(), direction.z()};
 
-  result *= m_conversionFactor;
+  // dd4hep tesla -> ACTS tesla
+  result *= m_fieldConversionFactor;
 
   return Result<Vector3>::success(result);
 }
