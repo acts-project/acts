@@ -119,11 +119,10 @@ Acts::Layer::compatibleSurfaces(
     return sIntersections;
   }
 
-  // (0) End surface check
-  // @todo: - we might be able to skip this by use of options.pathLimit
-  // check if you have to stop at the endSurface
-  double pathLimit = options.pathLimit;
   double overstepLimit = options.overstepLimit;
+
+  // (0) End surface check
+  // check if you have to stop at the endSurface
   if (options.endObject != nullptr) {
     // intersect the end surface
     // - it is the final one don't use the boundary check at all
@@ -135,19 +134,9 @@ Acts::Layer::compatibleSurfaces(
     // indicates wrong direction or faulty setup
     // -> do not return compatible surfaces since they may lead you on a wrong
     // navigation path
-    if (endInter) {
-      pathLimit = endInter.pathLength();
-    } else {
+    if (!endInter) {
       return sIntersections;
     }
-  } else {
-    // compatibleSurfaces() should only be called when on the layer,
-    // i.e. the maximum path limit is given by the layer thickness times
-    // path correction, we take a safety factor of 1.5
-    // -> this avoids punch through for cylinders
-    double pCorrection =
-        surfaceRepresentation().pathCorrection(gctx, position, direction);
-    pathLimit = 1.5 * thickness() * pCorrection;
   }
 
   // lemma 0 : accept the surface
@@ -187,9 +176,7 @@ Acts::Layer::compatibleSurfaces(
         sf.intersect(gctx, position, direction, boundaryCheck);
     for (const auto& sfi : sfmi.split()) {
       // check if intersection is valid and pathLimit has not been exceeded
-      if (sfi &&
-          detail::checkIntersection(sfi.intersection(), pathLimit,
-                                    overstepLimit, s_onSurfaceTolerance)) {
+      if (sfi && detail::checkIntersection(sfi.intersection(), overstepLimit)) {
         sIntersections.push_back(sfi);
       }
     }
@@ -271,18 +258,14 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
                    (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
                     (surfaceRepresentation().surfaceMaterial() != nullptr));
 
-  // The Limits: current path & overstepping
-  double pLimit = options.pathLimit;
+  // The Limits: current overstepping
   double oLimit = options.overstepLimit;
-  // TODO this should be configurable
-  double tolerance = s_onSurfaceTolerance;
 
   // Helper function to find valid intersection
   auto findValidIntersection =
       [&](const SurfaceMultiIntersection& sfmi) -> SurfaceIntersection {
     for (const auto& sfi : sfmi.split()) {
-      if (sfi && detail::checkIntersection(sfi.intersection(), pLimit, oLimit,
-                                           tolerance)) {
+      if (sfi && detail::checkIntersection(sfi.intersection(), oLimit)) {
         return sfi;
       }
     }
@@ -294,8 +277,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   // Approach descriptor present and resolving is necessary
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
-        gctx, position, direction, options.boundaryCheck, pLimit, oLimit,
-        tolerance);
+        gctx, position, direction, options.boundaryCheck, oLimit);
     return aSurface;
   }
 

@@ -50,14 +50,12 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     return Intersection3D::Status::onSurface;
   }
 
-  // Path and overstep limit checking
-  const double pLimit = state.stepSize.value(ConstrainedStep::aborter);
+  // Overstep limit checking
   const double oLimit = stepper.overstepLimit(state);
 
   for (const auto& intersection : sIntersection.split()) {
-    if (intersection &&
-        detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
-                                  surfaceTolerance, logger)) {
+    if (intersection && detail::checkIntersection(intersection.intersection(),
+                                                  oLimit, logger)) {
       ACTS_VERBOSE("Surface is reachable");
       stepper.setStepSize(state, intersection.pathLength());
       return Intersection3D::Status::reachable;

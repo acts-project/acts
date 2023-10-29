@@ -285,24 +285,19 @@ namespace detail {
 /// prevent the generation of logging code
 ///
 /// @param intersection The intersection to check
-/// @param pLimit The path-limit
 /// @param oLimit The overstep-limit
-/// @param tolerance The tolerance that is applied to the path-limit criterion
 /// @param logger A optionally supplied logger which prints out a lot of infos
 /// at VERBOSE level
 template <typename intersection_t, typename logger_t = std::false_type>
-bool checkIntersection(const intersection_t& intersection, double pLimit,
-                       double oLimit, double tolerance,
+bool checkIntersection(const intersection_t& intersection, double oLimit,
                        const Logger& logger = getDummyLogger()) {
   const double cLimit = intersection.pathLength();
 
-  ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                              << ", " << cLimit);
+  ACTS_VERBOSE(" -> oLimit, cLimit: " << oLimit << ", " << cLimit);
 
   const bool coCriterion = cLimit > oLimit;
-  const bool cpCriterion = std::abs(cLimit) < std::abs(pLimit) + tolerance;
 
-  const bool accept = coCriterion and cpCriterion;
+  const bool accept = coCriterion;
 
   if (accept) {
     ACTS_VERBOSE("Intersection is WITHIN limit");
@@ -311,12 +306,6 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
     if (not coCriterion) {
       ACTS_VERBOSE("- intersection path length "
                    << cLimit << " <= overstep limit " << oLimit);
-    }
-    if (not cpCriterion) {
-      ACTS_VERBOSE("- intersection path length "
-                   << std::abs(cLimit) << " is over the path limit "
-                   << (std::abs(pLimit) + tolerance)
-                   << " (including tolerance of " << tolerance << ")");
     }
   }
 

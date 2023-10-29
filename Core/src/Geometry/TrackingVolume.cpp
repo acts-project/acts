@@ -472,8 +472,7 @@ Acts::TrackingVolume::compatibleBoundaries(
   auto excludeObject = options.startObject;
   boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
-  // The Limits: current, path & overstepping
-  double pLimit = options.pathLimit;
+  // The Limits: current overstepping
   double oLimit = 0;
 
   // Helper function to test intersection
@@ -509,8 +508,7 @@ Acts::TrackingVolume::compatibleBoundaries(
                    << bSurface->surfaceRepresentation().geometryId());
       if (detail::checkIntersection<decltype(sIntersection.intersection()),
                                     decltype(logger)>(
-              sIntersection.intersection(), pLimit, oLimit,
-              s_onSurfaceTolerance, logger)) {
+              sIntersection.intersection(), oLimit, logger)) {
         return BoundaryIntersection(sIntersection.intersection(), bSurface,
                                     sIntersection.object(),
                                     sIntersection.index());
@@ -671,7 +669,6 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
   sIntersections.reserve(20);  // arbitrary
 
   // The limits for this navigation step
-  double pLimit = options.pathLimit;
   double oLimit = options.overstepLimit;
 
   if (m_bvhTop == nullptr) {
@@ -697,7 +694,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
       const Surface& srf = bs->surfaceRepresentation();
       auto sfmi = srf.intersect(gctx, position, direction, false);
       for (const auto& sfi : sfmi.split()) {
-        if (sfi and sfi.pathLength() > oLimit and sfi.pathLength() <= pLimit) {
+        if (sfi and sfi.pathLength() > oLimit) {
           sIntersections.push_back(sfi);
         }
       }
