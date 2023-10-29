@@ -76,8 +76,8 @@ struct PathLimitReached {
       navigator.targetReached(state.navigation, true);
       return true;
     }
-    stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
-                        false);
+    stepper.updateStepSize(state.stepping, distance, ConstrainedStep::aborter,
+                           false);
     ACTS_VERBOSE("Target: 0 | "
                  << "Target stepSize (path limit) updated to "
                  << stepper.outputStepSize(state.stepping));
@@ -183,8 +183,8 @@ struct SurfaceReached {
       if (intersection &&
           detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
                                     tolerance, logger)) {
-        stepper.setStepSize(state.stepping, intersection.pathLength(),
-                            ConstrainedStep::aborter, false);
+        stepper.updateStepSize(state.stepping, intersection.pathLength(),
+                               ConstrainedStep::aborter, false);
         break;
       }
     }

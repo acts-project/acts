@@ -59,7 +59,8 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
         detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
                                   surfaceTolerance, logger)) {
       ACTS_VERBOSE("Surface is reachable");
-      stepper.setStepSize(state, intersection.pathLength());
+      stepper.updateStepSize(state, intersection.pathLength(),
+                             ConstrainedStep::actor);
       return Intersection3D::Status::reachable;
     }
   }

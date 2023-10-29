@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 
@@ -55,6 +56,9 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
         // pass error to caller
         return res.error();
       }
+      // release actor and aborter constrains after step was performed
+      m_stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+      m_stepper.releaseStepSize(state.stepping, ConstrainedStep::aborter);
       // Post-stepping:
       // navigator post step call - action list - aborter list
       m_navigator.postStep(state, m_stepper);

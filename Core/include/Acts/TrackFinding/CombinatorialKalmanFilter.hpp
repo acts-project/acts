@@ -393,7 +393,7 @@ class CombinatorialKalmanFilter {
           targetReached(state, stepper, navigator, *filterTargetSurface,
                         logger())) {
         navigator.navigationBreak(state.navigation, true);
-        stepper.releaseStepSize(state.stepping);
+        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       }
 
       // Update:
