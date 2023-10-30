@@ -64,17 +64,20 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const ActsMatrix<4, 3> crossCovVP =
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * wMat;
 
-  KalmanVertexUpdater::MatrixCache matrixCache;
+  // Set up cache where entire content is set to 0
+  KalmanVertexUpdater::Cache cache;
 
-  // Now determine the smoothed chi2 of the track in the following
-  KalmanVertexUpdater::updatePosition<input_track_t>(
-      vtx, linTrack, track.trackWeight, -1, matrixCache);
+  // Calculate update when removing track and save result in cache. Note that
+  // the track is not really removed, this is just a way of computing a
+  // symmetric chi2 (see reference).
+  KalmanVertexUpdater::calculateUpdate<input_track_t>(
+      vtx, linTrack, track.trackWeight, -1, cache);
 
   // Corresponding weight matrix
-  const SquareMatrix4& vtxWeight = matrixCache.newVertexWeight;
+  const SquareMatrix4& vtxWeight = cache.newVertexWeight;
 
   // Difference in position
-  Vector4 posDiff = vtxPos - matrixCache.newVertexPos;
+  Vector4 posDiff = vtxPos - cache.newVertexPos;
 
   // Get smoothed params
   BoundVector smoothedParams =

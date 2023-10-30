@@ -22,9 +22,11 @@ void Acts::KalmanVertexUpdater::detail::update(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
   const double& trackWeight = trk.trackWeight;
 
-  MatrixCache matrixCache;
+  // Set up cache where entire content is set to 0
+  Cache cache;
 
-  updatePosition(vtx, trk.linearizedState, trackWeight, sign, matrixCache);
+  // Calculate update and save result in cache
+  calculateUpdate(vtx, trk.linearizedState, trackWeight, sign, cache);
 
   // Get fit quality parameters wrt to old vertex
   std::pair fitQuality = vtx.fitQuality();
@@ -32,19 +34,19 @@ void Acts::KalmanVertexUpdater::detail::update(
   double ndf = fitQuality.second;
 
   // Chi2 wrt to track parameters
-  double trkChi2 = detail::trackParametersChi2<input_track_t>(
-      trk.linearizedState, matrixCache);
+  double trkChi2 =
+      detail::trackParametersChi2<input_track_t>(trk.linearizedState, cache);
 
   // Calculate new chi2
-  chi2 += sign * (detail::vertexPositionChi2<input_track_t>(vtx, matrixCache) +
+  chi2 += sign * (detail::vertexPositionChi2<input_track_t>(vtx, cache) +
                   trackWeight * trkChi2);
 
   // Calculate ndf
   ndf += sign * trackWeight * 2.;
 
   // Updating the vertex
-  vtx.setFullPosition(matrixCache.newVertexPos);
-  vtx.setFullCovariance(matrixCache.newVertexCov);
+  vtx.setFullPosition(cache.newVertexPos);
+  vtx.setFullCovariance(cache.newVertexCov);
   vtx.setFitQuality(chi2, ndf);
 
   if (sign == 1) {
@@ -52,7 +54,7 @@ void Acts::KalmanVertexUpdater::detail::update(
     trk.chi2Track = trkChi2;
     trk.ndf = 2 * trackWeight;
   }
-  // Remove trk from current vertex
+  // Remove trk from current vertex by setting its weight to 0
   else if (sign == -1) {
     trk.trackWeight = 0;
   } else {
@@ -62,10 +64,10 @@ void Acts::KalmanVertexUpdater::detail::update(
 }
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdater::updatePosition(
+void Acts::KalmanVertexUpdater::calculateUpdate(
     const Acts::Vertex<input_track_t>& vtx,
     const Acts::LinearizedTrack& linTrack, const double& trackWeight, int sign,
-    MatrixCache& matrixCache) {
+    Cache& cache) {
   // Retrieve variables from the track linearization. The comments indicate the
   // corresponding symbol used in the reference.
   // A_k
@@ -81,43 +83,43 @@ void Acts::KalmanVertexUpdater::updatePosition(
 
   // Retrieve current position of the vertex and its current weight matrix
   const Vector4& oldVtxPos = vtx.fullPosition();
-  matrixCache.oldVertexWeight = (vtx.fullCovariance()).inverse();
+  cache.oldVertexWeight = (vtx.fullCovariance()).inverse();
 
   // W_k
-  matrixCache.wMat = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
+  cache.wMat = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   // G_k^B = G_k - G_k*B_k*W_k*B_k^(T)*G_k
   BoundSquareMatrix gMat =
-      trkParamWeight - trkParamWeight * momJac * matrixCache.wMat *
+      trkParamWeight - trkParamWeight * momJac * cache.wMat *
                            momJac.transpose() * trkParamWeight;
 
   // C_k^-1
   // TODO should the trackWeight not be multiplied into trkParamWeight?
-  matrixCache.newVertexWeight =
-      matrixCache.oldVertexWeight +
-      sign * trackWeight * posJac.transpose() * gMat * posJac;
+  cache.newVertexWeight = cache.oldVertexWeight + sign * trackWeight *
+                                                      posJac.transpose() *
+                                                      gMat * posJac;
   // C_k
-  matrixCache.newVertexCov = matrixCache.newVertexWeight.inverse();
+  cache.newVertexCov = cache.newVertexWeight.inverse();
 
   // New vertex position
-  matrixCache.newVertexPos =
-      matrixCache.newVertexCov * (matrixCache.oldVertexWeight * oldVtxPos +
-                                  sign * trackWeight * posJac.transpose() *
-                                      gMat * (trkParams - constTerm));
+  cache.newVertexPos =
+      cache.newVertexCov * (cache.oldVertexWeight * oldVtxPos +
+                            sign * trackWeight * posJac.transpose() * gMat *
+                                (trkParams - constTerm));
 }
 
 template <typename input_track_t>
 double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
-    const Vertex<input_track_t>& oldVtx, const MatrixCache& matrixCache) {
-  Vector4 posDiff = matrixCache.newVertexPos - oldVtx.fullPosition();
+    const Vertex<input_track_t>& oldVtx, const Cache& cache) {
+  Vector4 posDiff = cache.newVertexPos - oldVtx.fullPosition();
 
   // Calculate and return corresponding chi2
-  return posDiff.transpose() * (matrixCache.oldVertexWeight * posDiff);
+  return posDiff.transpose() * (cache.oldVertexWeight * posDiff);
 }
 
 template <typename input_track_t>
 double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
-    const LinearizedTrack& linTrack, const MatrixCache& matrixCache) {
+    const LinearizedTrack& linTrack, const Cache& cache) {
   // Track properties
   const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
   const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
@@ -126,11 +128,10 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
   const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
   // A_k * \tilde{x_k}
-  const BoundVector posJacVtxPos = posJac * matrixCache.newVertexPos;
+  const BoundVector posJacVtxPos = posJac * cache.newVertexPos;
 
   // \tilde{q_k}
-  Vector3 newTrackMomentum = matrixCache.wMat * momJac.transpose() *
-                             trkParamWeight *
+  Vector3 newTrackMomentum = cache.wMat * momJac.transpose() * trkParamWeight *
                              (trkParams - constTerm - posJacVtxPos);
 
   // Updated linearized track parameters \tilde{p_k}

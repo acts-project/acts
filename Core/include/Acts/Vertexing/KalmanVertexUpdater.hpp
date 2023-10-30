@@ -23,7 +23,7 @@ namespace KalmanVertexUpdater {
 /// robust Algorithms Computer Physics Comm.: 96 (1996) 189, chapter 2.1
 
 /// Cache object to store matrix information
-struct MatrixCache {
+struct Cache {
   Vector4 newVertexPos = Vector4::Zero();
   SquareMatrix4 newVertexCov = SquareMatrix4::Zero();
   SquareMatrix4 newVertexWeight = SquareMatrix4::Zero();
@@ -44,43 +44,42 @@ template <typename input_track_t>
 void updateVertexWithTrack(Vertex<input_track_t>& vtx,
                            TrackAtVertex<input_track_t>& trk);
 
-/// @brief Updates vertex position
-///
-/// @param vtx Old vertex
+/// @brief Calculates updated vertex position and covariance when
+/// adding/removing linTrack and saves the results in cache
+/// @param vtx Vertex
 /// @param linTrack Linearized version of track to be added or removed
 /// @param trackWeight Track weight
 /// @param sign +1 (add track) or -1 (remove track)
 /// @note Tracks are removed during the smoothing procedure to compute
 /// the chi2 of the track wrt the updated vertex position
-/// @param[out] matrixCache A cache to store matrix information
+/// @param[out] cache A cache to store the results of this function
 template <typename input_track_t>
-void updatePosition(const Acts::Vertex<input_track_t>& vtx,
-                    const Acts::LinearizedTrack& linTrack,
-                    const double& trackWeight, int sign,
-                    MatrixCache& matrixCache);
+void calculateUpdate(const Acts::Vertex<input_track_t>& vtx,
+                     const Acts::LinearizedTrack& linTrack,
+                     const double& trackWeight, int sign, Cache& cache);
 
 namespace detail {
 
 /// @brief Takes old and new vtx and calculates position chi2
 ///
 /// @param oldVtx Old vertex
-/// @param matrixCache A cache to store matrix information
+/// @param cache Cache containing updated vertex position
 ///
 /// @return Chi2
 template <typename input_track_t>
 double vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
-                          const MatrixCache& matrixCache);
+                          const Cache& cache);
 
 /// @brief Calculates chi2 of refitted track parameters
 /// w.r.t. updated vertex
 ///
 /// @param linTrack Linearized version of track
-/// @param matrixCache A cache to store matrix information
+/// @param cache Cache containing some quantities needed in
+/// this function
 ///
 /// @return Chi2
 template <typename input_track_t>
-double trackParametersChi2(const LinearizedTrack& linTrack,
-                           const MatrixCache& matrixCache);
+double trackParametersChi2(const LinearizedTrack& linTrack, const Cache& cache);
 
 /// @brief Adds or removes (depending on `sign`) tracks from vertex
 /// and updates the vertex
