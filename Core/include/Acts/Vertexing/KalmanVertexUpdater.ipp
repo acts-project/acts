@@ -47,17 +47,17 @@ void Acts::KalmanVertexUpdater::detail::update(
   vtx.setFullCovariance(matrixCache.newVertexCov);
   vtx.setFitQuality(chi2, ndf);
 
-  // Updates track at vertex if already there
-  // by removing it first and adding new one.
-  // Otherwise just adds track to existing list of tracks at vertex
-  if (sign > 0) {
+  if (sign == 1) {
     // Update track
     trk.chi2Track = trkChi2;
     trk.ndf = 2 * trackWeight;
   }
   // Remove trk from current vertex
-  if (sign < 0) {
+  else if (sign == -1) {
     trk.trackWeight = 0;
+  } else {
+    throw std::invalid_argument(
+        "Sign for adding/removing track must be +1 (add) or -1 (remove).");
   }
 }
 
@@ -92,7 +92,7 @@ void Acts::KalmanVertexUpdater::updatePosition(
                            momJac.transpose() * trkParamWeight;
 
   // C_k^-1
-  // TODO should the trackWeight not be multiplied into G_k?
+  // TODO should the trackWeight not be multiplied into trkParamWeight?
   matrixCache.newVertexWeight =
       matrixCache.oldVertexWeight +
       sign * trackWeight * posJac.transpose() * gMat * posJac;

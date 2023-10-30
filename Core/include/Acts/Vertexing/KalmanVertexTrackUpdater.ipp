@@ -15,14 +15,13 @@
 template <typename input_track_t>
 void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
                                             const Vertex<input_track_t>& vtx) {
+  // Check if linearized state exists
+  if (!track.isLinearized) {
+    throw std::invalid_argument("TrackAtVertex object must be linearized.");
+  }
+
   // Get the linearized track
   const LinearizedTrack& linTrack = track.linearizedState;
-
-  // Check if linearized state exists
-  if (linTrack.covarianceAtPCA.determinant() == 0.) {
-    // Track has no linearized state, returning w/o update
-    return;
-  }
 
   // Retrieve variables from the track linearization. The comments indicate the
   // corresponding symbol used in the reference.

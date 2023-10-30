@@ -50,6 +50,8 @@ void updateVertexWithTrack(Vertex<input_track_t>& vtx,
 /// @param linTrack Linearized version of track to be added or removed
 /// @param trackWeight Track weight
 /// @param sign +1 (add track) or -1 (remove track)
+/// @note Tracks are removed during the smoothing procedure to compute
+/// the chi2 of the track wrt the updated vertex position
 /// @param[out] matrixCache A cache to store matrix information
 template <typename input_track_t>
 void updatePosition(const Acts::Vertex<input_track_t>& vtx,
@@ -86,6 +88,8 @@ double trackParametersChi2(const LinearizedTrack& linTrack,
 /// @param vtx Vertex to be updated
 /// @param trk Track to be added to/removed from vtx
 /// @param sign +1 (add track) or -1 (remove track)
+/// @note Tracks are removed during the smoothing procedure to compute
+/// the chi2 of the track wrt the updated vertex position
 template <typename input_track_t>
 void update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk,
             int sign);
