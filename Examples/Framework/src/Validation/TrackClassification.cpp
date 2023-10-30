@@ -99,7 +99,7 @@ void ActsExamples::identifyContributingParticles(
 
   for (const auto& state : track.trackStatesReversed()) {
     // no truth info with non-measurement state
-    if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       continue;
     }
     // register all particles that generated this hit

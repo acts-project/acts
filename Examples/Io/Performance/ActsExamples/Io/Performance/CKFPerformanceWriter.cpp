@@ -202,7 +202,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         m_cfg.truthMatchProbMin;
 
     bool isFake = false;
-    if (not m_cfg.doubleMatching && recoMatched) {
+    if (!m_cfg.doubleMatching && recoMatched) {
       matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
     } else if (m_cfg.doubleMatching && recoMatched && truthMatched) {
       matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
