@@ -51,8 +51,6 @@ struct NavigationOptions {
   /// object to check against: at end
   const object_t* endObject = nullptr;
 
-  /// Target surface to exclude
-  const Surface* targetSurface = nullptr;
   /// External surface identifier for which the boundary check is ignored
   std::vector<GeometryIdentifier> externalSurfaces = {};
 
@@ -401,11 +399,6 @@ class Navigator {
     // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE(volInfo(state) << "Entering navigator::preStep.");
 
-    // Initialize the target and target volume
-    if (state.navigation.targetSurface and not state.navigation.targetVolume) {
-      // Find out about the target as much as you can
-      initializeTarget(state, stepper);
-    }
     // Try targeting the surfaces - then layers - then boundaries
     if (state.navigation.navigationStage <= Stage::surfaceTarget and
         targetSurfaces(state, stepper)) {
@@ -564,6 +557,9 @@ class Navigator {
       state.navigation.navigationBreak = true;
       stepper.releaseStepSize(state.stepping);
     } else {
+      // Set navigation break and release the navigation step size
+      state.navigation.navigationBreak = true;
+      stepper.releaseStepSize(state.stepping);
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
     }
@@ -872,11 +868,6 @@ class Navigator {
       ++state.navigation.navLayerIndex;
     }
 
-    // Re-initialize target at last layer, only in case it is the target volume
-    // This avoids a wrong target volume estimation
-    if (state.navigation.currentVolume == state.navigation.targetVolume) {
-      initializeTarget(state, stepper);
-    }
     // Screen output
     if (logger().doPrint(Logging::VERBOSE)) {
       std::ostringstream os;
@@ -941,9 +932,6 @@ class Navigator {
       stepper.releaseStepSize(state.stepping);
       return true;
     }
-
-    // Re-initialize target at volume boundary
-    initializeTarget(state, stepper);
 
     // Helper function to find boundaries
     auto findBoundaries = [&]() -> bool {
@@ -1034,85 +1022,6 @@ class Navigator {
 
     // Tried our best, but couldn't do anything
     return false;
-  }
-
-  /// @brief Navigation (re-)initialisation for the target
-  ///
-  /// @note This is only called a few times every propagation/extrapolation
-  ///
-  /// As a straight line estimate can lead you to the wrong destination
-  /// Volume, this will be called at:
-  /// - initialization
-  /// - attempted volume switch
-  /// Target finding by association will not be done again
-  ///
-  /// @tparam propagator_state_t The state type of the propagator
-  /// @tparam stepper_t The type of stepper used for the propagation
-  ///
-  /// @param [in,out] state is the propagation state object
-  /// @param [in] stepper Stepper in use
-  ///
-  /// boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename stepper_t>
-  void initializeTarget(propagator_state_t& state,
-                        const stepper_t& stepper) const {
-    if (state.navigation.targetVolume and
-        state.stepping.pathAccumulated == 0.) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Re-initialzing cancelled as it is the first step.");
-      return;
-    }
-    // Fast Navigation initialization for target:
-    if (state.navigation.targetSurface &&
-        state.navigation.targetSurface->associatedLayer() &&
-        !state.navigation.targetVolume) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Fast target initialization through association.");
-      ACTS_VERBOSE(volInfo(state)
-                   << "Target surface set to "
-                   << state.navigation.targetSurface->geometryId());
-      state.navigation.targetLayer =
-          state.navigation.targetSurface->associatedLayer();
-      state.navigation.targetVolume =
-          state.navigation.targetLayer->trackingVolume();
-    } else if (state.navigation.targetSurface) {
-      // screen output that you do a re-initialization
-      if (state.navigation.targetVolume) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Re-initialization of target volume triggered.");
-      }
-      // Slow navigation initialization for target:
-      // target volume and layer search through global search
-      auto targetIntersection =
-          state.navigation.targetSurface
-              ->intersect(
-                  state.geoContext, stepper.position(state.stepping),
-                  state.options.direction * stepper.direction(state.stepping),
-                  false, state.options.targetTolerance)
-              .closest();
-      if (targetIntersection) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Target estimate position ("
-                     << targetIntersection.position().x() << ", "
-                     << targetIntersection.position().y() << ", "
-                     << targetIntersection.position().z() << ")");
-        /// get the target volume from the intersection
-        auto tPosition = targetIntersection.position();
-        state.navigation.targetVolume =
-            m_cfg.trackingGeometry->lowestTrackingVolume(state.geoContext,
-                                                         tPosition);
-        state.navigation.targetLayer =
-            state.navigation.targetVolume
-                ? state.navigation.targetVolume->associatedLayer(
-                      state.geoContext, tPosition)
-                : nullptr;
-        if (state.navigation.targetVolume) {
-          ACTS_VERBOSE(volInfo(state)
-                       << "Target volume estimated : "
-                       << state.navigation.targetVolume->volumeName());
-        }
-      }
-    }
   }
 
   /// @brief Resolve the surfaces of this layer
@@ -1225,8 +1134,6 @@ class Navigator {
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
     navOpts.startObject = startLayer;
-    // Set also the target surface
-    navOpts.targetSurface = state.navigation.targetSurface;
     navOpts.pathLimit =
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
     navOpts.overstepLimit = stepper.overstepLimit(state.stepping);

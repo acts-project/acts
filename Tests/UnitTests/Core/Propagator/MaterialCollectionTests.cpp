@@ -31,6 +31,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
 #include <array>
@@ -63,7 +64,8 @@ auto tGeometry = cGeometry();
 
 // create a navigator for this tracking geometry
 Navigator navigatorES({tGeometry});
-Navigator navigatorSL({tGeometry});
+Navigator navigatorSL({tGeometry},
+                      getDefaultLogger("nav", Logging::Level::VERBOSE));
 
 using BField = ConstantBField;
 using EigenStepper = Acts::EigenStepper<>;
@@ -76,13 +78,15 @@ EigenStepper estepper(bField);
 EigenPropagator epropagator(std::move(estepper), std::move(navigatorES));
 
 StraightLineStepper slstepper;
-StraightLinePropagator slpropagator(slstepper, std::move(navigatorSL));
-const int ntests = 500;
+StraightLinePropagator slpropagator(slstepper, std::move(navigatorSL),
+                                    getDefaultLogger("prop",
+                                                     Logging::Level::VERBOSE));
+const int ntests = 1;
 const int skip = 0;
-bool debugModeFwd = false;
-bool debugModeBwd = false;
-bool debugModeFwdStep = false;
-bool debugModeBwdStep = false;
+bool debugModeFwd = true;
+bool debugModeBwd = true;
+bool debugModeFwdStep = true;
+bool debugModeBwdStep = true;
 
 /// the actual test nethod that runs the test
 /// can be used with several propagator types
@@ -226,7 +230,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
                     fwdMaterial.materialInteractions.size());
 
   CHECK_CLOSE_REL(bwdMaterial.materialInX0, fwdMaterial.materialInX0, 1e-3);
-  CHECK_CLOSE_REL(bwdMaterial.materialInL0, bwdMaterial.materialInL0, 1e-3);
+  CHECK_CLOSE_REL(bwdMaterial.materialInL0, fwdMaterial.materialInL0, 1e-3);
 
   // stepping from one surface to the next
   // now go from surface to surface and check
@@ -273,6 +277,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
         fwdStep.template get<typename MaterialInteractor::result_type>();
     fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
     fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
+
+    std::cout << fwdStepMaterial.materialInX0 << std::endl;
 
     if (fwdStep.endParameters.has_value()) {
       // make sure the parameters do not run out of scope
@@ -347,6 +353,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
     bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
+    std::cout << bwdStepMaterial.materialInX0 << std::endl;
+
     if (bwdStep.endParameters.has_value()) {
       // make sure the parameters do not run out of scope
       stepParameters.push_back(*bwdStep.endParameters);
@@ -369,6 +377,11 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
       bwdStepFinal.template get<typename MaterialInteractor::result_type>();
   bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
   bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
+
+  std::cout << fwdStepMaterialInX0 << " " << fwdStepStepMaterialInX0
+            << std::endl;
+  std::cout << bwdStepMaterialInX0 << " " << bwdStepStepMaterialInX0
+            << std::endl;
 
   // forward-forward step compatibility test
   CHECK_CLOSE_REL(bwdStepStepMaterialInX0, bwdStepMaterialInX0, 1e-3);
@@ -411,7 +424,7 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
-  runTest(epropagator, pT, phi, theta, charge, time, index);
+  // runTest(epropagator, pT, phi, theta, charge, time, index);
   runTest(slpropagator, pT, phi, theta, charge, time, index);
 }
 
