@@ -15,8 +15,6 @@
 template <typename input_track_t>
 void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
                                             const Vertex<input_track_t>& vtx) {
-  const Vector4 vtxPos = vtx.fullPosition();
-
   // Get the linearized track
   const LinearizedTrack& linTrack = track.linearizedState;
 
@@ -26,21 +24,31 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
     return;
   }
 
-  // Retrieve linTrack information
-  const ActsMatrix<eBoundSize, 4> posJac = linTrack.positionJacobian;
-  const ActsMatrix<eBoundSize, 3> momJac = linTrack.momentumJacobian;
-  const BoundVector trkParams = linTrack.parametersAtPCA;
-  const BoundSquareMatrix trkParamWeight = linTrack.weightAtPCA;
+  // Retrieve variables from the track linearization. The comments indicate the
+  // corresponding symbol used in the reference.
+  // A_k
+  const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
+  // B_k
+  const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
+  // p_k
+  const BoundVector& trkParams = linTrack.parametersAtPCA;
+  // c_k
+  const BoundVector& constTerm = linTrack.constantTerm;
+  // G_k
+  const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
-  // Calculate S matrix
-  ActsSquareMatrix<3> sMat =
+  // W_k
+  ActsSquareMatrix<3> wMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
-  const BoundVector residual = linTrack.constantTerm;
+  // 4D vertex position ...
+  const Vector4& vtxPos = vtx.fullPosition();
+  // ... and corresponding covariance
+  const SquareMatrix4& vtxCov = vtx.fullCovariance();
 
   // Refit track momentum
-  Vector3 newTrkMomentum = sMat * momJac.transpose() * trkParamWeight *
-                           (trkParams - residual - posJac * vtxPos);
+  Vector3 newTrkMomentum = wMat * momJac.transpose() * trkParamWeight *
+                           (trkParams - constTerm - posJac * vtxPos);
 
   // Refit track parameters
   BoundVector newTrkParams(BoundVector::Zero());
@@ -52,14 +60,10 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   newTrkParams(BoundIndices::eBoundTheta) = correctedPhiTheta.second;  // theta
   newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
 
-  // Vertex covariance and weight matrices
-  const SquareMatrix4 vtxCov = vtx.fullCovariance();
-  const SquareMatrix4 vtxWeight = vtxCov.inverse();
-
   // Cross covariance matrix between the vertex position and the refitted track
   // momentum
   const ActsMatrix<4, 3> crossCovVP =
-      -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
+      -vtxCov * posJac.transpose() * trkParamWeight * momJac * wMat;
 
   KalmanVertexUpdater::MatrixCache matrixCache;
 
@@ -68,22 +72,22 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
       vtx, linTrack, track.trackWeight, -1, matrixCache);
 
   // Corresponding weight matrix
-  const SquareMatrix4& reducedVtxWeight = matrixCache.newVertexWeight;
+  const SquareMatrix4& vtxWeight = matrixCache.newVertexWeight;
 
-  // Difference in positions
-  Vector4 posDiff = vtx.fullPosition() - matrixCache.newVertexPos;
+  // Difference in position
+  Vector4 posDiff = vtxPos - matrixCache.newVertexPos;
 
   // Get smoothed params
   BoundVector smoothedParams =
-      trkParams -
-      (residual + posJac * vtx.fullPosition() + momJac * newTrkMomentum);
+      trkParams - (constTerm + posJac * vtxPos +
+                   momJac * newTrkMomentum);  // TODO use newVertexPos?
 
   // New chi2 to be set later
-  double chi2 = posDiff.dot(reducedVtxWeight * posDiff) +
+  double chi2 = posDiff.dot(vtxWeight * posDiff) +
                 smoothedParams.dot(trkParamWeight * smoothedParams);
 
   Acts::BoundMatrix trkCov = detail::calculateTrackCovariance(
-      sMat, crossCovVP, vtxWeight, vtxCov, newTrkParams);
+      wMat, crossCovVP, vtxWeight, vtxCov, newTrkParams);
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -103,11 +107,11 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
 inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::calculateTrackCovariance(
-    const SquareMatrix3& sMat, const ActsMatrix<4, 3>& crossCovVP,
+    const SquareMatrix3& wMat, const ActsMatrix<4, 3>& crossCovVP,
     const SquareMatrix4& vtxWeight, const SquareMatrix4& vtxCov,
     const BoundVector& newTrkParams) {
   // Now new momentum covariance
-  SquareMatrix3 momCov = sMat + crossCovVP.transpose() * vtxWeight * crossCovVP;
+  SquareMatrix3 momCov = wMat + crossCovVP.transpose() * vtxWeight * crossCovVP;
 
   // Covariance matrix of the "free" track parameters, i.e., x, y, z, phi,
   // theta, q/p, and t. Note that the parameters are not actually free: Free

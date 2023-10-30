@@ -20,7 +20,7 @@ void Acts::KalmanVertexUpdater::updateVertexWithTrack(
 template <typename input_track_t>
 void Acts::KalmanVertexUpdater::detail::update(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
-  double trackWeight = trk.trackWeight;
+  const double& trackWeight = trk.trackWeight;
 
   MatrixCache matrixCache;
 
@@ -64,10 +64,11 @@ void Acts::KalmanVertexUpdater::detail::update(
 template <typename input_track_t>
 void Acts::KalmanVertexUpdater::updatePosition(
     const Acts::Vertex<input_track_t>& vtx,
-    const Acts::LinearizedTrack& linTrack, double trackWeight, int sign,
+    const Acts::LinearizedTrack& linTrack, const double& trackWeight, int sign,
     MatrixCache& matrixCache) {
   // Retrieve variables from the track linearization. The comments indicate the
-  // corresponding symbol used in the reference. A_k
+  // corresponding symbol used in the reference.
+  // A_k
   const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
   // B_k
   const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
@@ -125,19 +126,19 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
   const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
   // A_k * \tilde{x_k}
-  const BoundVector posJacTimesVtxPos = posJac * matrixCache.newVertexPos;
+  const BoundVector posJacVtxPos = posJac * matrixCache.newVertexPos;
 
-  // Refitted track momentum
+  // \tilde{q_k}
   Vector3 newTrackMomentum = matrixCache.wMat * momJac.transpose() *
                              trkParamWeight *
-                             (trkParams - constTerm - posJacTimesVtxPos);
+                             (trkParams - constTerm - posJacVtxPos);
 
-  // Linearized track parameters after the fit
-  BoundVector fittedTrkParams =
-      constTerm + posJacTimesVtxPos + momJac * newTrackMomentum;
+  // Updated linearized track parameters \tilde{p_k}
+  BoundVector linearizedTrkParams =
+      constTerm + posJacVtxPos + momJac * newTrackMomentum;
 
   // Parameter difference
-  BoundVector paramDiff = trkParams - fittedTrkParams;
+  BoundVector paramDiff = trkParams - linearizedTrkParams;
 
   // Return chi2
   return paramDiff.transpose() * (trkParamWeight * paramDiff);
