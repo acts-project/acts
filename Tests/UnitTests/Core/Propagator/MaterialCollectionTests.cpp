@@ -54,10 +54,6 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-// Global definitions
-// The path limit abort
-using path_limit = PathLimitReached;
-
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
@@ -116,7 +112,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
      0.5, 0, 0, 0, 1_e / 10_GeV, 0,
      0, 0, 0, 0, 0, 1_us;
   // clang-format on
-  std::cout << cov.determinant() << std::endl;
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
                                    cov, ParticleHypothesis::pion());
 
@@ -126,7 +121,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   using Options = PropagatorOptions<ActionListType, AbortListType>;
   Options fwdOptions(tgContext, mfContext);
-
   fwdOptions.maxStepSize = 25_cm;
   fwdOptions.pathLimit = 25_cm;
 
@@ -226,7 +220,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
                     fwdMaterial.materialInteractions.size());
 
   CHECK_CLOSE_REL(bwdMaterial.materialInX0, fwdMaterial.materialInX0, 1e-3);
-  CHECK_CLOSE_REL(bwdMaterial.materialInL0, bwdMaterial.materialInL0, 1e-3);
+  CHECK_CLOSE_REL(bwdMaterial.materialInL0, fwdMaterial.materialInL0, 1e-3);
 
   // stepping from one surface to the next
   // now go from surface to surface and check
@@ -304,7 +298,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext);
-
   bwdStepOptions.maxStepSize = 25_cm;
   bwdStepOptions.pathLimit = -25_cm;
   bwdStepOptions.direction = Direction::Backward;

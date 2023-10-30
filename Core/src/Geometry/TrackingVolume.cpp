@@ -473,7 +473,7 @@ Acts::TrackingVolume::compatibleBoundaries(
   boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
   // The Limits: current overstepping
-  double oLimit = 0;
+  double oLimit = options.overstepLimit;
 
   // Helper function to test intersection
   auto checkIntersection =
@@ -606,11 +606,8 @@ Acts::TrackingVolume::compatibleLayers(
         // layer on approach intersection
         auto atIntersection =
             tLayer->surfaceOnApproach(gctx, position, direction, options);
-        auto path = atIntersection.pathLength();
-        bool withinLimit = std::abs(path) <= std::abs(options.pathLimit);
         // Intersection is ok - take it (move to surface on approach)
-        if (atIntersection &&
-            (atIntersection.object() != options.targetSurface) && withinLimit) {
+        if (atIntersection) {
           // create a layer intersection
           lIntersections.push_back(LayerIntersection(
               atIntersection.intersection(), tLayer, atIntersection.object(),

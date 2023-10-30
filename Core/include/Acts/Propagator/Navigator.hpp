@@ -56,9 +56,6 @@ struct NavigationOptions {
   /// External surface identifier for which the boundary check is ignored
   std::vector<GeometryIdentifier> externalSurfaces = {};
 
-  /// The maximum path limit for this navigation step
-  double pathLimit = std::numeric_limits<double>::max();
-
   /// The overstep tolerance for this navigation step
   double overstepLimit = 0;
 
@@ -768,7 +765,7 @@ class Navigator {
         navOpts.resolveMaterial = m_cfg.resolveMaterial;
         navOpts.resolvePassive = m_cfg.resolvePassive;
         navOpts.endObject = state.navigation.targetSurface;
-        navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
+        navOpts.overstepLimit = state.options.targetTolerance;
         double opening_angle = 0;
 
         // Preliminary version of the frustum opening angle estimation.
@@ -951,9 +948,7 @@ class Navigator {
       NavigationOptions<Surface> navOpts;
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
-      navOpts.pathLimit =
-          stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
-      navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
+      navOpts.overstepLimit = state.options.targetTolerance;
       navOpts.forceIntersectBoundaries =
           state.navigation.forceIntersectBoundaries;
 
@@ -1155,13 +1150,8 @@ class Navigator {
         navOpts.externalSurfaces.push_back(itSurface->second);
       }
     }
-    // Check the limit
-    navOpts.pathLimit =
-        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
-    // No overstepping on start layer, otherwise ask the stepper
-    navOpts.overstepLimit = (cLayer != nullptr)
-                                ? state.options.targetTolerance
-                                : stepper.overstepLimit(state.stepping);
+    // No overstepping, intentionally positive
+    navOpts.overstepLimit = state.options.targetTolerance;
 
     // get the surfaces
     state.navigation.navSurfaces = navLayer->compatibleSurfaces(
@@ -1212,11 +1202,6 @@ class Navigator {
                      const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state) << "Searching for compatible layers.");
 
-    // Check if we are in the start volume
-    auto startLayer =
-        (state.navigation.currentVolume == state.navigation.startVolume)
-            ? state.navigation.startLayer
-            : nullptr;
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
     NavigationOptions<Layer> navOpts;
@@ -1224,12 +1209,15 @@ class Navigator {
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
-    navOpts.startObject = startLayer;
-    // Set also the target surface
-    navOpts.targetSurface = state.navigation.targetSurface;
-    navOpts.pathLimit =
-        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
-    navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
+    navOpts.startObject =
+        (state.navigation.currentVolume == state.navigation.startVolume)
+            ? state.navigation.startLayer
+            : nullptr;
+    navOpts.endObject =
+        (state.navigation.currentVolume == state.navigation.targetVolume)
+            ? state.navigation.targetLayer
+            : nullptr;
+    navOpts.overstepLimit = state.options.targetTolerance;
     // Request the compatible layers
     state.navigation.navLayers =
         state.navigation.currentVolume->compatibleLayers(
