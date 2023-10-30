@@ -126,6 +126,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       // track info
       trackInfo toAdd;
       toAdd.trackId = trackId;
+      toAdd.seedId = traj.seedNumber();
       toAdd.particleId = majorityParticleId;
       toAdd.nStates = trajState.nStates;
       toAdd.nMajorityHits = nMajorityHits;
@@ -183,7 +184,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
   }
 
   // write csv header
-  mos << "track_id,particleId,"
+  mos << "track_id,seed_id,particleId,"
       << "nStates,nMajorityHits,nMeasurements,nOutliers,nHoles,nSharedHits,"
       << "chi2,ndf,chi2/ndf,"
       << "pT,eta,phi,"
@@ -207,6 +208,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
 
     // write the track info
     mos << trajState.trackId << ",";
+    mos << trajState.seedId << ",";
     mos << trajState.particleId << ",";
     mos << trajState.nStates << ",";
     mos << trajState.nMajorityHits << ",";

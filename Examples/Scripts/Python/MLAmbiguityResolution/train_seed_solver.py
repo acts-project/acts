@@ -315,10 +315,10 @@ def train(
 # ==================================================================
 
 # ttbar events used as the training input, here we assume 160 events are availables
-CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-seed.csv"))
-CKF_files = sorted(glob.glob("odd_output" + "/event0000001[0-5][0-9]-seed.csv"))
-# CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-seed_cleaned.csv"))
-# CKF_files = sorted(glob.glob("odd_output" + "/event0000001[0-5][0-9]-seed_cleaned.csv"))
+# CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-seed.csv"))
+# CKF_files = sorted(glob.glob("odd_output" + "/event0000001[0-5][0-9]-seed.csv"))
+CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-seed_cleaned.csv"))
+CKF_files = sorted(glob.glob("odd_output" + "/event0000001[0-5][0-9]-seed_cleaned.csv"))
 data = readDataSet(CKF_files)
 # Prepare the data
 x_train, y_train = prepareTrainingData(data)
