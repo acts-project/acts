@@ -374,7 +374,8 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   const Config& cuts = *cutsPtr;
 
-  return within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
+  return track.hasReferenceSurface() &&
+         within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
          (m_noEtaCuts || (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
                           within(_eta, cuts.etaMin, cuts.etaMax))) &&
          within(track.phi(), cuts.phiMin, cuts.phiMax) &&

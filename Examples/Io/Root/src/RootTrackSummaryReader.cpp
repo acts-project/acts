@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
@@ -24,8 +24,8 @@
 #include <TChain.h>
 #include <TMathBase.h>
 
-ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
-    const ActsExamples::RootTrajectorySummaryReader::Config& config,
+ActsExamples::RootTrackSummaryReader::RootTrackSummaryReader(
+    const ActsExamples::RootTrackSummaryReader::Config& config,
     Acts::Logging::Level level)
     : ActsExamples::IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
@@ -107,11 +107,11 @@ ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
 }
 
 std::pair<size_t, size_t>
-ActsExamples::RootTrajectorySummaryReader::availableEvents() const {
+ActsExamples::RootTrackSummaryReader::availableEvents() const {
   return {0u, m_events};
 }
 
-ActsExamples::RootTrajectorySummaryReader::~RootTrajectorySummaryReader() {
+ActsExamples::RootTrackSummaryReader::~RootTrackSummaryReader() {
   delete m_multiTrajNr;
   delete m_subTrajNr;
   delete m_nStates;
@@ -155,7 +155,7 @@ ActsExamples::RootTrajectorySummaryReader::~RootTrajectorySummaryReader() {
   delete m_err_eT_fit;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
+ActsExamples::ProcessCode ActsExamples::RootTrackSummaryReader::read(
     const ActsExamples::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded tracks.");
 
@@ -170,7 +170,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
             Acts::Vector3(0., 0., 0.));
 
     // The collection to be written
-    std::vector<Acts::BoundTrackParameters> trackParameterCollection;
+    TrackParametersContainer trackParameterCollection;
     SimParticleContainer truthParticleCollection;
 
     // Read the correct entry

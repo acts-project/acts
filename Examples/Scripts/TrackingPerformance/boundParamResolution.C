@@ -34,7 +34,7 @@ using namespace ROOT;
 /// Plot the bound parameter resolutions
 ///
 /// (loc1, phi, theta, q/p, t) at all track states from root file produced by
-/// the RootTrajectoryStatesWriter
+/// the RootTrackStatesWriter
 ///
 /// @param inFile the input root file
 /// @param treeName the input tree name (default: 'trackstates)
@@ -71,7 +71,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
 
   // Section 0: file handling ---------------------------------------------
   //
-  // Open root file written by RootTrajectoryWriter
+  // Open root file written by RootTrackWriter
   // Create output root file
   std::cout << "Opening file: " << inFile << std::endl;
   TFile* file = TFile::Open(inFile.c_str(), "read");

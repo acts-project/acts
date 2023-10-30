@@ -26,17 +26,14 @@
 ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("VertexFit", lvl), m_cfg(cfg) {
-  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
-    throw std::invalid_argument(
-        "You have to either provide track parameters or trajectories");
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing input track parameter collection");
   }
   if (m_cfg.inputProtoVertices.empty()) {
     throw std::invalid_argument("Missing input proto vertices collection");
   }
 
-  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
-
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_inputProtoVertices.initialize(m_cfg.inputProtoVertices);
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
@@ -61,8 +58,9 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
-  auto [inputTrackParameters, inputTrackPointers] =
-      makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
+  const auto& inputTrackParameters = m_inputTrackParameters(ctx);
+  auto inputTrackPointers =
+      makeTrackParametersPointerContainer(inputTrackParameters);
 
   if (inputTrackParameters.size() != inputTrackPointers.size()) {
     ACTS_ERROR("Input track containers do not align: "

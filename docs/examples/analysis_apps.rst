@@ -123,7 +123,7 @@ applications.
 
 To investigate the per layer residual and pull distributions, one can use the 
 `ActsAnalysisResidualAndPulls` application, which runs on top of the ROOT file
-produced by the ``RootTrajectoryStatesWriter``.
+produced by the ``RootTrackStatesWriter``.
 
 
 The following options are available:
@@ -167,7 +167,7 @@ is shown below.
 **Track summary analysis**
 
 A higher level view of the track reconstruction performance is the ``ActsAnalysisTrackSummary`` application,
-which runs on top of the `RootTrajectorySummaryWriter` output of the examples code.
+which runs on top of the `RootTrackSummaryWriter` output of the examples code.
 
 The following options are available:
 

@@ -34,7 +34,7 @@ using namespace ROOT;
 
 /// This ROOT script will plot the residual and pull of perigee track parameters
 /// (d0, z0, phi, theta, q/p, pT, t) from root file produced by the
-/// RootTrajectorySummaryWriter
+/// RootTrackSummaryWriter
 ///
 /// @param inFiles the list of input files
 /// @param inTree the name of the input tree
@@ -66,7 +66,7 @@ int trackSummaryAnalysis(
   TChain* treeChain = new TChain(inTree.c_str());
   for (const auto& inFile : inFiles) {
     treeChain->Add(inFile.c_str());
-    // Open root file written by RootTrajectoryWriter
+    // Open root file written by RootTrackWriter
     std::cout << "*** Adding file: " << inFile << std::endl;
   }
 
