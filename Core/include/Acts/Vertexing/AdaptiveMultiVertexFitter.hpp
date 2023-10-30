@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -135,6 +135,9 @@ class AdaptiveMultiVertexFitter {
 
     // Do smoothing after multivertex fit
     bool doSmoothing{false};
+
+    // Use time information when calculating the vertex compatibility
+    bool useTime{false};
   };
 
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
@@ -167,12 +170,12 @@ class AdaptiveMultiVertexFitter {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
-  /// @brief The actual fit function, performs a simultaneous
-  /// fit of all vertices in `verticesToFit` by invoking `fitImpl`
+  /// @brief Performs a simultaneous fit of all vertices in `verticesToFit`
+  /// by invoking `fitImpl`.
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   /// @param verticesToFit Vector containing all vertices to be fitted
-  /// @param linearizer The track linearizer
+  /// @param linearizer Track linearizer
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
@@ -181,26 +184,18 @@ class AdaptiveMultiVertexFitter {
       const Linearizer_t& linearizer,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
-  /// @brief Adds new vertex to an existing multi-vertex fit
-  /// and fits everything together (by invoking the fit_impl method):
-  /// 1. The new vertex is added to the fit: all associated tracks get
-  /// initialized, i.e. ParamsAtIP3d are created (from ImpactPointEstimator)
-  /// to be later able to estimate in a fast way the compatibility of the tracks
-  /// to their respective vertices.
-  /// 2. All tracks belonging to the new vertex are scanned and all the vertices
-  ///  which share tracks with the new vertex to be fit are also added to the
-  ///  fit.
-  /// 3. The multivertex fit is performed with all involved vertices.
+  /// @brief Adds a new vertex to an existing multi-vertex fit.
+  /// 1. The 3D impact parameters are calculated for all tracks associated
+  /// with newVertex.
+  /// 2. A list of all vertices that are connected with newVertex via shared
+  /// tracks is created. It also considers indirect connections (e.g., vertex A
+  /// which shares a track with vertex B which, in turn, shares a track with
+  /// newVertex).
+  /// 3. The multivertex fit is performed for all vertices on said list.
   ///
-  /// This has the advantage that only vertices that are affected by adding the
-  /// new vertex are refitted.
-  ///
-  /// Note: newVertex has to be properly initialized (seed vertex,
-  /// constraint vertex, list of MAV)
-  ///
-  /// @param state The state object
-  /// @param newVertex New vertex to be added to fit
-  /// @param linearizer The track linearizer
+  /// @param state Fitter state
+  /// @param newVertex Vertex to be added to fit
+  /// @param linearizer Track linearizer
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
@@ -224,11 +219,11 @@ class AdaptiveMultiVertexFitter {
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
 
-  /// @brief The actual fit function, performs a simultaneous
-  ///   fit of all vertices in state.vertexCollection
+  /// @brief Performs a simultaneous fit of all vertices in
+  /// state.vertexCollection
   ///
-  /// @param state The state object
-  /// @param linearizer The track linearizer
+  /// @param state Fitter state
+  /// @param linearizer Track linearizer
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
@@ -246,23 +241,21 @@ class AdaptiveMultiVertexFitter {
       Vertex<InputTrack_t>* vtx,
       const std::vector<Vertex<InputTrack_t>*>& verticesVec) const;
 
-  /// @brief Prepares vertex object for the actual fit, i.e.
-  /// all TrackAtVertex objects at current vertex will obtain
-  /// `ip3dParams` from ImpactPointEstimator::estimate3DImpactParameters
-  /// in order to later faster estimate compatibilities of track
-  /// with different vertices
+  /// @brief Checks whether the impact parameters of the associated
+  /// tracks were calculated wrt the vertex position. Updates them
+  /// if needed.
   ///
-  /// @param state The state to operate on
-  /// @param vtx The vertex object
+  /// @param state Vertex fitter state
+  /// @param vtx Vertex object
   /// @param vertexingOptions Vertexing options
-  Result<void> prepareVertexForFit(
+  Result<void> updateImpactParams3D(
       State& state, Vertex<InputTrack_t>* vtx,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
-  /// @brief Sets vertexCompatibility for all TrackAtVertex objects
-  /// at current vertex
+  /// @brief Sets the vertexCompatibility for all TrackAtVertex objects
+  /// at the current vertex
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   /// @param currentVtx Current vertex
   /// @param vertexingOptions Vertexing options
   Result<void> setAllVertexCompatibilities(
@@ -272,36 +265,35 @@ class AdaptiveMultiVertexFitter {
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
   ///  and updates the vertices by calling the VertexUpdater
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   /// @param linearizer The track linearizer
   /// @param vertexingOptions Vertexing options
   Result<void> setWeightsAndUpdate(
       State& state, const Linearizer_t& linearizer,
       const VertexingOptions<input_track_t>& vertexingOptions) const;
 
-  /// @brief Collects all compatibility values of the track `trk`
-  /// at all vertices it is currently attached to and outputs
-  /// these values in a vector
+  /// @brief Collects the compatibility values of the track `trk`
+  /// wrt to all of its associated vertices
   ///
-  /// @param state The state object
-  /// @param trk The track
+  /// @param state Fitter state
+  /// @param trk Track
   ///
   /// @return Vector of compatibility values
   std::vector<double> collectTrackToVertexCompatibilities(
       State& state, const InputTrack_t* trk) const;
 
-  /// @brief Determines if vertex position has shifted more than
-  /// m_cfg.maxRelativeShift in last iteration
+  /// @brief Determines if any vertex position has shifted more than
+  /// m_cfg.maxRelativeShift in the last iteration
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   ///
-  /// @return False if shift was larger than maxRelativeShift
+  /// @return False if at least one shift was larger than maxRelativeShift
   bool checkSmallShift(State& state) const;
 
   /// @brief Updates tracks for current vertex with knowledge
   /// of current vertex position
   ///
-  /// @param state The state object
+  /// @param state Fitter state
   void doVertexSmoothing(State& state) const;
 };
 

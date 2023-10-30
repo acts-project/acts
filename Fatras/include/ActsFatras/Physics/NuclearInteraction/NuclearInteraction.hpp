@@ -528,7 +528,8 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
     p.setProcess(ProcessType::eNuclearInteraction)
         .setPosition4(initialParticle.fourPosition())
         .setAbsoluteMomentum(momentum)
-        .setDirection(direction);
+        .setDirection(direction)
+        .setReferenceSurface(initialParticle.referenceSurface());
 
     // Store the particle
     if (i == 0 && soft) {
