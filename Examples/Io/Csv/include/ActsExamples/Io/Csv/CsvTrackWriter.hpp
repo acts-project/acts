@@ -33,7 +33,7 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-/// @class CsvMultiTrajectoryWriter
+/// @class CsvTrackWriter
 ///
 /// Write out the tracks reconstructed using Combinatorial Kalman Filter in
 /// comma-separated-value format.
@@ -46,12 +46,12 @@ namespace ActsExamples {
 ///     event000000002-tracks_{algorithm_name}.csv
 ///
 /// and each line in the file corresponds to one track.
-class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
+class CsvTrackWriter : public WriterT<ConstTrackContainer> {
  public:
   using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
 
   struct Config {
-    std::string inputTrajectories;           ///< Input trajectory collection
+    std::string inputTracks;                 ///< Input track collection
     std::string outputDir;                   ///< where to place output files
     std::string fileName = "CKFtracks.csv";  ///< name of the output files
     std::string
@@ -66,8 +66,8 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// constructor
   /// @param config is the configuration object
   /// @param level is the output logging level
-  CsvMultiTrajectoryWriter(const Config& config,
-                           Acts::Logging::Level level = Acts::Logging::INFO);
+  CsvTrackWriter(const Config& config,
+                 Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -77,7 +77,7 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// @param [in] context is the algorithm context for consistency
   /// @param [in] tracks is the track collection
   ProcessCode writeT(const AlgorithmContext& context,
-                     const TrajectoriesContainer& trajectories) override;
+                     const ConstTrackContainer& tracks) override;
 
  private:
   Config m_cfg;  //!< Nested configuration struct
@@ -87,15 +87,15 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
 
   /// @brief Struct for brief trajectory summary info
   ///
-  struct trackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
+  struct TrackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
     size_t trackId = 0;
     ActsFatras::Barcode particleId;
     size_t nMajorityHits = 0;
     std::string trackType;
     double truthMatchProb = 0;
-    const TrackParameters* fittedParameters = nullptr;
+    std::optional<TrackParameters> fittedParameters;
     std::vector<uint64_t> measurementsID;
-  };  // trackInfo struct
+  };  // TrackInfo struct
 };
 
 }  // namespace ActsExamples

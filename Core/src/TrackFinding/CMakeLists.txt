@@ -3,5 +3,7 @@ target_sources(
   PRIVATE
     CombinatorialKalmanFilterError.cpp
     MeasurementSelector.cpp
+    FasTrackConnector.cpp
+    RoiDescriptor.cpp
     AmbiguityTrackClustering.cpp
 )
