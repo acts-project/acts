@@ -860,10 +860,17 @@ class KalmanFitter {
                             const stepper_t& stepper,
                             const navigator_t& navigator,
                             const MaterialUpdateStage& updateStage) const {
+      // Protect against null surface
+      if (not surface) {
+        ACTS_VERBOSE(
+            "Surface is nullptr. Cannot be used for material interaction");
+        return;
+      }
+
       // Indicator if having material
       bool hasMaterial = false;
 
-      if (surface and surface->surfaceMaterial()) {
+      if (surface->surfaceMaterial()) {
         // Prepare relevant input particle properties
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
