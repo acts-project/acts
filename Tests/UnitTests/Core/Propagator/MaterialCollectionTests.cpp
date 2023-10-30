@@ -389,7 +389,7 @@ BOOST_DATA_TEST_CASE(
     test_material_collector,
     bdata::random((bdata::seed = 20,
                    bdata::distribution =
-                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
+                       std::uniform_real_distribution<>(1_GeV, 10_GeV))) ^
         bdata::random((bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^

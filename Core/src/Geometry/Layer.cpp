@@ -157,8 +157,8 @@ Acts::Layer::compatibleSurfaces(
   // lemma 1 : check and fill the surface
   // [&sIntersections, &options, &parameters
   auto processSurface = [&](const Surface& sf, bool sensitive = false) {
-    // veto if it's start or end surface
-    if (options.startObject == &sf || options.endObject == &sf) {
+    // veto if it's start surface
+    if (options.startObject == &sf) {
       return;
     }
     // veto if it doesn't fit the prescription

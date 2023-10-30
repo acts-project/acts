@@ -764,7 +764,7 @@ class Navigator {
         navOpts.resolveSensitive = m_cfg.resolveSensitive;
         navOpts.resolveMaterial = m_cfg.resolveMaterial;
         navOpts.resolvePassive = m_cfg.resolvePassive;
-        navOpts.endObject = state.navigation.targetSurface;
+        navOpts.startObject = state.navigation.currentSurface;
         navOpts.overstepLimit = state.options.targetTolerance;
         double opening_angle = 0;
 
@@ -1136,7 +1136,8 @@ class Navigator {
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
     navOpts.startObject = startSurface;
-    navOpts.endObject = state.navigation.targetSurface;
+    // No overstepping, intentionally positive
+    navOpts.overstepLimit = state.options.targetTolerance;
 
     std::vector<GeometryIdentifier> externalSurfaces;
     if (!state.navigation.externalSurfaces.empty()) {
@@ -1150,8 +1151,6 @@ class Navigator {
         navOpts.externalSurfaces.push_back(itSurface->second);
       }
     }
-    // No overstepping, intentionally positive
-    navOpts.overstepLimit = state.options.targetTolerance;
 
     // get the surfaces
     state.navigation.navSurfaces = navLayer->compatibleSurfaces(
