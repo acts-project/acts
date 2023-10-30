@@ -9,8 +9,12 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+<<<<<<< HEAD
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
+=======
+#include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
+>>>>>>> 83cb3de1e (first shot at it)
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
 #include <cstddef>

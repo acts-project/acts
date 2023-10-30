@@ -58,7 +58,7 @@ void Acts::Experimental::DD4hepBlueprint::recursiveParse(
     // Check if it complies with the given definition
     bool ntt = getParamOr<bool>(nType, dd4hepElement, false);
     if (ntt) {
-      ACTS_VERBOSE(ofs << "ACTS node '" << nType
+      ACTS_DEBUG(ofs << "ACTS node '" << nType
                        << "' attached to dd4hep element '"
                        << dd4hepElement.name() << "',");
       // Extract the bounds type, values and binning
@@ -68,10 +68,10 @@ void Acts::Experimental::DD4hepBlueprint::recursiveParse(
       auto [internalsBuilder, rootsFinderBuilder, geoIdGenerator, auxInt] =
           extractInternals(cache.dd4hepStore, dd4hepElement, nType);
       // Screen output of position and shape
-      ACTS_VERBOSE(ofs << " - translation  : "
+      ACTS_DEBUG(ofs << " - translation  : "
                        << toString(transform.translation()));
-      ACTS_VERBOSE(ofs << " - bounds type  : " << bValueType);
-      ACTS_VERBOSE(ofs << " - bound values : " << toString(bValues));
+      ACTS_DEBUG(ofs << " - bounds type  : " << bValueType);
+      ACTS_DEBUG(ofs << " - bound values : " << toString(bValues));
       // If it is not the world node, create a new one
       if (nType == "acts_world") {
         mother.transform = transform;

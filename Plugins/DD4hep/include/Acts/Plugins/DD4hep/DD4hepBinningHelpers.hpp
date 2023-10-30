@@ -64,10 +64,10 @@ inline BinningValue stringToBinningValue(const std::string &binningString) {
 /// Example for e.g. bname = \"surface_binning\":
 ///
 /// - Equidistant binning in r and phi:
-///   \< surface_binning nr=\"2\" rmin=\"25\" rmax=\"100\" nphi=\"22\"
+///   \<acts_surface_binning nr=\"2\" rmin=\"25\" rmax=\"100\" nphi=\"22\"
 ///   phimin=\"-3.1415\" phimax=\"3.1415\" \/ \>
 /// - Variable binning in z:
-///   \< surface_binning zboundaries=\"-100,-90,90,100\" \/ \>
+///   \<acts_surface_binning zboundaries=\"-100,-90,90,100\" \/ \>
 ///
 /// And 2D combinations of this are allowed.
 ///

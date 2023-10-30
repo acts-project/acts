@@ -27,6 +27,7 @@ nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
 }
 
 nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
+<<<<<<< HEAD
   nlohmann::json jAxis;
   jAxis["bounds"] =
       ia.getBoundaryType() == Acts::detail::AxisBoundaryType::Bound ? 1 : 2;
@@ -40,5 +41,13 @@ nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
   } else {
     jAxis["edges"] = ia.getBinEdges();
   }
+=======
+
+  nlohmann::json jAxis;
+  jAxis["bounds"] =  ia.getBoundaryType() == Acts::detail::AxisBoundaryType::Bound ? 1 : 2;
+  jAxis["binning"] = ia.isEquidistant() ? 0 : 1;
+  jAxis["bins"] = ia.getNBins();
+  jAxis["edges"] = ia.getBinEdges();
+>>>>>>> 83cb3de1e (first shot at it)
   return jAxis;
 }
