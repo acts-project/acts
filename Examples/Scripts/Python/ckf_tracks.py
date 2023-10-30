@@ -17,9 +17,9 @@ def runCKFTracks(
     digiConfigFile: Path,
     field,
     outputDir: Path,
+    outputCsv=True,
     truthSmearedSeeded=False,
     truthEstimatedSeeded=False,
-    outputCsv=True,
     inputParticlePath: Optional[Path] = None,
     s=None,
 ):
@@ -148,9 +148,9 @@ if "__main__" == __name__:
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
         inputParticlePath=inputParticlePath,
         outputDir=Path.cwd(),
+        outputCsv=True,
     ).run()

@@ -11,6 +11,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
@@ -87,5 +88,27 @@ void ActsExamples::identifyContributingParticles(
     }
     return true;
   });
+  sortHitCount(particleHitCounts);
+}
+
+void ActsExamples::identifyContributingParticles(
+    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const ConstTrackContainer::ConstTrackProxy& track,
+    std::vector<ParticleHitCount>& particleHitCounts) {
+  particleHitCounts.clear();
+
+  for (const auto& state : track.trackStatesReversed()) {
+    // no truth info with non-measurement state
+    if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      continue;
+    }
+    // register all particles that generated this hit
+    IndexSourceLink sl =
+        state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+    auto hitIndex = sl.index();
+    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
+      increaseHitCount(particleHitCounts, hitParticle.second);
+    }
+  }
   sortHitCount(particleHitCounts);
 }

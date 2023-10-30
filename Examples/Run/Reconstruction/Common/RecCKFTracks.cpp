@@ -14,13 +14,13 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/CsvOptionsReader.hpp"
 #include "ActsExamples/Options/CsvOptionsWriter.hpp"
@@ -39,7 +39,6 @@
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
-#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include <Acts/Definitions/Units.hpp>
 
 #include <filesystem>
@@ -271,15 +270,9 @@ int runRecCKFTracks(
   sequencer.addAlgorithm(
       std::make_shared<TrackFindingAlgorithm>(trackFindingCfg, logLevel));
 
-  TracksToTrajectories::Config tracksToTrajCfg{};
-  tracksToTrajCfg.inputTracks = trackFindingCfg.outputTracks;
-  tracksToTrajCfg.outputTrajectories = "trajectories";
-  sequencer.addAlgorithm(
-      (std::make_shared<TracksToTrajectories>(tracksToTrajCfg, logLevel)));
-
   // write track states from CKF
-  RootTrajectoryStatesWriter::Config trackStatesWriter;
-  trackStatesWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
+  RootTrackStatesWriter::Config trackStatesWriter;
+  trackStatesWriter.inputTracks = trackFindingCfg.outputTracks;
   // @note The full particles collection is used here to avoid lots of warnings
   // since the unselected CKF track might have a majority particle not in the
   // filtered particle collection. This could be avoided when a separate track
@@ -292,12 +285,12 @@ int runRecCKFTracks(
       digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.filePath = outputDir + "/trackstates_ckf.root";
   trackStatesWriter.treeName = "trackstates";
-  sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
-      trackStatesWriter, logLevel));
+  sequencer.addWriter(
+      std::make_shared<RootTrackStatesWriter>(trackStatesWriter, logLevel));
 
   // write track summary from CKF
-  RootTrajectorySummaryWriter::Config trackSummaryWriter;
-  trackSummaryWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
+  RootTrackSummaryWriter::Config trackSummaryWriter;
+  trackSummaryWriter.inputTracks = trackFindingCfg.outputTracks;
   // @note The full particles collection is used here to avoid lots of warnings
   // since the unselected CKF track might have a majority particle not in the
   // filtered particle collection. This could be avoided when a separate track
@@ -307,13 +300,24 @@ int runRecCKFTracks(
       digiCfg.outputMeasurementParticlesMap;
   trackSummaryWriter.filePath = outputDir + "/tracksummary_ckf.root";
   trackSummaryWriter.treeName = "tracksummary";
-  sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
-      trackSummaryWriter, logLevel));
+  sequencer.addWriter(
+      std::make_shared<RootTrackSummaryWriter>(trackSummaryWriter, logLevel));
+
+  if (vm["output-csv"].template as<bool>()) {
+    // Write the CKF track as Csv
+    CsvTrackWriter::Config trackWriterCsvConfig;
+    trackWriterCsvConfig.inputTracks = trackFindingCfg.outputTracks;
+    trackWriterCsvConfig.outputDir = outputDir;
+    trackWriterCsvConfig.inputMeasurementParticlesMap =
+        digiCfg.outputMeasurementParticlesMap;
+    sequencer.addWriter(
+        std::make_shared<CsvTrackWriter>(trackWriterCsvConfig, logLevel));
+  }
 
   // Write CKF performance data
   CKFPerformanceWriter::Config perfWriterCfg;
   perfWriterCfg.inputParticles = inputParticles;
-  perfWriterCfg.inputTrajectories = tracksToTrajCfg.outputTrajectories;
+  perfWriterCfg.inputTracks = trackFindingCfg.outputTracks;
   perfWriterCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   perfWriterCfg.filePath = outputDir + "/performance_ckf.root";
@@ -335,17 +339,6 @@ int runRecCKFTracks(
 #endif
   sequencer.addWriter(
       std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
-
-  if (vm["output-csv"].template as<bool>()) {
-    // Write the CKF track as Csv
-    CsvMultiTrajectoryWriter::Config trackWriterCsvConfig;
-    trackWriterCsvConfig.inputTrajectories = tracksToTrajCfg.outputTrajectories;
-    trackWriterCsvConfig.outputDir = outputDir;
-    trackWriterCsvConfig.inputMeasurementParticlesMap =
-        digiCfg.outputMeasurementParticlesMap;
-    sequencer.addWriter(std::make_shared<CsvMultiTrajectoryWriter>(
-        trackWriterCsvConfig, logLevel));
-  }
 
   return sequencer.run();
 }
