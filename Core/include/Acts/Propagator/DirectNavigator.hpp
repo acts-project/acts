@@ -71,7 +71,7 @@ class DirectNavigator {
                     const navigator_t& /*navigator*/, result_type& r,
                     const Logger& /*logger*/) const {
       // Only act once
-      if (not r.initialized) {
+      if (!r.initialized) {
         // Initialize the surface sequence
         state.navigation.navSurfaces = navSurfaces;
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
@@ -199,8 +199,18 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    (void)state;
     (void)stepper;
+
+    // Call the navigation helper prior to actual navigation
+    ACTS_VERBOSE(volInfo(state) << "Initialization.");
+
+    // We set the current surface to the start surface
+    state.navigation.currentSurface = state.navigation.startSurface;
+    if (state.navigation.currentSurface) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current surface set to start surface "
+                   << state.navigation.currentSurface->geometryId());
+    }
   }
 
   /// @brief Navigator pre step call
@@ -317,6 +327,14 @@ class DirectNavigator {
   }
 
  private:
+  template <typename propagator_state_t>
+  std::string volInfo(const propagator_state_t& state) const {
+    return (state.navigation.currentVolume
+                ? state.navigation.currentVolume->volumeName()
+                : "No Volume") +
+           " | ";
+  }
+
   ObjectIntersection<Surface> chooseIntersection(const GeometryContext& gctx,
                                                  const Surface& surface,
                                                  const Vector3& position,

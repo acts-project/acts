@@ -289,7 +289,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     bool foundMajorityParticle = false;
     // Get the truth particle info
-    if (not particleHitCounts.empty()) {
+    if (!particleHitCounts.empty()) {
       // Get the barcode of the majority truth particle
       majorityParticleId = particleHitCounts.front().particleId;
       nMajorityHits = particleHitCounts.front().hitCount;
@@ -343,7 +343,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
                    << " not found in the input collection!");
       }
     }
-    if (not foundMajorityParticle) {
+    if (!foundMajorityParticle) {
       ACTS_DEBUG("Truth particle for track " << track.tipIndex()
                                              << " not found!");
     }

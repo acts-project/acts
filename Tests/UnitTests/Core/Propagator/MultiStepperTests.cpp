@@ -152,7 +152,7 @@ void test_multi_stepper_state() {
   for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.jacTransport(), FreeMatrix::Identity());
     BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
-    if constexpr (not Cov) {
+    if constexpr (!Cov) {
       BOOST_CHECK_EQUAL(cmp.jacToGlobal(), BoundToFreeMatrix::Zero());
       BOOST_CHECK_EQUAL(cmp.cov(), BoundSquareMatrix::Zero());
     }
@@ -167,7 +167,7 @@ void test_multi_stepper_state() {
   // thus not part of the interface. However, we want to check them for
   // consistency.
   if constexpr (Acts::Concepts::exists<components_t, MultiState>) {
-    BOOST_CHECK(not state.covTransport);
+    BOOST_CHECK(!state.covTransport);
     for (const auto &cmp : state.components) {
       BOOST_CHECK(cmp.state.covTransport == Cov);
     }
@@ -521,7 +521,7 @@ void test_component_bound_state() {
     auto failed_bound_state =
         (*(++cmp_iterable.begin()))
             .boundState(*right_surface, true, FreeToBoundCorrection(false));
-    BOOST_CHECK(not failed_bound_state.ok());
+    BOOST_CHECK(!failed_bound_state.ok());
   }
 }
 

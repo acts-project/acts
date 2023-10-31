@@ -122,7 +122,7 @@ class AnyBase : public AnyBaseAll {
         "Type needs to be copy assignable and copy constructible");
 
     m_handler = makeHandler<U>();
-    if constexpr (not heapAllocated<U>()) {
+    if constexpr (!heapAllocated<U>()) {
       // construct into local buffer
       /*U* ptr =*/new (m_data.data()) U(std::forward<Args>(args)...);
       _ACTS_ANY_VERBOSE(

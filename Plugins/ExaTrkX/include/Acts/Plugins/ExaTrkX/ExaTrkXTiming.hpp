@@ -47,13 +47,13 @@ class ExaTrkXTimer {
   ExaTrkXTimer(bool disabled = false) : m_disabled(disabled) {}
 
   void start() {
-    if (not m_disabled) {
+    if (!m_disabled) {
       m_start = std::chrono::high_resolution_clock::now();
       m_running = true;
     }
   }
   void stop() {
-    if (not m_disabled) {
+    if (!m_disabled) {
       m_end = std::chrono::high_resolution_clock::now();
       m_running = false;
     }
@@ -63,7 +63,7 @@ class ExaTrkXTimer {
     return elapsedSeconds();
   }
   double elapsed() {
-    if (not m_disabled) {
+    if (!m_disabled) {
       std::chrono::time_point<std::chrono::high_resolution_clock> end;
       if (m_running) {
         end = std::chrono::high_resolution_clock::now();

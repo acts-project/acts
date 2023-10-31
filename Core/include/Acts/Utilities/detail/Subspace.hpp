@@ -95,10 +95,10 @@ class FixedSizeSubspace {
   template <typename index_t>
   constexpr FixedSizeSubspace(const std::array<index_t, kSize>& indices) {
     for (size_t i = 0u; i < kSize; ++i) {
-      assert((indices[i] < kFullSize) and
+      assert((indices[i] < kFullSize) &&
              "Axis indices must be within the full space");
       if (0u < i) {
-        assert((indices[i - 1u] < indices[i]) and
+        assert((indices[i - 1u] < indices[i]) &&
                "Axis indices must be unique and ordered");
       }
     }
@@ -131,7 +131,7 @@ class FixedSizeSubspace {
     // always iterate over all elements to avoid branching and hope the compiler
     // can optimise this for us.
     for (auto a : m_axes) {
-      isContained = (isContained or (a == index));
+      isContained = (isContained || (a == index));
     }
     return isContained;
   }

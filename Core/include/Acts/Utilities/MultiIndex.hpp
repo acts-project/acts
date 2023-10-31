@@ -28,7 +28,7 @@ namespace Acts {
 template <typename T, std::size_t... BitsPerLevel>
 class MultiIndex {
  public:
-  static_assert(std::is_integral_v<T> and std::is_unsigned_v<T>,
+  static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>,
                 "The underlying storage type must be an unsigned integer");
   static_assert(0 < sizeof...(BitsPerLevel),
                 "At least one level must be defined");
@@ -81,12 +81,12 @@ class MultiIndex {
   constexpr Value value() const { return m_value; }
   /// Get the value for the index level.
   constexpr Value level(std::size_t lvl) const {
-    assert((lvl < NumLevels) and "Index level outside allowed range");
+    assert((lvl < NumLevels) && "Index level outside allowed range");
     return (m_value >> shift(lvl)) & mask(lvl);
   }
   /// Set the value of the index level.
   constexpr MultiIndex& set(std::size_t lvl, Value val) {
-    assert((lvl < NumLevels) and "Index level outside allowed range");
+    assert((lvl < NumLevels) && "Index level outside allowed range");
     // mask of valid bits at the encoded positions for the index level
     Value shiftedMask = (mask(lvl) << shift(lvl));
     // value of the index level shifted to its encoded position
@@ -98,7 +98,7 @@ class MultiIndex {
 
   /// Create index with the selected level increased and levels below zeroed.
   constexpr MultiIndex makeNextSibling(std::size_t lvl) const {
-    assert((lvl < NumLevels) and "Index level outside allowed range");
+    assert((lvl < NumLevels) && "Index level outside allowed range");
     // remove lower levels by shifting the upper levels to the left edge
     Value upper = (m_value >> shift(lvl));
     // increase to create sibling and shift back to zero lower levels again
@@ -106,7 +106,7 @@ class MultiIndex {
   }
   /// Create index with every level below the selected level maximized.
   constexpr MultiIndex makeLastDescendant(std::size_t lvl) const {
-    assert((lvl < NumLevels) and "Index level outside allowed range");
+    assert((lvl < NumLevels) && "Index level outside allowed range");
     // mask everything below the selected level
     Value maskLower = (Value(1u) << shift(lvl)) - 1u;
     // replace the masked lower levels w/ ones
@@ -115,7 +115,7 @@ class MultiIndex {
 
   /// Get the number of bits for the associated level
   static constexpr std::size_t bits(std::size_t lvl) {
-    assert((lvl < NumLevels) and "Index level outside allowed range");
+    assert((lvl < NumLevels) && "Index level outside allowed range");
     return s_bits[lvl];
   }
 
