@@ -223,11 +223,18 @@ class DirectNavigator {
 
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish & update the surface status
-      // TODO we do not know the intersection index - passing 0
+      // TODO we do not know the intersection index - passing the closer one
+      const auto& surface = **state.navigation.navSurfaceIter;
+      const auto index =
+          surface
+              .intersect(state.geoContext, stepper.position(state.stepping),
+                         stepper.direction(state.stepping), false,
+                         state.options.targetTolerance)
+              .closest()
+              .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter, 0,
-          state.options.direction, false, state.options.targetTolerance,
-          *m_logger);
+          state.stepping, surface, index, state.options.direction, false,
+          state.options.targetTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::unreachable) {
         ACTS_VERBOSE(
             "Surface not reachable anymore, switching to next one in "
@@ -273,11 +280,18 @@ class DirectNavigator {
     // Check if we are on surface
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish the surface status
-      // TODO we do not know the intersection index - passing 0
+      // TODO we do not know the intersection index - passing the closer one
+      const auto& surface = **state.navigation.navSurfaceIter;
+      const auto index =
+          surface
+              .intersect(state.geoContext, stepper.position(state.stepping),
+                         stepper.direction(state.stepping), false,
+                         state.options.targetTolerance)
+              .closest()
+              .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter, 0,
-          state.options.direction, false, state.options.targetTolerance,
-          *m_logger);
+          state.stepping, surface, index, state.options.direction, false,
+          state.options.targetTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;
