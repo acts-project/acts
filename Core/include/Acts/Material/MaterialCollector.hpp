@@ -67,8 +67,8 @@ struct MaterialCollector {
                   const Logger& logger) const {
     if (navigator.currentSurface(state.navigation)) {
       if (navigator.currentSurface(state.navigation) ==
-              navigator.targetSurface(state.navigation) and
-          not navigator.targetReached(state.navigation)) {
+              navigator.targetSurface(state.navigation) &&
+          !navigator.targetReached(state.navigation)) {
         return;
       }
 

@@ -70,7 +70,7 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map output collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
   if (!m_cfg.planarModuleStepper) {

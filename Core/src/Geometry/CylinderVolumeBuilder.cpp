@@ -258,7 +258,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       [&](VolumeConfig& centralConfig, VolumeConfig& endcapConfig,
           const std::string& endcapName) -> MutableTrackingVolumePtr {
     // No config - no volume
-    if (not endcapConfig) {
+    if (!endcapConfig) {
       return nullptr;
     }
     // Check for ring layout
@@ -314,7 +314,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
         return ss.str();
       }());
       // Result of the parsing loop
-      if (innerRadii.size() == outerRadii.size() and not innerRadii.empty()) {
+      if (innerRadii.size() == outerRadii.size() && !innerRadii.empty()) {
         bool consistent = true;
         // The inter volume radii
         ACTS_VERBOSE("Checking ring radius consistency");
@@ -359,7 +359,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
             auto ringVolume = std::find_if(
                 volumeRminRmax.begin(), volumeRminRmax.end(),
                 [&](const auto& reference) {
-                  return (test > reference.first and test < reference.second);
+                  return (test > reference.first && test < reference.second);
                 });
             if (ringVolume != volumeRminRmax.end()) {
               unsigned int ringBin =
@@ -423,7 +423,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volumesContainer.push_back(nEndcap);
       volume = nEndcap;
       // Set the inner or outer material
-      if (not m_cfg.buildToRadiusZero) {
+      if (!m_cfg.buildToRadiusZero) {
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
                                        Acts::tubeInnerCover);
       }
@@ -439,7 +439,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volumesContainer.push_back(barrel);
       volume = barrel;
       // Set the inner or outer material
-      if (not m_cfg.buildToRadiusZero) {
+      if (!m_cfg.buildToRadiusZero) {
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
                                        Acts::tubeInnerCover);
       }
@@ -454,7 +454,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       volumesContainer.push_back(pEndcap);
       volume = pEndcap;
       // Set the inner or outer material
-      if (not m_cfg.buildToRadiusZero) {
+      if (!m_cfg.buildToRadiusZero) {
         volume->assignBoundaryMaterial(m_cfg.boundaryMaterial[0],
                                        Acts::tubeInnerCover);
       }

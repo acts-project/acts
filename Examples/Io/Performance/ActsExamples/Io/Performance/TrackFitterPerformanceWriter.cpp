@@ -112,7 +112,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   // Loop over all tracks
   for (const auto& track : tracks) {
     // Select reco track with fitted parameters
-    if (not track.hasReferenceSurface()) {
+    if (!track.hasReferenceSurface()) {
       ACTS_WARNING("No fitted track parameters.");
       continue;
     }
