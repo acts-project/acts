@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Vertexing/KalmanVertexTrackUpdater.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -359,7 +358,7 @@ void Acts::AdaptiveMultiVertexFitter<
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
-        KalmanVertexTrackUpdater::update<input_track_t>(trkAtVtx, *vtx);
+        KalmanVertexUpdater::smooth<input_track_t>(trkAtVtx, *vtx);
       }
     }
   }

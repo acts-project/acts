@@ -44,10 +44,9 @@ struct Cache {
 };
 
 /// @brief Updates vertex with knowledge of new track
-/// @note KalmanVertexUpdater updates the vertex w.r.t. the
-/// newly given track, but does NOT add the track to the
-/// TrackAtVertex list. Has to be done manually after calling
-/// this method
+/// @note KalmanVertexUpdater updates the vertex when trk is added to the fit.
+/// However, it does not add the track to the TrackAtVertex list. This to be
+/// done manually after calling the method.
 ///
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
@@ -68,6 +67,16 @@ template <typename input_track_t>
 void calculateUpdate(const Acts::Vertex<input_track_t>& vtx,
                      const Acts::LinearizedTrack& linTrack,
                      const double& trackWeight, int sign, Cache& cache);
+
+/// @brief Recomputes track parameters with the final estimate of the vertex
+/// position. Reestimates the tracks' chi2 using a symmetric test.
+///
+/// @tparam input_track_t track parameter type
+/// @param track Track to update
+/// @param vtx Vertex after all its tracks were added to it
+template <typename input_track_t>
+void smooth(TrackAtVertex<input_track_t>& track,
+            const Vertex<input_track_t>& vtx);
 
 namespace detail {
 
@@ -104,6 +113,21 @@ double trackParametersChi2(const LinearizedTrack& linTrack, const Cache& cache);
 template <typename input_track_t>
 void update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk,
             int sign);
+
+/// @brief Creates a new covariance matrix for the
+/// refitted track parameters
+///
+/// @param sMat Track ovariance in momentum space
+/// @param crossCovVP Cross variance between the vertex and
+/// the fitted track momentum
+/// @param vtxWeight Vertex weight matrix
+/// @param vtxCov Vertex covariance matrix
+/// @param newTrkParams New track parameter
+inline BoundMatrix calculateTrackCovariance(const SquareMatrix3& sMat,
+                                            const ActsMatrix<4, 3>& crossCovVP,
+                                            const SquareMatrix4& vtxWeight,
+                                            const SquareMatrix4& vtxCov,
+                                            const BoundVector& newTrkParams);
 }  // Namespace detail
 
 }  // Namespace KalmanVertexUpdater
