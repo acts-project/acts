@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   BOOST_CHECK(tubeCylinderVolume->inside(tContext, Acts::Vector3(50., 0., 0.)));
   // Outside
   BOOST_CHECK(
-      not tubeCylinderVolume->inside(tContext, Acts::Vector3(150., 0., 0.)));
+      !tubeCylinderVolume->inside(tContext, Acts::Vector3(150., 0., 0.)));
 
   // Check the extent
   auto volumeExtent = tubeCylinderVolume->extent(tContext, 1);

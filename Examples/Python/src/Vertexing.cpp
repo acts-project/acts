@@ -39,23 +39,22 @@ void addVertexing(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
       "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
-      inputTrajectories, outputProtoVertices, outputVertices, seedFinder,
-      bField);
+      outputProtoVertices, outputVertices, seedFinder, bField);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
                                 mex, "IterativeVertexFinderAlgorithm",
-                                inputTrackParameters, inputTrajectories,
-                                outputProtoVertices, outputVertices, bField);
+                                inputTrackParameters, outputProtoVertices,
+                                outputVertices, bField);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TutorialVertexFinderAlgorithm,
                                 mex, "TutorialVertexFinderAlgorithm",
-                                inputTrackParameters, inputTrajectories,
-                                outputProtoVertices, bField);
+                                inputTrackParameters, outputProtoVertices,
+                                bField);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::VertexFitterAlgorithm, mex, "VertexFitterAlgorithm",
-      inputTrackParameters, inputTrajectories, inputProtoVertices,
-      outputVertices, bField, doConstrainedFit, constraintPos, constraintCov);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VertexFitterAlgorithm, mex,
+                                "VertexFitterAlgorithm", inputTrackParameters,
+                                inputProtoVertices, outputVertices, bField,
+                                doConstrainedFit, constraintPos, constraintCov);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SingleSeedVertexFinderAlgorithm,
                                 mex, "SingleSeedVertexFinderAlgorithm",

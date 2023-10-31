@@ -76,7 +76,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
     Acts::Vector3 dir;
     double cosTheta = 0.;
     double sinTheta = 0.;
-    if (not m_cfg.etaUniform) {
+    if (!m_cfg.etaUniform) {
       cosTheta = cosThetaDist(rng);
       sinTheta = std::sqrt(1 - cosTheta * cosTheta);
     } else {

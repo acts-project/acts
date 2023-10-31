@@ -343,7 +343,7 @@ template <typename track_proxy_t>
 bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
   auto checkMin = [](auto x, auto min) { return min <= x; };
   auto within = [](double x, double min, double max) {
-    return (min <= x) and (x < max);
+    return (min <= x) && (x < max);
   };
 
   const auto theta = track.theta();
@@ -374,13 +374,14 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   const Config& cuts = *cutsPtr;
 
-  return within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) and
-         (m_noEtaCuts || (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) and
-                          within(_eta, cuts.etaMin, cuts.etaMax))) and
-         within(track.phi(), cuts.phiMin, cuts.phiMax) and
-         within(track.loc0(), cuts.loc0Min, cuts.loc0Max) and
-         within(track.loc1(), cuts.loc1Min, cuts.loc1Max) and
-         within(track.time(), cuts.timeMin, cuts.timeMax) and
+  return track.hasReferenceSurface() &&
+         within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
+         (m_noEtaCuts || (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
+                          within(_eta, cuts.etaMin, cuts.etaMax))) &&
+         within(track.phi(), cuts.phiMin, cuts.phiMax) &&
+         within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
+         within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
+         within(track.time(), cuts.timeMin, cuts.timeMax) &&
          checkMin(track.nMeasurements(), cuts.minMeasurements);
 }
 

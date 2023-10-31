@@ -17,7 +17,7 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
     SeedFilterConfig config,
     IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
     : m_cfg(config), m_experimentCuts(expCuts) {
-  if (not config.isInInternalUnits) {
+  if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFilterConfig not in ACTS internal units in SeedFilter");
   }
@@ -169,13 +169,13 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       int deltaSeedConf =
           compatibleSeedR.size() + 1 - seedFilterState.nTopSeedConf;
       if (deltaSeedConf < 0 ||
-          (seedFilterState.numQualitySeeds != 0 and deltaSeedConf == 0)) {
+          (seedFilterState.numQualitySeeds != 0 && deltaSeedConf == 0)) {
         continue;
       }
       bool seedRangeCuts =
           bottomSP.radius() < seedConfRange.seedConfMinBottomRadius ||
           std::abs(zOrigin) > seedConfRange.seedConfMaxZOrigin;
-      if (seedRangeCuts and deltaSeedConf == 0 and
+      if (seedRangeCuts && deltaSeedConf == 0 &&
           impact > seedConfRange.minImpactSeedConf) {
         continue;
       }
@@ -186,8 +186,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < spacePointData.quality(bottomSP.index()) and
-          weight < spacePointData.quality(middleSP.index()) and
+      if (weight < spacePointData.quality(bottomSP.index()) &&
+          weight < spacePointData.quality(middleSP.index()) &&
           weight < spacePointData.quality(topSpVec[topSPIndex]->index())) {
         continue;
       }
@@ -227,7 +227,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   }  // loop on tops
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
-  if (m_cfg.seedConfirmation and maxWeightSeed and
+  if (m_cfg.seedConfirmation && maxWeightSeed &&
       seedFilterState.numQualitySeeds == 0) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
@@ -291,11 +291,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
 
     if (m_cfg.seedConfirmation) {
       // continue if higher-quality seeds were found
-      if (numQualitySeeds > 0 and not qualitySeed) {
+      if (numQualitySeeds > 0 && !qualitySeed) {
         continue;
       }
-      if (bestSeedQuality < spacePointData.quality(bottom->index()) and
-          bestSeedQuality < spacePointData.quality(medium->index()) and
+      if (bestSeedQuality < spacePointData.quality(bottom->index()) &&
+          bestSeedQuality < spacePointData.quality(medium->index()) &&
           bestSeedQuality < spacePointData.quality(top->index())) {
         continue;
       }
