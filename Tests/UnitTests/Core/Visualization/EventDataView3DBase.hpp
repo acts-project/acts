@@ -367,7 +367,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart,
                             kfOptions, tracks);
-  if (not fitRes.ok()) {
+  if (!fitRes.ok()) {
     std::cout << "Fit failed" << std::endl;
     return ss.str();
   }

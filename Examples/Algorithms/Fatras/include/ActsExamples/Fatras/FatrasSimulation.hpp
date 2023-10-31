@@ -78,6 +78,11 @@ class FatrasSimulation final : public IAlgorithm {
     /// have associated material.
     bool generateHitsOnPassive = false;
 
+    /// Absolute maximum step size
+    double maxStepSize = 1 * Acts::UnitConstants::m;
+    /// Absolute maximum path length
+    double pathLimit = 30 * Acts::UnitConstants::m;
+
     /// Expected average number of hits generated per particle.
     ///
     /// This is just a performance optimization hint and has no impact on the

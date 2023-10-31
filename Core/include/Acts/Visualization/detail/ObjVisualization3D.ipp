@@ -72,7 +72,7 @@ template <typename T>
 void ObjVisualization3D<T>::write(const std::string& path) const {
   std::ofstream os;
   std::string objectpath = path;
-  if (not IVisualization3D::hasExtension(objectpath)) {
+  if (!IVisualization3D::hasExtension(objectpath)) {
     objectpath += std::string(".obj");
   }
   os.open(objectpath);

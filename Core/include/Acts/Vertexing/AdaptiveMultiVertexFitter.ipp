@@ -218,7 +218,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     // will be set to false ...
     auto [it, inserted] = vtxInfo.impactParams3D.emplace(trk, *res);
     // ... and we have to overwrite manually.
-    if (not inserted) {
+    if (!inserted) {
       it->second = *res;
     }
   }
