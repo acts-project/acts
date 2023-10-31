@@ -102,7 +102,7 @@ def runTruthTrackingGx2f(
     s.addWriter(
         acts.examples.RootTrajectoryStatesWriter(
             level=acts.logging.INFO,
-            inputTrajectories="trajectories",
+            inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -114,7 +114,7 @@ def runTruthTrackingGx2f(
     s.addWriter(
         acts.examples.RootTrajectorySummaryWriter(
             level=acts.logging.INFO,
-            inputTrajectories="trajectories",
+            inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_fitter.root"),
@@ -135,7 +135,7 @@ def runTruthTrackingGx2f(
     # s.addWriter(
     #     acts.examples.TrackFitterPerformanceWriter(
     #         level=acts.logging.INFO,
-    #         inputTrajectories="trajectories",
+    #         inputTracks="tracks",
     #         inputParticles="truth_seeds_selected",
     #         inputMeasurementParticlesMap="measurement_particles_map",
     #         filePath=str(outputDir / "performance_track_fitter.root"),

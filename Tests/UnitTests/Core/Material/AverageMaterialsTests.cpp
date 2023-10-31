@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsVacuum) {
   // vacuum with zero thickness
   {
     auto slab = combineSlabs(zeroVacuum, zeroVacuum);
-    BOOST_CHECK(not slab.material());
+    BOOST_CHECK(!slab.material());
     BOOST_CHECK_EQUAL(slab.thickness(), 0.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), 0.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), 0.0f);
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsVacuum) {
   // vacuum with unit thickness
   {
     auto slab = combineSlabs(unitVacuum, unitVacuum);
-    BOOST_CHECK(not slab.material());
+    BOOST_CHECK(!slab.material());
     BOOST_CHECK_EQUAL(slab.thickness(), 2.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), 0.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), 0.0f);

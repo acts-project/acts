@@ -70,7 +70,7 @@ struct GeometricConfig {
 
   /// Charge generation (configurable via the chargeSmearer)
   Acts::ActsScalar charge(Acts::ActsScalar path, RandomEngine &rng) const {
-    if (not chargeSmearer) {
+    if (!chargeSmearer) {
       return path;
     }
     auto res = chargeSmearer(path, rng);

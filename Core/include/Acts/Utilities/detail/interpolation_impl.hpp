@@ -51,11 +51,11 @@ struct can_interpolate {
 
   static const bool value =
       std::is_same<std::true_type,
-                   decltype(value_type_test<Value>(nullptr))>::value and
+                   decltype(value_type_test<Value>(nullptr))>::value &&
       std::is_same<std::true_type,
-                   decltype(point_type_test<Point1>(nullptr))>::value and
+                   decltype(point_type_test<Point1>(nullptr))>::value &&
       std::is_same<std::true_type,
-                   decltype(point_type_test<Point2>(nullptr))>::value and
+                   decltype(point_type_test<Point2>(nullptr))>::value &&
       std::is_same<std::true_type,
                    decltype(point_type_test<Point3>(nullptr))>::value;
 };

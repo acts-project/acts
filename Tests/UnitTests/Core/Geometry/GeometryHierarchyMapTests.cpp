@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ConstructInitializerList) {
       {makeId(), {23.0}},
   };
   BOOST_CHECK_EQUAL(std::next(c.begin(), 4), c.end());
-  BOOST_CHECK(not c.empty());
+  BOOST_CHECK(!c.empty());
   BOOST_CHECK_EQUAL(c.size(), 4u);
   // only test that all elements are there; failure test are below
   CHECK_ENTRY(c, makeId(0, 1, 2), makeId(0, 1, 2));
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(IndexBasedAccess) {
       {makeId(4, 5, 7), {4.0}},
   });
 
-  BOOST_CHECK(not c.empty());
+  BOOST_CHECK(!c.empty());
   BOOST_CHECK_EQUAL(c.size(), 4u);
   // this tests just that the index-based access works
   // NOTE order is undefined and should not be tested
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(Find) {
 
   // basic checks
   BOOST_CHECK_EQUAL(std::next(c.begin(), 4u), c.end());
-  BOOST_CHECK(not c.empty());
+  BOOST_CHECK(!c.empty());
   BOOST_CHECK_EQUAL(c.size(), 4u);
 
   // find existing sensitive
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(FindWithGlobalDefault) {
 
   // basic checks
   BOOST_CHECK_EQUAL(std::next(c.begin(), 3u), c.end());
-  BOOST_CHECK(not c.empty());
+  BOOST_CHECK(!c.empty());
   BOOST_CHECK_EQUAL(c.size(), 3u);
 
   // find existing entries

@@ -53,7 +53,7 @@ class SpacePointData {
   void clear();
 
   ///
-  bool hasDynamicVariable() const { return not m_topStripVector.empty(); }
+  bool hasDynamicVariable() const { return !m_topStripVector.empty(); }
 
   const Acts::Vector3& getTopStripVector(std::size_t idx) const {
     return m_topStripVector[idx];

@@ -274,7 +274,7 @@ class Navigator {
 
   bool targetReached(const State& state) const { return state.targetReached; }
 
-  bool endOfWorldReached(State& state) const {
+  bool endOfWorldReached(const State& state) const {
     return state.currentVolume == nullptr;
   }
 
@@ -314,7 +314,7 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
     // Set the world volume if it is not set
-    if (not state.navigation.worldVolume) {
+    if (!state.navigation.worldVolume) {
       state.navigation.worldVolume =
           m_cfg.trackingGeometry->highestTrackingVolume();
     }
@@ -402,15 +402,15 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state) << "Entering navigator::preStep.");
 
     // Initialize the target and target volume
-    if (state.navigation.targetSurface and not state.navigation.targetVolume) {
+    if (state.navigation.targetSurface && !state.navigation.targetVolume) {
       // Find out about the target as much as you can
       initializeTarget(state, stepper);
     }
     // Try targeting the surfaces - then layers - then boundaries
-    if (state.navigation.navigationStage <= Stage::surfaceTarget and
+    if (state.navigation.navigationStage <= Stage::surfaceTarget &&
         targetSurfaces(state, stepper)) {
       ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
-    } else if (state.navigation.navigationStage <= Stage::layerTarget and
+    } else if (state.navigation.navigationStage <= Stage::layerTarget &&
                targetLayers(state, stepper)) {
       ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
     } else if (targetBoundaries(state, stepper)) {
@@ -475,7 +475,7 @@ class Navigator {
           // this was the last surface, check if we have layers
           if (!state.navigation.navLayers.empty()) {
             ++state.navigation.navLayerIndex;
-          } else if (state.navigation.startLayer != nullptr and
+          } else if (state.navigation.startLayer != nullptr &&
                      state.navigation.currentSurface->associatedLayer() ==
                          state.navigation.startLayer) {
             // this was the start layer, switch to layer target next
@@ -591,7 +591,7 @@ class Navigator {
                      const navigation_surfaces_t& navSurfaces,
                      std::size_t navIndex) const {
     // No surfaces, status check will be done on layer
-    if (navSurfaces.empty() or navIndex == navSurfaces.size()) {
+    if (navSurfaces.empty() || navIndex == navSurfaces.size()) {
       return false;
     }
     // Take the current surface
@@ -636,14 +636,13 @@ class Navigator {
       return false;
     }
     // Make sure resolve Surfaces is called on the start layer
-    if (state.navigation.startLayer and
-        not state.navigation.startLayerResolved) {
+    if (state.navigation.startLayer && !state.navigation.startLayerResolved) {
       ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
       // We provide the layer to the resolve surface method in this case
       state.navigation.startLayerResolved = true;
       bool startResolved =
           resolveSurfaces(state, stepper, state.navigation.startLayer);
-      if (not startResolved and
+      if (!startResolved &&
           state.navigation.startLayer == state.navigation.targetLayer) {
         ACTS_VERBOSE(volInfo(state)
                      << "Start is target layer, nothing left to do.");
@@ -656,7 +655,7 @@ class Navigator {
 
     // The call that we are on a layer and have not yet resolved the surfaces
     // No surfaces, do not return to stepper
-    if (state.navigation.navSurfaces.empty() or
+    if (state.navigation.navSurfaces.empty() ||
         state.navigation.navSurfaceIndex ==
             state.navigation.navSurfaces.size()) {
       ACTS_VERBOSE(volInfo(state)
@@ -980,7 +979,7 @@ class Navigator {
       }
       // Set the begin index
       state.navigation.navBoundaryIndex = 0;
-      if (not state.navigation.navBoundaries.empty()) {
+      if (!state.navigation.navBoundaries.empty()) {
         // Set to the first and return to the stepper
         stepper.updateStepSize(state.stepping, state.navigation.navBoundary(),
                                state.options.direction, true);
@@ -992,7 +991,7 @@ class Navigator {
     };
 
     // No boundaries are assigned yet, find them
-    if (state.navigation.navBoundaries.empty() and findBoundaries()) {
+    if (state.navigation.navBoundaries.empty() && findBoundaries()) {
       return true;
     }
 
@@ -1056,8 +1055,7 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   void initializeTarget(propagator_state_t& state,
                         const stepper_t& stepper) const {
-    if (state.navigation.targetVolume and
-        state.stepping.pathAccumulated == 0.) {
+    if (state.navigation.targetVolume && state.stepping.pathAccumulated == 0.) {
       ACTS_VERBOSE(volInfo(state)
                    << "Re-initialzing cancelled as it is the first step.");
       return;
