@@ -14,9 +14,11 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -226,11 +228,12 @@ class DirectNavigator {
       // TODO we do not know the intersection index - passing the closer one
       const auto& surface = **state.navigation.navSurfaceIter;
       const auto index =
-          surface
-              .intersect(state.geoContext, stepper.position(state.stepping),
-                         stepper.direction(state.stepping), false,
-                         state.options.targetTolerance)
-              .closest()
+          chooseIntersection(
+              state.geoContext, surface, stepper.position(state.stepping),
+              state.options.direction * stepper.direction(state.stepping),
+              false, std::numeric_limits<double>::max(),
+              stepper.overstepLimit(state.stepping),
+              state.options.targetTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, index, state.options.direction, false,
@@ -283,11 +286,12 @@ class DirectNavigator {
       // TODO we do not know the intersection index - passing the closer one
       const auto& surface = **state.navigation.navSurfaceIter;
       const auto index =
-          surface
-              .intersect(state.geoContext, stepper.position(state.stepping),
-                         stepper.direction(state.stepping), false,
-                         state.options.targetTolerance)
-              .closest()
+          chooseIntersection(
+              state.geoContext, surface, stepper.position(state.stepping),
+              state.options.direction * stepper.direction(state.stepping),
+              false, std::numeric_limits<double>::max(),
+              stepper.overstepLimit(state.stepping),
+              state.options.targetTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, index, state.options.direction, false,
@@ -313,6 +317,26 @@ class DirectNavigator {
   }
 
  private:
+  ObjectIntersection<Surface> chooseIntersection(const GeometryContext& gctx,
+                                                 const Surface& surface,
+                                                 const Vector3& position,
+                                                 const Vector3& direction,
+                                                 const BoundaryCheck& bcheck,
+                                                 double pLimit, double oLimit,
+                                                 double tolerance) const {
+    auto intersections =
+        surface.intersect(gctx, position, direction, bcheck, tolerance);
+
+    for (auto& intersection : intersections.split()) {
+      if (detail::checkIntersection(intersection, pLimit, oLimit, tolerance,
+                                    logger())) {
+        return intersection;
+      }
+    }
+
+    return ObjectIntersection<Surface>::invalid();
+  }
+
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;
