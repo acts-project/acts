@@ -131,7 +131,7 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
   GeometryIdentifier geoID(j["geo_id"]);
   mutableSf->assignGeometryId(geoID);
   // Add material
-  if (j.find("material") != j.end() and not j["material"].empty()) {
+  if (j.find("material") != j.end() && !j["material"].empty()) {
     const ISurfaceMaterial* surfaceMaterial = nullptr;
     from_json(j, surfaceMaterial);
     std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
@@ -155,7 +155,7 @@ nlohmann::json Acts::SurfaceJsonConverter::toJson(const GeometryContext& gctx,
   // Transform is always needed
   jSurface["bounds"] = SurfaceBoundsJsonConverter::toJson(sBounds);
   jSurface["geo_id"] = surface.geometryId().value();
-  if (surface.surfaceMaterial() != nullptr and options.writeMaterial) {
+  if (surface.surfaceMaterial() != nullptr && options.writeMaterial) {
     jSurface["material"] = nlohmann::json(surface.surfaceMaterial());
   }
   return jSurface;

@@ -52,7 +52,7 @@ std::size_t countBins(const indexed_surface_grid& isGrid) {
   std::size_t nonEmptyBins = 0u;
   for (std::size_t igb = 0u; igb < isGrid.grid.size(); ++igb) {
     const auto& gb = isGrid.grid.at(igb);
-    if (not gb.empty()) {
+    if (!gb.empty()) {
       ++nonEmptyBins;
     }
   }

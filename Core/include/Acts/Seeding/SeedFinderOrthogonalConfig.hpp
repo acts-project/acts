@@ -108,7 +108,7 @@ struct SeedFinderOrthogonalConfig {
   bool isInInternalUnits = false;
 
   SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
-    if (not isInInternalUnits) {
+    if (!isInInternalUnits) {
       throw std::runtime_error(
           "SeedFinderOrthogonalConfig not in ACTS internal units in "
           "calculateDerivedQuantities");

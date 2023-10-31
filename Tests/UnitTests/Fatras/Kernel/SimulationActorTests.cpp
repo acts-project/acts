@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(Decay) {
   f.state.stepping.time += 1_ns;
   f.result.properTimeLimit = f.result.particle.properTime() + gammaInv * 0.5_ns;
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
-  BOOST_CHECK(not f.result.isAlive);
+  BOOST_CHECK(!f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
   BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);

@@ -37,7 +37,7 @@ void Acts::Experimental::detail::BlueprintHelper::sort(Blueprint::Node& node,
   if (node.binning.size() == 1) {
     auto bVal = node.binning.front();
     // x,y,z binning along the axis
-    if (bVal == binX or bVal == binY or bVal == binZ) {
+    if (bVal == binX || bVal == binY || bVal == binZ) {
       Vector3 nodeCenter = node.transform.translation();
       Vector3 nodeSortAxis = node.transform.rotation().col(bVal);
       std::sort(
@@ -46,7 +46,7 @@ void Acts::Experimental::detail::BlueprintHelper::sort(Blueprint::Node& node,
             return (a->transform.translation() - nodeCenter).dot(nodeSortAxis) <
                    (b->transform.translation() - nodeCenter).dot(nodeSortAxis);
           });
-    } else if (bVal == binR and node.boundsType == VolumeBounds::eCylinder) {
+    } else if (bVal == binR && node.boundsType == VolumeBounds::eCylinder) {
       std::sort(node.children.begin(), node.children.end(),
                 [](const auto& a, const auto& b) {
                   return 0.5 * (a->boundaryValues[0] + a->boundaryValues[1]) <

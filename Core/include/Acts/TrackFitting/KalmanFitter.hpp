@@ -376,7 +376,7 @@ class KalmanFitter {
 
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      if constexpr (not isDirectNavigator) {
+      if constexpr (!isDirectNavigator) {
         if (result.processedStates == 0) {
           for (auto measurementIt = inputMeasurements->begin();
                measurementIt != inputMeasurements->end(); measurementIt++) {
@@ -398,7 +398,7 @@ class KalmanFitter {
         // -> Perform the kalman update
         // -> Fill track state information & update stepper information
 
-        if (not result.smoothed and not result.reversed) {
+        if (!result.smoothed && !result.reversed) {
           ACTS_VERBOSE("Perform " << direction << " filter step");
           auto res = filter(surface, state, stepper, navigator, result);
           if (!res.ok()) {
@@ -420,9 +420,9 @@ class KalmanFitter {
       // when all track states have been handled or the navigation is breaked,
       // reset navigation&stepping before run reversed filtering or
       // proceed to run smoothing
-      if (not result.smoothed and not result.reversed) {
-        if (result.measurementStates == inputMeasurements->size() or
-            (result.measurementStates > 0 and
+      if (!result.smoothed && !result.reversed) {
+        if (result.measurementStates == inputMeasurements->size() ||
+            (result.measurementStates > 0 &&
              navigator.navigationBreak(state.navigation))) {
           // Remove the missing surfaces that occur after the last measurement
           result.missedActiveSurfaces.resize(result.measurementHoles);
@@ -458,7 +458,7 @@ class KalmanFitter {
       // Post-finalization:
       // - Progress to target/reference surface and built the final track
       // parameters
-      if (result.smoothed or result.reversed) {
+      if (result.smoothed || result.reversed) {
         if (result.smoothed) {
           // Update state and stepper with material effects
           // Only for smoothed as reverse filtering will handle this separately
@@ -719,7 +719,7 @@ class KalmanFitter {
 
         // No reversed filtering for last measurement state, but still update
         // with material effects
-        if (result.reversed and
+        if (result.reversed &&
             surface == navigator.startSurface(state.navigation)) {
           materialInteractor(surface, state, stepper, navigator,
                              MaterialUpdateStage::FullUpdate);
@@ -861,7 +861,7 @@ class KalmanFitter {
                             const navigator_t& navigator,
                             const MaterialUpdateStage& updateStage) const {
       // Protect against null surface
-      if (not surface) {
+      if (!surface) {
         ACTS_VERBOSE(
             "Surface is nullptr. Cannot be used for material interaction");
         return;
@@ -870,7 +870,7 @@ class KalmanFitter {
       // Indicator if having material
       bool hasMaterial = false;
 
-      if (surface->surfaceMaterial()) {
+      if (surface && surface->surfaceMaterial()) {
         // Prepare relevant input particle properties
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
@@ -899,7 +899,7 @@ class KalmanFitter {
         }
       }
 
-      if (not hasMaterial) {
+      if (!hasMaterial) {
         // Screen out message
         ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
                                                         << " at update stage: "
@@ -1071,7 +1071,7 @@ class KalmanFitter {
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
-      if (!result.result.ok() or result.finished) {
+      if (!result.result.ok() || result.finished) {
         return true;
       }
       return false;
@@ -1176,7 +1176,7 @@ class KalmanFitter {
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
-    if (kalmanResult.result.ok() and not kalmanResult.measurementStates) {
+    if (kalmanResult.result.ok() && !kalmanResult.measurementStates) {
       kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
     }
 
@@ -1314,7 +1314,7 @@ class KalmanFitter {
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
-    if (kalmanResult.result.ok() and not kalmanResult.measurementStates) {
+    if (kalmanResult.result.ok() && !kalmanResult.measurementStates) {
       kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
     }
 

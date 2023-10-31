@@ -151,9 +151,9 @@ inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
                      [](const auto& lsl, const auto& rsl) {
                        return lsl.template get<IndexSourceLink>() ==
                               rsl.template get<IndexSourceLink>();
-                     }) and
-          (lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and
-          (lhs.z() == rhs.z()) and (lhs.varianceR() == rhs.varianceR()) and
+                     }) &&
+          (lhs.x() == rhs.x()) && (lhs.y() == rhs.y()) &&
+          (lhs.z() == rhs.z()) && (lhs.varianceR() == rhs.varianceR()) &&
           (lhs.varianceZ() == rhs.varianceZ()));
 }
 

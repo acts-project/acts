@@ -75,7 +75,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
 
   // Write the portals if pre-converted as link
   nlohmann::json jPortals;
-  if (not portals.empty()) {
+  if (!portals.empty()) {
     for (const auto* p : volume.portals()) {
       auto it = std::find(portals.begin(), portals.end(), p);
       if (it != portals.end()) {
@@ -161,7 +161,7 @@ Acts::DetectorVolumeJsonConverter::fromJson(const GeometryContext& gctx,
   // Some tooling
   auto portalGenerator = Experimental::defaultPortalGenerator();
 
-  if (jSurfaces.empty() and jVolumes.empty()) {
+  if (jSurfaces.empty() && jVolumes.empty()) {
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, gctx, name, transform, std::move(bounds),
         Experimental::tryAllPortals());

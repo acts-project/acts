@@ -78,7 +78,7 @@ void Acts::AccumulatedSurfaceMaterial::trackVariance(
     return;
   }
   // The touched bins are known, so you can access them directly
-  if (not trackBins.empty()) {
+  if (!trackBins.empty()) {
     for (auto bin : trackBins) {
       m_accumulatedMaterial[bin[1]][bin[0]].trackVariance(slabReference);
     }
@@ -115,7 +115,7 @@ void Acts::AccumulatedSurfaceMaterial::trackAverage(
   }
 
   // The touched bins are known, so you can access them directly
-  if (not trackBins.empty()) {
+  if (!trackBins.empty()) {
     for (auto bin : trackBins) {
       m_accumulatedMaterial[bin[1]][bin[0]].trackAverage(emptyHit);
     }
