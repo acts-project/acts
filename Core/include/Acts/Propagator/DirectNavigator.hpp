@@ -200,10 +200,10 @@ class DirectNavigator {
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
     (void)stepper;
 
-    // Call the navigation helper prior to actual navigation                                                                                                    
+    // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
-    // We set the current surface to the start surface                                                                                                          
+    // We set the current surface to the start surface
     state.navigation.currentSurface = state.navigation.startSurface;
     if (state.navigation.currentSurface) {
       ACTS_VERBOSE(volInfo(state)
