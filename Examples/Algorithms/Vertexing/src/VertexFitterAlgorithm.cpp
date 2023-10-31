@@ -78,7 +78,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
 
   for (const auto& protoVertex : protoVertices) {
     // un-constrained fit requires at least two tracks
-    if ((not m_cfg.doConstrainedFit) and (protoVertex.size() < 2)) {
+    if ((!m_cfg.doConstrainedFit) && (protoVertex.size() < 2)) {
       ACTS_INFO(
           "Skip un-constrained vertex fit on proto-vertex with less than two "
           "tracks");

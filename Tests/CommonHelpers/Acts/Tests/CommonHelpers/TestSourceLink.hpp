@@ -98,7 +98,7 @@ Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
 
   trackState.setUncalibratedSourceLink(sourceLink);
 
-  if ((sl.indices[0] != Acts::eBoundSize) and
+  if ((sl.indices[0] != Acts::eBoundSize) &&
       (sl.indices[1] != Acts::eBoundSize)) {
     auto meas =
         makeMeasurement(trackState.getUncalibratedSourceLink(), sl.parameters,

@@ -132,7 +132,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
       const auto& cast = multiLink1D->indexedUpdator.casts[0u];
       const auto& transform = multiLink1D->indexedUpdator.transform;
       const auto& volumes = multiLink1D->indexedUpdator.extractor.dVolumes;
-      if (not transform.isApprox(Transform3::Identity())) {
+      if (!transform.isApprox(Transform3::Identity())) {
         std::runtime_error(
             "PortalJsonConverter: transformed boundary link implementation not "
             "(yet) supported");
@@ -148,12 +148,12 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
       // Pick the surface dimension - via poly
       std::array<ActsScalar, 2u> clipRange = {0., 0.};
       std::vector<ActsScalar> boundValues = surfaceAdjusted->bounds().values();
-      if (surfaceType == Surface::SurfaceType::Cylinder and cast == binZ) {
+      if (surfaceType == Surface::SurfaceType::Cylinder && cast == binZ) {
         ActsScalar zPosition = surfaceAdjusted->center(gctx).z();
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
-      } else if (surfaceType == Surface::SurfaceType::Disc and cast == binR) {
+      } else if (surfaceType == Surface::SurfaceType::Disc && cast == binR) {
         clipRange = {boundValues[RadialBounds::BoundValues::eMinR],
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {

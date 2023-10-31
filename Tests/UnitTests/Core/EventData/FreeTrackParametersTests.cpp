@@ -85,7 +85,7 @@ BOOST_DATA_TEST_CASE(
   FreeTrackParameters params(pos4, phi, theta, 1 / p, std::nullopt,
                              ParticleHypothesis::pion0());
   checkParameters(params, pos4, dir, p, 0_e);
-  BOOST_CHECK(not params.covariance());
+  BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
   params = FreeTrackParameters(pos4, phi, theta, 1 / p, cov,
@@ -104,7 +104,7 @@ BOOST_DATA_TEST_CASE(
   FreeTrackParameters params(pos4, phi, theta, q / p, std::nullopt,
                              ParticleHypothesis::pionLike(std::abs(q)));
   checkParameters(params, pos4, dir, p, q);
-  BOOST_CHECK(not params.covariance());
+  BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
   params = FreeTrackParameters(pos4, phi, theta, q / p, cov,
@@ -123,7 +123,7 @@ BOOST_DATA_TEST_CASE(
   FreeTrackParameters params(pos4, phi, theta, q / p, std::nullopt,
                              ParticleHypothesis::pionLike(std::abs(q)));
   checkParameters(params, pos4, dir, p, q);
-  BOOST_CHECK(not params.covariance());
+  BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
   params = FreeTrackParameters(pos4, phi, theta, q / p, cov,

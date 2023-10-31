@@ -202,7 +202,7 @@ Result<void> reinitializeJacobians(const GeometryContext& geoContext,
   const Vector3 position = freeParameters.segment<3>(eFreePos0);
   const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
   auto lpResult = surface.globalToLocal(geoContext, position, direction);
-  if (not lpResult.ok()) {
+  if (!lpResult.ok()) {
     return lpResult.error();
   }
   // Transform from free to bound parameters
@@ -379,7 +379,7 @@ void transportCovarianceToBound(
     }
   }
 
-  if (not correction) {
+  if (!correction) {
     // Apply the actual covariance transport to get covariance of the current
     // bound parameters
     boundCovariance = fullTransportJacobian * boundCovariance *

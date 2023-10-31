@@ -69,7 +69,7 @@ void Acts::addLayerProtoMaterial(
       &(layer.surfaceRepresentation())};
   // Now fill (optionally) with the approach surfaces
   auto aDescriptor = layer.approachDescriptor();
-  if (aDescriptor != nullptr and aDescriptor->containedSurfaces().size() >= 2) {
+  if (aDescriptor != nullptr && aDescriptor->containedSurfaces().size() >= 2) {
     // Add the inner and outer approach surface
     const std::vector<const Surface*>& aSurfaces =
         aDescriptor->containedSurfaces();

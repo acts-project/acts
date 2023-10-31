@@ -337,7 +337,7 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     const Acts::TrackingVolume& tVolume,
     Acts::DetectorMaterialMaps& detMatMap) {
   // If the volume has volume material, write that
-  if (tVolume.volumeMaterialSharedPtr() != nullptr and m_cfg.processVolumes) {
+  if (tVolume.volumeMaterialSharedPtr() != nullptr && m_cfg.processVolumes) {
     detMatMap.second[tVolume.geometryId()] = tVolume.volumeMaterialSharedPtr();
   }
 
@@ -371,14 +371,14 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     const Acts::Layer& tLayer, Acts::DetectorMaterialMaps& detMatMap) {
   // If the representing surface has material, collect it
   const auto& rSurface = tLayer.surfaceRepresentation();
-  if (rSurface.surfaceMaterialSharedPtr() != nullptr and
+  if (rSurface.surfaceMaterialSharedPtr() != nullptr &&
       m_cfg.processRepresenting) {
     detMatMap.first[rSurface.geometryId()] =
         rSurface.surfaceMaterialSharedPtr();
   }
 
   // Check the approach surfaces
-  if (tLayer.approachDescriptor() != nullptr and m_cfg.processApproaches) {
+  if (tLayer.approachDescriptor() != nullptr && m_cfg.processApproaches) {
     for (auto& aSurface : tLayer.approachDescriptor()->containedSurfaces()) {
       if (aSurface->surfaceMaterialSharedPtr() != nullptr) {
         detMatMap.first[aSurface->geometryId()] =
@@ -388,7 +388,7 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
   }
 
   // Check the sensitive surfaces
-  if (tLayer.surfaceArray() != nullptr and m_cfg.processSensitives) {
+  if (tLayer.surfaceArray() != nullptr && m_cfg.processSensitives) {
     // sensitive surface loop
     for (auto& sSurface : tLayer.surfaceArray()->surfaces()) {
       if (sSurface->surfaceMaterialSharedPtr() != nullptr) {

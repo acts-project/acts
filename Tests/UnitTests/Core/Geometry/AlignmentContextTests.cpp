@@ -102,7 +102,7 @@ class AlignableDetectorElement : public DetectorElementBase {
 inline const Transform3& AlignableDetectorElement::transform(
     const GeometryContext& gctx) const {
   auto alignContext = gctx.get<AlignmentContext>();
-  if (alignContext.alignmentStore != nullptr and
+  if (alignContext.alignmentStore != nullptr &&
       alignContext.alignmentIndex < 2) {
     return (*(alignContext.alignmentStore))[alignContext.alignmentIndex];
   }

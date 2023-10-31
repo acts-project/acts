@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Detector/Blueprint.hpp"
+#include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 
 #include <exception>
@@ -70,7 +71,7 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   detector->add(std::move(beamPipe));
 
   std::ofstream fs("detector_unordered.dot");
-  detector->dotStream(fs);
+  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *detector);
   fs.close();
 
   // Sort the detector
@@ -84,7 +85,7 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   BOOST_CHECK(detector->children.back()->children.back()->name == "gap1");
 
   std::ofstream fs2("detector_ordered.dot");
-  detector->dotStream(fs2);
+  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs2, *detector);
   fs2.close();
 }
 
@@ -200,7 +201,7 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   detector->add(std::move(pixel));
 
   std::ofstream fs("detector_with_gaps.dot");
-  detector->dotStream(fs);
+  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *detector);
   fs.close();
 
   // Simple test
@@ -256,7 +257,7 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
       pixelOr);
 
   std::ofstream fs2("detector_without_gaps.dot");
-  detector->dotStream(fs2);
+  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs2, *detector);
   fs2.close();
 }
 

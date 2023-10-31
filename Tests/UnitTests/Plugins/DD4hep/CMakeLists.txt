@@ -28,7 +28,7 @@ endif()
 if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
   # set test library dependencies
   set(unittest_extra_libraries ActsTestsDD4hepFactories ActsPluginDD4hep)
-  set(dd4hep_tests DD4hepDetectorElement DD4hepCylinderLayerStructure DD4hepCylinderVolumeStructure)
+  set(dd4hep_tests DD4hepDetectorElement DD4hepCylinderLayerStructure DD4hepDiscLayerStructure DD4hepCylindricalDetector)
   foreach(_test ${dd4hep_tests})
     add_unittest(${_test} ${_test}Tests.cpp)
     add_dependencies(ActsUnitTest${_test} Components_ActsTestsDD4hepFactories)

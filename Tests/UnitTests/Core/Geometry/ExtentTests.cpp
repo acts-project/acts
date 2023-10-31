@@ -145,12 +145,12 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   Extent gExtConst;
   gExtConst.set(binR, 0., 5.);
   Extent gExtNonConst;
-  BOOST_CHECK(not gExtNonConst.constrains(binR));
+  BOOST_CHECK(!gExtNonConst.constrains(binR));
   gExtNonConst.addConstrain(gExtConst);
   BOOST_CHECK(gExtNonConst.constrains(binR));
 
   std::string tString = gExtConst.toString();
-  BOOST_CHECK(not tString.empty());
+  BOOST_CHECK(!tString.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
