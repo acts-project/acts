@@ -197,8 +197,18 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    state.navigation.currentSurface = state.navigation.startSurface;
     (void)stepper;
+
+    // Call the navigation helper prior to actual navigation                                                                                                    
+    ACTS_VERBOSE(volInfo(state) << "Initialization.");
+
+    // We set the current surface to the start surface                                                                                                          
+    state.navigation.currentSurface = state.navigation.startSurface;
+    if (state.navigation.currentSurface) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current surface set to start surface "
+                   << state.navigation.currentSurface->geometryId());
+    }
   }
 
   /// @brief Navigator pre step call
