@@ -531,7 +531,7 @@ class Surface : public virtual GeometryObject,
 /// << std::tie(surface, geometryContext);`
 inline std::ostream& operator<<(
     std::ostream& os,
-    const std::tuple<const Surface&, const GeometryContext&>& tup) {
+    const std::pair<const Surface&, const GeometryContext&>& tup) {
   const auto [surface, gctx] = tup;
   surface.toStream(gctx, os);
   return os;

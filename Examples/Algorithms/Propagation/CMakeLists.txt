@@ -1,5 +1,6 @@
 add_library(ActsExamplesPropagation SHARED 
-  src/PropagationAlgorithm.cpp)
+  src/PropagationAlgorithm.cpp
+  src/NavigationTestAlgorithm.cpp)
 
 target_include_directories(
   ActsExamplesPropagation

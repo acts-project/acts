@@ -16,6 +16,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Propagation/NavigationTestAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
@@ -163,6 +164,10 @@ void addPropagation(Context& ctx) {
     addPropagator<Acts::StraightLineStepper, Acts::Navigator>(prop,
                                                               "StraightLine");
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::NavigationTestAlgorithm, mex,
+                                "NavigationTestAlgorithm", randomNumberSvc,
+                                trackingGeometry, ntests, magneticField);
 }
 
 }  // namespace Acts::Python
