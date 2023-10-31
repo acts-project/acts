@@ -97,7 +97,7 @@ ActsExamples::RootTrackSummaryReader::RootTrackSummaryReader(
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 
   // If the events are not in order, get the entry numbers for ordered events
-  if (not m_cfg.orderedEvents) {
+  if (!m_cfg.orderedEvents) {
     m_entryNumbers.resize(m_events);
     m_inputChain->Draw("event_nr", "", "goff");
     // Sort to get the entry numbers of the ordered events
@@ -175,7 +175,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryReader::read(
 
     // Read the correct entry
     auto entry = context.eventNumber;
-    if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
+    if (!m_cfg.orderedEvents && entry < m_entryNumbers.size()) {
       entry = m_entryNumbers[entry];
     }
     m_inputChain->GetEntry(entry);

@@ -24,7 +24,7 @@ Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
     std::unique_ptr<const Acts::Logger> mlogger)
     : IExternalStructureBuilder(), m_cfg(cfg), m_logger(std::move(mlogger)) {
   // Sanity cross-checks
-  if (m_cfg.boundValues.empty() and not m_cfg.extent.has_value()) {
+  if (m_cfg.boundValues.empty() && !m_cfg.extent.has_value()) {
     throw std::invalid_argument(
         "VolumeStructureBuilder: no extent nor boundary values given");
   }
@@ -39,7 +39,7 @@ Acts::Experimental::ExternalStructure
 Acts::Experimental::VolumeStructureBuilder::construct(
     [[maybe_unused]] const Acts::GeometryContext& gctx) const {
   // Print out the auxiliary information
-  if (not m_cfg.auxiliary.empty()) {
+  if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
 
@@ -69,10 +69,10 @@ Acts::Experimental::VolumeStructureBuilder::construct(
     case VolumeBounds::BoundsType::eCuboid: {
       ACTS_VERBOSE("Building cuboid volume bounds.");
       // Cuboid translation - either parameters / or extent
-      if (boundValues.empty() and m_cfg.extent.has_value()) {
+      if (boundValues.empty() && m_cfg.extent.has_value()) {
         ACTS_VERBOSE("Cuboid: estimate parameters from Extent.");
         const auto& vExtent = m_cfg.extent.value();
-        if (vExtent.constrains(binX) and vExtent.constrains(binY) and
+        if (vExtent.constrains(binX) && vExtent.constrains(binY) &&
             vExtent.constrains(binZ)) {
           eTransform.pretranslate(Vector3(vExtent.medium(binX),
                                           vExtent.medium(binY),
@@ -113,10 +113,10 @@ Acts::Experimental::VolumeStructureBuilder::construct(
     case VolumeBounds::BoundsType::eCylinder: {
       ACTS_VERBOSE("Building cylindrical volume bounds.");
       // Cylinder translation - either parameters / or extent
-      if (boundValues.empty() and m_cfg.extent.has_value()) {
+      if (boundValues.empty() && m_cfg.extent.has_value()) {
         ACTS_VERBOSE("Cylinder: estimate parameters from Extent.");
         const auto& vExtent = m_cfg.extent.value();
-        if (vExtent.constrains(binR) and vExtent.constrains(binZ)) {
+        if (vExtent.constrains(binR) && vExtent.constrains(binZ)) {
           eTransform.pretranslate(Vector3(0., 0., vExtent.medium(binZ)));
           boundValues = {vExtent.min(binR), vExtent.max(binR),
                          0.5 * vExtent.interval(binZ)};
@@ -183,7 +183,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
 
   Transform3 fTransform = m_cfg.transform * eTransform;
   ACTS_VERBOSE(" - translation: " << Acts::toString(fTransform.translation()));
-  if (not fTransform.rotation().isApprox(
+  if (!fTransform.rotation().isApprox(
           Acts::Transform3::Identity().rotation())) {
     ACTS_VERBOSE(" - rotation: " << Acts::toString(fTransform.rotation()));
   }

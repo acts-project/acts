@@ -57,7 +57,7 @@ ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
   if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits output collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
 
@@ -258,7 +258,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     Acts::Vector3 mom(1, 1, 1);  // fake momentum
     Acts::Vector2 local(0, 0);
     auto lpResult = surface->globalToLocal(ctx.geoContext, pos, mom);
-    if (not lpResult.ok()) {
+    if (!lpResult.ok()) {
       ACTS_FATAL("Global to local transformation did not succeed.");
       return ProcessCode::ABORT;
     }

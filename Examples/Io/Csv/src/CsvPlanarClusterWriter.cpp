@@ -42,7 +42,7 @@ ActsExamples::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
 

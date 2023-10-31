@@ -69,7 +69,7 @@ class DirectNavigator {
                     const navigator_t& /*navigator*/, result_type& r,
                     const Logger& /*logger*/) const {
       // Only act once
-      if (not r.initialized) {
+      if (!r.initialized) {
         // Initialize the surface sequence
         state.navigation.navSurfaces = navSurfaces;
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();

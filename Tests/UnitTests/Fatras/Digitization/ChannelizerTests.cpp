@@ -156,7 +156,7 @@ BOOST_DATA_TEST_CASE(RandomChannelizerTest,
       }
       // 1 - write the grid
       grid.open("Channelizer" + name + "Grid.csv");
-      if (segmentation.binningData()[0].binvalue == Acts::binX and
+      if (segmentation.binningData()[0].binvalue == Acts::binX &&
           segmentation.binningData()[1].binvalue == Acts::binY) {
         double bxmin = segmentation.binningData()[0].min;
         double bxmax = segmentation.binningData()[0].max;
@@ -170,7 +170,7 @@ BOOST_DATA_TEST_CASE(RandomChannelizerTest,
         for (const auto yval : yboundaries) {
           csvHelper.writeLine(grid, {bxmin, yval}, {bxmax, yval});
         }
-      } else if (segmentation.binningData()[0].binvalue == Acts::binR and
+      } else if (segmentation.binningData()[0].binvalue == Acts::binR &&
                  segmentation.binningData()[1].binvalue == Acts::binPhi) {
         double brmin = segmentation.binningData()[0].min;
         double brmax = segmentation.binningData()[0].max;
