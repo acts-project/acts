@@ -199,8 +199,18 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    (void)state;
     (void)stepper;
+
+    // Call the navigation helper prior to actual navigation
+    ACTS_VERBOSE(volInfo(state) << "Initialization.");
+
+    // We set the current surface to the start surface
+    state.navigation.currentSurface = state.navigation.startSurface;
+    if (state.navigation.currentSurface) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current surface set to start surface "
+                   << state.navigation.currentSurface->geometryId());
+    }
   }
 
   /// @brief Navigator pre step call
@@ -231,8 +241,7 @@ class DirectNavigator {
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              false, std::numeric_limits<double>::max(),
-              stepper.overstepLimit(state.stepping),
+              false, stepper.overstepLimit(state.stepping),
               state.options.targetTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
@@ -317,19 +326,23 @@ class DirectNavigator {
   }
 
  private:
-  ObjectIntersection<Surface> chooseIntersection(const GeometryContext& gctx,
-                                                 const Surface& surface,
-                                                 const Vector3& position,
-                                                 const Vector3& direction,
-                                                 const BoundaryCheck& bcheck,
-                                                 double pLimit, double oLimit,
-                                                 double tolerance) const {
+  template <typename propagator_state_t>
+  std::string volInfo(const propagator_state_t& state) const {
+    return (state.navigation.currentVolume
+                ? state.navigation.currentVolume->volumeName()
+                : "No Volume") +
+           " | ";
+  }
+
+  ObjectIntersection<Surface> chooseIntersection(
+      const GeometryContext& gctx, const Surface& surface,
+      const Vector3& position, const Vector3& direction,
+      const BoundaryCheck& bcheck, double oLimit, double tolerance) const {
     auto intersections =
         surface.intersect(gctx, position, direction, bcheck, tolerance);
 
     for (auto& intersection : intersections.split()) {
-      if (detail::checkIntersection(intersection, pLimit, oLimit, tolerance,
-                                    logger())) {
+      if (detail::checkIntersection(intersection, oLimit, logger())) {
         return intersection;
       }
     }
