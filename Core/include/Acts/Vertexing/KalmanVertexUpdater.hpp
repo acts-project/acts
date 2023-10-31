@@ -62,6 +62,17 @@ template <typename input_track_t>
 void updateVertexWithTrack(Vertex<input_track_t>& vtx,
                            TrackAtVertex<input_track_t>& trk);
 
+/// @brief Recomputes track parameters with the final estimate of the vertex
+/// position. Reestimates the tracks' chi2 using a symmetric test. In Ref. (1)
+/// this procedure is referred to as "smoothing".
+///
+/// @tparam input_track_t track parameter type
+/// @param track Track to update
+/// @param vtx Vertex after the fit (i.e., when all its tracks were added)
+template <typename input_track_t>
+void updateTrack(TrackAtVertex<input_track_t>& track,
+                 const Vertex<input_track_t>& vtx);
+
 /// @brief Calculates updated vertex position and covariance as well as the
 /// updated track momentum when adding/removing linTrack. Saves the result in
 /// cache.
@@ -76,17 +87,6 @@ template <typename input_track_t>
 void calculateUpdate(const Acts::Vertex<input_track_t>& vtx,
                      const Acts::LinearizedTrack& linTrack,
                      const double& trackWeight, int sign, Cache& cache);
-
-/// @brief Recomputes track parameters with the final estimate of the vertex
-/// position. Reestimates the tracks' chi2 using a symmetric test. In Ref. (1)
-/// this procedure is referred to as "smoothing".
-///
-/// @tparam input_track_t track parameter type
-/// @param track Track to update
-/// @param vtx Vertex after the fit (i.e., when all its tracks were added)
-template <typename input_track_t>
-void updateTrack(TrackAtVertex<input_track_t>& track,
-                 const Vertex<input_track_t>& vtx);
 
 namespace detail {
 

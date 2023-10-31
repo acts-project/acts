@@ -67,76 +67,6 @@ void Acts::KalmanVertexUpdater::detail::update(
 }
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdater::calculateUpdate(
-    const Acts::Vertex<input_track_t>& vtx,
-    const Acts::LinearizedTrack& linTrack, const double& trackWeight, int sign,
-    Cache& cache) {
-  // Retrieve variables from the track linearization. The comments indicate the
-  // corresponding symbol used in Ref. (1).
-  // A_k
-  const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
-  // B_k
-  const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
-  // p_k
-  const BoundVector& trkParams = linTrack.parametersAtPCA;
-  // c_k
-  const BoundVector& constTerm = linTrack.constantTerm;
-  // G_k
-  // Note that, when removing a track, G_k -> - G_k, see Ref. (1).
-  // Further note that, as we use the weighted formalism, the track weight
-  // matrix (i.e., the inverse track covariance matrix) should be multiplied
-  // with the track weight from the AMVF formalism. Here, we choose to
-  // consider these two multiplicative factors directly in the updates of
-  // newVertexWeight and newVertexPos.
-  const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
-
-  // Retrieve current position of the vertex and its current weight matrix
-  const Vector4& oldVtxPos = vtx.fullPosition();
-  // C_{k-1}^-1
-  cache.oldVertexWeight = (vtx.fullCovariance()).inverse();
-
-  // W_k
-  cache.wMat = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
-
-  // G_k^B = G_k - G_k*B_k*W_k*B_k^(T)*G_k
-  BoundSquareMatrix gBMat =
-      trkParamWeight - trkParamWeight * momJac * cache.wMat *
-                           momJac.transpose() * trkParamWeight;
-
-  // C_k^-1
-  cache.newVertexWeight = cache.oldVertexWeight + sign * trackWeight *
-                                                      posJac.transpose() *
-                                                      gBMat * posJac;
-  // C_k
-  cache.newVertexCov = cache.newVertexWeight.inverse();
-
-  // \tilde{x_k}
-  cache.newVertexPos =
-      cache.newVertexCov * (cache.oldVertexWeight * oldVtxPos +
-                            sign * trackWeight * posJac.transpose() * gBMat *
-                                (trkParams - constTerm));
-
-  // A_k * \tilde{x_k}
-  const BoundVector posJacVtxPos = posJac * cache.newVertexPos;
-
-  // \tilde{q_k}
-  Vector3 newTrkMom = cache.wMat * momJac.transpose() * trkParamWeight *
-                      (trkParams - constTerm - posJacVtxPos);
-
-  // Correct phi and theta for possible periodicity changes
-  const auto correctedPhiTheta =
-      Acts::detail::normalizePhiTheta(newTrkMom(0), newTrkMom(1));
-  newTrkMom(0) = correctedPhiTheta.first;   // phi
-  newTrkMom(1) = correctedPhiTheta.second;  // theta
-
-  cache.newTrackMomentum = newTrkMom;
-
-  // Updated linearizedq track parameters \tilde{p_k}
-  cache.linearizedTrackParameters =
-      constTerm + posJacVtxPos + momJac * cache.newTrackMomentum;
-}
-
-template <typename input_track_t>
 void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
                                             const Vertex<input_track_t>& vtx) {
   // Check if linearized state exists
@@ -210,6 +140,82 @@ void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
   track.ndf = 2 * track.trackWeight;
 
   return;
+}
+
+template <typename input_track_t>
+void Acts::KalmanVertexUpdater::calculateUpdate(
+    const Acts::Vertex<input_track_t>& vtx,
+    const Acts::LinearizedTrack& linTrack, const double& trackWeight, int sign,
+    Cache& cache) {
+  // Retrieve variables from the track linearization. The comments indicate the
+  // corresponding symbol used in Ref. (1).
+  // A_k
+  const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
+  // B_k
+  const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
+  // p_k
+  const BoundVector& trkParams = linTrack.parametersAtPCA;
+  // c_k
+  const BoundVector& constTerm = linTrack.constantTerm;
+  // G_k
+  // Note that, when removing a track, G_k -> - G_k, see Ref. (1).
+  // Further note that, as we use the weighted formalism, the track weight
+  // matrix (i.e., the inverse track covariance matrix) should be multiplied
+  // with the track weight from the AMVF formalism. Here, we choose to
+  // consider these two multiplicative factors directly in the updates of
+  // newVertexWeight and newVertexPos.
+  const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
+
+  // Retrieve current position of the vertex and its current weight matrix
+  const Vector4& oldVtxPos = vtx.fullPosition();
+  // C_{k-1}^-1
+  cache.oldVertexWeight = (vtx.fullCovariance()).inverse();
+
+  // W_k
+  cache.wMat = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
+
+  // G_k^B = G_k - G_k*B_k*W_k*B_k^(T)*G_k
+  BoundSquareMatrix gBMat =
+      trkParamWeight - trkParamWeight * momJac * cache.wMat *
+                           momJac.transpose() * trkParamWeight;
+
+  // C_k^-1
+  cache.newVertexWeight = cache.oldVertexWeight + sign * trackWeight *
+                                                      posJac.transpose() *
+                                                      gBMat * posJac;
+  // C_k
+  cache.newVertexCov = cache.newVertexWeight.inverse();
+
+  // \tilde{x_k}
+  cache.newVertexPos =
+      cache.newVertexCov * (cache.oldVertexWeight * oldVtxPos +
+                            sign * trackWeight * posJac.transpose() * gBMat *
+                                (trkParams - constTerm));
+
+  // The following computations are independent of whether we add/remove the
+  // track. While it does not make much sense to compute an updated track
+  // momentum in the case where the track is removed, the computation is useful
+  // when we do the smoothing (i.e., when we update the track with the final
+  // estimation of the vertex position). Note that, for the moment, this is the
+  // only case where we remove tracks.
+  // A_k * \tilde{x_k}
+  const BoundVector posJacVtxPos = posJac * cache.newVertexPos;
+
+  // \tilde{q_k}
+  Vector3 newTrkMom = cache.wMat * momJac.transpose() * trkParamWeight *
+                      (trkParams - constTerm - posJacVtxPos);
+
+  // Correct phi and theta for possible periodicity changes
+  const auto correctedPhiTheta =
+      Acts::detail::normalizePhiTheta(newTrkMom(0), newTrkMom(1));
+  newTrkMom(0) = correctedPhiTheta.first;   // phi
+  newTrkMom(1) = correctedPhiTheta.second;  // theta
+
+  cache.newTrackMomentum = newTrkMom;
+
+  // Updated linearizedq track parameters \tilde{p_k}
+  cache.linearizedTrackParameters =
+      constTerm + posJacVtxPos + momJac * cache.newTrackMomentum;
 }
 
 template <typename input_track_t>
