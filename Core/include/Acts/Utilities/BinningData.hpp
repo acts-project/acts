@@ -212,12 +212,12 @@ class BinningData {
   ///
   /// @return a boolean indicating if they are the same
   bool operator==(const BinningData& bData) const {
-    return (type == bData.type and option == bData.option and
-            binvalue == bData.binvalue and min == bData.min and
-            max == bData.max and step == bData.step and zdim == bData.zdim and
-            ((subBinningData == nullptr and bData.subBinningData == nullptr) or
-             (subBinningData != nullptr and bData.subBinningData != nullptr and
-              (*subBinningData == *bData.subBinningData))) and
+    return (type == bData.type && option == bData.option &&
+            binvalue == bData.binvalue && min == bData.min &&
+            max == bData.max && step == bData.step && zdim == bData.zdim &&
+            ((subBinningData == nullptr && bData.subBinningData == nullptr) ||
+             (subBinningData != nullptr && bData.subBinningData != nullptr &&
+              (*subBinningData == *bData.subBinningData))) &&
             subBinningAdditive == bData.subBinningAdditive);
   }
 

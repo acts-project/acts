@@ -50,7 +50,7 @@ struct TestOutlierFinder {
   template <typename traj_t>
   bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
-    if (not state.hasCalibrated() or not state.hasPredicted()) {
+    if (!state.hasCalibrated() || !state.hasPredicted()) {
       return false;
     }
     auto residuals = (state.effectiveCalibrated() -

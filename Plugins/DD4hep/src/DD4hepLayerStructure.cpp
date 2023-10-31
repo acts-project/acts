@@ -41,7 +41,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
                                          << " passive surfaces");
 
   // Check if binning was provided or detected
-  if (fCache.binnings.empty() and
+  if (fCache.binnings.empty() &&
       (fCache.sensitiveSurfaces.size() + fCache.passiveSurfaces.size()) > 0u) {
     ACTS_VERBOSE(
         "Surface binning neither provided nor found, navigation will be "
@@ -73,7 +73,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   // Passive surfaces to be added
   for (auto [ps, toAll] : fCache.passiveSurfaces) {
     // Passive surface is not declared to be added to all navigation bins
-    if (not toAll) {
+    if (!toAll) {
       lSurfaces.push_back(ps);
     } else {
       // Passive surface is indeed declared to be added to all navigaiton bins

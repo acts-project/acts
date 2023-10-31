@@ -187,10 +187,9 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputParticles,
       outputProtoVertices, excludeSecondaries, separateSecondaries);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackModifier, mex, "TrackModifier", inputTrajectories,
-      inputTrackParameters, outputTrajectories, outputTrackParameters,
-      dropCovariance, covScale, killTime);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackModifier, mex,
+                                "TrackModifier", inputTracks, outputTracks,
+                                dropCovariance, covScale, killTime);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
