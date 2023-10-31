@@ -298,8 +298,7 @@ class DirectNavigator {
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              false, std::numeric_limits<double>::max(),
-              stepper.overstepLimit(state.stepping),
+              false, stepper.overstepLimit(state.stepping),
               state.options.targetTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
