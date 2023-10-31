@@ -69,14 +69,15 @@ void calculateUpdate(const Acts::Vertex<input_track_t>& vtx,
                      const double& trackWeight, int sign, Cache& cache);
 
 /// @brief Recomputes track parameters with the final estimate of the vertex
-/// position. Reestimates the tracks' chi2 using a symmetric test.
+/// position. Reestimates the tracks' chi2 using a symmetric test. In Ref. (1)
+/// this procedure is referred to as "smoothing".
 ///
 /// @tparam input_track_t track parameter type
 /// @param track Track to update
 /// @param vtx Vertex after all its tracks were added to it
 template <typename input_track_t>
-void smooth(TrackAtVertex<input_track_t>& track,
-            const Vertex<input_track_t>& vtx);
+void updateTrack(TrackAtVertex<input_track_t>& track,
+                 const Vertex<input_track_t>& vtx);
 
 namespace detail {
 

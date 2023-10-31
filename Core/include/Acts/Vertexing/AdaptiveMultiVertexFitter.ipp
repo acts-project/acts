@@ -358,7 +358,9 @@ void Acts::AdaptiveMultiVertexFitter<
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
-        KalmanVertexUpdater::smooth<input_track_t>(trkAtVtx, *vtx);
+        // Update the track parameters using the final estimate of the vertex
+        // position. This also updates their chi2 values using a symmetric test.
+        KalmanVertexUpdater::updateTrack<input_track_t>(trkAtVtx, *vtx);
       }
     }
   }

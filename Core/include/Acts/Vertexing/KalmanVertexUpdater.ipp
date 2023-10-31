@@ -117,8 +117,8 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
 }
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdater::smooth(TrackAtVertex<input_track_t>& track,
-                                       const Vertex<input_track_t>& vtx) {
+void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
+                                            const Vertex<input_track_t>& vtx) {
   // Check if linearized state exists
   if (!track.isLinearized) {
     throw std::invalid_argument("TrackAtVertex object must be linearized.");
@@ -140,17 +140,21 @@ void Acts::KalmanVertexUpdater::smooth(TrackAtVertex<input_track_t>& track,
   // G_k
   const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
-  // W_k
-  ActsSquareMatrix<3> wMat =
-      (momJac.transpose() * (trkParamWeight * momJac)).inverse();
+  // Set up cache where entire content is set to 0
+  Cache cache;
 
-  // 4D vertex position ...
+  // Calculate update when removing track and save result in cache. Note that
+  // the track is not really removed, this is just a way of computing a
+  // symmetric chi2 (see reference).
+  calculateUpdate<input_track_t>(vtx, linTrack, track.trackWeight, -1, cache);
+
+  // 4D vertex position after the fit ...
   const Vector4& vtxPos = vtx.fullPosition();
   // ... and corresponding covariance
   const SquareMatrix4& vtxCov = vtx.fullCovariance();
 
   // Refit track momentum
-  Vector3 newTrkMomentum = wMat * momJac.transpose() * trkParamWeight *
+  Vector3 newTrkMomentum = cache.wMat * momJac.transpose() * trkParamWeight *
                            (trkParams - constTerm - posJac * vtxPos);
 
   // Refit track parameters
@@ -166,45 +170,35 @@ void Acts::KalmanVertexUpdater::smooth(TrackAtVertex<input_track_t>& track,
   // Cross covariance matrix between the vertex position and the refitted track
   // momentum
   const ActsMatrix<4, 3> crossCovVP =
-      -vtxCov * posJac.transpose() * trkParamWeight * momJac * wMat;
+      -vtxCov * posJac.transpose() * trkParamWeight * momJac * cache.wMat;
 
-  // Set up cache where entire content is set to 0
-  KalmanVertexUpdater::Cache cache;
+  // Vertex weight after the removal of the track
+  const SquareMatrix4& newVtxWeight = cache.newVertexWeight;
 
-  // Calculate update when removing track and save result in cache. Note that
-  // the track is not really removed, this is just a way of computing a
-  // symmetric chi2 (see reference).
-  KalmanVertexUpdater::calculateUpdate<input_track_t>(
-      vtx, linTrack, track.trackWeight, -1, cache);
-
-  // Corresponding weight matrix
-  const SquareMatrix4& vtxWeight = cache.newVertexWeight;
-
-  // Difference in position
+  // Difference in vertex position before and after the track removal
   Vector4 posDiff = vtxPos - cache.newVertexPos;
 
-  // Get smoothed params
-  BoundVector smoothedParams =
-      trkParams - (constTerm + posJac * vtxPos +
-                   momJac * newTrkMomentum);  // TODO use newVertexPos?
+  // r_k
+  BoundVector paramDiff =
+      trkParams - (constTerm + posJac * vtxPos + momJac * newTrkMomentum);
 
   // New chi2 to be set later
-  double chi2 = posDiff.dot(vtxWeight * posDiff) +
-                smoothedParams.dot(trkParamWeight * smoothedParams);
+  double chi2 = posDiff.dot(newVtxWeight * posDiff) +
+                paramDiff.dot(trkParamWeight * paramDiff);
 
   Acts::BoundMatrix trkCov = detail::calculateTrackCovariance(
-      wMat, crossCovVP, vtxWeight, vtxCov, newTrkParams);
+      cache.wMat, crossCovVP, newVtxWeight, vtxCov, newTrkParams);
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
-  BoundTrackParameters refittedPerigee =
+  BoundTrackParameters refittedParams =
       BoundTrackParameters(perigeeSurface, newTrkParams, std::move(trkCov),
                            track.fittedParams.particleHypothesis());
 
   // Set new properties
-  track.fittedParams = refittedPerigee;
+  track.fittedParams = refittedParams;
   track.chi2Track = chi2;
   track.ndf = 2 * track.trackWeight;
 
@@ -259,7 +253,7 @@ Acts::KalmanVertexUpdater::detail::calculateTrackCovariance(
     const SquareMatrix3& wMat, const ActsMatrix<4, 3>& crossCovVP,
     const SquareMatrix4& vtxWeight, const SquareMatrix4& vtxCov,
     const BoundVector& newTrkParams) {
-  // Now new momentum covariance
+  // New momentum covariance
   SquareMatrix3 momCov = wMat + crossCovVP.transpose() * vtxWeight * crossCovVP;
 
   // Covariance matrix of the "free" track parameters, i.e., x, y, z, phi,
