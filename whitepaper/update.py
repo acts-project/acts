@@ -117,7 +117,7 @@ async def get_file(gh: GitHubAPI, repo: str, file: str) -> str:
 @app.command()
 @coro
 async def pull(
-    config_file: Path = Path(__file__).parent / "config.toml",
+    config_file: Path = Path(__file__).parent / "whitepapers.toml",
     github_token: str = typer.Option(..., envvar="GITHUB_TOKEN"),
 ):
     console = rich.console.Console()
@@ -210,7 +210,7 @@ async def pull(
 
 
 @app.command()
-def render(config_file: Path = Path(__file__).parent / "config.toml"):
+def render(config_file: Path = Path(__file__).parent / "whitepapers.toml"):
     config = Config(**toml.load(config_file))
     template_file = Path(__file__).parent / "template.md"
     docs_path = Path(__file__).parent.parent / "docs" / "whitepapers"
