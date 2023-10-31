@@ -72,7 +72,6 @@ class DirectNavigator {
       if (not r.initialized) {
         // Initialize the surface sequence
         state.navigation.navSurfaces = navSurfaces;
-        state.navigation.currentSurface = navSurfaces.front();
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
         r.initialized = true;
       }
@@ -198,7 +197,7 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    (void)state;
+    state.navigation.currentSurface = state.navigation.startSurface;
     (void)stepper;
   }
 
