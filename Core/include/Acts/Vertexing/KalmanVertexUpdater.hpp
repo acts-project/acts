@@ -121,12 +121,10 @@ void update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk,
 /// @param sMat Track ovariance in momentum space
 /// @param crossCovVP Cross variance between the vertex and
 /// the fitted track momentum
-/// @param vtxWeight Vertex weight matrix
-/// @param vtxCov Vertex covariance matrix
+/// @param vtxCov Vertex covariance matrix after the fit
 /// @param newTrkParams New track parameter
 inline BoundMatrix calculateTrackCovariance(const SquareMatrix3& sMat,
                                             const ActsMatrix<4, 3>& crossCovVP,
-                                            const SquareMatrix4& vtxWeight,
                                             const SquareMatrix4& vtxCov,
                                             const BoundVector& newTrkParams);
 }  // Namespace detail

@@ -172,9 +172,6 @@ void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
   const ActsMatrix<4, 3> crossCovVP =
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * cache.wMat;
 
-  // Vertex weight after the removal of the track
-  const SquareMatrix4& newVtxWeight = cache.newVertexWeight;
-
   // Difference in vertex position before and after the track removal
   Vector4 posDiff = vtxPos - cache.newVertexPos;
 
@@ -183,11 +180,11 @@ void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
       trkParams - (constTerm + posJac * vtxPos + momJac * newTrkMomentum);
 
   // New chi2 to be set later
-  double chi2 = posDiff.dot(newVtxWeight * posDiff) +
+  double chi2 = posDiff.dot(cache.newVertexWeight * posDiff) +
                 paramDiff.dot(trkParamWeight * paramDiff);
 
   Acts::BoundMatrix trkCov = detail::calculateTrackCovariance(
-      cache.wMat, crossCovVP, newVtxWeight, vtxCov, newTrkParams);
+      cache.wMat, crossCovVP, vtxCov, newTrkParams);
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -251,10 +248,10 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
 inline Acts::BoundMatrix
 Acts::KalmanVertexUpdater::detail::calculateTrackCovariance(
     const SquareMatrix3& wMat, const ActsMatrix<4, 3>& crossCovVP,
-    const SquareMatrix4& vtxWeight, const SquareMatrix4& vtxCov,
-    const BoundVector& newTrkParams) {
+    const SquareMatrix4& vtxCov, const BoundVector& newTrkParams) {
   // New momentum covariance
-  SquareMatrix3 momCov = wMat + crossCovVP.transpose() * vtxWeight * crossCovVP;
+  SquareMatrix3 momCov =
+      wMat + crossCovVP.transpose() * vtxCov.inverse() * crossCovVP;
 
   // Covariance matrix of the "free" track parameters, i.e., x, y, z, phi,
   // theta, q/p, and t. Note that the parameters are not actually free: Free
