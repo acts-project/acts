@@ -92,6 +92,7 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
 
   // Retrieve current position of the vertex and its current weight matrix
   const Vector4& oldVtxPos = vtx.fullPosition();
+  // C_{k-1}^-1
   cache.oldVertexWeight = (vtx.fullCovariance()).inverse();
 
   // W_k
@@ -109,11 +110,30 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
   // C_k
   cache.newVertexCov = cache.newVertexWeight.inverse();
 
-  // New vertex position
+  // \tilde{x_k}
   cache.newVertexPos =
       cache.newVertexCov * (cache.oldVertexWeight * oldVtxPos +
                             sign * trackWeight * posJac.transpose() * gBMat *
                                 (trkParams - constTerm));
+
+  // A_k * \tilde{x_k}
+  const BoundVector posJacVtxPos = posJac * cache.newVertexPos;
+
+  // \tilde{q_k}
+  Vector3 newTrkMom = cache.wMat * momJac.transpose() * trkParamWeight *
+                      (trkParams - constTerm - posJacVtxPos);
+
+  // Correct phi and theta for possible periodicity changes
+  const auto correctedPhiTheta =
+      Acts::detail::normalizePhiTheta(newTrkMom(0), newTrkMom(1));
+  newTrkMom(0) = correctedPhiTheta.first;   // phi
+  newTrkMom(1) = correctedPhiTheta.second;  // theta
+
+  cache.newTrackMomentum = newTrkMom;
+
+  // Updated linearizedq track parameters \tilde{p_k}
+  cache.linearizedTrackParameters =
+      constTerm + posJacVtxPos + momJac * cache.newTrackMomentum;
 }
 
 template <typename input_track_t>
@@ -135,8 +155,6 @@ void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
   const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
   // p_k
   const BoundVector& trkParams = linTrack.parametersAtPCA;
-  // c_k
-  const BoundVector& constTerm = linTrack.constantTerm;
   // G_k
   const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
@@ -153,19 +171,11 @@ void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
   // ... and corresponding covariance
   const SquareMatrix4& vtxCov = vtx.fullCovariance();
 
-  // Refit track momentum
-  Vector3 newTrkMomentum = cache.wMat * momJac.transpose() * trkParamWeight *
-                           (trkParams - constTerm - posJac * vtxPos);
-
   // Refit track parameters
   BoundVector newTrkParams(BoundVector::Zero());
-
-  // Get phi and theta and correct for possible periodicity changes
-  const auto correctedPhiTheta =
-      Acts::detail::normalizePhiTheta(newTrkMomentum(0), newTrkMomentum(1));
-  newTrkParams(BoundIndices::eBoundPhi) = correctedPhiTheta.first;     // phi
-  newTrkParams(BoundIndices::eBoundTheta) = correctedPhiTheta.second;  // theta
-  newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
+  newTrkParams(BoundIndices::eBoundPhi) = cache.newTrackMomentum(0);
+  newTrkParams(BoundIndices::eBoundTheta) = cache.newTrackMomentum(1);
+  newTrkParams(BoundIndices::eBoundQOverP) = cache.newTrackMomentum(2);
 
   // Cross covariance matrix between the vertex position and the refitted track
   // momentum
@@ -176,10 +186,10 @@ void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
   Vector4 posDiff = vtxPos - cache.newVertexPos;
 
   // r_k
-  BoundVector paramDiff =
-      trkParams - (constTerm + posJac * vtxPos + momJac * newTrkMomentum);
+  BoundVector paramDiff = trkParams - cache.linearizedTrackParameters;
 
-  // New chi2 to be set later
+  // Updated chi2 of the track (includes contribution from the vertex, see Ref.
+  // (1))
   double chi2 = posDiff.dot(cache.newVertexWeight * posDiff) +
                 paramDiff.dot(trkParamWeight * paramDiff);
 
@@ -215,31 +225,11 @@ template <typename input_track_t>
 double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
     const LinearizedTrack& linTrack, const Cache& cache) {
   // Track properties
-  const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
-  const ActsMatrix<eBoundSize, 3>& momJac = linTrack.momentumJacobian;
   const BoundVector& trkParams = linTrack.parametersAtPCA;
-  const BoundVector& constTerm = linTrack.constantTerm;
   const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
-  // A_k * \tilde{x_k}
-  const BoundVector posJacVtxPos = posJac * cache.newVertexPos;
-
-  // \tilde{q_k}
-  Vector3 newTrackMomentum = cache.wMat * momJac.transpose() * trkParamWeight *
-                             (trkParams - constTerm - posJacVtxPos);
-
-  // Correct phi and theta for possible periodicity changes
-  const auto correctedPhiTheta =
-      Acts::detail::normalizePhiTheta(newTrackMomentum(0), newTrackMomentum(1));
-  newTrackMomentum(0) = correctedPhiTheta.first;   // phi
-  newTrackMomentum(1) = correctedPhiTheta.second;  // theta
-
-  // Updated linearized track parameters \tilde{p_k}
-  BoundVector linearizedTrkParams =
-      constTerm + posJacVtxPos + momJac * newTrackMomentum;
-
   // Parameter difference
-  BoundVector paramDiff = trkParams - linearizedTrkParams;
+  BoundVector paramDiff = trkParams - cache.linearizedTrackParameters;
 
   // Return chi2
   return paramDiff.transpose() * (trkParamWeight * paramDiff);

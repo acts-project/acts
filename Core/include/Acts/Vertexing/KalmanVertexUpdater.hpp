@@ -35,11 +35,19 @@ namespace KalmanVertexUpdater {
 /// Section 5.3.5
 /// Cache object to store matrix information
 struct Cache {
+  // \tilde{x_k}
   Vector4 newVertexPos = Vector4::Zero();
+  // C_k
   SquareMatrix4 newVertexCov = SquareMatrix4::Zero();
+  // C_k^-1
   SquareMatrix4 newVertexWeight = SquareMatrix4::Zero();
+  // C_{k-1}^-1
   SquareMatrix4 oldVertexWeight = SquareMatrix4::Zero();
-  // W_k from the reference
+  // \tilde{q_k}
+  Vector3 newTrackMomentum = Vector3::Zero();
+  // \tilde{p_k}
+  BoundVector linearizedTrackParameters = BoundVector::Zero();
+  // W_k
   SquareMatrix3 wMat = SquareMatrix3::Zero();
 };
 
@@ -54,8 +62,9 @@ template <typename input_track_t>
 void updateVertexWithTrack(Vertex<input_track_t>& vtx,
                            TrackAtVertex<input_track_t>& trk);
 
-/// @brief Calculates updated vertex position and covariance when
-/// adding/removing linTrack and saves the results in cache
+/// @brief Calculates updated vertex position and covariance as well as the
+/// updated track momentum when adding/removing linTrack. Saves the result in
+/// cache.
 /// @param vtx Vertex
 /// @param linTrack Linearized version of track to be added or removed
 /// @param trackWeight Track weight
@@ -74,7 +83,7 @@ void calculateUpdate(const Acts::Vertex<input_track_t>& vtx,
 ///
 /// @tparam input_track_t track parameter type
 /// @param track Track to update
-/// @param vtx Vertex after all its tracks were added to it
+/// @param vtx Vertex after the fit (i.e., when all its tracks were added)
 template <typename input_track_t>
 void updateTrack(TrackAtVertex<input_track_t>& track,
                  const Vertex<input_track_t>& vtx);

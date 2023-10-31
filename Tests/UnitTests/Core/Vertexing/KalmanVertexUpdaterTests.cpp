@@ -295,6 +295,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Track_Updater) {
     // Create a vertex
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundTrackParameters> vtx(vtxPos);
+    SquareMatrix4 vtxCovariance(SquareMatrix4::Identity());
+    vtx.setFullCovariance(vtxCovariance);
 
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexUpdater::updateTrack<BoundTrackParameters>(trkAtVtx, vtx);
