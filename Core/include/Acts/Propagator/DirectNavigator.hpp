@@ -223,8 +223,9 @@ class DirectNavigator {
 
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish & update the surface status
+      // TODO we do not know the intersection index - passing 0
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter,
+          state.stepping, **state.navigation.navSurfaceIter, 0,
           state.options.direction, false, state.options.targetTolerance,
           *m_logger);
       if (surfaceStatus == Intersection3D::Status::unreachable) {
@@ -272,8 +273,9 @@ class DirectNavigator {
     // Check if we are on surface
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish the surface status
+      // TODO we do not know the intersection index - passing 0
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter,
+          state.stepping, **state.navigation.navSurfaceIter, 0,
           state.options.direction, false, state.options.targetTolerance,
           *m_logger);
       if (surfaceStatus == Intersection3D::Status::onSurface) {
