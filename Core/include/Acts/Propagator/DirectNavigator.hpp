@@ -12,7 +12,6 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -308,6 +307,14 @@ class DirectNavigator {
   }
 
  private:
+  template <typename propagator_state_t>
+  std::string volInfo(const propagator_state_t& state) const {
+    return (state.navigation.currentVolume
+                ? state.navigation.currentVolume->volumeName()
+                : "No Volume") +
+           " | ";
+  }
+  
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;
