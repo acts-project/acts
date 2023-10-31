@@ -140,14 +140,14 @@ inline std::vector<double> ConeBounds::values() const {
 }
 
 inline void ConeBounds::checkConsistency() noexcept(false) {
-  if (get(eAlpha) < 0. or get(eAlpha) >= M_PI) {
+  if (get(eAlpha) < 0. || get(eAlpha) >= M_PI) {
     throw std::invalid_argument("ConeBounds: invalid open angle.");
   }
-  if (get(eMinZ) > get(eMaxZ) or
+  if (get(eMinZ) > get(eMaxZ) ||
       std::abs(get(eMinZ) - get(eMaxZ)) < s_epsilon) {
     throw std::invalid_argument("ConeBounds: invalid z range setup.");
   }
-  if (get(eHalfPhiSector) < 0. or abs(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || abs(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("ConeBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

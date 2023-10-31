@@ -57,7 +57,7 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
   selectedParticles.reserve(inputParticles.size());
 
   auto within = [](double x, double min, double max) {
-    return (min <= x) and (x < max);
+    return (min <= x) && (x < max);
   };
   auto isValidparticle = [&](const auto& p) {
     const auto eta = Acts::VectorHelpers::eta(p.direction());
@@ -67,14 +67,14 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
     const auto& hits = makeRange(particleHitsMap.equal_range(p.particleId()));
     // number of recorded hits
     size_t nHits = hits.size();
-    return within(rho, 0., m_cfg.rhoMax) and
-           within(p.position().z(), m_cfg.zMin, m_cfg.zMax) and
-           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
-           within(eta, m_cfg.etaMin, m_cfg.etaMax) and
-           within(phi, m_cfg.phiMin, m_cfg.phiMax) and
-           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(nHits, m_cfg.nHitsMin, m_cfg.nHitsMax) and
-           (m_cfg.keepNeutral or (p.charge() != 0));
+    return within(rho, 0., m_cfg.rhoMax) &&
+           within(p.position().z(), m_cfg.zMin, m_cfg.zMax) &&
+           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
+           within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
+           within(phi, m_cfg.phiMin, m_cfg.phiMax) &&
+           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
+           within(nHits, m_cfg.nHitsMin, m_cfg.nHitsMax) &&
+           (m_cfg.keepNeutral || (p.charge() != 0));
   };
 
   // create prototracks for all input particles

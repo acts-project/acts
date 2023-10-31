@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
         const auto& covariance = std::get<BoundSquareMatrix>(variantCovariance);
         const auto& jacobian = std::get<BoundMatrix>(variantJacobian);
 
-        if (covariance(eBoundLoc0, eBoundLoc0) > 0 and
+        if (covariance(eBoundLoc0, eBoundLoc0) > 0 &&
             jacobian(eBoundLoc0, eBoundLoc1) > 0.) {
           ++sillyCounter;
         }

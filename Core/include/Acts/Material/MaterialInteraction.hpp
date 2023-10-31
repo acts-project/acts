@@ -52,7 +52,7 @@ struct InteractionVolume {
 
   /// Check if the volume is valid
   bool empty() const {
-    return trackingVolume == nullptr and detectorVolume == nullptr;
+    return trackingVolume == nullptr && detectorVolume == nullptr;
   }
 };
 
