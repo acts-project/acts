@@ -12,6 +12,7 @@
 
 #include <bitset>
 #include <optional>
+#include <type_traits>
 
 #include "Eigen/Dense"
 
@@ -177,6 +178,8 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 
 /// Calculate the inverse of an Eigen matrix after checking if it can be
 /// numerically inverted. This allows to catch potential FPEs before they occur.
+/// For matrices up to 4x4, the inverse is computed directly. For larger
+/// matrices, the FullPivLU is used.
 ///
 /// @tparam Derived Eigen derived concrete type
 /// @tparam Result Eigen result type defaulted to input type
@@ -186,10 +189,21 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 /// @return The theta value
 template <typename MatrixType, typename ResultType = MatrixType>
 std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
+  constexpr int rows = MatrixType::RowsAtCompileTime;
+  constexpr int cols = MatrixType::ColsAtCompileTime;
+
   ResultType result;
   bool invertible = false;
 
-  m.computeInverseWithCheck(result, invertible);
+  if constexpr (rows > 4 || cols > 4) {
+    Eigen::FullPivLU<MatrixType> mFullPivLU(m);
+    if (mFullPivLU.isInvertible()) {
+      invertible = true;
+      result = mFullPivLU.inverse();
+    }
+  } else {
+    m.computeInverseWithCheck(result, invertible);
+  }
 
   if (invertible) {
     return result;
