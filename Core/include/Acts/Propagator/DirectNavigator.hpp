@@ -314,7 +314,7 @@ class DirectNavigator {
                 : "No Volume") +
            " | ";
   }
-  
+
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;
