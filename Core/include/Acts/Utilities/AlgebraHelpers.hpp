@@ -12,7 +12,6 @@
 
 #include <bitset>
 #include <optional>
-#include <type_traits>
 
 #include "Eigen/Dense"
 
