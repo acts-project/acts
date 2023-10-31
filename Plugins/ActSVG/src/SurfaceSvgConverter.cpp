@@ -18,7 +18,7 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
   ProtoSurface pSurface;
 
   // In case of non-template surfaces, the polyhedron does the trick
-  if (not cOptions.templateSurface) {
+  if (!cOptions.templateSurface) {
     // Polyhedron surface for vertices needed anyway
     Polyhedron surfaceHedron =
         surface.polyhedronRepresentation(gctx, cOptions.style.nSegments);

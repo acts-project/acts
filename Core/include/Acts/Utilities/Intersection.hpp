@@ -303,7 +303,7 @@ bool checkIntersection(const intersection_t& intersection, double oLimit,
     ACTS_VERBOSE("Intersection is WITHIN limit");
   } else {
     ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
-    if (not coCriterion) {
+    if (!coCriterion) {
       ACTS_VERBOSE("- intersection path length "
                    << cLimit << " <= overstep limit " << oLimit);
     }

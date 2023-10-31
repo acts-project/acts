@@ -137,7 +137,7 @@ ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
   }
 
   // Register the last step if successful
-  if (not cSteps.empty()) {
+  if (!cSteps.empty()) {
     cSteps.push_back(ChannelStep({0, 0}, end, start));
     std::sort(cSteps.begin(), cSteps.end());
   }

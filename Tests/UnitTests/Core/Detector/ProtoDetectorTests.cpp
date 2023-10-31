@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
 
   // The detector container should have binning in R
   BOOST_CHECK(detectorVolume.container.has_value());
-  BOOST_CHECK(not detectorVolume.internal.has_value());
+  BOOST_CHECK(!detectorVolume.internal.has_value());
 
   auto& cts = detectorVolume.container.value();
 

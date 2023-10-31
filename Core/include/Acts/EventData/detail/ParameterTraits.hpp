@@ -81,7 +81,7 @@ struct CyclicParameterTraits {
   /// Get the corrected value folded into the central range.
   template <typename value_t>
   static constexpr value_t getValue(const value_t& value) {
-    if ((min <= value) and (value < max)) {
+    if ((min <= value) && (value < max)) {
       return value;
     } else {
       return value - (max - min) * std::floor((value - min) / (max - min));

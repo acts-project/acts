@@ -102,7 +102,7 @@ class IsPointLikeProcess {
 
 template <typename process_t>
 struct IsContinuousProcess {
-  static constexpr bool value = not IsPointLikeProcess<process_t>::value;
+  static constexpr bool value = !IsPointLikeProcess<process_t>::value;
 };
 
 template <typename processes_t>
@@ -277,7 +277,7 @@ class InteractionList {
                          std::index_sequence<kI0, kIs...> /*indices*/) const {
     const auto& process = std::get<kI0>(m_processes);
     // only call process if it is not masked
-    if (not m_mask[kI0] and process(rng, slab, particle, generated)) {
+    if (!m_mask[kI0] && process(rng, slab, particle, generated)) {
       // exit early in case the process signals an abort
       return true;
     }
@@ -301,7 +301,7 @@ class InteractionList {
                         Selection& selection,
                         std::index_sequence<kI0, kIs...> /*indices*/) const {
     // only arm the process if it is not masked
-    if (not m_mask[kI0]) {
+    if (!m_mask[kI0]) {
       auto [x0Limit, l0Limit] =
           std::get<kI0>(m_processes).generatePathLimits(rng, particle);
       if (x0Limit < selection.x0Limit) {
