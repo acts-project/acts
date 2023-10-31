@@ -18,7 +18,7 @@ from acts.examples import (
     RootParticleWriter,
     RootParticleReader,
     RootMaterialTrackReader,
-    RootTrajectorySummaryReader,
+    RootTrackSummaryReader,
     CsvParticleWriter,
     CsvParticleReader,
     CsvMeasurementWriter,
@@ -122,7 +122,7 @@ def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
 
 @pytest.mark.parametrize(
     "reader",
-    [RootParticleReader, RootTrajectorySummaryReader],
+    [RootParticleReader, RootTrackSummaryReader],
 )
 @pytest.mark.root
 def test_root_reader_interface(reader, conf_const, tmp_path):

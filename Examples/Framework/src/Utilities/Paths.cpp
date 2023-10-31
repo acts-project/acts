@@ -27,7 +27,7 @@ std::string ActsExamples::ensureWritableDirectory(const std::string& dir) {
   using std::filesystem::path;
 
   auto dir_path = dir.empty() ? current_path() : path(dir);
-  if (exists(dir_path) and not is_directory(dir_path)) {
+  if (exists(dir_path) && !is_directory(dir_path)) {
     throw std::runtime_error("'" + dir +
                              "' already exists but is not a directory");
   }
@@ -69,10 +69,10 @@ std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
 
   // ensure directory path is valid
   auto dir_path = dir.empty() ? current_path() : path(dir);
-  if (not exists(dir_path)) {
+  if (!exists(dir_path)) {
     throw std::runtime_error("'" + dir_path.native() + "' does not exists");
   }
-  if (not is_directory(dir_path)) {
+  if (!is_directory(dir_path)) {
     throw std::runtime_error("'" + dir_path.native() + "' is not a directory");
   }
 
@@ -86,7 +86,7 @@ std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
   std::cmatch match;
 
   for (const auto& f : directory_iterator(dir_path)) {
-    if ((not exists(f.status())) or (not is_regular_file(f.status()))) {
+    if ((!exists(f.status())) || (!is_regular_file(f.status()))) {
       continue;
     }
     // keep a copy so the match can refer to the underlying const char*

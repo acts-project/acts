@@ -39,7 +39,7 @@ bool approximatelyEqual(const Vector2& a, const Vector2& b) {
   const double dif0 = std::abs(a[0] - b[0]);
   const double dif1 = std::abs(a[1] - b[1]);
   const double tol = 1e-9;
-  return ((dif0 < tol) and (dif1 < tol));
+  return ((dif0 < tol) && (dif1 < tol));
 }
 BOOST_AUTO_TEST_SUITE(Surfaces)
 

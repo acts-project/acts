@@ -61,10 +61,10 @@ class Delegate<R(Args...), H, O> {
   using NonOwningDelegate =
       Delegate<R(Args...), holder_type, DelegateType::NonOwning>;
   template <typename T>
-  using isNoFunPtr = std::enable_if_t<
-      not std::is_convertible_v<std::decay_t<T>, function_type> and
-      not std::is_same_v<std::decay_t<T>, OwningDelegate> and
-      not std::is_same_v<std::decay_t<T>, NonOwningDelegate>>;
+  using isNoFunPtr =
+      std::enable_if_t<!std::is_convertible_v<std::decay_t<T>, function_type> &&
+                       !std::is_same_v<std::decay_t<T>, OwningDelegate> &&
+                       !std::is_same_v<std::decay_t<T>, NonOwningDelegate>>;
 
  public:
   Delegate() = default;

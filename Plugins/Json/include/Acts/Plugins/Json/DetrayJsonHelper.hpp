@@ -47,7 +47,7 @@ inline static std::tuple<unsigned int, std::vector<ActsScalar>> maskFromBounds(
   unsigned int type = 13u;
   std::vector<double> boundaries = bValues;
   // Special treatment for some portals
-  if (portal and bType == SurfaceBounds::BoundsType::eCylinder) {
+  if (portal && bType == SurfaceBounds::BoundsType::eCylinder) {
     boundaries = {bValues[0u], -bValues[1u], bValues[1u]};
     type = 4u;
   } else {

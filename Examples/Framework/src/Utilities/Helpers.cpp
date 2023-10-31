@@ -57,7 +57,7 @@ void anaHisto(TH1D* inputHist, int j, TH1F* meanHist, TH1F* widthHist) {
   assert(inputHist != nullptr);
   if (inputHist->GetEntries() > 0) {
     TFitResultPtr r = inputHist->Fit("gaus", "QS0");
-    if ((r.Get() != nullptr) and ((r->Status() % 1000) == 0)) {
+    if ((r.Get() != nullptr) && ((r->Status() % 1000) == 0)) {
       // fill the mean and width into 'j'th bin of the meanHist and widthHist,
       // respectively
       meanHist->SetBinContent(j, r->Parameter(1));
