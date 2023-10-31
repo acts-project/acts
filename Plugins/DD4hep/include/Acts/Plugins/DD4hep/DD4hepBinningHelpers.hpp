@@ -30,6 +30,28 @@ namespace Acts {
 static std::vector<std::tuple<std::string, BinningValue>> allowedBinnings = {
     {"x", binX}, {"y", binY}, {"z", binZ}, {"phi", binPhi}, {"r", binR}};
 
+/// Helper method to convert the string to binning value
+///
+/// @param binningString
+///
+/// @return a binningValue
+inline BinningValue stringToBinningValue(const std::string &binningString) {
+  if (binningString == "x") {
+    return binX;
+  } else if (binningString == "y") {
+    return binY;
+  } else if (binningString == "z") {
+    return binZ;
+  } else if (binningString == "phi") {
+    return binPhi;
+  } else if (binningString == "r") {
+    return binR;
+  } else {
+    throw std::invalid_argument("DD4hepBinningHelpers: Binning value " +
+                                binningString + " not allowed.");
+  }
+}
+
 /// Helper method to decode the binning from what would appear in the
 /// xml into variant parameters, such that it can be understood in the
 /// downstream processing.
@@ -54,9 +76,10 @@ static std::vector<std::tuple<std::string, BinningValue>> allowedBinnings = {
 /// @param bname the binning base name, e.g. surface_binning, material_binning
 /// @param bvals the boundary values, i.e. x,y,z,phi,r
 ///
-void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
-                   const xml_comp_t &xmlBinning, const std::string &bname,
-                   const std::vector<std::string> &bvals) {
+inline void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
+                          const xml_comp_t &xmlBinning,
+                          const std::string &bname,
+                          const std::vector<std::string> &bvals) {
   // Set the surface binninng parameter to true
   variantParams.set<int>(std::string(bname + "_dim"), bvals.size());
   for (const auto &bv : bvals) {
@@ -116,7 +139,7 @@ void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
 /// @param bname the binning base name, e.g. surface_binning, material_binning
 ///
 /// @return a vector of proto binning descriptions
-std::vector<Acts::Experimental::ProtoBinning> convertBinning(
+inline std::vector<Acts::Experimental::ProtoBinning> convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname) {
   std::vector<Experimental::ProtoBinning> protoBinnings;
   for (const auto &[ab, bVal] : allowedBinnings) {

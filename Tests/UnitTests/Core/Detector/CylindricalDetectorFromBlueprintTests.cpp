@@ -15,6 +15,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
+#include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -225,7 +226,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   Acts::Experimental::detail::BlueprintHelper::fillGaps(*detectorBpr);
 
   std::fstream fs("cylindrical_detector_blueprint.dot", std::ios::out);
-  detectorBpr->dotStream(fs, "blueprint2cylinder");
+  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *detectorBpr);
   fs.close();
 
   // ----------------------------- end of blueprint
