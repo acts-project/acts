@@ -33,13 +33,16 @@ void Acts::KalmanVertexUpdater::detail::update(
   double chi2 = fitQuality.first;
   double ndf = fitQuality.second;
 
-  // Chi2 wrt to track parameters
+  // Chi2 of the track parameters
   double trkChi2 =
       detail::trackParametersChi2<input_track_t>(trk.linearizedState, cache);
 
+  // Update of the chi2 of the vertex position
+  double vtxPosChi2Update =
+      detail::vertexPositionChi2Update<input_track_t>(vtx, cache);
+
   // Calculate new chi2
-  chi2 += sign * (detail::vertexPositionChi2<input_track_t>(vtx, cache) +
-                  trackWeight * trkChi2);
+  chi2 += sign * (vtxPosChi2Update + trackWeight * trkChi2);
 
   // Calculate ndf
   ndf += sign * trackWeight * 2.;
@@ -56,7 +59,7 @@ void Acts::KalmanVertexUpdater::detail::update(
   }
   // Remove trk from current vertex by setting its weight to 0
   else if (sign == -1) {
-    trk.trackWeight = 0;
+    trk.trackWeight = 0.;
   } else {
     throw std::invalid_argument(
         "Sign for adding/removing track must be +1 (add) or -1 (remove).");
@@ -69,7 +72,7 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
     const Acts::LinearizedTrack& linTrack, const double& trackWeight, int sign,
     Cache& cache) {
   // Retrieve variables from the track linearization. The comments indicate the
-  // corresponding symbol used in the reference.
+  // corresponding symbol used in Ref. (1).
   // A_k
   const ActsMatrix<eBoundSize, 4>& posJac = linTrack.positionJacobian;
   // B_k
@@ -79,6 +82,12 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
   // c_k
   const BoundVector& constTerm = linTrack.constantTerm;
   // G_k
+  // Note that, when removing a track, G_k -> - G_k, see Ref. (1).
+  // Further note that, as we use the weighted formalism, the track weight
+  // matrix (i.e., the inverse track covariance matrix) should be multiplied
+  // with the track weight from the AMVF formalism. Here, we choose to
+  // consider these two multiplicative factors directly in the updates of
+  // newVertexWeight and newVertexPos.
   const BoundSquareMatrix& trkParamWeight = linTrack.weightAtPCA;
 
   // Retrieve current position of the vertex and its current weight matrix
@@ -89,27 +98,26 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
   cache.wMat = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   // G_k^B = G_k - G_k*B_k*W_k*B_k^(T)*G_k
-  BoundSquareMatrix gMat =
+  BoundSquareMatrix gBMat =
       trkParamWeight - trkParamWeight * momJac * cache.wMat *
                            momJac.transpose() * trkParamWeight;
 
   // C_k^-1
-  // TODO should the trackWeight not be multiplied into trkParamWeight?
   cache.newVertexWeight = cache.oldVertexWeight + sign * trackWeight *
                                                       posJac.transpose() *
-                                                      gMat * posJac;
+                                                      gBMat * posJac;
   // C_k
   cache.newVertexCov = cache.newVertexWeight.inverse();
 
   // New vertex position
   cache.newVertexPos =
       cache.newVertexCov * (cache.oldVertexWeight * oldVtxPos +
-                            sign * trackWeight * posJac.transpose() * gMat *
+                            sign * trackWeight * posJac.transpose() * gBMat *
                                 (trkParams - constTerm));
 }
 
 template <typename input_track_t>
-double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
+double Acts::KalmanVertexUpdater::detail::vertexPositionChi2Update(
     const Vertex<input_track_t>& oldVtx, const Cache& cache) {
   Vector4 posDiff = cache.newVertexPos - oldVtx.fullPosition();
 

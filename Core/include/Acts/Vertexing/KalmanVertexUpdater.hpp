@@ -18,10 +18,21 @@ namespace KalmanVertexUpdater {
 /// KalmanVertexUpdater
 ///
 /// @brief adds or removes track from or updates current vertex
-/// Based on R. Frühwirth et al.
+/// Based on
+/// Ref. (1):
+/// R. Frühwirth et al.
 /// Vertex reconstruction and track bundling at the lep collider using
-/// robust Algorithms Computer Physics Comm.: 96 (1996) 189, chapter 2.1
-
+/// robust Algorithms
+/// Computer Physics Comm.: 96 (1996) 189
+/// Chapter 2.1
+///
+/// For remarks on the weighted formalism, which we use here, see
+/// Ref. (2):
+/// Giacinto Piacquadio
+/// Identification of b-jets and investigation of the discovery potential
+/// of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment
+/// CERN-THESIS-2010-027
+/// Section 5.3.5
 /// Cache object to store matrix information
 struct Cache {
   Vector4 newVertexPos = Vector4::Zero();
@@ -60,15 +71,16 @@ void calculateUpdate(const Acts::Vertex<input_track_t>& vtx,
 
 namespace detail {
 
-/// @brief Takes old and new vtx and calculates position chi2
+/// @brief Calculates the update of the vertex position chi2 after
+/// adding/removing the track
 ///
-/// @param oldVtx Old vertex
+/// @param oldVtx Vertex before the track was added/removed
 /// @param cache Cache containing updated vertex position
 ///
 /// @return Chi2
 template <typename input_track_t>
-double vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
-                          const Cache& cache);
+double vertexPositionChi2Update(const Vertex<input_track_t>& oldVtx,
+                                const Cache& cache);
 
 /// @brief Calculates chi2 of refitted track parameters
 /// w.r.t. updated vertex

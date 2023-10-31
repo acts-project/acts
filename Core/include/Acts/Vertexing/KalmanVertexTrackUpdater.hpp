@@ -21,6 +21,13 @@ namespace KalmanVertexTrackUpdater {
 ///
 /// @brief Refits a single track with the knowledge of
 /// the vertex it has originated from
+/// Based on
+/// R. Frühwirth et al.
+/// Vertex reconstruction and track bundling at the lep collider using
+/// robust Algorithms
+/// Computer Physics Comm.: 96 (1996) 189
+/// Chapter 2.1
+///
 ///
 /// @tparam input_track_t track parameter type
 /// @param track Track to update
