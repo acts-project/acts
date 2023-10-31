@@ -379,7 +379,7 @@ class Gx2Fitter {
 
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      if constexpr (not isDirectNavigator) {
+      if constexpr (!isDirectNavigator) {
         if (result.processedStates == 0) {
           for (auto measurementIt = inputMeasurements->begin();
                measurementIt != inputMeasurements->end(); measurementIt++) {
@@ -552,7 +552,7 @@ class Gx2Fitter {
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
-      if (!result.result.ok() or result.finished) {
+      if (!result.result.ok() || result.finished) {
         return true;
       }
       return false;

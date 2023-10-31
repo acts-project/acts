@@ -29,7 +29,7 @@ void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
   mval.paramVariances = std::move(params.variances);
   mval.sources = {simhit};
 
-  if (m_merge and not params.cluster.channels.empty()) {
+  if (m_merge && !params.cluster.channels.empty()) {
     // Break-up the cluster
     for (auto cell : params.cluster.channels) {
       ModuleValue mval_cell = mval;
@@ -104,7 +104,7 @@ void ModuleClusters::merge() {
 
   std::vector<ModuleValue> newVals;
 
-  if (not cells.empty()) {
+  if (!cells.empty()) {
     // Case where we actually have geometric clusters
     std::vector<std::vector<ModuleValue>> merged =
         Acts::Ccl::createClusters<std::vector<ModuleValue>,
@@ -277,7 +277,7 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
 
   for (size_t i = 0; i < values.size(); i++) {
     ModuleValue& other = values.at(i);
-    if (not std::holds_alternative<Cluster::Cell>(other.value)) {
+    if (!std::holds_alternative<Cluster::Cell>(other.value)) {
       continue;
     }
 

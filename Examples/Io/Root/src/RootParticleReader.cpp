@@ -75,7 +75,7 @@ ActsExamples::RootParticleReader::RootParticleReader(
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 
   // If the events are not in order, get the entry numbers for ordered events
-  if (not m_cfg.orderedEvents) {
+  if (!m_cfg.orderedEvents) {
     m_entryNumbers.resize(m_events);
     m_inputChain->Draw("event_id", "", "goff");
     // Sort to get the entry numbers of the ordered events
@@ -133,7 +133,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
 
     // Read the correct entry
     auto entry = context.eventNumber;
-    if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
+    if (!m_cfg.orderedEvents && entry < m_entryNumbers.size()) {
       entry = m_entryNumbers[entry];
     }
     m_inputChain->GetEntry(entry);
@@ -166,11 +166,11 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
     // Write the collections to the EventStore
     m_outputParticles(context, std::move(particleContainer));
 
-    if (not m_cfg.vertexPrimaryCollection.empty()) {
+    if (!m_cfg.vertexPrimaryCollection.empty()) {
       m_outputPrimaryVertices(context, std::move(priVtxCollection));
     }
 
-    if (not m_cfg.vertexSecondaryCollection.empty()) {
+    if (!m_cfg.vertexSecondaryCollection.empty()) {
       m_outputSecondaryVertices(context, std::move(secVtxCollection));
     }
   }

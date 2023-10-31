@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -196,7 +197,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   auto summary = [](auto& result_vec) {
     std::stringstream ss;
     for (auto& optRes : result_vec) {
-      if (not optRes) {
+      if (!optRes) {
         ss << "on surface | ";
       } else if (optRes->ok()) {
         ss << optRes->value() << " | ";

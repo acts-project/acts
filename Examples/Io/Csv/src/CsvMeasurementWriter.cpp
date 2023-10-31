@@ -68,7 +68,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
       pathMeasurements, m_cfg.outputPrecision);
 
   std::optional<dfe::NamedTupleCsvWriter<CellData>> writerCells{std::nullopt};
-  if (not m_cfg.inputClusters.empty()) {
+  if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE(
         "Set up writing of clusters from collection: " << m_cfg.inputClusters);
     clusters = m_inputClusters(ctx);
@@ -132,7 +132,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           writerMeasurements.append(meas);
 
           // CLUSTER / channel information ------------------------------
-          if (not clusters.empty() && writerCells) {
+          if (!clusters.empty() && writerCells) {
             auto cluster = clusters[measIdx];
             cell.geometry_id = meas.geometry_id;
             cell.measurement_id = meas.measurement_id;

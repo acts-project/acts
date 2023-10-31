@@ -69,7 +69,7 @@ struct SteppingLogger {
                   const navigator_t& navigator, result_type& result,
                   const Logger& /*logger*/) const {
     // Don't log if you have reached the target or are sterile
-    if (sterile or navigator.targetReached(state.navigation)) {
+    if (sterile || navigator.targetReached(state.navigation)) {
       return;
     }
     // Record the propagation state

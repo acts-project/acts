@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Detector/Blueprint.hpp"
+#include "Acts/Detector/detail/BlueprintDrawer.hpp"
 
 #include <fstream>
 
@@ -81,7 +82,7 @@ BOOST_AUTO_TEST_CASE(BlueprintTest) {
   BOOST_CHECK(leaf0Ptr->parent == root.get());
 
   std::ofstream fs("blueprint.dot");
-  root->dotStream(fs);
+  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *root);
   fs.close();
 }
 

@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 //
 BOOST_AUTO_TEST_CASE(UnconnectedUpdate) {
   Acts::Experimental::DetectorVolumeUpdator ucUpdator;
-  BOOST_CHECK(not ucUpdator.connected());
+  BOOST_CHECK(!ucUpdator.connected());
 }
 
 // The end of world is reached
