@@ -19,14 +19,19 @@ namespace Test {
 BOOST_AUTO_TEST_SUITE(AlgebraHelpers)
 
 BOOST_AUTO_TEST_CASE(safeInverseSmallMatrix) {
-  const Eigen::Matrix<double, 2, 2> aDouble{{1, 2}, {3, 4}};
-  const Eigen::Matrix<double, 2, 2> aDoubleInvRef{{-2, 1}, {1.5, -0.5}};
+  Eigen::Matrix<double, 2, 2> aDouble;
+  aDouble << 1, 2, 3, 4;
+
+  Eigen::Matrix<double, 2, 2> aDoubleInvRef;
+  aDoubleInvRef << -2, 1, 1.5, -0.5;
+
   auto aDoubleInv = Acts::safeInverse(aDouble);
 
   BOOST_CHECK(aDoubleInv);
   BOOST_CHECK_EQUAL(*aDoubleInv, aDoubleInvRef);
 
-  const Eigen::Matrix<int, 2, 2> identityInt{{1, 0}, {0, 1}};
+  Eigen::Matrix<int, 2, 2> identityInt;
+  identityInt << 1, 0, 0, 1;
   auto identityIntInv = Acts::safeInverse(identityInt);
 
   BOOST_CHECK(identityIntInv);
@@ -34,8 +39,11 @@ BOOST_AUTO_TEST_CASE(safeInverseSmallMatrix) {
 }
 
 BOOST_AUTO_TEST_CASE(safeInverseBadSmallMatrix) {
-  const Eigen::Matrix<double, 2, 2> aDouble{{1, 1}, {2, 2}};
+  Eigen::Matrix<double, 2, 2> aDouble;
+  aDouble << 1, 1, 2, 2;
+
   auto aDoubleInv = Acts::safeInverse(aDouble);
+
   BOOST_CHECK(!aDoubleInv);
 }
 
