@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
