@@ -145,7 +145,7 @@ inline std::vector<Acts::Experimental::ProtoBinning> convertBinning(
   for (const auto &[ab, bVal] : allowedBinnings) {
     auto type =
         getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
-    if (not type.empty()) {
+    if (!type.empty()) {
       // Default binning is bound
       auto bType = Acts::detail::AxisBoundaryType::Bound;
       // Equidistant or variable binning
@@ -162,7 +162,7 @@ inline std::vector<Acts::Experimental::ProtoBinning> convertBinning(
         auto max = getParamOr<ActsScalar>(bname + "_" + ab + "_max",
                                           dd4hepElement, 0.);
         // Check for closed phi binning
-        if (bVal == binPhi and (max - min) > 1.9 * M_PI) {
+        if (bVal == binPhi && (max - min) > 1.9 * M_PI) {
           bType = Acts::detail::AxisBoundaryType::Closed;
         }
         protoBinnings.push_back(Experimental::ProtoBinning(
@@ -175,7 +175,7 @@ inline std::vector<Acts::Experimental::ProtoBinning> convertBinning(
               bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
         }
         // Check for closed phi binning
-        if (bVal == binPhi and (edges.back() - edges.front()) > 1.9 * M_PI) {
+        if (bVal == binPhi && (edges.back() - edges.front()) > 1.9 * M_PI) {
           bType = Acts::detail::AxisBoundaryType::Closed;
         }
         protoBinnings.push_back(

@@ -38,14 +38,14 @@ Acts::Result<std::pair<float, float>> Acts::GaussianGridTrackDensity<
                                                             mainGrid) const {
   // Get z maximum value
   auto maxZRes = getMaxZPosition(mainGrid);
-  if (not maxZRes.ok()) {
+  if (!maxZRes.ok()) {
     return maxZRes.error();
   }
   float maxZ = *maxZRes;
 
   // Get seed width estimate
   auto widthRes = estimateSeedWidth(mainGrid, maxZ);
-  if (not widthRes.ok()) {
+  if (!widthRes.ok()) {
     return widthRes.error();
   }
   float width = *widthRes;
