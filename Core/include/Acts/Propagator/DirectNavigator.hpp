@@ -72,6 +72,7 @@ class DirectNavigator {
       if (not r.initialized) {
         // Initialize the surface sequence
         state.navigation.navSurfaces = navSurfaces;
+        state.navigation.currentSurface = navSurfaces.front();
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
         r.initialized = true;
       }
