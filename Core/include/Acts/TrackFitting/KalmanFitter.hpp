@@ -861,7 +861,7 @@ class KalmanFitter {
                             const navigator_t& navigator,
                             const MaterialUpdateStage& updateStage) const {
       // Protect against null surface
-      if (not surface) {
+      if (!surface) {
         ACTS_VERBOSE(
             "Surface is nullptr. Cannot be used for material interaction");
         return;
