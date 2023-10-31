@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
-import base64
-from dataclasses import dataclass
 from pathlib import Path
 import shutil
+import base64
 import subprocess
 from subprocess import run
 from typing import List
 import re
 import textwrap
 import tempfile
+from typing import Optional
+import functools
+import asyncio
 
 import typer
 import toml
 import pydantic
-import requests
 import rich.console
 import rich.panel
 import rich.pretty
 from jinja2 import Template
+import aiohttp
+from gidgethub.aiohttp import GitHubAPI
+from fsspec.implementations.zip import ZipFileSystem
 
 
 app = typer.Typer()
@@ -26,7 +30,7 @@ app = typer.Typer()
 class MetaData(pydantic.BaseModel):
     authors: List[str]
     title: str
-    description: str
+    description: str = ""
 
 
 class WhitePaper(pydantic.BaseModel):
@@ -49,9 +53,6 @@ class Config(pydantic.BaseModel):
     whitepapers: List[WhitePaper]
 
 
-API_URL = "https://api.github.com"
-
-
 def parse_metadata(content: str) -> MetaData:
     m = re.search(r"\\author{(.*)}", content)
     assert m is not None
@@ -62,113 +63,150 @@ def parse_metadata(content: str) -> MetaData:
     assert m is not None
     title = m.group(1).strip()
 
-    m = re.search(
-        r"^%% BEGIN SHORT DESCRIPTION$(.*)^%% END SHORT DESCRIPTION$",
-        content,
-        re.MULTILINE | re.DOTALL,
+    return MetaData(authors=authors, title=title)
+
+
+def which(cmd: str) -> Optional[Path]:
+    try:
+        exe = (
+            run(["command", "-v", cmd], check=True, capture_output=True)
+            .stdout.decode()
+            .strip()
+        )
+        return Path(exe)
+    except subprocess.CalledProcessError:
+        return None
+
+
+def coro(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        return asyncio.run(fn(*args, **kwargs))
+
+    return wrapper
+
+
+def make_titlepage_image(convert: Path, pdf: Path, output: Path):
+    run(
+        [
+            convert,
+            "-density",
+            "300",
+            f"{pdf}[0]",
+            "-background",
+            "white",
+            "-alpha",
+            "remove",
+            "-alpha",
+            "off",
+            "-depth",
+            "2",
+            str(output),
+        ],
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
-    assert m is not None
-    description = m.group(1)
-    description = textwrap.dedent(description).strip()
-
-    return MetaData(authors=authors, title=title, description=description)
 
 
-def which(cmd: str) -> Path:
-    exe = (
-        run(["command", "-v", cmd], check=True, capture_output=True)
-        .stdout.decode()
-        .strip()
-    )
-    return Path(exe)
+async def get_file(gh: GitHubAPI, repo: str, file: str) -> str:
+    r = await gh.getitem(f"/repos/{repo}/contents/{file}")
+    return base64.b64decode(r["content"]).decode()
 
 
 @app.command()
-def pull(config_file: Path = Path(__file__).parent / "config.toml"):
+@coro
+async def pull(
+    config_file: Path = Path(__file__).parent / "config.toml",
+    github_token: str = typer.Option(..., envvar="GITHUB_TOKEN"),
+):
     console = rich.console.Console()
-
-    git = which("git")
-    latexmk = which("latexmk")
     convert = which("convert")
+    if convert is None:
+        print("convert (imagemagick) not found, please install")
+        raise typer.Exit(1)
 
-    with console.status("[bold green]Loading config...") as status:
-        config = Config(**toml.load(config_file))
+    async with aiohttp.ClientSession() as session:
+        gh = GitHubAPI(session, "requester", oauth_token=github_token)
 
-        for whp in config.whitepapers:
-            status.update(f"Loading {whp.repository}...")
+        with console.status("[bold green]Loading config...") as status:
+            config = Config(**toml.load(config_file))
 
-            repo = whp.repo
-            slug = whp.slug
+            for whp in config.whitepapers:
+                status.update(f"Loading {whp.repository}...")
 
-            r = requests.get(f"{API_URL}/repos/{repo}")
-            repo_data = r.json()
+                repo = whp.repo
+                slug = whp.slug
 
-            with tempfile.TemporaryDirectory() as tmpdir:
-                tmpdir = Path(tmpdir)
-                checkout = tmpdir / slug
-                status.update(f"\[{repo}] Cloning repo {repo_data['clone_url']}...")
-                run(
-                    [git, "clone", repo_data["clone_url"], checkout],
-                    check=True,
-                    cwd=tmpdir,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
+                latest_artifact = None
+
+                async for artifact in gh.getiter(
+                    f"/repos/{repo}/actions/artifacts", iterable_key="artifacts"
+                ):
+                    if artifact["workflow_run"]["head_branch"] == "main":
+                        latest_artifact = artifact
+                        break
+                if latest_artifact is None:
+                    print("No artifacts found for", whp.repository)
+                    raise typer.Exit(1)
+
+                status.update(f"\[{repo}] Downloading artifact...")
+
+                r = await session.get(
+                    latest_artifact["archive_download_url"],
+                    headers={"Authorization": f"Token {github_token}"},
                 )
 
-                status.update(f"\[{repo}] Compiling PDF...")
-                run(
-                    [latexmk],
-                    check=True,
-                    cwd=checkout,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
+                with tempfile.TemporaryFile() as fh, tempfile.NamedTemporaryFile(
+                    suffix=".pdf"
+                ) as pdf_fh:
+                    async for data, _ in r.content.iter_chunks():
+                        fh.write(data)
+                    fh.seek(0)
+
+                    zipfs = ZipFileSystem(fh)
+                    files = zipfs.ls("/", detail=False)
+                    if len(files) != 1:
+                        print("Unexpected number of files in artifact", files)
+                        raise typer.Exit(1)
+                    if not files[0].endswith(".pdf"):
+                        print("Unexpected file in artifact", files)
+                        raise typer.Exit(1)
+
+                    shutil.copyfileobj(zipfs.open(files[0]), pdf_fh)
+
+                    status.update(f"\[{repo}] Converting PDF to PNG...")
+                    title_page = config_file.parent / f"{slug}.png"
+                    make_titlepage_image(convert, Path(pdf_fh.name), title_page)
+
+                status.update(f"\[{repo}] Getting metadata...")
+
+                metadata, abstract = await asyncio.gather(
+                    get_file(gh, repo, "metadata.tex"),
+                    get_file(gh, repo, "abstract.tex"),
                 )
 
-                build_dir = checkout / "build"
-                output_file = build_dir / "main.pdf"
-                assert output_file.exists(), "PDF not found"
-
-                title_page = build_dir / "title_page.png"
-
-                status.update(f"\[{repo}] Converting PDF to PNG...")
-                run(
+                abstract = textwrap.dedent(abstract).strip()
+                abstract = "\n".join(
                     [
-                        convert,
-                        "-density",
-                        "300",
-                        f"{output_file}[0]",
-                        "-background",
-                        "white",
-                        "-alpha",
-                        "remove",
-                        "-alpha",
-                        "off",
-                        "-depth",
-                        "2",
-                        str(title_page),
-                    ],
-                    cwd=tmpdir,
-                    check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
+                        line
+                        for line in abstract.split("\n")
+                        if not line.strip().startswith("%")
+                    ]
+                ).strip()
+                metadata = parse_metadata(metadata)
+                metadata.description = abstract
+
+                console.print(
+                    rich.panel.Panel(rich.pretty.Pretty(metadata), title=whp.repository)
                 )
-                assert title_page.exists(), "PNG not found"
-                shutil.copyfile(title_page, config_file.parent / f"{slug}.png")
 
-                metadata_file = checkout / "metadata.tex"
+                whp.metadata = metadata
 
-                metadata = parse_metadata(metadata_file.read_text())
+            status.update("Updating config...")
 
-            console.print(
-                rich.panel.Panel(rich.pretty.Pretty(metadata), title=whp.repository)
-            )
-
-            whp.metadata = metadata
-
-        status.update("Updating config...")
-
-        with open(config_file, "w") as f:
-            toml.dump(config.model_dump(), f)
+            with open(config_file, "w") as f:
+                toml.dump(config.model_dump(), f)
 
 
 @app.command()

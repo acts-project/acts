@@ -1,6 +1,9 @@
 rich
 toml
-requests
 typer
 pydantic
 jinja2
+gidgethub
+aiohttp
+python-dotenv
+fsspec

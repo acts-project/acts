@@ -27,8 +27,16 @@ in ACTS.
 
 ### Description
 This is a whitepaper example. It contains a number of example
-	patterns, layouts etc.
-    Simple math like $a + b = c$ or even $\sqrt{s} = 14$ TeV is supported!
+patterns, layouts etc.
+Simple math like $a + b = c$ or even $\sqrt{s} = 14$ TeV is supported!
+
+Quisque ullamcorper placerat ipsum. Cras nibh. Morbi vel justo vitae lacus
+tincidunt ultrices. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In hac
+habitasse platea dictumst. Integer tempus convallis augue. Etiam facilisis. Nunc
+elementum fermentum wisi. Aenean placerat. Ut imperdiet, enim sed gravida
+sollicitudin, felis odio placerat quam, ac pulvinar elit purus eget enim. Nunc vitae
+tortor. Proin tempus nibh sit amet nisl. Vivamus quis tortor vitae risus porta
+vehicula.
 
 <span style="display:block;clear:both;"></span>
 
