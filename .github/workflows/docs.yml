@@ -15,7 +15,6 @@ concurrency:
 jobs:
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
     env:
         DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
         DOXYGEN_VERSION: 1.9.4
@@ -31,7 +30,7 @@ jobs:
 
       - name: Install doxygen
         if: steps.cache-doxygen.outputs.cache-hit != 'true'
-        run:
+        run: >
           curl -SL https://sourceforge.net/projects/doxygen/files/rel-${{ env.DOXYGEN_VERSION }}/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz/download | tar -xzC .
           && mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
 
@@ -39,10 +38,20 @@ jobs:
         run: >
           pip3 install --upgrade pip
           && pip install -r docs/requirements.txt
-      - name: Configure
-        run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=ON
-      - name: Build
-        run: cmake --build build --target docs-with-api
+
+      - name: Build documentation
+        run: >
+          cd docs
+          && sphinx-build 
+          -b html 
+          -d _build/doctrees/ 
+          -j auto 
+          -W 
+          --keep-going 
+          -t run_doxygen 
+          -b linkcheck
+          . _build/html/ 
+
       - uses: actions/upload-artifact@v3
         with:
           name: acts-docs
