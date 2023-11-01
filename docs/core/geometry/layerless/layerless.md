@@ -1,5 +1,19 @@
-(exp_geometry_impl)=
+(layerless-geometry)=
+# Layerless geometry
 
+## Geometry module rosetta stone
+
+:::{todo}
+Describe replacements of `TrackingGeometry`, `TrackingVolume` etc and how the classes map to one another.
+:::
+
+
+:::{toctree}
+building
+:::
+
+
+(exp_geometry_impl)=
 # Experimental Geometry module
 
 :::{note}

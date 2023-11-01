@@ -28,8 +28,11 @@ extensions = [
     "breathe",
     "myst_parser",
     "sphinx.ext.mathjax",
+    "sphinx.ext.todo",
     "warnings_filter",
 ]
+
+todo_include_todos = True
 
 warnings_filter_config = str(Path(__file__).parent / "known-warnings.txt")
 warnings_filter_silent = True

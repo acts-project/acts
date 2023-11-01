@@ -42,7 +42,5 @@ At the time of writing, there are two aspects to the ACTS examples:
 
    Python bindings <python_bindings>
    full_chain_odd
-   material_mapping
-   digizier_config
    alignment
-   Analysis Apps <analysis_apps>
+   How-to guides <howto/howto>

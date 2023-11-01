@@ -1,3 +1,4 @@
+(magnetic-field-core)=
 # Magnetic field
 
 The magnetic field component of ACTS provides functionality to describe

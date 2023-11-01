@@ -1,10 +1,11 @@
-(material_howto_core)=
-# Howto run the material mapping and validation
+.. _material_mapping_howto_examples:
 
-ACTS Material Mapping Tutorial
-==============================
+Howto run the material mapping and validation
+=============================================
 
-(This how to uses **deprecated** executables and will be updated soon)
+.. note::
+   This documentation is for running the material mapping in the Examples framework.
+   Documentation on how to use the Core library directly for material mapping is found :ref:`here<material_mapping_howto_core>`.
 
 When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps: 
 
@@ -232,4 +233,4 @@ Can be use with X,Y,Z is a list of volumes, this will plot the material ratio be
 Using a different detector
 --------------------------
 
-If you want to use a different type of detector, you will first need to ensure that the relevant packages were added during the compilation. After this you can just replace the detector initialisation in the different main function. For reference you can have a look on the Odd for DD4Hep detector and on the ITk for TGeo detector. 
+If you want to use a different type of detector, you will first need to ensure that the relevant packages were added during the compilation. After this you can just replace the detector initialisation in the different main function. For reference you can have a look on the ODD for DD4Hep detector and on the ITk for TGeo detector. 

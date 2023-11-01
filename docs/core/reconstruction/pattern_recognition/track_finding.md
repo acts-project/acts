@@ -1,11 +1,16 @@
 # Track Finding
 
-:::{note}
-This is a stub!
+:::{todo}
+Write CKF documentation
 :::
 
 (ckf_core)=
 ## Combinatorial Kalman Filter
+
+% Functional approach
+% Implementation as an actor
+% Limitations (no inward filtering)
+% Requirement to copy out after smoothing if smoothed track states are desired
 
 ## Machine-Learning based Track Finding
 

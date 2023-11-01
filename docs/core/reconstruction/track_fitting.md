@@ -26,8 +26,8 @@ The KF can give us those three interpretations as sets of track parameters:
     * filtered: Uses the "current" data (i.e. the predicted data updated with the measurement on the current surface). It is some kind of weighted mean.
     * smoothed: Uses the "future" data to predict the current parameters. This can only be evaluated if the whole propagation is finished once. This can be done in to ways: one uses backwards-propagation and one does not.
 
-:::{note}
-This chapter will be extended in the future.
+:::{todo}
+Complete Kalman Filter description
 :::
 
 (gsf_core)=
@@ -46,7 +46,7 @@ f(z) = \frac{(- \ln z)^{c-1}}{\Gamma(c)}, \quad c = t/\ln 2
 $$
 
 (figBetheHeitler)=
-:::{figure} ../figures/gsf_bethe_heitler_approx.svg
+:::{figure} ../../figures/gsf_bethe_heitler_approx.svg
 :width: 450px
 :align: center
 The true Bethe-Heitler distribution compared with a gaussian mixture approximation (in thin lines the individual components are drawn) at t = 0.1 (corresponds to ~ 10mm Silicon).
@@ -58,7 +58,7 @@ To be able to handle this with the Kalman filter mechanics, this distribution is
 * On a measurement surface, for each component a Kalman update is performed. Afterwards, the component weights are corrected according to each component's compatibility with the measurement.
 
 (figGsf)=
-:::{figure} ../figures/gsf_overview.svg
+:::{figure} ../../figures/gsf_overview.svg
 :width: 450px
 :align: center
 Simplified overview of the GSF algorithm.
@@ -108,14 +108,16 @@ The {class}`Acts::AtlasBetheHeitlerApprox` is constructed with two parameterizat
 * $x/x_0 \geq 0.1$: Return the approximation for high $x/x_0$. The maximum possible value is $x/x_0 = 0.2$, for higher values it is clipped to 0.2 and the GSF emits a warning.
 
 ### Further reading
+
 * *Thomas Atkinson*, Electron reconstruction with the ATLAS inner detector, 2006, see [here](https://cds.cern.ch/record/1448253)
 * *R Frühwirth*, Track fitting with non-Gaussian noise, 1997, see [here](https://doi.org/10.1016/S0010-4655(96)00155-5)
 * *R Frühwirth*, A Gaussian-mixture approximation of the Bethe–Heitler model of electron energy loss by bremsstrahlung, 2003, see [here](https://doi.org/10.1016/S0010-4655(03)00292-3)
 
 (gx2f_core)=
 ## Global Chi-Square Fitter (GX2F) [wip]
-:::{note}
-This chapter will be added soon.
+
+:::{todo}
+Write GX2F documeneation
 :::
 
 [^billoir]: https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf

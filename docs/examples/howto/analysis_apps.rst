@@ -104,7 +104,7 @@ The resulting file contains the following histograms:
 Only histograms with non-zero contribution are written out per specified region,
 the following shows a resulting stacked histogram showing different components:
 
-.. figure:: ../figures/examples/aa_mc_stacked_x0.gif  
+.. figure:: ../../figures/examples/aa_mc_stacked_x0.gif  
    :width: 500
 
 The source code for this application can be found in ``Examples/Scripts/MaterialMapping``.
@@ -160,7 +160,7 @@ layers and volumes and create detailed and summary plots for all of them.
 As a example, the pull distributions for *predicted, filtered* and *smoothed* track states 
 is shown below.
 
-.. figure:: ../figures/examples/aa_rp_layers.png  
+.. figure:: ../../figures/examples/aa_rp_layers.png  
    :width: 500
 
 
@@ -228,11 +228,11 @@ using the ``--peak-events`` option.
 Some example histograms (transverse impact parameter ``d0`` distribution or a summary plot showing
 the number of detector hits, are added below).
 
-.. figure:: ../figures/examples/aa_ts_d0.png  
+.. figure:: ../../figures/examples/aa_ts_d0.png  
    :width: 500
 
 
-.. figure:: ../figures/examples/aa_ts_nhits.png  
+.. figure:: ../../figures/examples/aa_ts_nhits.png  
    :width: 500
 
 

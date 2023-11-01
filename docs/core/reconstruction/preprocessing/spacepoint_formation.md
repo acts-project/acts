@@ -2,6 +2,6 @@
 
 # Spacepoint formation
 
-:::{note}
-This is a stub!
+:::{todo}
+Write spacepoint formation documentation
 :::

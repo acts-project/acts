@@ -27,10 +27,10 @@ Key features:
    tracking
    acts_project
    core/core
-   fatras/fatras
+   Fast Track Simulation (Fatras) <fatras/fatras>
    plugins/plugins
    examples/examples
-   howto/howto
+
    contribution/contribution
 
    versioning
@@ -39,3 +39,9 @@ Key features:
    codeguide
    authors
    license
+
+
+TODOs
+=====
+
+.. todolist::
