@@ -632,9 +632,6 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   bool targetSurfaces(propagator_state_t& state,
                       const stepper_t& stepper) const {
-    if (state.navigation.navigationBreak) {
-      return false;
-    }
     // Make sure resolve Surfaces is called on the start layer
     if (state.navigation.startLayer && !state.navigation.startLayerResolved) {
       ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
@@ -1278,48 +1275,29 @@ class Navigator {
   /// is misconfigured
   ///
   /// @tparam propagator_state_t The state type of the propagator
-  /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
-  /// @param [in] stepper Stepper in use
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename stepper_t>
-  bool inactive(propagator_state_t& state, const stepper_t& stepper) const {
+  template <typename propagator_state_t>
+  bool inactive(propagator_state_t& state) const {
     // Void behavior in case no tracking geometry is present
     if (!m_cfg.trackingGeometry) {
+      ACTS_VERBOSE(volInfo(state) << "Navigation inactive - no geometry.");
       return true;
     }
     // turn the navigator into void when you are instructed to do nothing
     if (!m_cfg.resolveSensitive && !m_cfg.resolveMaterial &&
         !m_cfg.resolvePassive) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Navigation inactive - no geometry to resolve.");
       return true;
     }
-
     // Navigation break handling
-    // This checks if a navigation break had been triggered:
-    // - If so & the target exists or was hit - it simply returns
-    // - If a target exists and was not yet hit, it checks for it
     // -> return is always to the stepper
     if (state.navigation.navigationBreak) {
-      // target exists and reached, or no target exists
-      if (state.navigation.targetReached || !state.navigation.targetSurface) {
-        return true;
-      }
-      auto targetStatus = stepper.updateSurfaceStatus(
-          state.stepping, *state.navigation.targetSurface,
-          state.options.direction, true, state.options.targetTolerance,
-          logger());
-      // the only advance could have been to the target
-      if (targetStatus == Intersection3D::Status::onSurface) {
-        // set the target surface
-        state.navigation.currentSurface = state.navigation.targetSurface;
-        ACTS_VERBOSE(volInfo(state)
-                     << volInfo(state)
-                     << "Current surface set to target surface "
-                     << state.navigation.currentSurface->geometryId());
-        return true;
-      }
+      ACTS_VERBOSE(volInfo(state) << "Navigation inactive - break issued.");
+      return true;
     }
     return false;
   }
