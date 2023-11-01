@@ -14,6 +14,8 @@
 #include <string>
 #include <tuple>
 
+#include <nlohmann/json.hpp>
+
 namespace Acts {
 
 namespace DetrayJsonHelper {
