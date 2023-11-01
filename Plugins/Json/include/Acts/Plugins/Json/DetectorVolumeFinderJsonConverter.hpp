@@ -28,7 +28,7 @@ namespace DetectorVolumeFinderJsonConverter {
 ///
 /// @param jIndexedVolumes the json object to be filled
 /// @param delegate the delegate to be translated
-/// @par
+/// @param detray indicates if detray json format is to be written out
 /// @param refInstance is a reference instance of potential type casting
 template <typename instance_type>
 void convert(nlohmann::json& jIndexedVolumes,
@@ -81,6 +81,8 @@ void unrollConvert(nlohmann::json& jIndexedVolumes,
 ///
 /// @note this is the entry point of the conversion, i.e. top of the
 /// unrolling loop
+///
+/// @note detray json format can not be read back in with Acts
 ///
 /// @return a json object
 static inline nlohmann::json toJson(
