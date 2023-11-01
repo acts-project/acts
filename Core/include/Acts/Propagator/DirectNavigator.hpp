@@ -73,6 +73,20 @@ class DirectNavigator {
         // Initialize the surface sequence
         state.navigation.navSurfaces = navSurfaces;
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
+
+        // In case the start surface is in the list of nav surfaces
+        // we need to correct the iterator to point to the next surface
+        // in the vector
+        if (state.navigation.startSurface) {
+          auto surfaceIter = std::find(state.navigation.navSurfaces.begin(),
+                                       state.navigation.navSurfaces.end(),
+                                       state.navigation.startSurface);
+          // if current surface in the list, point to the next surface
+          if (surfaceIter != state.navigation.navSurfaces.end()) {
+            state.navigation.navSurfaceIter = ++surfaceIter;
+          }
+        }
+
         r.initialized = true;
       }
     }
