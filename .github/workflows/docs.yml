@@ -42,15 +42,15 @@ jobs:
       - name: Build documentation
         run: >
           cd docs
-          && sphinx-build 
-          -b html 
-          -d _build/doctrees/ 
-          -j auto 
-          -W 
-          --keep-going 
-          -t run_doxygen 
-          -b linkcheck
-          . _build/html/ 
+          && sphinx-build
+          -b html
+          -d _build/doctrees/
+          -j auto
+          -W
+          --keep-going
+          -t run_doxygen
+          -b linkchec
+          . _build/html/
 
       - uses: actions/upload-artifact@v3
         with:
