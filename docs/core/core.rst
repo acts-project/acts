@@ -11,16 +11,16 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
    definitions/units
    eventdata
 
-   geometry/geometry
+   geometry/index
    material
 
    propagation
    magnetic_field
 
-   reconstruction/reconstruction
+   reconstruction/index
 
-   visualization/visualization
+   visualization/index
 
-   misc/misc
+   misc/index
 
-   howto/howto
+   howto/index

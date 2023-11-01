@@ -24,7 +24,7 @@ The most typical way to create seeds is to combine measurements. In a homogeneou
 
 The seeding implementation in `Core/include/Acts/Seeding/` was written with a focus on parallelism and maintainability and as detector agnostic as possible, only assuming a (near) homogeneous magnetic field with particles originating from the central detector region. Cuts are configurable and can be plugged in as an algorithm which is called by the seeding. The seeding works on measurements or “SpacePoints” (SP), which need to provide $(x,y,z)$ coordinates with the $z$ axis being along the magnetic field, and $x$ and $y$. For the seeding algorithm to function the particle point of origin has to have a radius smaller than the radius of the detector layer closest to the interaction region. In other words, this seeding algorithm is not suitable for secondary particles originating far from the interaction region.
 
-:::{figure} ../../../figures/seeding/3Dcoordinates.svg
+:::{figure} figures/seeding/3Dcoordinates.svg
 :width: 550px
 :align: center
 Sketch of the detector with 3 layers. The interaction region is supposed to be located along the $z$-axis and has a size significantly smaller than the radius of the innermost detector layer.
@@ -50,7 +50,7 @@ used in the SP search can be defined separately for the bottom and top layer
 SPs in the $z$ and $\phi$ directions.
 
 (tripletsFormation)=
-:::{figure} ../../../figures/seeding/tripletsFormation.svg
+:::{figure} figures/seeding/tripletsFormation.svg
 :width: 450px
 :align: center
 Representation of the search for triplet combinations in the $(r, z)$ plane. The bins used in the search are represented in different colours.
@@ -73,7 +73,7 @@ Each triplet is then confronted with the helix hypothesis. In order to perform c
 only once, the circle calculation is spread out over the three loops.
 
 (x-yCoordinates)=
-:::{figure} ../../../figures/seeding/x-yCoordinates.svg
+:::{figure} figures/seeding/x-yCoordinates.svg
 :width: 400px
 :align: center
 The x-y projection of the detector with the charged particle helical track originating from the centre of the detector. Signals left by the passage of the track through the detector layers are marked with green crosses.
@@ -115,7 +115,7 @@ Now we can apply a cut on the estimate of the minimum helix diameter `minHelixDi
 where $B_z$ is the magnetic field.
 
 (r-zCoordinates)=
-:::{figure} ../../../figures/seeding/r-zCoordinates.svg
+:::{figure} figures/seeding/r-zCoordinates.svg
 :width: 500px
 :align: center
 The r-z projection of the detector with the same charged particle track. The track is depicted with the same colours as in the previous figure.
@@ -158,7 +158,7 @@ before storing all top SP compatible with both the current middle SP and current
 bottom SP. 
 
 (impactParameter)=
-:::{figure} ../../../figures/seeding/impactParameter.svg
+:::{figure} figures/seeding/impactParameter.svg
 :width: 400px
 :align: center
 Helix representation in $x/y$ reference frame with central space-point (SP$_m$) in the origin.

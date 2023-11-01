@@ -15,13 +15,13 @@ description or represent a more complex object that may contain:
 The following illustration shows an $xy$ view of a cylinder layer with planar
 detection modules:
 
-![CylinderLayer](/figures/geometry/CylinderLayer.png)
+![CylinderLayer](../figures/CylinderLayer.png)
 
 Modules can be sorted onto layer using all supported binning methods described
 through the {class}`Acts::SurfaceArray` class. The binning can be adjusted to fit as well as
 possible.
 
-![DiscLayerEB](/figures/geometry/DiscLayerEB.png)
+![DiscLayerEB](../figures/DiscLayerEB.png)
 
 The unoccupied space in a volume that contains a layer array is filled with
 objects of type {class}`Acts::NavigationLayer`, which allows that in a fully static geometry
@@ -29,6 +29,6 @@ setup, every single point in a volume can be associated with a layer. Layer
 objects are confined together in a special {type}`Acts::LayerArray` class and can be
 contained by a {class}`Acts::TrackingVolume`.
 
-![LayerArray](/figures/geometry/LayerArray.png)
+![LayerArray](../figures/LayerArray.png)
 
 

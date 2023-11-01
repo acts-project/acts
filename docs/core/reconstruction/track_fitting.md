@@ -46,7 +46,7 @@ f(z) = \frac{(- \ln z)^{c-1}}{\Gamma(c)}, \quad c = t/\ln 2
 $$
 
 (figBetheHeitler)=
-:::{figure} ../../figures/gsf_bethe_heitler_approx.svg
+:::{figure} figures/gsf_bethe_heitler_approx.svg
 :width: 450px
 :align: center
 The true Bethe-Heitler distribution compared with a gaussian mixture approximation (in thin lines the individual components are drawn) at t = 0.1 (corresponds to ~ 10mm Silicon).
@@ -58,7 +58,7 @@ To be able to handle this with the Kalman filter mechanics, this distribution is
 * On a measurement surface, for each component a Kalman update is performed. Afterwards, the component weights are corrected according to each component's compatibility with the measurement.
 
 (figGsf)=
-:::{figure} ../../figures/gsf_overview.svg
+:::{figure} figures/gsf_overview.svg
 :width: 450px
 :align: center
 Simplified overview of the GSF algorithm.

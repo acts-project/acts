@@ -20,5 +20,5 @@ The shape of the volume is defined by {class}`Acts::VolumeBounds` classes that c
 corresponding bounding surfaces and register the attachment to the volume itself
 at creation.
 
-![VolumeBounds](/figures/geometry/VolumeBounds.png)
-![CylinderVolumeBounds](/figures/geometry/CylinderVolumeBounds.png)
+![VolumeBounds](../figures/VolumeBounds.png)
+![CylinderVolumeBounds](../figures/CylinderVolumeBounds.png)

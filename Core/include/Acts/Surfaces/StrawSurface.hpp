@@ -29,7 +29,7 @@ class LineBounds;
 ///  Class for a StrawSurface in the TrackingGeometry
 ///  to describe dirft tube and straw like detectors.
 ///
-/// @image html figures/LineSurface.png
+/// @image html LineSurface.png
 ///
 class StrawSurface : public LineSurface {
   friend class Surface;

@@ -199,7 +199,7 @@ orientation of modules.
 Summing up the `DetElement` tree in DD4hep should have the following
 structure:
 
-![Detector element structure](/figures/DD4hepPlugin_DetElementStructure.jpg)
+![Detector element structure](figures/DD4hepPlugin_DetElementStructure.jpg)
 
 It is also possible to translate a very simple detector geometry, which just
 consists of cylindrical (for a barrel) or disc (for endcaps) layers which either

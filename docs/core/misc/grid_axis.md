@@ -34,7 +34,7 @@ where $b \in \{0, 1, \ldots N_\text{bins}\}$. If the type is `Variable`, a searc
 `AxisBoundaryType` steers how out-of-bounds lookups are handled.
 There are three options:
 
-![The three different axis boundary types](/figures/AxisBoundaryTypes.svg)
+![The three different axis boundary types](figures/AxisBoundaryTypes.svg)
 
 - **Bound**: out-of-bounds lookups resolve to the closest valid bin.
 - **Open**: out-of-bounds lookups resolve to dedicated underflow and overflow bins.

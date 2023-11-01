@@ -31,7 +31,7 @@ Key features:
    plugins/plugins
    examples/examples
 
-   contribution/contribution
+   Contribution guide <contribution/contribution>
 
    versioning
    formats/formats

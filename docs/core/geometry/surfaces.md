@@ -34,7 +34,7 @@ transformations.
 
 ## Plane surface
 
-![PlaneBounds](/figures/geometry/PlaneBounds.png)
+![PlaneBounds](figures/PlaneBounds.png)
 
 :::{doxygenclass} Acts::PlaneSurface
 ---
@@ -44,7 +44,7 @@ members: globalToLocal,localToGlobal,intersect,normal
 
 ## Disc surface
 
-![DiscBounds](/figures/geometry/DiscBounds.png)
+![DiscBounds](figures/DiscBounds.png)
 
 :::{doxygenclass} Acts::DiscSurface
 ---
@@ -54,7 +54,7 @@ members: globalToLocal,localToGlobal,intersect,normal
  
 ## Cylinder surface
 
-![CylinderBounds](/figures/geometry/CylinderBounds.png)
+![CylinderBounds](figures/CylinderBounds.png)
 
 :::{doxygenclass} Acts::CylinderSurface
 ---

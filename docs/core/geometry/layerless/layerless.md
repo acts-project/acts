@@ -1,4 +1,4 @@
-(layerless-geometry)=
+(layerless_geometry)=
 # Layerless geometry
 
 ## Geometry module rosetta stone
@@ -11,10 +11,6 @@ Describe replacements of `TrackingGeometry`, `TrackingVolume` etc and how the cl
 :::{toctree}
 building
 :::
-
-
-(exp_geometry_impl)=
-# Experimental Geometry module
 
 :::{note}
 This module is not considered production-ready yet, and is under the namespace
@@ -62,13 +58,13 @@ Portals are composite objects of a {class}`Acts::Surface` object and additional 
 
 When volumes are attached or glued to another, the portal object is usually shared between the volumes, and eventually portals can even be of larger extent than the actual volume they are bounding.
 
-:::{figure} /figures/geometry/DirectPortal.png
+:::{figure} ../figures/DirectPortal.png
 :width: 600px
 :align: center
 Illustration of a shared direct portal between two volumes, the arrows indicate the direction of attachment.
 :::
 
-:::{figure} /figures/geometry/SharedPortal.png
+:::{figure} ../figures/SharedPortal.png
 :width: 600px
 :align: center
 Illustration of a shared extended portal between several volumes, the arrows indicate the direction of attachment.
@@ -96,7 +92,7 @@ Additionally, it can contain:
 
 In case the volume contains surfaces and/or volumes, an adequate navigation state updator is to be provided that can resolve surface candidates or portal candidates into the sub volumes. E.g.~if the volume contain a layer with sensitive surfaces, a grid can be used to associate an entry/global position with the candidate surfaces further tested in the navigation.
 
-:::{figure} /figures/geometry/EndcapGrid.png
+:::{figure} ../figures/EndcapGrid.png
 :width: 600px
 :align: center
 Illustration of a planar module andcap detector with a grid holding the indices to the candidate surfaces.
@@ -118,7 +114,7 @@ The detector object is the holder class of all geometry objects, it has to conta
 When the detector is constructed, name duplicates are checked for and if found a `std::exception` is thrown. Similarly, when sensitive surfaces are provided and duplicate `Acts::GeometryIdentifier` objects are found during detector construction a `std::exception` is thrown. The latter can be avoided by using an appropriate (set of) `Acts::GeometyIdGenerator` tool(s) which will guarantee some level of uniqueness.
 :::
 
-:::{figure} /figures/geometry/ODD_Detector.png
+:::{figure} ../figures/ODD_Detector.png
 :width: 600px
 :align: center
 Illustration (r/z view) of the OpenDataDetector with its sub volumes, portals and contained surfaces.

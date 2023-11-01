@@ -9,4 +9,9 @@
 
 ### Volume based material description
 
+:::{todo}
+Improve material mapping technical description
+:::
 
+![](figures/material/MaterialAssignment.jpeg)
+![](figures/material/MaterialAveraging.jpeg)

@@ -105,7 +105,7 @@ cell*. The field cell can be retrieved for any given position. Since during
 typical access patterns, e.g. the propagation, subsequent steps are relatively
 likely to not cross the field cell boundary, the field cell can be cached.
 
-:::{figure} ../figures/bfield/field_cell.svg
+:::{figure} figures/bfield/field_cell.svg
 :width: 300
 :align: center
 Illustration of the field cell concept. Subsequent steps are clustered in the
@@ -164,7 +164,7 @@ to speed it up.
 ACTS also provides a field provider that calculates the field vectors
 analytically for a [solenoid](https://en.wikipedia.org/wiki/Solenoid) field. 
 
-:::{figure} ../figures/bfield/quiver.png
+:::{figure} figures/bfield/quiver.png
 :width: 600
 :align: center
 Picture of a solenoid field in rz, with arrows indicating the direction of the
