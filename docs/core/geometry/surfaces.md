@@ -9,6 +9,8 @@ that inherit from {class}`Acts::SurfaceBounds`, which every surface must provide
 In case of boundless surfaces, a special {class}`Acts::InfiniteBounds` class is
 available.
 
+
+
 Each {class}`Acts::Surface` instance reports its type from {func}`Acts::Surface::type()`:
 
 :::{doxygenenum} Acts::Surface::SurfaceType
@@ -102,3 +104,8 @@ members: false
 ---
 :::
 
+
+## API listings
+
+:::{doxygenclass} Acts::Surface
+:::
