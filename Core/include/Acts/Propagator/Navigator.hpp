@@ -394,7 +394,7 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   void preStep(propagator_state_t& state, const stepper_t& stepper) const {
     // Check if the navigator is inactive
-    if (inactive(state, stepper)) {
+    if (inactive(state)) {
       return;
     }
 
@@ -449,7 +449,7 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   void postStep(propagator_state_t& state, const stepper_t& stepper) const {
     // Check if the navigator is inactive
-    if (inactive(state, stepper)) {
+    if (inactive(state)) {
       return;
     }
 
