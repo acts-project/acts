@@ -512,7 +512,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
       //   size 3 and 5 for portals
       size_t nPortals = iv->portals().size();
       bool innerPresent = (nPortals == 3u || nPortals == 5u);
-      int iOffset = (innerPresent and i > 2u) ? -1 : 0;
+      int iOffset = (innerPresent && i > 2u) ? -1 : 0;
       ACTS_VERBOSE("-- update portal with index "
                    << i + iOffset << " (including offset " << iOffset << ")");
       iv->updatePortal(p, static_cast<unsigned int>(i + iOffset));
