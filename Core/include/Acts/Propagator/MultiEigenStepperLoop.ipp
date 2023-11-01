@@ -154,8 +154,9 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   // Type of the proxy single propagation2 state
   using ThisSinglePropState =
-      SinglePropState<SingleState, decltype(state.navigation),
-                      decltype(state.options), decltype(state.geoContext)>;
+      detail::SinglePropState<SingleState, decltype(state.navigation),
+                              decltype(state.options),
+                              decltype(state.geoContext)>;
 
   // Lambda that performs the step for a component and returns false if the step
   // went ok and true if there was an error

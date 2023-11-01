@@ -79,6 +79,7 @@ struct LoopComponentProxy
 
   using SingleState = typename loop_stepper_t::SingleState;
   using SingleStepper = typename loop_stepper_t::SingleStepper;
+  using Covariance = typename loop_stepper_t::Covariance;
 
   // Import the const accessors from ComponentProxyBase
   using Base::cmp;
