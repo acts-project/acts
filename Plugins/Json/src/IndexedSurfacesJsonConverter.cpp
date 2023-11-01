@@ -65,12 +65,14 @@ struct IndexedSurfacesGenerator {
 Acts::Experimental::SurfaceCandidatesUpdator
 Acts::IndexedSurfacesJsonConverter::fromJson(
     const nlohmann::json& jSurfaceNavigation) {
-  // The return object
-  auto sfCandidates = IndexedGridJsonHelper::generateFromJson<
-      Experimental::SurfaceCandidatesUpdator, IndexedSurfacesGenerator>(
-      jSurfaceNavigation, "IndexedSurfaces");
-  if (sfCandidates.connected()) {
-    return sfCandidates;
+  if (!jSurfaceNavigation.is_null()) {
+    // The return object
+    auto sfCandidates = IndexedGridJsonHelper::generateFromJson<
+        Experimental::SurfaceCandidatesUpdator, IndexedSurfacesGenerator>(
+        jSurfaceNavigation, "IndexedSurfaces");
+    if (sfCandidates.connected()) {
+      return sfCandidates;
+    }
   }
   // Return the object
   return Experimental::tryAllPortalsAndSurfaces();

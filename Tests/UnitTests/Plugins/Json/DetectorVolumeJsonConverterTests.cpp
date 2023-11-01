@@ -138,7 +138,6 @@ BOOST_AUTO_TEST_CASE(SingleSurfaceVolume) {
   in >> jVolumeIn;
   in.close();
 
-/*
   auto volumeIn =
       Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
