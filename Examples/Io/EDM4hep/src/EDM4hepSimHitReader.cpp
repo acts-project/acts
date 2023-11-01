@@ -54,7 +54,7 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
           mcParticle, [](const edm4hep::MCParticle& p) {
             ActsFatras::Barcode result;
             // TODO dont use podio internal id
-            result.setParticle(p.id());
+            result.setParticle(p.id().index);
             return result;
           });
       unordered.push_back(particle);
@@ -78,7 +78,7 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
           [](const edm4hep::MCParticle& particle) {
             ActsFatras::Barcode result;
             // TODO dont use podio internal id
-            result.setParticle(particle.id());
+            result.setParticle(particle.id().index);
             return result;
           },
           [&](std::uint64_t cellId) {
