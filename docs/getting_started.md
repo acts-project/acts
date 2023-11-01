@@ -52,7 +52,7 @@ These are usually not available through the system package manager and can be fo
 
 All external dependencies must be provided prior to building Acts. Compatible
 versions of all dependencies are provided e.g. by the [LCG
-releases](http://lcginfo.cern.ch/) starting from [LCG 97apython3](http://lcginfo.cern.ch/release/97apython3/).
+releases](http://lcginfo.cern.ch/) starting from [LCG 102b](http://lcginfo.cern.ch/release/102b/).
 For convenience, it is possible to build the required boost and eigen3 dependencies using the ACTS build system; see [Build options](#build-options).
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
