@@ -191,6 +191,9 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
   constexpr int rows = MatrixType::RowsAtCompileTime;
   constexpr int cols = MatrixType::ColsAtCompileTime;
 
+  static_assert(rows == cols);
+  static_assert(rows != -1);
+
   ResultType result;
   bool invertible = false;
 
