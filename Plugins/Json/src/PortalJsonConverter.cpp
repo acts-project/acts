@@ -155,7 +155,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
-      } else if (surfaceType == Surface::SurfaceType::Disc and cast == binR) {
+      } else if (surfaceType == Surface::SurfaceType::Disc && cast == binR) {
         clipRange = {boundValues[RadialBounds::BoundValues::eMinR],
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {
