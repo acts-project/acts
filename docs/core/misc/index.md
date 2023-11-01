@@ -1,4 +1,4 @@
-# Miscellanous
+# Miscellaneous
 
 :::{toctree}
 :maxdepth: 1
