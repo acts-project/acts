@@ -65,7 +65,8 @@ add_custom_target(
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Build documentation WITHOUT API documentation")
 
-list(APPEND doxygen_command "-t;run_apidoc")
+# Disable apidoc for right now (doxygen still runs)
+# list(APPEND doxygen_command "-t;run_apidoc")
 
 # extended target to build the full documentation with automatic API generation
 add_custom_target(
