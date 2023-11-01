@@ -646,7 +646,8 @@ BOOST_AUTO_TEST_CASE(RZPhiBoundaries) {
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {
       innerV, middleLV, middleDV, middleUV, middleRV, outerV};
 
-  auto boundaries = rzphiBoundaries(tContext, volumes, Acts::Logging::VERBOSE);
+  auto boundaries =
+      rzphiBoundaries(tContext, volumes, 0.00001, Acts::Logging::VERBOSE);
   BOOST_CHECK(boundaries.size() == 3u);
   // Check the r boundaries
   std::vector<ActsScalar> rBoundaries = {0., 20., 40., 60., 120.};

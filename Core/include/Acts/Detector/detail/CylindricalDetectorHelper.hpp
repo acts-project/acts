@@ -172,12 +172,14 @@ DetectorComponent::PortalContainer wrapInZR(
 ///
 /// @param gctx the geometry context of the call
 /// @param volumes the volumes at input
+/// @param precision the precision to be used for
 /// @param logLevel is the screen logging level
 ///
 /// @return extracted boundary values
 template <typename volume_container_t>
 std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
     const GeometryContext& gctx, const volume_container_t& volumes,
+    double precision = 0.000001,
     Acts::Logging::Level logLevel = Acts::Logging::INFO) {
   // The local logger
   ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
@@ -187,6 +189,9 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
 
   // The return boundaries
   std::array<std::set<ActsScalar>, 3u> uniqueBoundaries;
+  auto insertWithPrecision = [&](size_t is, ActsScalar value) {
+    uniqueBoundaries[is].insert(std::round(value / precision) * precision);
+  };
 
   // Loop over the volumes and collect boundaries
   for (const auto& v : volumes) {
@@ -207,12 +212,12 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
       ActsScalar phiMin = phiCenter - phiSector;
       ActsScalar phiMax = phiCenter + phiSector;
       // Fill the sets
-      uniqueBoundaries[0].insert(rMin);
-      uniqueBoundaries[0].insert(rMax);
-      uniqueBoundaries[1].insert(zMin);
-      uniqueBoundaries[1].insert(zMax);
-      uniqueBoundaries[2].insert(phiMin);
-      uniqueBoundaries[2].insert(phiMax);
+      insertWithPrecision(0u, rMin);
+      insertWithPrecision(0u, rMax);
+      insertWithPrecision(1u, zMin);
+      insertWithPrecision(1u, zMax);
+      insertWithPrecision(2u, phiMin);
+      insertWithPrecision(2u, phiMax);
     }
   }
 
