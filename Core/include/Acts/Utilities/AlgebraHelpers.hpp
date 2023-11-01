@@ -197,7 +197,7 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
   ResultType result;
   bool invertible = false;
 
-  if constexpr (rows > 4 || cols > 4) {
+  if constexpr (rows > 4) {
     Eigen::FullPivLU<MatrixType> mFullPivLU(m);
     if (mFullPivLU.isInvertible()) {
       invertible = true;
