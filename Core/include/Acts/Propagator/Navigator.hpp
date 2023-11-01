@@ -122,7 +122,7 @@ class Navigator {
 
     /// Whether to perform boundary checks for layer resolving (improves
     /// navigation for bended tracks)
-    BoundaryCheck boundaryCheckLayerResolving = true;
+    BoundaryCheck boundaryCheckLayerResolving = false;
   };
 
   /// Nested State struct
