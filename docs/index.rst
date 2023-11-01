@@ -35,7 +35,6 @@ Key features:
 
    versioning
    formats/formats
-   api/api
    codeguide
    authors
    license
