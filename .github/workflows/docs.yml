@@ -49,7 +49,7 @@ jobs:
           -W
           --keep-going
           -t run_doxygen
-          -b linkchec
+          -b linkcheck
           . _build/html/
 
       - uses: actions/upload-artifact@v3
