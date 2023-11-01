@@ -12,6 +12,7 @@
 
 nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
   nlohmann::json jAxis;
+
   jAxis["boundary_type"] = ia.getBoundaryType();
   // type, range, bins or boundaries
   if (ia.isEquidistant()) {
@@ -22,5 +23,15 @@ nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
     jAxis["type"] = detail::AxisType::Variable;
     jAxis["boundaries"] = ia.getBinEdges();
   }
+  return jAxis;
+}
+
+nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
+  nlohmann::json jAxis;
+  jAxis["bounds"] =
+      ia.getBoundaryType() == Acts::detail::AxisBoundaryType::Bound ? 1 : 2;
+  jAxis["binning"] = ia.isEquidistant() ? 0 : 1;
+  jAxis["bins"] = ia.getNBins();
+  jAxis["edges"] = ia.getBinEdges();
   return jAxis;
 }

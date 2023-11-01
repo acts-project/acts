@@ -75,7 +75,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
 
   // Write the portals if pre-converted as link
   nlohmann::json jPortals;
-  if (!portals.empty()) {
+  if (not portals.empty()) {
     for (const auto* p : volume.portals()) {
       auto it = std::find(portals.begin(), portals.end(), p);
       if (it != portals.end()) {
@@ -124,7 +124,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
   nlohmann::json jSurfaces;
   for (const auto& s : volume.surfaces()) {
     auto jSurface =
-        SurfaceJsonConverter::toJson(gctx, *s, options.surfaceOptions);
+        SurfaceJsonConverter::toJsonDetray(gctx, *s, options.surfaceOptions);
     DetrayJsonHelper::addVolumeLink(jSurface["mask"], vIndex);
     jSurfaces.push_back(jSurface);
   }
@@ -161,7 +161,7 @@ Acts::DetectorVolumeJsonConverter::fromJson(const GeometryContext& gctx,
   // Some tooling
   auto portalGenerator = Experimental::defaultPortalGenerator();
 
-  if (jSurfaces.empty() && jVolumes.empty()) {
+  if (jSurfaces.empty() and jVolumes.empty()) {
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, gctx, name, transform, std::move(bounds),
         Experimental::tryAllPortals());
