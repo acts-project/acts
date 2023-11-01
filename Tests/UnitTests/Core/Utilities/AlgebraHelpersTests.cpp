@@ -21,7 +21,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(AlgebraHelpers)
 
-ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("SafeInverse", logLevel));
+ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("SafeInverse", logLevel))
 
 BOOST_AUTO_TEST_CASE(SafeInverseSmallMatrix) {
   Eigen::Matrix<double, 2, 2> m;
