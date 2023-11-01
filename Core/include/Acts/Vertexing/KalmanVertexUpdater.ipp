@@ -92,15 +92,16 @@ void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
   // Set up cache where entire content is set to 0
   Cache cache;
 
+  // 4D vertex position after the fit ...
+  const Vector4& vtxPos = vtx.fullPosition();
+  // ... and corresponding covariance. Note that these variables do not change
+  // when calling calculateUpdate.
+  const SquareMatrix4& vtxCov = vtx.fullCovariance();
+
   // Calculate update when removing track and save result in cache. Note that
   // the track is not really removed, this is just a way of computing a
   // symmetric chi2 (see reference).
   calculateUpdate<input_track_t>(vtx, linTrack, track.trackWeight, -1, cache);
-
-  // 4D vertex position after the fit ...
-  const Vector4& vtxPos = vtx.fullPosition();
-  // ... and corresponding covariance
-  const SquareMatrix4& vtxCov = vtx.fullCovariance();
 
   // Refit track parameters
   BoundVector newTrkParams(BoundVector::Zero());
