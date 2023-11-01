@@ -116,7 +116,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
      0.5, 0, 0, 0, 1_e / 10_GeV, 0,
      0, 0, 0, 0, 0, 1_us;
   // clang-format on
-  std::cout << cov.determinant() << std::endl;
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
                                    cov, ParticleHypothesis::pion());
 
@@ -143,12 +142,12 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // forward material test
   const auto& fwdResult = prop.propagate(start, fwdOptions).value();
   auto& fwdMaterial = fwdResult.template get<MaterialInteractor::result_type>();
-
-  double fwdStepMaterialInX0 = 0.;
-  double fwdStepMaterialInL0 = 0.;
   // check that the collected material is not zero
   BOOST_CHECK_NE(fwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(fwdMaterial.materialInL0, 0.);
+
+  double fwdStepMaterialInX0 = 0.;
+  double fwdStepMaterialInL0 = 0.;
   // check that the sum of all steps is the total material
   for (auto& mInteraction : fwdMaterial.materialInteractions) {
     fwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
@@ -195,19 +194,17 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   auto& bwdMaterial =
       bwdResult.template get<typename MaterialInteractor::result_type>();
-
-  double bwdStepMaterialInX0 = 0.;
-  double bwdStepMaterialInL0 = 0.;
-
   // check that the collected material is not zero
   BOOST_CHECK_NE(bwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(bwdMaterial.materialInL0, 0.);
+
+  double bwdStepMaterialInX0 = 0.;
+  double bwdStepMaterialInL0 = 0.;
   // check that the sum of all steps is the total material
   for (auto& mInteraction : bwdMaterial.materialInteractions) {
     bwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
     bwdStepMaterialInL0 += mInteraction.materialSlab.thicknessInL0();
   }
-
   CHECK_CLOSE_REL(bwdMaterial.materialInX0, bwdStepMaterialInX0, 1e-3);
   CHECK_CLOSE_REL(bwdMaterial.materialInL0, bwdStepMaterialInL0, 1e-3);
 
@@ -370,7 +367,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
   bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
-  // forward-forward step compatibility test
+  // backward-backward step compatibility test
   CHECK_CLOSE_REL(bwdStepStepMaterialInX0, bwdStepMaterialInX0, 1e-3);
   CHECK_CLOSE_REL(bwdStepStepMaterialInL0, bwdStepMaterialInL0, 1e-3);
 
