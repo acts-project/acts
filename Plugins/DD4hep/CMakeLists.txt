@@ -3,6 +3,8 @@ include(FetchContent)
 add_library(
   ActsPluginDD4hep SHARED
   src/ConvertDD4hepDetector.cpp
+  src/DD4hepBlueprint.cpp
+  src/DD4hepDetectorStructure.cpp
   src/DD4hepMaterialHelpers.cpp
   src/DD4hepDetectorElement.cpp
   src/DD4hepDetectorSurfaceFactory.cpp
@@ -10,7 +12,9 @@ add_library(
   src/DD4hepLayerStructure.cpp
   src/DD4hepVolumeBuilder.cpp
   src/DD4hepVolumeStructure.cpp
-  src/DD4hepFieldAdapter.cpp)
+  src/DD4hepFieldAdapter.cpp
+  src/DD4hepVolumeBuilder.cpp)
+
 target_include_directories(
   ActsPluginDD4hep
   PUBLIC

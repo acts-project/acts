@@ -163,7 +163,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
 
   for (const auto& track : tracks) {
     // Check if the reco track has fitted track parameters
-    if (not track.hasReferenceSurface()) {
+    if (!track.hasReferenceSurface()) {
       ACTS_WARNING("No fitted track parameters for track with tip index = "
                    << track.tipIndex());
       continue;
@@ -202,9 +202,9 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         m_cfg.truthMatchProbMin;
 
     bool isFake = false;
-    if (not m_cfg.doubleMatching and recoMatched) {
+    if (!m_cfg.doubleMatching && recoMatched) {
       matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
-    } else if (m_cfg.doubleMatching and recoMatched and truthMatched) {
+    } else if (m_cfg.doubleMatching && recoMatched && truthMatched) {
       matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
     } else {
       isFake = true;

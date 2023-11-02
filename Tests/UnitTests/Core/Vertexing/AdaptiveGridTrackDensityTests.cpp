@@ -532,21 +532,21 @@ BOOST_AUTO_TEST_CASE(track_removing) {
 
   // Add track 0 to 1D grid
   auto firstTrackDensityMap1D = grid1D.addTrack(params0, mainDensityMap1D);
-  BOOST_CHECK(not mainDensityMap1D.empty());
+  BOOST_CHECK(!mainDensityMap1D.empty());
   // Grid size should match spatialTrkGridSize
   BOOST_CHECK_EQUAL(mainDensityMap1D.size(), spatialTrkGridSize);
   float firstDensitySum1D = densitySum(mainDensityMap1D);
 
   // Add track 0 to 2D grid
   auto firstTrackDensityMap2D = grid2D.addTrack(params0, mainDensityMap2D);
-  BOOST_CHECK(not mainDensityMap2D.empty());
+  BOOST_CHECK(!mainDensityMap2D.empty());
   // Grid size should match spatialTrkGridSize
   BOOST_CHECK_EQUAL(mainDensityMap2D.size(), trkGridSize);
   float firstDensitySum2D = densitySum(mainDensityMap2D);
 
   // Add track 0 again to 1D grid
   firstTrackDensityMap1D = grid1D.addTrack(params0, mainDensityMap1D);
-  BOOST_CHECK(not mainDensityMap1D.empty());
+  BOOST_CHECK(!mainDensityMap1D.empty());
   // Grid size should still match spatialTrkGridSize
   BOOST_CHECK_EQUAL(mainDensityMap1D.size(), spatialTrkGridSize);
   // Calculate new total density ...
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
 
   // Add track 0 again to 2D grid
   firstTrackDensityMap2D = grid2D.addTrack(params0, mainDensityMap2D);
-  BOOST_CHECK(not mainDensityMap2D.empty());
+  BOOST_CHECK(!mainDensityMap2D.empty());
   // Grid size should still match trkGridSize
   BOOST_CHECK_EQUAL(mainDensityMap2D.size(), trkGridSize);
   // Calculate new total density ...

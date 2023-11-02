@@ -60,8 +60,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
   // Check if it's a tube (segment)
   auto tube = dynamic_cast<const TGeoTube*>(&tgShape);
   if (tube != nullptr) {
-    if (not boost::istarts_with(axes, "XY") and
-        not boost::istarts_with(axes, "YX")) {
+    if (!boost::istarts_with(axes, "XY") && !boost::istarts_with(axes, "YX")) {
       throw std::invalid_argument(
           "TGeoShape -> CylinderSurface (full): can only be converted with "
           "'(x/X)(y/Y)(*)' or '(y/Y)(x/X)(*) axes.");
@@ -74,7 +73,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
     // Create translation and rotation
     Vector3 t(scalor * translation[0], scalor * translation[1],
               scalor * translation[2]);
-    bool flipxy = not boost::istarts_with(axes, "X");
+    bool flipxy = !boost::istarts_with(axes, "X");
     Vector3 ax = flipxy ? xs * Vector3(rotation[1], rotation[4], rotation[7])
                         : xs * Vector3(rotation[0], rotation[3], rotation[6]);
     Vector3 ay = flipxy ? ys * Vector3(rotation[0], rotation[3], rotation[6])
@@ -96,7 +95,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
         double phi1 = toRadian(tubeSeg->GetPhi1());
         double phi2 = toRadian(tubeSeg->GetPhi2());
         if (std::abs(phi2 - phi1) < M_PI * (1. - s_epsilon)) {
-          if (not boost::starts_with(axes, "X")) {
+          if (!boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
                 "TGeoShape -> CylinderSurface (sectorial): can only be "
                 "converted "
@@ -129,7 +128,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
   // Special test for composite shape of silicon
   auto compShape = dynamic_cast<const TGeoCompositeShape*>(&tgShape);
   if (compShape != nullptr) {
-    if (not boost::istarts_with(axes, "XY")) {
+    if (!boost::istarts_with(axes, "XY")) {
       throw std::invalid_argument(
           "TGeoShape -> DiscSurface (Annulus): can only be converted with "
           "'(x/X)(y/Y)(*)' "
@@ -224,8 +223,8 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
     // Check if it's a tube
     auto tube = dynamic_cast<const TGeoTube*>(&tgShape);
     if (tube != nullptr) {
-      if (not boost::istarts_with(axes, "XY") and
-          not boost::istarts_with(axes, "YX")) {
+      if (!boost::istarts_with(axes, "XY") &&
+          !boost::istarts_with(axes, "YX")) {
         throw std::invalid_argument(
             "TGeoShape -> DiscSurface: can only be converted with "
             "'(x/X)(y/Y)(*)' or '(y/Y)(x/X)(*) axes.");
@@ -254,7 +253,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
         double phi1 = toRadian(tubeSeg->GetPhi1());
         double phi2 = toRadian(tubeSeg->GetPhi2());
         if (std::abs(phi2 - phi1) < 2 * M_PI * (1. - s_epsilon)) {
-          if (not boost::starts_with(axes, "X")) {
+          if (!boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
                 "TGeoShape -> CylinderSurface (sectorial): can only be "
                 "converted "
@@ -293,7 +292,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
 
   // Check if it's a trapezoid2
   const TGeoTrd1* trapezoid1 = dynamic_cast<const TGeoTrd1*>(&tgShape);
-  if ((trapezoid1 != nullptr) and not boost::istarts_with(axes, "XZ")) {
+  if ((trapezoid1 != nullptr) && !boost::istarts_with(axes, "XZ")) {
     throw std::invalid_argument(
         "TGeoTrd1 -> PlaneSurface: can only be converted with '(x/X)(z/Z)(*)' "
         "axes");
@@ -302,12 +301,12 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   // Check if it's a trapezoid2
   const TGeoTrd2* trapezoid2 = dynamic_cast<const TGeoTrd2*>(&tgShape);
   if (trapezoid2 != nullptr) {
-    if (not boost::istarts_with(axes, "X") and
+    if (!boost::istarts_with(axes, "X") &&
         std::abs(trapezoid2->GetDx1() - trapezoid2->GetDx2()) > s_epsilon) {
       throw std::invalid_argument(
           "TGeoTrd2 -> PlaneSurface: dx1 must be be equal to dx2 if not taken "
           "as trapezoidal side.");
-    } else if (not boost::istarts_with(axes, "Y") and
+    } else if (!boost::istarts_with(axes, "Y") &&
                std::abs(trapezoid2->GetDy1() - trapezoid2->GetDy2()) >
                    s_epsilon) {
       throw std::invalid_argument(
@@ -315,7 +314,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
           "as trapezoidal side.");
     }
     // Not allowed
-    if (boost::istarts_with(axes, "XY") or boost::istarts_with(axes, "YX")) {
+    if (boost::istarts_with(axes, "XY") || boost::istarts_with(axes, "YX")) {
       throw std::invalid_argument(
           "TGeoTrd2 -> PlaneSurface: only works with (x/X)(z/Z) and "
           "(y/Y)(z/Z).");
@@ -330,8 +329,8 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
     polygon8 = const_cast<TGeoArb8*>(polygon8c);
   }
 
-  if ((polygon8c != nullptr) and
-      not(boost::istarts_with(axes, "XY") or boost::istarts_with(axes, "YX"))) {
+  if ((polygon8c != nullptr) &&
+      !(boost::istarts_with(axes, "XY") || boost::istarts_with(axes, "YX"))) {
     throw std::invalid_argument(
         "TGeoArb8 -> PlaneSurface: dz must be normal component of Surface.");
   }

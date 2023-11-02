@@ -109,7 +109,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getVertexCompatibility(const GeometryContext& gctx,
                            const BoundTrackParameters* trkParams,
                            const ActsVector<nDim>& vertexPos) const {
-  static_assert(nDim == 3 or nDim == 4,
+  static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
   if (trkParams == nullptr) {
@@ -148,7 +148,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Retrieve weight matrix of the track's local x-, y-, and time-coordinate
   // (the latter only if nDim = 4). For this, the covariance needs to be set.
-  if (not trkParams->covariance().has_value()) {
+  if (!trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
   ActsSquareMatrix<nDim - 1> subCovMat;
@@ -227,7 +227,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundTrackParameters& trkParams,
                            const ActsVector<nDim>& vtxPos, State& state) const {
-  static_assert(nDim == 3 or nDim == 4,
+  static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
   // Reference point R
@@ -248,7 +248,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // The particle moves on a straight trajectory if its charge is 0 or if there
   // is no B field. In that case, the 3D PCA can be calculated analytically, see
   // Sec 3.2 of the reference.
-  if (absoluteCharge == 0. or bZ == 0.) {
+  if (absoluteCharge == 0. || bZ == 0.) {
     // Momentum direction (constant for straight tracks)
     Vector3 momDirStraightTrack = trkParams.direction();
 
@@ -386,7 +386,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   const auto& propRes = *result;
 
   // Check if the covariance matrix of the Perigee parameters exists
-  if (not propRes.endParameters->covariance().has_value()) {
+  if (!propRes.endParameters->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
 
