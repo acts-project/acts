@@ -10,10 +10,10 @@
 
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
@@ -29,7 +29,7 @@ using Acts::VectorHelpers::phi;
 
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                       Acts::detail::EquidistantAxis>>
+               Acts::detail::EquidistantAxis>>
 Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                             std::array<size_t, 2> nBinsRZ)>&
                      localToGlobalBin,
@@ -73,9 +73,8 @@ Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                       nBinsZ);
 
   // Create the grid
-  using Grid_t =
-      Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                         Acts::detail::EquidistantAxis>;
+  using Grid_t = Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+                            Acts::detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
   // [2] Set the bField values
@@ -134,9 +133,9 @@ Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
       {transformPos, transformBField, std::move(grid)});
 }
 
-Acts::InterpolatedBFieldMap<Acts::Grid<
-    Acts::Vector3, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
-    Acts::detail::EquidistantAxis>>
+Acts::InterpolatedBFieldMap<
+    Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
+               Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
 Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                              std::array<size_t, 3> nBinsXYZ)>&
                       localToGlobalBin,
@@ -197,8 +196,7 @@ Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
   // Create the grid
   using Grid_t =
       Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
-                         Acts::detail::EquidistantAxis,
-                         Acts::detail::EquidistantAxis>;
+                 Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>;
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 
@@ -252,7 +250,7 @@ Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
 
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                       Acts::detail::EquidistantAxis>>
+               Acts::detail::EquidistantAxis>>
 Acts::solenoidFieldMap(std::pair<double, double> rlim,
                        std::pair<double, double> zlim,
                        std::pair<size_t, size_t> nbins,
@@ -275,9 +273,8 @@ Acts::solenoidFieldMap(std::pair<double, double> rlim,
   Acts::detail::EquidistantAxis zAxis(zMin, zMax, nBinsZ);
 
   // Create the grid
-  using Grid_t =
-      Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                         Acts::detail::EquidistantAxis>;
+  using Grid_t = Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+                            Acts::detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
   // Create the transformation for the position
