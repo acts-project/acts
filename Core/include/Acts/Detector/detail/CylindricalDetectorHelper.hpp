@@ -172,14 +172,14 @@ DetectorComponent::PortalContainer wrapInZR(
 ///
 /// @param gctx the geometry context of the call
 /// @param volumes the volumes at input
-/// @param precision the precision to be used for
+/// @param precision the precision to be used for (optionally)
 /// @param logLevel is the screen logging level
 ///
 /// @return extracted boundary values
 template <typename volume_container_t>
 std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
     const GeometryContext& gctx, const volume_container_t& volumes,
-    double precision = 0.000001,
+    double precision = 0.,
     Acts::Logging::Level logLevel = Acts::Logging::INFO) {
   // The local logger
   ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
@@ -189,7 +189,11 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
 
   // The return boundaries
   std::array<std::set<ActsScalar>, 3u> uniqueBoundaries;
-  auto insertWithPrecision = [&](size_t is, ActsScalar value) {
+  auto insertWithPrecision = [&](size_t is, ActsScalar value) -> void {
+    if (precision == 0.) {
+      uniqueBoundaries[is].insert(value);
+      return;
+    }
     uniqueBoundaries[is].insert(std::round(value / precision) * precision);
   };
 
