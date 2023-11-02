@@ -24,6 +24,8 @@ from gidgethub.aiohttp import GitHubAPI
 from fsspec.implementations.zip import ZipFileSystem
 
 
+#  http://[::]:8000/whitepapers/whitepapers.html#whitespace-template
+
 app = typer.Typer()
 
 
@@ -35,6 +37,7 @@ class MetaData(pydantic.BaseModel):
 
 class WhitePaper(pydantic.BaseModel):
     repository: str
+    slug: str
     metadata: MetaData | None = None
 
     @property
@@ -42,11 +45,6 @@ class WhitePaper(pydantic.BaseModel):
         m = re.match(r"^https://github.com/(.*/.*)$", self.repository)
         assert m is not None
         return m.group(1)
-
-    @property
-    def slug(self) -> str:
-        owner, name = self.repo.split("/")
-        return f"{owner}_{name}"
 
 
 class Config(pydantic.BaseModel):
@@ -212,23 +210,27 @@ async def pull(
 @app.command()
 def render(config_file: Path = Path(__file__).parent / "whitepapers.toml"):
     config = Config(**toml.load(config_file))
-    template_file = Path(__file__).parent / "template.md"
     docs_path = Path(__file__).parent.parent / "docs" / "whitepapers"
     docs_path.mkdir(parents=True, exist_ok=True)
-    target_file = docs_path / "whitepapers.md"
-    image_path = Path(__file__).parent.parent / "docs" / "figures" / "whitepapers"
+    index_target_file = docs_path / "index.md"
+    image_path = Path(__file__).parent.parent / "docs" / "whitepapers" / "figures"
     image_path.mkdir(parents=True, exist_ok=True)
 
-    tpl = Template(template_file.read_text())
+    template_file = Path(__file__).parent / "template.md"
+    index_template_file = Path(__file__).parent / "index_template.md"
 
-    target_file.write_text(
-        tpl.render(config=config, image_path="../figures/whitepapers")
-    )
+    tpl = Template(template_file.read_text())
+    index_tpl = Template(index_template_file.read_text())
+
+    index_target_file.write_text(index_tpl.render(config=config))
 
     for whp in config.whitepapers:
+        target_file = docs_path / f"{whp.slug}.md"
+        target_file.write_text(tpl.render(whp=whp, image_path="figures"))
+
         shutil.copyfile(
             config_file.parent / f"{whp.slug}.png",
-            f"{whp.slug}.png",
+            image_path / f"{whp.slug}.png",
         )
 
 

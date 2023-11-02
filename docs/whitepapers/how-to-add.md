@@ -146,7 +146,10 @@ To add a new whitepaper, simply add a new section at the bottom of the file:
 ```toml
 [[whitepapers]]
 repository = "https://github.com/acts-project/another-whitepaper"
+slug = "another-whitepaper"
 ```
+
+Note that `slug` should be lower case, not contain spaces, and be unique.
 
 The script `whitepapers/update.py` is used to complete the metadata information
 for the whitepapers. To run it, you need to install the dependencies in
