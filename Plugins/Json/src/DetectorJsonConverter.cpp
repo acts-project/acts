@@ -103,7 +103,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
     auto jVolume = DetectorVolumeJsonConverter::toJsonDetray(
         gctx, *volume, volumes, options.volumeOptions);
     jVolumes.push_back(jVolume);
-    if (jVolume.find("surfaces") != jVolume.end() and
+    if (jVolume.find("surfaces") != jVolume.end() &&
         jVolume["surfaces"].is_array()) {
       nSurfaces += jVolume["surfaces"].size();
     }

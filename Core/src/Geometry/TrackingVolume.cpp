@@ -213,7 +213,7 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
     const Surface& mySurface = bSurfaceMine->surfaceRepresentation();
     auto myMaterial = mySurface.surfaceMaterialSharedPtr();
     // Keep the neighbor material
-    if (myMaterial == nullptr and neighborMaterial != nullptr) {
+    if (myMaterial == nullptr && neighborMaterial != nullptr) {
       Surface* myMutbableSurface = const_cast<Surface*>(&mySurface);
       myMutbableSurface->assignSurfaceMaterial(neighborMaterial);
     }
@@ -474,7 +474,7 @@ Acts::TrackingVolume::compatibleBoundaries(
 
   // The Limits: current, path & overstepping
   double pLimit = options.pathLimit;
-  double oLimit = options.overstepLimit;
+  double oLimit = 0;
 
   // Helper function to test intersection
   auto checkIntersection =
@@ -697,7 +697,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
       const Surface& srf = bs->surfaceRepresentation();
       auto sfmi = srf.intersect(gctx, position, direction, false);
       for (const auto& sfi : sfmi.split()) {
-        if (sfi and sfi.pathLength() > oLimit and sfi.pathLength() <= pLimit) {
+        if (sfi && sfi.pathLength() > oLimit && sfi.pathLength() <= pLimit) {
           sIntersections.push_back(sfi);
         }
       }

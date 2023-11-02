@@ -109,50 +109,29 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getVertexCompatibility(const GeometryContext& gctx,
                            const BoundTrackParameters* trkParams,
                            const ActsVector<nDim>& vertexPos) const {
-  static_assert(nDim == 3 or nDim == 4,
+  static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
   }
 
-  // Retrieve weight matrix of the track's local x-, y-, and time-coordinate
-  // (the latter only if nDim = 4). For this, the covariance needs to be set.
-  if (not trkParams->covariance().has_value()) {
-    return VertexingError::NoCovariance;
-  }
-  ActsSquareMatrix<nDim - 1> subCovMat;
-  if constexpr (nDim == 3) {
-    subCovMat = trkParams->spatialImpactParameterCovariance().value();
-  } else {
-    subCovMat = trkParams->impactParameterCovariance().value();
-  }
-  ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
-
-  // Orientation of the surface (i.e., axes of the corresponding coordinate
-  // system)
-  RotationMatrix3 surfaceAxes =
-      trkParams->referenceSurface().transform(gctx).rotation();
   // Origin of the surface coordinate system
   Vector3 surfaceOrigin =
       trkParams->referenceSurface().transform(gctx).translation();
 
-  // x- and y-axis of the surface coordinate system
-  Vector3 xAxis = surfaceAxes.col(0);
-  Vector3 yAxis = surfaceAxes.col(1);
-
-  // Vector pointing from the surface origin to the vertex position
-  // TODO: The vertex should always be at the surfaceOrigin since the
-  // track parameters should be obtained by estimate3DImpactParameters.
-  // Therefore, originToVertex should always be 0, which is currently not the
-  // case.
-  Vector3 originToVertex = vertexPos.template head<3>() - surfaceOrigin;
+  if (vertexPos.template head<3>() != surfaceOrigin) {
+    throw std::invalid_argument(
+        "The origin of the track reference surface must be at the vertex "
+        "position. Please make sure that trkParams was computed using "
+        "estimate3DImpactParameters.");
+  }
 
   // x-, y-, and possibly time-coordinate of the vertex and the track in the
-  // surface coordinate system
+  // surface coordinate system. Since the vertex is at the surface origin, its
+  // spatial coordinates are 0.
   ActsVector<nDim - 1> localVertexCoords;
-  localVertexCoords.template head<2>() =
-      Vector2(originToVertex.dot(xAxis), originToVertex.dot(yAxis));
+  localVertexCoords.template head<2>() = Vector2(0., 0.);
 
   ActsVector<nDim - 1> localTrackCoords;
   localTrackCoords.template head<2>() =
@@ -166,6 +145,19 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // residual
   ActsVector<nDim - 1> residual = localTrackCoords - localVertexCoords;
+
+  // Retrieve weight matrix of the track's local x-, y-, and time-coordinate
+  // (the latter only if nDim = 4). For this, the covariance needs to be set.
+  if (!trkParams->covariance().has_value()) {
+    return VertexingError::NoCovariance;
+  }
+  ActsSquareMatrix<nDim - 1> subCovMat;
+  if constexpr (nDim == 3) {
+    subCovMat = trkParams->spatialImpactParameterCovariance().value();
+  } else {
+    subCovMat = trkParams->impactParameterCovariance().value();
+  }
+  ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
 
   // return chi2
   return residual.dot(weight * residual);
@@ -235,7 +227,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundTrackParameters& trkParams,
                            const ActsVector<nDim>& vtxPos, State& state) const {
-  static_assert(nDim == 3 or nDim == 4,
+  static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
   // Reference point R
@@ -256,7 +248,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // The particle moves on a straight trajectory if its charge is 0 or if there
   // is no B field. In that case, the 3D PCA can be calculated analytically, see
   // Sec 3.2 of the reference.
-  if (absoluteCharge == 0. or bZ == 0.) {
+  if (absoluteCharge == 0. || bZ == 0.) {
     // Momentum direction (constant for straight tracks)
     Vector3 momDirStraightTrack = trkParams.direction();
 
@@ -394,7 +386,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   const auto& propRes = *result;
 
   // Check if the covariance matrix of the Perigee parameters exists
-  if (not propRes.endParameters->covariance().has_value()) {
+  if (!propRes.endParameters->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
 

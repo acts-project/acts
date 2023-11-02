@@ -188,7 +188,7 @@ void quickSort(const std::size_t firstIndex, const std::size_t lastIndex,
   std::size_t pivotIndex = firstIndex + (lastIndex - firstIndex) / 2;
 
   // Partition the data around the pivot using Hoare's scheme
-  std::size_t splitIndex;
+  std::size_t splitIndex = 0;
   {
     // Start with two indices one step beyond each side of the array
     std::size_t i = firstIndex - 1;

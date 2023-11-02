@@ -27,7 +27,7 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
     const CylinderBounds& cBounds, double thickness) noexcept(false)
     : VolumeBounds() {
   double cR = cBounds.get(CylinderBounds::eR);
-  if (thickness <= 0. or (cR - 0.5 * thickness) < 0.) {
+  if (thickness <= 0. || (cR - 0.5 * thickness) < 0.) {
     throw(std::invalid_argument(
         "CylinderVolumeBounds: invalid extrusion thickness."));
   }

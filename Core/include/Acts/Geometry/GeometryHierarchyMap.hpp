@@ -245,9 +245,9 @@ inline void GeometryHierarchyMap<value_t>::fill(iterator_t beg,
 template <typename value_t>
 inline auto GeometryHierarchyMap<value_t>::find(GeometryIdentifier id) const
     -> Iterator {
-  assert((m_ids.size() == m_values.size()) and
+  assert((m_ids.size() == m_values.size()) &&
          "Inconsistent container state: #ids != # values");
-  assert((m_masks.size() == m_values.size()) and
+  assert((m_masks.size() == m_values.size()) &&
          "Inconsistent container state: #masks != #values");
 
   // we can not search for the element directly since the relevant one
@@ -276,7 +276,7 @@ inline auto GeometryHierarchyMap<value_t>::find(GeometryIdentifier id) const
     // hierarchy. having a special check for the highest level avoids an
     // unbounded search window all the way to the beginning of the container for
     // the global default entry.
-    if (not equalWithinMask(id.value(), m_ids[i], makeHighestLevelMask())) {
+    if (!equalWithinMask(id.value(), m_ids[i], makeHighestLevelMask())) {
       // check if a global default entry exists
       if (m_ids.front() == Identifier(0u)) {
         return begin();

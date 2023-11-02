@@ -66,6 +66,9 @@ class VolumeBounds {
     eOther = 6
   };
 
+  /// Static member to get the name of the BoundsType
+  static const std::vector<std::string> s_boundsTypeNames;
+
   VolumeBounds() = default;
 
   virtual ~VolumeBounds() = default;

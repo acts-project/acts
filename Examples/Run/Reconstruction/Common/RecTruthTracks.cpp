@@ -15,8 +15,8 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/CsvOptionsReader.hpp"
 #include "ActsExamples/Options/DigitizationOptions.hpp"
@@ -31,7 +31,6 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 
 #include <memory>
 
@@ -148,15 +147,9 @@ int runRecTruthTracks(
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
-  TracksToTrajectories::Config tracksToTrajCfg{};
-  tracksToTrajCfg.inputTracks = fitter.outputTracks;
-  tracksToTrajCfg.outputTrajectories = "trajectories";
-  sequencer.addAlgorithm(
-      (std::make_shared<TracksToTrajectories>(tracksToTrajCfg, logLevel)));
-
   // write track states from fitting
-  RootTrajectoryStatesWriter::Config trackStatesWriter;
-  trackStatesWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
+  RootTrackStatesWriter::Config trackStatesWriter;
+  trackStatesWriter.inputTracks = fitter.outputTracks;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurementParticlesMap =
@@ -164,18 +157,18 @@ int runRecTruthTracks(
   trackStatesWriter.inputMeasurementSimHitsMap =
       digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.filePath = outputDir + "/trackstates_fitter.root";
-  sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
-      trackStatesWriter, logLevel));
+  sequencer.addWriter(
+      std::make_shared<RootTrackStatesWriter>(trackStatesWriter, logLevel));
 
   // write track summary from CKF
-  RootTrajectorySummaryWriter::Config trackSummaryWriter;
-  trackSummaryWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
+  RootTrackSummaryWriter::Config trackSummaryWriter;
+  trackSummaryWriter.inputTracks = fitter.outputTracks;
   trackSummaryWriter.inputParticles = inputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   trackSummaryWriter.filePath = outputDir + "/tracksummary_fitter.root";
-  sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
-      trackSummaryWriter, logLevel));
+  sequencer.addWriter(
+      std::make_shared<RootTrackSummaryWriter>(trackSummaryWriter, logLevel));
 
   // Write CKF performance data
   // write reconstruction performance data
@@ -189,7 +182,7 @@ int runRecTruthTracks(
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
 
   TrackFitterPerformanceWriter::Config perfFitter;
-  perfFitter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
+  perfFitter.inputTracks = fitter.outputTracks;
   perfFitter.inputParticles = inputParticles;
   perfFitter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;

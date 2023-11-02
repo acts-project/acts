@@ -33,17 +33,18 @@ namespace detail {
 template <typename stepper_t>
 Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
-    const Surface& surface, Direction navDir, const BoundaryCheck& bcheck,
-    ActsScalar surfaceTolerance, const Logger& logger) {
+    const Surface& surface, std::uint8_t index, Direction navDir,
+    const BoundaryCheck& bcheck, ActsScalar surfaceTolerance,
+    const Logger& logger) {
   ACTS_VERBOSE(
       "Update single surface status for surface: " << surface.geometryId());
 
   auto sIntersection = surface.intersect(
       state.geoContext, stepper.position(state),
-      navDir * stepper.direction(state), bcheck, surfaceTolerance);
+      navDir * stepper.direction(state), bcheck, surfaceTolerance)[index];
 
   // The intersection is on surface already
-  if (sIntersection.closest().status() == Intersection3D::Status::onSurface) {
+  if (sIntersection.status() == Intersection3D::Status::onSurface) {
     // Release navigation step size
     state.stepSize.release(ConstrainedStep::actor);
     ACTS_VERBOSE("Intersection: state is ON SURFACE");
@@ -54,14 +55,12 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
   const double pLimit = state.stepSize.value(ConstrainedStep::aborter);
   const double oLimit = stepper.overstepLimit(state);
 
-  for (const auto& intersection : sIntersection.split()) {
-    if (intersection &&
-        detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
-                                  surfaceTolerance, logger)) {
-      ACTS_VERBOSE("Surface is reachable");
-      stepper.setStepSize(state, intersection.pathLength());
-      return Intersection3D::Status::reachable;
-    }
+  if (sIntersection &&
+      detail::checkIntersection(sIntersection.intersection(), pLimit, oLimit,
+                                surfaceTolerance, logger)) {
+    ACTS_VERBOSE("Surface is reachable");
+    stepper.setStepSize(state, sIntersection.pathLength());
+    return Intersection3D::Status::reachable;
   }
 
   ACTS_VERBOSE("Surface is NOT reachable");
