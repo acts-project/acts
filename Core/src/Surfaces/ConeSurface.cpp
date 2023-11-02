@@ -185,7 +185,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   double minZ = bounds().get(ConeBounds::eMinZ);
   double maxZ = bounds().get(ConeBounds::eMaxZ);
 
-  if (minZ == -std::numeric_limits<double>::infinity() or
+  if (minZ == -std::numeric_limits<double>::infinity() ||
       maxZ == std::numeric_limits<double>::infinity()) {
     throw std::domain_error(
         "Polyhedron repr of boundless surface not possible");
@@ -226,7 +226,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
     double r = std::abs(z) * bounds().tanAlpha();
     Vector3 zoffset(0., 0., z);
     for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-      int addon = (iseg == phiSegs.size() - 2 and not fullCone) ? 1 : 0;
+      int addon = (iseg == phiSegs.size() - 2 && !fullCone) ? 1 : 0;
       detail::VerticesHelper::createSegment(vertices, {r, r}, phiSegs[iseg],
                                             phiSegs[iseg + 1], lseg, addon,
                                             zoffset, ctransform);
@@ -303,7 +303,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
 
-  if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
+  if (bcheck && !isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection3D::Status::missed;
   }
 
@@ -312,7 +312,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
   Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
-  if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
+  if (bcheck && !isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection3D::Status::missed;
   }
 

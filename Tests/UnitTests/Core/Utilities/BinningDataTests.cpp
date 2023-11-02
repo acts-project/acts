@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
   BOOST_CHECK_EQUAL(xData_arb_binary.bins(), nBins_binary);
 
   BOOST_CHECK(xData_eq_copy == xData_eq_copy);
-  BOOST_CHECK(not(xData_eq == yData_eq));
+  BOOST_CHECK(!(xData_eq == yData_eq));
 
   /// check the global position requests
   BOOST_CHECK_EQUAL(xData_eq.value(xyzPosition), 0.5);

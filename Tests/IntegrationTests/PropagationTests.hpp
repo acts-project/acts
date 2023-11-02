@@ -33,7 +33,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(
 
   // phi is ill-defined in forward/backward tracks. normalize the value to
   // ensure parameter comparisons give correct answers.
-  if (not((0 < theta) and (theta < M_PI))) {
+  if (!((0 < theta) && (theta < M_PI))) {
     phi = 0;
   }
 
@@ -52,7 +52,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
 
   // phi is ill-defined in forward/backward tracks. normalize the value to
   // ensure parameter comparisons give correct answers.
-  if (not((0 < theta) and (theta < M_PI))) {
+  if (!((0 < theta) && (theta < M_PI))) {
     phi = 0;
   }
 
@@ -89,7 +89,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearNeutral(
 
   // phi is ill-defined in forward/backward tracks. normalize the value to
   // ensure parameter comparisons give correct answers.
-  if (not((0 < theta) and (theta < M_PI))) {
+  if (!((0 < theta) && (theta < M_PI))) {
     phi = 0;
   }
 
@@ -149,7 +149,7 @@ inline void checkCovarianceConsistency(const Acts::BoundTrackParameters& cmp,
     // reference parameters have covariance but the comparison does not
     BOOST_CHECK(cmp.covariance().has_value());
   }
-  if (cmp.covariance().has_value() and ref.covariance().has_value()) {
+  if (cmp.covariance().has_value() && ref.covariance().has_value()) {
     CHECK_CLOSE_COVARIANCE(cmp.covariance().value(), ref.covariance().value(),
                            relativeTolerance);
   }

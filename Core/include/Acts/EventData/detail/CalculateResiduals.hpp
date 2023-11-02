@@ -41,9 +41,9 @@ inline void calculateResiduals(BoundIndices size,
 
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(measured_t);
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(residuals_t);
-  assert((size <= eBoundSize) and "Measured subspace is too large");
-  assert((size <= measured.size()) and "Inconsistent measured size");
-  assert((size <= residuals.size()) and "Inconsistent residuals size");
+  assert((size <= eBoundSize) && "Measured subspace is too large");
+  assert((size <= measured.size()) && "Inconsistent measured size");
+  assert((size <= residuals.size()) && "Inconsistent residuals size");
 
   for (size_t i = 0; i < size; ++i) {
     size_t fullIndex = indices[i];
@@ -84,9 +84,9 @@ inline void calculateResiduals(FreeIndices size,
                                Eigen::MatrixBase<residuals_t>& residuals) {
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(measured_t);
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(residuals_t);
-  assert((size <= eFreeSize) and "Measured subspace is too large");
-  assert((size <= measured.size()) and "Inconsistent measured size");
-  assert((size <= residuals.size()) and "Inconsistent residuals size");
+  assert((size <= eFreeSize) && "Measured subspace is too large");
+  assert((size <= measured.size()) && "Inconsistent measured size");
+  assert((size <= residuals.size()) && "Inconsistent residuals size");
 
   for (size_t i = 0; i < size; ++i) {
     // all free parameters are unrestricted. no need to call parameter traits

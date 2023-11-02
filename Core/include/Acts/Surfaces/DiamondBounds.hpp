@@ -131,7 +131,7 @@ inline void DiamondBounds::checkConsistency() noexcept(false) {
                   [](auto v) { return v <= 0.; })) {
     throw std::invalid_argument("DiamondBounds: negative half length.");
   }
-  if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) or
+  if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) ||
       get(eHalfLengthXposY) > get(eHalfLengthXzeroY)) {
     throw std::invalid_argument("DiamondBounds: not a diamond shape.");
   }

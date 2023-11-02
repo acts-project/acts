@@ -53,7 +53,7 @@ std::istream& ActsExamples::Options::operator>>(
 
 std::ostream& ActsExamples::Options::operator<<(
     std::ostream& os, const ActsExamples::Options::Interval& interval) {
-  if (not interval.lower.has_value() and not interval.upper.has_value()) {
+  if (!interval.lower.has_value() && !interval.upper.has_value()) {
     os << "unbounded";
   } else {
     if (interval.lower.has_value()) {

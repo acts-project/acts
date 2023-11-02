@@ -59,7 +59,7 @@ class MultiWireInternalStructureBuilder
 
   Acts::Experimental::InternalStructure construct(
       const Acts::GeometryContext& gctx) const final {
-    if (not m_cfg.auxiliary.empty()) {
+    if (!m_cfg.auxiliary.empty()) {
       ACTS_DEBUG(m_cfg.auxiliary);
     }
 

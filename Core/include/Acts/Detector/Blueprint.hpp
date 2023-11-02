@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <memory>
 #include <string>
@@ -90,6 +91,9 @@ struct Node final {
   /// Branch definition binning
   std::vector<BinningValue> binning = {};
 
+  /// Auxiliary information
+  std::vector<std::string> auxiliary = {};
+
   /// Builders and helper tools that can be attached
   std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
       nullptr;
@@ -109,68 +113,6 @@ struct Node final {
   void add(std::unique_ptr<Node> c) {
     c->parent = this;
     children.push_back(std::move(c));
-  }
-
-  /// @brief  Turn into a dot output
-  template <typename stream_type>
-  void dotStream(stream_type& ss,
-                 const std::string& graphName = "blueprint") const {
-    if (isRoot()) {
-      ss << "digraph " << graphName << " {" << '\n';
-      ss << name
-         << " [shape=\"circle\";style=\"filled\";fillcolor=\"darkorange\"];"
-         << '\n';
-
-    } else if (isLeaf()) {
-      std::string color =
-          (internalsBuilder != nullptr) ? "darkolivegreen1" : "darkolivegreen3";
-
-      ss << name << " [shape=\"box\";style=\"filled\";fillcolor=\"";
-      ss << color << "\"];" << '\n';
-    } else {
-      ss << name << " [shape=\"diamond\"];" << '\n';
-    }
-
-    ss << name << " [label=\"" << name << "\"];" << '\n';
-    for (const auto& c : children) {
-      ss << name << " -> " << c->name << ";" << '\n';
-      c->dotStream(ss);
-    }
-    if (children.empty()) {
-      ss << name + "_shape"
-         << " [shape=\"cylinder\";style=\"filled\";fillcolor=\"lightgrey\"];"
-         << '\n';
-      ss << name << " -> " << name + "_shape"
-         << ";" << '\n';
-    }
-
-    if (internalsBuilder != nullptr) {
-      ss << name + "_int"
-         << " [shape=\"doubleoctagon\";style=\"filled\";fillcolor="
-            "\"cadetblue1\"];"
-         << '\n';
-      ss << name << " -> " << name + "_int"
-         << ";" << '\n';
-    }
-
-    if (geoIdGenerator != nullptr) {
-      ss << name + "_geoID"
-         << " [shape=\"note\";style=\"filled\";fillcolor=\"azure\"];" << '\n';
-      ss << name << " -> " << name + "_geoID"
-         << ";" << '\n';
-    }
-
-    if (rootVolumeFinderBuilder != nullptr) {
-      ss << name + "_roots"
-         << " [shape=\"Msquare\";style=\"filled\";fillcolor=\"darkkhaki\"];"
-         << '\n';
-      ss << name << " -> " << name + "_roots"
-         << ";" << '\n';
-    }
-
-    if (isRoot()) {
-      ss << "}" << '\n';
-    }
   }
 };
 

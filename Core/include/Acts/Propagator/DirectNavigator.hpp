@@ -69,10 +69,24 @@ class DirectNavigator {
                     const navigator_t& /*navigator*/, result_type& r,
                     const Logger& /*logger*/) const {
       // Only act once
-      if (not r.initialized) {
+      if (!r.initialized) {
         // Initialize the surface sequence
         state.navigation.navSurfaces = navSurfaces;
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
+
+        // In case the start surface is in the list of nav surfaces
+        // we need to correct the iterator to point to the next surface
+        // in the vector
+        if (state.navigation.startSurface) {
+          auto surfaceIter = std::find(state.navigation.navSurfaces.begin(),
+                                       state.navigation.navSurfaces.end(),
+                                       state.navigation.startSurface);
+          // if current surface in the list, point to the next surface
+          if (surfaceIter != state.navigation.navSurfaces.end()) {
+            state.navigation.navSurfaceIter = ++surfaceIter;
+          }
+        }
+
         r.initialized = true;
       }
     }
@@ -197,8 +211,18 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    (void)state;
     (void)stepper;
+
+    // Call the navigation helper prior to actual navigation
+    ACTS_VERBOSE(volInfo(state) << "Initialization.");
+
+    // We set the current surface to the start surface
+    state.navigation.currentSurface = state.navigation.startSurface;
+    if (state.navigation.currentSurface) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current surface set to start surface "
+                   << state.navigation.currentSurface->geometryId());
+    }
   }
 
   /// @brief Navigator pre step call
@@ -297,6 +321,14 @@ class DirectNavigator {
   }
 
  private:
+  template <typename propagator_state_t>
+  std::string volInfo(const propagator_state_t& state) const {
+    return (state.navigation.currentVolume
+                ? state.navigation.currentVolume->volumeName()
+                : "No Volume") +
+           " | ";
+  }
+
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;
