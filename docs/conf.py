@@ -57,6 +57,7 @@ linkcheck_ignore = [
     r"http://eigen.tuxfamily.org.*",
     r"https://pythia.org.*",
     r"https://lcginfo.cern.ch/.*",
+    r"https://.*\.?intel.com/.*",
 ]
 
 # -- Options for HTML output --------------------------------------------------
