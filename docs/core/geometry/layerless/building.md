@@ -5,7 +5,7 @@
 For cylindrical detectors there exist a generic tracking geometry building module,
 based on KDTree and a proto description.
 
-This building procedure uses a {class}`Acts::ProtoDetector` description which provides a 
+This building procedure uses a {struct}`Acts::ProtoDetector` description which provides a 
 high level description of layers and container volumes, together with some 
 binning and ordering information.
 This proto description is then used to assign surfaces that are provided to the 

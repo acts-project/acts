@@ -24,7 +24,7 @@ Surface based material extends this material information by a representative
 thickness; the corresponding object is called {class}`Acts::MaterialSlab`. The
 thickness hereby can be arbitrarily chosen in order to regulate the material
 budget, it does not have to represent the actual thickness of a detector
-element. To attach it to a surface, a dedicated {class}`Acts::SurfaceMaterial`
+element. To attach it to a surface, a dedicated {class}`Acts::ISurfaceMaterial`
 class (or it's extensions) is used, which allows to also describe binned
 material.
 

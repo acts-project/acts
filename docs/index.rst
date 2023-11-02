@@ -21,7 +21,7 @@ Key features:
 * Implementations of common vertexing algorithms.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
    getting_started
    tracking
@@ -32,6 +32,8 @@ Key features:
    examples/examples
 
    Contribution guide <contribution/contribution>
+
+   api/api
 
    versioning
    formats/formats

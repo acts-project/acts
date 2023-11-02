@@ -93,7 +93,7 @@ values at every queried location. It is implemented in the
 
 As seen above, the class is constructed from a three-dimensional field vector,
 which is returned unmodified to every call to
-{func}`Acts::ConstantBField::getField`.
+{func}`Acts::ConstantBField::getField()`.
 
 ### Interpolated magnetic field
 
@@ -122,7 +122,7 @@ methods:
 
 This intermediate interface is again implemented by
 {class}`Acts::InterpolatedBFieldMap`, which is a template class that depends on
-an instance of {class}`Acts::detail::Grid`. Varying configurations are possible,
+an instance of {class}`Acts::Grid`. Varying configurations are possible,
 like a 2D field map that exploits $rz$ symmetry, or a plain 3D grid.
 
 :::{doxygenclass} Acts::InterpolatedBFieldMap
@@ -225,7 +225,7 @@ $$
 
 In the implementation the factor of $(\mu_0\cdot I)$ is defined to be a scaling
 factor. It is evaluated and defined as the magnetic field in the center of the
-coil, i.e. the scale set in {any}`Acts::SolenoidBField::Config::bMagCenter`.
+coil, i.e. the scale set in {member}`Acts::SolenoidBField::Config::bMagCenter`.
 
 As the evaluation of $E_1(k^2)$ and $E_2(k^2)$ is **slow**. The
 {class}`Acts::InterpolatedBFieldMap` easily outperforms

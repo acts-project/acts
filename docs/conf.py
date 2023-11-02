@@ -2,10 +2,12 @@
 
 import os
 import sys
+import re
 import subprocess
 from pathlib import Path
 import shutil
 import datetime
+from typing import List, Tuple
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
@@ -22,7 +24,9 @@ copyright = (
 
 # -- General ------------------------------------------------------------------
 
-sys.path.insert(0, str(Path(__file__).parent / "_extensions"))
+doc_dir = Path(__file__).parent
+
+sys.path.insert(0, str(doc_dir / "_extensions"))
 
 extensions = [
     "breathe",
@@ -34,7 +38,7 @@ extensions = [
 
 todo_include_todos = True
 
-warnings_filter_config = str(Path(__file__).parent / "known-warnings.txt")
+warnings_filter_config = str(doc_dir / "known-warnings.txt")
 warnings_filter_silent = True
 
 source_suffix = {
@@ -105,37 +109,88 @@ breathe_default_members = (
 
 env = os.environ.copy()
 env["DOXYGEN_WARN_AS_ERROR"] = "NO"
-cwd = Path(__file__).parent
 
 if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
-    print("Executing doxygen in", cwd)
+    print("Executing doxygen in", doc_dir)
     print(
         "Doxygen version:",
         subprocess.check_output(["doxygen", "--version"], encoding="utf-8"),
     )
     sys.stdout.flush()
     subprocess.check_call(
-        ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
+        ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=doc_dir, env=env
     )
 
-api_index_target = cwd / "api/api.rst"
+api_index_target = doc_dir / "api/api.md"
 
 if tags.has("run_apidoc"):
-    print("Executing breathe apidoc in", cwd)
+    print("Executing breathe apidoc in", doc_dir)
     subprocess.check_call(
         [sys.executable, "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
         stdout=subprocess.DEVNULL,
-        cwd=cwd,
+        cwd=doc_dir,
         env=env,
     )
     if not api_index_target.exists():
-        shutil.copyfile(cwd / "api/api_index.rst", api_index_target)
+        shutil.copyfile(doc_dir / "api/api_index.rst", api_index_target)
     print("breathe apidoc completed")
 else:
     #  if not api_index_target.exists():
-    #  shutil.copyfile(cwd / "api/api_stub.rst", api_index_target)
+    #  shutil.copyfile(doc_dir / "api/api_stub.rst", api_index_target)
     pass
+
+# Find all roles pointing at code
+# @TODO: Member is difficult, unscoped enums don't work
+roles = {
+    "class": "Classes",
+    "struct": "Structs",
+    "type": "Types",
+}
+
+directives = {
+    "class": "doxygenclass",
+    "struct": "doxygenstruct",
+    "type": "doxygentypedef",
+}
+
+role_instances = {k: set() for k in roles.keys()}
+
+role_ex = re.compile(r"[{:](" + "|".join(roles.keys()) + r")[}:]`(.+?)`")
+
+
+def process_roles(file: Path) -> List[Tuple[str, str]]:
+    text = file.read_text()
+    return [m.groups() for m in role_ex.finditer(text)]
+
+
+#  process_roles(doc_dir / "core/propagation.md")
+
+if True:
+    for dirpath, _, filenames in os.walk(doc_dir):
+        dirpath = Path(dirpath)
+        for file in filenames:
+            file = dirpath / file
+            if file.suffix not in (".rst", ".md"):
+                continue
+            for role, arg in process_roles(file):
+                role_instances[role].add(arg)
+
+# add members to their parents
+
+with api_index_target.open("w") as fh:
+    fh.write("# API Reference\n\n")
+    for role, instances in sorted(role_instances.items(), key=lambda x: x[0]):
+        fh.write(f"## {roles[role]}\n")
+        for instance in sorted(instances):
+            fh.write(
+                f"""
+:::{{{directives[role]}}} {instance}
+:::
+"""
+            )
+        fh.write("\n")
+
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 

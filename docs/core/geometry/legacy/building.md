@@ -17,7 +17,7 @@ and parametrization/prediction of trajectories on detection surfaces. It is thus
 necessary that the detection surfaces are described to full detail in the
 reconstruction geometry (called {class}`Acts::TrackingGeometry`). This is guaranteed by a
 proxy mechanism that connects the detection elements (conveniently called
-{class}`Acts::DetectorElement`) to {class}`Acts::Surface` object in the reconstruction:
+{class}`Acts::DetectorElementBase`) to {class}`Acts::Surface` object in the reconstruction:
 
 ![DetectorElement](../figures/DetectorElement.png)
 
@@ -27,7 +27,7 @@ Very simple helper methods for 3D libraries exist, they are certainly not
 optimised, but used for templating:
 
 * {class}`Acts::TGeoDetectorElement` connects a TGeo volume to a {class}`Acts::Surface`
-* {class}`Acts::DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a {class}`Acts::Surface`
+* {class}`Acts::DD4hepDetectorElement` connects a DD4hep volume (based on TGeo) to a {class}`Acts::Surface`
 * {class}`Acts::Geant4DetectorElement` connects a Geant4 volume to a {class}`Acts::Surface`
 
 Further extensions exist in dedicated experiment contexts, such as e.g. a `GeoModel`

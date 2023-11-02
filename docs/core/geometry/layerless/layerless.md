@@ -37,7 +37,7 @@ While objects may be stored as `std::shared_ptr<T>` internally, their access dur
 
 ### Navigation state and delegates
 
-A struct {class}`Acts::Experimental::NavigationState` holds the current navigation information through the geometry, which comprises of
+A struct {struct}`Acts::Experimental::NavigationState` holds the current navigation information through the geometry, which comprises of
 
 - the current {class}`Acts::Experimental::DetectorVolume` in associated with the position within the detector, called `currentVolume`
 - a list of portal candidates to leave the `currentVolume`

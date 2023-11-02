@@ -5,7 +5,7 @@ control the amount of information displayed at run-time. Logger objects can
 easily be created using the {func}`Acts::getDefaultLogger` function which
 should be sufficient to get you started. In case you need more customized debug
 output, you can make use of the output decorators defined in
-{any}`Acts::Logging` or even write your own implementation of
+`Acts::Logging` or even write your own implementation of
 {class}`Acts::Logging::OutputDecorator`. In order to add debug messages to your
 program, you should use the provided macros for the different severity levels:
 
@@ -81,7 +81,7 @@ There are two approaches to logger integration:
 
     :::{note}
     ACTS code has iteratively moved to not construct loggers via
-    {func}`Acts::getDefaultLogger()` as much as possible, in favor of using a
+    {func}`Acts::getDefaultLogger` as much as possible, in favor of using a
     const-reference to {class}`Acts::Logger`. The latter can be defaulted to a
     dummy logger using {func}`Acts::getDummyLogger`. It is more suitable to
     pass into functions that might be called from other ACTS functions (rather
@@ -129,7 +129,7 @@ $ LD_PRELOAD=<YOUR_SHARED_LIBRARY> path/to/your/executable
 ## Logging thresholds
 
 Generally, log levels in ACTS are only of informative value: even
-{any}`Acts::Logging::ERROR` and {any}`Acts::Logging::FATAL` will only print a
+{enumerator}`Acts::Logging::ERROR` and {enumerator}`Acts::Logging::FATAL` will only print a
 messages, **and not terminate execution**. 
 
 This is desirable in an experiment context, where jobs should not immediately
@@ -148,7 +148,7 @@ on their configuration, the logging can operate in three modes:
    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and
    `ACTS_LOG_FAILURE_THRESHOLD=<LEVEL>` are set, the logger code will compile
    in a fixed check if the log level of a particular message exceeds `<LEVEL>`.
-   If that is the case, an exception of type {class}`Acts::ThresholdFailure` is
+   If that is the case, an exception of type {class}`Acts::Logging::ThresholdFailure` is
    thrown.
 3. A **runtime log failure threshold** is set. If only
    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and no fixed threshold level is set,
