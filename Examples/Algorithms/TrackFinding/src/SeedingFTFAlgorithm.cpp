@@ -199,7 +199,7 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
       int ACTS_mod_id = index_source_link.geometryId().sensitive();
 
       // dont want strips or HGTD
-      if (ACTS_vol_id == 2 or ACTS_vol_id == 22 or ACTS_vol_id == 23 or
+      if (ACTS_vol_id == 2 || ACTS_vol_id == 22 || ACTS_vol_id == 23 ||
           ACTS_vol_id == 24) {
         continue;
       }

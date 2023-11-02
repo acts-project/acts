@@ -136,7 +136,7 @@ class GenericBoundTrackParameters {
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
   /// Covariance matrix of the spatial impact parameters (i.e., of d0 and z0)
   std::optional<ActsSquareMatrix<2>> spatialImpactParameterCovariance() const {
-    if (not m_cov.has_value()) {
+    if (!m_cov.has_value()) {
       return std::nullopt;
     }
 
@@ -146,7 +146,7 @@ class GenericBoundTrackParameters {
   /// Covariance matrix of the spatial and temporal impact parameters (i.e., of
   /// d0, z0, and t)
   std::optional<ActsSquareMatrix<3>> impactParameterCovariance() const {
-    if (not m_cov.has_value()) {
+    if (!m_cov.has_value()) {
       return std::nullopt;
     }
 
@@ -278,14 +278,14 @@ class GenericBoundTrackParameters {
   ///   want and we might decided that we will remove this in the future.
   friend bool operator==(const GenericBoundTrackParameters& lhs,
                          const GenericBoundTrackParameters& rhs) {
-    return (lhs.m_params == rhs.m_params) and (lhs.m_cov == rhs.m_cov) and
-           (lhs.m_surface == rhs.m_surface) and
+    return (lhs.m_params == rhs.m_params) && (lhs.m_cov == rhs.m_cov) &&
+           (lhs.m_surface == rhs.m_surface) &&
            (lhs.m_particleHypothesis == rhs.m_particleHypothesis);
   }
   /// Compare two bound track parameters for bitwise in-equality.
   friend bool operator!=(const GenericBoundTrackParameters& lhs,
                          const GenericBoundTrackParameters& rhs) {
-    return not(lhs == rhs);
+    return !(lhs == rhs);
   }
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,

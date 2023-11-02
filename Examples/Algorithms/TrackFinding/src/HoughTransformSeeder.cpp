@@ -84,7 +84,7 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
 
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument(
         "HoughTransformSeeder: Missing tracking geometry");
   }
@@ -95,7 +95,7 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   }
   // ensure geometry selection contains only valid inputs
   for (const auto& geoId : m_cfg.geometrySelection) {
-    if ((geoId.approach() != 0u) or (geoId.boundary() != 0u) or
+    if ((geoId.approach() != 0u) || (geoId.boundary() != 0u) ||
         (geoId.sensitive() != 0u)) {
       throw std::invalid_argument(
           "HoughTransformSeeder: Invalid geometry selection: only volume and "

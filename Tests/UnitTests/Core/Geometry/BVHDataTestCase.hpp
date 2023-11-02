@@ -62,7 +62,7 @@ BOOST_DATA_TEST_CASE(
       auto srmi = srf.intersect(tgContext, ray.origin(), ray.dir(),
                                 Acts::BoundaryCheck(true));
       for (const auto& sri : srmi.split()) {
-        if (sri and sri.pathLength() >= s_onSurfaceTolerance) {
+        if (sri && sri.pathLength() >= s_onSurfaceTolerance) {
           // does intersect
           hits.push_back(sri);
         }

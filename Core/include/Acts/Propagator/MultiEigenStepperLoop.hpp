@@ -690,23 +690,24 @@ class MultiEigenStepperLoop
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, Direction navDir,
-      const BoundaryCheck& bcheck,
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryCheck& bcheck,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     using Status = Intersection3D::Status;
 
-    std::array<int, 4> counts = {0, 0, 0, 0};
+    std::array<int, 3> counts = {0, 0, 0};
 
     for (auto& component : state.components) {
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
-          *this, component.state, surface, navDir, bcheck, surfaceTolerance,
-          logger);
+          *this, component.state, surface, index, navDir, bcheck,
+          surfaceTolerance, logger);
       ++counts[static_cast<std::size_t>(component.status)];
     }
 

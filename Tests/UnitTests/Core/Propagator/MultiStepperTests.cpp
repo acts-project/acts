@@ -152,7 +152,7 @@ void test_multi_stepper_state() {
   for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.jacTransport(), FreeMatrix::Identity());
     BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
-    if constexpr (not Cov) {
+    if constexpr (!Cov) {
       BOOST_CHECK_EQUAL(cmp.jacToGlobal(), BoundToFreeMatrix::Zero());
       BOOST_CHECK_EQUAL(cmp.cov(), BoundSquareMatrix::Zero());
     }
@@ -167,7 +167,7 @@ void test_multi_stepper_state() {
   // thus not part of the interface. However, we want to check them for
   // consistency.
   if constexpr (Acts::Concepts::exists<components_t, MultiState>) {
-    BOOST_CHECK(not state.covTransport);
+    BOOST_CHECK(!state.covTransport);
     for (const auto &cmp : state.components) {
       BOOST_CHECK(cmp.state.covTransport == Cov);
     }
@@ -393,7 +393,8 @@ void test_multi_stepper_surface_status_update() {
   // Update surface status and check
   {
     auto status = multi_stepper.updateSurfaceStatus(
-        multi_state, *right_surface, Direction::Forward, BoundaryCheck(false));
+        multi_state, *right_surface, 0, Direction::Forward,
+        BoundaryCheck(false));
 
     BOOST_CHECK(status == Intersection3D::Status::reachable);
 
@@ -418,7 +419,8 @@ void test_multi_stepper_surface_status_update() {
   // Update surface status and check again
   {
     auto status = multi_stepper.updateSurfaceStatus(
-        multi_state, *right_surface, Direction::Forward, BoundaryCheck(false));
+        multi_state, *right_surface, 0, Direction::Forward,
+        BoundaryCheck(false));
 
     BOOST_CHECK(status == Intersection3D::Status::onSurface);
 
@@ -433,7 +435,8 @@ void test_multi_stepper_surface_status_update() {
   // Start surface should be unreachable
   {
     auto status = multi_stepper.updateSurfaceStatus(
-        multi_state, *start_surface, Direction::Forward, BoundaryCheck(false));
+        multi_state, *start_surface, 0, Direction::Forward,
+        BoundaryCheck(false));
 
     BOOST_CHECK(status == Intersection3D::Status::unreachable);
 
@@ -492,14 +495,14 @@ void test_component_bound_state() {
 
   // Step forward now
   {
-    multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
+    multi_stepper.updateSurfaceStatus(multi_state, *right_surface, 0,
                                       Direction::Forward, BoundaryCheck(false));
     auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
-    single_stepper.updateSurfaceStatus(
-        single_state, *right_surface, Direction::Forward, BoundaryCheck(false));
+    single_stepper.updateSurfaceStatus(single_state, *right_surface, 0,
+                                       Direction::Forward, BoundaryCheck(false));
     auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }
@@ -521,7 +524,7 @@ void test_component_bound_state() {
     auto failed_bound_state =
         (*(++cmp_iterable.begin()))
             .boundState(*right_surface, true, FreeToBoundCorrection(false));
-    BOOST_CHECK(not failed_bound_state.ok());
+    BOOST_CHECK(!failed_bound_state.ok());
   }
 }
 
