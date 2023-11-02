@@ -50,6 +50,6 @@ class DetectorElementBase {
   virtual double thickness() const = 0;
 };
 
-}
+}  // namespace Acts
 
 #endif
