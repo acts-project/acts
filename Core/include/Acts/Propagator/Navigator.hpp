@@ -676,7 +676,7 @@ class Navigator {
                    << " surfaces remain to try.");
       const auto& intersection = state.navigation.navSurface();
       // Take the surface
-      auto surface = intersection.object();
+      const auto* surface = intersection.object();
       // Screen output which surface you are on
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
@@ -846,7 +846,7 @@ class Navigator {
            state.navigation.navLayers.size()) {
       const auto& intersection = state.navigation.navLayer();
       // The layer surface
-      auto layerSurface = intersection.representation();
+      const auto* layerSurface = intersection.representation();
       // We are on the layer
       if (state.navigation.currentSurface == layerSurface) {
         ACTS_VERBOSE(volInfo(state) << "We are on a layer, resolve Surfaces.");
@@ -1003,7 +1003,7 @@ class Navigator {
            state.navigation.navBoundaries.size()) {
       const auto& intersection = state.navigation.navBoundary();
       // That is the current boundary surface
-      auto boundarySurface = intersection.representation();
+      const auto* boundarySurface = intersection.representation();
       // Step towards the boundary surfrace
       auto boundaryStatus = stepper.updateSurfaceStatus(
           state.stepping, *boundarySurface, intersection.index(),
