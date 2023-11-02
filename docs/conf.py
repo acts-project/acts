@@ -133,8 +133,9 @@ if tags.has("run_apidoc"):
         shutil.copyfile(cwd / "api/api_index.rst", api_index_target)
     print("breathe apidoc completed")
 else:
-    if not api_index_target.exists():
-        shutil.copyfile(cwd / "api/api_stub.rst", api_index_target)
+    #  if not api_index_target.exists():
+    #  shutil.copyfile(cwd / "api/api_stub.rst", api_index_target)
+    pass
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 
