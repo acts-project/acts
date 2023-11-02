@@ -59,15 +59,16 @@ struct DenseStepperPropagatorOptions
     // Copy the options over
     eoptions.direction = this->direction;
     eoptions.maxSteps = this->maxSteps;
-    eoptions.maxStepSize = this->maxStepSize;
-    eoptions.targetTolerance = this->targetTolerance;
+    eoptions.surfaceTolerance = this->surfaceTolerance;
     eoptions.pathLimit = this->pathLimit;
     eoptions.loopProtection = this->loopProtection;
     eoptions.loopFraction = this->loopFraction;
 
     // Stepper options
-    eoptions.tolerance = this->tolerance;
+    eoptions.stepTolerance = this->stepTolerance;
     eoptions.stepSizeCutOff = this->stepSizeCutOff;
+    eoptions.maxRungeKuttaStepTrials = this->maxRungeKuttaStepTrials;
+    eoptions.maxStepSize = this->maxStepSize;
     // Action / abort list
     eoptions.actionList = this->actionList;
     eoptions.abortList = std::move(aborters);

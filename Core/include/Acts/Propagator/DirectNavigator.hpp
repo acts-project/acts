@@ -255,13 +255,11 @@ class DirectNavigator {
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              false, std::numeric_limits<double>::max(),
-              stepper.overstepLimit(state.stepping),
-              state.options.targetTolerance)
+              false, state.options.surfaceTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, index, state.options.direction, false,
-          state.options.targetTolerance, *m_logger);
+          state.options.surfaceTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::unreachable) {
         ACTS_VERBOSE(
             "Surface not reachable anymore, switching to next one in "
@@ -313,13 +311,11 @@ class DirectNavigator {
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              false, std::numeric_limits<double>::max(),
-              stepper.overstepLimit(state.stepping),
-              state.options.targetTolerance)
+              false, state.options.surfaceTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, index, state.options.direction, false,
-          state.options.targetTolerance, *m_logger);
+          state.options.surfaceTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;
@@ -354,14 +350,12 @@ class DirectNavigator {
                                                  const Vector3& position,
                                                  const Vector3& direction,
                                                  const BoundaryCheck& bcheck,
-                                                 double pLimit, double oLimit,
                                                  double tolerance) const {
     auto intersections =
         surface.intersect(gctx, position, direction, bcheck, tolerance);
 
     for (auto& intersection : intersections.split()) {
-      if (detail::checkIntersection(intersection, pLimit, oLimit, tolerance,
-                                    logger())) {
+      if (intersection) {
         return intersection;
       }
     }

@@ -64,28 +64,34 @@ struct PropagatorPlainOptions {
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 
-  /// Maximum number of Runge-Kutta steps for the stepper step call
-  unsigned int maxRungeKuttaStepTrials = 10000;
-
-  /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
-
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
-
-  /// Required tolerance to reach target (surface, pathlength)
-  double targetTolerance = s_onSurfaceTolerance;
 
   /// Loop protection step, it adapts the pathLimit
   bool loopProtection = true;
   double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
 
+  /// Overstep limit
+  double overstepLimit = 100 * UnitConstants::um;  ///< Overstep limit
+
+  // Configurations for Navigator
+
+  /// Required tolerance to reach surfaces
+  double surfaceTolerance = s_onSurfaceTolerance;
+
   // Configurations for Stepper
+
   /// Tolerance for the error of the integration
-  double tolerance = 1e-4;
+  double stepTolerance = 1e-4;
 
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
+
+  /// Maximum number of Runge-Kutta steps for the stepper step call
+  unsigned int maxRungeKuttaStepTrials = 10000;
+
+  /// Absolute maximum step size
+  double maxStepSize = std::numeric_limits<double>::max();
 };
 
 /// @brief Options for propagate() call
@@ -127,16 +133,16 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     // Copy the options over
     eoptions.direction = direction;
     eoptions.maxSteps = maxSteps;
-    eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
-    eoptions.maxStepSize = maxStepSize;
-    eoptions.targetTolerance = targetTolerance;
+    eoptions.surfaceTolerance = surfaceTolerance;
     eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
     eoptions.loopFraction = loopFraction;
 
     // Stepper options
-    eoptions.tolerance = tolerance;
+    eoptions.stepTolerance = stepTolerance;
     eoptions.stepSizeCutOff = stepSizeCutOff;
+    eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
+    eoptions.maxStepSize = maxStepSize;
     // Action / abort list
     eoptions.actionList = std::move(actionList);
     eoptions.abortList = std::move(aborters);
@@ -151,14 +157,16 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     // Copy the options over
     direction = pOptions.direction;
     maxSteps = pOptions.maxSteps;
-    maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
-    maxStepSize = pOptions.maxStepSize;
-    targetTolerance = pOptions.targetTolerance;
+    surfaceTolerance = pOptions.surfaceTolerance;
     pathLimit = direction * std::abs(pOptions.pathLimit);
     loopProtection = pOptions.loopProtection;
     loopFraction = pOptions.loopFraction;
-    tolerance = pOptions.tolerance;
+
+    // Stepper options
+    stepTolerance = pOptions.stepTolerance;
     stepSizeCutOff = pOptions.stepSizeCutOff;
+    maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
+    maxStepSize = pOptions.maxStepSize;
   }
 
   /// List of actions

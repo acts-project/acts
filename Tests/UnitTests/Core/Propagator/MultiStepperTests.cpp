@@ -72,7 +72,7 @@ const auto defaultNullBField = std::make_shared<NullBField>();
 const auto particleHypothesis = ParticleHypothesis::pion();
 
 struct Options {
-  double tolerance = 1e-4;
+  double stepTolerance = 1e-4;
   double stepSizeCutOff = 0.0;
   std::size_t maxRungeKuttaStepTrials = 10;
   Direction direction = defaultNDir;

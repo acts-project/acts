@@ -67,7 +67,7 @@ struct PathLimitReached {
     // Check if the maximum allowed step size has to be updated
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
-    double tolerance = state.options.targetTolerance;
+    double tolerance = state.options.surfaceTolerance;
     bool limitReached = (std::abs(distance) < std::abs(tolerance));
     if (limitReached) {
       ACTS_VERBOSE("Target: x | "
@@ -145,7 +145,7 @@ struct SurfaceReached {
     // TODO the following code is mostly duplicated in updateSingleSurfaceStatus
 
     // Calculate the distance to the surface
-    const double tolerance = state.options.targetTolerance;
+    const double tolerance = state.options.surfaceTolerance;
 
     const auto sIntersection = targetSurface.intersect(
         state.geoContext, stepper.position(state.stepping),
@@ -172,17 +172,8 @@ struct SurfaceReached {
       return true;
     }
 
-    const double pLimit =
-        state.stepping.stepSize.value(ConstrainedStep::aborter);
-    // not using the stepper overstep limit here because it does not always work
-    // for perigee surfaces
-    const double oLimit =
-        overstepLimit.value_or(stepper.overstepLimit(state.stepping));
-
     for (const auto& intersection : sIntersection.split()) {
-      if (intersection &&
-          detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
-                                    tolerance, logger)) {
+      if (intersection) {
         stepper.setStepSize(state.stepping, intersection.pathLength(),
                             ConstrainedStep::aborter, false);
         break;

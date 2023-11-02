@@ -244,7 +244,7 @@ struct PropagatorState {
 
     const Acts::Logger& logger = Acts::getDummyLogger();
 
-    ActsScalar targetTolerance = s_onSurfaceTolerance;
+    ActsScalar surfaceTolerance = s_onSurfaceTolerance;
   };
 
   /// Navigation cache: the start surface
