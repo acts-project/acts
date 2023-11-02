@@ -63,7 +63,7 @@ void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
   }
   // Digital
   auto digital = f.target<const Digitization::Digital>();
-  if (uniform != nullptr) {
+  if (digital != nullptr) {
     j["type"] = "Digitial";
     j["bindata"] = nlohmann::json(digital->binningData);
     return;
