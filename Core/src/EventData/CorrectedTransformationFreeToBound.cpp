@@ -71,7 +71,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   }
 
   // The number of sigma points
-  size_t sampleSize = 2 * eFreeSize + 1;
+  std::size_t sampleSize = 2 * eFreeSize + 1;
   // The sampled free parameters, the weight for measurement W_m and weight for
   // covariance, W_c
   std::vector<std::tuple<FreeVector, ActsScalar, ActsScalar>> sampledFreeParams;

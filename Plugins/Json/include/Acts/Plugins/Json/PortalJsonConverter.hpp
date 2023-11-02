@@ -63,7 +63,7 @@ nlohmann::json toJson(
 /// @return a json object
 std::vector<nlohmann::json> toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
-    std::size_t ip, const Experimental::DetectorVolume& volume,
+    size_t ip, const Experimental::DetectorVolume& volume,
     const OrientedSurfaces& orientedSurfaces,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Options& options = Options{});

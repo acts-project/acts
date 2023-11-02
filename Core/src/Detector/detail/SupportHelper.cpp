@@ -124,7 +124,7 @@ Acts::Experimental::detail::SupportHelper::discSupport(
 
 void Acts::Experimental::detail::SupportHelper::addSupport(
     std::vector<std::shared_ptr<Surface>>& layerSurfaces,
-    std::vector<size_t>& assignToAll, const Extent& layerExtent,
+    std::vector<std::size_t>& assignToAll, const Extent& layerExtent,
     Surface::SurfaceType layerRepresentation,
     const std::array<ActsScalar, 5u>& layerSupportValues,
     std::optional<Transform3> layerTransform, unsigned int supportSplits) {

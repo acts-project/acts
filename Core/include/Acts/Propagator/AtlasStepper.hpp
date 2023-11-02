@@ -286,8 +286,8 @@ class AtlasStepper {
     bool debug = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
-    size_t debugPfxWidth = 30;
-    size_t debugMsgWidth = 50;
+    std::size_t debugPfxWidth = 30;
+    std::size_t debugMsgWidth = 50;
   };
 
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
@@ -1155,7 +1155,7 @@ class AtlasStepper {
     bool Helix = false;
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
-    size_t nStepTrials = 0;
+    std::size_t nStepTrials = 0;
     while (h != 0.) {
       // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;

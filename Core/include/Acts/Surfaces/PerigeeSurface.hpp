@@ -90,7 +90,7 @@ class PerigeeSurface : public LineSurface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const final;
+                                      std::size_t lseg) const final;
 };
 
 }  // namespace Acts

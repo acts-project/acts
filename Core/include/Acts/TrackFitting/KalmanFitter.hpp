@@ -68,7 +68,7 @@ struct KalmanFitterExtensions {
                     const SourceLink&, TrackStateProxy)>;
 
   using Smoother = Delegate<Result<void>(const GeometryContext&, traj_t&,
-                                         size_t, const Logger&)>;
+                                         std::size_t, const Logger&)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         Direction, const Logger&)>;
@@ -201,28 +201,28 @@ struct KalmanFitterResult {
   // This corresponds to the last measurement state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
-  size_t lastMeasurementIndex = SIZE_MAX;
+  std::size_t lastMeasurementIndex = SIZE_MAX;
 
   // This is the index of the 'tip' of the states stored in multitrajectory.
   // This corresponds to the last state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
-  size_t lastTrackIndex = SIZE_MAX;
+  std::size_t lastTrackIndex = SIZE_MAX;
 
   // The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
 
   // Counter for states with non-outlier measurements
-  size_t measurementStates = 0;
+  std::size_t measurementStates = 0;
 
   // Counter for measurements holes
   // A hole correspond to a surface with an associated detector element with no
   // associated measurement. Holes are only taken into account if they are
   // between the first and last measurements.
-  size_t measurementHoles = 0;
+  std::size_t measurementHoles = 0;
 
   // Counter for handled states
-  size_t processedStates = 0;
+  std::size_t processedStates = 0;
 
   // Indicator if smoothing has been done.
   bool smoothed = false;
@@ -739,7 +739,7 @@ class KalmanFitter {
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.
         TrackStatePropMask mask = TrackStatePropMask::All;
-        const size_t currentTrackIndex = fittedStates.addTrackState(
+        const std::size_t currentTrackIndex = fittedStates.addTrackState(
             mask, Acts::MultiTrajectoryTraits::kInvalid);
 
         // now get track state proxy back
@@ -927,9 +927,9 @@ class KalmanFitter {
 
       // Get the indices of the first states (can be either a measurement or
       // material);
-      size_t firstStateIndex = result.lastMeasurementIndex;
+      std::size_t firstStateIndex = result.lastMeasurementIndex;
       // Count track states to be smoothed
-      size_t nStates = 0;
+      std::size_t nStates = 0;
       result.fittedStates->applyBackwards(
           result.lastMeasurementIndex, [&](auto st) {
             bool isMeasurement =

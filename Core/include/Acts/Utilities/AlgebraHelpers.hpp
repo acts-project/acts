@@ -36,7 +36,7 @@ MatrixType bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime *
 
   MatrixType m;
   auto* p = m.data();
-  for (size_t i = 0; i < rows * cols; i++) {
+  for (std::size_t i = 0; i < rows * cols; i++) {
     p[i] = bs[rows * cols - 1 - i];
   }
   return m;
@@ -51,13 +51,13 @@ MatrixType bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime *
 template <typename Derived>
 auto matrixToBitset(const Eigen::PlainObjectBase<Derived>& m) {
   using MatrixType = Eigen::PlainObjectBase<Derived>;
-  constexpr size_t rows = MatrixType::RowsAtCompileTime;
-  constexpr size_t cols = MatrixType::ColsAtCompileTime;
+  constexpr std::size_t rows = MatrixType::RowsAtCompileTime;
+  constexpr std::size_t cols = MatrixType::ColsAtCompileTime;
 
   std::bitset<rows * cols> res;
 
   auto* p = m.data();
-  for (size_t i = 0; i < rows * cols; i++) {
+  for (std::size_t i = 0; i < rows * cols; i++) {
     res[rows * cols - 1 - i] = static_cast<bool>(p[i]);
   }
 

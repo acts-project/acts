@@ -87,7 +87,7 @@ class AccumulatedSurfaceMaterial {
   /// @param pathCorrection Correction factor for the effective path length
   ///
   /// @return the bin triple to which the material was assigned
-  std::array<size_t, 3> accumulate(const Vector2& lp, const MaterialSlab& mp,
+  std::array<std::size_t, 3> accumulate(const Vector2& lp, const MaterialSlab& mp,
                                    double pathCorrection = 1.);
 
   /// Assign a material properties object
@@ -97,7 +97,7 @@ class AccumulatedSurfaceMaterial {
   /// @param pathCorrection Correction factor for the effective path length
   ///
   /// @return the bin triple to which the material was assigned
-  std::array<size_t, 3> accumulate(const Vector3& gp, const MaterialSlab& mp,
+  std::array<std::size_t, 3> accumulate(const Vector3& gp, const MaterialSlab& mp,
                                    double pathCorrection = 1.);
 
   /// Use the accumulated material to update the material variance
@@ -106,7 +106,7 @@ class AccumulatedSurfaceMaterial {
   /// @param emptyHit indicator if this is an empty assignment
   /// @param slabReference reference slab (from the map) used to compute the variance
   /// If none is given, the average runs over all bins in the surface map
-  void trackVariance(const std::vector<std::array<size_t, 3>>& trackBins,
+  void trackVariance(const std::vector<std::array<std::size_t, 3>>& trackBins,
                      MaterialSlab slabReference, bool emptyHit = false);
 
   /// Use the accumulated material to update the material variance
@@ -122,7 +122,7 @@ class AccumulatedSurfaceMaterial {
   /// @param trackBins The bins that were touched by this event
   /// @param emptyHit indicator if this is an empty assignment
   /// If none is given, the average runs over all bins in the surface map
-  void trackAverage(const std::vector<std::array<size_t, 3>>& trackBins = {},
+  void trackAverage(const std::vector<std::array<std::size_t, 3>>& trackBins = {},
                     bool emptyHit = false);
 
   /// Average the information accumulated from one mapped track
