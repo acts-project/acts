@@ -52,7 +52,7 @@ class ITrackingVolumeArrayCreator {
   /// @param vols are the TrackingVolumes ordered in a tracker
   /// @param bVal is the binning value for the volume binning
   ///
-  /// @return sahred pointer to a new TrackingVolumeArray
+  /// @return shared pointer to a new TrackingVolumeArray
   virtual std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(
       const GeometryContext& gctx, const TrackingVolumeVector& vols,
       BinningValue bVal) const = 0;

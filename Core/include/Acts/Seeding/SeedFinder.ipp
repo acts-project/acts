@@ -776,7 +776,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       }
 
       state.topSpVec.push_back(state.compatTopSP[t]);
-      // inverse diameter is signed depending if the curvature is
+      // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
       state.curvatures.push_back(B / std::sqrt(S2));
       state.impactParameters.push_back(Im);

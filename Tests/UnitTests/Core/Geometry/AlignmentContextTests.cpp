@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
 
   const auto& alignedSurface = alignedElement.surface();
 
-  // The alignment centexts
+  // The alignment contexts
   GeometryContext defaultContext{AlignmentContext{}};
   GeometryContext negativeContext{AlignmentContext{alignmentStore, 0}};
   GeometryContext positiveContext{AlignmentContext{alignmentStore, 1}};
