@@ -26,7 +26,7 @@ namespace AxisJsonConverter {
 /// @return a json object to represent the axis
 nlohmann::json toJson(const IAxis& ia);
 
-/// Convert an axis to json - detay style
+/// Convert an axis to json - detray style
 ///
 /// @param ia the axis
 ///
