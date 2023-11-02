@@ -125,6 +125,8 @@ nitpick_ignore_regex = [
     ("cpp:identifier", r"detail::.*"),
     ("cpp:identifier", ".*::Identity"),
     ("cpp:identifier", ".*::Zero"),
+    # This blanket ignore only targets the doxygen/breathe auto-generated
+    # references. Explicit references should have specific types.
     ("cpp:identifier", r".*"),
 ]
 
