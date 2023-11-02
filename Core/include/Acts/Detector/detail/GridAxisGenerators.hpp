@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <array>
 #include <tuple>
@@ -39,7 +39,7 @@ struct Eq {
 
   /// Broadcast the grid type
   template <typename T>
-  using grid_type = Acts::detail::Grid<
+  using grid_type = Acts::Grid<
       T, Acts::detail::Axis<Acts::detail::AxisType::Equidistant, aType>>;
 
   std::array<ActsScalar, 2u> range = {};
@@ -69,7 +69,7 @@ struct Var {
 
   /// Broadcast the grid type
   template <typename T>
-  using grid_type = Acts::detail::Grid<
+  using grid_type = Acts::Grid<
       T, Acts::detail::Axis<Acts::detail::AxisType::Variable, aType>>;
 
   std::vector<ActsScalar> edges = {};
@@ -101,7 +101,7 @@ struct EqEq {
 
   /// Broadcast the grid type
   template <typename T>
-  using grid_type = Acts::detail::Grid<
+  using grid_type = Acts::Grid<
       T, Acts::detail::Axis<Acts::detail::AxisType::Equidistant, aType>,
       Acts::detail::Axis<Acts::detail::AxisType::Equidistant, bType>>;
 
@@ -156,7 +156,7 @@ struct EqVar {
 
   /// Broadcast the grid type
   template <typename T>
-  using grid_type = Acts::detail::Grid<
+  using grid_type = Acts::Grid<
       T, Acts::detail::Axis<Acts::detail::AxisType::Equidistant, aType>,
       Acts::detail::Axis<Acts::detail::AxisType::Variable, bType>>;
 
@@ -208,7 +208,7 @@ struct VarEq {
 
   /// Broadcast the grid type
   template <typename T>
-  using grid_type = Acts::detail::Grid<
+  using grid_type = Acts::Grid<
       T, Acts::detail::Axis<Acts::detail::AxisType::Variable, aType>,
       Acts::detail::Axis<Acts::detail::AxisType::Equidistant, bType>>;
 
@@ -260,7 +260,7 @@ struct VarVar {
 
   /// Broadcast the grid type
   template <typename T>
-  using grid_type = Acts::detail::Grid<
+  using grid_type = Acts::Grid<
       T, Acts::detail::Axis<Acts::detail::AxisType::Variable, aType>,
       Acts::detail::Axis<Acts::detail::AxisType::Variable, bType>>;
 

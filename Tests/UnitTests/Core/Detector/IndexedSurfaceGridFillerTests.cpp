@@ -25,7 +25,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <array>
 #include <cmath>

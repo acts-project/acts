@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -32,7 +32,7 @@ auto Acts::materialMapperRZ(
     std::vector<double> rPos, std::vector<double> zPos,
     const std::vector<Acts::Material>& material, double lengthUnit)
     -> MaterialMapper<
-        detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
+        Grid<Material::ParametersVector, detail::EquidistantAxis,
                      detail::EquidistantAxis>> {
   // [1] Decompose material
   std::vector<Material::ParametersVector> materialVector;
@@ -74,7 +74,7 @@ auto Acts::materialMapperRZ(
   detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  using Grid_t = detail::Grid<Material::ParametersVector,
+  using Grid_t = Grid<Material::ParametersVector,
                               detail::EquidistantAxis, detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
@@ -104,7 +104,7 @@ auto Acts::materialMapperRZ(
   // [5] Create the mapper & BField Service
   // create material mapping
   return MaterialMapper<
-      detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
+      Grid<Material::ParametersVector, detail::EquidistantAxis,
                    detail::EquidistantAxis>>(transformPos, std::move(grid));
 }
 
@@ -116,7 +116,7 @@ auto Acts::materialMapperXYZ(
     std::vector<double> zPos, const std::vector<Material>& material,
     double lengthUnit)
     -> MaterialMapper<
-        detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
+        Grid<Material::ParametersVector, detail::EquidistantAxis,
                      detail::EquidistantAxis, detail::EquidistantAxis>> {
   // [1] Decompose material
   std::vector<Material::ParametersVector> materialVector;
@@ -170,7 +170,7 @@ auto Acts::materialMapperXYZ(
   detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
   using Grid_t =
-      detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
+      Grid<Material::ParametersVector, detail::EquidistantAxis,
                    detail::EquidistantAxis, detail::EquidistantAxis>;
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
@@ -202,7 +202,7 @@ auto Acts::materialMapperXYZ(
   // [5] Create the mapper & BField Service
   // create material mapping
   return MaterialMapper<
-      detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
+      Grid<Material::ParametersVector, detail::EquidistantAxis,
                    detail::EquidistantAxis, detail::EquidistantAxis>>(
       transformPos, std::move(grid));
 }

@@ -12,7 +12,7 @@
 #include "Acts/Plugins/ActSVG/GridSvgConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "actsvg/display/grids.hpp"
 
 #include <fstream>

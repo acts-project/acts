@@ -19,7 +19,7 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Range1D.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>

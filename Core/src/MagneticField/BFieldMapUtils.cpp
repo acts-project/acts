@@ -13,7 +13,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
@@ -28,7 +28,7 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 Acts::InterpolatedBFieldMap<
-    Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+    Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
 Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                             std::array<size_t, 2> nBinsRZ)>&
@@ -74,7 +74,7 @@ Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 
   // Create the grid
   using Grid_t =
-      Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+      Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                          Acts::detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
@@ -134,7 +134,7 @@ Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
       {transformPos, transformBField, std::move(grid)});
 }
 
-Acts::InterpolatedBFieldMap<Acts::detail::Grid<
+Acts::InterpolatedBFieldMap<Acts::Grid<
     Acts::Vector3, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
     Acts::detail::EquidistantAxis>>
 Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
@@ -196,7 +196,7 @@ Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                       nBinsZ);
   // Create the grid
   using Grid_t =
-      Acts::detail::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
+      Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
                          Acts::detail::EquidistantAxis,
                          Acts::detail::EquidistantAxis>;
   Grid_t grid(
@@ -251,7 +251,7 @@ Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
 }
 
 Acts::InterpolatedBFieldMap<
-    Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+    Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
 Acts::solenoidFieldMap(std::pair<double, double> rlim,
                        std::pair<double, double> zlim,
@@ -276,7 +276,7 @@ Acts::solenoidFieldMap(std::pair<double, double> rlim,
 
   // Create the grid
   using Grid_t =
-      Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+      Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                          Acts::detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
