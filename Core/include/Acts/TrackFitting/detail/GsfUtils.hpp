@@ -105,11 +105,11 @@ class ScopedGsfInfoPrinterAndChecker {
         m_stepper.numberComponents(m_state.stepping) == 0;
 
     if (onStart) {
-      assert(not zeroComponents && "no cmps at the start");
+      assert(!zeroComponents && "no cmps at the start");
       assert(allFinite && "weights not finite at the start");
       assert(allNormalized && "not normalized at the start");
     } else {
-      assert(not zeroComponents && "no cmps at the end");
+      assert(!zeroComponents && "no cmps at the end");
       assert(allFinite && "weights not finite at the end");
       assert(allNormalized && "not normalized at the end");
     }

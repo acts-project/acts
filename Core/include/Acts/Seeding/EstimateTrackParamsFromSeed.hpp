@@ -255,7 +255,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Transform the bottom space point to local coordinates of the provided
   // surface
   auto lpResult = surface.globalToLocal(gctx, spGlobalPositions[0], direction);
-  if (not lpResult.ok()) {
+  if (!lpResult.ok()) {
     ACTS_ERROR(
         "Global to local transformation did not succeed. Please make sure the "
         "bottom space point lies on the provided surface.");

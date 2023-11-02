@@ -228,8 +228,9 @@ class DetectorNavigator {
       // Estimate the surface status
       bool boundaryCheck = c.boundaryCheck;
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, surface, state.options.direction, boundaryCheck,
-          state.options.targetTolerance, logger());
+          state.stepping, surface, c.objectIntersection.index(),
+          state.options.direction, boundaryCheck, state.options.targetTolerance,
+          logger());
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper)
@@ -296,8 +297,10 @@ class DetectorNavigator {
 
     // TODO not sure about the boundary check
     auto surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, *nextSurface, state.options.direction, boundaryCheck,
-        state.options.targetTolerance, logger());
+        state.stepping, *nextSurface,
+        nState.surfaceCandidate->objectIntersection.index(),
+        state.options.direction, boundaryCheck, state.options.targetTolerance,
+        logger());
 
     // Check if we are at a surface
     if (surfaceStatus == Intersection3D::Status::onSurface) {

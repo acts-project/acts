@@ -47,12 +47,12 @@ class DigitizationSourceLink final {
 
 inline bool operator==(const DigitizationSourceLink& lhs,
                        const DigitizationSourceLink& rhs) {
-  return (lhs.geometryId() == rhs.geometryId()) and
+  return (lhs.geometryId() == rhs.geometryId()) &&
          (lhs.indices() == rhs.indices());
 }
 inline bool operator!=(const DigitizationSourceLink& lhs,
                        const DigitizationSourceLink& rhs) {
-  return not(lhs == rhs);
+  return !(lhs == rhs);
 }
 
 }  // namespace Acts

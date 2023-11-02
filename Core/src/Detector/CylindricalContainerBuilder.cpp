@@ -71,7 +71,7 @@ Acts::Experimental::DetectorComponent::PortalContainer connect(
         break;
     }
   } else if (binning ==
-                 std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR} and
+                 std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR} &&
              objects.size() == 2u) {
     rContainer =
         Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
@@ -94,7 +94,7 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   if (m_cfg.binning.size() == 1u) {
     // 1-dimensional case
     auto b = m_cfg.binning.front();
-    if (b != Acts::binR and b != Acts::binZ and b != Acts::binPhi) {
+    if (b != Acts::binR && b != Acts::binZ && b != Acts::binPhi) {
       throw std::invalid_argument(
           "CylindricalContainerBuilder: 1D binning only supported in z, r, or "
           "phi");
@@ -181,7 +181,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   std::for_each(
       m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
         auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
-        atNavigationLevel = (atNavigationLevel and cVolumes.size() == 1u);
+        atNavigationLevel = (atNavigationLevel && cVolumes.size() == 1u);
         // Collect individual components, volumes, containers, roots
         volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
         containers.push_back(cContainer);

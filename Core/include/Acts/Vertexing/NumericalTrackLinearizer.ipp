@@ -43,7 +43,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
 
   // Propagate to the PCA of the reference point
   auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
-  if (not result.ok()) {
+  if (!result.ok()) {
     return result.error();
   }
 
@@ -126,7 +126,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // Propagate to the new PCA and extract Perigee parameters
     auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,
                                                  perigeeSurface, pOptions);
-    if (not newResult.ok()) {
+    if (!newResult.ok()) {
       return newResult.error();
     }
     newPerigeeParams = (*newResult->endParameters).parameters();
