@@ -58,7 +58,7 @@ Representation of the search for triplet combinations in the $(r, z)$ plane. The
 
 ### The Seed Finder
 
-The {func}`SeedFilter::createSeedsForGroup` function receives three iterators 
+The {func}`Acts::SeedFinder::createSeedsForGroup` function receives three iterators 
 over SPs constructed from detector layers of increasing radii. The seedfinder will 
 then attempt to create seeds, with each seed containing exactly one SP returned by 
 each of the three iterators. It starts by iterating over SPs in the middle layer
@@ -67,6 +67,14 @@ and once over the top SP. Within each of the nested loops, SP pairs are tested f
 compatibility by applying a set of configurable cuts that can be tested with
 two SP only (pseudorapidity, origin along $z$-axis, distance in $r$ between SP,
 compatibility with interaction point).
+
+:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, SeedingState &state, const Acts::SpacePointGrid<external_spacepoint_t> &grid, std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs, const Acts::Range1D<float> &rMiddleSPRange) const
+:::
+
+
+:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, const Acts::SpacePointGrid<external_spacepoint_t> &grid, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs) const
+:::
+
 
 For all pairs passing the selection the triplets of bottom-middle-top SPs are formed.
 Each triplet is then confronted with the helix hypothesis. In order to perform calculations
@@ -181,7 +189,7 @@ d_0 \leq \left| \left( A - B \cdot r_M \right) \cdot r_M \right|
 
 After creating the potential seeds we apply a seed filter procedure that compares the seeds with other SPs compatible with the seed curvature.
 This process ranks the potential seeds based on certain quality criteria and selects the ones that are more likely to produce high-quality tracks 
-The filter is divided into two functions {func}`SeedFilter::filterSeeds_2SpFixed` and {func}`SeedFilter::filterSeeds_1SpFixed`.
+The filter is divided into two functions {func}`Acts::SeedFilter::filterSeeds_2SpFixed` and {func}`Acts::SeedFilter::filterSeeds_1SpFixed`.
 
 The first function compares the middle and bottom layer SPs of the seeds to other top layer SPs; seeds only differing in top SP are 
 compatible if they have similar helix radius with the same sign (i.e. the same charge). The SPs must have a minimum distance in 
@@ -210,7 +218,7 @@ likely to stem from a particle than another seed using the same middle SP with
 smaller impact parameters. The number of compatible seeds ($N_t$) is used to increase the weight, as a higher number of measurements 
 will lead to higher quality tracks.  Finally, the weight can also be affected by optional detector-specific cuts.
 
-The {func}`SeedFilter::filterSeeds_2SpFixed` function also includes a configurable {struct}`Acts::SeedConfirmationRangeConfig` seed confirmation step that, when enabled,
+The {func}`Acts::SeedFilter::filterSeeds_2SpFixed` function also includes a configurable {struct}`Acts::SeedConfirmationRangeConfig` seed confirmation step that, when enabled,
 classifies higher quality seeds as "quality confined" seeds if they fall within a predefined range of parameters ($d_0$, $z_0$ and $N_t$) that also
 depends on the region of the detector (i.e., forward or central region). If the seed is not
 classified as "quality confined" seed, it will only be accepted if its weight is greater

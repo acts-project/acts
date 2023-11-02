@@ -105,6 +105,29 @@ breathe_default_members = (
     "undoc-members",
 )
 
+nitpicky = True
+nitpick_ignore = [
+    ("cpp:identifier", "Acts"),
+    ("cpp:identifier", "detail"),
+    ("cpp:identifier", "SIZE_MAX"),
+    ("cpp:identifier", "M_PI"),
+    ("cpp:identifier", "eSize"),
+    ("cpp:identifier", "eBoundSize"),
+    ("cpp:identifier", "eFreeSize"),
+    ("cpp:identifier", "open"),
+    ("cpp:identifier", "FreeToBoundCorrection"),
+]
+
+nitpick_ignore_regex = [
+    ("cpp:identifier", r"Eigen.*"),
+    ("cpp:identifier", r"boost.*"),
+    ("cpp:identifier", r"s_.*"),
+    ("cpp:identifier", r"detail::.*"),
+    ("cpp:identifier", ".*::Identity"),
+    ("cpp:identifier", ".*::Zero"),
+    ("cpp:identifier", r".*"),
+]
+
 # -- Automatic API documentation ---------------------------------------------
 
 env = os.environ.copy()
@@ -142,21 +165,111 @@ else:
 
 # Find all roles pointing at code
 # @TODO: Member is difficult, unscoped enums don't work
-roles = {
-    "class": "Classes",
-    "struct": "Structs",
-    "type": "Types",
-}
+roles = [
+    "class",
+    "struct",
+    "type",
+]
+
+role_names = {"class": "Classes", "struct": "Structs", "type": "Types", "enum": "Enums"}
 
 directives = {
     "class": "doxygenclass",
     "struct": "doxygenstruct",
     "type": "doxygentypedef",
+    "func": "doxygenfunction",
+    "enum": "doxygenenum",
 }
 
-role_instances = {k: set() for k in roles.keys()}
+role_instances = {k: set() for k in roles}
 
-role_ex = re.compile(r"[{:](" + "|".join(roles.keys()) + r")[}:]`(.+?)`")
+role_instances["type"] |= {
+    "Acts::ActsScalar",
+    "Acts::ActsVector",
+    "Acts::ActsMatrix",
+    "Acts::ActsSquareMatrix",
+    "Acts::SquareMatrix2",
+    "Acts::SquareMatrix3",
+    "Acts::SquareMatrix4",
+    "Acts::BoundMatrix",
+    "Acts::BoundSquareMatrix",
+    "Acts::Vector2",
+    "Acts::Vector3",
+    "Acts::Vector4",
+    "Acts::BoundVector",
+    "Acts::BoundTrackParameters",
+    "Acts::Transform2",
+    "Acts::Transform3",
+    "Acts::AngleAxis3",
+    "Acts::RotationMatrix2",
+    "Acts::RotationMatrix3",
+    "Acts::Translation2",
+    "Acts::Translation3",
+    "Acts::GeometryContext",
+    "Acts::FreeVector",
+    "Acts::FreeMatrix",
+    "Acts::SurfaceVector",
+    "Acts::Intersection3D",
+    "Acts::OrientedSurface",
+    "Acts::OrientedSurfaces",
+    "Acts::BoundToFreeMatrix",
+    "Acts::FreeToBoundMatrix",
+    "Acts::FreeSquareMatrix",
+    "Acts::FreeToPathMatrix",
+}
+
+role_instances["struct"] |= {
+    "Acts::DenseStepperPropagatorOptions",
+    "Acts::Experimental::DetectorNavigator::State",
+    "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
+    "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
+}
+
+role_instances["class"] |= {
+    "Acts::BinningData",
+    "Acts::Direction",
+    "Acts::ConstrainedStep",
+    "Acts::IAxis",
+    "Acts::SeedFilter",
+    "Acts::BoundaryCheck",
+    "Acts::ConeVolumeBounds",
+    "Acts::CuboidVolumeBounds",
+    "Acts::CylinderVolumeBounds",
+    "Acts::CutoutCylinderVolumeBounds",
+    "Acts::GenericCuboidVolumeBounds",
+    "Acts::TrapezoidVolumeBounds",
+    "Acts::GeometryObject",
+    "Acts::TrackContainer",
+    "Acts::ConeLayer",
+    "Acts::CylinderLayer",
+    "Acts::IdentifiedDetectorElement",
+    "Acts::DiscLayer",
+    "Acts::PlaneLayer",
+    "Acts::NullBField",
+    "Acts::DiscBounds",
+    "Acts::PlanarBounds",
+    "Acts::AbstractVolume",
+    "Acts::AnnulusBounds",
+    "Acts::DiamondBounds",
+    "Acts::ConvexPolygonBounds",
+    "Acts::ConvexPolygonBoundsBase",
+    "Acts::Logging::LevelOutputDecorator",
+    "Acts::Logging::NamedOutputDecorator",
+    "Acts::Logging::ThreadOutputDecorator",
+    "Acts::Logging::TimedOutputDecorator",
+    "Acts::Logging::DefaultFilterPolicy",
+    "Acts::Logging::DefaultPrintPolicy",
+}
+
+role_instances["enum"] = {
+    "Acts::BinningValue",
+    "Acts::BinningType",
+    "Acts::BinningValue",
+    "Acts::BoundIndices",
+    "Acts::FreeIndices",
+}
+
+role_ex = re.compile(r"[{:](" + "|".join(roles) + r")[}:]`(.+?)`")
 
 
 def process_roles(file: Path) -> List[Tuple[str, str]]:
@@ -164,24 +277,26 @@ def process_roles(file: Path) -> List[Tuple[str, str]]:
     return [m.groups() for m in role_ex.finditer(text)]
 
 
-#  process_roles(doc_dir / "core/propagation.md")
-
-if True:
-    for dirpath, _, filenames in os.walk(doc_dir):
-        dirpath = Path(dirpath)
-        for file in filenames:
-            file = dirpath / file
-            if file.suffix not in (".rst", ".md"):
-                continue
-            for role, arg in process_roles(file):
-                role_instances[role].add(arg)
+for dirpath, _, filenames in os.walk(doc_dir):
+    dirpath = Path(dirpath)
+    for file in filenames:
+        file = dirpath / file
+        if file.suffix not in (".rst", ".md"):
+            continue
+        for role, arg in process_roles(file):
+            role_instances[role].add(arg)
 
 # add members to their parents
 
+api_preamble = """
+
+"""
+
 with api_index_target.open("w") as fh:
     fh.write("# API Reference\n\n")
+    fh.write(api_preamble)
     for role, instances in sorted(role_instances.items(), key=lambda x: x[0]):
-        fh.write(f"## {roles[role]}\n")
+        fh.write(f"## {role_names[role]}\n")
         for instance in sorted(instances):
             fh.write(
                 f"""
