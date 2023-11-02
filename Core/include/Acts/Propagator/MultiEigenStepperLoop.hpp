@@ -592,33 +592,51 @@ class MultiEigenStepperLoop
     }
   }
 
-  /// Reset the number of components
+  /// Updates the components in the multistepper
   ///
   /// @param [in,out] state  The stepping state (thread-local cache)
-  void clearComponents(State& state) const { state.components.clear(); }
-
-  /// Add a component to the Multistepper
-  ///
-  /// @param [in,out] state  The stepping state (thread-local cache)
-  /// @param [in] pars Parameters of the component to add
-  /// @param [in] weight Weight of the component to add
+  /// @param [in] surface The surface we are on
+  /// @param [in] begin New components iterable begin
+  /// @param [in] end New components iterable end
+  /// @param [in] copy function with signature copy(from, to) to copy
+  /// from the iterators to the component proxy
   ///
   /// @note: It is not ensured that the weights are normalized afterwards
-  /// @note This function makes no garantuees about how new components are
-  /// initialized, it is up to the caller to ensure that all components are
-  /// valid in the end.
-  /// @note The returned component-proxy is only garantueed to be valid until
-  /// the component number is again modified
-  Result<ComponentProxy> addComponent(State& state,
-                                      const BoundTrackParameters& pars,
-                                      double weight) const {
-    state.components.push_back(
-        {SingleState(state.geoContext,
-                     SingleStepper::m_bField->makeCache(state.magContext),
-                     pars),
-         weight, Intersection3D::Status::onSurface});
+  template <typename iterator_t, typename copy_t>
+  void update(State& state, const Surface& surface, iterator_t begin,
+              iterator_t end, const copy_t& copy) const {
+    auto& cmps = state.components;
 
-    return ComponentProxy{state.components.back(), state};
+    auto it = begin;
+    for (auto cmp : componentIterable(state)) {
+      if (it == end) {
+        break;
+      }
+
+      copy(*it, cmp);
+      ++it;
+    }
+
+    // If we get more components then we have, we need to add more
+    if (it != end) {
+      BoundTrackParameters dummy(surface.getSharedPtr(), BoundVector::Zero(),
+                                 BoundSquareMatrix::Zero(),
+                                 state.particleHypothesis);
+
+      for (; it != end; ++it) {
+        // This should do the heavy part (allocation, cache, ...)
+        cmps.push_back(
+            {SingleState(state.geoContext,
+                         SingleStepper::m_bField->makeCache(state.magContext),
+                         dummy),
+             0.0, Intersection3D::Status::missed});
+        // The overhead of copying a few floats should be negligible
+        copy(*it, ComponentProxy{cmps.back(), state});
+      }
+    }
+
+    // If we get less components then we have, we need to remove the rest
+    cmps.erase(cmps.begin() + std::distance(begin, end), cmps.end());
   }
 
   /// Get the field for the stepping, it checks first if the access is still

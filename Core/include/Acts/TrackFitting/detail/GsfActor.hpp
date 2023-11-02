@@ -259,7 +259,7 @@ struct GsfActor {
         return;
       }
 
-      updateStepper(state, stepper, tmpStates);
+      updateStepper(state, stepper, navigator, tmpStates);
     }
     // We have material, we thus need a component cache since we will
     // convolute the components and later reduce them again before updating
@@ -450,17 +450,19 @@ struct GsfActor {
   }
 
   /// Function that updates the stepper from the MultiTrajectory
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void updateStepper(propagator_state_t& state, const stepper_t& stepper,
+                     const navigator_t& navigator,
                      const TemporaryStates& tmpStates) const {
-    auto cmps = stepper.componentIterable(state.stepping);
+    const auto& surface = *navigator.currentSurface(state.navigation);
 
-    for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
+    auto copy = [&](auto idx, auto cmp) {
       // we set ignored components to missed, so we can remove them after
       // the loop
       if (tmpStates.weights.at(idx) < m_cfg.weightCutoff) {
         cmp.status() = Intersection3D::Status::missed;
-        continue;
+        return;
       }
 
       auto proxy = tmpStates.traj.getTrackState(idx);
@@ -469,13 +471,16 @@ struct GsfActor {
           MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, proxy);
       cmp.cov() = proxy.filteredCovariance();
       cmp.weight() = tmpStates.weights.at(idx);
-    }
+    };
 
+    stepper.update(state.stepping, surface, tmpStates.tips.begin(),
+                   tmpStates.tips.end(), copy);
     stepper.removeMissedComponents(state.stepping);
 
     // TODO we have two normalization passes here now, this can probably be
     // optimized
-    detail::normalizeWeights(cmps,
+    auto components = stepper.componentIterable(state.stepping);
+    detail::normalizeWeights(components,
                              [&](auto cmp) -> double& { return cmp.weight(); });
   }
 
@@ -487,29 +492,24 @@ struct GsfActor {
                      const std::vector<ComponentCache>& componentCache) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
-    // Clear components before adding new ones
-    stepper.clearComponents(state.stepping);
+    auto copy = [&](const auto& cache, auto cmp) {
+      const auto& [weight, pars, cov] = cache;
 
-    // Finally loop over components
-    for (const auto& [weight, pars, cov] : componentCache) {
-      // Add the component to the stepper
-      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
-                                 stepper.particleHypothesis(state.stepping));
-
-      auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
-
-      if (!res.ok()) {
-        ACTS_ERROR("Error adding component to MultiStepper");
-        continue;
-      }
-
-      auto& cmp = *res;
-      cmp.jacToGlobal() = surface.boundToFreeJacobian(state.geoContext, pars);
+      cmp.weight() = weight;
+      cmp.pars() = detail::transformBoundToFreeParameters(
+          surface, state.geoContext, pars);
+      cmp.cov() = cov;
       cmp.pathAccumulated() = state.stepping.pathAccumulated;
-      cmp.jacobian() = Acts::BoundMatrix::Identity();
-      cmp.derivative() = Acts::FreeVector::Zero();
-      cmp.jacTransport() = Acts::FreeMatrix::Identity();
-    }
+      // cmp.jacToGlobal() = surface.boundToFreeJacobian(state.geoContext,
+      // pars); cmp.jacobian() = Acts::BoundMatrix::Identity(); cmp.derivative()
+      // = Acts::FreeVector::Zero(); cmp.jacTransport() =
+      // Acts::FreeMatrix::Identity();
+    };
+
+    // Clear components before adding new ones
+    stepper.update(state.stepping, surface, componentCache.begin(),
+                   componentCache.end(), copy);
+    stepper.removeMissedComponents(state.stepping);
   }
 
   /// This function performs the kalman update, computes the new posterior

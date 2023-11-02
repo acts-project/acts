@@ -681,25 +681,48 @@ void remove_add_components_function() {
   using MultiStepper = multi_stepper_t;
 
   const auto multi_pars = makeDefaultBoundPars(4);
+  const auto &surface = multi_pars.referenceSurface();
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
 
+  auto copy = [&](auto from, auto to) {
+    const auto &[w, p, c] = from;
+
+    to.weight() = w;
+    to.pars() = Acts::detail::transformBoundToFreeParameters(
+        surface, multi_state.geoContext, p);
+    to.cov() = *c;
+  };
+
+  // Effectively add components
   {
-    BoundTrackParameters pars(multi_pars.referenceSurface().getSharedPtr(),
-                              BoundVector::Ones(), std::nullopt,
-                              particleHypothesis);
-    multi_stepper.addComponent(multi_state, pars, 0.0);
+    const auto new_pars = makeDefaultBoundPars(6);
+
+    const auto &cmps = new_pars.components();
+    multi_stepper.update(multi_state, surface, cmps.begin(), cmps.end(), copy);
+    BOOST_CHECK_EQUAL(multi_stepper.numberComponents(multi_state), 6);
   }
 
-  BOOST_CHECK_EQUAL(multi_stepper.numberComponents(multi_state),
-                    multi_pars.components().size() + 1);
+  // Effectively remove components
+  {
+    const auto new_pars = makeDefaultBoundPars(2);
 
-  multi_stepper.clearComponents(multi_state);
+    const auto &cmps = new_pars.components();
+    multi_stepper.update(multi_state, surface, cmps.begin(), cmps.end(), copy);
+    BOOST_CHECK_EQUAL(multi_stepper.numberComponents(multi_state), 2);
+  }
 
-  BOOST_CHECK_EQUAL(multi_stepper.numberComponents(multi_state), 0);
+  // Clear
+  {
+    std::vector<int> empty;
+    auto dummyCopy = [](auto /*from*/, auto /*to*/) {};
+    multi_stepper.update(multi_state, surface, empty.begin(), empty.end(),
+                         dummyCopy);
+    BOOST_CHECK_EQUAL(multi_stepper.numberComponents(multi_state), 0);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(remove_add_components_test) {
