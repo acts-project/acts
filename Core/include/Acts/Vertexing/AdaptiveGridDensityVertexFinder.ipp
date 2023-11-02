@@ -44,6 +44,13 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
         }
         continue;
       }
+      if (trkParams.referenceSurface()
+              .transform(vertexingOptions.geoContext)
+              .translation() != Vector3::Zero()) {
+        throw std::invalid_argument(
+            "Track parameters must be defined wrt origin in order to add them "
+            "to mainDensityMap.");
+      }
       auto trackDensityMap =
           m_cfg.gridDensity.addTrack(trkParams, state.mainDensityMap);
       // Cache track density contribution to main grid if enabled
