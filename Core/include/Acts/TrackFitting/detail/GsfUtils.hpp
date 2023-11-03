@@ -231,6 +231,10 @@ struct MultiTrajectoryProjector {
       case StatesType::eSmoothed:
         return std::make_tuple(weights.at(idx), proxy.smoothed(),
                                proxy.smoothedCovariance());
+      default:
+        throw std::invalid_argument(
+            "Incorrect StatesType, should be ePredicted"
+            ", eFiltered, or eSmoothed.");
     }
   }
 };
