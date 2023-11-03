@@ -66,9 +66,7 @@ def parse_metadata(content: str) -> MetaData:
 def which(cmd: str) -> Path | None:
     try:
         exe = (
-            run(["command", "-v", cmd], check=True, capture_output=True)
-            .stdout.decode()
-            .strip()
+            run(["which", cmd], check=True, capture_output=True).stdout.decode().strip()
         )
         return Path(exe)
     except subprocess.CalledProcessError:
@@ -280,10 +278,8 @@ async def pull(
 
                 status.update(f"\[{repo}] Getting metadata for ref {metadata_ref}...")
 
-                metadata, abstract = await asyncio.gather(
-                    get_file(gh, repo, "metadata.tex", ref=metadata_ref),
-                    get_file(gh, repo, "abstract.tex", ref=metadata_ref),
-                )
+                metadata = await get_file(gh, repo, "metadata.tex", ref=metadata_ref)
+                abstract = await get_file(gh, repo, "abstract.tex", ref=metadata_ref)
 
                 abstract = textwrap.dedent(abstract).strip()
                 abstract = "\n".join(
