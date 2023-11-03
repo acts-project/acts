@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -155,8 +155,9 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   // Type of the proxy single propagation2 state
   using ThisSinglePropState =
-      SinglePropState<SingleState, decltype(state.navigation),
-                      decltype(state.options), decltype(state.geoContext)>;
+      detail::SinglePropState<SingleState, decltype(state.navigation),
+                              decltype(state.options),
+                              decltype(state.geoContext)>;
 
   // Lambda that performs the step for a component and returns false if the step
   // went ok and true if there was an error
