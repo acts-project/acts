@@ -21,7 +21,7 @@
 #include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <algorithm>
 #include <cstddef>
