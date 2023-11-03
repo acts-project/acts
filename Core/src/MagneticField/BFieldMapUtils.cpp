@@ -134,24 +134,16 @@ Acts::fieldMapRZ(
       {transformPos, transformBField, std::move(grid)});
 }
 
-<<<<<<< HEAD
-Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
-               Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
-Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                                             std::array<size_t, 3> nBinsXYZ)>&
-=======
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
                Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
 Acts::fieldMapXYZ(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
->>>>>>> 4dfcc6abb (refactor: Use `std::size_t` consistently)
-                      localToGlobalBin,
-                  std::vector<double> xPos, std::vector<double> yPos,
-                  std::vector<double> zPos, std::vector<Acts::Vector3> bField,
-                  double lengthUnit, double BFieldUnit, bool firstOctant) {
+        localToGlobalBin,
+    std::vector<double> xPos, std::vector<double> yPos,
+    std::vector<double> zPos, std::vector<Acts::Vector3> bField,
+    double lengthUnit, double BFieldUnit, bool firstOctant) {
   // [1] Create Grid
   // Sort the values
   std::sort(xPos.begin(), xPos.end());
