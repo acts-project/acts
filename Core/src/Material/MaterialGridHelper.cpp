@@ -118,13 +118,13 @@ std::function<double(Acts::Vector3)> Acts::globalToLocalFromBin(
       };
       break;
 
-    case Acts::binRPhi:
-    case Acts::binEta:
-    case Acts::binH:
-    case Acts::binMag:
-    case Acts::binValues:
-      throw std::invalid_argument("Incorrect bin, should be x,y,z,r,phi,z");
-      break;
+      // case Acts::binRPhi:
+      // case Acts::binEta:
+      // case Acts::binH:
+      // case Acts::binMag:
+      // case Acts::binValues:
+    default:
+      throw std::invalid_argument("Incorrect bin, should be x,y,z,r,phi");
   }
   return transfoGlobalToLocal;
 }
