@@ -195,12 +195,6 @@ constexpr bool MultiStepperStateConcept= require<
         constexpr static bool number_components_exists = has_method<const S, std::size_t, number_components_t, const state&>;
         // static_assert(number_components_exists, "!num_components_exists");
 
-        // TODO We cannot check addComponents since it is a template member function
-
-        METHOD_TRAIT(clear_components_t, clearComponents);
-        constexpr static bool clear_components_exists = has_method<const S, void, clear_components_t, state&>;
-        // static_assert(clear_components_exists, "!clear_components_exists");
-
         METHOD_TRAIT(remove_missed_components_t, removeMissedComponents);
         constexpr static bool remove_missed_components_exists = has_method<const S, void, remove_missed_components_t, state&>;
         // static_assert(remove_missed_components_exists, "!remove_missed_components_exists");
