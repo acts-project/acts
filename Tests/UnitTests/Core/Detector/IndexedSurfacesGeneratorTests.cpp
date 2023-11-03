@@ -24,8 +24,8 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cmath>

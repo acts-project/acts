@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
-#include "Acts/Utilities/detail/GridFwd.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
@@ -22,8 +21,6 @@
 #include <vector>
 
 namespace Acts {
-
-namespace detail {
 
 /// @brief class for describing a regular multi-dimensional grid
 ///
@@ -166,7 +163,7 @@ class Grid final {
   /// @pre All local bin indices must be a valid index for the corresponding
   ///      axis (excluding the under-/overflow bins for each axis).
   std::array<ActsScalar, DIM> binCenter(const index_t& localBins) const {
-    return grid_helper::getBinCenter(localBins, m_axes);
+    return detail::grid_helper::getBinCenter(localBins, m_axes);
   }
 
   /// @brief determine global index for bin containing the given point
@@ -193,7 +190,7 @@ class Grid final {
   /// @pre All local bin indices must be a valid index for the corresponding
   ///      axis (including the under-/overflow bin for this axis).
   size_t globalBinFromLocalBins(const index_t& localBins) const {
-    return grid_helper::getGlobalBin(localBins, m_axes);
+    return detail::grid_helper::getGlobalBin(localBins, m_axes);
   }
 
   /// @brief  determine global bin index of the bin with the lower left edge
@@ -227,7 +224,7 @@ class Grid final {
   /// @note This could be a under-/overflow bin along one or more axes.
   template <class Point>
   index_t localBinsFromPosition(const Point& point) const {
-    return grid_helper::getLocalBinIndices(point, m_axes);
+    return detail::grid_helper::getLocalBinIndices(point, m_axes);
   }
 
   /// @brief determine local bin index for each axis from global bin index
@@ -239,7 +236,7 @@ class Grid final {
   /// @note Local bin indices can contain under-/overflow bins along the
   ///       corresponding axis.
   index_t localBinsFromGlobalBin(size_t bin) const {
-    return grid_helper::getLocalBinIndices(bin, m_axes);
+    return detail::grid_helper::getLocalBinIndices(bin, m_axes);
   }
 
   /// @brief  determine local bin index of the bin with the lower left edge
@@ -258,11 +255,11 @@ class Grid final {
   template <class Point>
   index_t localBinsFromLowerLeftEdge(const Point& point) const {
     Point shiftedPoint;
-    point_t width = grid_helper::getWidth(m_axes);
+    point_t width = detail::grid_helper::getWidth(m_axes);
     for (size_t i = 0; i < DIM; i++) {
       shiftedPoint[i] = point[i] + width[i] / 2;
     }
-    return grid_helper::getLocalBinIndices(shiftedPoint, m_axes);
+    return detail::grid_helper::getLocalBinIndices(shiftedPoint, m_axes);
   }
 
   /// @brief retrieve lower-left bin edge from set of local bin indices
@@ -273,7 +270,7 @@ class Grid final {
   /// @pre @c localBins must only contain valid bin indices (excluding
   ///      underflow bins).
   point_t lowerLeftBinEdge(const index_t& localBins) const {
-    return grid_helper::getLowerLeftBinEdge(localBins, m_axes);
+    return detail::grid_helper::getLowerLeftBinEdge(localBins, m_axes);
   }
 
   /// @brief retrieve upper-right bin edge from set of local bin indices
@@ -284,30 +281,30 @@ class Grid final {
   /// @pre @c localBins must only contain valid bin indices (excluding
   ///      overflow bins).
   point_t upperRightBinEdge(const index_t& localBins) const {
-    return grid_helper::getUpperRightBinEdge(localBins, m_axes);
+    return detail::grid_helper::getUpperRightBinEdge(localBins, m_axes);
   }
 
   /// @brief get bin width along each specific axis
   ///
   /// @return array giving the bin width alonf all axes
-  point_t binWidth() const { return grid_helper::getWidth(m_axes); }
+  point_t binWidth() const { return detail::grid_helper::getWidth(m_axes); }
 
   /// @brief get number of bins along each specific axis
   ///
   /// @return array giving the number of bins along all axes
   ///
   /// @note Not including under- and overflow bins
-  index_t numLocalBins() const { return grid_helper::getNBins(m_axes); }
+  index_t numLocalBins() const { return detail::grid_helper::getNBins(m_axes); }
 
   /// @brief get the minimum value of all axes of one grid
   ///
   /// @return array returning the minima of all given axes
-  point_t minPosition() const { return grid_helper::getMin(m_axes); }
+  point_t minPosition() const { return detail::grid_helper::getMin(m_axes); }
 
   /// @brief get the maximum value of all axes of one grid
   ///
   /// @return array returning the maxima of all given axes
-  point_t maxPosition() const { return grid_helper::getMax(m_axes); }
+  point_t maxPosition() const { return detail::grid_helper::getMax(m_axes); }
 
   /// @brief set all overflow and underflow bins to a certain value
   ///
@@ -315,7 +312,7 @@ class Grid final {
   ///                   bin of the grid.
   ///
   void setExteriorBins(const value_type& value) {
-    for (size_t index : grid_helper::exteriorBinIndices(m_axes)) {
+    for (size_t index : detail::grid_helper::exteriorBinIndices(m_axes)) {
       at(index) = value;
     }
   }
@@ -347,8 +344,8 @@ class Grid final {
   /// lower-left corner of the corresponding hyper-box.
   template <class Point, typename U = T,
             typename = std::enable_if_t<
-                can_interpolate<Point, std::array<ActsScalar, DIM>,
-                                std::array<ActsScalar, DIM>, U>::value>>
+                detail::can_interpolate<Point, std::array<ActsScalar, DIM>,
+                                        std::array<ActsScalar, DIM>, U>::value>>
   T interpolate(const Point& point) const {
     // there are 2^DIM corner points used during the interpolation
     constexpr size_t nCorners = 1 << DIM;
@@ -387,7 +384,7 @@ class Grid final {
   ///       along any axis.
   template <class Point>
   bool isInside(const Point& position) const {
-    return grid_helper::isInside(position, m_axes);
+    return detail::grid_helper::isInside(position, m_axes);
   }
 
   /// @brief get global bin indices for neighborhood
@@ -407,7 +404,7 @@ class Grid final {
   ///       \text{size}+1\f$ along each dimension.
   detail::GlobalNeighborHoodIndices<DIM> neighborHoodIndices(
       const index_t& localBins, size_t size = 1u) const {
-    return grid_helper::neighborHoodIndices(localBins, size, m_axes);
+    return detail::grid_helper::neighborHoodIndices(localBins, size, m_axes);
   }
 
   /// @brief get global bin   indices for neighborhood
@@ -429,7 +426,8 @@ class Grid final {
   detail::GlobalNeighborHoodIndices<DIM> neighborHoodIndices(
       const index_t& localBins,
       std::array<std::pair<int, int>, DIM>& sizePerAxis) const {
-    return grid_helper::neighborHoodIndices(localBins, sizePerAxis, m_axes);
+    return detail::grid_helper::neighborHoodIndices(localBins, sizePerAxis,
+                                                    m_axes);
   }
 
   /// @brief total number of bins
@@ -456,7 +454,7 @@ class Grid final {
   }
 
   std::array<const IAxis*, DIM> axes() const {
-    return grid_helper::getAxes(m_axes);
+    return detail::grid_helper::getAxes(m_axes);
   }
 
  private:
@@ -470,9 +468,8 @@ class Grid final {
   // doesn't make that much sense from an API design standpoint.
   detail::GlobalNeighborHoodIndices<DIM> rawClosestPointsIndices(
       const index_t& localBins) const {
-    return grid_helper::closestPointsIndices(localBins, m_axes);
+    return detail::grid_helper::closestPointsIndices(localBins, m_axes);
   }
 };
-}  // namespace detail
 
 }  // namespace Acts
