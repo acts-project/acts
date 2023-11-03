@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/AnyIntersection.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -61,93 +62,6 @@ struct NavigationOptions {
   double nearLimit = 0;
   /// The maximum distance for a surface to be considered
   double farLimit = std::numeric_limits<double>::max();
-  /// The maximum distance for a surface to be considered
-  double surfaceTolerance = std::numeric_limits<double>::max();
-
-  /// Force intersection with boundaries
-  bool forceIntersectBoundaries = false;
-};
-
-class AnyIntersection {
- public:
-  using Any = std::variant<SurfaceIntersection, LayerIntersection,
-                           BoundaryIntersection>;
-
-  AnyIntersection(const Any& any) : m_intersection(any) {}
-  AnyIntersection(Any&& any) : m_intersection(std::move(any)) {}
-
-  explicit operator bool() const {
-    return std::visit(
-        [](const auto& intersection) { return intersection.operator bool(); },
-        m_intersection);
-  }
-
-  template <typename intersection_t>
-  bool checkType() const {
-    return std::holds_alternative<intersection_t>(m_intersection);
-  }
-
-  template <typename intersection_t>
-  const typename intersection_t::Object* object() const {
-    return std::get<intersection_t>(m_intersection).object();
-  }
-
-  const Intersection3D& intersection() const {
-    return std::visit(
-        [](const auto& intersection) -> const Intersection3D& {
-          return intersection.intersection();
-        },
-        m_intersection);
-  }
-
-  const Intersection3D::Position& position() const {
-    return std::visit(
-        [](const auto& intersection) -> const Intersection3D::Position& {
-          return intersection.position();
-        },
-        m_intersection);
-  }
-
-  ActsScalar pathLength() const {
-    return std::visit(
-        [](const auto& intersection) { return intersection.pathLength(); },
-        m_intersection);
-  }
-
-  Intersection3D::Status status() const {
-    return std::visit(
-        [](const auto& intersection) { return intersection.status(); },
-        m_intersection);
-  }
-
-  const Surface* representation() const {
-    return std::visit(
-        [](const auto& intersection) -> const Surface* {
-          return intersection.representation();
-        },
-        m_intersection);
-  }
-
-  std::uint8_t index() const {
-    return std::visit(
-        [](const auto& intersection) { return intersection.index(); },
-        m_intersection);
-  }
-
-  static bool forwardOrder(const AnyIntersection& aIntersection,
-                           const AnyIntersection& bIntersection) {
-    return Intersection3D::forwardOrder(aIntersection.intersection(),
-                                        bIntersection.intersection());
-  }
-
-  static bool closestOrder(const AnyIntersection& aIntersection,
-                           const AnyIntersection& bIntersection) {
-    return Intersection3D::closestOrder(aIntersection.intersection(),
-                                        bIntersection.intersection());
-  }
-
- private:
-  Any m_intersection;
 };
 
 /// Navigator class
@@ -262,8 +176,6 @@ class Navigator {
     bool lastHierarchySurfaceReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
-    /// Force intersection with boundaries
-    bool forceIntersectBoundaries = false;
   };
 
   /// Constructor with configuration object
@@ -652,10 +564,8 @@ class Navigator {
       NavigationOptions<Surface> navOpts;
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
-      navOpts.farLimit = 0;
-      navOpts.nearLimit = std::numeric_limits<double>::max();
-      navOpts.forceIntersectBoundaries =
-          state.navigation.forceIntersectBoundaries;
+      navOpts.nearLimit = 0;
+      navOpts.farLimit = std::numeric_limits<double>::max();
 
       ACTS_VERBOSE(volInfo(state)
                    << "Try to find boundaries, we are at: "

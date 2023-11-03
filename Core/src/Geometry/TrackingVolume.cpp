@@ -478,34 +478,9 @@ Acts::TrackingVolume::compatibleBoundaries(
       [&](SurfaceMultiIntersection& smIntersection,
           const BoundarySurface* bSurface) -> BoundaryIntersection {
     for (const auto& sIntersection : smIntersection.split()) {
-      if (!sIntersection) {
-        continue;
-      }
-
-      if (options.forceIntersectBoundaries) {
-        const bool coCriterion = sIntersection.pathLength() < options.nearLimit;
-        ACTS_VERBOSE("Forcing intersection with surface "
-                     << bSurface->surfaceRepresentation().geometryId());
-        if (coCriterion) {
-          ACTS_VERBOSE("Intersection forced successfully ");
-          ACTS_VERBOSE("- intersection path length "
-                       << sIntersection.pathLength() << " < overstep limit "
-                       << options.nearLimit);
-          return BoundaryIntersection(sIntersection.intersection(), bSurface,
-                                      sIntersection.object(),
-                                      sIntersection.index());
-        }
-        ACTS_VERBOSE("Can't force intersection: ");
-        ACTS_VERBOSE("- intersection path length " << sIntersection.pathLength()
-                                                   << " > overstep limit "
-                                                   << options.nearLimit);
-      }
-
-      ACTS_VERBOSE("Check intersection with surface "
-                   << bSurface->surfaceRepresentation().geometryId());
-      if (detail::checkIntersection(sIntersection.intersection(),
-                                    options.nearLimit, options.farLimit,
-                                    logger)) {
+      if (sIntersection && detail::checkIntersection(
+                               sIntersection.intersection(), options.nearLimit,
+                               options.farLimit, logger)) {
         return BoundaryIntersection(sIntersection.intersection(), bSurface,
                                     sIntersection.object(),
                                     sIntersection.index());
