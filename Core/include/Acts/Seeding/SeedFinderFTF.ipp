@@ -57,7 +57,7 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(
     m_storage->addSpacePoint(FTF_sp, (m_config.m_useClusterWidth > 0));
   }
 
-  m_config.m_nMaxPhiSlice = 1;
+  // m_config.m_nMaxPhiSlice = 53; //set in athena 
   m_config.m_phiSliceWidth = 2 * M_PI / m_config.m_nMaxPhiSlice;
 
   m_storage->sortByPhi();
@@ -734,26 +734,5 @@ SeedFinderFTF<external_spacepoint_t>::createSeeds(
   return r;
 }
 
-// // still to be developed
-template <typename external_spacepoint_t>
-template <typename input_container_t, typename output_container_t,
-          typename callable_t>
-void SeedFinderFTF<external_spacepoint_t>::createSeeds_old(
-    const Acts::SeedFinderOptions& /*options*/,
-    const input_container_t& /*spacePoints*/, output_container_t& /*out_cont*/,
-    callable_t&& /*extract_coordinates*/) const {}
-
-template <typename external_spacepoint_t>
-template <typename input_container_t, typename callable_t>
-std::vector<Seed<external_spacepoint_t>>
-SeedFinderFTF<external_spacepoint_t>::createSeeds_old(
-    const Acts::SeedFinderOptions& options,
-    const input_container_t& spacePoints,
-    callable_t&& extract_coordinates) const {
-  std::vector<seed_t> r;
-  createSeeds_old(options, spacePoints, r,
-                  std::forward<callable_t>(extract_coordinates));
-  return r;
-}
 
 }  // namespace Acts

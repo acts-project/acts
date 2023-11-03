@@ -43,7 +43,7 @@ struct SeedFinderFTFConfig {
   unsigned int maxSeedsPerSpM = 5;
 
   float m_phiSliceWidth{};
-  float m_nMaxPhiSlice{};
+  float m_nMaxPhiSlice = 53; //set in athena TrigFastTrackFinder.cxx 
   bool m_useClusterWidth = false;
   std::string fastrack_input_file;
   std::vector<TrigInDetSiLayer> m_layerGeometry;

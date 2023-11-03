@@ -17,6 +17,7 @@
 #include <iostream>
 #include <list>
 #include <vector>
+#include <typeinfo> //temp for debugging 
 
 template <typename external_spacepoint_t>
 struct TrigFTF_GNN_EdgeState {
@@ -162,7 +163,7 @@ class TrigFTF_GNN_TrackingFilter {
     new_ts.clone(ts);
 
     new_ts.m_vs.push_back(pS);
-
+    // std::cout << "before calling update " << std::endl ; 
     bool accepted = update(pS, new_ts);  // update using n1 of the segment
 
     if (!accepted) {
@@ -248,6 +249,8 @@ class TrigFTF_GNN_TrackingFilter {
     ts.m_Cx[1][1] += sigma_t * sigma_t;
 
     int type1 = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
+    // int type1 = 0;
+
 
     float t2 = type1 == 0 ? 1.0 + ts.m_Y[1] * ts.m_Y[1]
                           : 1.0 + 1.0 / (ts.m_Y[1] * ts.m_Y[1]);
@@ -284,37 +287,35 @@ class TrigFTF_GNN_TrackingFilter {
     X[0] = ts.m_X[0] + ts.m_X[1] * A + ts.m_X[2] * B;
     X[1] = ts.m_X[1] + ts.m_X[2] * A;
     X[2] = ts.m_X[2];
-    
-    // std::cout << " printing pre  arithmetic error 00 : " << ts.m_Cx[0][0] << std::endl ; 
-    // std::cout << "  printing pre  arithmetic error 01 : " << ts.m_Cx[0][1] << std::endl ; 
-    // std::cout << "  printing pre  arithmetic error 02 : " << ts.m_Cx[0][2] << std::endl ; 
-    // std::cout << "  printing pre  arithmetic error 11 : " << ts.m_Cx[1][1] << std::endl ; 
-    // std::cout << "  printing pre  arithmetic error 12 : " << ts.m_Cx[1][2] << std::endl ; 
-    // std::cout << "  printing pre  arithmetic error 22 : " << ts.m_Cx[2][2] << std::endl ; 
-    // std::cout << " printing pre  arithmetic error A : " << A << std::endl ; 
-    // std::cout << " printing pre  arithmetic error B : " << B << std::endl ; 
 
-    Cx[0][0] = ts.m_Cx[0][0] + 2 * ts.m_Cx[0][1] * A + 2 * ts.m_Cx[0][2] * B +
-               A * A * ts.m_Cx[1][1] + 2 * A * B * ts.m_Cx[1][2] +
-               B * B * ts.m_Cx[2][2];
+
+    Cx[0][0] = ts.m_Cx[0][0] + 2 * ts.m_Cx[0][1] * A + 2 * ts.m_Cx[0][2] * B + 
+                          A * A * ts.m_Cx[1][1] + 2 * A * B * ts.m_Cx[1][2] + 
+                          B * B * ts.m_Cx[2][2];
+
     Cx[0][1] = Cx[1][0] = ts.m_Cx[0][1] + ts.m_Cx[1][1] * A +
                           ts.m_Cx[1][2] * B + ts.m_Cx[0][2] * A +
                           A * A * ts.m_Cx[1][2] + A * B * ts.m_Cx[2][2];
+
     Cx[0][2] = Cx[2][0] = ts.m_Cx[0][2] + ts.m_Cx[1][2] * A + ts.m_Cx[2][2] * B;
 
     Cx[1][1] = ts.m_Cx[1][1] + 2 * A * ts.m_Cx[1][2] + A * A * ts.m_Cx[2][2];
+
     Cx[1][2] = Cx[2][1] = ts.m_Cx[1][2] + ts.m_Cx[2][2] * A;
 
     Cx[2][2] = ts.m_Cx[2][2];
 
+
     Y[0] = ts.m_Y[0] + ts.m_Y[1] * dr;
+    
     Y[1] = ts.m_Y[1];
 
     Cy[0][0] = ts.m_Cy[0][0] + 2 * ts.m_Cy[0][1] * dr + dr * dr * ts.m_Cy[1][1];
+
     Cy[0][1] = Cy[1][0] = ts.m_Cy[0][1] + dr * ts.m_Cy[1][1];
+    
     Cy[1][1] = ts.m_Cy[1][1];
-   
-    // std::cout << " printing after where arithmetic error is " << Cx[0][0] << std::endl ; 
+
     // chi2 test
 
     float resid_x = mx - X[0];
@@ -326,6 +327,9 @@ class TrigFTF_GNN_TrackingFilter {
     float sigma_rz = 0.0;
     
     int type = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
+    // int type = 0;
+
+    // std::cout << "checking type of type: " << type << typeid(type).name() << std::endl ; 
 
     if (type == 0) {  // barrel TO-DO:c split into barrel Pixel and barrel SCT
       sigma_rz = sigma_y * sigma_y;
@@ -334,11 +338,23 @@ class TrigFTF_GNN_TrackingFilter {
       sigma_rz = sigma_rz * sigma_rz;
     }
 
+
     float Dx = 1.0 / (Cx[0][0] + sigma_x * sigma_x);
+    // float Dx = 1.0 / (Cx[0][0] + 0.0625);
+    // std::cout << "checking type of Dx: " << Dx << typeid(Dx).name() << std::endl ; 
+    // std::cout << "checking  Dx: " << Dx_old  << std::endl ; 
+
 
     float Dy = 1.0 / (Cy[0][0] + sigma_rz);
+    // std::cout << "checking  Dy: " << Dy  << std::endl ; 
+        
+    float dchi2_x = 0.0;
+    if (isnan(resid_x * resid_x * Dx) || isinf(resid_x * resid_x * Dx) ){
+      return false ; 
+    } else {
+      dchi2_x = resid_x * resid_x * Dx; 
+    }  
 
-    float dchi2_x = resid_x * resid_x * Dx;
     float dchi2_y = resid_y * resid_y * Dy;
 
     if (dchi2_x > maxDChi2_x || dchi2_y > maxDChi2_y) {
@@ -347,8 +363,7 @@ class TrigFTF_GNN_TrackingFilter {
 
     ts.m_J += add_hit - dchi2_x * weight_x - dchi2_y * weight_y;
 
-    // state update
-
+    // state update 
     float Kx[3] = {Dx * Cx[0][0], Dx * Cx[0][1], Dx * Cx[0][2]};
     float Ky[2] = {Dy * Cy[0][0], Dy * Cy[0][1]};
 
@@ -367,11 +382,16 @@ class TrigFTF_GNN_TrackingFilter {
 
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 2; j++) {
+        // std::cout << "checking type of Cy in loop: " <<  Cy[i][j] << "ky" << Ky[i] << "CH" << CHy[j]<< std::endl ; // numbers look fine 
         ts.m_Cy[i][j] = Cy[i][j] - Ky[i] * CHy[j];
+        // std::cout << "checking type of mCy in loop: " <<  ts.m_Cy[i][j]  << std::endl ; 
       }
     }
+
     ts.m_refX = refX;
     ts.m_refY = refY;
+
+
     return true;
   }
 
@@ -381,7 +401,7 @@ class TrigFTF_GNN_TrackingFilter {
     });  // iterator to vector member with this id
     int index = std::distance(m_geo.begin(), iterator);
 
-    return m_geo.at(index).m_type;
+    return m_geo.at(index).m_type; //needs to be 0,2 or -2 
   }
 
   const std::vector<Acts::TrigInDetSiLayer>& m_geo;

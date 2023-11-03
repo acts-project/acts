@@ -25,7 +25,7 @@ from acts.examples.reconstruction import (
 ttbar_pu200 = False
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
-outputDir = pathlib.Path.cwd() / "itk_output"
+outputDir = pathlib.Path.cwd() / "itk_output/default"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
 detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
