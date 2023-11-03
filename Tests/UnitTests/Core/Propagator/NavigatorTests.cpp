@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const Layer* startLay = startVol->associatedLayer(
         state.geoContext, stepper.position(state.stepping));
     navigator.initialize(state, stepper);
-    testNavigatorStateVectors(state.navigation, 1u, 0u);
+    testNavigatorStateVectors(state.navigation, 2u, 0u);
     testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay,
                                nullptr, nullptr, startVol, nullptr, nullptr,
                                nullptr);
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     state.navigation = Navigator::State();
     state.navigation.startSurface = startSurf;
     navigator.initialize(state, stepper);
-    testNavigatorStateVectors(state.navigation, 1u, 0u);
+    testNavigatorStateVectors(state.navigation, 2u, 0u);
     testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay,
                                startSurf, startSurf, startVol, nullptr, nullptr,
                                nullptr);
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     state.navigation = Navigator::State();
     state.navigation.startVolume = startVol;
     navigator.initialize(state, stepper);
-    testNavigatorStateVectors(state.navigation, 1u, 0u);
+    testNavigatorStateVectors(state.navigation, 2u, 0u);
     testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay,
                                nullptr, nullptr, startVol, nullptr, nullptr,
                                nullptr);
@@ -476,11 +476,11 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // Check that the currentSurface is reset to:
   BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
   // No layer has been found
-  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 1u);
+  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 2u);
   // ACTORS-ABORTERS-TARGET
   navigator.preStep(state, stepper);
   // A layer has been found
-  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 1u);
+  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 2u);
   // The index should points to the begin
   BOOST_CHECK(state.navigation.candidateIndex == 0);
   // Cache the beam pipe radius
@@ -506,7 +506,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   BOOST_CHECK_EQUAL(state.navigation.currentVolume,
                     state.navigation.startVolume);
   // The layer number has not changed
-  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 1u);
+  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 2u);
   // The index still points to the begin
   BOOST_CHECK(state.navigation.candidateIndex == 0);
   // ACTORS - ABORTERS - PRE STEP

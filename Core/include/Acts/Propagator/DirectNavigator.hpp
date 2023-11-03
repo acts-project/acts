@@ -245,13 +245,13 @@ class DirectNavigator {
       // Establish & update the surface status
       // TODO we do not know the intersection index - passing the closer one
       const auto& surface = **state.navigation.navSurfaceIter;
+      const double nearLimit = stepper.overstepLimit(state.stepping);
+      const double farLimit = std::numeric_limits<double>::max();
       const auto index =
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              false, std::numeric_limits<double>::max(),
-              stepper.overstepLimit(state.stepping),
-              state.options.targetTolerance)
+              false, nearLimit, farLimit, state.options.targetTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, index, state.options.direction, false,
@@ -303,13 +303,13 @@ class DirectNavigator {
       // Establish the surface status
       // TODO we do not know the intersection index - passing the closer one
       const auto& surface = **state.navigation.navSurfaceIter;
+      const double nearLimit = stepper.overstepLimit(state.stepping);
+      const double farLimit = std::numeric_limits<double>::max();
       const auto index =
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              false, std::numeric_limits<double>::max(),
-              stepper.overstepLimit(state.stepping),
-              state.options.targetTolerance)
+              false, nearLimit, farLimit, state.options.targetTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, index, state.options.direction, false,
