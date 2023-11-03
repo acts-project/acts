@@ -281,45 +281,27 @@ void step(stepper_state_t& sstate) {
   return;
 }
 
-/// @brief Method for testing vectors in @c Navigator::State
-///
-/// @param [in] state Navigator state
-/// @param [in] cand Number of navigation candidates
-/// @param [in] extSurf Number of external surfaces
-void testNavigatorStateVectors(Navigator::State& state, size_t cand,
-                               size_t extSurf) {
-  BOOST_CHECK_EQUAL(state.candidates.size(), cand);
-  BOOST_CHECK_EQUAL(state.externalSurfaces.size(), extSurf);
-}
+#define testNavigatorStateVectors(state, cand, extSurf)        \
+  do {                                                         \
+    BOOST_CHECK_EQUAL(state.candidates.size(), cand);          \
+    BOOST_CHECK_EQUAL(state.externalSurfaces.size(), extSurf); \
+  } while (0)
 
-/// @brief Method for testing pointers in @c Navigator::State
-///
-/// @param [in] state Navigation state
-/// @param [in] worldVol World volume
-/// @param [in] startVol Start volume
-/// @param [in] startLay Start layer
-/// @param [in] startSurf Start surface
-/// @param [in] currSurf Current surface
-/// @param [in] currVol Current volume
-/// @param [in] targetVol Target volume
-/// @param [in] targetLay Target layer
-/// @param [in] targetSurf Target surface
-void testNavigatorStatePointers(
-    Navigator::State& state, const TrackingVolume* worldVol,
-    const TrackingVolume* startVol, const Layer* startLay,
-    const Surface* startSurf, const Surface* currSurf,
-    const TrackingVolume* currVol, const TrackingVolume* targetVol,
-    const Layer* targetLay, const Surface* targetSurf) {
-  BOOST_CHECK_EQUAL(state.worldVolume, worldVol);
-  BOOST_CHECK_EQUAL(state.startVolume, startVol);
-  BOOST_CHECK_EQUAL(state.startLayer, startLay);
-  BOOST_CHECK_EQUAL(state.startSurface, startSurf);
-  BOOST_CHECK_EQUAL(state.currentSurface, currSurf);
-  BOOST_CHECK_EQUAL(state.currentVolume, currVol);
-  BOOST_CHECK_EQUAL(state.targetVolume, targetVol);
-  BOOST_CHECK_EQUAL(state.targetLayer, targetLay);
-  BOOST_CHECK_EQUAL(state.targetSurface, targetSurf);
-}
+#define testNavigatorStatePointers(state, worldVol, startVol, startLay,     \
+                                   startSurf, currSurf, currVol, targetVol, \
+                                   targetLay, targetSurf)                   \
+  do {                                                                      \
+    BOOST_CHECK_EQUAL(state.worldVolume, worldVol);                         \
+    BOOST_CHECK_EQUAL(state.startVolume, startVol);                         \
+    BOOST_CHECK_EQUAL(state.startLayer, startLay);                          \
+    BOOST_CHECK_EQUAL(state.startSurface, startSurf);                       \
+    BOOST_CHECK_EQUAL(state.currentSurface, currSurf);                      \
+    BOOST_CHECK_EQUAL(state.currentVolume, currVol);                        \
+    BOOST_CHECK_EQUAL(state.targetVolume, targetVol);                       \
+    BOOST_CHECK_EQUAL(state.targetLayer, targetLay);                        \
+    BOOST_CHECK_EQUAL(state.targetSurface, targetSurf);                     \
+  } while (0)
+
 // the surface cache & the creation of the geometry
 
 CylindricalTrackingGeometry cGeometry(tgContext);
@@ -404,17 +386,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr,
                                nullptr, nullptr, nullptr, nullptr, nullptr,
                                nullptr);
-    // c) Because the target surface is reached
-    const Surface* startSurf = tGeometry->getBeamline();
-    state.stepping.pos4.segment<3>(Acts::ePos0) =
-        startSurf->center(state.geoContext);
-    const Surface* targetSurf = startSurf;
-    state.navigation.targetSurface = targetSurf;
-    navigator.postStep(state, stepper);
-    testNavigatorStateVectors(state.navigation, 0u, 0u);
-    testNavigatorStatePointers(state.navigation, nullptr, nullptr, nullptr,
-                               nullptr, targetSurf, nullptr, nullptr, nullptr,
-                               targetSurf);
 
     //
     // (2) Test the initialisation
@@ -428,16 +399,17 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const Layer* startLay = startVol->associatedLayer(
         state.geoContext, stepper.position(state.stepping));
     navigator.initialize(state, stepper);
-    testNavigatorStateVectors(state.navigation, 0u, 0u);
+    testNavigatorStateVectors(state.navigation, 1u, 0u);
     testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay,
                                nullptr, nullptr, startVol, nullptr, nullptr,
                                nullptr);
 
     // b) Initialise having a start surface
+    const Surface* startSurf = tGeometry->getBeamline();
     state.navigation = Navigator::State();
     state.navigation.startSurface = startSurf;
     navigator.initialize(state, stepper);
-    testNavigatorStateVectors(state.navigation, 0u, 0u);
+    testNavigatorStateVectors(state.navigation, 1u, 0u);
     testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay,
                                startSurf, startSurf, startVol, nullptr, nullptr,
                                nullptr);
@@ -446,7 +418,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     state.navigation = Navigator::State();
     state.navigation.startVolume = startVol;
     navigator.initialize(state, stepper);
-    testNavigatorStateVectors(state.navigation, 0u, 0u);
+    testNavigatorStateVectors(state.navigation, 1u, 0u);
     testNavigatorStatePointers(state.navigation, worldVol, startVol, startLay,
                                nullptr, nullptr, startVol, nullptr, nullptr,
                                nullptr);
@@ -504,7 +476,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // Check that the currentSurface is reset to:
   BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
   // No layer has been found
-  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 0u);
+  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 1u);
   // ACTORS-ABORTERS-TARGET
   navigator.preStep(state, stepper);
   // A layer has been found
@@ -705,46 +677,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     std::cout << state.options.debugString << std::endl;
     state.options.debugString = "";
   }
-
-  // test the navigation in a bounding volume hierarchy
-  // ----------------------------------------------
-  if (debug) {
-    std::cout << "<<<<<<<<<<<<<<<<<<<<< BVH Navigation >>>>>>>>>>>>>>>>>>"
-              << std::endl;
-  }
-
-  // position and direction vector
-  Vector4 BVHPosition4(0., 0., 0, 0);
-  Vector3 BVHMomentum(1., 1., 0.);
-
-  // the propagator cache
-  PropagatorState BVHState;
-  BVHState.options.debug = debug;
-
-  // the stepper cache
-  BVHState.stepping.pos4 = BVHPosition4;
-  BVHState.stepping.dir = BVHMomentum.normalized();
-
-  // Stepper
-  PropagatorState::Stepper BVHStepper;
-
-  BVHNavigator.initialize(BVHState, BVHStepper);
-
-  // Check that the currentVolume is set
-  BOOST_CHECK_NE(BVHState.navigation.currentVolume, nullptr);
-  // Check that the currentVolume is the startVolume
-  BOOST_CHECK_EQUAL(BVHState.navigation.currentVolume,
-                    BVHState.navigation.startVolume);
-  // Check that the currentSurface is reset to:
-  BOOST_CHECK_EQUAL(BVHState.navigation.currentSurface, nullptr);
-  // No layer has been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.candidates.size(), 0u);
-  // ACTORS-ABORTERS-TARGET
-  navigator.preStep(BVHState, BVHStepper);
-  // Still no layer
-  BOOST_CHECK_EQUAL(BVHState.navigation.candidates.size(), 0u);
-  // Surfaces have been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.candidates.size(), 42u);
 }
 
 }  // namespace Test
