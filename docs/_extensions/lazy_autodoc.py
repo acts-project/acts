@@ -122,6 +122,7 @@ def run() -> None:
         "Acts::getDefaultLogger",
         "Acts::getDummyLogger",
         "Acts::makeDefaultBetheHeitlerApprox",
+        "Acts::convertDD4hepDetector",
     }
 
     role_instances["enum"] = {

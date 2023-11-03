@@ -217,33 +217,23 @@ To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to
 $ cmake -B <build> -S <source> -DACTS_BUILD_DOCS=on
 ```
 
-Then the documentation can be build with either of the following two build
-targets
+Then the documentation can be build with this target
 
 ```console
-$ cmake --build <build> --target docs # default fast option
-# or
-$ cmake --build <build> --target docs-with-api # full documentation
+$ cmake --build <build> --target docs
 ```
 
 The default option includes the Doxygen, Sphinx, and the Breathe extension,
 i.e. the source code information can be used in the manually written
-documentation but the full API documentation is not generated. The second
-target builds the full documentation to automatically generate full API
-listings. This is equivalent to the public [Read the Docs][rtd_acts]
-documentation, but the build takes a while to finish.
+documentation. An attempt is made to pull in symbols that are cross-referenced from
+other parts of the documentation. This is not guaranteed to work: in case 
+of errors you will need to manually pull in symbols to be documented.
 
 [doxygen]: https://doxygen.nl/
 [sphinx]: https://www.sphinx-doc.org
 [breathe]: https://breathe.readthedocs.io
 [exhale]: https://exhale.readthedocs.io
 [rtd_acts]: https://acts.readthedocs.io
-
-A special phony target exists to clean the documentation output files:
-
-```console
-$ cmake --build <build> --target clean-docs
-```
 
 ## Build options
 
