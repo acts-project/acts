@@ -19,7 +19,7 @@
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
