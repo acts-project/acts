@@ -145,7 +145,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
       case Mode::SlowOutside:
         num_inside_points = NTESTS;
         num_outside_points = NTESTS_SLOW;
-      default: // do nothing
+      default:  // do nothing
         break;
     };
 
