@@ -697,12 +697,10 @@ class Navigator {
   /// is misconfigured
   ///
   /// @tparam propagator_state_t The state type of the propagator
-  /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
-  /// @param [in] stepper Stepper in use
   ///
-  /// boolean return triggers exit to stepper
+  /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t>
   bool inactive(propagator_state_t& state) const {
     // Void behavior in case no tracking geometry is present
