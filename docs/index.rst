@@ -40,5 +40,5 @@ Key features:
    authors
    license
 
-   whitepapers/index.rst
+   white_papers/index.rst
 

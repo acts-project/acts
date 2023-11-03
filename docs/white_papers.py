@@ -47,7 +47,7 @@ class WhitePaper(pydantic.BaseModel):
 
 
 class Config(pydantic.BaseModel):
-    whitepapers: List[WhitePaper]
+    white_papers: List[WhitePaper]
 
 
 def parse_metadata(content: str) -> MetaData:
@@ -200,7 +200,7 @@ def extract_pdf_from_artifact(fh: IO[bytes], target: IO[bytes]):
 @app.command()
 @coro
 async def pull(
-    config_file: Path = Path(__file__).parent / "whitepapers.toml",
+    config_file: Path = Path(__file__).parent / "white_papers.toml",
     github_token: str = typer.Option(..., envvar="GITHUB_TOKEN"),
 ):
     console = rich.console.Console()
@@ -215,12 +215,15 @@ async def pull(
         with console.status("[bold green]Loading config...") as status:
             config = Config(**toml.load(config_file))
 
-            for whp in config.whitepapers:
+            for whp in config.white_papers:
                 status.update(f"Loading {whp.repository}...")
 
                 repo = whp.repo
                 slug = whp.slug
                 title_page_file = config_file.parent / f"{slug}.png"
+
+                image_path = Path(__file__).parent / "white_papers" / "figures"
+                assert image_path.is_dir(), image_path
 
                 latest_release = await get_latest_release(gh, repo)
 
@@ -306,30 +309,26 @@ async def pull(
 
 
 @app.command()
-def render(config_file: Path = Path(__file__).parent / "whitepapers.toml"):
+def render(config_file: Path = Path(__file__).parent / "white_papers.toml"):
     config = Config(**toml.load(config_file))
-    docs_path = Path(__file__).parent.parent / "docs" / "whitepapers"
-    docs_path.mkdir(parents=True, exist_ok=True)
+    docs_path = Path(__file__).parent / "white_papers"
+    assert docs_path.is_dir(), docs_path
     index_target_file = docs_path / "index.md"
-    image_path = Path(__file__).parent.parent / "docs" / "whitepapers" / "figures"
-    image_path.mkdir(parents=True, exist_ok=True)
 
-    template_file = Path(__file__).parent / "template.md"
-    index_template_file = Path(__file__).parent / "index_template.md"
+    template_file = Path(__file__).parent / "white_paper_template.md.j2"
+    index_template_file = Path(__file__).parent / "white_paper_index_template.md.j2"
 
     tpl = Template(template_file.read_text())
     index_tpl = Template(index_template_file.read_text())
 
     index_target_file.write_text(index_tpl.render(config=config))
+    print("Index written to", index_target_file)
 
-    for whp in config.whitepapers:
+    for whp in config.white_papers:
+        assert whp.metadata is not None, "White paper meta data is missing"
         target_file = docs_path / f"{whp.slug}.md"
         target_file.write_text(tpl.render(whp=whp, image_path="figures"))
-
-        shutil.copyfile(
-            config_file.parent / f"{whp.slug}.png",
-            image_path / f"{whp.slug}.png",
-        )
+        print("-", whp.metadata.title, "->", target_file)
 
 
 if "__main__" == __name__:

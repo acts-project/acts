@@ -1,13 +1,13 @@
-# How to add a whitepaper
+# How to add a white paper
 
-The whitepaper collection is managed through a configuration file that
-contains information on registered whitepaper. This configuration can be
+The white paper collection is managed through a configuration file that
+contains information on registered white paper. This configuration can be
 automatically updated from GitHub by a script that will pull some meta
 information like the title, authors and abstract. It will also grab the
 most latest compiled PDF from the source repository that was created by a
 CI job.
 
-To get started, head over to the whitepaper template
+To get started, head over to the white paper template
 [repository](https://github.com/acts-project/whitepaper-template). There
 should be a button toward the top right that says *Use this template*,
 which will allow you to create a copy of the content of the template
@@ -99,7 +99,7 @@ changed the content of the document.
 
 [Overleaf](https://overleaf.com) is a convenient web-based LaTeX authoring tool. It has GitHub integration 🎉!
 
-:::{image} ../figures/whitepapers/overleaf_import_github.png
+:::{image} figures/overleaf_import_github.png
 :align: center
 :::
 
@@ -111,49 +111,49 @@ Overleaf is not particularly good at handling merge conflicts, so try not to mak
 
 For the document to compile without errors on Overleaf, you will have to change the compiler to LuaLatex, by going to *Menu* in the top right, and changing the *Compiler* setting:
 
-:::{image} ../figures/whitepapers/overleaf_compiler.png
+:::{image} figures/overleaf_compiler.png
 :align: center
 :::
 
 (whitepaper_index_update)=
-## Update the whitepaper overview
+## Update the white paper overview
 
-The whitepaper overview in this documentation [here](#whitepaper-index) is
+The white paper overview in this documentation [here](#white-paper-index) is
 automatically generated using a registry file and a script, both of which are
-located in the main ACTS repository under `whitepapers`.
+located in the main ACTS repository under `docs`.
 
-The registration file `whitepapers/whitepapers.toml` contains a list of all
-known whitepapers, and also stores metadata information on the whitepaper. It looks something like:
+The registration file `docs/white_papers.toml` contains a list of all
+known white papers, and also stores metadata information on the white paper. It looks something like:
 
 ```toml
-[[whitepapers]]
+[[white_papers]]
 repository = "https://github.com/acts-project/whitepaper-template"
 
-[whitepapers.metadata]
+[white_papers.metadata]
 authors = [ "First Author", "Second Author",]
 title = "A whitepaper about a topic"
 description = "This is a whitepaper example. It contains a number of example\npatterns, layouts etc.\nSimple math like $a + b = c$ or even $\\sqrt{s} = 14$ TeV is supported!\n\nQuisque ullamcorper placerat ipsum. Cras nibh. Morbi vel justo vitae lacus\ntincidunt ultrices. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In hac\nhabitasse platea dictumst. Integer tempus convallis augue. Etiam facilisis. Nunc\nelementum fermentum wisi. Aenean placerat. Ut imperdiet, enim sed gravida\nsollicitudin, felis odio placerat quam, ac pulvinar elit purus eget enim. Nunc vitae\ntortor. Proin tempus nibh sit amet nisl. Vivamus quis tortor vitae risus porta\nvehicula."
 ```
 
-`[[whitepapers]]` indicates a whitepaper entry, while `[whitepapers.metadata]` is a dictionary containing the metadata for that whitepaper.
+`[[white_papers]]` indicates a white paper entry, while `[white_papers.metadata]` is a dictionary containing the metadata for that white paper.
 
 :::{note}
-`[whitepapers.metadata]` is auto-generated!
+`[white_papers.metadata]` is auto-generated!
 :::
 
-To add a new whitepaper, simply add a new section at the bottom of the file:
+To add a new white paper, simply add a new section at the bottom of the file:
 
 ```toml
-[[whitepapers]]
+[[white_papers]]
 repository = "https://github.com/acts-project/another-whitepaper"
 slug = "another-whitepaper"
 ```
 
 Note that `slug` should be lower case, not contain spaces, and be unique.
 
-The script `whitepapers/update.py` is used to complete the metadata information
-for the whitepapers. To run it, you need to install the dependencies in
-`whitepapers/requirements.txt` using `pip`.
+The script `docs/white_papers.py` is used to complete the metadata information
+for the white papers. To run it, you need to install the dependencies in
+`docs/requirements.txt` using `pip`.
 
 :::{tip}
 It is **strongly recommended** to use a [virtual
@@ -173,10 +173,10 @@ You also need the `convert` executable from
 then run 
 
 ```console
-$ whitepaper/update.py pull
+$ white_papers.py pull
 ```
 
-which will for each whitepaper listed in `whitepapers.toml`
+which will for each white_paper listed in `white_papers.toml`
 
 1. Download the most recent PDF of the document built by that repository's CI
 2. Make a PNG of the first page of that PDF to be displayed in the documentation
@@ -189,12 +189,7 @@ for organizational purposes, but also allows directly linking to the PDF that
 is generated by the CI for that tag.
 :::
 
-Afterwards, the `whitepapers.toml` should now contain updated information
-from all listed whitepapers. Another command can be used to actually create
-the listing in the documentation 
-
-```console
-$ whitepaper/update.py render
-```
-
-This will use the `whitepapers.toml` file to generate a markdown file at `docs/whitepapers/whitepapers.md`, that is then used by the regular documentation build, which you can read more about [here](#build_docs).
+Afterwards, the `white_papers.toml` should now contain updated information from
+all listed white papers.  The `white_papers.toml` file is used to automatically
+generate a white paper index, that is then used by the regular documentation
+build, which you can read more about [here](#build_docs).
