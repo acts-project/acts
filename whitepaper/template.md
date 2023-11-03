@@ -5,6 +5,9 @@
 ({{ whp.slug }})=
 # {{ whp.metadata.title }} 
 [GitHub]({{ whp.repository }})
+{%- if whp.pdf_url is not none %}
+, [PDF]({{ whp.pdf_url }})
+{% endif %}
 
 :::{image} {{ image_path }}/{{ whp.slug }}.png
 :width: 200px

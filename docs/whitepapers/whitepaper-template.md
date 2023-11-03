@@ -4,7 +4,9 @@
 
 (whitepaper-template)=
 # A whitepaper about a topic 
-[GitHub](https://github.com/acts-project/whitepaper-template)
+[GitHub](https://github.com/paulgessinger/test-whitepaper)
+, [PDF](https://github.com/paulgessinger/test-whitepaper/releases/download/v5/main.pdf)
+
 
 :::{image} figures/whitepaper-template.png
 :width: 200px

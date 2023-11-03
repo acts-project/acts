@@ -1,6 +1,7 @@
 [[whitepapers]]
 repository = "https://github.com/acts-project/whitepaper-template"
 slug = "whitepaper-template"
+pdf_url = "https://github.com/paulgessinger/test-whitepaper/releases/download/v5/main.pdf"
 
 [whitepapers.metadata]
 authors = [ "First Author", "Second Author",]
