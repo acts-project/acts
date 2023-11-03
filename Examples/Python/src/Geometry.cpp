@@ -222,8 +222,7 @@ void addExperimentalGeometry(Context& ctx) {
         .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
                       const std::vector<Acts::ActsScalar>&, size_t>())
         .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
-                      Acts::ActsScalar, Acts::ActsScalar, size_t,
-                      size_t>());
+                      Acts::ActsScalar, Acts::ActsScalar, size_t, size_t>());
   }
 
   {

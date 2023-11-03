@@ -36,7 +36,8 @@ class NeighborHoodIndices {
   NeighborHoodIndices(std::size_t begin, std::size_t end)
       : m_begin1(begin), m_end1(end), m_begin2(end), m_end2(end) {}
 
-  NeighborHoodIndices(std::size_t begin1, std::size_t end1, std::size_t begin2, std::size_t end2)
+  NeighborHoodIndices(std::size_t begin1, std::size_t end1, std::size_t begin2,
+                      std::size_t end2)
       : m_begin1(begin1), m_end1(end1), m_begin2(begin2), m_end2(end2) {}
 
   class iterator {
@@ -138,7 +139,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @param [in] idx requested bin index
   /// @param [in] sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
-  NeighborHoodIndices neighborHoodIndices(std::size_t idx, std::size_t size = 1) const {
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
+                                          std::size_t size = 1) const {
     return neighborHoodIndices(idx, std::make_pair(-size, size));
   }
 
@@ -421,7 +423,8 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @param [in] idx requested bin index
   /// @param [in] size how many neighboring bins
   /// @return Set of neighboring bin indices (global)
-  NeighborHoodIndices neighborHoodIndices(std::size_t idx, std::size_t size = 1) const {
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
+                                          std::size_t size = 1) const {
     return neighborHoodIndices(idx, std::make_pair(-size, size));
   }
 
@@ -608,7 +611,9 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  ActsScalar getBinUpperBound(std::size_t bin) const { return m_binEdges.at(bin); }
+  ActsScalar getBinUpperBound(std::size_t bin) const {
+    return m_binEdges.at(bin);
+  }
 
   /// @brief get bin center
   ///

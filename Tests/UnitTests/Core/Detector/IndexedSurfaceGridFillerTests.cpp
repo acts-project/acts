@@ -291,8 +291,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
   // Fill the surface
   filler.fill(tContext, indexedGridZPhi, surfaces, generator);
 
-  size_t nonEmptyBins =
-      countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
+  size_t nonEmptyBins = countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
   BOOST_CHECK(nonEmptyBins == 6u);
 }
@@ -327,8 +326,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   // Fill the surface
   filler.fill(tContext, indexedGridZPhi, surfaces, generator);
 
-  size_t nonEmptyBins =
-      countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
+  size_t nonEmptyBins = countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
   BOOST_CHECK(nonEmptyBins == 9u);
 }

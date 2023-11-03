@@ -63,8 +63,7 @@ std::ostream& operator<<(std::ostream& out, const Info::Device& device) {
       << "|" << std::endl;
   static constexpr double MEGABYTES = 1.0 / (1024 * 1024);
   const double totalMem = device.totalMemory * MEGABYTES;
-  const size_t memDigits =
-      static_cast<size_t>(std::log10(totalMem)) + 1;
+  const size_t memDigits = static_cast<size_t>(std::log10(totalMem)) + 1;
   out << " | Total memory: " << totalMem << " MB"
       << std::string((25 > memDigits ? 25 - memDigits : 0), ' ') << "|"
       << std::endl;

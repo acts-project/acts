@@ -69,8 +69,8 @@ struct EventDataView3D {
   /// @param lposition The local anker point of the ellipse
   /// @param transform The transform to global
   static inline std::vector<Vector3> createEllipse(
-      double lambda0, double lambda1, double theta, std::size_t lseg, double offset,
-      const Vector2& lposition = Vector2(0., 0.),
+      double lambda0, double lambda1, double theta, std::size_t lseg,
+      double offset, const Vector2& lposition = Vector2(0., 0.),
       const Transform3& transform = Transform3::Identity()) {
     double ctheta = std::cos(theta);
     double stheta = std::sin(theta);
@@ -222,7 +222,8 @@ struct EventDataView3D {
   template <typename traj_t>
   static void drawMultiTrajectory(
       IVisualization3D& helper, const traj_t& multiTraj,
-      const std::size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
+      const std::size_t& entryIndex,
+      const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& surfaceConfig = s_viewSensitive,

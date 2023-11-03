@@ -58,8 +58,7 @@ inline int levenshteinDistance(const std::string_view &a,
 }  // namespace
 
 std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
-    const std::string_view &name, int distThreshold,
-    size_t maxNumber) const {
+    const std::string_view &name, int distThreshold, size_t maxNumber) const {
   std::vector<std::pair<int, std::string_view>> names;
   for (const auto &[n, h] : m_store) {
     if (const auto d = levenshteinDistance(n, name); d < distThreshold) {

@@ -159,11 +159,13 @@ template <typename indices_t>
 struct ParametersTraitsImpl;
 template <>
 struct ParametersTraitsImpl<BoundIndices> {
-  static constexpr std::size_t kSize = static_cast<std::size_t>(BoundIndices::eBoundSize);
+  static constexpr std::size_t kSize =
+      static_cast<std::size_t>(BoundIndices::eBoundSize);
 };
 template <>
 struct ParametersTraitsImpl<FreeIndices> {
-  static constexpr std::size_t kSize = static_cast<std::size_t>(FreeIndices::eFreeSize);
+  static constexpr std::size_t kSize =
+      static_cast<std::size_t>(FreeIndices::eFreeSize);
 };
 
 /// The maximum parameters vector size definable for an indices enum.

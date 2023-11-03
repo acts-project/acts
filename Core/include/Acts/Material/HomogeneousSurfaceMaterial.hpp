@@ -83,7 +83,8 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(std::size_t, std::size_t) const
   ///
   /// @note the input parameters are ignored
-  const MaterialSlab& materialSlab(std::size_t bin0, std::size_t bin1) const final;
+  const MaterialSlab& materialSlab(std::size_t bin0,
+                                   std::size_t bin1) const final;
 
   /// The inherited methods - for MaterialSlab access
   using ISurfaceMaterial::materialSlab;

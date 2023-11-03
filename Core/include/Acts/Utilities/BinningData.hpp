@@ -428,12 +428,13 @@ class BinningData {
   }
 
  private:
-  std::size_t m_bins{};                  ///< number of bins
+  std::size_t m_bins{};             ///< number of bins
   std::vector<float> m_boundaries;  ///< vector of holding the bin boundaries
-  std::size_t m_totalBins{};             ///< including potential substructure
+  std::size_t m_totalBins{};        ///< including potential substructure
   std::vector<float> m_totalBoundaries;  ///< including potential substructure
 
-  std::size_t (*m_functionPtr)(float, const BinningData&){};  /// function pointer
+  std::size_t (*m_functionPtr)(float,
+                               const BinningData&){};  /// function pointer
 
   /// helper method to set the sub structure
   void checkSubStructure() {
@@ -488,7 +489,7 @@ class BinningData {
   // Equidistant search
   // - fastest method
   static std::size_t searchEquidistantWithBoundary(float value,
-                                              const BinningData& bData) {
+                                                   const BinningData& bData) {
     // vanilla
 
     int bin = static_cast<int>((value - bData.min) / bData.step);
@@ -504,13 +505,13 @@ class BinningData {
     // if outside boundary : return boundary for open, opposite bin for closed
     bin = bin < 0 ? ((bData.option == open) ? 0 : (bData.m_bins - 1)) : bin;
     return std::size_t((bin <= int(bData.m_bins - 1))
-                      ? bin
-                      : ((bData.option == open) ? (bData.m_bins - 1) : 0));
+                           ? bin
+                           : ((bData.option == open) ? (bData.m_bins - 1) : 0));
   }
 
   // Search in arbitrary boundary
   static std::size_t searchInVectorWithBoundary(float value,
-                                           const BinningData& bData) {
+                                                const BinningData& bData) {
     // lower boundary
     if (value <= bData.m_boundaries[0]) {
       return (bData.option == closed) ? (bData.m_bins - 1) : 0;
@@ -522,8 +523,8 @@ class BinningData {
 
     auto lb = std::lower_bound(bData.m_boundaries.begin(),
                                bData.m_boundaries.end(), value);
-    return static_cast<std::size_t>(std::distance(bData.m_boundaries.begin(), lb) -
-                               1);
+    return static_cast<std::size_t>(
+        std::distance(bData.m_boundaries.begin(), lb) - 1);
   }
 
  public:

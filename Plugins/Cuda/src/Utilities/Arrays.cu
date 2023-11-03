@@ -112,22 +112,22 @@ void copyToHost(host_array<T>& host, const device_array<T>& dev,
   template class std::unique_ptr<TYPE,                                         \
                                  Acts::Cuda::Details::DeviceArrayDeleter>;     \
   template std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>      \
-      Acts::Cuda::make_device_array<TYPE>(size_t);                        \
+      Acts::Cuda::make_device_array<TYPE>(size_t);                             \
   template class std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>; \
   template std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>        \
-      Acts::Cuda::make_host_array<TYPE>(size_t);                          \
+      Acts::Cuda::make_host_array<TYPE>(size_t);                               \
   template void Acts::Cuda::copyToDevice<TYPE>(                                \
       std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>&,         \
       const std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>&,     \
-      size_t);                                                            \
+      size_t);                                                                 \
   template void Acts::Cuda::copyToDevice<TYPE>(                                \
       std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>&,         \
       const std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>&,     \
-      size_t, const Acts::Cuda::StreamWrapper&);                          \
+      size_t, const Acts::Cuda::StreamWrapper&);                               \
   template void Acts::Cuda::copyToHost<TYPE>(                                  \
       std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>&,           \
       const std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>&,   \
-      size_t);                                                            \
+      size_t);                                                                 \
   template void Acts::Cuda::copyToHost<TYPE>(                                  \
       std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>&,           \
       const std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>&,   \

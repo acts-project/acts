@@ -60,9 +60,8 @@ namespace Svg {
 
 using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 using ProtoGrid = actsvg::proto::grid;
-using ProtoIndexedSurfaceGrid =
-    std::tuple<std::vector<ProtoSurface>, ProtoGrid,
-               std::vector<std::vector<size_t>>>;
+using ProtoIndexedSurfaceGrid = std::tuple<std::vector<ProtoSurface>, ProtoGrid,
+                                           std::vector<std::vector<size_t>>>;
 
 namespace IndexedSurfacesConverter {
 /// Nested options struct

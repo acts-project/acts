@@ -36,8 +36,7 @@ Acts::GreedyAmbiguityResolution::Config transformConfig(
 }
 
 size_t sourceLinkHash(const Acts::SourceLink& a) {
-  return static_cast<size_t>(
-      a.get<ActsExamples::IndexSourceLink>().index());
+  return static_cast<size_t>(a.get<ActsExamples::IndexSourceLink>().index());
 }
 
 bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {

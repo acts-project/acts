@@ -361,7 +361,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param nseg is the number of segments to approximate
   ///
   /// @return a boolean indicating if the objects are properly contained
-  bool checkContainment(const GeometryContext& gctx, std::size_t nseg = 1) const;
+  bool checkContainment(const GeometryContext& gctx,
+                        std::size_t nseg = 1) const;
 
   /// build the bounding box
   ///

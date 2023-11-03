@@ -174,9 +174,9 @@ struct grid_helper_impl {
   }
 
   template <class... Axes>
-  static void getGlobalBin(const std::array<std::size_t, sizeof...(Axes)>& localBins,
-                           const std::tuple<Axes...>& axes, std::size_t& bin,
-                           std::size_t& area) {
+  static void getGlobalBin(
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
+      const std::tuple<Axes...>& axes, std::size_t& bin, std::size_t& area) {
     const auto& thisAxis = std::get<N>(axes);
     bin += area * localBins.at(N);
     // make sure to account for under-/overflow bins
@@ -185,18 +185,18 @@ struct grid_helper_impl {
   }
 
   template <class Point, class... Axes>
-  static void getLocalBinIndices(const Point& point,
-                                 const std::tuple<Axes...>& axes,
-                                 std::array<std::size_t, sizeof...(Axes)>& indices) {
+  static void getLocalBinIndices(
+      const Point& point, const std::tuple<Axes...>& axes,
+      std::array<std::size_t, sizeof...(Axes)>& indices) {
     const auto& thisAxis = std::get<N>(axes);
     indices.at(N) = static_cast<std::size_t>(thisAxis.getBin(point[N]));
     grid_helper_impl<N - 1>::getLocalBinIndices(point, axes, indices);
   }
 
   template <class... Axes>
-  static void getLocalBinIndices(std::size_t& bin, const std::tuple<Axes...>& axes,
-                                 std::size_t& area,
-                                 std::array<std::size_t, sizeof...(Axes)>& indices) {
+  static void getLocalBinIndices(
+      std::size_t& bin, const std::tuple<Axes...>& axes, std::size_t& area,
+      std::array<std::size_t, sizeof...(Axes)>& indices) {
     const auto& thisAxis = std::get<N>(axes);
     // make sure to account for under-/overflow bins
     std::size_t new_area = area * (thisAxis.getNBins() + 2);
@@ -339,25 +339,25 @@ struct grid_helper_impl<0u> {
   }
 
   template <class... Axes>
-  static void getGlobalBin(const std::array<std::size_t, sizeof...(Axes)>& localBins,
-                           const std::tuple<Axes...>& /*axes*/, std::size_t& bin,
-                           std::size_t& area) {
+  static void getGlobalBin(
+      const std::array<std::size_t, sizeof...(Axes)>& localBins,
+      const std::tuple<Axes...>& /*axes*/, std::size_t& bin,
+      std::size_t& area) {
     bin += area * localBins.at(0u);
   }
 
   template <class Point, class... Axes>
-  static void getLocalBinIndices(const Point& point,
-                                 const std::tuple<Axes...>& axes,
-                                 std::array<std::size_t, sizeof...(Axes)>& indices) {
+  static void getLocalBinIndices(
+      const Point& point, const std::tuple<Axes...>& axes,
+      std::array<std::size_t, sizeof...(Axes)>& indices) {
     const auto& thisAxis = std::get<0u>(axes);
     indices.at(0u) = thisAxis.getBin(point[0u]);
   }
 
   template <class... Axes>
-  static void getLocalBinIndices(std::size_t& bin,
-                                 const std::tuple<Axes...>& /*axes*/,
-                                 std::size_t& area,
-                                 std::array<std::size_t, sizeof...(Axes)>& indices) {
+  static void getLocalBinIndices(
+      std::size_t& bin, const std::tuple<Axes...>& /*axes*/, std::size_t& area,
+      std::array<std::size_t, sizeof...(Axes)>& indices) {
     // make sure to account for under-/overflow bins
     indices.at(0u) = bin / area;
     bin %= area;
@@ -782,7 +782,8 @@ struct grid_helper {
   template <class... Axes>
   static GlobalNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
       const std::array<std::size_t, sizeof...(Axes)>& localIndices,
-      std::pair<std::size_t, std::size_t> sizes, const std::tuple<Axes...>& axes) {
+      std::pair<std::size_t, std::size_t> sizes,
+      const std::tuple<Axes...>& axes) {
     constexpr std::size_t MAX = sizeof...(Axes) - 1;
 
     // length N array which contains local neighbors based on size par
@@ -800,8 +801,8 @@ struct grid_helper {
 
   template <class... Axes>
   static GlobalNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
-      const std::array<std::size_t, sizeof...(Axes)>& localIndices, std::size_t size,
-      const std::tuple<Axes...>& axes) {
+      const std::array<std::size_t, sizeof...(Axes)>& localIndices,
+      std::size_t size, const std::tuple<Axes...>& axes) {
     return neighborHoodIndices(localIndices, std::make_pair(int(-size), size),
                                axes);
   }
@@ -853,7 +854,8 @@ struct grid_helper {
   /// @param  [in] axes         actual axis objects spanning the grid
   /// @return set of global bin indices for all over- and underflow bins
   template <class... Axes>
-  static std::set<std::size_t> exteriorBinIndices(const std::tuple<Axes...>& axes) {
+  static std::set<std::size_t> exteriorBinIndices(
+      const std::tuple<Axes...>& axes) {
     constexpr std::size_t MAX = sizeof...(Axes) - 1;
 
     std::array<std::size_t, sizeof...(Axes)> idx{};

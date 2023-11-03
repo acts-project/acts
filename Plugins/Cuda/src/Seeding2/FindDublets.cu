@@ -151,8 +151,7 @@ __global__ void findDublets(size_t nMiddleSPs,
 namespace Details {
 
 void findDublets(size_t maxBlockSize, size_t nBottomSPs,
-                 const device_array<SpacePoint>& bottomSPs,
-                 size_t nMiddleSPs,
+                 const device_array<SpacePoint>& bottomSPs, size_t nMiddleSPs,
                  const device_array<SpacePoint>& middleSPs, size_t nTopSPs,
                  const device_array<SpacePoint>& topSPs, float deltaRMin,
                  float deltaRMax, float cotThetaMax, float collisionRegionMin,

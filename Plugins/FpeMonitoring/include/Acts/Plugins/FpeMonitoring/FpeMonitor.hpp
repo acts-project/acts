@@ -99,9 +99,8 @@ class FpeMonitor {
 
     bool contains(FpeType type, const boost::stacktrace::stacktrace &st) const;
 
-    void summary(
-        std::ostream &os,
-        size_t depth = std::numeric_limits<size_t>::max()) const;
+    void summary(std::ostream &os,
+                 size_t depth = std::numeric_limits<size_t>::max()) const;
 
     Result() = default;
 

@@ -48,7 +48,7 @@ class SurfaceArray {
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     virtual std::size_t completeBinning(const GeometryContext& gctx,
-                                   const SurfaceVector& surfaces) = 0;
+                                        const SurfaceVector& surfaces) = 0;
 
     /// @brief Performs lookup at @c pos and returns bin content as reference
     /// @param position Lookup position
@@ -174,7 +174,7 @@ class SurfaceArray {
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     std::size_t completeBinning(const GeometryContext& gctx,
-                           const SurfaceVector& surfaces) override {
+                                const SurfaceVector& surfaces) override {
       std::size_t binCompleted = 0;
       std::size_t nBins = size();
       double minPath = 0;
@@ -428,7 +428,7 @@ class SurfaceArray {
     /// @brief Comply with concept and provide completeBinning method
     /// @note Does nothing
     std::size_t completeBinning(const GeometryContext& /*gctx*/,
-                           const SurfaceVector& /*surfaces*/) override {
+                                const SurfaceVector& /*surfaces*/) override {
       return 0;
     }
 
@@ -504,7 +504,9 @@ class SurfaceArray {
   /// @brief Get the center of the bin identified by global bin index @p bin
   /// @param bin the global bin index
   /// @return Center position of the bin in global coordinates
-  Vector3 getBinCenter(std::size_t bin) { return p_gridLookup->getBinCenter(bin); }
+  Vector3 getBinCenter(std::size_t bin) {
+    return p_gridLookup->getBinCenter(bin);
+  }
 
   /// @brief Get all surfaces attached to this @c SurfaceArray
   /// @return Reference to @c SurfaceVector containing all surfaces
@@ -524,7 +526,9 @@ class SurfaceArray {
   /// @return bool if the bin is valid
   /// @note Valid means that the index points to a bin which is not a under
   ///       or overflow bin or out of range in any axis.
-  bool isValidBin(std::size_t bin) const { return p_gridLookup->isValidBin(bin); }
+  bool isValidBin(std::size_t bin) const {
+    return p_gridLookup->isValidBin(bin);
+  }
 
   const Transform3& transform() const { return m_transform; }
 

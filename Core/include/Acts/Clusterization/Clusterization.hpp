@@ -80,7 +80,8 @@ void labelClusters(CellCollection& cells, Connect connect = Connect());
 ///   void clusterAddCell(Cluster&, const Cell&)
 ///
 /// @return nothing
-template <typename CellCollection, typename ClusterCollection, std::size_t GridDim>
+template <typename CellCollection, typename ClusterCollection,
+          std::size_t GridDim>
 ClusterCollection mergeClusters(CellCollection& /*cells*/);
 
 /// @brief createClusters

@@ -50,7 +50,8 @@ using VolumeTrajectoryStateContainer =
 ///
 /// @return The trajectory summary info
 template <typename traj_t>
-TrajectoryState trajectoryState(const traj_t& multiTraj, std::size_t entryIndex) {
+TrajectoryState trajectoryState(const traj_t& multiTraj,
+                                std::size_t entryIndex) {
   TrajectoryState trajState;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     // Get the volume Id of this surface

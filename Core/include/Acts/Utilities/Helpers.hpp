@@ -105,8 +105,8 @@ std::array<value_type, kDIM> to_array(const std::vector<value_type>& vecvals) {
 /// @param args Additional arguments passed to @c Callable::invoke().
 /// @note @c Callable is expected to have a static member function @c invoke
 /// that is callable with @c Args
-template <template <std::size_t> class Callable, std::size_t N, std::size_t NMAX,
-          typename... Args>
+template <template <std::size_t> class Callable, std::size_t N,
+          std::size_t NMAX, typename... Args>
 auto template_switch(std::size_t v, Args&&... args) {
   if (v == N) {
     return Callable<N>::invoke(std::forward<Args>(args)...);

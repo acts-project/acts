@@ -71,7 +71,8 @@ struct FacesHelper {
     std::size_t reduce = (!fullTwoPi) ? 1 : 0;
     for (std::size_t iface = 0; iface < nqfaces - reduce; ++iface) {
       std::size_t p2 = (iface + 1 == nqfaces) ? 0 : iface + 1;
-      std::vector<std::size_t> face = {iface, p2, p2 + nqfaces, nqfaces + iface};
+      std::vector<std::size_t> face = {iface, p2, p2 + nqfaces,
+                                       nqfaces + iface};
       faces.push_back(face);
       std::vector<std::size_t> triA = {iface, p2, p2 + nqfaces};
       triangularMesh.push_back(triA);

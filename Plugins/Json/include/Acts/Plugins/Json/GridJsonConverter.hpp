@@ -87,8 +87,8 @@ template <typename axis_generator_type>
 auto fromJson(const nlohmann::json& jGrid,
               const axis_generator_type& aGenerator) {
   // Generate the grid
-  using GridType = typename axis_generator_type::template grid_type<
-      std::vector<size_t>>;
+  using GridType =
+      typename axis_generator_type::template grid_type<std::vector<size_t>>;
   GridType grid(aGenerator());
   nlohmann::json jData = jGrid["data"];
   // Index filling

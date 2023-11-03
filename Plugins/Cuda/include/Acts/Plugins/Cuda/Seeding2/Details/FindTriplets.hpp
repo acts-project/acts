@@ -81,9 +81,9 @@ std::vector<std::vector<Triplet> > findTriplets(
     const device_array<unsigned int>& middleBottomCounts,
     const device_array<size_t>& middleBottomDublets,
     const device_array<unsigned int>& middleTopCounts,
-    const device_array<size_t>& middleTopDublets,
-    float maxScatteringAngle2, float sigmaScattering, float minHelixDiameter2,
-    float pT2perRadius, float impactMax);
+    const device_array<size_t>& middleTopDublets, float maxScatteringAngle2,
+    float sigmaScattering, float minHelixDiameter2, float pT2perRadius,
+    float impactMax);
 
 }  // namespace Details
 }  // namespace Cuda

@@ -158,10 +158,10 @@ void TrackFindingAlgorithm::computeSharedHits(
   // Compute nSharedhits and Update ckf results
   // hit index -> list of multi traj indexes [traj, meas]
 
-  std::vector<size_t> firstTrackOnTheHit(
-      sourceLinks.size(), std::numeric_limits<size_t>::max());
-  std::vector<size_t> firstStateOnTheHit(
-      sourceLinks.size(), std::numeric_limits<size_t>::max());
+  std::vector<size_t> firstTrackOnTheHit(sourceLinks.size(),
+                                         std::numeric_limits<size_t>::max());
+  std::vector<size_t> firstStateOnTheHit(sourceLinks.size(),
+                                         std::numeric_limits<size_t>::max());
 
   for (auto track : tracks) {
     for (auto state : track.trackStatesReversed()) {
@@ -170,8 +170,8 @@ void TrackFindingAlgorithm::computeSharedHits(
       }
 
       size_t hitIndex = state.getUncalibratedSourceLink()
-                                 .template get<IndexSourceLink>()
-                                 .index();
+                            .template get<IndexSourceLink>()
+                            .index();
 
       // Check if hit not already used
       if (firstTrackOnTheHit.at(hitIndex) ==

@@ -173,7 +173,8 @@ class SurfaceArrayCreator {
   std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
-      std::size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
+      std::size_t binsPhi,
+      std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
@@ -290,8 +291,8 @@ class SurfaceArrayCreator {
       const std::function<bool(const Surface*, const Surface*)>& equal) const;
 
   std::size_t determineBinCount(const GeometryContext& gctx,
-                           const std::vector<const Surface*>& surfaces,
-                           BinningValue bValue) const;
+                                const std::vector<const Surface*>& surfaces,
+                                BinningValue bValue) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with

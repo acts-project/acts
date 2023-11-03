@@ -238,7 +238,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
     std::transform(
         phiModules.begin(), phiModules.end(), std::back_inserter(nPhiModules),
-        [&equal, this](const std::vector<const Surface*>& surfaces_) -> std::size_t {
+        [&equal,
+         this](const std::vector<const Surface*>& surfaces_) -> std::size_t {
           return this->findKeySurfaces(surfaces_, equal).size();
         });
 
@@ -304,7 +305,8 @@ std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
-    std::size_t bins2, BinningValue bValue, std::optional<ProtoLayer> protoLayerOpt,
+    std::size_t bins2, BinningValue bValue,
+    std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it

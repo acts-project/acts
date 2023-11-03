@@ -533,7 +533,8 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
 
 template <typename box_t>
 box_t* Acts::make_octree(std::vector<std::unique_ptr<box_t>>& store,
-                         const std::vector<box_t*>& prims, std::size_t max_depth,
+                         const std::vector<box_t*>& prims,
+                         std::size_t max_depth,
                          typename box_t::value_type envelope1) {
   static_assert(box_t::dim == 3, "Octree can only be created in 3D");
 

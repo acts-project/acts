@@ -323,8 +323,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
-    std::size_t bins2, BinningValue bValue, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    std::size_t bins2, BinningValue bValue,
+    std::optional<ProtoLayer> _protoLayer, const Transform3& transform,
+    std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 

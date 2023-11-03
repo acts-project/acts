@@ -364,21 +364,21 @@ struct BranchComparisonHarness {
                             branchName, tree1Data, tree2Data});
 
     // Setup event comparison and swapping for each tree
-    result.sortHarness = std::make_pair(
-        std::make_pair(
-            [&tree1Data](size_t i, size_t j) -> Ordering {
-              return compare(tree1Data[i], tree1Data[j]);
-            },
-            [&tree1Data](size_t i, size_t j) {
-              std::swap(tree1Data[i], tree1Data[j]);
-            }),
-        std::make_pair(
-            [&tree2Data](size_t i, size_t j) -> Ordering {
-              return compare(tree2Data[i], tree2Data[j]);
-            },
-            [&tree2Data](size_t i, size_t j) {
-              std::swap(tree2Data[i], tree2Data[j]);
-            }));
+    result.sortHarness =
+        std::make_pair(std::make_pair(
+                           [&tree1Data](size_t i, size_t j) -> Ordering {
+                             return compare(tree1Data[i], tree1Data[j]);
+                           },
+                           [&tree1Data](size_t i, size_t j) {
+                             std::swap(tree1Data[i], tree1Data[j]);
+                           }),
+                       std::make_pair(
+                           [&tree2Data](size_t i, size_t j) -> Ordering {
+                             return compare(tree2Data[i], tree2Data[j]);
+                           },
+                           [&tree2Data](size_t i, size_t j) {
+                             std::swap(tree2Data[i], tree2Data[j]);
+                           }));
 
     // Setup order-sensitive tree comparison
     result.eventDataEqual = [&tree1Data, &tree2Data]() -> bool {

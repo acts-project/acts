@@ -159,8 +159,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
   // binSizeR allows to increase or reduce numRBins if needed
-  std::size_t numRBins = static_cast<std::size_t>((config.rMax + options.beamPos.norm()) /
-                                        config.binSizeR);
+  std::size_t numRBins = static_cast<std::size_t>(
+      (config.rMax + options.beamPos.norm()) / config.binSizeR);
 
   // keep track of changed bins while sorting
   boost::container::flat_set<std::size_t> rBinsIndex;
@@ -194,7 +194,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
         counter, sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    std::size_t rIndex = static_cast<std::size_t>(isp->radius() / config.binSizeR);
+    std::size_t rIndex =
+        static_cast<std::size_t>(isp->radius() / config.binSizeR);
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;

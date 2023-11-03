@@ -130,8 +130,7 @@ std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
 }
 
 ActsExamples::ClusterContainer makeClusters(
-    const std::unordered_multimap<size_t, ActsExamples::CellData>&
-        cellDataMap,
+    const std::unordered_multimap<size_t, ActsExamples::CellData>& cellDataMap,
     size_t nMeasurements) {
   using namespace ActsExamples;
   ClusterContainer clusters;

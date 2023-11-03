@@ -114,13 +114,11 @@ __device__ Details::LinCircle transformCoordinates(
 ///
 __global__ void transformCoordinates(
     unsigned int nDublets, unsigned int maxMBDublets, unsigned int maxMTDublets,
-    size_t nBottomSPs, const Details::SpacePoint* bottomSPs,
-    size_t nMiddleSPs, const Details::SpacePoint* middleSPs,
-    size_t nTopSPs, const Details::SpacePoint* topSPs,
-    const unsigned int* middleBottomCounts,
+    size_t nBottomSPs, const Details::SpacePoint* bottomSPs, size_t nMiddleSPs,
+    const Details::SpacePoint* middleSPs, size_t nTopSPs,
+    const Details::SpacePoint* topSPs, const unsigned int* middleBottomCounts,
     const size_t* middleBottomDublets, const unsigned int* middleTopCounts,
-    const size_t* middleTopDublets,
-    Details::LinCircle* bottomSPLinTransArray,
+    const size_t* middleTopDublets, Details::LinCircle* bottomSPLinTransArray,
     Details::LinCircle* topSPLinTransArray) {
   // Get the global index.
   const int dubletIndex = blockIdx.x * blockDim.x + threadIdx.x;
@@ -222,11 +220,10 @@ __global__ void transformCoordinates(
 __global__ void findTriplets(
     size_t middleIndexStart, unsigned int maxMBDublets,
     unsigned int maxMTDublets, unsigned int maxTriplets,
-    size_t nParallelMiddleSPs, size_t nMiddleSPsProcessed,
-    size_t nBottomSPs, const Details::SpacePoint* bottomSPs,
-    size_t nMiddleSPs, const Details::SpacePoint* middleSPs,
-    size_t nTopSPs, const Details::SpacePoint* topSPs,
-    const unsigned int* middleBottomCounts,
+    size_t nParallelMiddleSPs, size_t nMiddleSPsProcessed, size_t nBottomSPs,
+    const Details::SpacePoint* bottomSPs, size_t nMiddleSPs,
+    const Details::SpacePoint* middleSPs, size_t nTopSPs,
+    const Details::SpacePoint* topSPs, const unsigned int* middleBottomCounts,
     const size_t* middleBottomDublets, const unsigned int* middleTopCounts,
     const size_t* middleTopDublets,
     const Details::LinCircle* bottomSPLinTransArray,
@@ -443,14 +440,13 @@ __global__ void filterTriplets2Sp(
     unsigned int maxMTDublets, unsigned int maxTriplets,
     unsigned int nAllTriplets, size_t nParallelMiddleSPs,
     size_t nMiddleSPsProcessed, unsigned int* middleBottomCounts,
-    size_t nBottomSPs, const Details::SpacePoint* bottomSPs,
-    size_t nMiddleSPs, const Details::SpacePoint* middleSPs,
-    size_t nTopSPs, const Details::SpacePoint* topSPs,
-    const unsigned int* tripletsPerBottomDublet,
-    const size_t* tripletIndices, const Details::Triplet* allTriplets,
-    float deltaInvHelixDiameter, float deltaRMin, float compatSeedWeight,
-    size_t compatSeedLimit, unsigned int* nFilteredTriplets,
-    Details::Triplet* filteredTriplets) {
+    size_t nBottomSPs, const Details::SpacePoint* bottomSPs, size_t nMiddleSPs,
+    const Details::SpacePoint* middleSPs, size_t nTopSPs,
+    const Details::SpacePoint* topSPs,
+    const unsigned int* tripletsPerBottomDublet, const size_t* tripletIndices,
+    const Details::Triplet* allTriplets, float deltaInvHelixDiameter,
+    float deltaRMin, float compatSeedWeight, size_t compatSeedLimit,
+    unsigned int* nFilteredTriplets, Details::Triplet* filteredTriplets) {
   // Sanity checks.
   assert(seedWeight != nullptr);
   assert(singleSeedCut != nullptr);
@@ -590,9 +586,9 @@ std::vector<std::vector<Triplet>> findTriplets(
     const device_array<unsigned int>& middleBottomCounts,
     const device_array<size_t>& middleBottomDublets,
     const device_array<unsigned int>& middleTopCounts,
-    const device_array<size_t>& middleTopDublets,
-    float maxScatteringAngle2, float sigmaScattering, float minHelixDiameter2,
-    float pT2perRadius, float impactMax) {
+    const device_array<size_t>& middleTopDublets, float maxScatteringAngle2,
+    float sigmaScattering, float minHelixDiameter2, float pT2perRadius,
+    float impactMax) {
   // Calculate the parallelisation for the parameter transformation.
   const int numBlocksLT =
       (dubletCounts.nDublets + maxBlockSize - 1) / maxBlockSize;
@@ -624,8 +620,7 @@ std::vector<std::vector<Triplet>> findTriplets(
       // Then the objects holding indices to the triplets per middle-bottom
       // dublet.
       dubletCounts.maxMBDublets * sizeof(unsigned int) +
-      dubletCounts.maxMBDublets * dubletCounts.maxMTDublets *
-          sizeof(size_t) +
+      dubletCounts.maxMBDublets * dubletCounts.maxMTDublets * sizeof(size_t) +
       // Finally the array holding the filtered triplet counts per middle
       // spacepoint.
       sizeof(unsigned int);
@@ -673,9 +668,9 @@ std::vector<std::vector<Triplet>> findTriplets(
 
   // Allocate the array holding the indices of the triplets found for a given
   // bottom-middle spacepoint combination.
-  auto tripletIndices = make_device_array<size_t>(
-      nParallelMiddleSPs * dubletCounts.maxMBDublets *
-      dubletCounts.maxMTDublets);
+  auto tripletIndices =
+      make_device_array<size_t>(nParallelMiddleSPs * dubletCounts.maxMBDublets *
+                                dubletCounts.maxMTDublets);
 
   // Allocate and initialise the arrays holding the per-middle-spacepoint
   // filtered triplet counts.

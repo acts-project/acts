@@ -36,10 +36,10 @@ namespace detail {
 /// axes at compile time. This was tried previously and resulted in sizable
 /// resource consumption at compile time without runtime benefits.
 ///
-/// All types are intentionally using `std::size_t` as their template values, instead
-/// of the more specific index enums, to reduce the number of templates. This is
-/// fully compatible as the index enums are required to be convertible to
-/// `std::size_t`.
+/// All types are intentionally using `std::size_t` as their template values,
+/// instead of the more specific index enums, to reduce the number of templates.
+/// This is fully compatible as the index enums are required to be convertible
+/// to `std::size_t`.
 ///
 /// All types intentionally only define the subspace but not how vectors
 /// and matrices are stored to avoid unnecessary coupling between components,

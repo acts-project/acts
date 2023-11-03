@@ -82,8 +82,7 @@ void FpeMonitor::Result::merge(const Result &with) {
   deduplicate();
 }
 
-void FpeMonitor::Result::add(FpeType type, void *stackPtr,
-                             size_t bufferSize) {
+void FpeMonitor::Result::add(FpeType type, void *stackPtr, size_t bufferSize) {
   auto st = std::make_unique<boost::stacktrace::stacktrace>(
       boost::stacktrace::stacktrace::from_dump(stackPtr, bufferSize));
 

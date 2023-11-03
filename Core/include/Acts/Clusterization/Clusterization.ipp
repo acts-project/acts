@@ -114,7 +114,8 @@ class DisjointSets {
       m_size *= 2;
       m_rank.resize(m_size);
       m_parent.resize(m_size);
-      m_ds = boost::disjoint_sets<std::size_t*, std::size_t*>(&m_rank[0], &m_parent[0]);
+      m_ds = boost::disjoint_sets<std::size_t*, std::size_t*>(&m_rank[0],
+                                                              &m_parent[0]);
     }
     m_ds.make_set(m_globalId);
     return static_cast<Label>(m_globalId++);
@@ -315,8 +316,8 @@ ClusterCollection mergeClusters(CellCollection& cells) {
   return internal::mergeClustersImpl<CellCollection, ClusterCollection>(cells);
 }
 
-template <typename CellCollection, typename ClusterCollection, std::size_t GridDim,
-          typename Connect>
+template <typename CellCollection, typename ClusterCollection,
+          std::size_t GridDim, typename Connect>
 ClusterCollection createClusters(CellCollection& cells, Connect connect) {
   using Cell = typename CellCollection::value_type;
   using Cluster = typename ClusterCollection::value_type;

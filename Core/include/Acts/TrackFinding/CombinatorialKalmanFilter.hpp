@@ -253,7 +253,8 @@ struct CombinatorialKalmanFilterResult {
 
   /// The indices of track states and corresponding source links on different
   /// surfaces
-  std::unordered_map<const Surface*, std::unordered_map<std::size_t, std::size_t>>
+  std::unordered_map<const Surface*,
+                     std::unordered_map<std::size_t, std::size_t>>
       sourcelinkTips;
 
   /// Indicator if filtering has been done
@@ -1058,9 +1059,9 @@ class CombinatorialKalmanFilter {
     ///
     /// @return The tip of added state
     std::size_t addNonSourcelinkState(const TrackStatePropMask& stateMask,
-                                 const BoundState& boundState,
-                                 result_type& result, bool isSensitive,
-                                 std::size_t prevTip) const {
+                                      const BoundState& boundState,
+                                      result_type& result, bool isSensitive,
+                                      std::size_t prevTip) const {
       // Add a track state
       auto currentTip = result.fittedStates->addTrackState(stateMask, prevTip);
       ACTS_VERBOSE(

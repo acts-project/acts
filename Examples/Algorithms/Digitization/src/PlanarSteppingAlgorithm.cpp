@@ -206,8 +206,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       Acts::Vector3 par(localX, localY, simHit.time());
 
       // create the planar cluster
-      digiSourceLinks.emplace_back(moduleGeoId,
-                                   std::vector<size_t>{simHitIdx});
+      digiSourceLinks.emplace_back(moduleGeoId, std::vector<size_t>{simHitIdx});
       Acts::DigitizationSourceLink& digiSourceLink = digiSourceLinks.back();
 
       Acts::PlanarModuleCluster cluster(

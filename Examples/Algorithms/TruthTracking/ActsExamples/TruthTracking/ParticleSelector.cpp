@@ -109,8 +109,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
                             << p.particleId());
     }
 
-    nInvalidMeasurementCount +=
-        static_cast<size_t>(!validMeasurementCount);
+    nInvalidMeasurementCount += static_cast<size_t>(!validMeasurementCount);
 
     return validCharge && validSecondary && validMeasurementCount &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&

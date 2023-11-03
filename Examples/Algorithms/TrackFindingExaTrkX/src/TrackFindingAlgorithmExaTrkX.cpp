@@ -43,9 +43,8 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
   ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
                   const IndexMultimap<Index>& measHitMap,
                   const SimHitContainer& simhits,
-                  const SimParticleContainer& particles,
-                  size_t targetMinHits, double targetMinPT,
-                  const Acts::Logger& logger)
+                  const SimParticleContainer& particles, size_t targetMinHits,
+                  double targetMinPT, const Acts::Logger& logger)
       : m_targetPT(targetMinPT),
         m_targetSize(targetMinHits),
         m_logger(logger.clone("MetricsHook")) {

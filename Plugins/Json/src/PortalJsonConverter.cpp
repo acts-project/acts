@@ -67,8 +67,8 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
 }
 
 std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
-    const GeometryContext& gctx, const Experimental::Portal& portal,
-    size_t ip, const Experimental::DetectorVolume& volume,
+    const GeometryContext& gctx, const Experimental::Portal& portal, size_t ip,
+    const Experimental::DetectorVolume& volume,
     const OrientedSurfaces& orientedSurfaces,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Options& option) {

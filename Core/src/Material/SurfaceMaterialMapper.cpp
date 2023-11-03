@@ -284,10 +284,12 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   auto currentAccMaterial = mState.accumulatedMaterial.end();
 
   // To remember the bins of this event
-  using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
+  using MapBin =
+      std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
   using MaterialBin = std::pair<AccumulatedSurfaceMaterial*,
                                 std::shared_ptr<const ISurfaceMaterial>>;
-  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>> touchedMapBins;
+  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>
+      touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
       touchedMaterialBin;
   if (sfIter != mappingSurfaces.end() &&
@@ -463,8 +465,10 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
 
 void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
     State& mState, std::vector<MaterialInteraction>& rMaterial) const {
-  using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
-  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>> touchedMapBins;
+  using MapBin =
+      std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
+  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>
+      touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
       touchedMaterialBin;
 

@@ -131,7 +131,8 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// @param bins is the bin triple filled during this access
   ///
   /// @return is the object in that bin
-  T object(const Vector2& lposition, std::array<std::size_t, 3>& bins) const final {
+  T object(const Vector2& lposition,
+           std::array<std::size_t, 3>& bins) const final {
     if (m_binUtility) {
       std::size_t bdim = m_binUtility->dimensions();
       bins[2] = bdim > 2 ? m_binUtility->bin(lposition, 2) : 0;
@@ -154,7 +155,8 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// @param bins is the bins triple filled during access
   ///
   /// @return is the object in that bin
-  T object(const Vector3& position, std::array<std::size_t, 3>& bins) const final {
+  T object(const Vector3& position,
+           std::array<std::size_t, 3>& bins) const final {
     if (m_binUtility) {
       std::size_t bdim = m_binUtility->dimensions();
       bins[2] = bdim > 2 ? m_binUtility->bin(position, 2) : 0;
