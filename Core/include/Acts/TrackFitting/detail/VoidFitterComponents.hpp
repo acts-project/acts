@@ -62,6 +62,5 @@ bool voidReverseFilteringLogic(
 
 inline const Surface* voidSurfaceAccessor(const SourceLink& /*sourceLink*/) {
   throw std::runtime_error{"voidSurfaceAccessor should not ever execute"};
-  return nullptr;
 }
 }  // namespace Acts::detail
