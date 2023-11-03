@@ -57,4 +57,9 @@ void identifyContributingParticles(
     const Trajectories& trajectories, size_t trajectoryTip,
     std::vector<ParticleHitCount>& particleHitCounts);
 
+void identifyContributingParticles(
+    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const ConstTrackContainer::ConstTrackProxy& track,
+    std::vector<ParticleHitCount>& particleHitCounts);
+
 }  // namespace ActsExamples

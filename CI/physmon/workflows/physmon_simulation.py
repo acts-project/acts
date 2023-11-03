@@ -27,9 +27,6 @@ with tempfile.TemporaryDirectory() as temp:
         events=1000,
         numThreads=1,
         logLevel=acts.logging.INFO,
-        fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
-            Path(__file__).parent.parent / "fpe_masks.yml"
-        ),
     )
 
     for d in setup.decorators:

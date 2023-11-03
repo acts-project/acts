@@ -44,7 +44,7 @@ template <typename T>
 void PlyVisualization3D<T>::write(const std::string& path) const {
   std::ofstream os;
   std::string objectpath = path;
-  if (not IVisualization3D::hasExtension(path)) {
+  if (!IVisualization3D::hasExtension(path)) {
     objectpath += std::string(".ply");
   }
   os.open(objectpath);

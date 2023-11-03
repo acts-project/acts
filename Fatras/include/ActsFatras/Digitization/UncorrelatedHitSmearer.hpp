@@ -88,7 +88,7 @@ struct BoundParametersSmearer {
     CovarianceMatrix cov = CovarianceMatrix::Zero();
     for (int i = 0; i < static_cast<int>(kSize); ++i) {
       auto res = smearFunctions[i](boundParams[indices[i]], rng);
-      if (not res.ok()) {
+      if (!res.ok()) {
         return Result::failure(res.error());
       }
       auto [value, stddev] = res.value();
@@ -143,7 +143,7 @@ struct FreeParametersSmearer {
     CovarianceMatrix cov = CovarianceMatrix::Zero();
     for (size_t i = 0; i < kSize; ++i) {
       auto res = smearFunctions[i](freeParams[indices[i]], rng);
-      if (not res.ok()) {
+      if (!res.ok()) {
         return Result::failure(res.error());
       }
       auto [value, stddev] = res.value();

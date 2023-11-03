@@ -168,11 +168,11 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
 
   // some field cell tests
-  BOOST_CHECK(not c.isInside(transformPos((pos << 3, 2, -3.7).finished())));
-  BOOST_CHECK(not c.isInside(transformPos((pos << -2, 3, -4.7).finished())));
-  BOOST_CHECK(not c.isInside(transformPos((pos << -2, 3, 4.7).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << 3, 2, -3.7).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << -2, 3, -4.7).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << -2, 3, 4.7).finished())));
   BOOST_CHECK(c.isInside(transformPos((pos << 0, 2, -4.7).finished())));
-  BOOST_CHECK(not c.isInside(transformPos((pos << 5, 2, 14.).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << 5, 2, 14.).finished())));
 }
 }  // namespace Test
 
