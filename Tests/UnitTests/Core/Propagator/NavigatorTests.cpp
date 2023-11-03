@@ -283,15 +283,11 @@ void step(stepper_state_t& sstate) {
 /// @brief Method for testing vectors in @c Navigator::State
 ///
 /// @param [in] state Navigator state
-/// @param [in] navSurf Number of navigation surfaces
-/// @param [in] navLay Number of navigation layers
-/// @param [in] navBound Number of navigation boundaries
+/// @param [in] cand Number of navigation candidates
 /// @param [in] extSurf Number of external surfaces
-bool testNavigatorStateVectors(Navigator::State& state, size_t navSurf,
-                               size_t navLay, size_t navBound, size_t extSurf) {
-  return ((state.navSurfaces.size() == navSurf) &&
-          (state.navLayers.size() == navLay) &&
-          (state.navBoundaries.size() == navBound) &&
+bool testNavigatorStateVectors(Navigator::State& state, size_t cand,
+                               size_t extSurf) {
+  return ((state.candidates.size() == cand) &&
           (state.externalSurfaces.size() == extSurf));
 }
 
@@ -356,7 +352,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     Navigator navigator{navCfg};
 
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
@@ -372,7 +368,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     Navigator navigator{navCfg};
 
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
@@ -391,7 +387,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     // a) Because target is reached
     state.navigation.targetReached = true;
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
@@ -400,7 +396,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     state.navigation.targetReached = false;
     state.navigation.targetSurface = nullptr;
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
@@ -411,7 +407,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const Surface* targetSurf = startSurf;
     state.navigation.targetSurface = targetSurf;
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(
         state.navigation, nullptr, nullptr, nullptr, nullptr, targetSurf,
         nullptr, nullptr, nullptr, targetSurf));
@@ -428,7 +424,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const Layer* startLay = startVol->associatedLayer(
         state.geoContext, stepper.position(state.stepping));
     navigator.initialize(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, worldVol, startVol,
                                            startLay, nullptr, nullptr, startVol,
                                            nullptr, nullptr, nullptr));
@@ -437,7 +433,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     state.navigation = Navigator::State();
     state.navigation.startSurface = startSurf;
     navigator.initialize(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(
         state.navigation, worldVol, startVol, startLay, startSurf, startSurf,
         startVol, nullptr, nullptr, nullptr));
@@ -446,7 +442,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     state.navigation = Navigator::State();
     state.navigation.startVolume = startVol;
     navigator.initialize(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, worldVol, startVol,
                                            startLay, nullptr, nullptr, startVol,
                                            nullptr, nullptr, nullptr));
@@ -504,15 +500,15 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // Check that the currentSurface is reset to:
   BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
   // No layer has been found
-  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 0u);
+  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 0u);
   // ACTORS-ABORTERS-TARGET
   navigator.preStep(state, stepper);
   // A layer has been found
-  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
+  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 1u);
   // The index should points to the begin
-  BOOST_CHECK(state.navigation.navLayerIndex == 0);
+  BOOST_CHECK(state.navigation.candidateIndex == 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayer().position());
+  double beamPipeR = perp(state.navigation.candidate().intersection.position());
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);
@@ -534,9 +530,9 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   BOOST_CHECK_EQUAL(state.navigation.currentVolume,
                     state.navigation.startVolume);
   // The layer number has not changed
-  BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
+  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 1u);
   // The index still points to the begin
-  BOOST_CHECK(state.navigation.navLayerIndex == 0);
+  BOOST_CHECK(state.navigation.candidateIndex == 0);
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
@@ -738,13 +734,13 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // Check that the currentSurface is reset to:
   BOOST_CHECK_EQUAL(BVHState.navigation.currentSurface, nullptr);
   // No layer has been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.navLayers.size(), 0u);
+  BOOST_CHECK_EQUAL(BVHState.navigation.candidates.size(), 0u);
   // ACTORS-ABORTERS-TARGET
   navigator.preStep(BVHState, BVHStepper);
   // Still no layer
-  BOOST_CHECK_EQUAL(BVHState.navigation.navLayers.size(), 0u);
+  BOOST_CHECK_EQUAL(BVHState.navigation.candidates.size(), 0u);
   // Surfaces have been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.navSurfaces.size(), 42u);
+  BOOST_CHECK_EQUAL(BVHState.navigation.candidates.size(), 42u);
 }
 
 }  // namespace Test

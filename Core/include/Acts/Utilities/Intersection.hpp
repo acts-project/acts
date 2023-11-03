@@ -121,6 +121,9 @@ using MultiIntersection3D =
 template <typename object_t, typename representation_t = object_t>
 class ObjectIntersection {
  public:
+  using Object = object_t;
+  using Representation = representation_t;
+
   /// Object intersection - symmetric setup
   ///
   /// @param intersection is the intersection
