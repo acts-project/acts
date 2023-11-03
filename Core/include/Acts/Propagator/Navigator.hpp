@@ -54,16 +54,15 @@ struct NavigationOptions {
   /// object to check against: at end
   const object_t* endObject = nullptr;
 
-  /// Target surface to exclude
-  const Surface* targetSurface = nullptr;
   /// External surface identifier for which the boundary check is ignored
   std::vector<GeometryIdentifier> externalSurfaces = {};
 
-  /// The maximum path limit for this navigation step
-  double pathLimit = std::numeric_limits<double>::max();
-
-  /// The overstep tolerance for this navigation step
-  double overstepLimit = 0;
+  /// The minimum distance for a surface to be considered
+  double nearLimit = 0;
+  /// The maximum distance for a surface to be considered
+  double farLimit = std::numeric_limits<double>::max();
+  /// The maximum distance for a surface to be considered
+  double surfaceTolerance = std::numeric_limits<double>::max();
 
   /// Force intersection with boundaries
   bool forceIntersectBoundaries = false;
@@ -196,10 +195,10 @@ class Navigator {
     AnyIntersection intersection;
     BoundaryCheck boundaryCheck = BoundaryCheck(true);
 
-    NavigationCandidate(AnyIntersection intersection,
-                        BoundaryCheck boundaryCheck)
-        : intersection(std::move(intersection)),
-          boundaryCheck(std::move(boundaryCheck)) {}
+    NavigationCandidate(AnyIntersection _intersection,
+                        BoundaryCheck _boundaryCheck)
+        : intersection(std::move(_intersection)),
+          boundaryCheck(std::move(_boundaryCheck)) {}
 
     static bool forwardOrder(const NavigationCandidate& aCandidate,
                              const NavigationCandidate& bCandidate) {
@@ -653,8 +652,8 @@ class Navigator {
       NavigationOptions<Surface> navOpts;
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
-      navOpts.pathLimit = std::numeric_limits<double>::max();
-      navOpts.overstepLimit = 0;
+      navOpts.farLimit = 0;
+      navOpts.nearLimit = std::numeric_limits<double>::max();
       navOpts.forceIntersectBoundaries =
           state.navigation.forceIntersectBoundaries;
 
@@ -700,8 +699,8 @@ class Navigator {
           (state.navigation.currentVolume == state.navigation.startVolume)
               ? state.navigation.startLayer
               : nullptr;
-      navOpts.pathLimit = std::numeric_limits<double>::max();
-      navOpts.overstepLimit = 0;
+      navOpts.nearLimit = 0;
+      navOpts.farLimit = std::numeric_limits<double>::max();
 
       // Request the compatible layers
       auto layers = state.navigation.currentVolume->compatibleLayers(
@@ -754,8 +753,8 @@ class Navigator {
                               ? state.navigation.startSurface
                               : nullptr;
     navOpts.endObject = state.navigation.targetSurface;
-    navOpts.pathLimit = std::numeric_limits<double>::max();
-    navOpts.overstepLimit = 0;
+    navOpts.nearLimit = 0;
+    navOpts.farLimit = std::numeric_limits<double>::max();
 
     std::vector<GeometryIdentifier> externalSurfaces;
     if (!state.navigation.externalSurfaces.empty()) {

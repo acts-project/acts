@@ -288,22 +288,21 @@ namespace detail {
 /// prevent the generation of logging code
 ///
 /// @param intersection The intersection to check
-/// @param pLimit The path-limit
-/// @param oLimit The overstep-limit
-/// @param tolerance The tolerance that is applied to the path-limit criterion
+/// @param nearLimit The minimum distance for an intersection to be considered
+/// @param farLimit The maximum distance for an intersection to be considered
 /// @param logger A optionally supplied logger which prints out a lot of infos
 /// at VERBOSE level
 template <typename intersection_t, typename logger_t = std::false_type>
-bool checkIntersection(const intersection_t& intersection, double pLimit,
-                       double oLimit, double tolerance,
+bool checkIntersection(const intersection_t& intersection, double nearLimit,
+                       double farLimit,
                        const Logger& logger = getDummyLogger()) {
-  const double cLimit = intersection.pathLength();
+  const double distance = intersection.pathLength();
 
-  ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                              << ", " << cLimit);
+  ACTS_VERBOSE(" -> near limit, far limit, distance: "
+               << nearLimit << ", " << farLimit << ", " << distance);
 
-  const bool coCriterion = cLimit > oLimit;
-  const bool cpCriterion = std::abs(cLimit) < std::abs(pLimit) + tolerance;
+  const bool coCriterion = distance > nearLimit;
+  const bool cpCriterion = distance < farLimit;
 
   const bool accept = coCriterion && cpCriterion;
 
@@ -313,13 +312,11 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
     ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
     if (!coCriterion) {
       ACTS_VERBOSE("- intersection path length "
-                   << cLimit << " <= overstep limit " << oLimit);
+                   << distance << " <= near limit " << nearLimit);
     }
     if (!cpCriterion) {
-      ACTS_VERBOSE("- intersection path length "
-                   << std::abs(cLimit) << " is over the path limit "
-                   << (std::abs(pLimit) + tolerance)
-                   << " (including tolerance of " << tolerance << ")");
+      ACTS_VERBOSE("- intersection path length " << distance << " >= far limit "
+                                                 << farLimit);
     }
   }
 

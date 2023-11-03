@@ -17,6 +17,8 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <limits>
+
 namespace Acts {
 namespace detail {
 
@@ -51,13 +53,11 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     return Intersection3D::Status::onSurface;
   }
 
-  // Path and overstep limit checking
-  const double pLimit = state.stepSize.value(ConstrainedStep::aborter);
-  const double oLimit = stepper.overstepLimit(state);
+  const double newLimit = stepper.overstepLimit(state);
+  const double farLimit = std::numeric_limits<double>::max();
 
-  if (sIntersection &&
-      detail::checkIntersection(sIntersection.intersection(), pLimit, oLimit,
-                                surfaceTolerance, logger)) {
+  if (sIntersection && detail::checkIntersection(sIntersection.intersection(),
+                                                 newLimit, farLimit, logger)) {
     ACTS_VERBOSE("Surface is reachable");
     stepper.setStepSize(state, sIntersection.pathLength());
     return Intersection3D::Status::reachable;

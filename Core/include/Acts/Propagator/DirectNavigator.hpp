@@ -349,18 +349,16 @@ class DirectNavigator {
            " | ";
   }
 
-  ObjectIntersection<Surface> chooseIntersection(const GeometryContext& gctx,
-                                                 const Surface& surface,
-                                                 const Vector3& position,
-                                                 const Vector3& direction,
-                                                 const BoundaryCheck& bcheck,
-                                                 double pLimit, double oLimit,
-                                                 double tolerance) const {
+  ObjectIntersection<Surface> chooseIntersection(
+      const GeometryContext& gctx, const Surface& surface,
+      const Vector3& position, const Vector3& direction,
+      const BoundaryCheck& bcheck, double nearLimit, double farLimit,
+      double tolerance) const {
     auto intersections =
         surface.intersect(gctx, position, direction, bcheck, tolerance);
 
     for (auto& intersection : intersections.split()) {
-      if (detail::checkIntersection(intersection, pLimit, oLimit, tolerance,
+      if (detail::checkIntersection(intersection, nearLimit, farLimit,
                                     logger())) {
         return intersection;
       }

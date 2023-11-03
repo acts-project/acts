@@ -172,17 +172,16 @@ struct SurfaceReached {
       return true;
     }
 
-    const double pLimit =
-        state.stepping.stepSize.value(ConstrainedStep::aborter);
     // not using the stepper overstep limit here because it does not always work
     // for perigee surfaces
-    const double oLimit =
+    const double nearLimit =
         overstepLimit.value_or(stepper.overstepLimit(state.stepping));
+    const double farLimit = std::numeric_limits<double>::max();
 
     for (const auto& intersection : sIntersection.split()) {
       if (intersection &&
-          detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
-                                    tolerance, logger)) {
+          detail::checkIntersection(intersection.intersection(), nearLimit,
+                                    farLimit, logger)) {
         stepper.setStepSize(state.stepping, intersection.pathLength(),
                             ConstrainedStep::aborter, false);
         break;

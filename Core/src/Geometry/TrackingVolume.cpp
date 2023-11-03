@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
 #include <algorithm>
@@ -472,10 +473,6 @@ Acts::TrackingVolume::compatibleBoundaries(
   auto excludeObject = options.startObject;
   boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
-  // The Limits: current, path & overstepping
-  double pLimit = options.pathLimit;
-  double oLimit = 0;
-
   // Helper function to test intersection
   auto checkIntersection =
       [&](SurfaceMultiIntersection& smIntersection,
@@ -486,31 +483,29 @@ Acts::TrackingVolume::compatibleBoundaries(
       }
 
       if (options.forceIntersectBoundaries) {
-        const bool coCriterion =
-            std::abs(sIntersection.pathLength()) < std::abs(oLimit);
+        const bool coCriterion = sIntersection.pathLength() < options.nearLimit;
         ACTS_VERBOSE("Forcing intersection with surface "
                      << bSurface->surfaceRepresentation().geometryId());
         if (coCriterion) {
           ACTS_VERBOSE("Intersection forced successfully ");
           ACTS_VERBOSE("- intersection path length "
-                       << std::abs(sIntersection.pathLength())
-                       << " < overstep limit " << std::abs(oLimit));
+                       << sIntersection.pathLength() << " < overstep limit "
+                       << options.nearLimit);
           return BoundaryIntersection(sIntersection.intersection(), bSurface,
                                       sIntersection.object(),
                                       sIntersection.index());
         }
         ACTS_VERBOSE("Can't force intersection: ");
-        ACTS_VERBOSE("- intersection path length "
-                     << std::abs(sIntersection.pathLength())
-                     << " > overstep limit " << std::abs(oLimit));
+        ACTS_VERBOSE("- intersection path length " << sIntersection.pathLength()
+                                                   << " > overstep limit "
+                                                   << options.nearLimit);
       }
 
       ACTS_VERBOSE("Check intersection with surface "
                    << bSurface->surfaceRepresentation().geometryId());
-      if (detail::checkIntersection<decltype(sIntersection.intersection()),
-                                    decltype(logger)>(
-              sIntersection.intersection(), pLimit, oLimit,
-              s_onSurfaceTolerance, logger)) {
+      if (detail::checkIntersection(sIntersection.intersection(),
+                                    options.nearLimit, options.farLimit,
+                                    logger)) {
         return BoundaryIntersection(sIntersection.intersection(), bSurface,
                                     sIntersection.object(),
                                     sIntersection.index());
@@ -608,11 +603,8 @@ Acts::TrackingVolume::compatibleLayers(
         // layer on approach intersection
         auto atIntersection =
             tLayer->surfaceOnApproach(gctx, position, direction, options);
-        auto path = atIntersection.pathLength();
-        bool withinLimit = std::abs(path) <= std::abs(options.pathLimit);
         // Intersection is ok - take it (move to surface on approach)
-        if (atIntersection &&
-            (atIntersection.object() != options.targetSurface) && withinLimit) {
+        if (atIntersection) {
           // create a layer intersection
           lIntersections.push_back(LayerIntersection(
               atIntersection.intersection(), tLayer, atIntersection.object(),
@@ -670,10 +662,6 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
   std::vector<SurfaceIntersection> sIntersections;
   sIntersections.reserve(20);  // arbitrary
 
-  // The limits for this navigation step
-  double pLimit = options.pathLimit;
-  double oLimit = options.overstepLimit;
-
   if (m_bvhTop == nullptr) {
     return sIntersections;
   }
@@ -697,7 +685,8 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
       const Surface& srf = bs->surfaceRepresentation();
       auto sfmi = srf.intersect(gctx, position, direction, false);
       for (const auto& sfi : sfmi.split()) {
-        if (sfi && sfi.pathLength() > oLimit && sfi.pathLength() <= pLimit) {
+        if (sfi && detail::checkIntersection(sfi, options.farLimit,
+                                             options.nearLimit)) {
           sIntersections.push_back(sfi);
         }
       }
