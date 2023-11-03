@@ -25,17 +25,24 @@ These macros correspond to the available log levels:
 :::
 
 
-The macros require that a function `logger()` returning a
-{class}`Acts::Logger` object is available in the scope in which the macros are
-used. Inside classes containing an {class}`Acts::Logger` object as member
-variable, this could be achieved by providing a private class method called
-`logger()` (for an example see e.g.
-{func}`Acts::CylinderVolumeBuilder::logger`). Inside free functions or member
-methods with local logger objects, the same effect can be achieved by using the
-macro `ACTS_LOCAL_LOGGER(...)` which is provided for your convenience.
+The macros require that a function `logger` returning a {class}`Acts::Logger`
+object is available in the scope in which the macros are used:
+
+```cpp
+const Logger& logger() const;
+```
+
+Inside classes
+containing an {class}`Acts::Logger` object as member variable, this could be
+achieved by providing a private class method called `logger()` (for an example
+see e.g.  {func}`Acts::CylinderVolumeBuilder::logger`). Inside free functions
+or member methods with local logger objects, the macros are also usable, since
+{class}`Acts::Logger` is callable and returns a reference to itself.
 
 Code example illustrating the usage:
 
+:::{doxygenfunction} Acts::getDefaultLogger
+:::
 
 ```cpp
 #include <fstream>
@@ -47,11 +54,9 @@ void myFunction() {
   // open the logfile
   std::ofstream logfile("log.txt");
   // setup a logger instance for >= INFO messages, streaming into the log file
-  // make sure you do NOT call the variable 'logger'
-  std::unique_ptr<const Acts::Logger> myLogger
+  std::unique_ptr<const Acts::Logger> logger
       = Acts::getDefaultLogger("MyLogger", Acts::Logging::INFO, &logfile);
   // make sure the Acts debug macros can work with your logger
-  ACTS_LOCAL_LOGGER(myLogger);
   ACTS_VERBOSE("This message will not appear in the logfile.");
   ACTS_INFO("But this one will: Hello World!");
   // do not forget to close the logfile
@@ -94,14 +99,14 @@ There are two approaches to logger integration:
 
 
 (override_deflog)=
-### Overriding `Acts::getDefaultLogger()`
+### Overriding `Acts::getDefaultLogger`
 
 :::{attention}
 Using this mechanism is now **discouraged** for integration with an experiment
 framework.
 :::
 
-Since Acts makes extensive use of {func}`Acts::getDefaultLogger()` to provide
+Since Acts makes extensive use of {func}`Acts::getDefaultLogger` to provide
 sufficient information for debugging, you might want to provide a modified
 implementation of this function (using your output filter and printing
 policies) to also pipe this output to your framework. You can use the following
@@ -129,7 +134,7 @@ $ LD_PRELOAD=<YOUR_SHARED_LIBRARY> path/to/your/executable
 ## Logging thresholds
 
 Generally, log levels in ACTS are only of informative value: even
-{enumerator}`Acts::Logging::ERROR` and {enumerator}`Acts::Logging::FATAL` will only print a
+{enumerator}`Acts::Logging::Level::ERROR` and {enumerator}`Acts::Logging::Level::FATAL` will only print a
 messages, **and not terminate execution**. 
 
 This is desirable in an experiment context, where jobs should not immediately

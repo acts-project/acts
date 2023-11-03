@@ -93,7 +93,7 @@ values at every queried location. It is implemented in the
 
 As seen above, the class is constructed from a three-dimensional field vector,
 which is returned unmodified to every call to
-{func}`Acts::ConstantBField::getField()`.
+{func}`Acts::ConstantBField::getField`.
 
 ### Interpolated magnetic field
 
