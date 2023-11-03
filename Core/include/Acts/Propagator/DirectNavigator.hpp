@@ -255,14 +255,13 @@ class DirectNavigator {
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              false, std::numeric_limits<double>::max(),
+              BoundaryCheck(false), std::numeric_limits<double>::max(),
               stepper.overstepLimit(state.stepping),
               state.options.targetTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, index, state.options.direction,
-          BoundaryCheck(false), state.options.targetTolerance,
-          *m_logger);
+          BoundaryCheck(false), state.options.targetTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::unreachable) {
         ACTS_VERBOSE(
             "Surface not reachable anymore, switching to next one in "
@@ -314,14 +313,13 @@ class DirectNavigator {
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              false, std::numeric_limits<double>::max(),
+              BoundaryCheck(false), std::numeric_limits<double>::max(),
               stepper.overstepLimit(state.stepping),
               state.options.targetTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, index, state.options.direction,
-          BoundaryCheck(false), state.options.targetTolerance,
-          *m_logger);
+          BoundaryCheck(false), state.options.targetTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;
