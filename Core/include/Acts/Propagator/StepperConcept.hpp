@@ -203,7 +203,6 @@ constexpr bool MultiStepperStateConcept= require<
                                               component_proxy_exists,
                                               const_component_proxy_exists,
                                               number_components_exists,
-                                              clear_components_exists,
                                               remove_missed_components_exists>;
         };
 // clang-format on
