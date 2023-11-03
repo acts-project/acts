@@ -143,20 +143,14 @@ class DirectNavigator {
   /// @param state is the state to reset
   /// @param ssurface is the new starting surface
   /// @param tsurface is the target surface
-  void resetState(State& state, const GeometryContext& /*geoContext*/,
-                  const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  const Surface* ssurface, const Surface* tsurface) const {
-    // Reset everything except the navSurfaces
+  void resetState(State& state, const Surface* ssurface,
+                  const Surface* tsurface) const {
     auto navSurfaces = state.navSurfaces;
-    state = State();
-    state.navSurfaces = navSurfaces;
+    state = makeState(ssurface, tsurface);
+    state.navSurfaces = std::move(navSurfaces);
 
-    // Reset others
     state.navSurfaceIter =
         std::find(state.navSurfaces.begin(), state.navSurfaces.end(), ssurface);
-    state.startSurface = ssurface;
-    state.currentSurface = ssurface;
-    state.targetSurface = tsurface;
   }
 
   const Surface* currentSurface(const State& state) const {

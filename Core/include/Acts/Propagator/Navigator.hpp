@@ -176,6 +176,9 @@ class Navigator {
     bool lastHierarchySurfaceReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
+
+    /// Navigation reset requested
+    bool resetRequested = false;
   };
 
   /// Constructor with configuration object
@@ -198,15 +201,12 @@ class Navigator {
   /// Reset state
   ///
   /// @param state is the state
-  /// @param geoContext is the geometry context
-  /// @param pos is the global position
-  /// @param dir is the direction of navigation
   /// @param ssurface is the new starting surface
   /// @param tsurface is the target surface
-  void resetState(State& state, const GeometryContext& /*geoContext*/,
-                  const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  const Surface* ssurface, const Surface* tsurface) const {
+  void resetState(State& state, const Surface* ssurface,
+                  const Surface* tsurface) const {
     state = makeState(ssurface, tsurface);
+    state.resetRequested = true;
   }
 
   const Surface* currentSurface(const State& state) const {
@@ -355,6 +355,12 @@ class Navigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void preStep(propagator_state_t& state, const stepper_t& stepper) const {
+    // Check for reset
+    if (state.navigation.resetRequested) {
+      initialize(state, stepper);
+      state.navigation.resetRequested = false;
+    }
+
     // Check if the navigator is inactive
     if (inactive(state)) {
       return;
@@ -564,7 +570,7 @@ class Navigator {
       NavigationOptions<Surface> navOpts;
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
-      navOpts.nearLimit = 0;
+      navOpts.nearLimit = state.options.targetTolerance;
       navOpts.farLimit = std::numeric_limits<double>::max();
 
       ACTS_VERBOSE(volInfo(state)
@@ -609,7 +615,7 @@ class Navigator {
           (state.navigation.currentVolume == state.navigation.startVolume)
               ? state.navigation.startLayer
               : nullptr;
-      navOpts.nearLimit = 0;
+      navOpts.nearLimit = state.options.targetTolerance;
       navOpts.farLimit = std::numeric_limits<double>::max();
 
       // Request the compatible layers
@@ -663,7 +669,7 @@ class Navigator {
                               ? state.navigation.startSurface
                               : nullptr;
     navOpts.endObject = state.navigation.targetSurface;
-    navOpts.nearLimit = 0;
+    navOpts.nearLimit = state.options.targetTolerance;
     navOpts.farLimit = std::numeric_limits<double>::max();
 
     std::vector<GeometryIdentifier> externalSurfaces;

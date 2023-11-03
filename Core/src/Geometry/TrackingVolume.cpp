@@ -469,8 +469,7 @@ Acts::TrackingVolume::compatibleBoundaries(
     const Vector3& direction, const NavigationOptions<Surface>& options,
     const Logger& logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
-  // Loop over boundarySurfaces and calculate the intersection
-  auto excludeObject = options.startObject;
+
   boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
   // Helper function to test intersection
@@ -503,20 +502,15 @@ Acts::TrackingVolume::compatibleBoundaries(
                                                 << " :\n"
                                                 << std::tie(bSurfaceRep, gctx));
 
-      // Exclude the boundary where you are on
-      if (excludeObject != &bSurfaceRep) {
-        auto bCandidate = bSurfaceRep.intersect(gctx, position, direction,
-                                                options.boundaryCheck);
-        // Intersect and continue
-        auto bIntersection = checkIntersection(bCandidate, bsIter.get());
-        if (bIntersection) {
-          ACTS_VERBOSE(" - Proceed with surface");
-          bIntersections.push_back(bIntersection);
-        } else {
-          ACTS_VERBOSE(" - Surface intersecion invalid");
-        }
+      auto bCandidate = bSurfaceRep.intersect(gctx, position, direction,
+                                              options.boundaryCheck);
+      // Intersect and continue
+      auto bIntersection = checkIntersection(bCandidate, bsIter.get());
+      if (bIntersection) {
+        ACTS_VERBOSE(" - Proceed with surface");
+        bIntersections.push_back(bIntersection);
       } else {
-        ACTS_VERBOSE(" - Surface is excluded surface");
+        ACTS_VERBOSE(" - Surface intersecion invalid");
       }
     }
   };

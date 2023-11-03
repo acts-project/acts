@@ -82,14 +82,9 @@ class DetectorNavigator {
     return result;
   }
 
-  void resetState(State& state, const GeometryContext& /*geoContext*/,
-                  const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  const Surface* /*ssurface*/,
-                  const Surface* /*tsurface*/) const {
-    // Reset everything first
-    state = State();
-
-    // TODO fill state
+  void resetState(State& state, const Surface* ssurface,
+                  const Surface* tsurface) const {
+    state = makeState(ssurface, tsurface);
   }
 
   const Surface* currentSurface(const State& state) const {
