@@ -15,9 +15,9 @@
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cstddef>
@@ -33,8 +33,8 @@ namespace Acts {
 namespace Test {
 
 constexpr unsigned int dim = 2;
-using grid_t = detail::Grid<Acts::Material::ParametersVector,
-                            detail::EquidistantAxis, detail::EquidistantAxis>;
+using grid_t = Grid<Acts::Material::ParametersVector, detail::EquidistantAxis,
+                    detail::EquidistantAxis>;
 
 ActsVector<dim> trafoGlobalToLocal(const Vector3& global) {
   return {global.x(), global.y()};
