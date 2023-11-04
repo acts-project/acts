@@ -138,7 +138,7 @@ class Navigator {
     /// the vector of navigation surfaces to work through
     NavigationCandidates candidates = {};
     /// the current surface index of the navigation state
-    std::size_t candidateIndex = candidates.size();
+    int candidateIndex = 0;
 
     auto candidate() const { return candidates.at(candidateIndex); }
 
@@ -338,7 +338,23 @@ class Navigator {
       }
     }
 
+    state.navigation.candidates.clear();
+    state.navigation.candidateIndex = 0;
+
     initializeVolume(state, stepper);
+
+    state.navigation.currentLayer = state.navigation.startLayer;
+    if (state.navigation.currentLayer) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current layer set to start layer "
+                   << state.navigation.currentLayer->geometryId());
+    }
+
+    initializeLayer(state, stepper);
+
+    std::sort(state.navigation.candidates.begin(),
+              state.navigation.candidates.end(),
+              NavigationCandidate::forwardOrder);
   }
 
   /// @brief Navigator pre step call
@@ -370,8 +386,8 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state) << "Entering navigator::preStep.");
 
     // Loop over the remaining navigation candidates
-    for (;
-         state.navigation.candidateIndex != state.navigation.candidates.size();
+    for (; state.navigation.candidateIndex !=
+           (int)state.navigation.candidates.size();
          ++state.navigation.candidateIndex) {
       // Screen output how much is left to try
       ACTS_VERBOSE(volInfo(state)
@@ -409,7 +425,8 @@ class Navigator {
       }
     }
 
-    if (state.navigation.candidateIndex == state.navigation.candidates.size()) {
+    if (state.navigation.candidateIndex ==
+        (int)state.navigation.candidates.size()) {
       ACTS_ERROR(volInfo(state) << "Exhausted navigation candidates.");
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
@@ -463,6 +480,7 @@ class Navigator {
                  << state.navigation.currentSurface->geometryId());
 
     const auto& intersection = state.navigation.candidate().intersection;
+
     if (intersection.template checkType<SurfaceIntersection>()) {
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
     } else if (intersection.template checkType<LayerIntersection>()) {
@@ -471,22 +489,7 @@ class Navigator {
       state.navigation.currentLayer =
           intersection.template object<LayerIntersection>();
 
-      auto surfaces = resolveSurfaces(state, stepper);
-
-      if (logger().doPrint(Logging::VERBOSE)) {
-        std::ostringstream os;
-        os << surfaces.size();
-        os << " surface candidates found at path(s): ";
-        for (const auto& surface : surfaces) {
-          os << surface.pathLength() << "  ";
-        }
-        logger().log(Logging::VERBOSE, os.str());
-      }
-
-      for (const auto& surface : surfaces) {
-        state.navigation.candidates.emplace_back(AnyIntersection(surface),
-                                                 BoundaryCheck(true));
-      }
+      initializeLayer(state, stepper);
 
       std::sort(state.navigation.candidates.begin() +
                     state.navigation.candidateIndex + 1,
@@ -504,7 +507,14 @@ class Navigator {
 
       ACTS_VERBOSE(volInfo(state) << "Switched volume");
 
+      state.navigation.candidates.clear();
+      state.navigation.candidateIndex = 0;
+
       initializeVolume(state, stepper);
+
+      std::sort(state.navigation.candidates.begin(),
+                state.navigation.candidates.end(),
+                NavigationCandidate::forwardOrder);
     } else {
       ACTS_ERROR(volInfo(state) << "Unknown intersection type");
     }
@@ -552,9 +562,6 @@ class Navigator {
   void initializeVolume(propagator_state_t& state,
                         const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state) << "Initialize volume");
-
-    state.navigation.candidates.clear();
-    state.navigation.candidateIndex = 0;
 
     if (state.navigation.currentVolume == nullptr) {
       state.navigation.navigationBreak = true;
@@ -639,10 +646,34 @@ class Navigator {
             AnyIntersection(layer), m_cfg.boundaryCheckLayerResolving);
       }
     }
+  }
 
-    std::sort(state.navigation.candidates.begin(),
-              state.navigation.candidates.end(),
-              NavigationCandidate::forwardOrder);
+  template <typename propagator_state_t, typename stepper_t>
+  auto initializeLayer(propagator_state_t& state,
+                       const stepper_t& stepper) const {
+    ACTS_VERBOSE(volInfo(state) << "Initialize layer");
+
+    if (state.navigation.currentLayer == nullptr) {
+      ACTS_VERBOSE(volInfo(state) << "No layer set.");
+      return;
+    }
+
+    auto surfaces = resolveSurfaces(state, stepper);
+
+    if (logger().doPrint(Logging::VERBOSE)) {
+      std::ostringstream os;
+      os << surfaces.size();
+      os << " surface candidates found at path(s): ";
+      for (const auto& surface : surfaces) {
+        os << surface.pathLength() << "  ";
+      }
+      logger().log(Logging::VERBOSE, os.str());
+    }
+
+    for (const auto& surface : surfaces) {
+      state.navigation.candidates.emplace_back(AnyIntersection(surface),
+                                               BoundaryCheck(true));
+    }
   }
 
   /// @brief Resolve the surfaces of this layer

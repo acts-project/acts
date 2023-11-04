@@ -119,37 +119,8 @@ Acts::Layer::compatibleSurfaces(
     return sIntersections;
   }
 
-  // (0) End surface check
-  // @todo: - we might be able to skip this by use of options.pathLimit
-  // check if you have to stop at the endSurface
   double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
-
-  if (options.endObject != nullptr) {
-    // intersect the end surface
-    // - it is the final one don't use the boundary check at all
-    SurfaceIntersection endInter =
-        options.endObject
-            ->intersect(gctx, position, direction, BoundaryCheck(true))
-            .closest();
-    // non-valid intersection with the end surface provided at this layer
-    // indicates wrong direction or faulty setup
-    // -> do not return compatible surfaces since they may lead you on a wrong
-    // navigation path
-    if (endInter) {
-      farLimit = endInter.pathLength();
-    } else {
-      return sIntersections;
-    }
-  } else {
-    // compatibleSurfaces() should only be called when on the layer,
-    // i.e. the maximum path limit is given by the layer thickness times
-    // path correction, we take a safety factor of 1.5
-    // -> this avoids punch through for cylinders
-    double pCorrection =
-        surfaceRepresentation().pathCorrection(gctx, position, direction);
-    farLimit = 1.5 * thickness() * pCorrection;
-  }
 
   // lemma 0 : accept the surface
   auto acceptSurface = [&options](const Surface& sf,
@@ -169,8 +140,8 @@ Acts::Layer::compatibleSurfaces(
   // lemma 1 : check and fill the surface
   // [&sIntersections, &options, &parameters
   auto processSurface = [&](const Surface& sf, bool sensitive = false) {
-    // veto if it's start or end surface
-    if (options.startObject == &sf || options.endObject == &sf) {
+    // veto if it's start surface
+    if (options.startObject == &sf) {
       return;
     }
     // veto if it doesn't fit the prescription
@@ -202,14 +173,11 @@ Acts::Layer::compatibleSurfaces(
   // - the surfaces are only collected if needed
   if (m_approachDescriptor &&
       (options.resolveMaterial || options.resolvePassive)) {
-    // the approach surfaces
-    const std::vector<const Surface*>& approachSurfaces =
-        m_approachDescriptor->containedSurfaces();
-    // we loop through and veto
-    // - if the approach surface is the parameter surface
-    // - if the surface is not compatible with the collect
-    for (auto& aSurface : approachSurfaces) {
-      processSurface(*aSurface);
+    // the approach surface
+    auto approachSurface = m_approachDescriptor->approachSurface(
+        gctx, position, direction, options.boundaryCheck, nearLimit, farLimit);
+    if (approachSurface) {
+      processSurface(*approachSurface.object());
     }
   }
 
