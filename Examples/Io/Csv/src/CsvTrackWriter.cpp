@@ -75,7 +75,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     }
 
     // Check if the reco track has fitted track parameters
-    if (not track.hasReferenceSurface()) {
+    if (!track.hasReferenceSurface()) {
       ACTS_WARNING(
           "No fitted track parameters for trajectory with entry index = "
           << track.tipIndex());

@@ -137,7 +137,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
   trackState.setUncalibratedSourceLink(sourceLink);
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
 
-  assert((idxSourceLink.index() < measurements.size()) and
+  assert((idxSourceLink.index() < measurements.size()) &&
          "Source link index is outside the container bounds");
 
   auto geoId = trackState.referenceSurface().geometryId();

@@ -9,8 +9,6 @@
 #pragma once
 
 namespace Acts {
-namespace detail {
 template <typename T, class... Axes>
 class Grid;
-}
 }  // namespace Acts

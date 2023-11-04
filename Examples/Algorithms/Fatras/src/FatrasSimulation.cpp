@@ -60,9 +60,9 @@ struct HitSurfaceSelector {
     bool isSensitive = surface.associatedDetectorElement() != nullptr;
     bool isMaterial = surface.surfaceMaterial() != nullptr;
     // passive should be an orthogonal category
-    bool isPassive = not(isSensitive or isMaterial);
-    return (isSensitive and sensitive) or (isMaterial and material) or
-           (isPassive and passive);
+    bool isPassive = !(isSensitive || isMaterial);
+    return (isSensitive && sensitive) || (isMaterial && material) ||
+           (isPassive && passive);
   }
 };
 
@@ -140,16 +140,16 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
         makeStandardChargedElectroMagneticInteractions(cfg.pMin);
 
     // processes are enabled by default
-    if (not cfg.emScattering) {
+    if (!cfg.emScattering) {
       simulation.charged.interactions.template disable<StandardScattering>();
     }
-    if (not cfg.emEnergyLossIonisation) {
+    if (!cfg.emEnergyLossIonisation) {
       simulation.charged.interactions.template disable<StandardBetheBloch>();
     }
-    if (not cfg.emEnergyLossRadiation) {
+    if (!cfg.emEnergyLossRadiation) {
       simulation.charged.interactions.template disable<StandardBetheHeitler>();
     }
-    if (not cfg.emPhotonConversion) {
+    if (!cfg.emPhotonConversion) {
       simulation.neutral.interactions.template disable<PhotonConversion>();
     }
 
@@ -239,7 +239,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
                              inputParticles, particlesInitialUnordered,
                              particlesFinalUnordered, simHitsUnordered);
   // fatal error leads to panic
-  if (not ret.ok()) {
+  if (!ret.ok()) {
     ACTS_FATAL("event " << ctx.eventNumber << " simulation failed with error "
                         << ret.error());
     return ProcessCode::ABORT;

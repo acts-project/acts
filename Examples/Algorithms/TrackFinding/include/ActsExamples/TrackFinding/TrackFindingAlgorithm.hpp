@@ -165,7 +165,7 @@ void TrackFindingAlgorithm::computeSharedHits(
 
   for (auto track : tracks) {
     for (auto state : track.trackStatesReversed()) {
-      if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         continue;
       }
 
@@ -190,8 +190,7 @@ void TrackFindingAlgorithm::computeSharedHits(
                             .container()
                             .trackStateContainer()
                             .getTrackState(indexFirstState);
-      if (not firstState.typeFlags().test(
-              Acts::TrackStateFlag::SharedHitFlag)) {
+      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
         firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
       }
 

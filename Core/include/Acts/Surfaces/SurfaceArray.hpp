@@ -11,9 +11,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <iostream>
 #include <type_traits>
@@ -125,7 +125,7 @@ class SurfaceArray {
     /// std::array<double, 1>
     using point_t =
         std::conditional_t<DIM == 1, std::array<double, 1>, ActsVector<DIM>>;
-    using Grid_t = detail::Grid<SurfaceVector, Axes...>;
+    using Grid_t = Grid<SurfaceVector, Axes...>;
 
     /// @brief Default constructor
     ///

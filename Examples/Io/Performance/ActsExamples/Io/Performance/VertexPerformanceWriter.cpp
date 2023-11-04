@@ -604,7 +604,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
             auto result =
                 propagator->propagate(params, *perigeeSurface, pOptions);
-            if (not result.ok()) {
+            if (!result.ok()) {
               ACTS_ERROR("Propagation to true vertex position failed.");
               return std::nullopt;
             }

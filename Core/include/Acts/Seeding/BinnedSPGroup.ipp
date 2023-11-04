@@ -42,16 +42,16 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator++() {
 template <typename external_spacepoint_t>
 inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator==(
     const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
-  return m_group.ptr == other.m_group.ptr and
+  return m_group.ptr == other.m_group.ptr &&
          m_current_localBins[INDEX::PHI] ==
-             other.m_current_localBins[INDEX::PHI] and
+             other.m_current_localBins[INDEX::PHI] &&
          m_current_localBins[INDEX::Z] == other.m_current_localBins[INDEX::Z];
 }
 
 template <typename external_spacepoint_t>
 inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator!=(
     const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
-  return not(*this == other);
+  return !(*this == other);
 }
 
 template <typename external_spacepoint_t>
@@ -134,11 +134,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     Acts::Extent& rRangeSPExtent,
     const SeedFinderConfig<external_spacepoint_t>& config,
     const SeedFinderOptions& options) {
-  if (not config.isInInternalUnits) {
+  if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
   }
-  if (not options.isInInternalUnits) {
+  if (!options.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }

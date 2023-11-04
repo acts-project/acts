@@ -78,13 +78,13 @@ struct MeasurementsCreator {
     using namespace Acts::UnitLiterals;
 
     // only generate measurements on surfaces
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
     const Acts::Surface& surface = *navigator.currentSurface(state.navigation);
     const Acts::GeometryIdentifier geoId = surface.geometryId();
     // only generate measurements on sensitive surface
-    if (not geoId.sensitive()) {
+    if (!geoId.sensitive()) {
       ACTS_VERBOSE("Create no measurements on non-sensitive surface " << geoId);
       return;
     }

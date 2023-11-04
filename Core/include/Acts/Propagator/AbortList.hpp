@@ -33,7 +33,7 @@ namespace Acts {
 template <typename... aborters_t>
 struct AbortList : public detail::Extendable<aborters_t...> {
  private:
-  static_assert(not detail::has_duplicates_v<aborters_t...>,
+  static_assert(!detail::has_duplicates_v<aborters_t...>,
                 "same aborter type specified several times");
 
   using detail::Extendable<aborters_t...>::tuple;

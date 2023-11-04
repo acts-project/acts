@@ -34,7 +34,7 @@ void Acts::DD4hepDetectorSurfaceFactory::construct(
              << (options.convertSensitive ? "sensitive components and " : "")
              << (options.convertPassive
                      ? "passive surfaces."
-                     : (not options.convertSensitive
+                     : (!options.convertSensitive
                             ? "nothing (this is likely a configuration error)."
                             : "")));
   ACTS_DEBUG("Constructing DD4hepDetectorElements - tree level call from  "
@@ -60,7 +60,7 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
   // Deal with passive surface if detected
   bool pSurface =
       getParamOr<bool>("acts_passive_surface", dd4hepElement, false);
-  if (pSurface and options.convertPassive) {
+  if (pSurface && options.convertPassive) {
     ACTS_VERBOSE("Passive surface(s) detected.");
     cache.passiveSurfaces.push_back(
         constructPassiveComponents(dd4hepElement, options));
@@ -72,7 +72,7 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
     for (auto& child : children) {
       dd4hep::DetElement childDetElement = child.second;
       ACTS_VERBOSE("Processing child " << childDetElement.name());
-      if (childDetElement.volume().isSensitive() and options.convertSensitive) {
+      if (childDetElement.volume().isSensitive() && options.convertSensitive) {
         ACTS_VERBOSE("Sensitive surface detected.");
         cache.sensitiveSurfaces.push_back(
             constructSensitiveComponents(childDetElement, options));
