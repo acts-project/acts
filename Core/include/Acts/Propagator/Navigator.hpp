@@ -411,7 +411,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
       // Get the boundary check
-      bool boundaryCheck = candidate.boundaryCheck;
+      BoundaryCheck boundaryCheck = candidate.boundaryCheck;
       // Estimate the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, *surface, intersection.index(),

@@ -71,7 +71,7 @@ struct PathLimitReached {
 /// it then triggers an propagation abort of the propagation
 struct SurfaceReached {
   const Surface* surface = nullptr;
-  BoundaryCheck boundaryCheck = true;
+  BoundaryCheck boundaryCheck = BoundaryCheck(true);
   std::optional<double> overstepLimit;
 
   SurfaceReached() = default;
