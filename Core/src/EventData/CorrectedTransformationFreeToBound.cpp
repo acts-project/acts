@@ -150,7 +150,8 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     SurfaceIntersection intersection =
         surface
             .intersect(geoContext, params.segment<3>(eFreePos0),
-                       navDir * params.segment<3>(eFreeDir0), false)
+                       navDir * params.segment<3>(eFreeDir0),
+                       BoundaryCheck(false))
             .closest();
     correctedFreeParams.segment<3>(eFreePos0) = intersection.position();
 

@@ -252,7 +252,8 @@ class LineSurface : public Surface {
   /// @return is the intersection object
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// the pathCorrection for derived classes with thickness

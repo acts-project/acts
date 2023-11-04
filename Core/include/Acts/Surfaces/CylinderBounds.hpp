@@ -111,7 +111,7 @@ class CylinderBounds : public SurfaceBounds {
   /// @param bcheck is the boundary check directive
   /// @return boolean indicator for operation success
   bool inside3D(const Vector3& position,
-                const BoundaryCheck& bcheck = true) const;
+                const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
