@@ -680,7 +680,7 @@ void remove_add_components_function() {
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
-  const auto multi_pars = makeDefaultBoundPars(4);
+  const auto multi_pars = makeDefaultBoundPars(true, 4);
   const auto &surface = multi_pars.referenceSurface();
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
@@ -699,7 +699,7 @@ void remove_add_components_function() {
 
   // Effectively add components
   {
-    const auto new_pars = makeDefaultBoundPars(6);
+    const auto new_pars = makeDefaultBoundPars(true, 6);
 
     const auto &cmps = new_pars.components();
     multi_stepper.update(multi_state, surface, cmps.begin(), cmps.end(), copy);
@@ -708,7 +708,7 @@ void remove_add_components_function() {
 
   // Effectively remove components
   {
-    const auto new_pars = makeDefaultBoundPars(2);
+    const auto new_pars = makeDefaultBoundPars(true, 2);
 
     const auto &cmps = new_pars.components();
     multi_stepper.update(multi_state, surface, cmps.begin(), cmps.end(), copy);
