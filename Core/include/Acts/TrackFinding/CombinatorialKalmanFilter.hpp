@@ -633,8 +633,9 @@ class CombinatorialKalmanFilter {
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering; it's only needed
       // after smoothing
-      navigator.resetState(state.navigation, &currentState.referenceSurface(),
-                           nullptr);
+      state.navigation =
+          navigator.makeState(&currentState.referenceSurface(), nullptr);
+      navigator.initialize(state, stepper);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
@@ -1307,7 +1308,8 @@ class CombinatorialKalmanFilter {
       // Reset the navigation state to enable propagation towards the target
       // surface
       // Set targetSurface to nullptr as it is handled manually in the actor
-      navigator.resetState(state.navigation, &surface, nullptr);
+      state.navigation = navigator.makeState(&surface, nullptr);
+      navigator.initialize(state, stepper);
 
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
                                   logger());

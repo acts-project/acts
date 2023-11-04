@@ -198,17 +198,6 @@ class Navigator {
     return result;
   }
 
-  /// Reset state
-  ///
-  /// @param state is the state
-  /// @param ssurface is the new starting surface
-  /// @param tsurface is the target surface
-  void resetState(State& state, const Surface* ssurface,
-                  const Surface* tsurface) const {
-    state = makeState(ssurface, tsurface);
-    state.resetRequested = true;
-  }
-
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }

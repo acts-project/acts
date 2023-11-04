@@ -83,11 +83,6 @@ class DetectorNavigator {
     return result;
   }
 
-  void resetState(State& state, const Surface* ssurface,
-                  const Surface* tsurface) const {
-    state = makeState(ssurface, tsurface);
-  }
-
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
