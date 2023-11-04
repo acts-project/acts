@@ -186,8 +186,6 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 /// @param m Eigen matrix to invert
 ///
 /// @return The theta value
-///
-/// @note This is only for fixed-size square matrices of size up to 4x4.
 template <typename MatrixType, typename ResultType = MatrixType>
 std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
   constexpr int rows = MatrixType::RowsAtCompileTime;
