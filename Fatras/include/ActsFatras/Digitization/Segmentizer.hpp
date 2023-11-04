@@ -98,8 +98,7 @@ struct Segmentizer {
   std::vector<ChannelSegment> segments(const Acts::GeometryContext& geoCtx,
                                        const Acts::Surface& surface,
                                        const Acts::BinUtility& segmentation,
-                                       const Segment2D& segment,
-                                       double thickness) const;
+                                       const Segment2D& segment) const;
 };
 
 }  // namespace ActsFatras

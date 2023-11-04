@@ -13,6 +13,8 @@
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
+#include <numeric>
+
 namespace ActsFatras {
 
 /// @brief Class that ties the digitization modules together and produces the channels
@@ -39,14 +41,27 @@ class Channelizer {
 
     auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
 
-    if (maskedSegmentRes.ok()) {
-      auto maskedSegment = maskedSegmentRes.value();
-      // Now Channelize
-      return m_segmentizer.segments(gctx, surface, segmentation, maskedSegment,
-                                    thickness);
-    } else {
+    if (!maskedSegmentRes.ok()) {
       return maskedSegmentRes.error();
     }
+
+    // Now Channelize
+    auto segments =
+        m_segmentizer.segments(gctx, surface, segmentation, *maskedSegmentRes);
+
+    // Go from 2D-path to 3D-path by applying thickness
+    const auto path2D = std::accumulate(
+        segments.begin(), segments.end(), 0.0,
+        [](double sum, const auto& seg) { return sum + seg.activation; });
+
+    for (auto& seg : segments) {
+      auto r = path2D != 0.0 ? (seg.activation / path2D) : 1.0;
+      auto segThickness = r * thickness;
+
+      seg.activation = std::hypot(segThickness, seg.activation);
+    }
+
+    return segments;
   }
 };
 

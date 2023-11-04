@@ -6,18 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsFatras/Digitization/Segmentizer.hpp"
+
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <memory>
-#include <numeric>
 
 namespace {
 
@@ -188,8 +188,7 @@ std::vector<ActsFatras::Segmentizer::ChannelSegment>
 ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
                                   const Acts::Surface& surface,
                                   const Acts::BinUtility& segmentation,
-                                  const Segment2D& segment,
-                                  double thickness) const {
+                                  const Segment2D& segment) const {
   // Return if the segmentation is not two-dimensional
   // (strips need to have one bin along the strip)
   if (segmentation.dimensions() != 2) {
@@ -200,28 +199,12 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
   const auto& start = segment[0];
   const auto& end = segment[1];
 
-  std::vector<ChannelSegment> cSegments;
   if (surface.type() == Acts::Surface::SurfaceType::Plane) {
-    cSegments = segmentPlaneSurface(segmentation, start, end);
+    return segmentPlaneSurface(segmentation, start, end);
   } else if (surface.type() == Acts::Surface::SurfaceType::Disc) {
-    cSegments = segmentDiscSurface(geoCtx, surface, segmentation, start, end);
+    return segmentDiscSurface(geoCtx, surface, segmentation, start, end);
   } else {
-    throw std::runtime_error("Cannot digitize surface");
+    // TODO propagate error code
+    throw std::runtime_error("Cannot segment surface");
   }
-
-  // Go from 2D-path to 3D-path by applying thickness
-  const auto path2D =
-      std::accumulate(cSegments.begin(), cSegments.end(), 0.0,
-                      [](double sum, const ChannelSegment& seg) {
-                        return sum + seg.activation;
-                      });
-
-  for (auto& seg : cSegments) {
-    auto r = path2D != 0.0 ? (seg.activation / path2D) : 1.0;
-    auto segThickness = r * thickness;
-
-    seg.activation = std::hypot(segThickness, seg.activation);
-  }
-
-  return cSegments;
 }
