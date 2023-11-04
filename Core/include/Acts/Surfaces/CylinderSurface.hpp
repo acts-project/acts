@@ -194,7 +194,8 @@ class CylinderSurface : public Surface {
   /// @return SurfaceIntersection object (contains intersection & surface)
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track
