@@ -105,9 +105,6 @@ struct PropagatorState {
       // Previous step size for overstep estimation (ignored here)
       double previousStepSize = 0.;
 
-      /// The tolerance for the stepping
-      double tolerance = s_onSurfaceTolerance;
-
       GeometryContext geoContext = GeometryContext();
     };
 
@@ -245,7 +242,7 @@ struct PropagatorState {
 
     const Acts::Logger& logger = Acts::getDummyLogger();
 
-    ActsScalar targetTolerance = s_onSurfaceTolerance;
+    ActsScalar surfaceTolerance = s_onSurfaceTolerance;
   };
 
   /// Navigation cache: the start surface

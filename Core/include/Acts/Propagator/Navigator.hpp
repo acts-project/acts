@@ -415,8 +415,8 @@ class Navigator {
       // Estimate the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, *surface, intersection.index(),
-          state.options.direction, boundaryCheck, state.options.targetTolerance,
-          logger());
+          state.options.direction, boundaryCheck,
+          state.options.surfaceTolerance, logger());
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface reachable, step size updated to "
@@ -544,7 +544,7 @@ class Navigator {
     // it the current one to pass it to the other actors
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *surface, intersection.index(), state.options.direction,
-        candidate.boundaryCheck, state.options.targetTolerance, logger());
+        candidate.boundaryCheck, state.options.surfaceTolerance, logger());
     if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -577,7 +577,7 @@ class Navigator {
       NavigationOptions<Surface> navOpts;
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
-      navOpts.nearLimit = state.options.targetTolerance;
+      navOpts.nearLimit = state.options.surfaceTolerance;
       navOpts.farLimit = std::numeric_limits<double>::max();
 
       ACTS_VERBOSE(volInfo(state)
@@ -622,7 +622,7 @@ class Navigator {
           (state.navigation.currentVolume == state.navigation.startVolume)
               ? state.navigation.startLayer
               : nullptr;
-      navOpts.nearLimit = state.options.targetTolerance;
+      navOpts.nearLimit = state.options.surfaceTolerance;
       navOpts.farLimit = std::numeric_limits<double>::max();
 
       // Request the compatible layers
@@ -700,7 +700,7 @@ class Navigator {
                               ? state.navigation.startSurface
                               : nullptr;
     navOpts.endObject = state.navigation.targetSurface;
-    navOpts.nearLimit = state.options.targetTolerance;
+    navOpts.nearLimit = state.options.surfaceTolerance;
     navOpts.farLimit = std::numeric_limits<double>::max();
 
     std::vector<GeometryIdentifier> externalSurfaces;
