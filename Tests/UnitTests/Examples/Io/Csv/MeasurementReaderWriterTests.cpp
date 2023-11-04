@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
 
     ActsExamples::Cluster cl;
 
-    using Bin2D = ActsFatras::Channelizer::Bin2D;
-    using Seg2D = ActsFatras::Channelizer::Segment2D;
+    using Bin2D = ActsFatras::Segmentizer::Bin2D;
+    using Seg2D = ActsFatras::Segmentizer::Segment2D;
 
     // We have two cluster shapes which are displaced randomly
     const auto o = disti(gen);

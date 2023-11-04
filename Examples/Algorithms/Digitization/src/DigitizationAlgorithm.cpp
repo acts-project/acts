@@ -205,16 +205,20 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               ACTS_VERBOSE("Configured to geometric digitize "
                            << digitizer.geometric.indices.size()
                            << " parameters.");
-              auto channels = channelizing(digitizer.geometric, simHit,
-                                           *surfacePtr, ctx.geoContext, rng);
-              if (channels.empty()) {
+              const auto& cfg = digitizer.geometric;
+              Acts::Vector3 driftDir = cfg.drift(simHit.position(), rng);
+              auto channelsRes = m_channelizer.channelize(
+                  simHit, *surfacePtr, ctx.geoContext, driftDir,
+                  cfg.segmentation, cfg.thickness);
+              if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this hit.")
                 continue;
               }
-              ACTS_VERBOSE("Activated " << channels.size()
+              ACTS_VERBOSE("Activated " << channelsRes->size()
                                         << " channels for this hit.");
-              dParameters = localParameters(digitizer.geometric, channels, rng);
+              dParameters =
+                  localParameters(digitizer.geometric, *channelsRes, rng);
             }
 
             // Smearing part - (optionally) rest
@@ -292,30 +296,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-std::vector<ActsFatras::Channelizer::ChannelSegment>
-ActsExamples::DigitizationAlgorithm::channelizing(
-    const GeometricConfig& geoCfg, const SimHit& hit,
-    const Acts::Surface& surface, const Acts::GeometryContext& gctx,
-    RandomEngine& rng) const {
-  Acts::Vector3 driftDir = geoCfg.drift(hit.position(), rng);
-
-  auto driftedSegment =
-      m_surfaceDrift.toReadout(gctx, surface, geoCfg.thickness, hit.position(),
-                               hit.direction(), driftDir);
-  auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
-  if (maskedSegmentRes.ok()) {
-    auto maskedSegment = maskedSegmentRes.value();
-    // Now Channelize
-    return m_channelizer.segments(gctx, surface, geoCfg.segmentation,
-                                  maskedSegment);
-  }
-  return {};
-}
-
 ActsExamples::DigitizedParameters
 ActsExamples::DigitizationAlgorithm::localParameters(
     const GeometricConfig& geoCfg,
-    const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
+    const std::vector<ActsFatras::Segmentizer::ChannelSegment>& channels,
     RandomEngine& rng) const {
   DigitizedParameters dParameters;
 
