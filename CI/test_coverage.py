@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# vi:syntax=python
-from __future__ import print_function
 import sys
 import os
 import subprocess
@@ -42,19 +40,18 @@ ret, gcovr_exe = check_output(["which", "gcovr"])
 assert ret == 0, "gcovr not installed. Use 'pip install gcovr'."
 
 ret, gcovr_version_text = check_output(["gcovr", "--version"])
-gcovr_version = re.match("gcovr (\d+)\.(\d+)", gcovr_version_text)
-gcovr_version_major, gcovr_version_minor = gcovr_version.groups()
-gcovr_version_major = int(gcovr_version_major)
-gcovr_version_minor = int(gcovr_version_minor)
+gcovr_version = tuple(
+    map(int, re.match("gcovr (\d+\.\d+)", gcovr_version_text).group(1).split("."))
+)
 
 extra_flags = []
 
-print(f"Found gcovr version {gcovr_version_major}.{gcovr_version_minor}")
-if gcovr_version_major < 5:
+print(f"Found gcovr version {gcovr_version[0]}.{gcovr_version[1]}")
+if gcovr_version < (5,):
     print("Consider upgrading to a newer gcovr version.")
-elif gcovr_version_major == 5 and gcovr_version_minor == 1:
+elif gcovr_version == (5, 1):
     assert False and "Version 5.1 does not support parallel processing of gcov data"
-elif gcovr_version_major >= 6:
+elif gcovr_version >= (6,):
     extra_flags += ["--exclude-noncode-lines"]
 
 gcovr = [gcovr_exe]
@@ -78,8 +75,6 @@ call(
     + extra_flags
     + ["--xml", "-o", "coverage/cov.xml"]
 )
-#  ["--html", "--html-details",
-#  "-o", os.path.join(coverage_dir, "index.html")])
 
 call(
     gcovr
