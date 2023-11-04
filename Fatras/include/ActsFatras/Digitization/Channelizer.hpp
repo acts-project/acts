@@ -26,10 +26,15 @@ class Channelizer {
  public:
   /// Do the geometric channelizing
   ///
-  /// @param geoCfg is the geometric digitization configuration
-  /// @param hit the Simultated hit
-  /// @param surface the Surface on which this is supposed to happen
+  /// @param hit The hit we want to channelize
+  /// @param surface the surface on which the hit is
   /// @param gctx the Geometry context
+  /// @param driftDir the drift direction
+  /// @param segmentation the segmentation of the surface
+  /// @param thickness the thickness of the surface
+  ///
+  /// TODO Why having the thickness as a config parameter,
+  /// and not pulling it from the surface->detectorElement directly?
   ///
   /// @return the list of channels
   Acts::Result<std::vector<Segmentizer::ChannelSegment>> channelize(
