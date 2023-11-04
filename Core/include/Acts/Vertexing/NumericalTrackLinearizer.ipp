@@ -23,7 +23,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
-  pOptions.targetTolerance = m_cfg.targetTolerance;
+  pOptions.surfaceTolerance = m_cfg.targetTolerance;
 
   // Get intersection of the track with the Perigee if the particle would
   // move on a straight line.

@@ -1239,7 +1239,7 @@ class CombinatorialKalmanFilter {
             ->intersect(
                 state.geoContext, freeVector.segment<3>(eFreePos0),
                 state.options.direction * freeVector.segment<3>(eFreeDir0),
-                BoundaryCheck(true), state.options.targetTolerance)
+                BoundaryCheck(true), state.options.surfaceTolerance)
             .closest();
       };
 
