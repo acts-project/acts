@@ -65,7 +65,7 @@ jobs:
         run: >
           pip3 install gcovr==6.0
           && cd build
-          && /usr/bin/python3 ../CI/test_coverage --exclude-noncode-lines
+          && /usr/bin/python3 ../CI/test_coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
