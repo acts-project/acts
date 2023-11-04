@@ -143,7 +143,7 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
     // This is done by comparing its weight with the weights of its two
     // children. Few things can happen:
     //   - there are no children
-    //   - the current weight is lower then the weight of the children
+    //   - the current weight is lower than the weight of the children
     //   - at least one of the children has a lower weight
     // In the first two cases we stop, since we are already in the correct
     // position

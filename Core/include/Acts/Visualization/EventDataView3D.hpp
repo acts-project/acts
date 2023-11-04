@@ -128,7 +128,7 @@ struct EventDataView3D {
   /// @param gctx The geometry context for which it is drawn
   /// @param momentumScale The scale of the momentum
   /// @param locErrorScale  The scale of the local error
-  /// @param angularErrorScale The sclae of the angular error
+  /// @param angularErrorScale The scale of the angular error
   /// @param parConfig The visualization options for the parameter
   /// @param covConfig The visualization option for the covariance
   /// @param surfConfig The visualization option for the surface

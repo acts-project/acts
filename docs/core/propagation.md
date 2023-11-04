@@ -7,7 +7,7 @@ The track propagation is an essential part of track reconstruction. This section
 
 The propagation through a geometry is based on the interaction of two different components:
 
-* The **Stepper** provides the implementation of the the solution of the equation of motion (either by analytical means or through numerical integration).
+* The **Stepper** provides the implementation of the solution of the equation of motion (either by analytical means or through numerical integration).
 * The **Navigator** keeps track of the current position in the geometry and adjusts the step size so that the stepper does not step through a surface.
 
 Following the general Acts design, these classes do not manage their internal state via member variables, but provide an internal `State` struct which contains all relevant data and is managed by the propagator.

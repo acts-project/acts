@@ -193,7 +193,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
 
   auto ctransform = transform(gctx);
 
-  // The tip - created only once and only, if the it's not a cut-off cone
+  // The tip - created only once and only, if it is not a cut-off cone
   bool tipExists = false;
   if (minZ * maxZ <= s_onSurfaceTolerance) {
     vertices.push_back(ctransform * Vector3(0., 0., 0.));

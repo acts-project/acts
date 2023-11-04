@@ -185,7 +185,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     // one simple example, one may consider that hits with z < 50 mm belong to
     // one subregion, and hits with z > -50 mm belong to a second subregion.
     // Note that hits even in this toy example belong to more than one
-    // subregions. But since not all hits are considered this provides a way to
+    // subregion. But since not all hits are considered this provides a way to
     // reduce potential combinatorics
 
     std::vector<int> subRegions = {
