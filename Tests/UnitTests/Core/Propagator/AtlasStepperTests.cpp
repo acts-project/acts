@@ -66,7 +66,7 @@ struct MockPropagatorState {
   Stepper::State stepping;
   /// Propagator options with only the relevant components.
   struct {
-    double tolerance = 10_um;
+    double stepTolerance = 10_um;
     Direction direction = Direction::Backward;
   } options;
 };
