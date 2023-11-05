@@ -168,7 +168,8 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCutoutCylinder) {
       ccylBuilderVals.construct(tContext);
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_REQUIRE(boundsVals != nullptr);
-  BOOST_CHECK_EQUAL(boundsVals->type(), VolumeBounds::BoundsType::eCutoutCylinder);
+  BOOST_CHECK_EQUAL(boundsVals->type(),
+                    VolumeBounds::BoundsType::eCutoutCylinder);
   BOOST_CHECK_EQUAL(boundsVals->values().size(), 5u);
   BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 100.);
   BOOST_CHECK_EQUAL(boundsVals->values().at(1u), 120.);
@@ -287,7 +288,8 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderGenericCuboid) {
       gcubBuilderVals.construct(tContext);
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_REQUIRE(boundsVals != nullptr);
-  BOOST_CHECK_EQUAL(boundsVals->type(), VolumeBounds::BoundsType::eGenericCuboid);
+  BOOST_CHECK_EQUAL(boundsVals->type(),
+                    VolumeBounds::BoundsType::eGenericCuboid);
   BOOST_CHECK_EQUAL(boundsVals->values().size(), 24u);
 
   // Misconfigured - values not complete
