@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   TrackingGeometryBuilder tgBuilder(tgbConfig);
   auto tGeometry = tgBuilder.trackingGeometry(tgContext);
 
-  BOOST_CHECK(tGeometry != nullptr);
+  BOOST_CHECK_NE(tGeometry, nullptr);
 }
 }  // namespace Test
 }  // namespace Acts

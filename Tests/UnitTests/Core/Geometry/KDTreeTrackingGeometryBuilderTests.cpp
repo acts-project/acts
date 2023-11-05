@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
       Acts::getDefaultLogger("KDTreeTrackingGeometryBuilder", logLevel));
 
   auto trackingGeometry = kdtTrackingGeometryBuilder.trackingGeometry(tContext);
-  BOOST_CHECK(trackingGeometry != nullptr);
+  BOOST_CHECK_NE(trackingGeometry, nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
