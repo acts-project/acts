@@ -4,7 +4,7 @@ The white paper collection is managed through a configuration file that
 contains information on registered white papers. This configuration can be
 automatically updated from GitHub by a script that will pull some meta
 information like the title, authors, and abstract. It will also grab the
-most latest compiled PDF from the source repository that was created by a
+latest compiled PDF from the source repository that was created by a
 CI job.
 
 To get started, head over to the white paper template
