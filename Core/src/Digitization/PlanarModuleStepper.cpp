@@ -87,7 +87,7 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   // intersect them - fast exit for cases where
   // readout and counter readout are hit
   Vector3 intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
-  size_t attempts = 0;
+  std::size_t attempts = 0;
   // the collected intersections
   std::vector<Acts::Intersection3D> boundaryIntersections;
   // run them - and check for the fast exit

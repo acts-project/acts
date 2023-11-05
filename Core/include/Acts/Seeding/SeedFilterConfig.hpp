@@ -35,7 +35,7 @@ struct SeedFilterConfig {
   unsigned int maxSeedsPerSpM = 10;
   // how often do you want to increase the weight of a seed for finding a
   // compatible seed?
-  size_t compatSeedLimit = 2;
+  std::size_t compatSeedLimit = 2;
   // Tool to apply experiment specific cuts on collected middle space points
 
   // increment in seed weight if the number of compatible seeds is larger than

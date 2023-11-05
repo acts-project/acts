@@ -70,7 +70,7 @@ ActsExamples::RootSimHitReader::RootSimHitReader(
   m_inputChain->SetBranchStatus("*", false);
   m_inputChain->SetBranchStatus("event_id", true);
 
-  auto nEntries = static_cast<std::size_t>(m_inputChain->GetEntriesFast());
+  auto nEntries = static_cast<size_t>(m_inputChain->GetEntriesFast());
 
   // Add the first entry
   m_inputChain->GetEntry(0);

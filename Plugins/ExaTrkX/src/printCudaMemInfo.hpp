@@ -27,7 +27,7 @@ inline void printCudaMemInfo(const Acts::Logger& logger) {
     constexpr float mb = kb * kb;
 
     int device;
-    std::size_t free, total;
+    size_t free, total;
     cudaMemGetInfo(&free, &total);
     cudaGetDevice(&device);
 
