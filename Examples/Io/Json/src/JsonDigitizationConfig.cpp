@@ -63,7 +63,7 @@ void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
   }
   // Digital
   auto digital = f.target<const Digitization::Digital>();
-  if (uniform != nullptr) {
+  if (digital != nullptr) {
     j["type"] = "Digitial";
     j["bindata"] = nlohmann::json(digital->binningData);
     return;
@@ -167,10 +167,10 @@ void ActsExamples::from_json(const nlohmann::json& j,
 
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::DigiComponentsConfig& dc) {
-  if (not dc.geometricDigiConfig.indices.empty()) {
+  if (!dc.geometricDigiConfig.indices.empty()) {
     j["geometric"] = nlohmann::json(dc.geometricDigiConfig);
   }
-  if (not dc.smearingDigiConfig.empty()) {
+  if (!dc.smearingDigiConfig.empty()) {
     j["smearing"] = nlohmann::json(dc.smearingDigiConfig);
   }
 }

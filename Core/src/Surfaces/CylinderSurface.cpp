@@ -245,7 +245,7 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
       return status;
     }
     const auto& cBounds = bounds();
-    if (cBounds.coversFullAzimuth() and
+    if (cBounds.coversFullAzimuth() &&
         bcheck.type() == BoundaryCheck::Type::eAbsolute) {
       // Project out the current Z value via local z axis
       // Built-in local to global for speed reasons

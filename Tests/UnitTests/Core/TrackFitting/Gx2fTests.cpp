@@ -621,7 +621,6 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
 
   ACTS_INFO("*** Test: relChi2changeCutOff -- Finish");
 }
-
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

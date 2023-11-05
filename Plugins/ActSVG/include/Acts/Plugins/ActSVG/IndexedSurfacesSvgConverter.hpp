@@ -19,7 +19,7 @@
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -101,9 +101,9 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   // - for 1D phi
   // - for 2D z-phi or phi-z
   bool estimateR =
-      (index_grid::grid_type::DIM == 1 and indexGrid.casts[0u] == binPhi) or
-      (index_grid::grid_type::DIM == 2 and
-       (indexGrid.casts[0u] == binPhi or indexGrid.casts[1u] == binPhi));
+      (index_grid::grid_type::DIM == 1 && indexGrid.casts[0u] == binPhi) ||
+      (index_grid::grid_type::DIM == 2 &&
+       (indexGrid.casts[0u] == binPhi || indexGrid.casts[1u] == binPhi));
 
   for (auto [is, s] : enumerate(surfaces)) {
     // Create the surface converter options

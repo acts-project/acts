@@ -212,7 +212,7 @@ struct AcceptCombination {
 
   /// returns true if value is within range
   /// @param entry the entry in the tree
-  bool operator()(ULong64_t entry) { return (one(entry) and two(entry)); }
+  bool operator()(ULong64_t entry) { return (one(entry) && two(entry)); }
 };
 
 /// This Struct is to accept all values - a placeholder
@@ -233,7 +233,7 @@ struct AcceptRange {
   bool operator()(ULong64_t entry) {
     if (value != nullptr) {
       float v = value->at(entry);
-      return (range[0] <= v and range[1] > v);
+      return (range[0] <= v && range[1] > v);
     }
     return false;
   }
@@ -270,7 +270,7 @@ struct DivisionAccessor {
   ///
   /// @param entry the entry in the tree
   primitive_one_t operator()(ULong64_t entry) {
-    if (one and two) {
+    if (one && two) {
       primitive_one_t vo = one->at(entry);
       primitive_two_t vt = two->at(entry);
       return vo / vt;
@@ -289,7 +289,7 @@ struct ResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (value != nullptr and reference != nullptr) {
+    if (value != nullptr && reference != nullptr) {
       float v = value->at(entry);
       float r = reference->at(entry);
       return (v - r);
@@ -310,7 +310,7 @@ struct QopResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value != nullptr and reference_charge != nullptr and
+    if (qop_value != nullptr && reference_charge != nullptr &&
         reference_p != nullptr) {
       float v = qop_value->at(entry);
       float q_true = reference_charge->at(entry);
@@ -333,7 +333,7 @@ struct PtResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value != nullptr and theta_value != nullptr and
+    if (qop_value != nullptr && theta_value != nullptr &&
         reference_pt != nullptr) {
       float p = 1. / std::abs(qop_value->at(entry));
       float theta = theta_value->at(entry);
@@ -356,8 +356,8 @@ struct PtErrorAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value != nullptr and qop_error != nullptr and
-        theta_value != nullptr and theta_error != nullptr) {
+    if (qop_value != nullptr && qop_error != nullptr &&
+        theta_value != nullptr && theta_error != nullptr) {
       float qop_v = qop_value->at(entry);
       float qop_e = qop_error->at(entry);
       float theta_v = theta_value->at(entry);
@@ -493,7 +493,7 @@ template <typename tree_t>
 unsigned long estimateEntries(const tree_t& tree,
                               unsigned long configuredEntries) {
   unsigned long entries = static_cast<unsigned long>(tree.GetEntries());
-  if (configuredEntries > 0 and configuredEntries < entries) {
+  if (configuredEntries > 0 && configuredEntries < entries) {
     entries = configuredEntries;
   }
   return entries;

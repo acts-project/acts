@@ -389,7 +389,7 @@ class Gx2Fitter {
 
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
-      if constexpr (not isDirectNavigator) {
+      if constexpr (!isDirectNavigator) {
         if (result.processedStates == 0) {
           for (auto measurementIt = inputMeasurements->begin();
                measurementIt != inputMeasurements->end(); measurementIt++) {
@@ -562,7 +562,7 @@ class Gx2Fitter {
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
-      if (!result.result.ok() or result.finished) {
+      if (!result.result.ok() || result.finished) {
         return true;
       }
       return false;
@@ -711,25 +711,17 @@ class Gx2Fitter {
       // calculate delta params [a] * delta = b
       deltaParams = BoundVector::Zero();
       if (gx2fOptions.zeroField) {
-        const size_t reducedMatrixSize = 4;
-        const ActsVector<reducedMatrixSize> deltaParamsReduced =
+        constexpr size_t reducedMatrixSize = 4;
+        deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
             aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
                 .colPivHouseholderQr()
                 .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-
-        for (size_t idp = 0; idp < reducedMatrixSize; idp++) {
-          deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
-        }
       } else {
-        const size_t reducedMatrixSize = 5;
-        const ActsVector<reducedMatrixSize> deltaParamsReduced =
+        constexpr size_t reducedMatrixSize = 5;
+        deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
             aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
                 .colPivHouseholderQr()
                 .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-
-        for (size_t idp = 0; idp < reducedMatrixSize; idp++) {
-          deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
-        }
       }
 
       ACTS_VERBOSE("aMatrix:\n"
@@ -760,33 +752,37 @@ class Gx2Fitter {
 
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
-    bool detAisZero = true;
+    bool aMatrixIsInvertible = false;
     if (gx2fOptions.zeroField) {
-      const size_t reducedMatrixSize = 4;
-      if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-              .determinant() != 0) {
-        detAisZero = false;
+      constexpr size_t reducedMatrixSize = 4;
+
+      auto safeReducedCovariance = safeInverse(
+          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+      if (safeReducedCovariance) {
+        aMatrixIsInvertible = true;
         fullCovariancePredicted
-            .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-                .inverse();
+            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            *safeReducedCovariance;
       }
     } else {
-      const size_t reducedMatrixSize = 5;
-      if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-              .determinant() != 0) {
-        detAisZero = false;
+      constexpr size_t reducedMatrixSize = 5;
+
+      auto safeReducedCovariance = safeInverse(
+          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+      if (safeReducedCovariance) {
+        aMatrixIsInvertible = true;
         fullCovariancePredicted
-            .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-                .inverse();
+            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            *safeReducedCovariance;
       }
     }
 
-    if (detAisZero && gx2fOptions.nUpdateMax > 0) {
-      ACTS_ERROR("det(a) == 0. This should not happen ever.");
-      return Experimental::GlobalChiSquareFitterError::DetAIsZero;
+    if (!aMatrixIsInvertible && gx2fOptions.nUpdateMax > 0) {
+      ACTS_ERROR("aMatrix is not invertible.");
+      return Experimental::GlobalChiSquareFitterError::AIsNotInvertible;
     }
+
+    ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
 
     // Prepare track for return
     auto track = trackContainer.getTrack(trackContainer.addTrack());

@@ -37,21 +37,22 @@ class Barcode;
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// Write out the performance of CombinatorialKalmanFilter (CKF), e.g.
-/// track efficiency, fake rate etc.
+/// Write out the performance of CombinatorialKalmanFilter (CKF), e.g. track
+/// efficiency, fake rate etc.
+///
 /// @TODO: add duplication plots
 ///
-/// A common file can be provided for the writer to attach his TTree,
-/// this is done by setting the Config::rootFile pointer to an existing file
+/// A common file can be provided for the writer to attach his TTree, this is
+/// done by setting the Config::rootFile pointer to an existing file.
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
+class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
  public:
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
   struct Config {
-    /// Input (found) trajectories collection.
-    std::string inputTrajectories;
+    /// Input (found) tracks collection.
+    std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
@@ -88,7 +89,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) override;
+                     const ConstTrackContainer& tracks) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.
