@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
           origTsIt, orig.trackStatesReversed().end(), [](const auto& ts) {
             return ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
           });
-      BOOST_CHECK_NE(nextMeas, orig.trackStatesReversed().end());
+      BOOST_CHECK(nextMeas != orig.trackStatesReversed().end());
       origTsIt = nextMeas;
       auto origTs = *origTsIt;
       auto readTs = *readTsIt;
