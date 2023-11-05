@@ -142,17 +142,17 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
 
   static_assert(
       std::is_same_v<std::decay_t<decltype(measRead)>, decltype(measOriginal)>);
-  BOOST_REQUIRE(measRead.size() == measOriginal.size());
+  BOOST_REQUIRE_EQUAL(measRead.size(), measOriginal.size());
   for (const auto &[a, b] : Acts::zip(measRead, measOriginal)) {
     std::visit(checkMeasurementClose, a, b);
   }
 
   static_assert(std::is_same_v<std::decay_t<decltype(clusterRead)>,
                                decltype(clusterOriginal)>);
-  BOOST_REQUIRE(clusterRead.size() == clusterOriginal.size());
+  BOOST_REQUIRE_EQUAL(clusterRead.size(), clusterOriginal.size());
   for (auto [a, b] : Acts::zip(clusterRead, clusterOriginal)) {
-    BOOST_REQUIRE(a.sizeLoc0 == b.sizeLoc0);
-    BOOST_REQUIRE(a.sizeLoc1 == b.sizeLoc1);
+    BOOST_REQUIRE_EQUAL(a.sizeLoc0, b.sizeLoc0);
+    BOOST_REQUIRE_EQUAL(a.sizeLoc1, b.sizeLoc1);
 
     for (const auto &ca : a.channels) {
       auto match = [&](const auto &cb) {
@@ -166,16 +166,16 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
 
   static_assert(
       std::is_same_v<std::decay_t<decltype(mapRead)>, decltype(mapOriginal)>);
-  BOOST_REQUIRE(mapRead.size() == mapOriginal.size());
+  BOOST_REQUIRE_EQUAL(mapRead.size(), mapOriginal.size());
   for (const auto &[a, b] : Acts::zip(mapRead, mapOriginal)) {
-    BOOST_REQUIRE(a == b);
+    BOOST_REQUIRE_EQUAL(a, b);
   }
 
   static_assert(std::is_same_v<std::decay_t<decltype(sourceLinksRead)>,
                                decltype(sourceLinksOriginal)>);
-  BOOST_REQUIRE(sourceLinksRead.size() == sourceLinksOriginal.size());
+  BOOST_REQUIRE_EQUAL(sourceLinksRead.size(), sourceLinksOriginal.size());
   for (const auto &[a, b] : Acts::zip(sourceLinksRead, sourceLinksOriginal)) {
-    BOOST_REQUIRE(a.geometryId() == b.geometryId());
-    BOOST_REQUIRE(a.index() == b.index());
+    BOOST_REQUIRE_EQUAL(a.geometryId(), b.geometryId());
+    BOOST_REQUIRE_EQUAL(a.index(), b.index());
   }
 }
