@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   BOOST_CHECK_EQUAL(cBarPortals.size(), 3u);
   // Check they are not nullptrs
   for (const auto& p : cBarPortals) {
-    BOOST_CHECK_NE(p, nullptr);
+    BOOST_REQUIRE_NE(p, nullptr);
   }
 
   // Pointing inside the volume
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   BOOST_CHECK_EQUAL(cTubePortals.size(), 4u);
   // Check they are not nullptrs
   for (const auto& p : cTubePortals) {
-    BOOST_CHECK_NE(p, nullptr);
+    BOOST_REQUIRE_NE(p, nullptr);
   }
 
   testDetectorVolumeUpdate(*cTubePortals[0], negPos, negDir, dVolume.get());
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   BOOST_CHECK_EQUAL(cTubeSectorPortals.size(), 6u);
   // Check they are not nullptrs
   for (const auto& p : cTubeSectorPortals) {
-    BOOST_CHECK_NE(p, nullptr);
+    BOOST_REQUIRE_NE(p, nullptr);
   }
 
   // Pointing inside the volume

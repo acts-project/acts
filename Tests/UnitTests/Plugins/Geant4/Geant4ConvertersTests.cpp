@@ -240,11 +240,11 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
 
   auto planeSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
       g4BoxPhys, Acts::Transform3::Identity(), true, thickness);
-  BOOST_CHECK_NE(planeSurface, nullptr);
+  BOOST_REQUIRE_NE(planeSurface, nullptr);
   BOOST_CHECK_EQUAL(planeSurface->type(), Acts::Surface::SurfaceType::Plane);
 
   auto material = planeSurface->surfaceMaterial();
-  BOOST_CHECK_NE(material, nullptr);
+  BOOST_REQUIRE_NE(material, nullptr);
 
   auto materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
   // Here it should be uncompressed material
@@ -256,11 +256,11 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
   Acts::ActsScalar compression = 4.;
   planeSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
       g4BoxPhys, Acts::Transform3::Identity(), true, thickness / compression);
-  BOOST_CHECK_NE(planeSurface, nullptr);
+  BOOST_REQUIRE_NE(planeSurface, nullptr);
   BOOST_CHECK_EQUAL(planeSurface->type(), Acts::Surface::SurfaceType::Plane);
 
   material = planeSurface->surfaceMaterial();
-  BOOST_CHECK_NE(material, nullptr);
+  BOOST_REQUIRE_NE(material, nullptr);
   materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
 
   // Here it should be uncompressed material
@@ -295,12 +295,12 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
 
   auto cylinderSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
       g4CylinderPhys, Acts::Transform3::Identity(), true, thickness);
-  BOOST_CHECK_NE(cylinderSurface, nullptr);
+  BOOST_REQUIRE_NE(cylinderSurface, nullptr);
   BOOST_CHECK_EQUAL(cylinderSurface->type(),
                     Acts::Surface::SurfaceType::Cylinder);
 
   auto material = cylinderSurface->surfaceMaterial();
-  BOOST_CHECK_NE(material, nullptr);
+  BOOST_REQUIRE_NE(material, nullptr);
 
   auto materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
   CHECK_CLOSE_REL(thickness / g4Material->GetRadlen(),
@@ -338,11 +338,11 @@ BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
 
   auto discSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
       g4discPhys, Acts::Transform3::Identity(), true, thickness);
-  BOOST_CHECK_NE(discSurface, nullptr);
+  BOOST_REQUIRE_NE(discSurface, nullptr);
   BOOST_CHECK_EQUAL(discSurface->type(), Acts::Surface::SurfaceType::Disc);
 
   auto material = discSurface->surfaceMaterial();
-  BOOST_CHECK_NE(material, nullptr);
+  BOOST_REQUIRE_NE(material, nullptr);
 
   auto materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
   // Here it should be uncompressed material
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(Geant4LineVPhysConversion) {
   auto lineSurface =
       Acts::Geant4PhysicalVolumeConverter{Acts::Surface::SurfaceType::Straw}
           .surface(g4linePhys, Acts::Transform3::Identity(), true, thickness);
-  BOOST_CHECK_NE(lineSurface, nullptr);
+  BOOST_REQUIRE_NE(lineSurface, nullptr);
   BOOST_CHECK_EQUAL(lineSurface->type(), Acts::Surface::SurfaceType::Straw);
 
   delete g4Tube;

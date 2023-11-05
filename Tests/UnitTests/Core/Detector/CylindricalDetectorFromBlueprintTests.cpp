@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
 
   auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
 
-  BOOST_CHECK_NE(detector, nullptr);
+  BOOST_REQUIRE_NE(detector, nullptr);
 
   // There should be 14 volumes, and they should be built in order
   // beam_pipe

@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK_NE(castedDelegate, nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK_NE(castedDelegate, nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK_NE(castedDelegate, nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK_NE(castedDelegate, nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK_NE(castedDelegate, nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
   const auto* instance = indexedCylinder.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK_NE(castedDelegate, nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
