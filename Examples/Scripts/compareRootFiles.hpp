@@ -155,11 +155,10 @@ using IndexSwapper = std::function<void(size_t, size_t)>;
 // and in-place, which makes it a good choice for smaller inputs
 void selectionSort(const size_t firstIndex, const size_t lastIndex,
                    const IndexComparator& compare, const IndexSwapper& swap) {
-  using namespace std;
-  for (size_t targetIndex = firstIndex; targetIndex < lastIndex;
+  for (std::size_t targetIndex = firstIndex; targetIndex < lastIndex;
        ++targetIndex) {
-    size_t minIndex = targetIndex;
-    for (size_t readIndex = targetIndex + 1; readIndex <= lastIndex;
+    std::size_t minIndex = targetIndex;
+    for (std::size_t readIndex = targetIndex + 1; readIndex <= lastIndex;
          ++readIndex) {
       if (compare(readIndex, minIndex) == Ordering::SMALLER) {
         minIndex = readIndex;
