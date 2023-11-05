@@ -25,7 +25,7 @@ double MeasurementSelector::calculateChi2(
                      false>::Projector projector,
     unsigned int calibratedSize) const {
   return visit_measurement(calibratedSize, [&](auto N) -> double {
-    constexpr size_t kMeasurementSize = decltype(N)::value;
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
     typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
         fullCalibrated};

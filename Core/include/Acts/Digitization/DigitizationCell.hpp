@@ -14,12 +14,12 @@ namespace Acts {
 /// @brief pair of ints for definition of a cell
 struct DigitizationCell final {
   // identification and data
-  size_t channel0 = 0;
-  size_t channel1 = 1;
+  std::size_t channel0 = 0;
+  std::size_t channel1 = 1;
   float data = 0.;
 
   // construct them
-  DigitizationCell(size_t ch0, size_t ch1, float d = 0.)
+  DigitizationCell(std::size_t ch0, std::size_t ch1, float d = 0.)
       : channel0(ch0), channel1(ch1), data(d) {}
 
   /// To merge cells in case they are at the same position

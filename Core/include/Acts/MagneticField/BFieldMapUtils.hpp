@@ -45,7 +45,7 @@ class SolenoidBField;
 ///
 /// In this case the function would look like:
 /// @code
-/// [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
+/// [](std::array<std::size_t, 2> binsRZ, std::array<std::size_t, 2> nBinsRZ) {
 ///    return (binsRZ.at(0) * nBinsRZ.at(1) + binsRZ.at(1));
 /// }
 /// @endcode
@@ -71,8 +71,8 @@ class SolenoidBField;
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                Acts::detail::EquidistantAxis>>
-fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                      std::array<size_t, 2> nBinsRZ)>&
+fieldMapRZ(const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
+                                           std::array<std::size_t, 2> nBinsRZ)>&
                localToGlobalBin,
            std::vector<double> rPos, std::vector<double> zPos,
            std::vector<Acts::Vector2> bField,
@@ -102,7 +102,8 @@ fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 ///
 /// In this case the function would look like:
 /// @code
-/// [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
+/// [](std::array<std::size_t, 3> binsXYZ, std::array<std::size_t, 3> nBinsXYZ)
+/// {
 ///   return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2))
 ///        + binsXYZ.at(1) * nBinsXYZ.at(2)
 ///        + binsXYZ.at(2));
@@ -130,13 +131,14 @@ fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
                Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
-fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                                       std::array<size_t, 3> nBinsXYZ)>&
-                localToGlobalBin,
-            std::vector<double> xPos, std::vector<double> yPos,
-            std::vector<double> zPos, std::vector<Acts::Vector3> bField,
-            double lengthUnit = UnitConstants::mm,
-            double BFieldUnit = UnitConstants::T, bool firstOctant = false);
+fieldMapXYZ(
+    const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
+                                    std::array<std::size_t, 3> nBinsXYZ)>&
+        localToGlobalBin,
+    std::vector<double> xPos, std::vector<double> yPos,
+    std::vector<double> zPos, std::vector<Acts::Vector3> bField,
+    double lengthUnit = UnitConstants::mm, double BFieldUnit = UnitConstants::T,
+    bool firstOctant = false);
 
 /// Function which takes an existing SolenoidBField instance and
 /// creates a field mapper by sampling grid points from the analytical
@@ -152,6 +154,7 @@ Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                Acts::detail::EquidistantAxis>>
 solenoidFieldMap(std::pair<double, double> rlim, std::pair<double, double> zlim,
-                 std::pair<size_t, size_t> nbins, const SolenoidBField& field);
+                 std::pair<std::size_t, std::size_t> nbins,
+                 const SolenoidBField& field);
 
 }  // namespace Acts

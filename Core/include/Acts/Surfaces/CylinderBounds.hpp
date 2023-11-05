@@ -124,7 +124,8 @@ class CylinderBounds : public SurfaceBounds {
   ///
   /// @param trans is the global transform
   /// @param lseg  are the numbero if phi segments
-  std::vector<Vector3> createCircles(const Transform3 trans, size_t lseg) const;
+  std::vector<Vector3> createCircles(const Transform3 trans,
+                                     std::size_t lseg) const;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

@@ -445,7 +445,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return A list of vertices and a face/facett description of it
   virtual Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                              size_t lseg) const = 0;
+                                              std::size_t lseg) const = 0;
 
   /// The derivative of bound track parameters w.r.t. alignment
   /// parameters of its reference surface (i.e. local frame origin in
