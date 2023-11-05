@@ -669,7 +669,7 @@ class MultiEigenStepperLoop
       auto intersection = surface.intersect(
           component.state.geoContext, SingleStepper::position(component.state),
           direction * SingleStepper::direction(component.state),
-          true)[oIntersection.index()];
+          BoundaryCheck(true))[oIntersection.index()];
 
       SingleStepper::updateStepSize(component.state, intersection, direction,
                                     release);

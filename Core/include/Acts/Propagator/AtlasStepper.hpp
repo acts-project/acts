@@ -1237,7 +1237,7 @@ class AtlasStepper {
           2. * h *
           (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4)) +
            std::abs((C1 + C6) - (C3 + C4)));
-      if (std::abs(EST) > std::abs(state.options.tolerance)) {
+      if (std::abs(EST) > std::abs(state.options.stepTolerance)) {
         h = h * .5;
         // neutralize the sign of h again
         state.stepping.stepSize.setAccuracy(h * state.options.direction);
