@@ -135,17 +135,17 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
     auto protoContainer = connectInR(tContext, rVolumes, {}, logLevel);
     // Check the portal setup
     BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[2u],
-                rVolumes[1u]->portalPtrs()[3u]);
+                      rVolumes[1u]->portalPtrs()[3u]);
     BOOST_CHECK_EQUAL(rVolumes[1u]->portalPtrs()[2u],
-                rVolumes[2u]->portalPtrs()[3u]);
+                      rVolumes[2u]->portalPtrs()[3u]);
     BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[0u],
-                rVolumes[1u]->portalPtrs()[0u]);
+                      rVolumes[1u]->portalPtrs()[0u]);
     BOOST_CHECK_EQUAL(rVolumes[1u]->portalPtrs()[0u],
-                rVolumes[2u]->portalPtrs()[0u]);
+                      rVolumes[2u]->portalPtrs()[0u]);
     BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[1u],
-                rVolumes[1u]->portalPtrs()[1u]);
+                      rVolumes[1u]->portalPtrs()[1u]);
     BOOST_CHECK_EQUAL(rVolumes[1u]->portalPtrs()[1u],
-                rVolumes[2u]->portalPtrs()[1u]);
+                      rVolumes[2u]->portalPtrs()[1u]);
     BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[0u], protoContainer[0u]);
     BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[1u], protoContainer[1u]);
 
@@ -250,11 +250,11 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
       // Check the portal setup.
       // Glued, remainders are outside skin
       BOOST_CHECK_EQUAL(zVolumes[0u]->portalPtrs()[1u],
-                  zVolumes[1u]->portalPtrs()[0u]);
+                        zVolumes[1u]->portalPtrs()[0u]);
       BOOST_CHECK_EQUAL(zVolumes[1u]->portalPtrs()[1u],
-                  zVolumes[2u]->portalPtrs()[0u]);
+                        zVolumes[2u]->portalPtrs()[0u]);
       BOOST_CHECK_EQUAL(zVolumes[2u]->portalPtrs()[1u],
-                  zVolumes[3u]->portalPtrs()[0u]);
+                        zVolumes[3u]->portalPtrs()[0u]);
       BOOST_CHECK_EQUAL(protoContainer[0u], zVolumes[0u]->portalPtrs()[0u]);
       BOOST_CHECK_EQUAL(protoContainer[1u], zVolumes[3u]->portalPtrs()[1u]);
 
@@ -266,11 +266,11 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
 
       for (const auto& ip : checkShared) {
         BOOST_CHECK_EQUAL(zVolumes[0u]->portalPtrs()[ip],
-                    zVolumes[1u]->portalPtrs()[ip]);
+                          zVolumes[1u]->portalPtrs()[ip]);
         BOOST_CHECK_EQUAL(zVolumes[1u]->portalPtrs()[ip],
-                    zVolumes[2u]->portalPtrs()[ip]);
+                          zVolumes[2u]->portalPtrs()[ip]);
         BOOST_CHECK_EQUAL(zVolumes[2u]->portalPtrs()[ip],
-                    zVolumes[3u]->portalPtrs()[ip]);
+                          zVolumes[3u]->portalPtrs()[ip]);
         BOOST_CHECK_EQUAL(protoContainer[ip], zVolumes[0u]->portalPtrs()[ip]);
       }
 

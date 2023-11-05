@@ -82,9 +82,9 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
       std::move(fullCylinderBounds), tryAllPortals());
 
   BOOST_CHECK_EQUAL(fullCylinderVolume,
-              unpackToShared<DetectorVolume>(*fullCylinderVolume));
+                    unpackToShared<DetectorVolume>(*fullCylinderVolume));
   BOOST_CHECK_EQUAL(fullCylinderVolume,
-              unpackToShared<const DetectorVolume>(*fullCylinderVolume));
+                    unpackToShared<const DetectorVolume>(*fullCylinderVolume));
 
   BOOST_CHECK(fullCylinderVolume->surfaces().empty());
   BOOST_CHECK(fullCylinderVolume->volumes().empty());

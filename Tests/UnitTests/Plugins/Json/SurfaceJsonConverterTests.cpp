@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceRoundTripTests) {
   BOOST_CHECK(trapezoidPlaneTest->transform(gctx).isApprox(
       trapezoidPlaneRef->transform(gctx)));
   BOOST_CHECK_EQUAL(trapezoidPlaneTest->geometryId(),
-              trapezoidPlaneRef->geometryId());
+                    trapezoidPlaneRef->geometryId());
   BOOST_CHECK_EQUAL(trapezoidPlaneTest->bounds(), trapezoidPlaneRef->bounds());
 }
 

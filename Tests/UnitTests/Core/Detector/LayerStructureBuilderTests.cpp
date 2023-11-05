@@ -111,7 +111,8 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
       endcapBuilder.construct(tContext);
 
   BOOST_CHECK_EQUAL(surfaces2.size(), 22u + 11u);
-  BOOST_CHECK_EQUAL(surfaces2.back()->type(), Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(surfaces2.back()->type(),
+                    Acts::Surface::SurfaceType::Plane);
   BOOST_CHECK(surfacesUpdator2.connected());
   BOOST_CHECK(volumes2.empty());
   BOOST_CHECK(volumeUpdator2.connected());

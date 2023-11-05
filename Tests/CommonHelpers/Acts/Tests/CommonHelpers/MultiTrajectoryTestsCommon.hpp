@@ -567,7 +567,7 @@ class MultiTrajectoryTestsCommon {
       auto ts = mj.getTrackState(
           mj.addTrackState(PM::Filtered | PM::Smoothed | PM::Predicted));
       BOOST_CHECK_EQUAL(ts.getMask(),
-                  (PM::Filtered | PM::Smoothed | PM::Predicted));
+                        (PM::Filtered | PM::Smoothed | PM::Predicted));
     }
     {
       for (PM mask : values) {

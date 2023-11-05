@@ -401,9 +401,9 @@ void test_multi_stepper_surface_status_update() {
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
 
     BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
-                Intersection3D::Status::reachable);
+                      Intersection3D::Status::reachable);
     BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
-                Intersection3D::Status::missed);
+                      Intersection3D::Status::missed);
   }
 
   // Step forward now
@@ -427,9 +427,9 @@ void test_multi_stepper_surface_status_update() {
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
 
     BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
-                Intersection3D::Status::onSurface);
+                      Intersection3D::Status::onSurface);
     BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
-                Intersection3D::Status::missed);
+                      Intersection3D::Status::missed);
   }
 
   // Start surface should be unreachable
@@ -443,9 +443,9 @@ void test_multi_stepper_surface_status_update() {
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
 
     BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
-                Intersection3D::Status::unreachable);
+                      Intersection3D::Status::unreachable);
     BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
-                Intersection3D::Status::unreachable);
+                      Intersection3D::Status::unreachable);
   }
 }
 
@@ -654,9 +654,9 @@ void test_single_component_interface_function() {
     auto &sstepping = cmp.singleState(multi_prop_state).stepping;
 
     BOOST_CHECK_EQUAL(sstepper.position(sstepping),
-                cmp.pars().template segment<3>(eFreePos0));
+                      cmp.pars().template segment<3>(eFreePos0));
     BOOST_CHECK_EQUAL(sstepper.direction(sstepping),
-                cmp.pars().template segment<3>(eFreeDir0));
+                      cmp.pars().template segment<3>(eFreeDir0));
     BOOST_CHECK_EQUAL(sstepper.time(sstepping), cmp.pars()[eFreeTime]);
     BOOST_CHECK_CLOSE(sstepper.qOverP(sstepping), cmp.pars()[eFreeQOverP],
                       1.e-8);

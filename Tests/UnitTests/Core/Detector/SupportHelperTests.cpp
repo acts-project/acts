@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(CylindricalSupport) {
           Acts::Transform3::Identity(), {100., 400., M_PI, 0., 0., 0.}, 1u);
   BOOST_CHECK_EQUAL(singleSupport.size(), 1u);
   BOOST_CHECK_EQUAL(singleSupport[0u]->type(),
-              Acts::Surface::SurfaceType::Cylinder);
+                    Acts::Surface::SurfaceType::Cylinder);
 
   // As a split cylinder
   auto splitSupport =
@@ -63,7 +63,8 @@ BOOST_AUTO_TEST_CASE(DiscSupport) {
   auto singleSupport = Acts::Experimental::detail::SupportHelper::discSupport(
       Acts::Transform3::Identity(), {100., 400., M_PI, 0.}, 1u);
   BOOST_CHECK_EQUAL(singleSupport.size(), 1u);
-  BOOST_CHECK_EQUAL(singleSupport[0u]->type(), Acts::Surface::SurfaceType::Disc);
+  BOOST_CHECK_EQUAL(singleSupport[0u]->type(),
+                    Acts::Surface::SurfaceType::Disc);
 
   // As a split disc
   auto splitSupport = Acts::Experimental::detail::SupportHelper::discSupport(

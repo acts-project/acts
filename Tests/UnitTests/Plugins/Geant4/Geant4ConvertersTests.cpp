@@ -296,7 +296,8 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
   auto cylinderSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
       g4CylinderPhys, Acts::Transform3::Identity(), true, thickness);
   BOOST_CHECK_NE(cylinderSurface, nullptr);
-  BOOST_CHECK_EQUAL(cylinderSurface->type(), Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(cylinderSurface->type(),
+                    Acts::Surface::SurfaceType::Cylinder);
 
   auto material = cylinderSurface->surfaceMaterial();
   BOOST_CHECK_NE(material, nullptr);

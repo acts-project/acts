@@ -166,10 +166,10 @@ BOOST_AUTO_TEST_CASE(DetectorBuilder_testWithSurfaces) {
 
   auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
   BOOST_CHECK_EQUAL(detector->name(), "TestDetectorWithSurfaces");
-  BOOST_CHECK_EQUAL(detector->volumes()[0]->surfaces()[0]->geometryId().sensitive(),
-              1);
-  BOOST_CHECK_EQUAL(detector->volumes()[0]->surfaces()[1]->geometryId().sensitive(),
-              2);
+  BOOST_CHECK_EQUAL(
+      detector->volumes()[0]->surfaces()[0]->geometryId().sensitive(), 1);
+  BOOST_CHECK_EQUAL(
+      detector->volumes()[0]->surfaces()[1]->geometryId().sensitive(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

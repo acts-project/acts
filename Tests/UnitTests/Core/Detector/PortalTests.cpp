@@ -93,7 +93,8 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   BOOST_CHECK_EQUAL(&(portalA->surface()), surface.get());
 
   portalA->assignGeometryId(Acts::GeometryIdentifier{5});
-  BOOST_CHECK_EQUAL(portalA->surface().geometryId(), Acts::GeometryIdentifier{5});
+  BOOST_CHECK_EQUAL(portalA->surface().geometryId(),
+                    Acts::GeometryIdentifier{5});
 
   BOOST_CHECK_EQUAL(portalA, unpackToShared<Portal>(*portalA));
   BOOST_CHECK_EQUAL(portalA, unpackToShared<const Portal>(*portalA));

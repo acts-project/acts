@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   BOOST_CHECK(dcTest.geometricDigiConfig.indices ==
               dcRef.geometricDigiConfig.indices);
   BOOST_CHECK_EQUAL(dcTest.geometricDigiConfig.segmentation.dimensions(),
-              dcRef.geometricDigiConfig.segmentation.dimensions());
+                    dcRef.geometricDigiConfig.segmentation.dimensions());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

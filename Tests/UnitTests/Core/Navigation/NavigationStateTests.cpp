@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(NavigationState) {
 
   Acts::Experimental::SurfacesFiller::fill(nState, surfaces);
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(),
-              portals.size() + surfaces.size());
+                    portals.size() + surfaces.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

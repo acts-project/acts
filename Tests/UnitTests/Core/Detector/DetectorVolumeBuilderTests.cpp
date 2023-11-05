@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithSurface) {
   BOOST_CHECK_EQUAL(volumes.front()->surfaces().size(), 1u);
 
   BOOST_CHECK_EQUAL(volumes.front()->surfaces().front()->geometryId().passive(),
-              1u);
+                    1u);
   BOOST_CHECK(volumes.front()->volumes().empty());
 
   BOOST_CHECK_EQUAL(portals.size(), 4u);

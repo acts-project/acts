@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   BOOST_CHECK_EQUAL(cnv(PM::Predicted ^ PM::Filtered).count(), 2);
   BOOST_CHECK(cnv(PM::Predicted ^ PM::Predicted).none());
   BOOST_CHECK_EQUAL(~(PM::Predicted | PM::Calibrated),
-              (PM::All ^ PM::Predicted ^ PM::Calibrated));
+                    (PM::All ^ PM::Predicted ^ PM::Calibrated));
 
   PM base = PM::None;
   BOOST_CHECK_EQUAL(cnv(base), 0);

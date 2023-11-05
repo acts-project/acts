@@ -96,9 +96,10 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   BOOST_CHECK_EQUAL(det012->volumePtrs().size(), 3u);
 
   // Check the shared pointer mechanism
-  BOOST_CHECK_EQUAL(det012, unpackToShared<Acts::Experimental::Detector>(*det012));
   BOOST_CHECK_EQUAL(det012,
-              unpackToShared<const Acts::Experimental::Detector>(*det012));
+                    unpackToShared<Acts::Experimental::Detector>(*det012));
+  BOOST_CHECK_EQUAL(
+      det012, unpackToShared<const Acts::Experimental::Detector>(*det012));
 
   // Check the inside function with positions
   Acts::Experimental::NavigationState nState;
