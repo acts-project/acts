@@ -57,6 +57,6 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
   // Check what we have here
   for (const auto &refTrack : refTracks) {
     auto found = std::find(testTracks.begin(), testTracks.end(), refTrack);
-    BOOST_CHECK_NE(found, testTracks.end());
+    BOOST_CHECK(found != testTracks.end());
   }
 }
