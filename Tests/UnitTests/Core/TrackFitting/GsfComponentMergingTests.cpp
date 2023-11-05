@@ -199,9 +199,10 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   // the mean might not fulfill the perigee condition.
   Vector3 position = mean.head<3>();
   Vector3 direction = mean.segment<3>(eFreeDir0);
-  auto intersection =
-      surface.intersect(GeometryContext{}, position, direction, false)
-          .closest();
+  auto intersection = surface
+                          .intersect(GeometryContext{}, position, direction,
+                                     BoundaryCheck(false))
+                          .closest();
   mean.head<3>() = intersection.position();
 
   return *detail::transformFreeToBoundParameters(mean, surface,

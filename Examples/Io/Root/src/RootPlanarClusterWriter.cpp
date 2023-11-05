@@ -19,7 +19,6 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -53,7 +52,7 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
   // Setup ROOT I/O
@@ -195,7 +194,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
         Acts::Vector2 lPosition{0., 0.};
         auto lpResult = surface.globalToLocal(ctx.geoContext, simHit.position(),
                                               simHit.direction());
-        if (not lpResult.ok()) {
+        if (!lpResult.ok()) {
           ACTS_FATAL("Global to local transformation did not succeed.");
           return ProcessCode::ABORT;
         }

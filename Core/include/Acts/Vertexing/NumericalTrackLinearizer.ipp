@@ -23,16 +23,16 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
-  pOptions.targetTolerance = m_cfg.targetTolerance;
+  pOptions.surfaceTolerance = m_cfg.targetTolerance;
 
   // Get intersection of the track with the Perigee if the particle would
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection =
-      perigeeSurface
-          .intersect(gctx, params.position(gctx), params.direction(), false)
-          .closest();
+  auto intersection = perigeeSurface
+                          .intersect(gctx, params.position(gctx),
+                                     params.direction(), BoundaryCheck(false))
+                          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above.
@@ -43,7 +43,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
 
   // Propagate to the PCA of the reference point
   auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
-  if (not result.ok()) {
+  if (!result.ok()) {
     return result.error();
   }
 
@@ -116,17 +116,17 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
         paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
-    intersection =
-        perigeeSurface
-            .intersect(gctx, paramVecCopy.template head<3>(), wiggledDir, false)
-            .closest();
+    intersection = perigeeSurface
+                       .intersect(gctx, paramVecCopy.template head<3>(),
+                                  wiggledDir, BoundaryCheck(false))
+                       .closest();
     pOptions.direction =
         Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
     // Propagate to the new PCA and extract Perigee parameters
     auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,
                                                  perigeeSurface, pOptions);
-    if (not newResult.ok()) {
+    if (!newResult.ok()) {
       return newResult.error();
     }
     newPerigeeParams = (*newResult->endParameters).parameters();

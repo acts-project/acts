@@ -166,8 +166,8 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   // frame. it should be equal if the track is a transverse track w/ theta =
   // 90deg. in that case there might be numerical deviations and we need to
   // check that it is less or equal within the numerical tolerance.
-  BOOST_CHECK((dist3 < distT) or
-              (theta == 90_degree and std::abs(dist3 - distT) < 1_nm));
+  BOOST_CHECK((dist3 < distT) ||
+              (theta == 90_degree && std::abs(dist3 - distT) < 1_nm));
 
   // estimate parameters at the closest point in 3d
   auto res = ipEstimator.estimate3DImpactParameters(
@@ -260,7 +260,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   PropagatorOptions pOptions(geoContext, magFieldContext);
   auto intersection = refPerigeeSurface
                           ->intersect(geoContext, params.position(geoContext),
-                                      params.direction(), false)
+                                      params.direction(), BoundaryCheck(false))
                           .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());

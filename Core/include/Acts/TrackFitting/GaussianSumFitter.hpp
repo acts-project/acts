@@ -211,7 +211,7 @@ struct GaussianSumFitter {
         sParameters.referenceSurface()
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
-                       sParameters.direction(), true)
+                       sParameters.direction(), BoundaryCheck(true))
             .closest()
             .status();
 
@@ -274,7 +274,7 @@ struct GaussianSumFitter {
 
       // This allows the initialization with single- and multicomponent start
       // parameters
-      if constexpr (not IsMultiParameters::value) {
+      if constexpr (!IsMultiParameters::value) {
         MultiComponentBoundTrackParameters params(
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), *sParameters.covariance(),
@@ -429,7 +429,7 @@ struct GaussianSumFitter {
              fwdGsfResult.currentTip)) {
       const bool found = std::find(foundBwd.begin(), foundBwd.end(),
                                    &state.referenceSurface()) != foundBwd.end();
-      if (not found && state.typeFlags().test(MeasurementFlag)) {
+      if (!found && state.typeFlags().test(MeasurementFlag)) {
         state.typeFlags().set(OutlierFlag);
         state.typeFlags().reset(MeasurementFlag);
         state.unset(TrackStatePropMask::Smoothed);
@@ -469,9 +469,6 @@ struct GaussianSumFitter {
     }
 
     calculateTrackQuantities(track);
-
-    track.nMeasurements() = measurementStatesFinal;
-    track.nHoles() = fwdGsfResult.measurementHoles;
 
     return track;
   }
