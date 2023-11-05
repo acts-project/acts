@@ -107,8 +107,8 @@ class BoundarySurfaceT {
   ///
   /// @return The attached volume at that position
   virtual const volume_t* attachedVolume(const GeometryContext& gctx,
-                                         const Vector3& pos, const Vector3& mom,
-                                         Direction dir) const;
+                                         const Vector3& pos,
+                                         const Vector3& dir) const;
 
   /// templated onBoundary method
   ///
@@ -180,11 +180,10 @@ void BoundarySurfaceT<volume_t>::attachVolumeArray(
 
 template <class volume_t>
 const volume_t* BoundarySurfaceT<volume_t>::attachedVolume(
-    const GeometryContext& gctx, const Vector3& pos, const Vector3& mom,
-    Direction dir) const {
+    const GeometryContext& gctx, const Vector3& pos, const Vector3& dir) const {
   const volume_t* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(gctx, pos)).dot(dir * mom) > 0.) {
+  if ((surfaceRepresentation().normal(gctx, pos)).dot(dir) > 0.) {
     attVolume = m_alongVolumeArray ? m_alongVolumeArray->object(pos).get()
                                    : m_alongVolume;
   } else {
