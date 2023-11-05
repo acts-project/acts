@@ -20,7 +20,12 @@
 namespace Acts {
 
 /// This enum describes the type of surface material mapping
-enum MappingType { PreMapping = -1, Default = 0, PostMapping = 1, Sensor = 2 };
+enum MaterialMappingType {
+  PreMapping = -1,
+  Default = 0,
+  PostMapping = 1,
+  Sensor = 2
+};
 
 /// @class ISurfaceMaterial
 ///
@@ -43,7 +48,7 @@ class ISurfaceMaterial {
   ///
   /// @param splitFactor is the splitting ratio between pre/post update
   /// @param mappingType is the type of surface mapping associated to the surface
-  ISurfaceMaterial(double splitFactor, Acts::MappingType mappingType)
+  ISurfaceMaterial(double splitFactor, Acts::MaterialMappingType mappingType)
       : m_splitFactor(splitFactor), m_mappingType(mappingType) {}
 
   /// Destructor
@@ -84,7 +89,7 @@ class ISurfaceMaterial {
 
   /// Return the type of surface material mapping
   ///
-  MappingType mappingType() const { return m_mappingType; }
+  MaterialMappingType mappingType() const { return m_mappingType; }
 
   /// Return method for fully scaled material description of the Surface
   /// - from local coordinate on the surface
@@ -125,8 +130,9 @@ class ISurfaceMaterial {
 
  protected:
   double m_splitFactor{1.};  //!< the split factor in favour of oppositePre
-  MappingType m_mappingType{
-      Acts::MappingType::Default};  //!< Use the default mapping type by default
+  MaterialMappingType m_mappingType{
+      Acts::MaterialMappingType::Default};  //!< Use the default mapping type by
+                                            //!< default
 };
 
 inline double ISurfaceMaterial::factor(Direction pDir,

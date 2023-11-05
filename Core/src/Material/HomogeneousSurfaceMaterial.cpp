@@ -13,7 +13,8 @@
 #include <ostream>
 
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
-    const MaterialSlab& full, double splitFactor, Acts::MappingType mappingType)
+    const MaterialSlab& full, double splitFactor,
+    Acts::MaterialMappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType), m_fullMaterial(full) {}
 
 Acts::HomogeneousSurfaceMaterial& Acts::HomogeneousSurfaceMaterial::operator*=(

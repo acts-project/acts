@@ -99,7 +99,6 @@ void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3& gp,
     m_accumulatedMaterial[0][0].trackAverage(emptyHit);
     return;
   }
-
   std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
   std::vector<std::array<size_t, 3>> trackBins = {bTriple};
   trackAverage(trackBins, emptyHit);
@@ -130,7 +129,7 @@ void Acts::AccumulatedSurfaceMaterial::trackAverage(
 }
 
 /// Total average creates SurfaceMaterial
-std::unique_ptr<const Acts::ISurfaceMaterial>
+std::unique_ptr<Acts::ISurfaceMaterial>
 Acts::AccumulatedSurfaceMaterial::totalAverage() {
   if (m_binUtility.bins() == 1) {
     // Return HomogeneousSurfaceMaterial
@@ -148,6 +147,6 @@ Acts::AccumulatedSurfaceMaterial::totalAverage() {
     }
   }
   // Now return the BinnedSurfaceMaterial
-  return std::make_unique<const BinnedSurfaceMaterial>(
+  return std::make_unique<BinnedSurfaceMaterial>(
       m_binUtility, std::move(mpMatrix), m_splitFactor);
 }

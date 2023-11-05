@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,32 +13,32 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Material/interface/IMaterialMapper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
-#include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
-#include <functional>
 #include <map>
 #include <memory>
 #include <vector>
 
 namespace Acts {
 
-class IVolumeMaterial;
 class ISurfaceMaterial;
 class TrackingGeometry;
-struct MaterialInteraction;
+class TrackingVolume;
+
+namespace Experimental {
+class DetectorVolume;
+class Detector;
+}  // namespace Experimental
 
 /// @brief selector for finding surface
 struct MaterialSurface {
@@ -47,22 +47,17 @@ struct MaterialSurface {
   }
 };
 
-/// @brief selector for finding volume
-struct MaterialVolume {
-  bool operator()(const TrackingVolume& vf) const {
-    return (vf.volumeMaterial() != nullptr);
-  }
-};
-
 /// @brief SurfaceMaterialMapper
 ///
 /// This is the main feature tool to map material information
-/// from a 3D geometry onto the TrackingGeometry with its surface
-/// material description.
+/// from a 3D geometry onto a surfaces based description.
+///
+/// It works for both, the `TrackingVolume` based detector description,
+/// as well as the `DetectorVolume` one.
 ///
 /// The process runs as such:
 ///
-///  1) TrackingGeometry is parsed and for each Surface with
+///  1) The geometry is parsed and for each Surface with
 ///     ProtoSurfaceMaterial a local store is initialized
 ///     the identification is done hereby through the
 ///     Surface::GeometryIdentifier
@@ -74,13 +69,13 @@ struct MaterialVolume {
 ///       origin, direction, material steps < position, step length, x0, l0, a,
 ///       z, rho >
 ///
-///       for each track:
+///       For each track:
 ///          surfaces along the origin/direction path are collected
 ///          the closest material steps are assigned
 ///
 ///  4) Each 'hit' bin per event is counted and averaged at the end of the run
 ///
-class SurfaceMaterialMapper {
+class SurfaceMaterialMapper final : public IMaterialMapper {
  public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
@@ -88,20 +83,23 @@ class SurfaceMaterialMapper {
   ///
   /// Nested Configuration struct for the material mapper
   struct Config {
-    /// Mapping range
-    std::array<double, 2> etaRange = {{-6., 6.}};
     /// Correct for empty bins (recommended)
     bool emptyBinCorrection = true;
     /// Mapping output to debug stream
     bool mapperDebugOutput = false;
     /// Compute the variance of each material slab (only if using an input map)
     bool computeVariance = false;
+    /// A potential veto
+    MaterialInteractionVeto veto = NoVeto{};
   };
 
-  /// @struct State
-  ///
   /// Nested State struct which is used for the mapping prococess
-  struct State {
+  /// for caching the result
+  ///
+  /// In an appropriate way, the base class returned by the
+  /// `createState(...)` interface method can be  transformed via
+  /// `static_cast` tot he derived class needed by the mapper
+  struct State final : public MaterialMappingState {
     /// @param [in] gctx The geometry context to use
     /// @param [in] mctx The magnetic field context to use
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
@@ -111,17 +109,9 @@ class SurfaceMaterialMapper {
     std::map<GeometryIdentifier, AccumulatedSurfaceMaterial>
         accumulatedMaterial;
 
-    /// The created surface material from it
-    std::map<GeometryIdentifier, std::unique_ptr<const ISurfaceMaterial>>
-        surfaceMaterial;
-
-    /// The surface material of the input tracking geometry
+    /// The surface material of the input geometry
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
         inputSurfaceMaterial;
-
-    /// The volume material of the input tracking geometry
-    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>
-        volumeMaterial;
 
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -144,6 +134,7 @@ class SurfaceMaterialMapper {
                                              Logging::INFO));
 
   /// @brief helper method that creates the cache for the mapping
+  /// from a TrackingGeometry
   ///
   /// @param [in] gctx The geometry context to use
   /// @param [in] mctx The magnetic field context to use
@@ -151,19 +142,24 @@ class SurfaceMaterialMapper {
   ///
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
-  /// and returns you a Cache object tO be used
-  State createState(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
-                    const TrackingGeometry& tGeometry) const;
+  /// and returns you a Cache object to be used in the mapping process
+  std::unique_ptr<MaterialMappingState> createState(
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
+      const TrackingGeometry& tGeometry) const final;
 
-  /// @brief Method to finalize the maps
+  /// @brief helper method that creates the cache for the mapping
+  /// from a Detector object
   ///
-  /// It calls the final run averaging and then transforms
-  /// the AccumulatedSurface material class to a surface material
-  /// class type
+  /// @param [in] gctx The geometry context to use
+  /// @param [in] mctx The magnetic field context to use
+  /// @param[in] detector The geometry which should be mapped
   ///
-  /// @param mState
-  void finalizeMaps(State& mState) const;
+  /// This method takes a Detector object,
+  /// finds all surfaces with material proxis
+  /// and returns you a Cache object to be used in the mapping process
+  std::unique_ptr<MaterialMappingState> createState(
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
+      const Experimental::Detector& detector) const final;
 
   /// Process/map a single track
   ///
@@ -172,46 +168,65 @@ class SurfaceMaterialMapper {
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  ///
+  /// The @return object is a pair of recorded material tracks, the mapped ones,
+  /// and the unprocessed ones
+  std::array<RecordedMaterialTrack, 2u> mapMaterialTrack(
+      MaterialMappingState& mState,
+      const RecordedMaterialTrack& mTrack) const final;
 
+  /// @brief Method to finalize the maps
+  ///
+  /// It calls the final run averaging and then transforms
+  /// the AccumulatedSurface material class to a surface material
+  /// class type
+  ///
+  /// @param mState
+  MaterialMappingResult finalizeMaps(MaterialMappingState& mState) const final;
+
+ private:
   /// Loop through all the material interactions and add them to the
   /// associated surface
   ///
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
   ///
-  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+  std::array<RecordedMaterialTrack, 2u> mapInteraction(
+      State& mState, const RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
   ///
+  /// @note this option can be run to re-map material without the need of
+  /// re-running the intersection, so it is primarily for optimisation in order
+  /// to fine tune surface binning and description
+  ///
   /// @param mState The current state map
-  /// @param rMaterial Vector of all the material interactions that will be mapped
+  /// @param mTrack The material track to be mapped
   ///
   /// @note The material interactions are assumed to have an associated surface ID
-  void mapSurfaceInteraction(State& mState,
-                             std::vector<MaterialInteraction>& rMaterial) const;
+  std::array<RecordedMaterialTrack, 2u> mapSurfaceInteraction(
+      State& mState, const RecordedMaterialTrack& mTrack) const;
 
- private:
-  /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume
+  /// @brief finds all surfaces with ProtoSurfaceMaterial of a tracking volume
   ///
   /// @param mState The state to be filled
   /// @param tVolume is current TrackingVolume
   void resolveMaterialSurfaces(State& mState,
                                const TrackingVolume& tVolume) const;
 
-  /// @brief check and insert
+  /// @brief finds all surfaces with ProtoSurfaceMaterial of a detector volume
+  ///
+  /// @param mState The state to be filled
+  /// @param dVolume is current DetectorVolume
+  void resolveMaterialSurfaces(
+      State& mState, const Experimental::DetectorVolume& dVolume) const;
+
+  /// @brief Check and insert
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
   void checkAndInsert(State& mState, const Surface& surface) const;
-
-  /// @brief check and insert
-  ///
-  /// @param mState is the map to be filled
-  /// @param tVolume is the volume collect from
-  void collectMaterialVolumes(State& mState,
-                              const TrackingVolume& tVolume) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

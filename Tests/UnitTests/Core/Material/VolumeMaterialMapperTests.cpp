@@ -81,7 +81,7 @@ struct MaterialCollector {
 namespace Test {
 
 /// Test the filling and conversion
-BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
+BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests) {
   using namespace Acts::UnitLiterals;
 
   BinUtility bu1(4, 0_m, 1_m, open, binX);
@@ -153,9 +153,10 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
 
   /// Now create the mapper state
   auto mState = vmMapper.createState(gCtx, mfCtx, *tGeometry);
+  auto state = dynamic_cast<Acts::VolumeMaterialMapper::State*>(mState.get());
 
   /// Test if this is not null
-  BOOST_CHECK_EQUAL(mState.materialBin.size(), 3u);
+  BOOST_CHECK_EQUAL(state->materialBin.size(), 3u);
 }
 
 /// @brief Test case for comparison between the mapped material and the

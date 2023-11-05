@@ -93,7 +93,7 @@ int runMaterialMapping(int argc, char* argv[],
 
   auto mapSurface = vm["mat-mapping-surfaces"].template as<bool>();
   auto mapVolume = vm["mat-mapping-volumes"].template as<bool>();
-  auto volumeStep = vm["mat-mapping-volume-stepsize"].template as<float>();
+  // auto volumeStep = vm["mat-mapping-volume-stepsize"].template as<float>();
   if (!mapSurface && !mapVolume) {
     return EXIT_FAILURE;
   }
@@ -131,8 +131,9 @@ int runMaterialMapping(int argc, char* argv[],
     auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
         smmConfig, std::move(propagator),
         Acts::getDefaultLogger("SurfaceMaterialMapper", logLevel));
-    mmAlgConfig.materialSurfaceMapper = smm;
+    mmAlgConfig.materialMappers.push_back(smm);
   }
+  /*
   if (mapVolume) {
     // Get a Navigator
     Acts::Navigator navigator({tGeometry});
@@ -147,6 +148,7 @@ int runMaterialMapping(int argc, char* argv[],
         Acts::getDefaultLogger("VolumeMaterialMapper", logLevel));
     mmAlgConfig.materialVolumeMapper = vmm;
   }
+  */
   mmAlgConfig.trackingGeometry = tGeometry;
 
   // Get the file name from the options
@@ -166,8 +168,7 @@ int runMaterialMapping(int argc, char* argv[],
       // Write the propagation steps as ROOT TTree
       ActsExamples::RootMaterialTrackWriter::Config matTrackWriterRootConfig;
       matTrackWriterRootConfig.filePath = materialFileName + "_tracks.root";
-      matTrackWriterRootConfig.collection =
-          mmAlgConfig.mappingMaterialCollection;
+      matTrackWriterRootConfig.collection = mmAlgConfig.mappedCollection;
       matTrackWriterRootConfig.storeSurface = true;
       matTrackWriterRootConfig.storeVolume = true;
       auto matTrackWriterRoot =
