@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralCylinder) {
   BOOST_REQUIRE_NE(cylindricalElement, nullptr);
 
   const auto& surface = cylindricalElement->surface();
-  BOOST_CHECK_EQUALsurface.type(), Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Cylinder);
   BOOST_CHECK(
       surface.transform(tContext).isApprox(Acts::Transform3::Identity()));
   auto boundValues = surface.bounds().values();
