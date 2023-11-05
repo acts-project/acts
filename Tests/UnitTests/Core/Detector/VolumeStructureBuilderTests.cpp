@@ -54,12 +54,12 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCone) {
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
   BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eCone);
-  BOOST_CHECK_EQUAL(boundsVals->values().size(), 7u);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 0.2);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(1u), -200.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(2u), 0.3);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(3u), -300.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(4u), 100.);
+  BOOST_CHECK(boundsVals->values().size() == 7u);
+  BOOST_CHECK(boundsVals->values().at(0u) == 0.2);
+  BOOST_CHECK(boundsVals->values().at(1u) == -200.);
+  BOOST_CHECK(boundsVals->values().at(2u) == 0.3);
+  BOOST_CHECK(boundsVals->values().at(3u) == -300.);
+  BOOST_CHECK(boundsVals->values().at(4u) == 100.);
 
   // Misconfigured - values not complete
   VolumeStructureBuilder::Config coneMis1Config;
@@ -100,10 +100,10 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCuboid) {
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
   BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eCuboid);
-  BOOST_CHECK_EQUAL(boundsVals->values().size(), 3u);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 100.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(1u), 200.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(2u), 300.);
+  BOOST_CHECK(boundsVals->values().size() == 3u);
+  BOOST_CHECK(boundsVals->values().at(0u) == 100.);
+  BOOST_CHECK(boundsVals->values().at(1u) == 200.);
+  BOOST_CHECK(boundsVals->values().at(2u) == 300.);
 
   // Cuboid volume from extent
   Extent cuboidExtent;
@@ -125,10 +125,10 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCuboid) {
   BOOST_CHECK(transformExtent.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsExtent, nullptr);
   BOOST_CHECK(boundsExtent->type() == VolumeBounds::BoundsType::eCuboid);
-  BOOST_CHECK_EQUAL(boundsExtent->values().size(), 3u);
-  BOOST_CHECK_EQUAL(boundsExtent->values().at(0u), 100.);
-  BOOST_CHECK_EQUAL(boundsExtent->values().at(1u), 200.);
-  BOOST_CHECK_EQUAL(boundsExtent->values().at(2u), 300.);
+  BOOST_CHECK(boundsExtent->values().size() == 3u);
+  BOOST_CHECK(boundsExtent->values().at(0u) == 100.);
+  BOOST_CHECK(boundsExtent->values().at(1u) == 200.);
+  BOOST_CHECK(boundsExtent->values().at(2u) == 300.);
 
   // Misconfigured - values not correct
   VolumeStructureBuilder::Config cuboidMis1Config;
@@ -169,12 +169,12 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCutoutCylinder) {
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
   BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eCutoutCylinder);
-  BOOST_CHECK_EQUAL(boundsVals->values().size(), 5u);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 100.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(1u), 120.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(2u), 200.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(3u), 300.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(4u), 280.);
+  BOOST_CHECK(boundsVals->values().size() == 5u);
+  BOOST_CHECK(boundsVals->values().at(0u) == 100.);
+  BOOST_CHECK(boundsVals->values().at(1u) == 120.);
+  BOOST_CHECK(boundsVals->values().at(2u) == 200.);
+  BOOST_CHECK(boundsVals->values().at(3u) == 300.);
+  BOOST_CHECK(boundsVals->values().at(4u) == 280.);
 
   // Misconfigured - values not complete
   VolumeStructureBuilder::Config ccylMis1Config;
@@ -215,11 +215,11 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCylinder) {
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
   BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eCylinder);
-  BOOST_CHECK_EQUAL(boundsVals->values().size(), 7u);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 100.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(1u), 200.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(2u), 400.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(3u), 0.3);
+  BOOST_CHECK(boundsVals->values().size() == 7u);
+  BOOST_CHECK(boundsVals->values().at(0u) == 100.);
+  BOOST_CHECK(boundsVals->values().at(1u) == 200.);
+  BOOST_CHECK(boundsVals->values().at(2u) == 400.);
+  BOOST_CHECK(boundsVals->values().at(3u) == 0.3);
 
   // Cylinder volume from extent
   Extent cylinderExtent;
@@ -243,10 +243,10 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCylinder) {
   BOOST_CHECK(transformExtent.isApprox(shifted));
   BOOST_CHECK_NE(boundsExtent, nullptr);
   BOOST_CHECK(boundsExtent->type() == VolumeBounds::BoundsType::eCylinder);
-  BOOST_CHECK_EQUAL(boundsExtent->values().size(), 7u);
-  BOOST_CHECK_EQUAL(boundsExtent->values().at(0u), 100.);
-  BOOST_CHECK_EQUAL(boundsExtent->values().at(1u), 200.);
-  BOOST_CHECK_EQUAL(boundsExtent->values().at(2u), 400.);
+  BOOST_CHECK(boundsExtent->values().size() == 7u);
+  BOOST_CHECK(boundsExtent->values().at(0u) == 100.);
+  BOOST_CHECK(boundsExtent->values().at(1u) == 200.);
+  BOOST_CHECK(boundsExtent->values().at(2u) == 400.);
 
   // Misconfigured - values not complete
   VolumeStructureBuilder::Config cylMis1Config;
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderGenericCuboid) {
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
   BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eGenericCuboid);
-  BOOST_CHECK_EQUAL(boundsVals->values().size(), 24u);
+  BOOST_CHECK(boundsVals->values().size() == 24u);
 
   // Misconfigured - values not complete
   VolumeStructureBuilder::Config gcubMis1Config;
@@ -327,11 +327,11 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderTrapezoid) {
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
   BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eTrapezoid);
-  BOOST_CHECK_EQUAL(boundsVals->values().size(), 6u);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 100.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(1u), 200.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(2u), 300.);
-  BOOST_CHECK_EQUAL(boundsVals->values().at(3u), 10.);
+  BOOST_CHECK(boundsVals->values().size() == 6u);
+  BOOST_CHECK(boundsVals->values().at(0u) == 100.);
+  BOOST_CHECK(boundsVals->values().at(1u) == 200.);
+  BOOST_CHECK(boundsVals->values().at(2u) == 300.);
+  BOOST_CHECK(boundsVals->values().at(3u) == 10.);
 
   // Misconfigured - values not complete
   VolumeStructureBuilder::Config trapMis1Config;
