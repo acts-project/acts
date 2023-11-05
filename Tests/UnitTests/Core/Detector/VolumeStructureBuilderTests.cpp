@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCone) {
       coneBuilderVals.construct(tContext);
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
-  BOOST_CHECK_EQUAL(boundsVals->type(), VolumeBounds::BoundsType::eCone);
+  BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eCone);
   BOOST_CHECK_EQUAL(boundsVals->values().size(), 7u);
   BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 0.2);
   BOOST_CHECK_EQUAL(boundsVals->values().at(1u), -200.);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCuboid) {
       cuboidBuilderVals.construct(tContext);
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
-  BOOST_CHECK_EQUAL(boundsVals->type(), VolumeBounds::BoundsType::eCuboid);
+  BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eCuboid);
   BOOST_CHECK_EQUAL(boundsVals->values().size(), 3u);
   BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 100.);
   BOOST_CHECK_EQUAL(boundsVals->values().at(1u), 200.);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCuboid) {
 
   BOOST_CHECK(transformExtent.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsExtent, nullptr);
-  BOOST_CHECK_EQUAL(boundsExtent->type(), VolumeBounds::BoundsType::eCuboid);
+  BOOST_CHECK(boundsExtent->type() == VolumeBounds::BoundsType::eCuboid);
   BOOST_CHECK_EQUAL(boundsExtent->values().size(), 3u);
   BOOST_CHECK_EQUAL(boundsExtent->values().at(0u), 100.);
   BOOST_CHECK_EQUAL(boundsExtent->values().at(1u), 200.);
@@ -168,8 +168,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCutoutCylinder) {
       ccylBuilderVals.construct(tContext);
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
-  BOOST_CHECK_EQUAL(boundsVals->type(),
-                    VolumeBounds::BoundsType::eCutoutCylinder);
+  BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eCutoutCylinder);
   BOOST_CHECK_EQUAL(boundsVals->values().size(), 5u);
   BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 100.);
   BOOST_CHECK_EQUAL(boundsVals->values().at(1u), 120.);
@@ -215,7 +214,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCylinder) {
       cylBuilderVals.construct(tContext);
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
-  BOOST_CHECK_EQUAL(boundsVals->type(), VolumeBounds::BoundsType::eCylinder);
+  BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eCylinder);
   BOOST_CHECK_EQUAL(boundsVals->values().size(), 7u);
   BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 100.);
   BOOST_CHECK_EQUAL(boundsVals->values().at(1u), 200.);
@@ -243,7 +242,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCylinder) {
 
   BOOST_CHECK(transformExtent.isApprox(shifted));
   BOOST_CHECK_NE(boundsExtent, nullptr);
-  BOOST_CHECK_EQUAL(boundsExtent->type(), VolumeBounds::BoundsType::eCylinder);
+  BOOST_CHECK(boundsExtent->type() == VolumeBounds::BoundsType::eCylinder);
   BOOST_CHECK_EQUAL(boundsExtent->values().size(), 7u);
   BOOST_CHECK_EQUAL(boundsExtent->values().at(0u), 100.);
   BOOST_CHECK_EQUAL(boundsExtent->values().at(1u), 200.);
@@ -288,8 +287,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderGenericCuboid) {
       gcubBuilderVals.construct(tContext);
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
-  BOOST_CHECK_EQUAL(boundsVals->type(),
-                    VolumeBounds::BoundsType::eGenericCuboid);
+  BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eGenericCuboid);
   BOOST_CHECK_EQUAL(boundsVals->values().size(), 24u);
 
   // Misconfigured - values not complete
@@ -328,7 +326,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderTrapezoid) {
       trapBuilderVals.construct(tContext);
   BOOST_CHECK(transformVals.isApprox(Transform3::Identity()));
   BOOST_CHECK_NE(boundsVals, nullptr);
-  BOOST_CHECK_EQUAL(boundsVals->type(), VolumeBounds::BoundsType::eTrapezoid);
+  BOOST_CHECK(boundsVals->type() == VolumeBounds::BoundsType::eTrapezoid);
   BOOST_CHECK_EQUAL(boundsVals->values().size(), 6u);
   BOOST_CHECK_EQUAL(boundsVals->values().at(0u), 100.);
   BOOST_CHECK_EQUAL(boundsVals->values().at(1u), 200.);
