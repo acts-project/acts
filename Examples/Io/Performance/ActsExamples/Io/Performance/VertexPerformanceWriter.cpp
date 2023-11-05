@@ -597,7 +597,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             auto intersection =
                 perigeeSurface
                     ->intersect(ctx.geoContext, params.position(ctx.geoContext),
-                                params.direction(), false)
+                                params.direction(), Acts::BoundaryCheck(false))
                     .closest();
             pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
                 intersection.pathLength());

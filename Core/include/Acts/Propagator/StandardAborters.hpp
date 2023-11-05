@@ -30,7 +30,7 @@ struct TargetOptions {
   Direction navDir = Direction::Forward;
 
   /// Target Boundary check directive - always false here
-  BoundaryCheck boundaryCheck = false;
+  BoundaryCheck boundaryCheck = BoundaryCheck(false);
 
   /// Object to check against - always nullptr here
   const Surface* startObject = nullptr;
@@ -149,8 +149,8 @@ struct SurfaceReached {
 
     const auto sIntersection = targetSurface.intersect(
         state.geoContext, stepper.position(state.stepping),
-        state.options.direction * stepper.direction(state.stepping), true,
-        tolerance);
+        state.options.direction * stepper.direction(state.stepping),
+        BoundaryCheck(true), tolerance);
     const auto closest = sIntersection.closest();
 
     // Return true if you fall below tolerance
