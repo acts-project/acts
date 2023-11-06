@@ -313,13 +313,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<float> tanMT;
   tanMT.reserve(top.size());
 
-  size_t numTopSP = top.size();
-  for (size_t t = 0; t < numTopSP; t++) {
+  std::size_t numTopSP = top.size();
+  for (std::size_t t = 0; t < numTopSP; t++) {
     tanMT.push_back(
         std::atan2(top[t]->radius() - middle.radius(), top[t]->z() - zM));
   }
 
-  size_t t0 = 0;
+  std::size_t t0 = 0;
 
   for (const std::size_t b : sorted_bottoms) {
     // break if we reached the last top SP
@@ -346,7 +346,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // minimum number of compatible top SPs to trigger the filter for a certain
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
-    size_t minCompatibleTopSPs = 2;
+    std::size_t minCompatibleTopSPs = 2;
     if (!m_config.seedConfirmation ||
         bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
@@ -362,7 +362,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     float tanLM = std::atan2(rM - bottom[b]->radius(), zM - bottom[b]->z());
 
-    for (size_t index_t = t0; index_t < numTopSP; index_t++) {
+    for (std::size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
       auto lt = linCircleTop[t];
 

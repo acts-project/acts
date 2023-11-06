@@ -39,3 +39,6 @@ Key features:
    codeguide
    authors
    license
+
+   white_papers/index.rst
+

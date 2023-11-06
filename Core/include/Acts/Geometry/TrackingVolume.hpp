@@ -464,7 +464,7 @@ class TrackingVolume : public Volume {
   void closeGeometry(
       const IMaterialDecorator* materialDecorator,
       std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-      size_t& vol, const GeometryIdentifierHook& hook,
+      std::size_t& vol, const GeometryIdentifierHook& hook,
       const Logger& logger = getDummyLogger());
 
   /// interlink the layers in this TrackingVolume
