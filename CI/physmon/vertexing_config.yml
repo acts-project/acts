@@ -6,8 +6,8 @@ histograms:
 
   "resT":
     nbins: 100
-    min: -100
-    max: 100
+    min: -50
+    max: 50
 
   "trk_res.*":
     nbins: 100
@@ -25,10 +25,15 @@ histograms:
     min: -10
     max: 10
 
-  "cov.*":
+  "covXX|covXY|covXZ|covXT|covYY|covYZ|covYT|covZZ|covZT":
     nbins: 100
     min: -0.0005
     max: 0.0005
+
+  "covTT":
+    nbins: 100
+    min: 0.0
+    max: 100.0
 
   "^n.*$":
     nbins: 250
