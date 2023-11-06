@@ -208,8 +208,8 @@ struct MaxWeightReducerLoop {
   static const auto& maxWeightIt(const component_range_t& cmps) {
     return *std::max_element(cmps.begin(), cmps.end(),
                              [&](const auto& a, const auto& b) {
-                               return std::abs(a.state.weight) >
-                                      std::abs(b.state.weight);
+                               return std::abs(a.weight) >
+                                      std::abs(b.weight);
                              });
   }
 
