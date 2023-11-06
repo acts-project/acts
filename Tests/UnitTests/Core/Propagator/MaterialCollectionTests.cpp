@@ -61,10 +61,6 @@ using path_limit = PathLimitReached;
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
-// create a navigator for this tracking geometry
-Navigator navigatorES({tGeometry});
-Navigator navigatorSL({tGeometry});
-
 using BField = ConstantBField;
 using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
@@ -72,11 +68,15 @@ using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
 const double Bz = 2_T;
 auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
+
 EigenStepper estepper(bField);
-EigenPropagator epropagator(std::move(estepper), std::move(navigatorES));
+Navigator esnavigator({tGeometry});
+EigenPropagator epropagator(std::move(estepper), std::move(esnavigator));
 
 StraightLineStepper slstepper;
-StraightLinePropagator slpropagator(slstepper, std::move(navigatorSL));
+Navigator slnavigator({tGeometry});
+StraightLinePropagator slpropagator(slstepper, std::move(slnavigator));
+
 const int ntests = 500;
 const int skip = 0;
 bool debugModeFwd = false;

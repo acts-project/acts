@@ -139,7 +139,7 @@ class Navigator {
     /// the vector of navigation surfaces to work through
     NavigationCandidates candidates = {};
     /// the current surface index of the navigation state
-    int candidateIndex = 0;
+    std::size_t candidateIndex = 0;
 
     auto candidate() const { return candidates.at(candidateIndex); }
 
@@ -168,18 +168,10 @@ class Navigator {
     /// Navigation state: the target surface
     const Surface* targetSurface = nullptr;
 
-    /// Indicator for start layer treatment
-    bool startLayerResolved = false;
     /// Indicator if the target is reached
     bool targetReached = false;
-    /// Indicator that the last VolumeHierarchy surface was reached
-    /// skip the next layer targeting to the next boundary/volume
-    bool lastHierarchySurfaceReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
-
-    /// Navigation reset requested
-    bool resetRequested = false;
   };
 
   /// Constructor with configuration object
@@ -319,14 +311,14 @@ class Navigator {
           m_cfg.trackingGeometry->highestTrackingVolume();
 
       state.navigation.currentVolume = state.navigation.startVolume;
-      if (state.navigation.currentVolume) {
+      if (state.navigation.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
       } else {
         ACTS_ERROR("Start volume not resolved.");
       }
 
       state.navigation.currentLayer = state.navigation.startLayer;
-      if (state.navigation.currentLayer) {
+      if (state.navigation.currentLayer != nullptr) {
         ACTS_VERBOSE(volInfo(state)
                      << "Start layer resolved to "
                      << state.navigation.currentLayer->geometryId() << " .");
@@ -335,7 +327,7 @@ class Navigator {
       }
 
       state.navigation.currentSurface = state.navigation.startSurface;
-      if (state.navigation.currentSurface) {
+      if (state.navigation.currentSurface != nullptr) {
         ACTS_VERBOSE(volInfo(state)
                      << "Current surface set to start surface "
                      << state.navigation.currentSurface->geometryId());
@@ -345,25 +337,7 @@ class Navigator {
     }
 
     // Initialize navigation candidates for the start volume
-    {
-      state.navigation.candidates.clear();
-      state.navigation.candidateIndex = 0;
-
-      initializeVolume(state, stepper);
-
-      state.navigation.currentLayer = state.navigation.startLayer;
-      if (state.navigation.currentLayer) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Current layer set to start layer "
-                     << state.navigation.currentLayer->geometryId());
-      }
-
-      initializeLayer(state, stepper);
-
-      std::sort(state.navigation.candidates.begin(),
-                state.navigation.candidates.end(),
-                NavigationCandidate::forwardOrder);
-    }
+    reinitializeCandidates(state, stepper);
   }
 
   /// @brief Navigator pre step call
@@ -380,24 +354,16 @@ class Navigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void preStep(propagator_state_t& state, const stepper_t& stepper) const {
-    // Check for reset
-    if (state.navigation.resetRequested) {
-      initialize(state, stepper);
-      state.navigation.resetRequested = false;
-    }
+    ACTS_VERBOSE(volInfo(state) << "Entering navigator::preStep.");
 
     // Check if the navigator is inactive
     if (inactive(state)) {
       return;
     }
 
-    // Call the navigation helper prior to actual navigation
-    ACTS_VERBOSE(volInfo(state) << "Entering navigator::preStep.");
-
-    // Loop over the remaining navigation candidates
-    for (; state.navigation.candidateIndex !=
-           (int)state.navigation.candidates.size();
-         ++state.navigation.candidateIndex) {
+    // Check next navigation candidate
+    while (state.navigation.candidateIndex !=
+           state.navigation.candidates.size()) {
       // Screen output how much is left to try
       ACTS_VERBOSE(volInfo(state)
                    << (state.navigation.candidates.size() -
@@ -409,16 +375,10 @@ class Navigator {
       const auto& intersection = candidate.intersection;
       const Surface* surface = intersection.representation();
 
-      if (intersection.template checkType<SurfaceIntersection>()) {
-        if (surface->associatedLayer() != state.navigation.currentLayer) {
-          ACTS_VERBOSE(volInfo(state) << "Skip surface from a different layer");
-          continue;
-        }
-      }
-
       // Screen output which surface you are on
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
+
       // Get the boundary check
       BoundaryCheck boundaryCheck = candidate.boundaryCheck;
       // Estimate the surface status
@@ -426,16 +386,26 @@ class Navigator {
           state.stepping, *surface, intersection.index(),
           state.options.direction, boundaryCheck,
           state.options.surfaceTolerance, logger());
-      if (surfaceStatus == Intersection3D::Status::reachable) {
+
+      if (surfaceStatus == IntersectionStatus::onSurface) {
+        ACTS_ERROR(volInfo(state) << "We are on surface before trying to reach "
+                                     "it, this should not happen. Good luck.");
+        break;
+      }
+
+      if (surfaceStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface reachable, step size updated to "
                      << stepper.outputStepSize(state.stepping));
         break;
       }
+
+      // Unreachable means we have to reinitialize
+      ACTS_VERBOSE(volInfo(state) << "Surface unreachable, reinitialize.");
+      reinitializeCandidates(state, stepper);
     }
 
-    if (state.navigation.candidateIndex ==
-        (int)state.navigation.candidates.size()) {
+    if (state.navigation.candidateIndex == state.navigation.candidates.size()) {
       ACTS_ERROR(volInfo(state) << "Exhausted navigation candidates.");
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
@@ -467,16 +437,16 @@ class Navigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void postStep(propagator_state_t& state, const stepper_t& stepper) const {
+    ACTS_VERBOSE(volInfo(state) << "Entering navigator::postStep.");
+
     // Check if the navigator is inactive
     if (inactive(state)) {
       return;
     }
 
-    // Call the navigation helper prior to actual navigation
-    ACTS_VERBOSE(volInfo(state) << "Entering navigator::postStep.");
-
     assert(state.navigation.currentSurface == nullptr &&
            "Current surface must be reset.");
+
     surfaceStatus(state, stepper);
 
     if (state.navigation.currentSurface == nullptr) {
@@ -489,41 +459,45 @@ class Navigator {
                  << state.navigation.currentSurface->geometryId());
 
     const auto& intersection = state.navigation.candidate().intersection;
+    ++state.navigation.candidateIndex;
 
     if (intersection.template checkType<SurfaceIntersection>()) {
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
+
+      if (state.navigation.candidateIndex ==
+          state.navigation.candidates.size()) {
+        ACTS_VERBOSE(
+            volInfo(state)
+            << "Last surface in layer reached. Reinitialize navigation");
+
+        state.navigation.currentLayer = nullptr;
+
+        reinitializeCandidates(state, stepper);
+      }
     } else if (intersection.template checkType<LayerIntersection>()) {
-      ACTS_VERBOSE(volInfo(state) << "This is a layer");
+      ACTS_VERBOSE(volInfo(state)
+                   << "This is a layer. Reinitialize navigation");
 
       state.navigation.currentLayer =
           intersection.template object<LayerIntersection>();
 
-      initializeLayer(state, stepper);
-
-      std::sort(state.navigation.candidates.begin() +
-                    state.navigation.candidateIndex + 1,
-                state.navigation.candidates.end(),
-                NavigationCandidate::forwardOrder);
+      reinitializeCandidates(state, stepper);
     } else if (intersection.template checkType<BoundaryIntersection>()) {
-      ACTS_VERBOSE(volInfo(state) << "This is a boundary");
+      ACTS_VERBOSE(volInfo(state)
+                   << "This is a boundary. Reinitialize navigation");
 
       const auto* boundary =
           intersection.template object<BoundaryIntersection>();
 
+      assert(state.navigation.currentLayer == nullptr &&
+             "Current layer must be reset.");
       state.navigation.currentVolume = boundary->attachedVolume(
           state.geoContext, stepper.position(state.stepping),
           state.options.direction * stepper.direction(state.stepping));
 
       ACTS_VERBOSE(volInfo(state) << "Switched volume");
 
-      state.navigation.candidates.clear();
-      state.navigation.candidateIndex = 0;
-
-      initializeVolume(state, stepper);
-
-      std::sort(state.navigation.candidates.begin(),
-                state.navigation.candidates.end(),
-                NavigationCandidate::forwardOrder);
+      reinitializeCandidates(state, stepper);
     } else {
       ACTS_ERROR(volInfo(state) << "Unknown intersection type");
     }
@@ -546,15 +520,16 @@ class Navigator {
                      const stepper_t& stepper) const {
     const auto& candidate = state.navigation.candidate();
     const auto& intersection = candidate.intersection;
-    // Take the current surface
     const Surface* surface = intersection.representation();
+
     // Check if we are at a surface
     // If we are on the surface pointed at by the index, we can make
     // it the current one to pass it to the other actors
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *surface, intersection.index(), state.options.direction,
         candidate.boundaryCheck, state.options.surfaceTolerance, logger());
-    if (surfaceStatus == Intersection3D::Status::onSurface) {
+
+    if (surfaceStatus == IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
       // Set in navigation state, so actors and aborters can access it
@@ -568,11 +543,12 @@ class Navigator {
   }
 
   template <typename propagator_state_t, typename stepper_t>
-  void initializeVolume(propagator_state_t& state,
-                        const stepper_t& stepper) const {
+  void initializeVolumeCandidates(propagator_state_t& state,
+                                  const stepper_t& stepper) const {
+    const TrackingVolume* volume = state.navigation.currentVolume;
     ACTS_VERBOSE(volInfo(state) << "Initialize volume");
 
-    if (state.navigation.currentVolume == nullptr) {
+    if (volume == nullptr) {
       state.navigation.navigationBreak = true;
       ACTS_VERBOSE(volInfo(state) << "No volume set. Good luck.");
       return;
@@ -594,7 +570,7 @@ class Navigator {
                    << stepper.position(state.stepping).transpose() << ", dir: "
                    << stepper.direction(state.stepping).transpose());
 
-      auto boundaries = state.navigation.currentVolume->compatibleBoundaries(
+      auto boundaries = volume->compatibleBoundaries(
           state.geoContext, stepper.position(state.stepping),
           state.options.direction * stepper.direction(state.stepping), navOpts,
           logger());
@@ -627,15 +603,14 @@ class Navigator {
       navOpts.resolveSensitive = m_cfg.resolveSensitive;
       navOpts.resolveMaterial = m_cfg.resolveMaterial;
       navOpts.resolvePassive = m_cfg.resolvePassive;
-      navOpts.startObject =
-          (state.navigation.currentVolume == state.navigation.startVolume)
-              ? state.navigation.startLayer
-              : nullptr;
+      navOpts.startObject = (volume == state.navigation.startVolume)
+                                ? state.navigation.startLayer
+                                : nullptr;
       navOpts.nearLimit = state.options.surfaceTolerance;
       navOpts.farLimit = std::numeric_limits<double>::max();
 
       // Request the compatible layers
-      auto layers = state.navigation.currentVolume->compatibleLayers(
+      auto layers = volume->compatibleLayers(
           state.geoContext, stepper.position(state.stepping),
           state.options.direction * stepper.direction(state.stepping), navOpts);
 
@@ -658,77 +633,84 @@ class Navigator {
   }
 
   template <typename propagator_state_t, typename stepper_t>
-  auto initializeLayer(propagator_state_t& state,
-                       const stepper_t& stepper) const {
-    ACTS_VERBOSE(volInfo(state) << "Initialize layer");
-
-    if (state.navigation.currentLayer == nullptr) {
-      ACTS_VERBOSE(volInfo(state) << "No layer set.");
-      return;
-    }
-
-    auto surfaces = resolveSurfaces(state, stepper);
-
-    if (logger().doPrint(Logging::VERBOSE)) {
-      std::ostringstream os;
-      os << surfaces.size();
-      os << " surface candidates found at path(s): ";
-      for (const auto& surface : surfaces) {
-        os << surface.pathLength() << "  ";
-      }
-      logger().log(Logging::VERBOSE, os.str());
-    }
-
-    for (const auto& surface : surfaces) {
-      state.navigation.candidates.emplace_back(AnyIntersection(surface),
-                                               BoundaryCheck(true));
-    }
-  }
-
-  /// @brief Resolve the surfaces of this layer
-  ///
-  /// @tparam propagator_state_t The state type of the propagator
-  /// @tparam stepper_t The type of stepper used for the propagation
-  ///
-  /// @param [in,out] state is the propagation state object
-  /// @param [in] stepper Stepper in use
-  template <typename propagator_state_t, typename stepper_t>
-  auto resolveSurfaces(propagator_state_t& state,
-                       const stepper_t& stepper) const {
-    ACTS_VERBOSE(volInfo(state) << "Searching for compatible surfaces.");
-
+  void initializeLayerCandidates(propagator_state_t& state,
+                                 const stepper_t& stepper) const {
     const Layer* layer = state.navigation.currentLayer;
     assert(layer != nullptr && "Current layer must be set.");
 
-    // Use navigation parameters and NavigationOptions
-    NavigationOptions<Surface> navOpts;
-    navOpts.resolveSensitive = m_cfg.resolveSensitive;
-    navOpts.resolveMaterial = m_cfg.resolveMaterial;
-    navOpts.resolvePassive = m_cfg.resolvePassive;
-    navOpts.startObject = (layer == state.navigation.startLayer)
-                              ? state.navigation.startSurface
-                              : nullptr;
-    navOpts.endObject = state.navigation.targetSurface;
-    navOpts.nearLimit = state.options.surfaceTolerance;
-    navOpts.farLimit = std::numeric_limits<double>::max();
+    ACTS_VERBOSE(volInfo(state) << "Initialize layer " << layer->geometryId());
 
-    std::vector<GeometryIdentifier> externalSurfaces;
-    if (!state.navigation.externalSurfaces.empty()) {
-      auto layerID = layer->geometryId().layer();
-      auto externalSurfaceRange =
-          state.navigation.externalSurfaces.equal_range(layerID);
-      navOpts.externalSurfaces.reserve(
-          state.navigation.externalSurfaces.count(layerID));
-      for (auto itSurface = externalSurfaceRange.first;
-           itSurface != externalSurfaceRange.second; itSurface++) {
-        navOpts.externalSurfaces.push_back(itSurface->second);
+    {
+      ACTS_VERBOSE(volInfo(state) << "Searching for compatible surfaces.");
+
+      // Use navigation parameters and NavigationOptions
+      NavigationOptions<Surface> navOpts;
+      navOpts.resolveSensitive = m_cfg.resolveSensitive;
+      navOpts.resolveMaterial = m_cfg.resolveMaterial;
+      navOpts.resolvePassive = m_cfg.resolvePassive;
+      navOpts.startObject = (layer == state.navigation.startLayer)
+                                ? state.navigation.startSurface
+                                : nullptr;
+      navOpts.endObject = state.navigation.targetSurface;
+      navOpts.nearLimit = state.options.surfaceTolerance;
+      navOpts.farLimit = std::numeric_limits<double>::max();
+
+      std::vector<GeometryIdentifier> externalSurfaces;
+      if (!state.navigation.externalSurfaces.empty()) {
+        auto layerID = layer->geometryId().layer();
+        auto externalSurfaceRange =
+            state.navigation.externalSurfaces.equal_range(layerID);
+        navOpts.externalSurfaces.reserve(
+            state.navigation.externalSurfaces.count(layerID));
+        for (auto itSurface = externalSurfaceRange.first;
+             itSurface != externalSurfaceRange.second; itSurface++) {
+          navOpts.externalSurfaces.push_back(itSurface->second);
+        }
+      }
+
+      auto surfaces = layer->compatibleSurfaces(
+          state.geoContext, stepper.position(state.stepping),
+          state.options.direction * stepper.direction(state.stepping), navOpts);
+
+      if (logger().doPrint(Logging::VERBOSE)) {
+        std::ostringstream os;
+        os << surfaces.size();
+        os << " surface candidates found at path(s): ";
+        for (const auto& surface : surfaces) {
+          os << surface.pathLength() << "  ";
+        }
+        logger().log(Logging::VERBOSE, os.str());
+      }
+
+      for (const auto& surface : surfaces) {
+        state.navigation.candidates.emplace_back(AnyIntersection(surface),
+                                                 BoundaryCheck(true));
+      }
+    }
+  }
+
+  template <typename propagator_state_t, typename stepper_t>
+  void reinitializeCandidates(propagator_state_t& state,
+                              const stepper_t& stepper) const {
+    state.navigation.candidates.clear();
+    state.navigation.candidateIndex = 0;
+
+    if (state.navigation.currentLayer != nullptr) {
+      initializeLayerCandidates(state, stepper);
+
+      if (state.navigation.candidates.empty()) {
+        ACTS_VERBOSE(volInfo(state) << "Layer is empty.");
+        state.navigation.currentLayer = nullptr;
       }
     }
 
-    // get the surfaces
-    return layer->compatibleSurfaces(
-        state.geoContext, stepper.position(state.stepping),
-        state.options.direction * stepper.direction(state.stepping), navOpts);
+    if (state.navigation.currentLayer == nullptr) {
+      initializeVolumeCandidates(state, stepper);
+    }
+
+    std::sort(state.navigation.candidates.begin(),
+              state.navigation.candidates.end(),
+              NavigationCandidate::forwardOrder);
   }
 
   /// Inactive

@@ -219,10 +219,6 @@ Acts::Layer::compatibleSurfaces(
   sIntersections.resize(std::distance(sIntersections.begin(), it),
                         SurfaceIntersection::invalid());
 
-  // sort according to the path length
-  std::sort(sIntersections.begin(), sIntersections.end(),
-            SurfaceIntersection::forwardOrder);
-
   return sIntersections;
 }
 

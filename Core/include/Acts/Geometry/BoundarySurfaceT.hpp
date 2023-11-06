@@ -102,8 +102,7 @@ class BoundarySurfaceT {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pos The global position on surface
-  /// @param mom The direction on the surface
-  /// @param dir is an additional direction corrective
+  /// @param dir The direction on the surface
   ///
   /// @return The attached volume at that position
   virtual const volume_t* attachedVolume(const GeometryContext& gctx,

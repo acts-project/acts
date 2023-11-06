@@ -470,17 +470,17 @@ Acts::TrackingVolume::compatibleBoundaries(
     const Logger& logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
 
-  boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
+  boost::container::small_vector<Acts::BoundaryIntersection, 4> intersections;
 
   // Helper function to test intersection
   auto checkIntersection =
-      [&](SurfaceMultiIntersection& smIntersection,
-          const BoundarySurface* bSurface) -> BoundaryIntersection {
-    for (const auto& sIntersection : smIntersection.split()) {
+      [&](SurfaceMultiIntersection& candidates,
+          const BoundarySurface* boundary) -> BoundaryIntersection {
+    for (const auto& sIntersection : candidates.split()) {
       if (sIntersection && detail::checkIntersection(
                                sIntersection.intersection(), options.nearLimit,
                                options.farLimit, logger)) {
-        return BoundaryIntersection(sIntersection.intersection(), bSurface,
+        return BoundaryIntersection(sIntersection.intersection(), boundary,
                                     sIntersection.object(),
                                     sIntersection.index());
       }
@@ -492,23 +492,23 @@ Acts::TrackingVolume::compatibleBoundaries(
 
   /// Helper function to process boundary surfaces
   auto processBoundaries =
-      [&](const TrackingVolumeBoundaries& bSurfaces) -> void {
+      [&](const TrackingVolumeBoundaries& boundaries) -> void {
     ACTS_VERBOSE("Processing boundaries");
     // Loop over the boundary surfaces
-    for (auto& bsIter : bSurfaces) {
+    for (auto& boundary : boundaries) {
       // Get the boundary surface pointer
-      const auto& bSurfaceRep = bsIter->surfaceRepresentation();
-      ACTS_VERBOSE("Consider boundary surface " << bSurfaceRep.geometryId()
+      const auto& surface = boundary->surfaceRepresentation();
+      ACTS_VERBOSE("Consider boundary surface " << surface.geometryId()
                                                 << " :\n"
-                                                << std::tie(bSurfaceRep, gctx));
+                                                << std::tie(surface, gctx));
 
-      auto bCandidate = bSurfaceRep.intersect(gctx, position, direction,
-                                              options.boundaryCheck);
+      auto candidates =
+          surface.intersect(gctx, position, direction, options.boundaryCheck);
       // Intersect and continue
-      auto bIntersection = checkIntersection(bCandidate, bsIter.get());
-      if (bIntersection) {
+      auto intersection = checkIntersection(candidates, boundary.get());
+      if (intersection) {
         ACTS_VERBOSE(" - Proceed with surface");
-        bIntersections.push_back(bIntersection);
+        intersections.push_back(intersection);
       } else {
         ACTS_VERBOSE(" - Surface intersecion invalid");
       }
@@ -516,36 +516,21 @@ Acts::TrackingVolume::compatibleBoundaries(
   };
 
   // Process the boundaries of the current volume
-  auto& bSurfaces = boundarySurfaces();
-  ACTS_VERBOSE("Volume reports " << bSurfaces.size() << " boundary surfaces");
-  processBoundaries(bSurfaces);
+  const auto& surfaces = boundarySurfaces();
+  ACTS_VERBOSE("Volume reports " << surfaces.size() << " boundary surfaces");
+  processBoundaries(surfaces);
 
   // Process potential boundaries of contained volumes
   auto confinedDenseVolumes = denseVolumes();
   ACTS_VERBOSE("Volume reports " << confinedDenseVolumes.size()
                                  << " confined dense volumes");
-  for (const auto& dv : confinedDenseVolumes) {
-    auto& bSurfacesConfined = dv->boundarySurfaces();
-    ACTS_VERBOSE(" -> " << bSurfacesConfined.size() << " boundary surfaces");
-    processBoundaries(bSurfacesConfined);
+  for (const auto& volume : confinedDenseVolumes) {
+    const auto& surfacesConfined = volume->boundarySurfaces();
+    ACTS_VERBOSE(" -> " << surfacesConfined.size() << " boundary surfaces");
+    processBoundaries(surfacesConfined);
   }
 
-  auto comparator = [](double a, double b) {
-    // sign function would be nice but ...
-    if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
-      return a < b;
-    }
-    if (a > 0) {  // b < 0
-      return true;
-    }
-    return false;
-  };
-
-  std::sort(bIntersections.begin(), bIntersections.end(),
-            [&](const auto& a, const auto& b) {
-              return comparator(a.pathLength(), b.pathLength());
-            });
-  return bIntersections;
+  return intersections;
 }
 
 boost::container::small_vector<Acts::LayerIntersection, 10>
@@ -556,38 +541,39 @@ Acts::TrackingVolume::compatibleLayers(
   boost::container::small_vector<Acts::LayerIntersection, 10> lIntersections;
 
   // the confinedLayers
-  if (m_confinedLayers != nullptr) {
-    // start layer given or not - test layer
-    const Layer* tLayer = options.startObject != nullptr
-                              ? options.startObject
-                              : associatedLayer(gctx, position);
-    while (tLayer != nullptr) {
-      // check if the layer needs resolving
-      // - resolveSensitive -> always take layer if it has a surface array
-      // - resolveMaterial -> always take layer if it has material
-      // - resolvePassive -> always take, unless it's a navigation layer
-      // skip the start object
-      if (tLayer != options.startObject && tLayer->resolve(options)) {
-        // if it's a resolveable start layer, you are by definition on it
-        // layer on approach intersection
-        auto atIntersection =
-            tLayer->surfaceOnApproach(gctx, position, direction, options);
-        // Intersection is ok - take it (move to surface on approach)
-        if (atIntersection) {
-          // create a layer intersection
-          lIntersections.push_back(LayerIntersection(
-              atIntersection.intersection(), tLayer, atIntersection.object(),
-              atIntersection.index()));
-        }
-      }
-      // move to next one or break because you reached the end layer
-      tLayer = (tLayer == options.endObject)
-                   ? nullptr
-                   : tLayer->nextLayer(gctx, position, direction);
-    }
-    std::sort(lIntersections.begin(), lIntersections.end(),
-              LayerIntersection::forwardOrder);
+  if (m_confinedLayers == nullptr) {
+    return {};
   }
+
+  // start layer given or not - test layer
+  const Layer* tLayer = options.startObject != nullptr
+                            ? options.startObject
+                            : associatedLayer(gctx, position);
+  while (tLayer != nullptr) {
+    // check if the layer needs resolving
+    // - resolveSensitive -> always take layer if it has a surface array
+    // - resolveMaterial -> always take layer if it has material
+    // - resolvePassive -> always take, unless it's a navigation layer
+    // skip the start object
+    if (tLayer != options.startObject && tLayer->resolve(options)) {
+      // if it's a resolveable start layer, you are by definition on it
+      // layer on approach intersection
+      auto atIntersection =
+          tLayer->surfaceOnApproach(gctx, position, direction, options);
+      // Intersection is ok - take it (move to surface on approach)
+      if (atIntersection) {
+        // create a layer intersection
+        lIntersections.push_back(
+            LayerIntersection(atIntersection.intersection(), tLayer,
+                              atIntersection.object(), atIntersection.index()));
+      }
+    }
+    // move to next one or break because you reached the end layer
+    tLayer = (tLayer == options.endObject)
+                 ? nullptr
+                 : tLayer->nextLayer(gctx, position, direction);
+  }
+
   // and return
   return lIntersections;
 }
