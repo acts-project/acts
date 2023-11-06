@@ -493,14 +493,11 @@ Acts::TrackingVolume::compatibleBoundaries(
   /// Helper function to process boundary surfaces
   auto processBoundaries =
       [&](const TrackingVolumeBoundaries& boundaries) -> void {
-    ACTS_VERBOSE("Processing boundaries");
     // Loop over the boundary surfaces
     for (auto& boundary : boundaries) {
       // Get the boundary surface pointer
       const auto& surface = boundary->surfaceRepresentation();
-      ACTS_VERBOSE("Consider boundary surface " << surface.geometryId()
-                                                << " :\n"
-                                                << std::tie(surface, gctx));
+      ACTS_VERBOSE("Consider boundary surface " << surface.geometryId());
 
       auto candidates =
           surface.intersect(gctx, position, direction, options.boundaryCheck);

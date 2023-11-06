@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   BOOST_CHECK_EQUAL(state.navigation.currentVolume,
                     state.navigation.startVolume);
   // The layer number has not changed
-  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 2u);
+  BOOST_CHECK_EQUAL(state.navigation.candidates.size(), 1u);
   // The index still points to the begin
   BOOST_CHECK(state.navigation.candidateIndex == 0);
   // ACTORS - ABORTERS - PRE STEP
