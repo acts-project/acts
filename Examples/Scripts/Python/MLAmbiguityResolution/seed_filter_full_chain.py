@@ -37,6 +37,8 @@ def prepareInferenceData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     target_column = "good/duplicate/fake"
     # Separate the truth from the input variables
 
+    data.loc[data["good/duplicate/fake"] == "good", "good/duplicate/fake"] = "duplicate"
+    data.loc[data["goodSeed"] == True, "good/duplicate/fake"] = "good"
     y = LabelEncoder().fit(data[target_column]).transform(data[target_column])
     input = data.drop(
         columns=[
@@ -44,6 +46,7 @@ def prepareInferenceData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
             "seed_id",
             "Hits_ID",
             "cluster",
+            "goodSeed",
         ]
     )
     # Prepare the input feature
@@ -99,7 +102,7 @@ import time
 start = time.time()
 
 # ttbar events as test input
-CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-1][0-9]-seed.csv"))
+CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-1][0-9]-seed_cleaned.csv"))
 data = readDataSet(CKF_files)
 
 # Data of each events after clustering
@@ -122,36 +125,37 @@ import matplotlib.pyplot as plt
 
 # Make a copy of the data to be plotted
 plotData = []
+plotDF = pd.DataFrame()
 for event in clusteredData:
     plotData.append(event.copy())
+    plotDF = pd.concat([plotDF, event.copy()])
 
-# Plot the distribution of the 4 variable used in the clustering
-for event in plotData:
-    event["eta"].hist(bins=100)
-    plt.xlabel("eta")
-    plt.ylabel("nb seed")
-    plt.savefig("eta.png")
-    plt.clf()
+# Plot the distribution of the 4 variable
+plotDF["eta"].hist(bins=100)
+plt.xlabel("eta")
+plt.ylabel("nb seed")
+plt.savefig("eta.png")
+plt.clf()
 
-    event["phi"].hist(bins=100)
-    plt.xlabel("phi")
-    plt.ylabel("nb seed")
-    plt.savefig("phi.png")
-    plt.clf()
+plotDF["phi"].hist(bins=100)
+plt.xlabel("phi")
+plt.ylabel("nb seed")
+plt.savefig("phi.png")
+plt.clf()
 
-    event["vertexZ"].hist(bins=100)
-    plt.xlabel("vertexZ")
-    plt.ylabel("nb seed")
-    plt.savefig("vertexZ.png")
-    plt.clf()
+plotDF["vertexZ"].hist(bins=100)
+plt.xlabel("vertexZ")
+plt.ylabel("nb seed")
+plt.savefig("vertexZ.png")
+plt.clf()
 
-    event["pT"].hist(bins=100, range=[0, 10])
-    plt.xlabel("pT")
-    plt.ylabel("nb seed")
-    plt.savefig("pT.png")
-    plt.clf()
+plotDF["pT"].hist(bins=100, range=[0, 10])
+plt.xlabel("pT")
+plt.ylabel("nb seed")
+plt.savefig("pT.png")
+plt.clf()
 
-
+plotDF2 = pd.DataFrame()
 # Create histogram filled with the number of seed per cluster
 for event in plotData:
     event["nb_seed"] = 0
@@ -160,70 +164,87 @@ for event in plotData:
     event["nb_good"] = 0
     event["nb_cluster"] = 0
     event["nb_truth"] = 0
-    event["nb_big_good"] = 0
+    event["nb_seed_truth"] = 0
+    event["nb_seed_removed"] = 0
     event["particleId"] = event.index
-
     event["nb_seed"] = event.groupby(["cluster"])["cluster"].transform("size")
-    event["nb_seed"].hist(bins=20, weights=1 / event["nb_seed"], range=[0, 20])
-    plt.xlabel("nb seed")
-    plt.ylabel("nb cluster")
-    plt.savefig("nb_seed.png")
-    plt.clf()
+    event["nb_seed"] = event.groupby(["cluster"])["cluster"].transform("size")
     # Create histogram filled with the number of fake seed per cluster
     event.loc[event["good/duplicate/fake"] == "fake", "nb_fake"] = (
         event.loc[event["good/duplicate/fake"] == "fake"]
         .groupby(["cluster"])["cluster"]
         .transform("size")
     )
-    event["nb_fake"].hist(bins=10, weights=1 / event["nb_seed"], range=[0, 10])
-    plt.xlabel("nb fake")
-    plt.ylabel("nb cluster")
-    plt.savefig("nb_fake.png")
-    plt.clf()
     # Create histogram filled with the number of duplicate seed per cluster
     event.loc[event["good/duplicate/fake"] == "duplicate", "nb_duplicate"] = (
         event.loc[event["good/duplicate/fake"] == "duplicate"]
         .groupby(["cluster"])["cluster"]
         .transform("size")
     )
-    event["nb_duplicate"].hist(bins=10, weights=1 / event["nb_seed"], range=[0, 10])
-    plt.xlabel("nb duplicate")
-    plt.ylabel("nb cluster")
-    plt.savefig("nb_duplicate.png")
-    plt.clf()
     # Create histogram filled with the number of good seed per cluster
     event.loc[event["good/duplicate/fake"] == "good", "nb_good"] = (
         event.loc[event["good/duplicate/fake"] == "good"]
         .groupby(["cluster"])["cluster"]
         .transform("size")
     )
-    event["nb_good"].hist(bins=10, weights=1 / event["nb_seed"], range=[0, 10])
-    plt.xlabel("nb good")
-    plt.ylabel("nb cluster")
-    plt.savefig("nb_good.png")
-    plt.clf()
     # Create histogram filled with the number of truth particle per cluster
     event["nb_truth"] = event.groupby(["cluster"])["particleId"].transform("nunique")
-    event["nb_truth"].hist(bins=10, range=[0, 10])
-    plt.xlabel("nb truth")
-    plt.ylabel("nb cluster")
-    plt.savefig("nb_truth.png")
-    plt.clf()
     # Create histogram filled with the number of cluster per truth particle
     event["nb_cluster"] = event.groupby(event.index)["cluster"].transform("nunique")
-    event["nb_cluster"].hist(bins=30, weights=1 / event["nb_seed"], range=[0, 30])
-    plt.xlabel("nb cluster")
-    plt.ylabel("nb truth")
-    plt.savefig("nb_cluster.png")
-    plt.clf()
+        
+    # Create histogram filled with the number seed per truth particle
+    event["nb_seed_truth"] = event.groupby(event.index).transform("size")
+    event["nb_seed_removed"] = event["nb_seed_truth"] - event["nb_cluster"]
 
-    # Create histogram filled with the number of good cluster with more than one
-    event["nb_good"].hist(bins=10, weights=(event["nb_seed"] > 1) / event["nb_seed"])
-    plt.xlabel("nb good cluster with more than 1 seed")
-    plt.ylabel("nb cluster")
-    plt.savefig("nb_big_good.png")
-    plt.clf()
+    plotDF2 = pd.concat([plotDF2, event])
 
+plotDF2["nb_seed"].hist(bins=20, weights=1 / plotDF2["nb_seed"], range=[0, 20])
+plt.xlabel("nb seed/[cluster]")
+plt.ylabel("Arbitrary unit")
+plt.savefig("nb_seed.png")
+plt.clf()
+
+plotDF2["nb_fake"].hist(bins=10, weights=1 / plotDF2["nb_seed"], range=[0, 10])
+plt.xlabel("nb fake/[cluster]")
+plt.ylabel("Arbitrary unit")
+plt.savefig("nb_fake.png")
+plt.clf()
+
+plotDF2["nb_duplicate"].hist(bins=10, weights=1 / plotDF2["nb_seed"], range=[0, 10])
+plt.xlabel("nb duplicate/[cluster]")
+plt.ylabel("Arbitrary unit")
+plt.savefig("nb_duplicate.png")
+plt.clf()
+
+plotDF2["nb_good"].hist(bins=5, weights=1 / plotDF2["nb_seed"], range=[0, 5])
+plt.xlabel("nb good/[cluster]")
+plt.ylabel("Arbitrary unit")
+plt.savefig("nb_good.png")
+plt.clf()
+
+plotDF2["nb_truth"].hist(bins=5, weights=1 / plotDF2["nb_seed"], range=[0, 5])
+plt.xlabel("nb truth/[cluster]")
+plt.ylabel("Arbitrary unit")
+plt.savefig("nb_truth.png")
+plt.clf()
+
+plotDF2["nb_cluster"].hist(bins=50, weights=1 / plotDF2["nb_seed_truth"], range=[0, 50])
+plt.xlabel("nb cluster/[truth particle]")
+plt.ylabel("Arbitrary unit")
+plt.savefig("nb_cluster.png")
+plt.clf()
+
+plotDF2["nb_seed_truth"].hist(bins=50, weights=1 / plotDF2["nb_seed_truth"], range=[0, 50])
+plt.xlabel("nb seed/[truth particle]")
+plt.ylabel("Arbitrary unit")
+plt.savefig("nb_seed_truth.png")
+plt.clf()
+
+plotDF2["nb_seed_removed"].hist(bins=50, weights=1 / plotDF2["nb_seed_truth"], range=[0, 50])
+plt.xlabel("nb seed removed/[truth particle]")
+plt.ylabel("Arbitrary unit")
+plt.savefig("nb_seed_removed.png")
+plt.clf()
 
 t3 = time.time()
 
