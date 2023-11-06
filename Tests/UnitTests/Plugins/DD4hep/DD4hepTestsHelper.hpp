@@ -17,7 +17,6 @@
 #include <DD4hep/Objects.h>
 #include <XML/Utilities.h>
 
-using namespace std;
 using namespace dd4hep;
 
 namespace Acts {

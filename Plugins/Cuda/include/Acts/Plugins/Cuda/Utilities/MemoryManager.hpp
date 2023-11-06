@@ -60,7 +60,7 @@ class MemoryManager {
   static MemoryManager& instance();
 
   /// Set the amount of memory to use on a particular device
-  void setMemorySize(std::size_t sizeInBytes, int device = -1);
+  void setMemorySize(size_t sizeInBytes, int device = -1);
 
   /// @}
 
@@ -68,10 +68,10 @@ class MemoryManager {
   /// @{
 
   /// Get the amount of memory still available on a specific device
-  std::size_t availableMemory(int device = -1) const;
+  size_t availableMemory(int device = -1) const;
 
   /// Get a pointer to an available memory block on the device
-  void* allocate(std::size_t sizeInBytes, int device = -1);
+  void* allocate(size_t sizeInBytes, int device = -1);
 
   /// Reset all allocations
   void reset(int device = -1);
@@ -86,7 +86,7 @@ class MemoryManager {
   /// device
   struct DeviceMemory {
     /// The amount of memory allocated on the CUDA device
-    std::size_t m_size = 0;
+    size_t m_size = 0;
     /// Pointer to the beginning of the memory allocation
     char* m_ptr = nullptr;
     /// Pointer to the next available memory block in the "current round"

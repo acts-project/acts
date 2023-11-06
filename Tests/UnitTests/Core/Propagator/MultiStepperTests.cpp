@@ -72,9 +72,9 @@ const auto defaultNullBField = std::make_shared<NullBField>();
 const auto particleHypothesis = ParticleHypothesis::pion();
 
 struct Options {
-  double tolerance = 1e-4;
+  double stepTolerance = 1e-4;
   double stepSizeCutOff = 0.0;
-  std::size_t maxRungeKuttaStepTrials = 10;
+  size_t maxRungeKuttaStepTrials = 10;
   Direction direction = defaultNDir;
   const Acts::Logger &logger = Acts::getDummyLogger();
 };
@@ -107,7 +107,7 @@ using components_t = typename T::components;
 // Makes random bound parameters and covariance and a plane surface at {0,0,0}
 // with normal {1,0,0}. Optionally some external fixed bound parameters can be
 // supplied
-auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
+auto makeDefaultBoundPars(bool cov = true, size_t n = 4,
                           std::optional<BoundVector> ext_pars = std::nullopt) {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps;
@@ -138,7 +138,7 @@ void test_multi_stepper_state() {
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
-  constexpr std::size_t N = 4;
+  constexpr size_t N = 4;
   const auto multi_pars = makeDefaultBoundPars(Cov, N, BoundVector::Ones());
 
   MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize);
@@ -392,8 +392,9 @@ void test_multi_stepper_surface_status_update() {
 
   // Update surface status and check
   {
-    auto status = multi_stepper.updateSurfaceStatus(
-        multi_state, *right_surface, 0, Direction::Forward, false);
+    auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
+                                                    0, Direction::Forward,
+                                                    BoundaryCheck(false));
 
     BOOST_CHECK(status == Intersection3D::Status::reachable);
 
@@ -417,8 +418,9 @@ void test_multi_stepper_surface_status_update() {
 
   // Update surface status and check again
   {
-    auto status = multi_stepper.updateSurfaceStatus(
-        multi_state, *right_surface, 0, Direction::Forward, false);
+    auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
+                                                    0, Direction::Forward,
+                                                    BoundaryCheck(false));
 
     BOOST_CHECK(status == Intersection3D::Status::onSurface);
 
@@ -432,8 +434,9 @@ void test_multi_stepper_surface_status_update() {
 
   // Start surface should be unreachable
   {
-    auto status = multi_stepper.updateSurfaceStatus(
-        multi_state, *start_surface, 0, Direction::Forward, false);
+    auto status = multi_stepper.updateSurfaceStatus(multi_state, *start_surface,
+                                                    0, Direction::Forward,
+                                                    BoundaryCheck(false));
 
     BOOST_CHECK(status == Intersection3D::Status::unreachable);
 
@@ -493,13 +496,14 @@ void test_component_bound_state() {
   // Step forward now
   {
     multi_stepper.updateSurfaceStatus(multi_state, *right_surface, 0,
-                                      Direction::Forward, false);
+                                      Direction::Forward, BoundaryCheck(false));
     auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
     single_stepper.updateSurfaceStatus(single_state, *right_surface, 0,
-                                       Direction::Forward, false);
+                                       Direction::Forward,
+                                       BoundaryCheck(false));
     auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }

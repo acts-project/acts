@@ -111,7 +111,7 @@ void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
   if (m_volumeUpdators[0u].connected() && m_volumeUpdators[1u].connected()) {
     throw std::runtime_error("Portal: portal already has links on both sides.");
   }
-  size_t idx = m_volumeUpdators[0u].connected() ? 1u : 0u;
+  std::size_t idx = m_volumeUpdators[0u].connected() ? 1u : 0u;
   m_volumeUpdators[idx] = std::move(dVolumeUpdator);
   m_attachedVolumes[idx] = std::move(attachedVolumes);
 }

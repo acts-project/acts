@@ -15,7 +15,7 @@ namespace Acts::Ccl::internal {
 
 // Machinery for validating generic Cell/Cluster types at compile-time
 
-template <typename, size_t, typename T = void>
+template <typename, std::size_t, typename T = void>
 struct cellTypeHasRequiredFunctions : std::false_type {};
 
 template <typename T>
@@ -42,14 +42,14 @@ struct clusterTypeHasRequiredFunctions<
     std::void_t<decltype(clusterAddCell(std::declval<T>(), std::declval<U>()))>>
     : std::true_type {};
 
-template <size_t GridDim>
+template <std::size_t GridDim>
 constexpr void staticCheckGridDim() {
   static_assert(
       GridDim == 1 || GridDim == 2,
       "mergeClusters is only defined for grid dimensions of 1 or 2. ");
 }
 
-template <typename T, size_t GridDim>
+template <typename T, std::size_t GridDim>
 constexpr void staticCheckCellType() {
   constexpr bool hasFns = cellTypeHasRequiredFunctions<T, GridDim>();
   static_assert(hasFns,
@@ -67,7 +67,7 @@ constexpr void staticCheckClusterType() {
                 "'void clusterAddCell(Cluster&, const Cell&)'");
 }
 
-template <typename Cell, size_t GridDim>
+template <typename Cell, std::size_t GridDim>
 struct Compare {
   static_assert(GridDim != 1 && GridDim != 2,
                 "Only grid dimensions of 1 or 2 are supported");
@@ -101,7 +101,7 @@ struct Compare<Cell, 1> {
 // wrapping, but it's way slower
 class DisjointSets {
  public:
-  explicit DisjointSets(size_t initial_size = 128)
+  explicit DisjointSets(std::size_t initial_size = 128)
       : m_size(initial_size),
         m_rank(m_size),
         m_parent(m_size),
@@ -114,31 +114,32 @@ class DisjointSets {
       m_size *= 2;
       m_rank.resize(m_size);
       m_parent.resize(m_size);
-      m_ds = boost::disjoint_sets<size_t*, size_t*>(&m_rank[0], &m_parent[0]);
+      m_ds = boost::disjoint_sets<std::size_t*, std::size_t*>(&m_rank[0],
+                                                              &m_parent[0]);
     }
     m_ds.make_set(m_globalId);
     return static_cast<Label>(m_globalId++);
   }
 
-  void unionSet(size_t x, size_t y) { m_ds.union_set(x, y); }
-  Label findSet(size_t x) { return static_cast<Label>(m_ds.find_set(x)); }
+  void unionSet(std::size_t x, std::size_t y) { m_ds.union_set(x, y); }
+  Label findSet(std::size_t x) { return static_cast<Label>(m_ds.find_set(x)); }
 
  private:
-  size_t m_globalId = 1;
-  size_t m_size;
-  std::vector<size_t> m_rank;
-  std::vector<size_t> m_parent;
-  boost::disjoint_sets<size_t*, size_t*> m_ds;
+  std::size_t m_globalId = 1;
+  std::size_t m_size;
+  std::vector<std::size_t> m_rank;
+  std::vector<std::size_t> m_parent;
+  boost::disjoint_sets<std::size_t*, std::size_t*> m_ds;
 };
 
-template <size_t BufSize>
+template <std::size_t BufSize>
 struct ConnectionsBase {
-  size_t nconn{0};
+  std::size_t nconn{0};
   std::array<Label, BufSize> buf;
   ConnectionsBase() { std::fill(buf.begin(), buf.end(), NO_LABEL); }
 };
 
-template <size_t GridDim>
+template <std::size_t GridDim>
 class Connections {};
 
 // On 1-D grid, cells have 1 backward neighbor
@@ -154,7 +155,7 @@ struct Connections<2> : public ConnectionsBase<4> {
 };
 
 // Cell collection logic
-template <typename Cell, typename Connect, size_t GridDim>
+template <typename Cell, typename Connect, std::size_t GridDim>
 Connections<GridDim> getConnections(typename std::vector<Cell>::iterator it,
                                     std::vector<Cell>& set, Connect connect) {
   Connections<GridDim> seen;
@@ -242,7 +243,7 @@ ConnectResult Connect1D<Cell>::operator()(const Cell& ref,
   return deltaCol == 1 ? ConnectResult::eConn : ConnectResult::eNoConnStop;
 }
 
-template <size_t GridDim>
+template <std::size_t GridDim>
 void recordEquivalences(const internal::Connections<GridDim> seen,
                         internal::DisjointSets& ds) {
   // Sanity check: first element should always have
@@ -250,7 +251,7 @@ void recordEquivalences(const internal::Connections<GridDim> seen,
   if (seen.nconn > 0 && seen.buf[0] == NO_LABEL) {
     throw std::logic_error("seen.nconn > 0 but seen.buf[0] == NO_LABEL");
   }
-  for (size_t i = 1; i < seen.nconn; i++) {
+  for (std::size_t i = 1; i < seen.nconn; i++) {
     // Sanity check: since connection lookup is always backward
     // while iteration is forward, all connected cells found here
     // should have a label
@@ -264,7 +265,7 @@ void recordEquivalences(const internal::Connections<GridDim> seen,
   }
 }
 
-template <typename CellCollection, size_t GridDim, typename Connect>
+template <typename CellCollection, std::size_t GridDim, typename Connect>
 void labelClusters(CellCollection& cells, Connect connect) {
   using Cell = typename CellCollection::value_type;
   internal::staticCheckCellType<Cell, GridDim>();
@@ -296,7 +297,7 @@ void labelClusters(CellCollection& cells, Connect connect) {
 }
 
 template <typename CellCollection, typename ClusterCollection,
-          size_t GridDim = 2>
+          std::size_t GridDim = 2>
 ClusterCollection mergeClusters(CellCollection& cells) {
   using Cell = typename CellCollection::value_type;
   using Cluster = typename ClusterCollection::value_type;
@@ -315,8 +316,8 @@ ClusterCollection mergeClusters(CellCollection& cells) {
   return internal::mergeClustersImpl<CellCollection, ClusterCollection>(cells);
 }
 
-template <typename CellCollection, typename ClusterCollection, size_t GridDim,
-          typename Connect>
+template <typename CellCollection, typename ClusterCollection,
+          std::size_t GridDim, typename Connect>
 ClusterCollection createClusters(CellCollection& cells, Connect connect) {
   using Cell = typename CellCollection::value_type;
   using Cluster = typename ClusterCollection::value_type;

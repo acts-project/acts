@@ -169,7 +169,7 @@ class AdaptiveMultiVertexFinder {
   template <
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFinder(Config& cfg,
+  AdaptiveMultiVertexFinder(Config cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFinder",
                                                  Logging::INFO))
@@ -185,7 +185,7 @@ class AdaptiveMultiVertexFinder {
   /// object
   /// @param logger The logging instance
   AdaptiveMultiVertexFinder(
-      Config& cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),

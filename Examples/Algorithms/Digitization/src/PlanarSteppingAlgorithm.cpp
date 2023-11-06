@@ -20,7 +20,6 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -206,8 +205,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       Acts::Vector3 par(localX, localY, simHit.time());
 
       // create the planar cluster
-      digiSourceLinks.emplace_back(moduleGeoId,
-                                   std::vector<std::size_t>{simHitIdx});
+      digiSourceLinks.emplace_back(moduleGeoId, std::vector<size_t>{simHitIdx});
       Acts::DigitizationSourceLink& digiSourceLink = digiSourceLinks.back();
 
       Acts::PlanarModuleCluster cluster(
