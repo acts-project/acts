@@ -40,11 +40,12 @@ ParticleSelectorConfig = namedtuple(
         "absEta",  # (min,max)
         "pt",  # (min,max)
         "m",  # (min,max)
+        "measurements",  # (min,max)
         "removeCharged",  # bool
         "removeNeutral",  # bool
         "removeSecondaries",  # bool
     ],
-    defaults=[(None, None)] * 8 + [None] * 3,
+    defaults=[(None, None)] * 9 + [None] * 3,
 )
 
 
@@ -333,6 +334,7 @@ def addParticleSelection(
     config: ParticleSelectorConfig,
     inputParticles: str,
     outputParticles: str,
+    inputMeasurementParticlesMap: str = "",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
@@ -370,6 +372,8 @@ def addParticleSelection(
                 ptMax=config.pt[1],
                 mMin=config.m[0],
                 mMax=config.m[1],
+                measurementsMin=config.measurements[0],
+                measurementsMax=config.measurements[1],
                 removeCharged=config.removeCharged,
                 removeNeutral=config.removeNeutral,
                 removeSecondaries=config.removeSecondaries,
@@ -377,6 +381,7 @@ def addParticleSelection(
             level=customLogLevel(),
             inputParticles=inputParticles,
             outputParticles=outputParticles,
+            inputMeasurementParticlesMap=inputMeasurementParticlesMap,
         )
     )
 
@@ -638,7 +643,7 @@ def addGeant4(
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     killVolume: acts.Volume, None
-        if given, particles are killed when going outside of this volume.
+        if given, particles are killed when going outside this volume.
     killAfterTime: float
         if given, particle are killed after the global time since event creation exceeds the given value
     killSecondaries: bool

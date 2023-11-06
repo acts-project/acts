@@ -34,7 +34,7 @@ using MutableLayerPtr = std::shared_ptr<Layer>;
 
 /// @class LayerCreator
 ///
-/// The LayerCreator is able to build cylinde,r disc layers or plane layers from
+/// The LayerCreator is able to build cylinder disc layers or plane layers from
 /// detector elements
 ///
 class LayerCreator {
@@ -46,9 +46,9 @@ class LayerCreator {
   struct Config {
     /// surface array helper
     std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
-    /// cylinder module z tolerance : it counts at same z, if ...
+    /// cylinder module z tolerance: it counts as same z, if ...
     double cylinderZtolerance{10.};
-    /// cylinder module phi tolerance : it counts at same phi, if ...
+    /// cylinder module phi tolerance: it counts as same phi, if ...
     double cylinderPhiTolerance{0.1};
     /// standard constructor
     Config() = default;
@@ -84,8 +84,8 @@ class LayerCreator {
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-      size_t binsZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
+      std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
+      std::size_t binsZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
@@ -133,8 +133,8 @@ class LayerCreator {
   /// @return shared pointer to a newly created layer
   MutableLayerPtr discLayer(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-      size_t binsPhi, std::optional<ProtoLayer> _protoLayer = std::nullopt,
+      std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
+      std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
@@ -186,8 +186,8 @@ class LayerCreator {
   /// @return shared pointer to a newly created layer
   MutableLayerPtr planeLayer(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-      size_t bins2, BinningValue bValue,
+      std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
+      std::size_t bins2, BinningValue bValue,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
@@ -203,7 +203,7 @@ class LayerCreator {
   /// @param newLogger the logger instance
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
-  // associate surfaces contained by this layer to this layer
+  /// associate surfaces contained by this layer to this layer
   void associateSurfacesToLayer(Layer& layer) const;
 
  private:

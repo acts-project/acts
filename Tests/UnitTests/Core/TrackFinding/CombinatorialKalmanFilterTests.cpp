@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   Fixture f(0_T);
 
   auto options = f.makeCkfOptions();
-  // this is the default option. set anyways for consistency
+  // this is the default option. set anyway for consistency
   options.propagatorPlainOptions.direction = Acts::Direction::Forward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   // run the CKF for all initial track states
   for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
     auto res = f.ckf.findTracks(f.startParameters.at(trackId), options, tc);
-    if (not res.ok()) {
+    if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   // run the CKF for all initial track states
   for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
     auto res = f.ckf.findTracks(f.endParameters.at(trackId), options, tc);
-    if (not res.ok()) {
+    if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());

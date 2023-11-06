@@ -15,6 +15,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -50,13 +51,11 @@ class VertexPerformanceWriter final
     std::string inputAllTruthParticles;
     /// Selected input truth particle collection.
     std::string inputSelectedTruthParticles;
-    /// Optional. Input track parameters.
-    std::string inputTrackParameters;
+    /// Tracks object from track finidng.
+    std::string inputTracks;
     /// Optional. Truth particles associated to tracks. Using 1:1 matching if
     /// given.
     std::string inputAssociatedTruthParticles;
-    /// Optional. Trajectories object from track finidng.
-    std::string inputTrajectories;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
@@ -212,11 +211,7 @@ class VertexPerformanceWriter final
   ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
       this, "InputSelectedTruthParticles"};
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
-
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
 
   ReadDataHandle<SimParticleContainer> m_inputAssociatedTruthParticles{
       this, "InputAssociatedTruthParticles"};

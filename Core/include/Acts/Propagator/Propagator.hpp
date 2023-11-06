@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,12 +16,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
+#include "Acts/Propagator/detail/ParameterTraits.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -62,28 +64,29 @@ struct PropagatorPlainOptions {
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 
-  /// Maximum number of Runge-Kutta steps for the stepper step call
-  unsigned int maxRungeKuttaStepTrials = 10000;
-
-  /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
-
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
 
-  /// Required tolerance to reach target (surface, pathlength)
-  double targetTolerance = s_onSurfaceTolerance;
+  /// Required tolerance to reach surface
+  double surfaceTolerance = s_onSurfaceTolerance;
 
   /// Loop protection step, it adapts the pathLimit
   bool loopProtection = true;
   double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
 
   // Configurations for Stepper
+
   /// Tolerance for the error of the integration
-  double tolerance = 1e-4;
+  double stepTolerance = 1e-4;
 
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
+
+  /// Absolute maximum step size
+  double maxStepSize = std::numeric_limits<double>::max();
+
+  /// Maximum number of Runge-Kutta steps for the stepper step call
+  unsigned int maxRungeKuttaStepTrials = 10000;
 };
 
 /// @brief Options for propagate() call
@@ -122,22 +125,14 @@ struct PropagatorOptions : public PropagatorPlainOptions {
       extended_aborter_list_t aborters) const {
     PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
         geoContext, magFieldContext);
-    // Copy the options over
-    eoptions.direction = direction;
-    eoptions.maxSteps = maxSteps;
-    eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
-    eoptions.maxStepSize = maxStepSize;
-    eoptions.targetTolerance = targetTolerance;
-    eoptions.pathLimit = direction * std::abs(pathLimit);
-    eoptions.loopProtection = loopProtection;
-    eoptions.loopFraction = loopFraction;
 
-    // Stepper options
-    eoptions.tolerance = tolerance;
-    eoptions.stepSizeCutOff = stepSizeCutOff;
+    // Copy the options over
+    eoptions.setPlainOptions(*this);
+
     // Action / abort list
     eoptions.actionList = std::move(actionList);
     eoptions.abortList = std::move(aborters);
+
     // And return the options
     return eoptions;
   }
@@ -149,14 +144,16 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     // Copy the options over
     direction = pOptions.direction;
     maxSteps = pOptions.maxSteps;
-    maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
-    maxStepSize = pOptions.maxStepSize;
-    targetTolerance = pOptions.targetTolerance;
+    surfaceTolerance = pOptions.surfaceTolerance;
     pathLimit = direction * std::abs(pOptions.pathLimit);
     loopProtection = pOptions.loopProtection;
     loopFraction = pOptions.loopFraction;
-    tolerance = pOptions.tolerance;
+
+    // Stepper options
+    stepTolerance = pOptions.stepTolerance;
     stepSizeCutOff = pOptions.stepSizeCutOff;
+    maxStepSize = pOptions.maxStepSize;
+    maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
   }
 
   /// List of actions
@@ -199,10 +196,26 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 ///
 template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final {
+  /// Re-define bound track parameters dependent on the stepper
+  using StepperBoundTrackParameters =
+      detail::stepper_bound_parameters_type_t<stepper_t>;
+  static_assert(
+      Concepts::BoundTrackParametersConcept<StepperBoundTrackParameters>,
+      "Stepper bound track parameters do not fulfill bound "
+      "parameters concept.");
+
+  /// Re-define curvilinear track parameters dependent on the stepper
+  using StepperCurvilinearTrackParameters =
+      detail::stepper_curvilinear_parameters_type_t<stepper_t>;
+  static_assert(
+      Concepts::BoundTrackParametersConcept<StepperCurvilinearTrackParameters>,
+      "Stepper bound track parameters do not fulfill bound "
+      "parameters concept.");
+
   using Jacobian = BoundMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+      std::tuple<StepperCurvilinearTrackParameters, Jacobian, double>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
                 "Stepper does not fulfill stepper concept.");
@@ -349,7 +362,7 @@ class Propagator final {
   template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
   Result<
-      action_list_t_result_t<CurvilinearTrackParameters,
+      action_list_t_result_t<StepperCurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const propagator_options_t& options,
             bool makeCurvilinear = true) const;
@@ -376,12 +389,12 @@ class Propagator final {
   template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
   Result<
-      action_list_t_result_t<CurvilinearTrackParameters,
+      action_list_t_result_t<StepperCurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>>
   propagate(
       const parameters_t& start, const propagator_options_t& options,
       bool makeCurvilinear,
-      action_list_t_result_t<CurvilinearTrackParameters,
+      action_list_t_result_t<StepperCurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>&&
           inputResult) const;
 
@@ -406,8 +419,9 @@ class Propagator final {
   template <typename parameters_t, typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
-  Result<action_list_t_result_t<
-      BoundTrackParameters, typename propagator_options_t::action_list_type>>
+  Result<
+      action_list_t_result_t<StepperBoundTrackParameters,
+                             typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
@@ -433,12 +447,13 @@ class Propagator final {
   template <typename parameters_t, typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
-  Result<action_list_t_result_t<
-      BoundTrackParameters, typename propagator_options_t::action_list_type>>
+  Result<
+      action_list_t_result_t<StepperBoundTrackParameters,
+                             typename propagator_options_t::action_list_type>>
   propagate(
       const parameters_t& start, const Surface& target,
       const propagator_options_t& options,
-      action_list_t_result_t<BoundTrackParameters,
+      action_list_t_result_t<StepperBoundTrackParameters,
                              typename propagator_options_t::action_list_type>
           inputResult) const;
 

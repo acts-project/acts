@@ -84,7 +84,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   // Loop over the input partilces and run
   for (const auto& part : inputParticles) {
     auto currentVertex = part.fourPosition();
-    if (not lastVertex or not currentVertex.isApprox(*lastVertex)) {
+    if (!lastVertex || !currentVertex.isApprox(*lastVertex)) {
       // Add the vertex to the event
       if (pVertex != nullptr) {
         anEvent->AddPrimaryVertex(pVertex);
@@ -150,6 +150,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     // Add the primary to the vertex
     pVertex->SetPrimary(particle);
 
+    eventStore().particlesInitial.insert(part);
     eventStore().trackIdMapping[particle->GetTrackID()] = part.particleId();
 
     ++pCounter;

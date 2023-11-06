@@ -12,6 +12,7 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
@@ -20,12 +21,15 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
 #include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
+#include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
@@ -193,6 +197,24 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
+    using Config = Acts::SeedFinderFTFConfig<SimSpacePoint>;
+    auto c = py::class_<Config>(m, "SeedFinderFTFConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(minPt);
+    ACTS_PYTHON_MEMBER(sigmaScattering);
+    ACTS_PYTHON_MEMBER(highland);
+    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
+    ACTS_PYTHON_MEMBER(fastrack_input_file);
+    ACTS_PYTHON_MEMBER(m_phiSliceWidth);
+    ACTS_PYTHON_MEMBER(m_nMaxPhiSlice);
+    ACTS_PYTHON_MEMBER(m_useClusterWidth);
+    ACTS_PYTHON_MEMBER(m_layerGeometry);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
     using seedConf = Acts::SeedConfirmationRangeConfig;
     auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
                  .def(py::init<>());
@@ -251,6 +273,12 @@ void addTrackFinding(Context& ctx) {
                                 seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SeedingFTFAlgorithm, mex, "SeedingFTFAlgorithm",
+      inputSpacePoints, outputSeeds, seedFilterConfig, seedFinderConfig,
+      seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks,
+      trackingGeometry, ACTS_FTF_Map, fill_module_csv);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
       inputSpacePoints, outputProtoTracks, inputSourceLinks, trackingGeometry,
       geometrySelection, inputMeasurements, subRegions, nLayers, xMin, xMax,
@@ -298,6 +326,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_MEMBER(trackSelectorCfg);
+    ACTS_PYTHON_MEMBER(backward);
+    ACTS_PYTHON_MEMBER(maxSteps);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -308,6 +338,10 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TracksToTrajectories, mex,
                                 "TracksToTrajectories", inputTracks,
                                 outputTrajectories);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TracksToParameters, mex,
+                                "TracksToParameters", inputTracks,
+                                outputTrackParameters);
 
   {
     auto constructor = [](const std::vector<
@@ -349,6 +383,11 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::PrototracksToSeeds, mex, "PrototracksToSeeds",
       inputProtoTracks, inputSpacePoints, outputSeeds, outputProtoTracks);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::MeasurementMapSelector, mex, "MeasurementMapSelector",
+      inputMeasurementParticleMap, inputSourceLinks,
+      outputMeasurementParticleMap, geometrySelection);
 }
 
 }  // namespace Acts::Python

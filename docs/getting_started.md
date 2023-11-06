@@ -36,7 +36,7 @@ components:
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
--   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
+-   [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
 -   [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
 -   [Pythia8](https://pythia.org) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
@@ -273,6 +273,7 @@ components.
 | ACTS_BUILD_PLUGIN_ACTSVG            | Build SVG display plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                          |
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
+| ACTS_BUILD_PLUGIN_PODIO             | Build Podio plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                |
 | ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |

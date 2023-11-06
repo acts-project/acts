@@ -157,9 +157,9 @@ sys.setrecursionlimit(10**6)
 CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-tracks_ckf.csv"))
 data = readDataSet(CKF_files)
 
-# Data of each events after clustering
+# Data of each event after clustering
 clusteredData = []
-# data of each events after ambiguity resolution
+# data of each event after ambiguity resolution
 cleanedData = []
 
 t1 = time.time()

@@ -28,13 +28,13 @@ namespace Acts {
 /// @return a boolean
 inline static bool isEqual(const BinningData& ba, const BinningData& bb,
                            float tolerance) {
-  bool equalBool = (ba.type == bb.type) and (ba.option == bb.option) and
-                   (ba.binvalue == bb.binvalue) and (ba.zdim == bb.zdim) and
+  bool equalBool = (ba.type == bb.type) && (ba.option == bb.option) &&
+                   (ba.binvalue == bb.binvalue) && (ba.zdim == bb.zdim) &&
                    (ba.subBinningAdditive == bb.subBinningAdditive);
 
   BOOST_CHECK(equalBool);
-  bool equalRange = (std::abs(ba.min - bb.min) < tolerance) and
-                    (std::abs(ba.max - bb.max) < tolerance) and
+  bool equalRange = (std::abs(ba.min - bb.min) < tolerance) &&
+                    (std::abs(ba.max - bb.max) < tolerance) &&
                     (std::abs(ba.step - bb.step) < tolerance);
 
   BOOST_CHECK(equalRange);
@@ -50,14 +50,14 @@ inline static bool isEqual(const BinningData& ba, const BinningData& bb,
     for (size_t ib = 0; ib < ba.boundaries().size(); ++ib) {
       equalBoundaries =
           (std::abs(ba.boundaries()[ib] - bb.boundaries()[ib]) < tolerance);
-      if (not equalBoundaries) {
+      if (!equalBoundaries) {
         break;
       }
     }
   }
   BOOST_CHECK(equalBoundaries);
 
-  return equalBool and equalRange and euqalStructure;
+  return equalBool && equalRange && euqalStructure;
 }
 
 /// Check whether the BinUtility objects are equal
@@ -93,19 +93,19 @@ inline static bool isEqual(const Acts::Extent& ea, const Acts::Extent& eb,
   bool equalRange = true;
   for (auto& bVal : s_binningValues) {
     equalConstrains =
-        equalConstrains and (ea.constrains(bVal) == eb.constrains(bVal));
+        equalConstrains && (ea.constrains(bVal) == eb.constrains(bVal));
     BOOST_CHECK(equalConstrains);
-    if (ea.constrains(bVal) and eb.constrains(bVal)) {
+    if (ea.constrains(bVal) && eb.constrains(bVal)) {
       equalRange =
-          equalRange and std::abs(ea.min(bVal) - eb.min(bVal)) < tolerance;
+          equalRange && std::abs(ea.min(bVal) - eb.min(bVal)) < tolerance;
       equalRange =
-          equalRange and std::abs(ea.max(bVal) - eb.max(bVal)) < tolerance;
+          equalRange && std::abs(ea.max(bVal) - eb.max(bVal)) < tolerance;
       BOOST_CHECK(equalRange);
     }
   }
   BOOST_CHECK(equalConstrains);
   BOOST_CHECK(equalRange);
-  return equalRange and equalConstrains;
+  return equalRange && equalConstrains;
 }
 
 }  // namespace Acts

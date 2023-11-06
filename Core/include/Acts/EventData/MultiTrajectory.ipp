@@ -18,12 +18,12 @@
 
 namespace Acts {
 namespace detail_lt {
-template <typename D, size_t M, bool ReadOnly>
+template <typename D, std::size_t M, bool ReadOnly>
 inline TrackStateProxy<D, M, ReadOnly>::TrackStateProxy(
     ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory, IndexType istate)
     : m_traj(&trajectory), m_istate(istate) {}
 
-template <typename D, size_t M, bool ReadOnly>
+template <typename D, std::size_t M, bool ReadOnly>
 TrackStatePropMask TrackStateProxy<D, M, ReadOnly>::getMask() const {
   using PM = TrackStatePropMask;
 
@@ -46,7 +46,7 @@ TrackStatePropMask TrackStateProxy<D, M, ReadOnly>::getMask() const {
   return mask;
 }
 
-template <typename D, size_t M, bool ReadOnly>
+template <typename D, std::size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const
     -> ConstParameters {
   if (hasSmoothed()) {
@@ -58,7 +58,7 @@ inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const
   }
 }
 
-template <typename D, size_t M, bool ReadOnly>
+template <typename D, std::size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const
     -> ConstCovariance {
   if (hasSmoothed()) {
@@ -70,14 +70,14 @@ inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const
   }
 }
 
-template <typename D, size_t M, bool ReadOnly>
+template <typename D, std::size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
   assert(has<hashString("projector")>());
   return bitsetToMatrix<Projector>(
       component<ProjectorBitset, hashString("projector")>());
 }
 
-template <typename D, size_t M, bool ReadOnly>
+template <typename D, std::size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::getUncalibratedSourceLink() const
     -> SourceLink {
   assert(has<hashString("uncalibratedSourceLink")>());

@@ -43,10 +43,10 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters output collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
-  if (not m_cfg.magneticField) {
+  if (!m_cfg.magneticField) {
     throw std::invalid_argument("Missing magnetic field");
   }
 
@@ -58,7 +58,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 
   // Set up the track parameters covariance (the same for all tracks)
-  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+  for (size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
     m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
                          m_cfg.initialSigmas[i];
   }
@@ -125,7 +125,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
         m_cfg.bFieldMin, logger());
-    if (not optParams.has_value()) {
+    if (!optParams.has_value()) {
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
                                                               << " failed.");
       continue;

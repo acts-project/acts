@@ -9,6 +9,8 @@
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 
 #include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
@@ -69,7 +71,7 @@ Acts::Experimental::DetectorComponent::PortalContainer connect(
         break;
     }
   } else if (binning ==
-                 std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR} and
+                 std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR} &&
              objects.size() == 2u) {
     rContainer =
         Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
@@ -92,7 +94,7 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   if (m_cfg.binning.size() == 1u) {
     // 1-dimensional case
     auto b = m_cfg.binning.front();
-    if (b != Acts::binR and b != Acts::binZ and b != Acts::binPhi) {
+    if (b != Acts::binR && b != Acts::binZ && b != Acts::binPhi) {
       throw std::invalid_argument(
           "CylindricalContainerBuilder: 1D binning only supported in z, r, or "
           "phi");
@@ -112,6 +114,50 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
           "two builders.");
     }
   }
+}
+
+Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
+    const Acts::Experimental::Blueprint::Node& bpNode,
+    Acts::Logging::Level logLevel)
+    : IDetectorComponentBuilder(),
+      m_logger(getDefaultLogger(bpNode.name + "_cont", logLevel)) {
+  if (bpNode.boundsType != VolumeBounds::BoundsType::eCylinder) {
+    throw std::invalid_argument(
+        "CylindricalContainerBuilder: boundary type must be cylinder - for "
+        "building from a blueprint node.");
+  }
+
+  std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders;
+  for (const auto& child : bpNode.children) {
+    if (child->isLeaf()) {
+      // Volume structure
+      VolumeStructureBuilder::Config vsCfg;
+      vsCfg.transform = child->transform;
+      vsCfg.boundsType = child->boundsType;
+      vsCfg.boundValues = child->boundaryValues;
+      vsCfg.auxiliary = "*** acts auto-generated shape builder ***";
+      auto vsBuilder = std::make_shared<VolumeStructureBuilder>(
+          vsCfg, getDefaultLogger(child->name + "_shape", logLevel));
+      // Detector volume builder
+      DetectorVolumeBuilder::Config dvCfg;
+      dvCfg.name = child->name;
+      dvCfg.externalsBuilder = vsBuilder;
+      dvCfg.internalsBuilder = child->internalsBuilder;
+      dvCfg.auxiliary = "*** acts auto-generated volume builder ***";
+      // Add the builder
+      m_cfg.builders.push_back(std::make_shared<DetectorVolumeBuilder>(
+          dvCfg, getDefaultLogger(child->name, logLevel)));
+    } else {
+      // This evokes the recursive stepping down the tree
+      m_cfg.builders.push_back(
+          std::make_shared<CylindricalContainerBuilder>(*child, logLevel));
+    }
+  }
+
+  m_cfg.binning = bpNode.binning;
+  m_cfg.auxiliary = "*** acts auto-generated from proxy ***";
+  m_cfg.geoIdGenerator = bpNode.geoIdGenerator;
+  m_cfg.rootVolumeFinderBuilder = bpNode.rootVolumeFinderBuilder;
 }
 
 Acts::Experimental::DetectorComponent
@@ -135,7 +181,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   std::for_each(
       m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
         auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
-        atNavigationLevel = (atNavigationLevel and cVolumes.size() == 1u);
+        atNavigationLevel = (atNavigationLevel && cVolumes.size() == 1u);
         // Collect individual components, volumes, containers, roots
         volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
         containers.push_back(cContainer);

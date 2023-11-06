@@ -62,7 +62,7 @@ struct GeometricConfig {
   ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
       chargeSmearer = Digitization::Exact{};
 
-  // The threshold below an cell activation is ignored
+  // The threshold below a cell activation is ignored
   double threshold = 0.;
 
   // Whether to assume digital readout (activation is either 0 or 1)
@@ -70,7 +70,7 @@ struct GeometricConfig {
 
   /// Charge generation (configurable via the chargeSmearer)
   Acts::ActsScalar charge(Acts::ActsScalar path, RandomEngine &rng) const {
-    if (not chargeSmearer) {
+    if (!chargeSmearer) {
       return path;
     }
     auto res = chargeSmearer(path, rng);
@@ -111,9 +111,9 @@ struct DigiComponentsConfig {
 class DigitizationConfig {
  public:
   DigitizationConfig(bool merge, double sigma, bool commonCorner)
-      : DigitizationConfig(
-            merge, sigma, commonCorner,
-            Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+      : DigitizationConfig(merge, sigma, commonCorner,
+                           Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {
+  }
 
   DigitizationConfig(
       bool doMerge, double mergeNsigma, bool mergeCommonCorner,

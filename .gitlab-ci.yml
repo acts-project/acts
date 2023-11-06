@@ -2,6 +2,7 @@ variables:
   CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
   CCACHE_MAXSIZE: 2G
   CCACHE_KEY_SUFFIX: r1
+  CTEST_OUTPUT_ON_FAILURE: 1
 
 clang_tidy:
   stage: build
@@ -19,11 +20,11 @@ clang_tidy:
         apt-get update
         && apt-get install -y g++-8 libstdc++-8-dev parallel software-properties-common 
         && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add
-        && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-16 main'
-        && apt-get install -y clang-16 clang-tidy-16
-        && ln -s /usr/bin/clang++-16 /usr/bin/clang++
-        && ln -s /usr/bin/clang-16 /usr/bin/clang
-        && ln -s /usr/bin/clang-tidy-16 /usr/bin/clang-tidy
+        && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main'
+        && apt-get install -y clang-17 clang-tidy-17
+        && ln -s /usr/bin/clang++-17 /usr/bin/clang++
+        && ln -s /usr/bin/clang-17 /usr/bin/clang
+        && ln -s /usr/bin/clang-tidy-17 /usr/bin/clang-tidy
         && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
         && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/ 
         && clang++ --gcc-toolchain=/opt -v
@@ -49,6 +50,7 @@ clang_tidy:
         clang-tidy/clang-tidy.log 
         clang-tidy/clang-tidy.json 
         --exclude "*thirdparty*"
+        --exclude "*ActsPodioEdm*"
 
     # Check the combined report against the defined limits
     - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
@@ -58,14 +60,14 @@ clang_tidy:
 
 build_exatrkx:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
-    - docker
+    - large
 
   cache:
     key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
     paths:
-      - ${CI_PROJECT_DIR}/ccache_${CCACHE_KEY_SUFFIX}
+      - ${CI_PROJECT_DIR}/ccache
 
   artifacts:
     paths:
@@ -98,13 +100,16 @@ build_exatrkx:
       -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+
+    - ccache -z
     - cmake --build build -- -j3
+    - ccache -s
 
 test_exatrkx_unittests:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
     - docker-gpu-nvidia
   script:
@@ -114,7 +119,7 @@ test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
     - docker-gpu-nvidia
   script:
@@ -132,8 +137,6 @@ test_exatrkx_python:
 build_linux_ubuntu:
   stage: build
   image: ghcr.io/acts-project/ubuntu2204:v41
-  tags:
-    - docker
 
   cache:
     key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
@@ -186,8 +189,6 @@ linux_test_examples:
   stage: test
   image: ghcr.io/acts-project/ubuntu2204:v41
   needs: [build_linux_ubuntu]
-  tags:
-    - docker
 
   script:
     - apt-get update && apt-get install -y git-lfs
@@ -214,8 +215,6 @@ linux_physmon:
   stage: test
   image: ghcr.io/acts-project/ubuntu2204:v41
   needs: [build_linux_ubuntu]
-  tags:
-    - docker
 
   artifacts:
     when: always
@@ -254,8 +253,6 @@ linux_physmon:
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
 
   stage: build
-  tags:
-    - docker
 
   cache:
     key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
@@ -341,7 +338,6 @@ linux_ubuntu_2204_clang:
   image: ghcr.io/acts-project/${OS}-base:sha-ca76a1f2
   stage: build
   tags:
-    - docker
     - cvmfs
 
   variables:

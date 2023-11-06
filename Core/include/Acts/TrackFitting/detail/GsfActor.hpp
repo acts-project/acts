@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -101,7 +101,7 @@ struct GsfActor {
     /// Whether to abort immediately when an error occurs
     bool abortOnError = false;
 
-    /// We can stop the propagation if we reach this number of measuerement
+    /// We can stop the propagation if we reach this number of measurement
     /// states
     std::optional<std::size_t> numberMeasurements;
 
@@ -133,7 +133,7 @@ struct GsfActor {
 
   /// @brief GSF actor operation
   ///
-  /// @tparam propagator_state_t is the type of Propagagor state
+  /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
   ///
@@ -148,7 +148,7 @@ struct GsfActor {
     assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
-    if (not result.result.ok()) {
+    if (!result.result.ok()) {
       ACTS_WARNING("result.result not ok, return!")
       return;
     }
@@ -168,7 +168,7 @@ struct GsfActor {
                                                          navigator, logger());
 
     // We only need to do something if we are on a surface
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
 
@@ -220,7 +220,7 @@ struct GsfActor {
     ////////////////////////
 
     // Early return if nothing happens
-    if (not haveMaterial && not haveMeasurement) {
+    if (!haveMaterial && !haveMeasurement) {
       // No hole before first measurement
       if (result.processedStates > 0 && surface.associatedDetectorElement()) {
         TemporaryStates tmpStates;
@@ -248,13 +248,13 @@ struct GsfActor {
     // We do not need the component cache here, we can just update our stepper
     // state with the filtered components.
     // NOTE because of early return before we know that we have a measurement
-    if (not haveMaterial) {
+    if (!haveMaterial) {
       TemporaryStates tmpStates;
 
       auto res = kalmanUpdate(state, stepper, navigator, result, tmpStates,
                               found_source_link->second);
 
-      if (not res.ok()) {
+      if (!res.ok()) {
         setErrorOrAbort(res.error());
         return;
       }
@@ -276,7 +276,7 @@ struct GsfActor {
                                   false);
       }
 
-      if (not res.ok()) {
+      if (!res.ok()) {
         setErrorOrAbort(res.error());
         return;
       }
@@ -307,7 +307,7 @@ struct GsfActor {
       updateStepper(state, stepper, navigator, componentCache);
     }
 
-    // If we only done preUpdate before, now do postUpdate
+    // If we have only done preUpdate before, now do postUpdate
     if (haveMaterial && haveMeasurement) {
       applyMultipleScattering(state, stepper, navigator,
                               MaterialUpdateStage::PostUpdate);
@@ -361,7 +361,7 @@ struct GsfActor {
     slab.scaleThickness(pathCorrection);
 
     // Emit a warning if the approximation is not valid for this x/x0
-    if (not m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
+    if (!m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
       ++nInvalidBetheHeitler;
       ACTS_DEBUG(
           "Bethe-Heitler approximation encountered invalid value for x/x0="
@@ -524,7 +524,7 @@ struct GsfActor {
 
     // Boolean flag, to distinguish measurement and outlier states. This flag
     // is only modified by the valid-measurement-branch, so only if there
-    // isn't any valid measuerement state, the flag stays false and the state
+    // isn't any valid measurement state, the flag stays false and the state
     // is thus counted as an outlier
     bool is_valid_measurement = false;
 
@@ -545,7 +545,7 @@ struct GsfActor {
       const auto& trackStateProxy = *trackStateProxyRes;
 
       // If at least one component is no outlier, we consider the whole thing
-      // as a measuerementState
+      // as a measurementState
       if (trackStateProxy.typeFlags().test(
               Acts::TrackStateFlag::MeasurementFlag)) {
         is_valid_measurement = true;
@@ -627,7 +627,7 @@ struct GsfActor {
 
       const auto& trackStateProxy = *trackStateProxyRes;
 
-      if (not trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+      if (!trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
         is_hole = false;
       }
 
@@ -695,7 +695,7 @@ struct GsfActor {
     using FltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
-    if (not m_cfg.inReversePass) {
+    if (!m_cfg.inReversePass) {
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
       const auto isMeasurement =
@@ -768,47 +768,6 @@ struct GsfActor {
     m_cfg.weightCutoff = options.weightCutoff;
     m_cfg.reductionMethod = options.stateReductionMethod;
     m_cfg.calibrationContext = &options.calibrationContext.get();
-  }
-};
-
-/// An actor that collects the final multi component state once the propagation
-/// finished
-struct FinalStateCollector {
-  using MultiPars = Acts::GsfConstants::FinalMultiComponentState;
-
-  struct result_type {
-    MultiPars pars;
-  };
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& /*logger*/) const {
-    if (not(navigator.targetReached(state.navigation) and
-            navigator.currentSurface(state.navigation))) {
-      return;
-    }
-
-    const auto& surface = *navigator.currentSurface(state.navigation);
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-        states;
-
-    for (auto cmp : stepper.componentIterable(state.stepping)) {
-      auto singleState = cmp.singleState(state);
-      auto bs = cmp.singleStepper(stepper).boundState(singleState.stepping,
-                                                      surface, true);
-
-      if (bs.ok()) {
-        const auto& btp = std::get<BoundTrackParameters>(*bs);
-        states.emplace_back(cmp.weight(), btp.parameters(), btp.covariance());
-      }
-    }
-
-    result.pars = typename MultiPars::value_type(
-        surface.getSharedPtr(), states,
-        stepper.particleHypothesis(state.stepping));
   }
 };
 

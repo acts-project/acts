@@ -101,7 +101,7 @@ class IterativeVertexFinder {
     ///
     /// are considered compatible with the vertex.
     double significanceCutSeeding = 10;
-    double maximumChi2CutForSeeding = 36.;
+    double maximumChi2cutForSeeding = 36.;
     int maxVertices = 50;
 
     /// Assign a certain fraction of compatible tracks to a different (so-called
