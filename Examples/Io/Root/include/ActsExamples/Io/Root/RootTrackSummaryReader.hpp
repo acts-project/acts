@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -30,11 +31,11 @@ class TChain;
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// @class RootTrajectorySummaryReader
+/// @class RootTrackSummaryReader
 ///
 /// @brief Reads in TrackParameter information from a root file
 /// and fills it into a Acts::BoundTrackParameter format
-class RootTrajectorySummaryReader : public IReader {
+class RootTrackSummaryReader : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
@@ -51,10 +52,10 @@ class RootTrajectorySummaryReader : public IReader {
   /// Constructor
   /// @param config The Configuration struct
   /// @param level The log level
-  RootTrajectorySummaryReader(const Config& config, Acts::Logging::Level level);
+  RootTrackSummaryReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootTrajectorySummaryReader() override;
+  ~RootTrackSummaryReader() override;
 
   /// Framework name() method
   std::string name() const override { return "RootTrackSummaryReader"; }
@@ -80,8 +81,8 @@ class RootTrajectorySummaryReader : public IReader {
   /// The config class
   Config m_cfg;
 
-  WriteDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_outputTrackParameters{this, "OutputTrackParameters"};
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};

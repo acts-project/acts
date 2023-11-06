@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   VertexInfo<BoundTrackParameters> vtxInfo1;
   vtxInfo1.linPoint.setZero();
   vtxInfo1.linPoint.head<3>() = vtxPos1;
-  vtxInfo1.constraintVertex = vtx1Constr;
+  vtxInfo1.constraint = vtx1Constr;
   vtxInfo1.oldPosition = vtxInfo1.linPoint;
   vtxInfo1.seedPosition = vtxInfo1.linPoint;
 
@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   VertexInfo<BoundTrackParameters> vtxInfo2;
   vtxInfo2.linPoint.setZero();
   vtxInfo2.linPoint.head<3>() = vtxPos2;
-  vtxInfo2.constraintVertex = vtx2Constr;
+  vtxInfo2.constraint = vtx2Constr;
   vtxInfo2.oldPosition = vtxInfo2.linPoint;
   vtxInfo2.seedPosition = vtxInfo2.linPoint;
 

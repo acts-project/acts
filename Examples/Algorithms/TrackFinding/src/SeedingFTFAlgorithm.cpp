@@ -199,7 +199,7 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
       int ACTS_mod_id = index_source_link.geometryId().sensitive();
 
       // dont want strips or HGTD
-      if (ACTS_vol_id == 2 or ACTS_vol_id == 22 or ACTS_vol_id == 23 or
+      if (ACTS_vol_id == 2 || ACTS_vol_id == 22 || ACTS_vol_id == 23 ||
           ACTS_vol_id == 24) {
         continue;
       }
@@ -313,10 +313,12 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
       rc = sqrt(center(0) * center(0) +
                 center(1) * center(1));  // barrel center in r
       // bounds of z
-      if (min_bound_global(2) < minBound)
+      if (min_bound_global(2) < minBound) {
         minBound = min_bound_global(2);
-      if (max_bound_global(2) > maxBound)
+      }
+      if (max_bound_global(2) > maxBound) {
         maxBound = max_bound_global(2);
+      }
     } else {
       rc = center(2);  // not barrel center in Z
       // bounds of r
@@ -324,10 +326,12 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
                        min_bound_global(1) * min_bound_global(1));
       float max = sqrt(max_bound_global(0) * max_bound_global(0) +
                        max_bound_global(1) * max_bound_global(1));
-      if (min < minBound)
+      if (min < minBound) {
         minBound = min;
-      if (max > maxBound)
+      }
+      if (max > maxBound) {
         maxBound = max;
+      }
     }
 
     int combined_id = FTF_id * 1000 + eta_mod;

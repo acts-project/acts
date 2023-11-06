@@ -249,14 +249,14 @@ class TrigFTF_GNN_Layer {
   std::vector<float> m_minBinCoord;
   std::vector<float> m_maxBinCoord;
 
-  float m_minEta, m_maxEta;
+  float m_minEta{}, m_maxEta{};
 
  protected:
-  float m_etaBinWidth, m_phiBinWidth;
+  float m_etaBinWidth{}, m_phiBinWidth{};
 
-  float m_r1, m_z1, m_r2, m_z2;
-  float m_nBins;
-  float m_etaBin;
+  float m_r1{}, m_z1{}, m_r2{}, m_z2{};
+  float m_nBins{};
+  float m_etaBin{};
 };
 
 template <typename space_point_t>
@@ -265,7 +265,7 @@ class TrigFTF_GNN_Geometry {
   TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer> &layers,
                        std::unique_ptr<Acts::FasTrackConnector> &conn)
 
-      : m_nEtaBins(0), m_fastrack(move(conn)) {
+      : m_fastrack(std::move(conn)) {
     const float min_z0 = -168.0;
     const float max_z0 = 168.0;
 
@@ -320,7 +320,7 @@ class TrigFTF_GNN_Geometry {
     }
   }
 
-  TrigFTF_GNN_Geometry() : m_nEtaBins(0) {}
+  TrigFTF_GNN_Geometry() = default;
 
   // for safety to prevent passing as copy
   TrigFTF_GNN_Geometry(const TrigFTF_GNN_Geometry &) = delete;
@@ -373,12 +373,12 @@ class TrigFTF_GNN_Geometry {
     return pHL;
   }
 
-  float m_etaBinWidth;
+  float m_etaBinWidth{};
 
   std::map<unsigned int, TrigFTF_GNN_Layer<space_point_t> *> m_layMap;
   std::vector<TrigFTF_GNN_Layer<space_point_t> *> m_layArray;
 
-  int m_nEtaBins;
+  int m_nEtaBins{0};
 
   std::unique_ptr<Acts::FasTrackConnector> m_fastrack;
 };

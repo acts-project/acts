@@ -1,6 +1,7 @@
 add_unittest(Blueprint BlueprintTests.cpp)
 add_unittest(BlueprintHelper BlueprintHelperTests.cpp)
 add_unittest(CylindricalContainerBuilder CylindricalContainerBuilderTests.cpp)
+add_unittest(CylindricalDetectorFromBlueprint CylindricalDetectorFromBlueprintTests.cpp)
 add_unittest(CylindricalDetectorHelper CylindricalDetectorHelperTests.cpp)
 add_unittest(GridAxisGenerators GridAxisGeneratorsTests.cpp)
 add_unittest(Detector DetectorTests.cpp)

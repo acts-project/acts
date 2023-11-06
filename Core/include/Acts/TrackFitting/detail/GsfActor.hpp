@@ -149,7 +149,7 @@ struct GsfActor {
     assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
-    if (not result.result.ok()) {
+    if (!result.result.ok()) {
       ACTS_WARNING("result.result not ok, return!")
       return;
     }
@@ -169,7 +169,7 @@ struct GsfActor {
                                                          navigator, logger());
 
     // We only need to do something if we are on a surface
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
 
@@ -221,7 +221,7 @@ struct GsfActor {
     ////////////////////////
 
     // Early return if nothing happens
-    if (not haveMaterial && not haveMeasurement) {
+    if (!haveMaterial && !haveMeasurement) {
       // No hole before first measurement
       if (result.processedStates > 0 && surface.associatedDetectorElement()) {
         TemporaryStates tmpStates;
@@ -249,13 +249,13 @@ struct GsfActor {
     // We do not need the component cache here, we can just update our stepper
     // state with the filtered components.
     // NOTE because of early return before we know that we have a measurement
-    if (not haveMaterial) {
+    if (!haveMaterial) {
       TemporaryStates tmpStates;
 
       auto res = kalmanUpdate(state, stepper, navigator, result, tmpStates,
                               found_source_link->second);
 
-      if (not res.ok()) {
+      if (!res.ok()) {
         setErrorOrAbort(res.error());
         return;
       }
@@ -277,7 +277,7 @@ struct GsfActor {
                                   false);
       }
 
-      if (not res.ok()) {
+      if (!res.ok()) {
         setErrorOrAbort(res.error());
         return;
       }
@@ -362,7 +362,7 @@ struct GsfActor {
     slab.scaleThickness(pathCorrection);
 
     // Emit a warning if the approximation is not valid for this x/x0
-    if (not m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
+    if (!m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
       ++nInvalidBetheHeitler;
       ACTS_DEBUG(
           "Bethe-Heitler approximation encountered invalid value for x/x0="
@@ -628,7 +628,7 @@ struct GsfActor {
 
       const auto& trackStateProxy = *trackStateProxyRes;
 
-      if (not trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+      if (!trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
         is_hole = false;
       }
 
@@ -696,7 +696,7 @@ struct GsfActor {
     using FltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
-    if (not m_cfg.inReversePass) {
+    if (!m_cfg.inReversePass) {
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
       const auto isMeasurement =

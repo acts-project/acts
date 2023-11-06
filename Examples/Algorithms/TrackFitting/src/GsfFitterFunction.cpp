@@ -131,8 +131,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
     using namespace Acts::GsfConstants;
-    if (not tracks.hasColumn(
-            Acts::hashString(kFinalMultiComponentStateColumn))) {
+    if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
       tracks.template addColumn<FinalMultiComponentState>(key);
     }
@@ -151,8 +150,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
     using namespace Acts::GsfConstants;
-    if (not tracks.hasColumn(
-            Acts::hashString(kFinalMultiComponentStateColumn))) {
+    if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
       tracks.template addColumn<FinalMultiComponentState>(key);
     }

@@ -9,9 +9,11 @@
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -32,13 +34,11 @@ using Acts::VectorHelpers::eta;
 ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
     ActsExamples::TrackFitterPerformanceWriter::Config config,
     Acts::Logging::Level level)
-    : WriterT(config.inputTrajectories, "TrackFitterPerformanceWriter", level),
+    : WriterT(config.inputTracks, "TrackFitterPerformanceWriter", level),
       m_cfg(std::move(config)),
       m_resPlotTool(m_cfg.resPlotToolConfig, level),
       m_effPlotTool(m_cfg.effPlotToolConfig, level),
-      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, level)
-
-{
+      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, level) {
   // trajectories collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -95,7 +95,7 @@ ActsExamples::TrackFitterPerformanceWriter::finalize() {
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
-    const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
+    const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
@@ -109,38 +109,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  // Loop over all trajectories
-  for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
-    const auto& traj = trajectories[itraj];
-
-    // The trajectory entry indices and the multiTrajectory
-    const auto& trackTips = traj.tips();
-    const auto& mj = traj.multiTrajectory();
-
-    if (trackTips.empty()) {
-      ACTS_WARNING("No trajectory found for entry " << itraj);
-      continue;
-    }
-
-    // Check the size of the trajectory entry indices. For track fitting, there
-    // should be at most one trajectory
-    if (trackTips.size() > 1) {
-      ACTS_ERROR("Track fitting should not result in multiple trajectories.");
-      return ProcessCode::ABORT;
-    }
-    // Get the entry index for the single trajectory
-    auto trackTip = trackTips.front();
-
+  // Loop over all tracks
+  for (const auto& track : tracks) {
     // Select reco track with fitted parameters
-    if (not traj.hasTrackParameters(trackTip)) {
+    if (!track.hasReferenceSurface()) {
       ACTS_WARNING("No fitted track parameters.");
       continue;
     }
-    const auto& fittedParameters = traj.trackParameters(trackTip);
+    Acts::BoundTrackParameters fittedParameters =
+        track.createParametersAtReference();
 
     // Get the majority truth particle for this trajectory
-    identifyContributingParticles(hitParticlesMap, traj, trackTip,
-                                  particleHitCounts);
+    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     if (particleHitCounts.empty()) {
       ACTS_WARNING("No truth particle associated with this trajectory.");
       continue;
@@ -155,16 +135,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     // Record this majority particle ID of this trajectory
     reconParticleIds.push_back(ip->particleId());
     // Fill the residual plots
-    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip,
-                       traj.trackParameters(trackTip));
-    // Collect the trajectory summary info
-    auto trajState =
-        Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip, fittedParameters);
     // Fill the trajectory summary info
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                trajState.nStates, trajState.nMeasurements,
-                                trajState.nOutliers, trajState.nHoles,
-                                trajState.nSharedHits);
+                                track.nTrackStates(), track.nMeasurements(),
+                                track.nOutliers(), track.nHoles(),
+                                track.nSharedHits());
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with

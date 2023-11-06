@@ -39,10 +39,10 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   // The outgoing root volumes
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
   // Screen printout of the auxiliary information
-  if (not m_cfg.auxiliary.empty()) {
+  if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
-  ACTS_DEBUG("Building a volume with name " << m_cfg.name);
+  ACTS_DEBUG("Building a volume with name '" << m_cfg.name << "'.");
 
   // Get transform and bounds from the volume
   auto [transform, bounds, portalGenerator] =

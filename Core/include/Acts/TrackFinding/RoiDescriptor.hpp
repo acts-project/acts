@@ -22,7 +22,7 @@ namespace Acts {
 class RoiDescriptor {
  public:
   // iterator
-  typedef std::vector<const RoiDescriptor*>::const_iterator roi_iterator;
+  using roi_iterator = std::vector<const RoiDescriptor*>::const_iterator;
   /// convenient
   static constexpr bool FULLSCAN = true;
   static constexpr bool ROI = false;
@@ -165,41 +165,44 @@ class RoiDescriptor {
   /// to ensure default width is only set once at job startup
   static std::atomic<bool> s_firstInstanceCreated;
 
-  float m_phi;  //!< phi of RoI center
-  float m_eta;  //!< eta of RoI center
-  float m_zed;  //!< zed of RoI center
+  float m_phi{};  //!< phi of RoI center
+  float m_eta{};  //!< eta of RoI center
+  float m_zed{};  //!< zed of RoI center
 
-  float m_phiMinus;  //!< most negative RoI in azimuthal
-  float m_phiPlus;   //!< most positive RoI in azimuthal
-  float m_etaMinus;  //!< eta of RoI at zedMinus
-  float m_etaPlus;   //!< eta of RoI at zedPlus
+  float m_phiMinus{};  //!< most negative RoI in azimuthal
+  float m_phiPlus{};   //!< most positive RoI in azimuthal
+  float m_etaMinus{};  //!< eta of RoI at zedMinus
+  float m_etaPlus{};   //!< eta of RoI at zedPlus
+  float m_zedMinus{};  //!< z position at most negative position along the
+                       //!< beamline
   float
-      m_zedMinus;   //!< z position at most negative position along the beamline
-  float m_zedPlus;  //!< z position at most positive position along the beamline
+      m_zedPlus{};  //!< z position at most positive position along the beamline
 
-  float m_dzdrMinus;  //!<  dz/dr at the rear of the RoI
-  float m_dzdrPlus;   //!<  dz/dr at the front of the RoI
+  float m_dzdrMinus{};  //!<  dz/dr at the rear of the RoI
+  float m_dzdrPlus{};   //!<  dz/dr at the front of the RoI
 
-  float m_drdzMinus;  //!<  dr/dz at the rear of the RoI
-  float m_drdzPlus;   //!<  dr/dz at the front of the RoI
+  float m_drdzMinus{};  //!<  dr/dz at the rear of the RoI
+  float m_drdzPlus{};   //!<  dr/dz at the front of the RoI
 
-  float m_zedOuterMinus;  //!< z at rear of RoI at the outer radius ( = 1100 mm)
-  float m_zedOuterPlus;  //!< z at front of RoI at the outer radius ( = 1100 mm)
+  float
+      m_zedOuterMinus{};  //!< z at rear of RoI at the outer radius ( = 1100 mm)
+  float
+      m_zedOuterPlus{};  //!< z at front of RoI at the outer radius ( = 1100 mm)
 
-  bool m_fullscan;            //!< flag this as a full detector RoI
-  bool m_composite;           //!< flag this as a composite RoI
-  bool m_manageConstituents;  //!< flag to determine whether constituents should
-                              //!< be managed
+  bool m_fullscan{};            //!< flag this as a full detector RoI
+  bool m_composite{};           //!< flag this as a composite RoI
+  bool m_manageConstituents{};  //!< flag to determine whether constituents
+                                //!< should be managed
 
-  int m_version;  //!< transient version identifier
+  int m_version{};  //!< transient version identifier
 
   std::vector<const RoiDescriptor*> m_roiDescriptors;  //!< roi constituents
 
   // from trig
-  unsigned int m_l1Id;     //!< lvl1 event number
-  unsigned int m_roiId;    //!< RoI number
-  unsigned int m_roiWord;  //!< lvl1 RoI word from which this RoI was initially
-                           //!< constructed
+  unsigned int m_l1Id{0};     //!< lvl1 event number
+  unsigned int m_roiId{0};    //!< RoI number
+  unsigned int m_roiWord{0};  //!< lvl1 RoI word from which this RoI was
+                              //!< initially constructed
 
   //   std::string str( const RoiDescriptor& d );                           //<!
   //   printing helper std::ostream& operator<<( std::ostream& m, const

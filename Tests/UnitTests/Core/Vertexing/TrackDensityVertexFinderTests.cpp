@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
     std::cout << res2.error().message() << std::endl;
   }
 
-  if (res1.ok() and res2.ok()) {
+  if (res1.ok() && res2.ok()) {
     BOOST_CHECK(!(*res1).empty());
     BOOST_CHECK(!(*res2).empty());
     Vector3 result1 = (*res1).back().position();

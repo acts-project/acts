@@ -333,7 +333,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       // store volume information
       if (m_cfg.storeVolume) {
         Acts::GeometryIdentifier vlayerID;
-        if (not mint.volume.empty()) {
+        if (!mint.volume.empty()) {
           vlayerID = mint.volume.geometryId();
           m_vol_id.push_back(vlayerID.value());
         } else {

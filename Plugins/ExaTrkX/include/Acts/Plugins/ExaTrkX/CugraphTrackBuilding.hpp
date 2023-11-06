@@ -18,7 +18,7 @@ namespace Acts {
 class CugraphTrackBuilding final : public Acts::TrackBuildingBase {
  public:
   CugraphTrackBuilding(std::unique_ptr<const Logger> logger)
-      : m_logger(std::move(logger)){};
+      : m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(std::any nodes, std::any edges,
                                            std::any edge_weights,
