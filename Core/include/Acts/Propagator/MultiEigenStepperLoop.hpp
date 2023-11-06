@@ -216,7 +216,7 @@ struct MaxMomentumReducerLoop {
 /// @tparam small_vector_size A size-hint how much memory should be allocated
 /// by the small vector
 template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
-          typename component_reducer_t = WeightedComponentReducerLoop,
+          typename component_reducer_t = MaxMomentumReducerLoop,
           typename auctioneer_t = detail::VoidAuctioneer>
 class MultiEigenStepperLoop
     : public EigenStepper<extensionlist_t, auctioneer_t> {
