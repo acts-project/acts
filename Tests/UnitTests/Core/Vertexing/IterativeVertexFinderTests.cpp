@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     cfg.reassignTracksAfterFirstFit = true;
 
-    VertexFinder finder(cfg);
+    VertexFinder finder(std::move(cfg));
     VertexFinder::State state(*bField, magFieldContext);
 
     // Vector to be filled with all tracks in current event
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
                              ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
 
-    VertexFinder finder(cfg, extractParameters);
+    VertexFinder finder(std::move(cfg), extractParameters);
     VertexFinder::State state(*bField, magFieldContext);
 
     // Same for user track type tracks
@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   cfg.maximumChi2cutForSeeding = 49;
   cfg.significanceCutSeeding = 12;
 
-  VertexFinder finder(cfg);
+  VertexFinder finder(std::move(cfg));
   VertexFinder::State state(*bField, magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
