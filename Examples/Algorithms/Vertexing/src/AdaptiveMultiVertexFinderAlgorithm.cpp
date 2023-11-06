@@ -103,7 +103,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.annealingTool = annealingUtility;
   fitterCfg.minWeight = 0.001;
   fitterCfg.doSmoothing = true;
-  Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
+  Fitter fitter(std::move(fitterCfg), logger().cloneWithSuffix("AMVFitter"));
 
   typename Finder::Config finderConfig(std::move(fitter), seedFinder,
                                        ipEstimator, std::move(linearizer),
@@ -113,7 +113,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   finderConfig.maxIterations = 200;
 
   // Instantiate the finder
-  Finder finder(finderConfig, logger().cloneWithSuffix("AMVFinder"));
+  Finder finder(std::move(finderConfig), logger().cloneWithSuffix("AMVFinder"));
 
   // retrieve input tracks and convert into the expected format
 
