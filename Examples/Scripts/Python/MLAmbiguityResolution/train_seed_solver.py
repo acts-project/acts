@@ -31,27 +31,9 @@ def readDataSet(Seed_files: list[str]) -> pd.DataFrame:
     globalindex = 0
     data = pd.DataFrame()
     for f in Seed_files:
-        print()
         datafile = pd.read_csv(f)
-        if f[-11:-4] != "cleaned":
-            # Remove the particle ID where all seeds are fakes
-            cleanedData = pd.DataFrame()
-            for ID in datafile["particleId"].unique():
-                if not (
-                    datafile.loc[datafile["particleId"] == ID, "good/duplicate/fake"]
-                    == "fake"
-                ).all():
-                    cleanedData = pd.concat(
-                        [datafile.loc[datafile["particleId"] == ID], cleanedData]
-                    )
-            cleanedData = prepareDataSet(cleanedData)
-            # Save the cleaned dataset for futur use (the cleaning is time consuming)
-            newName = f[:-4] + "_cleaned.csv"
-            cleanedData.to_csv(newName)
-            data = pd.concat([data, cleanedData])
-        else:
-            datafile = prepareDataSet(datafile)
-            data = pd.concat([data, datafile])
+        datafile = prepareDataSet(datafile)
+        data = pd.concat([data, datafile])
     return data
 
 
@@ -61,16 +43,23 @@ def prepareTrainingData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     @param[in] data: input DataFrame to be prepared
     @return: array of the network input and the corresponding truth  
     """
+    print("Truth particles : ", data.loc[data["goodSeed"] == True].size)
+    print("Good seed matched : ", data.loc[(data["goodSeed"] == True) & (data["good/duplicate/fake"] == "good")].size)
+    print("Duplicate seed matched : ", data.loc[(data["goodSeed"] == True) & (data["good/duplicate/fake"] == "duplicate")].size)
+    print("Fake seed matched : ", data.loc[(data["goodSeed"] == True) & (data["good/duplicate/fake"] == "fake")].size)
+
+    data.loc[data["good/duplicate/fake"] == "good", "good/duplicate/fake"] = "duplicate"
+    data.loc[data["goodSeed"] == True, "good/duplicate/fake"] = "good"
     # Remove truth and useless variable
     target_column = "good/duplicate/fake"
     # Separate the truth from the input variables
-
     y = LabelEncoder().fit(data[target_column]).transform(data[target_column])
     input = data.drop(
         columns=[
             target_column,
             "seed_id",
             "Hits_ID",
+            "goodSeed",
         ]
     )
     # Compute the normalisation factors
@@ -135,13 +124,15 @@ def computeLoss(
     if score_duplicate:
         for s in score_duplicate:
             batch_loss += F.relu(s - score_good + margin_duplicate) / (
-                len(score_duplicate) + len(score_fake)
+                len(score_duplicate) + len(score_fake) + 1
             )
     if score_fake:
         for s in score_fake:
             batch_loss += F.relu(s - score_good + margin_fake) / (
-                len(score_duplicate) + len(score_fake)
+                len(score_duplicate) + len(score_fake) + 1
             )
+    batch_loss += margin_fake / (len(score_duplicate) + len(score_fake) + 1)
+    
     return batch_loss
 
 
@@ -175,7 +166,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
         # score of the duplicate seeds
         score_duplicate = []
         # score of the fake seeds
-        score_fake = [0]
+        score_fake = []
 
         if Optimiser:
             Optimiser.zero_grad()
@@ -196,14 +187,14 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
                     score_duplicate,
                     score_fake,
                     batch_loss,
-                    margin_duplicate=0.3,
-                    margin_fake=0.9,
+                    margin_duplicate=0.2,
+                    margin_fake=0.4,
                 )
                 nb_part += 1
                 # Reinitialise the variable for the next particle
                 pid = index
                 score_duplicate = []
-                score_fake = [0]
+                score_fake = []
                 score_good = 1
                 max_score = 0
                 max_match = 1
@@ -215,8 +206,6 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
             else:
                 score_fake.append(pred)
             # Prepare efficiency computtion
-            if pred == max_score:
-                max_match = 1
             if pred > max_score:
                 max_score = pred
                 max_match = truth
@@ -230,8 +219,8 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
             score_duplicate,
             score_fake,
             batch_loss,
-            margin_duplicate=0.3,
-            margin_fake=0.9,
+            margin_duplicate=0.2,
+            margin_fake=0.4,
         )
         nb_part += 1
         # Normalise the loss to the batch size
@@ -315,10 +304,7 @@ def train(
 # ==================================================================
 
 # ttbar events used as the training input, here we assume 160 events are availables
-# CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-seed.csv"))
-# CKF_files = sorted(glob.glob("odd_output" + "/event0000001[0-5][0-9]-seed.csv"))
-CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-seed_cleaned.csv"))
-CKF_files = sorted(glob.glob("odd_output" + "/event0000001[0-5][0-9]-seed_cleaned.csv"))
+CKF_files = sorted(glob.glob("odd_output" + "/event000000[0-9][0-9][0-9]-seed_cleaned.csv"))
 data = readDataSet(CKF_files)
 # Prepare the data
 x_train, y_train = prepareTrainingData(data)
@@ -352,8 +338,7 @@ torch.onnx.export(
 # ==================================================================
 
 # ttbar events for the test, here we assume 40 events are availables
-CKF_files_test = sorted(glob.glob("odd_output" + "/event0000001[5-9][0-9]-seed.csv"))
-# CKF_files_test = sorted(glob.glob("odd_output" + "/event0000001[5-9][0-9]-seed_cleaned.csv"))
+CKF_files_test = sorted(glob.glob("odd_output" + "/event000001[0-0][0-9][0-9]-seed_cleaned.csv"))
 
 test = readDataSet(CKF_files_test)
 
