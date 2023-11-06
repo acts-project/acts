@@ -36,7 +36,7 @@ components:
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
--   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
+-   [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
 -   [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
 -   [Pythia8](https://pythia.org) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
@@ -52,7 +52,7 @@ These are usually not available through the system package manager and can be fo
 
 All external dependencies must be provided prior to building Acts. Compatible
 versions of all dependencies are provided e.g. by the [LCG
-releases](http://lcginfo.cern.ch/) starting from [LCG 97apython3](http://lcginfo.cern.ch/release/97apython3/).
+releases](https://lcginfo.cern.ch/) starting from [LCG 97apython3](https://lcginfo.cern.ch/release/97apython3/).
 For convenience, it is possible to build the required boost and eigen3 dependencies using the ACTS build system; see [Build options](#build-options).
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.

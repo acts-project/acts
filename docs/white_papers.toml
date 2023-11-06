@@ -1,0 +1,9 @@
+[[white_papers]]
+repository = "https://github.com/acts-project/whitepaper-template"
+slug = "whitepaper-template"
+pdf_url = "https://github.com/acts-project/whitepaper-template/releases/download/v1/main.pdf"
+
+[white_papers.metadata]
+authors = [ "First Author", "Second Author",]
+title = "A whitepaper about a topic"
+description = "This is a whitepaper example. It contains a number of example\npatterns, layouts etc.\nSimple math like $a + b = c$ or even $\\sqrt{s} = 14$ TeV is supported!\n\nQuisque ullamcorper placerat ipsum. Cras nibh. Morbi vel justo vitae lacus\ntincidunt ultrices. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. In hac\nhabitasse platea dictumst. Integer tempus convallis augue. Etiam facilisis. Nunc\nelementum fermentum wisi. Aenean placerat. Ut imperdiet, enim sed gravida\nsollicitudin, felis odio placerat quam, ac pulvinar elit purus eget enim. Nunc vitae\ntortor. Proin tempus nibh sit amet nisl. Vivamus quis tortor vitae risus porta\nvehicula."
