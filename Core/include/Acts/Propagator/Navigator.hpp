@@ -429,7 +429,7 @@ class Navigator {
       stepper.releaseStepSize(state.stepping);
     }
 
-    // Navigator target always resets the current surface
+    // Navigator preStep always resets the current surface
     state.navigation.currentSurface = nullptr;
   }
 

@@ -78,7 +78,6 @@ def runTruthTrackingGsf(
         field,
         rnd=rnd,
         enableInteractions=True,
-        logLevel=acts.logging.VERBOSE,
     )
 
     addDigitization(
@@ -89,7 +88,6 @@ def runTruthTrackingGsf(
         rnd=rnd,
     )
 
-    """
     addSeeding(
         s,
         trackingGeometry,
@@ -108,7 +106,6 @@ def runTruthTrackingGsf(
         s,
         trackingGeometry,
         field,
-        logLevel=acts.logging.VERBOSE,
     )
 
     s.addAlgorithm(
@@ -154,7 +151,6 @@ def runTruthTrackingGsf(
             filePath=str(outputDir / "performance_gsf.root"),
         )
     )
-    """
 
     return s
 

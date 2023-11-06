@@ -37,7 +37,7 @@ def runTruthTrackingKalman(
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=1, logLevel=acts.logging.INFO
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     for d in decorators:
