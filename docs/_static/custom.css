@@ -1,3 +1,29 @@
 .wy-side-nav-search > a img.logo {
   width: 200px;
 }
+
+.math {
+      text-align: left;
+}
+.eqno {
+      float: right;
+}
+
+.admonition.seealso .admonition-title::before {
+    content: "";
+}
+
+.admonition.caution .admonition-title::before,
+.admonition.danger .admonition-title::before,
+.admonition.warning .admonition-title::before {
+    content: "";
+}
+
+.admonition.error .admonition-title::before {
+  content: "";
+}
+
+.admonition.hint .admonition-title::before,
+.admonition.tip .admonition-title::before {
+  content: "";
+}
