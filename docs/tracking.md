@@ -130,7 +130,7 @@ called *particle propagation* or *extrapolation*, is used to predict a
 particle's properties after it has travelled a certain distance. In many cases,
 the projected intersection with various types of surfaces is desired. The
 trajectory of a charged particle is governed by the [magnetic
-field](core/magnetic_field.rst) through which it travels, as well as any
+field](core/magnetic_field.md) through which it travels, as well as any
 [material effects](core/material.rst). In case of a homogeneous magnetic field,
 and in the absence of material interaction, the particle follows a helical
 trajectory. Such a helix can be calculated purely analytically, although
