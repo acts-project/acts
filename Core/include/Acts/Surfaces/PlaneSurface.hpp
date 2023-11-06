@@ -189,7 +189,8 @@ class PlaneSurface : public Surface {
   /// @return the @c SurfaceMultiIntersection object
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
@@ -201,7 +202,7 @@ class PlaneSurface : public Surface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+                                      std::size_t lseg) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;

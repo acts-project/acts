@@ -1,3 +1,4 @@
+add_unittest(AlgebraHelpersTests AlgebraHelpersTests.cpp)
 add_unittest(AnnealingUtility AnnealingUtilityTests.cpp)
 add_unittest(Axes AxesTests.cpp)
 add_unittest(BFieldMapUtils BFieldMapUtilsTests.cpp)

@@ -70,7 +70,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   std::vector<std::vector<IndexSourceLink>> sourceLinkTrackContainer;
   sourceLinkTrackContainer.reserve(numTracksUsed);
   std::vector<IndexSourceLink> trackSourceLinks;
-  for (std::size_t itrack = 0; itrack < numTracksUsed; ++itrack) {
+  for (size_t itrack = 0; itrack < numTracksUsed; ++itrack) {
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
 

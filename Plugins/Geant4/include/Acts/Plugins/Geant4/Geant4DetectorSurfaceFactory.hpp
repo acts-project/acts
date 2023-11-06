@@ -52,11 +52,11 @@ class Geant4DetectorSurfaceFactory {
     /// The created non-const surfaces - for further processing,
     std::vector<Geant4PassiveSurface> passiveSurfaces;
     /// matching and conversion statistics: volumes
-    std::size_t matchedG4Volumes = 0;
+    size_t matchedG4Volumes = 0;
     /// matching and conversion statistics: surfaces
-    std::size_t convertedSurfaces = 0;
+    size_t convertedSurfaces = 0;
     /// matching and conversion statistics: materials
-    std::size_t convertedMaterials = 0;
+    size_t convertedMaterials = 0;
   };
 
   /// Nested option struct that allows per call changeable configuration

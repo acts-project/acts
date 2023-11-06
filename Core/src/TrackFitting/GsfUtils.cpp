@@ -23,7 +23,7 @@ ActsScalar calculateDeterminant(
     TrackStateTraits::Covariance predictedCovariance,
     TrackStateTraits::Projector projector, unsigned int calibratedSize) {
   return visit_measurement(calibratedSize, [&](auto N) {
-    constexpr size_t kMeasurementSize = decltype(N)::value;
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
     typename Acts::TrackStateTraits<kMeasurementSize, true>::Measurement
         calibrated{fullCalibrated};

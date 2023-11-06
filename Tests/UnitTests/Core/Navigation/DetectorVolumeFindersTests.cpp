@@ -18,9 +18,9 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cstddef>
@@ -96,11 +96,11 @@ BOOST_AUTO_TEST_CASE(RootVolumeFinder) {
 BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
   nState.currentDetector = det012.get();
 
-  using SingleIndex = std::size_t;
+  using SingleIndex = size_t;
 
   using Axis = Acts::detail::Axis<Acts::detail::AxisType::Variable,
                                   Acts::detail::AxisBoundaryType::Bound>;
-  using Grid = Acts::detail::Grid<SingleIndex, Axis>;
+  using Grid = Acts::Grid<SingleIndex, Axis>;
 
   std::vector<Acts::ActsScalar> b = {r0, r1, r2, r3};
   Axis a(b);

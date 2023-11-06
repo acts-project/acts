@@ -20,16 +20,16 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
-  pOptions.targetTolerance = m_cfg.targetTolerance;
+  pOptions.surfaceTolerance = m_cfg.targetTolerance;
 
   // Get intersection of the track with the Perigee if the particle would
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection =
-      perigeeSurface
-          .intersect(gctx, params.position(gctx), params.direction(), false)
-          .closest();
+  auto intersection = perigeeSurface
+                          .intersect(gctx, params.position(gctx),
+                                     params.direction(), BoundaryCheck(false))
+                          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above

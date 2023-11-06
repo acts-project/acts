@@ -17,7 +17,7 @@ namespace Acts {
 /// direction.
 /// @tparam value_t The floating point type to use
 /// @tparam DIM The number of dimensions in which this ray is defined (2 or 3)
-template <typename value_t, size_t DIM>
+template <typename value_t, std::size_t DIM>
 class Ray {
  public:
   /// Re expose the value type
@@ -59,7 +59,7 @@ class Ray {
   /// Helper to draw this ray using a given visualization helper.
   /// @param helper The visualization helper
   /// @param far_distance The "length" of the drawn line representing the ray
-  template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
+  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   void draw(IVisualization3D& helper, value_type far_distance = 10) const;
 
  private:
@@ -72,7 +72,7 @@ class Ray {
 /// @param os The out stream
 /// @param ray The ray to write to @p os
 /// @return The outstream given in @p os
-template <typename T, size_t D>
+template <typename T, std::size_t D>
 std::ostream& operator<<(std::ostream& os, const Ray<T, D>& ray) {
   ray.dump(os);
   return os;
