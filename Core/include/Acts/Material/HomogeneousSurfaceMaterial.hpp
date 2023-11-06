@@ -80,10 +80,11 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @note the input parameter is ignored
   const MaterialSlab& materialSlab(const Vector3& gp) const final;
 
-  /// @copydoc ISurfaceMaterial::materialSlab(size_t, size_t) const
+  /// @copydoc ISurfaceMaterial::materialSlab(std::size_t, std::size_t) const
   ///
   /// @note the input parameters are ignored
-  const MaterialSlab& materialSlab(size_t bin0, size_t bin1) const final;
+  const MaterialSlab& materialSlab(std::size_t bin0,
+                                   std::size_t bin1) const final;
 
   /// The inherited methods - for MaterialSlab access
   using ISurfaceMaterial::materialSlab;
@@ -112,7 +113,7 @@ inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
 }
 
 inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
-    size_t /*ib0*/, size_t /*ib1*/) const {
+    std::size_t /*ib0*/, std::size_t /*ib1*/) const {
   return (m_fullMaterial);
 }
 

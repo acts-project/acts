@@ -26,7 +26,7 @@ namespace {
 
 class ExamplesEdmHook : public Acts::ExaTrkXHook {
   double m_targetPT = 0.5_GeV;
-  std::size_t m_targetSize = 3;
+  size_t m_targetSize = 3;
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_truthGraphHook;
@@ -35,7 +35,7 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
   const Acts::Logger& logger() const { return *m_logger; }
 
   struct HitInfo {
-    std::size_t spacePointIndex;
+    size_t spacePointIndex;
     int32_t hitIndex;
   };
 
@@ -43,9 +43,8 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
   ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
                   const IndexMultimap<Index>& measHitMap,
                   const SimHitContainer& simhits,
-                  const SimParticleContainer& particles,
-                  std::size_t targetMinHits, double targetMinPT,
-                  const Acts::Logger& logger)
+                  const SimParticleContainer& particles, size_t targetMinHits,
+                  double targetMinPT, const Acts::Logger& logger)
       : m_targetPT(targetMinPT),
         m_targetSize(targetMinHits),
         m_logger(logger.clone("MetricsHook")) {
@@ -160,7 +159,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 }
 
 /// Allow access to features with nice names
-enum feat : std::size_t {
+enum feat : size_t {
   eR = 0,
   ePhi,
   eZ,
@@ -190,8 +189,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   // Convert Input data to a list of size [num_measurements x
   // measurement_features]
-  const std::size_t numSpacepoints = spacepoints.size();
-  const std::size_t numFeatures = clusters ? 7 : 3;
+  const size_t numSpacepoints = spacepoints.size();
+  const size_t numFeatures = clusters ? 7 : 3;
   ACTS_INFO("Received " << numSpacepoints << " spacepoints");
 
   std::vector<float> features(numSpacepoints * numFeatures);

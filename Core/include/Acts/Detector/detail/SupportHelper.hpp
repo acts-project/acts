@@ -62,7 +62,8 @@ std::vector<std::shared_ptr<Surface>> discSupport(
 ///
 /// @note this modifies the layerSurfaces and toAllIndices
 void addSupport(std::vector<std::shared_ptr<Surface>>& layerSurfaces,
-                std::vector<size_t>& assignToAll, const Extent& layerExtent,
+                std::vector<std::size_t>& assignToAll,
+                const Extent& layerExtent,
                 Surface::SurfaceType layerRepresentation,
                 const std::array<ActsScalar, 5u>& layerSupportValues,
                 std::optional<Transform3> layerTransform = std::nullopt,
