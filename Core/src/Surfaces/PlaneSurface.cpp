@@ -108,7 +108,7 @@ const Acts::SurfaceBounds& Acts::PlaneSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;

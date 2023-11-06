@@ -34,16 +34,16 @@ namespace detail {
 /// @return The global track parameters covariance matrix and the starting
 /// row/column for smoothed states
 template <typename traj_t, typename parameters_t = BoundTrackParameters>
-std::pair<ActsDynamicMatrix, std::unordered_map<size_t, size_t>>
+std::pair<ActsDynamicMatrix, std::unordered_map<std::size_t, std::size_t>>
 globalTrackParametersCovariance(const traj_t& multiTraj,
-                                const size_t& entryIndex) {
+                                const std::size_t& entryIndex) {
   using CovMatrix = typename parameters_t::CovarianceMatrix;
   using GainMatrix = CovMatrix;
 
   // The last smoothed state index
-  size_t lastSmoothedIndex = SIZE_MAX;
+  std::size_t lastSmoothedIndex = SIZE_MAX;
   // The total number of smoothed states
-  size_t nSmoothedStates = 0;
+  std::size_t nSmoothedStates = 0;
   // Visit all the states
   multiTraj.visitBackwards(entryIndex, [&](const auto& ts) {
     if (ts.hasSmoothed()) {
@@ -60,13 +60,13 @@ globalTrackParametersCovariance(const traj_t& multiTraj,
   fullGlobalTrackParamsCov.setZero();
   // The index of state within the trajectory and the starting row/column for
   // this state in the global covariance matrix
-  std::unordered_map<size_t, size_t> stateRowIndices;
+  std::unordered_map<std::size_t, std::size_t> stateRowIndices;
   // Visit the smoothed states to calculate the full global track parameters
   // covariance
-  size_t nProcessed = 0;
+  std::size_t nProcessed = 0;
   auto prev_ts = multiTraj.getTrackState(lastSmoothedIndex);
   multiTraj.visitBackwards(lastSmoothedIndex, [&](const auto& ts) {
-    const size_t iRow =
+    const std::size_t iRow =
         fullGlobalTrackParamsCov.rows() - eBoundSize * (nProcessed + 1);
     // Fill the covariance of this state
     fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(iRow, iRow) =
@@ -79,8 +79,8 @@ globalTrackParametersCovariance(const traj_t& multiTraj,
       GainMatrix G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
                      prev_ts.predictedCovariance().inverse();
       // Loop over the beforehand smoothed states
-      for (size_t iProcessed = 1; iProcessed <= nProcessed; iProcessed++) {
-        const size_t iCol = iRow + eBoundSize * iProcessed;
+      for (std::size_t iProcessed = 1; iProcessed <= nProcessed; iProcessed++) {
+        const std::size_t iCol = iRow + eBoundSize * iProcessed;
         CovMatrix prev_correlation =
             fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(
                 iRow + eBoundSize, iCol);
