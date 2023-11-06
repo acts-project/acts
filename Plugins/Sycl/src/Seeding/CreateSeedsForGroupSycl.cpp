@@ -140,12 +140,12 @@ void createSeedsForGroupSycl(
 
     midBotDupletBuffer =
         std::make_unique<vecmem::data::jagged_vector_buffer<uint32_t>>(
-            std::vector<std::size_t>(M, 0), std::vector<std::size_t>(M, B),
+            std::vector<size_t>(M, 0), std::vector<size_t>(M, B),
             (device_resource ? *device_resource : resource),
             (device_resource ? &resource : nullptr));
     midTopDupletBuffer =
         std::make_unique<vecmem::data::jagged_vector_buffer<uint32_t>>(
-            std::vector<std::size_t>(M, 0), std::vector<std::size_t>(M, T),
+            std::vector<size_t>(M, 0), std::vector<size_t>(M, T),
             (device_resource ? *device_resource : resource),
             (device_resource ? &resource : nullptr));
     copy.setup(*midBotDupletBuffer);

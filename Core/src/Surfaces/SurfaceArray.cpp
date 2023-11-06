@@ -43,7 +43,7 @@ std::ostream& Acts::SurfaceArray::toStream(const GeometryContext& /*gctx*/,
 
   auto axes = p_gridLookup->getAxes();
 
-  for (size_t j = 0; j < axes.size(); ++j) {
+  for (std::size_t j = 0; j < axes.size(); ++j) {
     detail::AxisBoundaryType bdt = axes.at(j)->getBoundaryType();
     sl << " - axis " << (j + 1) << std::endl;
     sl << "   - boundary type: ";
@@ -63,7 +63,7 @@ std::ostream& Acts::SurfaceArray::toStream(const GeometryContext& /*gctx*/,
     sl << "   - n bins: " << axes.at(j)->getNBins() << std::endl;
     sl << "   - bin edges: [ ";
     auto binEdges = axes.at(j)->getBinEdges();
-    for (size_t i = 0; i < binEdges.size(); ++i) {
+    for (std::size_t i = 0; i < binEdges.size(); ++i) {
       if (i > 0) {
         sl << ", ";
       }

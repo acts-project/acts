@@ -58,7 +58,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 
   // Set up the track parameters covariance (the same for all tracks)
-  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+  for (size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
     m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
                          m_cfg.initialSigmas[i];
   }

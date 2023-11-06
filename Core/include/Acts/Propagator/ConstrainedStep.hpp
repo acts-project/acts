@@ -53,7 +53,7 @@ class ConstrainedStep {
 
   /// Number of iterations needed by the stepsize finder
   /// (e.g. Runge-Kutta) of the stepper.
-  size_t nStepTrials = std::numeric_limits<size_t>::max();
+  std::size_t nStepTrials = std::numeric_limits<std::size_t>::max();
 
   constexpr ConstrainedStep() = default;
 

@@ -127,10 +127,10 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   tracks.addColumn<unsigned int>("trackGroup");
   Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
 
-  std::size_t nSeed = 0;
-  std::size_t nFailed = 0;
+  size_t nSeed = 0;
+  size_t nFailed = 0;
 
-  std::vector<std::size_t> nTracksPerSeeds;
+  std::vector<size_t> nTracksPerSeeds;
   nTracksPerSeeds.reserve(initialParameters.size());
 
   for (auto i = 0ul; i < initialParameters.size(); ++i) {

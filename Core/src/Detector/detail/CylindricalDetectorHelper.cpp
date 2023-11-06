@@ -510,7 +510,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
       // - if the volume doesn't have an inner portal, indices need to
       //   be shifted by -1 to update the correct index, that's the case for
       //   size 3 and 5 for portals
-      size_t nPortals = iv->portals().size();
+      std::size_t nPortals = iv->portals().size();
       bool innerPresent = (nPortals == 3u || nPortals == 5u);
       int iOffset = (innerPresent && i > 2u) ? -1 : 0;
       ACTS_VERBOSE("-- update portal with index "
@@ -648,7 +648,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   ActsScalar avgPhi = refValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
 
   // Check if inner cylinder and sectors are present by the number of portals
-  size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
+  std::size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
   bool innerPresent = (nPortals != 3u && nPortals != 5u);
   bool sectorsPresent = nPortals > 4u;
 
@@ -743,7 +743,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   DetectorComponent::PortalContainer dShell;
 
   // Check if inner cylinder and sectors are present by the number of portals
-  size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
+  std::size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
   bool innerPresent = (nPortals != 3u && nPortals != 5u);
 
   Transform3 refTransform = volumes[0u]->transform(gctx);

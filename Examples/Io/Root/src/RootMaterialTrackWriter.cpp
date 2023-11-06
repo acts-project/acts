@@ -173,7 +173,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       Acts::Vector3 positionSum = Acts::Vector3::Zero();
       double pathCorrectionSum = 0;
 
-      for (std::size_t start = 0, end = 0; end < materialInteractions.size();
+      for (size_t start = 0, end = 0; end < materialInteractions.size();
            ++end) {
         const auto& mintStart = materialInteractions[start];
         const auto& mintEnd = materialInteractions[end];

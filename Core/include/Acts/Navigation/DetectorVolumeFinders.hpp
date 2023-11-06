@@ -102,7 +102,7 @@ struct IndexedDetectorVolumeExtractor {
   /// @return a raw DetectorVolume pointer
   inline static const DetectorVolume* extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, size_t index) noexcept(false) {
+      const NavigationState& nState, std::size_t index) noexcept(false) {
     if (nState.currentDetector == nullptr) {
       throw std::runtime_error("IndexedVolumeExtractor: no detector given.");
     }
