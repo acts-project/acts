@@ -595,11 +595,11 @@ BOOST_AUTO_TEST_CASE(range_search_many_same) {
 
   std::vector<std::pair<std::array<double, 3>, int>> points;
 
-  for (std::size_t i = 0; i < 50; ++i) {
+  for (size_t i = 0; i < 50; ++i) {
     points.push_back({{64.0, 64.0, 64.0}, q++});
   }
 
-  for (std::size_t i = 0; i < 50; ++i) {
+  for (size_t i = 0; i < 50; ++i) {
     points.push_back({{-64.0, -64.0, -64.0}, q++});
   }
 

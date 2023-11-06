@@ -44,7 +44,7 @@ using device_array = std::unique_ptr<T, detail::DeviceArrayDeleter>;
 
 /// Function creating a primitive array in SYCL device memory
 template <typename T>
-device_array<T> make_device_array(std::size_t size, cl::sycl::queue& queue) {
+device_array<T> make_device_array(size_t size, cl::sycl::queue& queue) {
   return device_array<T>(cl::sycl::malloc_device<T>(size, queue),
                          detail::DeviceArrayDeleter(queue));
 }

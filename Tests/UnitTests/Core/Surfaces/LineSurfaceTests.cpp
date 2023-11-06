@@ -134,9 +134,10 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // isOnSurface
   const Vector3 insidePosition{0., 2.5, 0.};
   BOOST_CHECK(line.isOnSurface(tgContext, insidePosition, mom,
-                               false));  // need better test here
+                               BoundaryCheck(false)));  // need better test here
   const Vector3 outsidePosition{100., 100., 200.};
-  BOOST_CHECK(!line.isOnSurface(tgContext, outsidePosition, mom, true));
+  BOOST_CHECK(
+      !line.isOnSurface(tgContext, outsidePosition, mom, BoundaryCheck(true)));
   //
   // localToGlobal
   Vector3 returnedGlobalPosition{0., 0., 0.};

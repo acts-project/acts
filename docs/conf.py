@@ -22,6 +22,7 @@ copyright = (
 
 # -- General ------------------------------------------------------------------
 
+sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / "_extensions"))
 
 extensions = [
@@ -47,16 +48,17 @@ highlight_language = "cpp"
 smartquotes = True
 numfig = True
 
-myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
+myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath", "html_image"]
 myst_heading_anchors = 3
 
 linkcheck_retries = 5
 linkcheck_ignore = [
     r"https://doi.org/.*",
     r"https://cernvm.cern.ch/.*",
-    r"https://tavianator.com/.*",
     r"http://eigen.tuxfamily.org.*",
     r"https://pythia.org.*",
+    r"https://lcginfo.cern.ch/.*",
+    r"https://.*\.?intel.com/.*",
 ]
 
 # -- Options for HTML output --------------------------------------------------
@@ -131,6 +133,10 @@ if on_readthedocs or tags.has("run_apidoc"):
 else:
     if not api_index_target.exists():
         shutil.copyfile(cwd / "api/api_stub.rst", api_index_target)
+
+import white_papers
+
+white_papers.render()
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 

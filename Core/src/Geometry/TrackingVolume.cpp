@@ -364,7 +364,8 @@ void Acts::TrackingVolume::interlinkLayers() {
 void Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-    size_t& vol, const GeometryIdentifierHook& hook, const Logger& logger) {
+    std::size_t& vol, const GeometryIdentifierHook& hook,
+    const Logger& logger) {
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
@@ -695,7 +696,8 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
         boundarySurfaces = avol->boundarySurfaces();
     for (const auto& bs : boundarySurfaces) {
       const Surface& srf = bs->surfaceRepresentation();
-      auto sfmi = srf.intersect(gctx, position, direction, false);
+      auto sfmi =
+          srf.intersect(gctx, position, direction, BoundaryCheck(false));
       for (const auto& sfi : sfmi.split()) {
         if (sfi && sfi.pathLength() > oLimit && sfi.pathLength() <= pLimit) {
           sIntersections.push_back(sfi);

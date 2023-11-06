@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
   {
     // let's create an unrelated track first
     auto t = tc.getTrack(tc.addTrack());
-    for (std::size_t i = 0; i < 10; i++) {
+    for (size_t i = 0; i < 10; i++) {
       t.appendTrackState();
     }
   }
