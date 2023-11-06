@@ -202,6 +202,69 @@ struct MaxMomentumReducerLoop {
   }
 };
 
+
+struct MaxWeightReducerLoop {
+  template <typename component_range_t>
+  static const auto& maxWeightIt(const component_range_t& cmps) {
+    return *std::max_element(cmps.begin(), cmps.end(),
+                             [&](const auto& a, const auto& b) {
+                               return std::abs(a.state.weight) >
+                                      std::abs(b.state.weight);
+                             });
+  }
+
+  template <typename stepper_state_t>
+  static Vector3 position(const stepper_state_t& s) {
+    return maxWeightIt(s.components)
+        .state.pars.template segment<3>(eFreePos0);
+  }
+
+  template <typename stepper_state_t>
+  static Vector3 direction(const stepper_state_t& s) {
+    return maxWeightIt(s.components)
+        .state.pars.template segment<3>(eFreeDir0);
+  }
+
+  template <typename stepper_state_t>
+  static ActsScalar qOverP(const stepper_state_t& s) {
+    const auto& cmp = maxWeightIt(s.components);
+    return cmp.state.pars[eFreeQOverP];
+  }
+
+  template <typename stepper_state_t>
+  static ActsScalar absoluteMomentum(const stepper_state_t& s) {
+    const auto& cmp = maxWeightIt(s.components);
+    return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]);
+  }
+
+  template <typename stepper_state_t>
+  static Vector3 momentum(const stepper_state_t& s) {
+    const auto& cmp = maxWeightIt(s.components);
+    return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]) *
+           cmp.state.pars.template segment<3>(eFreeDir0);
+  }
+
+  template <typename stepper_state_t>
+  static ActsScalar charge(const stepper_state_t& s) {
+    return maxWeightIt(s.components).state.absCharge;
+  }
+
+  template <typename stepper_state_t>
+  static ActsScalar time(const stepper_state_t& s) {
+    return maxWeightIt(s.components).state.pars[eFreeTime];
+  }
+
+  template <typename stepper_state_t>
+  static FreeVector pars(const stepper_state_t& s) {
+    return maxWeightIt(s.components).state.pars;
+  }
+
+  template <typename stepper_state_t>
+  static FreeVector cov(const stepper_state_t& s) {
+    return maxWeightIt(s.components).state.cov;
+  }
+};
+
 /// @brief Stepper based on the EigenStepper, but handles Multi-Component Tracks
 /// (e.g., for the GSF). Internally, this only manages a vector of
 /// EigenStepper::States. This simplifies implementation, but has several
@@ -216,7 +279,7 @@ struct MaxMomentumReducerLoop {
 /// @tparam small_vector_size A size-hint how much memory should be allocated
 /// by the small vector
 template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
-          typename component_reducer_t = MaxMomentumReducerLoop,
+          typename component_reducer_t = MaxWeightReducerLoop,
           typename auctioneer_t = detail::VoidAuctioneer>
 class MultiEigenStepperLoop
     : public EigenStepper<extensionlist_t, auctioneer_t> {
