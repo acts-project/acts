@@ -40,7 +40,7 @@ setup = makeSetup()
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=500,
+            events=1,
             numThreads=-1,
             logLevel=acts.logging.INFO,
         )
@@ -64,7 +64,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-            multiplicity=50,
+            multiplicity=25,
             rnd=rnd,
         )
 
@@ -74,6 +74,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             setup.field,
             enableInteractions=True,
             rnd=rnd,
+            outputDirRoot=tp,
         )
 
         addDigitization(
@@ -127,6 +128,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 nMeasurementsMin=6,
             ),
             outputDirRoot=tp,
+            logLevel=acts.logging.VERBOSE,
         )
 
         if label in ["seeded", "orthogonal"]:
@@ -198,6 +200,8 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
         for stem in (
             [
+                "hits",
+                "particles_final",
                 "performance_ckf",
                 "tracksummary_ckf",
                 "performance_ivf",
@@ -219,8 +223,8 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
 for truthSmearedSeeded, truthEstimatedSeeded, label in [
     (True, False, "truth_smeared"),  # if first is true, second is ignored
-    (False, True, "truth_estimated"),
-    (False, False, "seeded"),
-    (False, False, "orthogonal"),
+    #(False, True, "truth_estimated"),
+    #(False, False, "seeded"),
+    #(False, False, "orthogonal"),
 ]:
     run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)

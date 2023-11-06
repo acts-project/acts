@@ -361,6 +361,7 @@ class Navigator {
       return;
     }
 
+    bool reinitialized = false;
     // Check next navigation candidate
     while (state.navigation.candidateIndex !=
            state.navigation.candidates.size()) {
@@ -389,7 +390,7 @@ class Navigator {
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
         ACTS_ERROR(volInfo(state) << "We are on surface before trying to reach "
-                                     "it, this should not happen. Good luck.");
+                                     "it. This should not happen. Good luck.");
         break;
       }
 
@@ -400,9 +401,25 @@ class Navigator {
         break;
       }
 
-      // Unreachable means we have to reinitialize
-      ACTS_VERBOSE(volInfo(state) << "Surface unreachable, reinitialize.");
-      reinitializeCandidates(state, stepper);
+      // Handle unreachable
+      if (intersection.template checkType<SurfaceIntersection>()) {
+        // Skip if this is a surface
+        ACTS_VERBOSE(volInfo(state) << "Surface unreachable, skip.");
+        ++state.navigation.candidateIndex;
+      } else {
+        // Renavigate otherwise
+        ACTS_VERBOSE(volInfo(state)
+                     << "Layer/Boundary unreachable, renavigate.");
+        if (reinitialized) {
+          ACTS_ERROR(volInfo(state) << "Renavigation failed. Good luck.");
+          // Set navigation break and release the navigation step size
+          state.navigation.navigationBreak = true;
+          stepper.releaseStepSize(state.stepping);
+          break;
+        }
+        reinitializeCandidates(state, stepper);
+        reinitialized = true;
+      }
     }
 
     if (state.navigation.candidateIndex == state.navigation.candidates.size()) {
