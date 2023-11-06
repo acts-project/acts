@@ -125,12 +125,15 @@ A set of container images is available through the [Acts container
 registry][acts_containers]. The following containers are used as part of the
 continuous integration setup and come with all dependencies pre-installed.
 
--   `centos7-lcg97apython3-gcc9`: based on CentOS 7 with HEP-specific software from
-    LCG 97apython3 using the GCC 9 compiler
--   `centos7-lcg98python3-gcc10`: based on CentOS 7 with HEP-specific software from LCG
-    98python3 using the GCC 10 compiler
--   `ubuntu2004`: based on Ubuntu 20.04 with manual installation of HEP-specific
+-   `centos7-lcg101-gcc11`: based on CentOS 7 with HEP-specific software from
+    LCG 101 using the GCC 11 compiler
+-   `ubuntu2204`: based on Ubuntu 22.04 with manual installation of HEP-specific
     software
+
+:::{attention}
+We stopped producing fully-contained LCG containers in favor of running LCG
+based tests directly from CVMFS.
+:::
 
 To use these locally, you first need to pull the relevant images from the
 registry. Stable versions are tagged as `vX` where `X` is the version number.

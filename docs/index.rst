@@ -41,6 +41,7 @@ Key features:
    authors
    license
 
+   white_papers/index.rst
 
 TODOs
 =====
