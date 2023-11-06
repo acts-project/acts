@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
                               std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
                               std::move(linearizer), bField);
   Finder::State state;
 
-  Finder finder(finderConfig, extractParameters);
+  Finder finder(std::move(finderConfig), extractParameters);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
                               std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
                               std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);

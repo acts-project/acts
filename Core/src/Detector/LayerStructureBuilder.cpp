@@ -52,7 +52,7 @@ template <Acts::detail::AxisBoundaryType aType>
 Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Surface>> lSurfaces,
-    std::vector<size_t> assignToAll,
+    std::vector<std::size_t> assignToAll,
     const Acts::Experimental::ProtoBinning& binning) {
   // The surface candidate updator & a generator for polyhedrons
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
@@ -95,7 +95,7 @@ template <Acts::detail::AxisBoundaryType aType,
 Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     const Acts::GeometryContext& gctx,
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
-    const std::vector<size_t>& assignToAll,
+    const std::vector<std::size_t>& assignToAll,
     const Acts::Experimental::ProtoBinning& aBinning,
     const Acts::Experimental::ProtoBinning& bBinning) {
   // The surface candidate updator & a generator for polyhedrons
@@ -175,7 +175,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
 
   // Check whether support structure is scheduled to be built, and if so
   // collect those that should be assigned to all bins
-  std::vector<size_t> assignToAll = {};
+  std::vector<std::size_t> assignToAll = {};
   if (!m_cfg.supports.empty()) {
     ACTS_DEBUG("Adding " << m_cfg.supports.size() << " support structures.")
     // The surface candidate updator

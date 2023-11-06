@@ -176,7 +176,7 @@ const Acts::ConeBounds& Acts::ConeSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
@@ -221,7 +221,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   }
   for (auto& z : coneSides) {
     // Remember the first vertex
-    size_t firstIv = vertices.size();
+    std::size_t firstIv = vertices.size();
     // Radius and z offset
     double r = std::abs(z) * bounds().tanAlpha();
     Vector3 zoffset(0., 0., z);
@@ -233,8 +233,8 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
     }
     // Create the faces
     if (tipExists) {
-      for (size_t iv = firstIv + 2; iv < vertices.size() + 1; ++iv) {
-        size_t one = 0, two = iv - 1, three = iv - 2;
+      for (std::size_t iv = firstIv + 2; iv < vertices.size() + 1; ++iv) {
+        std::size_t one = 0, two = iv - 1, three = iv - 2;
         if (z < 0.) {
           std::swap(two, three);
         }

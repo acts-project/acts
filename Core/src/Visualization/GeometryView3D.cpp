@@ -316,7 +316,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
         ids.push_back(current->motherVolume()->geometryId().volume());
       }
 
-      for (size_t i = ids.size() - 1; i < ids.size(); --i) {
+      for (std::size_t i = ids.size() - 1; i < ids.size(); --i) {
         vs << "_v" << ids[i];
       }
       vname = vs.str();
@@ -337,7 +337,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
 
   if (tVolume.confinedLayers() != nullptr) {
     const auto& layers = tVolume.confinedLayers()->arrayObjects();
-    size_t il = 0;
+    std::size_t il = 0;
     for (const auto& tl : layers) {
       if (writeIt) {
         lConfig.outputName =

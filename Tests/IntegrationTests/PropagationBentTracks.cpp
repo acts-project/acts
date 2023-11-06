@@ -15,6 +15,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 
 using namespace Acts::UnitLiterals;
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_no_bfield) {
 
 BOOST_AUTO_TEST_CASE(without_boundary_check_no_bfield) {
   auto navCfg = Acts::Navigator::Config{};
-  navCfg.boundaryCheckLayerResolving = false;
+  navCfg.boundaryCheckLayerResolving = Acts::BoundaryCheck(false);
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.0_T);
 
   // without bField we exit at the side so we don't hit the surfaces at x ~
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_with_bfield) {
 
 BOOST_AUTO_TEST_CASE(no_boundary_check_with_bfield) {
   auto navCfg = Acts::Navigator::Config{};
-  navCfg.boundaryCheckLayerResolving = false;
+  navCfg.boundaryCheckLayerResolving = Acts::BoundaryCheck(false);
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.5_T);
 
   // Without boundary check at layer resolving, we also hit the surfaces at x ~

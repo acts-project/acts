@@ -87,7 +87,7 @@ class TransitiveConstPointer {
 };
 
 /// Type construction helper for coefficients and associated covariances.
-template <size_t Size, bool ReadOnlyMaps = true>
+template <std::size_t Size, bool ReadOnlyMaps = true>
 struct Types {
   enum {
     Flags = Eigen::ColMajor | Eigen::AutoAlign,
@@ -111,7 +111,7 @@ struct Types {
 }  // namespace detail_lt
 
 // This is public
-template <size_t M, bool ReadOnly = true>
+template <std::size_t M, bool ReadOnly = true>
 struct TrackStateTraits {
   using Parameters =
       typename detail_lt::Types<eBoundSize, ReadOnly>::CoefficientsMap;
@@ -133,7 +133,7 @@ namespace detail_lt {
 /// @tparam SourceLink Type to link back to an original measurement
 /// @tparam M         Maximum number of measurement dimensions
 /// @tparam ReadOnly  true for read-only access to underlying storage
-template <typename trajectory_t, size_t M, bool ReadOnly = true>
+template <typename trajectory_t, std::size_t M, bool ReadOnly = true>
 class TrackStateProxy {
  public:
   using Parameters = typename TrackStateTraits<M, ReadOnly>::Parameters;
@@ -141,14 +141,14 @@ class TrackStateProxy {
   using ConstParameters = typename TrackStateTraits<M, true>::Parameters;
   using ConstCovariance = typename TrackStateTraits<M, true>::Covariance;
 
-  template <size_t N>
+  template <std::size_t N>
   using Measurement = typename TrackStateTraits<N, ReadOnly>::Measurement;
-  template <size_t N>
+  template <std::size_t N>
   using MeasurementCovariance =
       typename TrackStateTraits<N, ReadOnly>::MeasurementCovariance;
-  template <size_t N>
+  template <std::size_t N>
   using ConstMeasurement = typename TrackStateTraits<N, true>::Measurement;
-  template <size_t N>
+  template <std::size_t N>
   using ConstMeasurementCovariance =
       typename TrackStateTraits<N, true>::MeasurementCovariance;
 
@@ -758,7 +758,7 @@ class TrackStateProxy {
   /// dimensions.
   /// @return The measurement vector
   /// @note Const version
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstMeasurement<measdim> calibrated() const {
     assert(has<hashString("calibrated")>());
     return m_traj->self().template measurement<measdim>(m_istate);
@@ -768,7 +768,7 @@ class TrackStateProxy {
   /// dimensions.
   /// @return The measurement vector
   /// @note Mutable version
-  template <size_t measdim, bool RO = ReadOnly,
+  template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   Measurement<measdim> calibrated() {
     assert(has<hashString("calibrated")>());
@@ -779,7 +779,7 @@ class TrackStateProxy {
   /// is located in the top left corner, everything else is zeroed.
   /// @return The measurement covariance matrix
   /// @note Const version
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstMeasurementCovariance<measdim> calibratedCovariance() const {
     assert(has<hashString("calibratedCov")>());
     return m_traj->self().template measurementCovariance<measdim>(m_istate);
@@ -789,7 +789,7 @@ class TrackStateProxy {
   /// is located in the top left corner, everything else is zeroed.
   /// @return The measurement covariance matrix
   /// @note Mutable version
-  template <size_t measdim, bool RO = ReadOnly,
+  template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   MeasurementCovariance<measdim> calibratedCovariance() {
     assert(has<hashString("calibratedCov")>());
@@ -878,7 +878,7 @@ class TrackStateProxy {
   ///   be overwritten!**. Also assumes none of the calibrated components is
   ///   *invalid* (i.e. unset) for this TrackState.
   /// @note This does not set the reference surface.
-  template <size_t kMeasurementSize, bool RO = ReadOnly,
+  template <std::size_t kMeasurementSize, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   void setCalibrated(
       const Acts::Measurement<BoundIndices, kMeasurementSize>& meas) {
@@ -898,7 +898,7 @@ class TrackStateProxy {
     setProjector(meas.projector());
   }
 
-  void allocateCalibrated(size_t measdim) {
+  void allocateCalibrated(std::size_t measdim) {
     m_traj->allocateCalibrated(m_istate, measdim);
   }
 
@@ -971,7 +971,7 @@ class TrackStateProxy {
 };
 
 /// Helper type that wraps two iterators
-template <bool reverse, typename trajectory_t, size_t M, bool ReadOnly>
+template <bool reverse, typename trajectory_t, std::size_t M, bool ReadOnly>
 class TrackStateRange {
   using ProxyType = TrackStateProxy<trajectory_t, M, ReadOnly>;
   using IndexType = typename ProxyType::IndexType;
@@ -1361,7 +1361,7 @@ class MultiTrajectory {
   /// @tparam measdim the measurement dimension
   /// @param measIdx Index into the measurement column
   /// @return Mutable proxy
-  template <size_t measdim, bool RO = ReadOnly,
+  template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   constexpr typename TrackStateProxy::template Measurement<measdim> measurement(
       IndexType measIdx) {
@@ -1372,7 +1372,7 @@ class MultiTrajectory {
   /// @tparam measdim the measurement dimension
   /// @param measIdx Index into the measurement column
   /// @return Const proxy
-  template <size_t measdim>
+  template <std::size_t measdim>
   constexpr typename ConstTrackStateProxy::template Measurement<measdim>
   measurement(IndexType measIdx) const {
     return self().template measurement_impl<measdim>(measIdx);
@@ -1383,7 +1383,7 @@ class MultiTrajectory {
   /// @tparam measdim the measurement dimension
   /// @param covIdx Index into the measurement covariance column
   /// @return Mutable proxy
-  template <size_t measdim, bool RO = ReadOnly,
+  template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   constexpr typename TrackStateProxy::template MeasurementCovariance<measdim>
   measurementCovariance(IndexType covIdx) {
@@ -1394,7 +1394,7 @@ class MultiTrajectory {
   /// given index
   /// @param covIdx Index into the measurement covariance column
   /// @return Const proxy
-  template <size_t measdim>
+  template <std::size_t measdim>
   constexpr
       typename ConstTrackStateProxy::template MeasurementCovariance<measdim>
       measurementCovariance(IndexType covIdx) const {
@@ -1483,7 +1483,7 @@ class MultiTrajectory {
   /// @param measdim the dimension of the measurement to store
   /// @note Is a noop if the track state already has an allocation
   ///       an the dimension is the same.
-  void allocateCalibrated(IndexType istate, size_t measdim) {
+  void allocateCalibrated(IndexType istate, std::size_t measdim) {
     throw_assert(measdim > 0 && measdim <= eBoundSize,
                  "Invalid measurement dimension detected");
 

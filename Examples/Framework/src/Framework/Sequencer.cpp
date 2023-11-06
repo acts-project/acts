@@ -289,7 +289,7 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
   return names;
 }
 
-std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
+std::pair<size_t, size_t> Sequencer::determineEventsRange() const {
   constexpr auto kInvalidEventsRange = std::make_pair(SIZE_MAX, SIZE_MAX);
 
   // Note on skipping events:
@@ -395,7 +395,7 @@ struct TimingInfo {
 };
 
 void storeTiming(const std::vector<std::string>& identifiers,
-                 const std::vector<Duration>& durations, std::size_t numEvents,
+                 const std::vector<Duration>& durations, size_t numEvents,
                  const std::string& path) {
   dfe::NamedTupleTsvWriter<TimingInfo> writer(path, 4);
   for (size_t i = 0; i < identifiers.size(); ++i) {
@@ -652,7 +652,7 @@ void Sequencer::fpeReport() const {
   }
 }
 
-std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
+std::pair<std::string, size_t> Sequencer::fpeMaskCount(
     const boost::stacktrace::stacktrace& st, Acts::FpeType type) const {
   for (const auto& frame : st) {
     std::string loc = Acts::FpeMonitor::getSourceLocation(frame);
