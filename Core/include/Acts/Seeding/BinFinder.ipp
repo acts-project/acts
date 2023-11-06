@@ -12,9 +12,9 @@ Acts::BinFinder<external_spacepoint_t>::BinFinder(
     : m_zBinNeighbors(zBinNeighbors), m_numPhiNeighbors(numPhiNeighbors) {}
 
 template <typename external_spacepoint_t>
-boost::container::small_vector<size_t, 9>
+boost::container::small_vector<std::size_t, 9>
 Acts::BinFinder<external_spacepoint_t>::findBins(
-    size_t phiBin, size_t zBin,
+    std::size_t phiBin, std::size_t zBin,
     const Acts::SpacePointGrid<external_spacepoint_t>* binnedSP) const {
   // if zBinNeighbors is not defined, get the indices using
   // neighborHoodIndices

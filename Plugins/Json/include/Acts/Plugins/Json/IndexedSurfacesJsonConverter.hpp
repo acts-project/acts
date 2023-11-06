@@ -17,9 +17,9 @@
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <tuple>
 #include <vector>
@@ -87,7 +87,7 @@ void convert(nlohmann::json& jIndexedSurfaces,
              const Experimental::SurfaceCandidatesUpdator& delegate,
              [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
-      typename instance_type::template grid_type<std::vector<std::size_t>>;
+      typename instance_type::template grid_type<std::vector<size_t>>;
   // Defining a Delegate type
   using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<
       GridType, Experimental::IndexedSurfacesImpl>;
@@ -110,7 +110,7 @@ void convert(nlohmann::json& jIndexedSurfaces,
 /// @param axesTuple the tuple of axes to be unrolled
 ///
 /// @note parameters are as of the `convertImpl` method
-template <typename tuple_type, std::size_t... I>
+template <typename tuple_type, size_t... I>
 void unrollConvert(nlohmann::json& jIndexedSurfaces,
                    const Experimental::SurfaceCandidatesUpdator& delegate,
                    const tuple_type& axesTuple,
