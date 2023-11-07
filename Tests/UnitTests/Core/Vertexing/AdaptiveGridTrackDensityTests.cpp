@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(
   }
 
   // The analytical calculations of the following can be found here:
-  // https://acts.readthedocs.io/en/white-papers/gaussian-track-densities.html
+  // https://acts.readthedocs.io/en/latest/white_papers/gaussian-track-densities.html
   // Analytical maximum of the Gaussian
   ActsSquareMatrix<3> ipWeights = ipCov.inverse();
   ActsScalar denom =
