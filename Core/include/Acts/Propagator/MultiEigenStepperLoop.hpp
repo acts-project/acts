@@ -240,7 +240,7 @@ struct MaxWeightReducerLoop {
   template <typename stepper_state_t>
   static Vector3 momentum(const stepper_state_t& s) {
     const auto& cmp = maxWeightIt(s.components);
-    return std::abs(cmp.particleHypothesis.extractMomentum(cmp.state.pars[eFreeQOverP]) *
+    return cmp.particleHypothesis.extractMomentum(cmp.state.pars[eFreeQOverP]) *
            cmp.state.pars.template segment<3>(eFreeDir0);
   }
 
