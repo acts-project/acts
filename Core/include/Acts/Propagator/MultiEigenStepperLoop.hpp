@@ -234,19 +234,20 @@ struct MaxWeightReducerLoop {
   template <typename stepper_state_t>
   static ActsScalar absoluteMomentum(const stepper_state_t& s) {
     const auto& cmp = maxWeightIt(s.components);
-    return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]);
+    return cmp.particleHypothesis.extractMomentum(cmp.state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
   static Vector3 momentum(const stepper_state_t& s) {
     const auto& cmp = maxWeightIt(s.components);
-    return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]) *
+    return std::abs(cmp.particleHypothesis.extractMomentum(cmp.state.pars[eFreeQOverP]) *
            cmp.state.pars.template segment<3>(eFreeDir0);
   }
 
   template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
-    return maxWeightIt(s.components).state.absCharge;
+    const auto &cmp = maxWeightIt(s.components);
+    return s.particleHypothesis.extractCharge(cmp.state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
