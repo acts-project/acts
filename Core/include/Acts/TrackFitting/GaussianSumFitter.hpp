@@ -211,7 +211,7 @@ struct GaussianSumFitter {
         sParameters.referenceSurface()
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
-                       sParameters.direction(), true)
+                       sParameters.direction(), BoundaryCheck(true))
             .closest()
             .status();
 
@@ -449,9 +449,9 @@ struct GaussianSumFitter {
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
 
-      const auto [finalPars, finalCov] = Acts::reduceGaussianMixture(
+      const auto [finalPars, finalCov] = Acts::mergeGaussianMixture(
           params.components(), params.referenceSurface(),
-          options.stateReductionMethod, [](auto& t) {
+          options.componentMergeMethod, [](auto& t) {
             return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
           });
 

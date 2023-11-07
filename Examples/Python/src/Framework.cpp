@@ -198,7 +198,7 @@ void addFramework(Context& ctx) {
       py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
           .def(py::init<>())
           .def(py::init<std::string, std::pair<unsigned int, unsigned int>,
-                        Acts::FpeType, std::size_t>())
+                        Acts::FpeType, size_t>())
           .def("__repr__", [](const Sequencer::FpeMask& self) {
             std::stringstream ss;
             ss << self;

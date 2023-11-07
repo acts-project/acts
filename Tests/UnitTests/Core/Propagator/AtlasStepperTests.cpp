@@ -66,7 +66,7 @@ struct MockPropagatorState {
   Stepper::State stepping;
   /// Propagator options with only the relevant components.
   struct {
-    double tolerance = 10_um;
+    double stepTolerance = 10_um;
     Direction direction = Direction::Backward;
   } options;
 };
@@ -590,7 +590,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       state,
       target
           ->intersect(state.geoContext, stepper.position(state),
-                      navDir * stepper.direction(state), false)
+                      navDir * stepper.direction(state), BoundaryCheck(false))
           .closest(),
       navDir, false);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       state,
       target
           ->intersect(state.geoContext, stepper.position(state),
-                      navDir * stepper.direction(state), false)
+                      navDir * stepper.direction(state), BoundaryCheck(false))
           .closest(),
       navDir, true);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);

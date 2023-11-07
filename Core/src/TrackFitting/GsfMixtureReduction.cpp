@@ -8,6 +8,7 @@
 
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 
+#include "Acts/TrackFitting/detail/MergeGaussianMixture.hpp"
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
 template <typename component_t, typename component_projector_t,
@@ -23,8 +24,10 @@ auto mergeComponents(const component_t &a, const component_t &b,
     return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
   };
 
-  auto [mergedPars, mergedCov] =
-      gaussianMixtureMeanCov(range, refProj, angle_desc);
+  const auto mergedPars =
+      Acts::detail::computeMixtureMean(range, refProj, angle_desc);
+  const auto mergedCov = Acts::detail::computeMixtureCovariance(
+      range, mergedPars, refProj, angle_desc);
 
   component_t ret = a;
   proj(ret).boundPars = mergedPars;

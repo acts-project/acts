@@ -36,7 +36,7 @@ using MaterialGrid2D =
 using MaterialGrid3D =
     Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
-using MaterialGridAxisData = std::tuple<double, double, size_t>;
+using MaterialGridAxisData = std::tuple<double, double, std::size_t>;
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.

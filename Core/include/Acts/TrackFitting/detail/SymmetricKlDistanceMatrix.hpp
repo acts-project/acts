@@ -12,7 +12,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 
 namespace Acts::detail {
 

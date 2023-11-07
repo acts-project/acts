@@ -25,7 +25,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -669,7 +668,7 @@ class MultiEigenStepperLoop
       auto intersection = surface.intersect(
           component.state.geoContext, SingleStepper::position(component.state),
           direction * SingleStepper::direction(component.state),
-          true)[oIntersection.index()];
+          BoundaryCheck(true))[oIntersection.index()];
 
       SingleStepper::updateStepSize(component.state, intersection, direction,
                                     release);

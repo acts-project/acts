@@ -68,7 +68,7 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
   }
 
   // Tell the user what CUDA device will be used by the object.
-  if (static_cast<std::size_t>(m_device) < Info::instance().devices().size()) {
+  if (static_cast<size_t>(m_device) < Info::instance().devices().size()) {
     ACTS_DEBUG("Will be using device:\n"
                << Info::instance().devices()[m_device]);
   } else {
@@ -83,7 +83,7 @@ std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     Acts::SpacePointData& spacePointData,
     Acts::SpacePointGrid<external_spacepoint_t>& grid,
-    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& bottomSPs, const size_t middleSPs,
     const sp_range_t& topSPs) const {
   // Create an empty vector, to be returned already early on when no seeds can
   // be constructed.
@@ -96,7 +96,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   // Create more convenient vectors out of the space point containers.
   auto spVecMaker = [&grid](const sp_range_t& spRange) {
     std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> result;
-    for (std::size_t idx : spRange) {
+    for (size_t idx : spRange) {
       auto& collection = grid.at(idx);
       for (auto& sp : collection) {
         result.push_back(sp.get());
@@ -132,7 +132,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   // Fill these memory blobs.
   auto fillSPArray = [](Details::SpacePoint* array, const auto& spVec) {
-    for (std::size_t i = 0; i < spVec.size(); ++i) {
+    for (size_t i = 0; i < spVec.size(); ++i) {
       array[i].x = spVec[i]->x();
       array[i].y = spVec[i]->y();
       array[i].z = spVec[i]->z();
@@ -172,9 +172,9 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   // Matrices holding the indices of the viable bottom-middle and middle-top
   // pairs.
   auto middleBottomDublets =
-      make_device_array<std::size_t>(middleSPVec.size() * bottomSPVec.size());
+      make_device_array<size_t>(middleSPVec.size() * bottomSPVec.size());
   auto middleTopDublets =
-      make_device_array<std::size_t>(middleSPVec.size() * topSPVec.size());
+      make_device_array<size_t>(middleSPVec.size() * topSPVec.size());
 
   // Launch the dublet finding code.
   Details::findDublets(
@@ -209,7 +209,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   assert(tripletCandidates.size() == middleSPVec.size());
 
   // Perform the final step of the filtering.
-  std::size_t middleIndex = 0;
+  size_t middleIndex = 0;
   auto triplet_itr = tripletCandidates.begin();
   auto triplet_end = tripletCandidates.end();
   for (; triplet_itr != triplet_end; ++triplet_itr, ++middleIndex) {
@@ -230,7 +230,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
         candidates.begin(), candidates.end(),
         CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>::
             descendingByQuality);
-    std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
+    size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_commonConfig.seedFilter->filterSeeds_1SpFixed(
         spacePointData, candidates, numQualitySeeds,
         std::back_inserter(outputVec));

@@ -10,7 +10,6 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
@@ -97,9 +96,10 @@ void addTrackFitting(Context& ctx) {
         },
         py::arg("path"));
 
-    py::enum_<Acts::MixtureReductionMethod>(mex, "FinalReductionMethod")
-        .value("mean", Acts::MixtureReductionMethod::eMean)
-        .value("maxWeight", Acts::MixtureReductionMethod::eMaxWeight);
+    py::enum_<Acts::ComponentMergeMethod>(mex, "ComponentMergeMethod")
+        .value("mean", Acts::ComponentMergeMethod::eMean)
+        .value("maxWeight", Acts::ComponentMergeMethod::eMaxWeight)
+        .value("mode", Acts::ComponentMergeMethod::eMode);
 
     py::enum_<ActsExamples::MixtureReductionAlgorithm>(
         mex, "MixtureReductionAlgorithm")
@@ -120,19 +120,18 @@ void addTrackFitting(Context& ctx) {
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-           double weightCutoff,
-           Acts::MixtureReductionMethod finalReductionMethod,
+           double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
            ActsExamples::MixtureReductionAlgorithm mixtureReductionAlgorithm,
            Logging::Level level) {
           return ActsExamples::makeGsfFitterFunction(
               trackingGeometry, magneticField, betheHeitlerApprox,
-              maxComponents, weightCutoff, finalReductionMethod,
+              maxComponents, weightCutoff, componentMergeMethod,
               mixtureReductionAlgorithm,
               *Acts::getDefaultLogger("GSFFunc", level));
         },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("betheHeitlerApprox"), py::arg("maxComponents"),
-        py::arg("weightCutoff"), py::arg("finalReductionMethod"),
+        py::arg("weightCutoff"), py::arg("componentMergeMethod"),
         py::arg("mixtureReductionAlgorithm"), py::arg("level"));
 
     mex.def(
