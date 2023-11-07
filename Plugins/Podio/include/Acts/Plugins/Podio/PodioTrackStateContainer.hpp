@@ -246,7 +246,7 @@ class ConstPodioTrackStateContainer final
 
     for (const auto& col : available) {
       std::string prefix = trackStatesKey + "_extra__";
-      std::size_t p = col.find(prefix);
+      size_t p = col.find(prefix);
       if (p == std::string::npos) {
         continue;
       }

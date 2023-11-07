@@ -14,9 +14,9 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
@@ -29,8 +29,8 @@ using Acts::VectorHelpers::phi;
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-    size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
+    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
+    std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // Check if we have proto layer, else build it
@@ -127,8 +127,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   // get the number of bins
   auto axes = sl->getAxes();
-  size_t bins0 = axes.at(0)->getNBins();
-  size_t bins1 = axes.at(1)->getNBins();
+  std::size_t bins0 = axes.at(0)->getNBins();
+  std::size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
@@ -142,8 +142,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-    size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
+    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
+    std::size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
@@ -179,8 +179,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   // get the number of bins
   auto axes = sl->getAxes();
-  size_t bins0 = axes.at(0)->getNBins();
-  size_t bins1 = axes.at(1)->getNBins();
+  std::size_t bins0 = axes.at(0)->getNBins();
+  std::size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
@@ -226,11 +226,11 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfacesRaw) {
       Vector3 bpos = srf->binningPosition(gctx, binR);
-      size_t bin = pAxisR.getBin(perp(bpos));
+      std::size_t bin = pAxisR.getBin(perp(bpos));
       phiModules.at(bin).push_back(srf);
     }
 
-    std::vector<size_t> nPhiModules;
+    std::vector<std::size_t> nPhiModules;
     auto matcher = m_cfg.surfaceMatcher;
     auto equal = [&gctx, &matcher](const Surface* a, const Surface* b) {
       return matcher(gctx, binPhi, a, b);
@@ -238,7 +238,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
     std::transform(
         phiModules.begin(), phiModules.end(), std::back_inserter(nPhiModules),
-        [&equal, this](const std::vector<const Surface*>& surfaces_) -> size_t {
+        [&equal,
+         this](const std::vector<const Surface*>& surfaces_) -> std::size_t {
           return this->findKeySurfaces(surfaces_, equal).size();
         });
 
@@ -248,7 +249,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     // but the rotation is done considering all bins.
     // This might be resolved through bin completion, but not sure.
     // @TODO: check in extrapolation
-    size_t nBinsPhi =
+    std::size_t nBinsPhi =
         (*std::min_element(nPhiModules.begin(), nPhiModules.end()));
     pAxisPhi = createEquidistantAxis(gctx, surfacesRaw, binPhi, protoLayer,
                                      ftransform, nBinsPhi);
@@ -285,8 +286,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   // get the number of bins
   auto axes = sl->getAxes();
-  size_t bins0 = axes.at(0)->getNBins();
-  size_t bins1 = axes.at(1)->getNBins();
+  std::size_t bins0 = axes.at(0)->getNBins();
+  std::size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
@@ -303,8 +304,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-    size_t bins2, BinningValue bValue, std::optional<ProtoLayer> protoLayerOpt,
+    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
+    std::size_t bins2, BinningValue bValue,
+    std::optional<ProtoLayer> protoLayerOpt,
     const Transform3& transform) const {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
@@ -396,7 +398,7 @@ std::vector<const Acts::Surface*> Acts::SurfaceArrayCreator::findKeySurfaces(
   return keys;
 }
 
-size_t Acts::SurfaceArrayCreator::determineBinCount(
+std::size_t Acts::SurfaceArrayCreator::determineBinCount(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     BinningValue bValue) const {
   auto matcher = m_cfg.surfaceMatcher;
@@ -448,7 +450,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     // rotate using transform from before
     AxisScalar previous = phi(keys.at(0)->binningPosition(gctx, binPhi));
     // go through key surfaces
-    for (size_t i = 1; i < keys.size(); i++) {
+    for (std::size_t i = 1; i < keys.size(); i++) {
       const Surface* surface = keys.at(i);
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
@@ -552,7 +554,7 @@ Acts::SurfaceArrayCreator::ProtoAxis
 Acts::SurfaceArrayCreator::createEquidistantAxis(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     BinningValue bValue, const ProtoLayer& protoLayer, Transform3& transform,
-    size_t nBins) const {
+    std::size_t nBins) const {
   if (surfaces.empty()) {
     throw std::logic_error(
         "No surfaces handed over for creating equidistant axis!");
@@ -569,7 +571,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   // direction
   std::vector<const Acts::Surface*> keys;
 
-  size_t binNumber = 0;
+  std::size_t binNumber = 0;
   if (nBins == 0) {
     // determine bin count
     binNumber = determineBinCount(gctx, surfaces, bValue);

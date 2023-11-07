@@ -124,7 +124,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(fitterCfg);
+  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(
+      std::move(fitterCfg));
 
   // Create positions of three vertices, two of which (1 and 2) are
   // close to one another and will share a common track later
@@ -378,7 +379,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Test smoothing
   // fitterCfg.doSmoothing = true;
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(fitterCfg);
+  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(
+      std::move(fitterCfg));
 
   // Create first vector of tracks
   Vector3 pos1a(0.5_mm, -0.5_mm, 2.4_mm);

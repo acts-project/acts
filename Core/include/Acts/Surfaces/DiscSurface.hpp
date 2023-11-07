@@ -48,7 +48,7 @@ class SurfaceBounds;
 /// to happen to transfer the local coordinates onto the
 /// cartesian reference frame coordinates.
 ///
-/// @image html figures/DiscSurface.png
+/// @image html DiscSurface.png
 ///
 class DiscSurface : public Surface {
 #ifndef DOXYGEN
@@ -274,7 +274,8 @@ class DiscSurface : public Surface {
   /// @return The @c SurfaceMultiIntersection object
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Implement the binningValue
@@ -300,7 +301,7 @@ class DiscSurface : public Surface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+                                      std::size_t lseg) const override;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
