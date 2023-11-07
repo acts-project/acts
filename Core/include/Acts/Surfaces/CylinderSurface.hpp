@@ -38,7 +38,7 @@ class DetectorElementBase;
 /// since it builds the surfaces of all TrackingVolumes at container level
 /// for a cylindrical tracking geometry.
 ///
-/// @image html figures/CylinderSurface.png
+/// @image html CylinderSurface.png
 
 class CylinderSurface : public Surface {
 #ifndef DOXYGEN
