@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
 }
 
 struct NoCopy {
-  NoCopy(int i) : num(i){};
+  NoCopy(int i) : num(i) {}
   NoCopy(const NoCopy&) = delete;
   NoCopy& operator=(const NoCopy&) = delete;
   NoCopy(NoCopy&&) = default;

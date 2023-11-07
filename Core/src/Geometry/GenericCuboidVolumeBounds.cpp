@@ -90,6 +90,10 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     // z is normal in local coordinates
     // Volume local to surface local
     Transform3 vol2srf;
+
+    // GCC13+ Complains about maybe uninitialized memory inside Eigen's SVD code
+    // This warning is ignored in this compilation unit by using the pragma at
+    // the top of this file.
     vol2srf = (Eigen::Quaternion<Transform3::Scalar>().setFromTwoVectors(
         normal, Vector3::UnitZ()));
 

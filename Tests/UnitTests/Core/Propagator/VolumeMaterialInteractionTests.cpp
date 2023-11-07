@@ -43,7 +43,7 @@ struct NaivgatorState {
   TrackingVolume* currentVolume = nullptr;
 };
 
-/// @brief Simplified propgator state
+/// @brief Simplified propagator state
 struct State {
   struct {
     Direction direction = Direction::Forward;
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Build the VolumeMaterialInteraction & test assignments
   detail::VolumeMaterialInteraction volMatInt(volume.get(), state, stepper);
-  BOOST_CHECK_EQUAL(volMatInt.volume, volume.get());
+  BOOST_CHECK_EQUAL(volMatInt.volume.trackingVolume, volume.get());
   BOOST_CHECK_EQUAL(volMatInt.pos, stepper.position(state.stepping));
   BOOST_CHECK_EQUAL(volMatInt.time, stepper.time(state.stepping));
   BOOST_CHECK_EQUAL(volMatInt.dir, stepper.direction(state.stepping));

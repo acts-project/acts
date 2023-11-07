@@ -153,11 +153,14 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat),
                                 ParticleHypothesis::pion());
 
+    std::shared_ptr<PerigeeSurface> perigee =
+        Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, Vector4::Zero(), geoContext,
-                            magFieldContext, linState)
+            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
+                            linState)
             .value();
 
     // Create TrackAtVertex
@@ -178,14 +181,13 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // The old distance
     double oldDistance =
-        ip3dEst.calculate3dDistance(geoContext, fittedParamsCopy, vtxPos, state)
+        ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos, state)
             .value();
 
     // The new distance after update
     double newDistance =
         ip3dEst
-            .calculate3dDistance(geoContext, trkAtVtx.fittedParams, vtxPos,
-                                 state)
+            .calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos, state)
             .value();
     if (debug) {
       std::cout << "Old distance: " << oldDistance << std::endl;

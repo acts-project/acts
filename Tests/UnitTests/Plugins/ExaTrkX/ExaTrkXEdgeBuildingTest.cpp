@@ -66,9 +66,9 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
       *std::max_element(edge_counts.begin(), edge_counts.end());
 
   // If this is not the case, the test is ill-formed
-  // knn specifies how many edges can be found by the function at max. Thus we
+  // knn specifies how many edges can be found by the function at max. Thus, we
   // should design the test in a way, that our brute-force test algorithm does
-  // not find more edges then the algorithm that we test against it can find
+  // not find more edges than the algorithm that we test against it can find
   BOOST_REQUIRE(max_edges <= knn);
 
   // Run the edge building

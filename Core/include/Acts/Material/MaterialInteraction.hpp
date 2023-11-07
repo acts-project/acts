@@ -9,13 +9,52 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
 namespace Acts {
 
 class Surface;
-class TrackingVolume;
+
+/// @brief The Material interaction volume struct
+/// It acts as a switch between detctor and tracking volume
+/// as long as those co-exist alongside
+struct InteractionVolume {
+  /// The tracking volume
+  const TrackingVolume* trackingVolume = nullptr;
+  /// The detector volume
+  const Experimental::DetectorVolume* detectorVolume = nullptr;
+
+  /// Empty constructor
+  InteractionVolume() = default;
+
+  /// Constructor from tracking volume
+  /// @param tv The tracking volume
+  InteractionVolume(const TrackingVolume* tv) : trackingVolume(tv) {}
+
+  /// Constructor from detector volume
+  /// @param dv The detector volume
+  InteractionVolume(const Experimental::DetectorVolume* dv)
+      : detectorVolume(dv) {}
+
+  /// Forward the geometry identifier
+  GeometryIdentifier geometryId() const {
+    if (trackingVolume != nullptr) {
+      return trackingVolume->geometryId();
+    } else if (detectorVolume != nullptr) {
+      return detectorVolume->geometryId();
+    } else {
+      return GeometryIdentifier();
+    }
+  }
+
+  /// Check if the volume is valid
+  bool empty() const {
+    return trackingVolume == nullptr && detectorVolume == nullptr;
+  }
+};
 
 /// @brief The Material interaction struct
 /// It records the surface  and the passed material
@@ -42,7 +81,7 @@ struct MaterialInteraction {
   /// The surface where the interaction occurred.
   const Surface* surface = nullptr;
   /// The volume where the interaction occurred.
-  const TrackingVolume* volume = nullptr;
+  InteractionVolume volume{};
   /// Update the volume step to implement the proper step size
   bool updatedVolumeStep = false;
   /// The path correction factor due to non-zero incidence on the surface.

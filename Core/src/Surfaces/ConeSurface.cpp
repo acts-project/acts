@@ -185,7 +185,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   double minZ = bounds().get(ConeBounds::eMinZ);
   double maxZ = bounds().get(ConeBounds::eMaxZ);
 
-  if (minZ == -std::numeric_limits<double>::infinity() or
+  if (minZ == -std::numeric_limits<double>::infinity() ||
       maxZ == std::numeric_limits<double>::infinity()) {
     throw std::domain_error(
         "Polyhedron repr of boundless surface not possible");
@@ -193,7 +193,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
 
   auto ctransform = transform(gctx);
 
-  // The tip - created only once and only, if the it's not a cut-off cone
+  // The tip - created only once and only, if it is not a cut-off cone
   bool tipExists = false;
   if (minZ * maxZ <= s_onSurfaceTolerance) {
     vertices.push_back(ctransform * Vector3(0., 0., 0.));
@@ -226,7 +226,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
     double r = std::abs(z) * bounds().tanAlpha();
     Vector3 zoffset(0., 0., z);
     for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-      int addon = (iseg == phiSegs.size() - 2 and not fullCone) ? 1 : 0;
+      int addon = (iseg == phiSegs.size() - 2 && !fullCone) ? 1 : 0;
       detail::VerticesHelper::createSegment(vertices, {r, r}, phiSegs[iseg],
                                             phiSegs[iseg + 1], lseg, addon,
                                             zoffset, ctransform);
@@ -285,7 +285,7 @@ Acts::detail::RealQuadraticEquation Acts::ConeSurface::intersectionSolver(
   return detail::RealQuadraticEquation(A, B, C);
 }
 
-Acts::SurfaceIntersection Acts::ConeSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
@@ -294,7 +294,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return SurfaceIntersection();
+    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
   }
 
   // Check the validity of the first solution
@@ -303,7 +303,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
 
-  if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
+  if (bcheck && !isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection3D::Status::missed;
   }
 
@@ -312,7 +312,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
   Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
-  if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
+  if (bcheck && !isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection3D::Status::missed;
   }
 
@@ -320,26 +320,11 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
   // Set the intersection
   Intersection3D first(tf * solution1, qe.first, status1);
   Intersection3D second(tf * solution2, qe.second, status2);
-  SurfaceIntersection cIntersection(first, this);
-  // Check one if its valid or neither is valid
-  bool check1 = status1 != Intersection3D::Status::missed or
-                (status1 == Intersection3D::Status::missed and
-                 status2 == Intersection3D::Status::missed);
-  // Check and (eventually) go with the first solution
-  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
-      status2 == Intersection3D::Status::missed) {
-    // And add the alternative
-    if (qe.solutions > 1) {
-      cIntersection.alternative = second;
-    }
-  } else {
-    // And add the alternative
-    if (qe.solutions > 1) {
-      cIntersection.alternative = first;
-    }
-    cIntersection.intersection = second;
+  // Order based on path length
+  if (first.pathLength() <= second.pathLength()) {
+    return {{first, second}, this};
   }
-  return cIntersection;
+  return {{second, first}, this};
 }
 
 Acts::AlignmentToPathMatrix Acts::ConeSurface::alignmentToPathDerivative(

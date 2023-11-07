@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -105,11 +105,11 @@ class ScopedGsfInfoPrinterAndChecker {
         m_stepper.numberComponents(m_state.stepping) == 0;
 
     if (onStart) {
-      assert(not zeroComponents && "no cmps at the start");
+      assert(!zeroComponents && "no cmps at the start");
       assert(allFinite && "weights not finite at the start");
       assert(allNormalized && "not normalized at the start");
     } else {
-      assert(not zeroComponents && "no cmps at the end");
+      assert(!zeroComponents && "no cmps at the end");
       assert(allFinite && "weights not finite at the end");
       assert(allNormalized && "not normalized at the end");
     }
@@ -194,7 +194,7 @@ void computePosteriorWeights(
             .data(),
         state.predictedCovariance(), state.projector(), state.calibratedSize());
 
-    const auto factor = std::sqrt(1. / detR) * std::exp(-0.5 * chi2);
+    const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 
     // If something is not finite here, just leave the weight as it is
     if (std::isfinite(factor)) {

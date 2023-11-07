@@ -21,11 +21,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cmath>
@@ -52,7 +52,7 @@ std::size_t countBins(const indexed_surface_grid& isGrid) {
   std::size_t nonEmptyBins = 0u;
   for (std::size_t igb = 0u; igb < isGrid.grid.size(); ++igb) {
     const auto& gb = isGrid.grid.at(igb);
-    if (not gb.empty()) {
+    if (!gb.empty()) {
       ++nonEmptyBins;
     }
   }

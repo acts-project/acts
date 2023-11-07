@@ -74,6 +74,8 @@ class VectorTrackContainerBase {
     switch (key) {
       case "tipIndex"_hash:
         return &instance.m_tipIndex[itrack];
+      case "stemIndex"_hash:
+        return &instance.m_stemIndex[itrack];
       case "particleHypothesis"_hash:
         return &instance.m_particleHypothesis[itrack];
       case "params"_hash:
@@ -112,6 +114,8 @@ class VectorTrackContainerBase {
 
     bool result = true;
     result = result && m_tipIndex.size() == size;
+    assert(result);
+    result = result && m_stemIndex.size() == size;
     assert(result);
     result = result && m_particleHypothesis.size() == size;
     assert(result);
@@ -161,6 +165,7 @@ class VectorTrackContainerBase {
   // END INTERFACE HELPER
 
   std::vector<IndexType> m_tipIndex;
+  std::vector<IndexType> m_stemIndex;
   std::vector<ParticleHypothesis> m_particleHypothesis;
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;

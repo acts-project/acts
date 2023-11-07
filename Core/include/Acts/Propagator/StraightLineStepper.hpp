@@ -218,7 +218,10 @@ class StraightLineStepper {
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Overstep limit
-  double overstepLimit(const State& /*state*/) const {
+  ///
+  /// @param state The stepping state (thread-local cache)
+  double overstepLimit(const State& state) const {
+    (void)state;
     return -m_overstepLimit;
   }
 
@@ -231,17 +234,18 @@ class StraightLineStepper {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, Direction navDir,
-      const BoundaryCheck& bcheck,
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryCheck& bcheck,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
-        *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
+        *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size
@@ -254,7 +258,7 @@ class StraightLineStepper {
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
+                      Direction /*direction*/, bool release = true) const {
     detail::updateSingleStepSize<StraightLineStepper>(state, oIntersection,
                                                       release);
   }

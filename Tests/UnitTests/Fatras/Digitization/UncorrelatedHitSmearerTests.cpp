@@ -158,7 +158,7 @@ BOOST_DATA_TEST_CASE(Bound1, bd::make(boundIndices), index) {
   {
     s.smearFunctions.fill(InvalidSmearer{});
     auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
-    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(!ret.ok());
     BOOST_CHECK(ret.error());
   }
 }
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(BoundAll) {
     s.smearFunctions.fill(SterileSmearer{});
     s.smearFunctions[3] = InvalidSmearer{};
     auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
-    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(!ret.ok());
     BOOST_CHECK(ret.error());
   }
 }
@@ -232,7 +232,7 @@ BOOST_DATA_TEST_CASE(Free1, bd::make(freeIndices), index) {
   {
     s.smearFunctions.fill(InvalidSmearer{});
     auto ret = s(f.rng, f.hit);
-    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(!ret.ok());
     BOOST_CHECK(ret.error());
   }
 }
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(FreeAll) {
     s.smearFunctions.fill(SterileSmearer{});
     s.smearFunctions[3] = InvalidSmearer{};
     auto ret = s(f.rng, f.hit);
-    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(!ret.ok());
     BOOST_CHECK(ret.error());
   }
 }

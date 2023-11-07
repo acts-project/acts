@@ -33,10 +33,6 @@ This chapter will be extended in the future.
 (gsf_core)=
 ## Gaussian Sum Filter (GSF)
 
-:::{note}
-The GSF is not considered as production ready yet, therefore it is located in the namespace `Acts::Experimental`.
-:::
-
 The GSF is an extension of the Kalman-Filter that allows to handle non-gaussian errors by modelling the track state as a gaussian mixture:
 
 $$
@@ -59,7 +55,7 @@ The true Bethe-Heitler distribution compared with a gaussian mixture approximati
 To be able to handle this with the Kalman filter mechanics, this distribution is approximated by a gaussian mixture as well (see {numref}`figBetheHeitler`). The GSF Algorithm works then as follows (see also {numref}`figGsf`)
 
 * On a surface with material, the Bethe-Heitler energy-loss distribution is approximated with a fixed number of gaussian components for each component. Since this way the number of components would grow exponentially with each material interaction, components that are close in terms of their *Kullback–Leibler divergence* are merged to limit the computational cost.
-* On a measurement surface, for each component a Kalman update is performed. Afterwards, the component weights are corrected according to each components compatibility with the measurement.
+* On a measurement surface, for each component a Kalman update is performed. Afterwards, the component weights are corrected according to each component's compatibility with the measurement.
 
 (figGsf)=
 :::{figure} ../figures/gsf_overview.svg
@@ -82,9 +78,9 @@ Even though the multi-stepper interface exposes only one aggregate state and thu
 
 ### Using the GSF
 
-The GSF is implemented in the class {class}`Acts::Experimental::GaussianSumFitter`. The interface of its `fit(...)`-functions is very similar to the one of the {class}`Acts::KalmanFitter` (one for the standard {class}`Acts::Navigator` and one for the {class}`Acts::DirectNavigator` that takes an additional `std::vector<const Acts::Surface *>` as an argument):
+The GSF is implemented in the class {class}`Acts::GaussianSumFitter`. The interface of its `fit(...)`-functions is very similar to the one of the {class}`Acts::KalmanFitter` (one for the standard {class}`Acts::Navigator` and one for the {class}`Acts::DirectNavigator` that takes an additional `std::vector<const Acts::Surface *>` as an argument):
 
-```{doxygenstruct} Acts::Experimental::GaussianSumFitter
+```{doxygenstruct} Acts::GaussianSumFitter
 ---
 members: fit
 outline:
@@ -95,17 +91,17 @@ The fit can be customized with several options, e.g., the maximum number of comp
 
 To simplify integration, the GSF returns an {class}`Acts::KalmanFitterResult` object, the same as the {class}`Acts::KalmanFitter`. This allows to use the same analysis tools for both fitters.
 
-If the GSF finds the column with the string identifier *"gsf-final-multi-component-state"* (defined in `Acts::Experimental::GsfConstants::kFinalMultiComponentStateColumn`) in the track container, it adds the final multi-component state to the track as a `std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>` object.
+If the GSF finds the column with the string identifier *"gsf-final-multi-component-state"* (defined in `Acts::GsfConstants::kFinalMultiComponentStateColumn`) in the track container, it adds the final multi-component state to the track as a `std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>` object.
 
 A GSF example can be found in the Acts Examples Framework [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_gsf.py).
 
 ### Customising the Bethe-Heitler approximation
 
-The GSF needs an approximation of the Bethe-Heitler distribution as a Gaussian mixture on each material interaction (see above). This task is delegated to a separate class, that can be provided by a template parameter to {class}`Acts::Experimental::GaussianSumFitter`, so in principle it can be implemented in different ways.
+The GSF needs an approximation of the Bethe-Heitler distribution as a Gaussian mixture on each material interaction (see above). This task is delegated to a separate class, that can be provided by a template parameter to {class}`Acts::GaussianSumFitter`, so in principle it can be implemented in different ways.
 
-However, ACTS ships with the class {class}`Acts::Experimental::AtlasBetheHeitlerApprox` that implements the ATLAS strategy for this task: To be able to evaluate the approximation of the Bethe-Heitler distribution for different materials and thicknesses, the individual Gaussian components (weight, mean, variance of the ratio $E_f/E_i$) are parametrised as polynomials in $x/x_0$. This class can load files in the ATLAS format that can be found [here](https://gitlab.cern.ch/atlas/athena/-/tree/master/Tracking/TrkFitter/TrkGaussianSumFilter/Data). A default parameterization can be created with {func}`Acts::Experimental::makeDefaultBetheHeitlerApprox`.
+However, ACTS ships with the class {class}`Acts::AtlasBetheHeitlerApprox` that implements the ATLAS strategy for this task: To be able to evaluate the approximation of the Bethe-Heitler distribution for different materials and thicknesses, the individual Gaussian components (weight, mean, variance of the ratio $E_f/E_i$) are parametrised as polynomials in $x/x_0$. This class can load files in the ATLAS format that can be found [here](https://gitlab.cern.ch/atlas/athena/-/tree/master/Tracking/TrkFitter/TrkGaussianSumFilter/Data). A default parameterization can be created with {func}`Acts::makeDefaultBetheHeitlerApprox`.
 
-The {class}`Acts::Experimental::AtlasBetheHeitlerApprox` is constructed with two parameterizations, allowing to use different parameterizations for different $x/x_0$. In particular, it has this behaviour:
+The {class}`Acts::AtlasBetheHeitlerApprox` is constructed with two parameterizations, allowing to use different parameterizations for different $x/x_0$. In particular, it has this behaviour:
 * $x/x_0 < 0.0001$: Return no change
 * $x/x_0 < 0.002$: Return a single gaussian approximation
 * $x/x_0 < 0.1$: Return the approximation for low $x/x_0$.

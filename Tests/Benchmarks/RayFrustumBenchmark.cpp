@@ -227,7 +227,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
   frustumVariants["Manual constexpr loop unroll, early ret."] =
       [](const Box& box, const Frustum3& fr) {
-        constexpr size_t sides = 4;  // yes this is pointless, i just want to
+        constexpr size_t sides = 4;  // yes this is pointless, I just want to
                                      // kind of match the other impl
 
         const auto& normals = fr.normals();
@@ -305,7 +305,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
   frustumVariants["Manual constexpr unroll, early ret."] =
       [](const Box& box, const Frustum3& fr) {
-        constexpr size_t sides = 4;  // yes this is pointless, i just want to
+        constexpr size_t sides = 4;  // yes this is pointless, I just want to
                                      // kind of match the other impl
 
         const auto& normals = fr.normals();

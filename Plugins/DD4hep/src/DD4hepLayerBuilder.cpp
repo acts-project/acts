@@ -17,9 +17,9 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -392,7 +392,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =
       new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
-                                      isDisc, nullptr, nullptr);
+                                      isDisc, nullptr);
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();

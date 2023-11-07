@@ -56,7 +56,7 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(Acts::ActsScalar rInner,
   // Reserve & fill
   moduleSurfaces.reserve(nSegments * nRings);
   // Radial disc
-  if (not useTrapezoids) {
+  if (!useTrapezoids) {
     for (unsigned int ir = 0; ir < nRings; ++ir) {
       std::shared_ptr<const Acts::RadialBounds> rBounds = nullptr;
       rBounds = std::make_shared<Acts::RadialBounds>(
@@ -65,7 +65,7 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(Acts::ActsScalar rInner,
       for (unsigned int is = 0; is < nSegments; ++is) {
         // Place the module
         auto placement = Acts::Transform3::Identity();
-        if (is % 2) {
+        if ((is % 2) != 0u) {
           placement.pretranslate(Acts::Vector3{0., 0., 2.});
         }
         placement.rotate(
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
   auto tGeometry = cGeometry();
   auto pixelVolume =
       tGeometry->lowestTrackingVolume(tgContext, Acts::Vector3(50., 0., 0.));
-  if (pixelVolume != nullptr and pixelVolume->confinedLayers() != nullptr) {
+  if (pixelVolume != nullptr && pixelVolume->confinedLayers() != nullptr) {
     auto layers = pixelVolume->confinedLayers()->arrayObjects();
     size_t il = 0;
     for (const auto& layer : layers) {

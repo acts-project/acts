@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
@@ -18,7 +18,6 @@ namespace Acts::detail {
 
 /// Computes the Kullback-Leibler distance between two components as shown in
 /// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
-
 struct SymmetricKLDistanceQoP {
   template <typename component_t, typename proj_t>
   ActsScalar operator()(const component_t &a, const component_t &b,

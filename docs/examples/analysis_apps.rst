@@ -123,7 +123,7 @@ applications.
 
 To investigate the per layer residual and pull distributions, one can use the 
 `ActsAnalysisResidualAndPulls` application, which runs on top of the ROOT file
-produced by the ``RootTrajectoryStatesWriter``.
+produced by the ``RootTrackStatesWriter``.
 
 
 The following options are available:
@@ -167,7 +167,7 @@ is shown below.
 **Track summary analysis**
 
 A higher level view of the track reconstruction performance is the ``ActsAnalysisTrackSummary`` application,
-which runs on top of the `RootTrajectorySummaryWriter` output of the examples code.
+which runs on top of the `RootTrackSummaryWriter` output of the examples code.
 
 The following options are available:
 
@@ -194,9 +194,9 @@ The following options are available:
 	  --phi-range MIN:MAX (=-3.14159:3.14159)
 	                                        Range for the phi bins.
 	  --pt-borders arg                      Transverse momentum borders.
-	  --config-output arg                   (Optional) output histrogram
+	  --config-output arg                   (Optional) output histogram
 	                                        configuration json file.
-	  --config-input arg                    (Optional) input histrogram
+	  --config-input arg                    (Optional) input histogram
 	                                        configuration json file.
 	  --all                                 Process all residual/pull and auxiliary
 	                                        parameters

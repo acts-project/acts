@@ -19,9 +19,9 @@ namespace Acts {
 /// @param cmpCache the component collection
 /// @param maxCmpsAfterMerge the number of components we want to reach
 /// @param surface the surface type on which the components are (unused in this method)
-void reduceMixtureLargestWeights(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const Surface &surface);
+void reduceMixtureLargestWeights(std::vector<Acts::GsfComponent> &cmpCache,
+                                 std::size_t maxCmpsAfterMerge,
+                                 const Surface &surface);
 
 /// Greedy component reduction algorithm. Reduces the components with the
 /// minimal symmetric KL-distance until the required number of components is
@@ -31,10 +31,11 @@ void reduceMixtureLargestWeights(
 /// @param cmpCache the component collection
 /// @param maxCmpsAfterMerge the number of components we want to reach
 /// @param surface the surface type on which the components are (unused in this method)
-void reduceMixtureWithKLDistance(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const Surface &surface);
+void reduceMixtureWithKLDistance(std::vector<Acts::GsfComponent> &cmpCache,
+                                 std::size_t maxCmpsAfterMerge,
+                                 const Surface &surface);
 
+namespace Experimental {
 /// More aggressive version of the KL-distance based mixture reducer. Tries to
 /// merge more components in one pass without updating all distances. Should be
 /// faster, but may merge components that have not the minimal distance.
@@ -43,7 +44,7 @@ void reduceMixtureWithKLDistance(
 /// @param maxCmpsAfterMerge the number of components we want to reach
 /// @param surface the surface type on which the components are (unused in this method)
 void reduceMixtureWithKLDistanceAggressive(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const Surface &surface);
-
+    std::vector<Acts::GsfComponent> &cmpCache, std::size_t maxCmpsAfterMerge,
+    const Surface &surface);
+}  // namespace Experimental
 }  // namespace Acts

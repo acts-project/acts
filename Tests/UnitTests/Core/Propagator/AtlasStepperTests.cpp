@@ -582,24 +582,28 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   auto target = Surface::makeShared<PlaneSurface>(
       pos + navDir * distance * unitDir, unitDir);
 
-  stepper.updateSurfaceStatus(state, *target, navDir, BoundaryCheck(false));
+  stepper.updateSurfaceStatus(state, *target, 0, navDir, BoundaryCheck(false));
   BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
 
   // test the step size modification in the context of a surface
   stepper.updateStepSize(
       state,
-      target->intersect(state.geoContext, stepper.position(state),
-                        navDir * stepper.direction(state), false),
-      false);
+      target
+          ->intersect(state.geoContext, stepper.position(state),
+                      navDir * stepper.direction(state), false)
+          .closest(),
+      navDir, false);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
-  state.stepSize.setValue(navDir * stepSize);
+  state.stepSize.setUser(navDir * stepSize);
   stepper.updateStepSize(
       state,
-      target->intersect(state.geoContext, stepper.position(state),
-                        navDir * stepper.direction(state), false),
-      true);
+      target
+          ->intersect(state.geoContext, stepper.position(state),
+                      navDir * stepper.direction(state), false)
+          .closest(),
+      navDir, true);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 

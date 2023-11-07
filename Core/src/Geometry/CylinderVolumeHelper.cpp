@@ -105,9 +105,9 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     BinningValue bValue = binR;
 
     // check the dimension and fill raw data
-    if (not estimateAndCheckDimension(gctx, layers, cylinderBounds, transform,
-                                      rMinRaw, rMaxRaw, zMinRaw, zMaxRaw,
-                                      bValue, bType)) {
+    if (!estimateAndCheckDimension(gctx, layers, cylinderBounds, transform,
+                                   rMinRaw, rMaxRaw, zMinRaw, zMaxRaw, bValue,
+                                   bType)) {
       ACTS_WARNING(
           "[!] Problem with given dimensions - return nullptr and "
           "delete provided objects");
@@ -119,11 +119,11 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     }
     // get the zMin/Max
     double zMin =
-        (not idTrf ? transform.translation().z() : 0.) +
+        (!idTrf ? transform.translation().z() : 0.) +
         (cylinderBounds != nullptr
              ? -cylinderBounds->get(CylinderVolumeBounds::eHalfLengthZ)
              : 0.);
-    double zMax = (not idTrf ? transform.translation().z() : 0.) +
+    double zMax = (!idTrf ? transform.translation().z() : 0.) +
                   (cylinderBounds != nullptr
                        ? cylinderBounds->get(CylinderVolumeBounds::eHalfLengthZ)
                        : 0.);
@@ -342,7 +342,7 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
         "(required) - returning 0 ");
     return nullptr;
   }
-  // Check whether it is a r-binned case or a z-binned case
+  // Check whether it is an r-binned case or a z-binned case
   bool rCase =
       std::abs(firstVolumeBounds->get(CylinderVolumeBounds::eMinR) -
                lastVolumeBounds->get(CylinderVolumeBounds::eMinR)) > 0.1;
@@ -405,8 +405,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
       volumeName);
   // glueing section
   // --------------------------------------------------------------------------------------
-  if (not interGlueTrackingVolume(gctx, topVolume, rCase, rMin, rGlueMin, rMax,
-                                  zSep1, zSep2)) {
+  if (!interGlueTrackingVolume(gctx, topVolume, rCase, rMin, rGlueMin, rMax,
+                               zSep1, zSep2)) {
     ACTS_WARNING(
         "Problem with inter-glueing of TrackingVolumes (needed) - "
         "returning 0 ");
@@ -525,7 +525,7 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
                             : Transform3::Identity();
   } else if ((cylinderVolumeBounds != nullptr) && idTrf && !concentric) {
     vtransform = Transform3(Translation3(0., 0., zEstFromLayerEnv));
-  } else if (not idTrf && (cylinderVolumeBounds == nullptr)) {
+  } else if (!idTrf && (cylinderVolumeBounds == nullptr)) {
     // create the CylinderBounds from parsed layer inputs
     cylinderVolumeBounds =
         new CylinderVolumeBounds(layerRmin, layerRmax, halflengthFromLayer);
@@ -535,7 +535,7 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
                << layerRmin << " / " << layerRmax << " / " << layerZmin << " / "
                << layerZmax);
 
-  double zFromTransform = not idTrf ? transform.translation().z() : 0.;
+  double zFromTransform = !idTrf ? transform.translation().z() : 0.;
   ACTS_VERBOSE(
       "    -> while created bounds are (rMin/rMax/zMin/zMax) = "
       << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR) << " / "

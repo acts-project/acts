@@ -17,7 +17,7 @@ import sys
 # It can also be used to define the binning for volume mapping
 
 
-def getSurfaceMateral(mat):
+def getSurfaceMaterial(mat):
     outputmat = {}
     value = {}
     material = {}
@@ -78,13 +78,13 @@ with open(inFileName, "r") as json_file:
                 if "sensitive" not in entry:
                     if entry["value"]["bounds"]["type"] not in typeLayer:
                         typeLayer.append(entry["value"]["bounds"]["type"])
-                        surface = getSurfaceMateral(entry)
+                        surface = getSurfaceMaterial(entry)
                         vconfig.append(surface)
                         continue
 
         if "boundary" in entry:
             if "layer" not in entry:
-                surface = getSurfaceMateral(entry)
+                surface = getSurfaceMaterial(entry)
                 vconfig.append(surface)
                 continue
 
@@ -92,12 +92,12 @@ with open(inFileName, "r") as json_file:
             if "sensitive" not in entry:
                 if entry["approach"] == 1 and createdApproach1 == False:
                     createdApproach1 = True
-                    surface = getSurfaceMateral(entry)
+                    surface = getSurfaceMaterial(entry)
                     vconfig.append(surface)
                     continue
                 if entry["approach"] == 2 and createdApproach2 == False:
                     createdApproach2 = True
-                    surface = getSurfaceMateral(entry)
+                    surface = getSurfaceMaterial(entry)
                     vconfig.append(surface)
                     continue
 
@@ -113,7 +113,7 @@ with open(inFileName, "r") as json_file:
                         typeSensitive[entry["layer"]].append(
                             entry["value"]["bounds"]["type"]
                         )
-                        surface = getSurfaceMateral(entry)
+                        surface = getSurfaceMaterial(entry)
                         vconfig.append(surface)
                         continue
 

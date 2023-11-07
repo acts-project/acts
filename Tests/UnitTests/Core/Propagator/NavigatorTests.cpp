@@ -36,6 +36,7 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -145,20 +146,19 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    Intersection3D::Status updateSurfaceStatus(State& state,
-                                               const Surface& surface,
-                                               Direction navDir,
-                                               const BoundaryCheck& bcheck,
-                                               ActsScalar surfaceTolerance,
-                                               const Logger& logger) const {
+    Intersection3D::Status updateSurfaceStatus(
+        State& state, const Surface& surface, std::uint8_t index,
+        Direction navDir, const BoundaryCheck& bcheck,
+        ActsScalar surfaceTolerance, const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(
-          *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
+          *this, state, surface, index, navDir, bcheck, surfaceTolerance,
+          logger);
     }
 
     template <typename object_intersection_t>
     void updateStepSize(State& state,
                         const object_intersection_t& oIntersection,
-                        bool release = true) const {
+                        Direction /*direction*/, bool release = true) const {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK(state.navigation.navLayerIndex == 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayer().intersection.position);
+  double beamPipeR = perp(state.navigation.navLayer().position());
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);

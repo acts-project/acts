@@ -22,7 +22,7 @@ class CantorEdge {
 
  public:
   CantorEdge(T x, T y, bool sort = true) {
-    if ((x > y) and sort) {
+    if ((x > y) && sort) {
       std::swap(x, y);
     }
     m_value = y + ((x + y) * (x + y + 1)) / 2;

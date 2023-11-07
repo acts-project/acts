@@ -35,10 +35,9 @@ auto mergeComponents(const component_t &a, const component_t &b,
 }
 
 template <typename proj_t, typename angle_desc_t>
-void reduceWithKLDistanceImpl(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const proj_t &proj,
-    const angle_desc_t &desc) {
+void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
+                              std::size_t maxCmpsAfterMerge, const proj_t &proj,
+                              const angle_desc_t &desc) {
   Acts::detail::SymmetricKLDistanceMatrix<Acts::detail::SymmetricKLDistanceQoP>
       distances(cmpCache, proj);
 
@@ -75,9 +74,8 @@ void reduceWithKLDistanceImpl(
 
 template <typename proj_t, typename angle_desc_t>
 void reduceWithKLDistanceAggressiveImpl(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const proj_t &proj,
-    const angle_desc_t &desc) {
+    std::vector<Acts::GsfComponent> &cmpCache, std::size_t maxCmpsAfterMerge,
+    const proj_t &proj, const angle_desc_t &desc) {
   Acts::detail::SymmetricKLDistanceMatrix<Acts::detail::SymmetricKLDistanceQoP>
       distances(cmpCache, proj);
 
@@ -136,9 +134,9 @@ void reduceWithKLDistanceAggressiveImpl(
 
 namespace Acts {
 
-void reduceMixtureLargestWeights(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const Surface &) {
+void reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
+                                 std::size_t maxCmpsAfterMerge,
+                                 const Surface &) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
@@ -148,9 +146,9 @@ void reduceMixtureLargestWeights(
   cmpCache.resize(maxCmpsAfterMerge);
 }
 
-void reduceMixtureWithKLDistance(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const Surface &surface) {
+void reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
+                                 std::size_t maxCmpsAfterMerge,
+                                 const Surface &surface) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
@@ -164,9 +162,9 @@ void reduceMixtureWithKLDistance(
   });
 }
 
-void reduceMixtureWithKLDistanceAggressive(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const Surface &surface) {
+void reduceMixtureWithKLDistanceAggressive(std::vector<GsfComponent> &cmpCache,
+                                           std::size_t maxCmpsAfterMerge,
+                                           const Surface &surface) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }

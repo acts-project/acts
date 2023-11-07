@@ -51,23 +51,14 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   std::vector<Intersection3D> tsfpIntersections = {tIp, sIp, fIp};
 
   // let's sort the tsf intersection, it should give fst
-  std::sort(tsfpIntersections.begin(), tsfpIntersections.end());
-  BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength,
-                    tsfpIntersections[0].pathLength);
-  BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength,
-                    tsfpIntersections[1].pathLength);
-  BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength,
-                    tsfpIntersections[2].pathLength);
-
-  // let's sort them with greater
   std::sort(tsfpIntersections.begin(), tsfpIntersections.end(),
-            std::greater<>());
-  BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength,
-                    tsfpIntersections[2].pathLength);
-  BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength,
-                    tsfpIntersections[1].pathLength);
-  BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength,
-                    tsfpIntersections[0].pathLength);
+            Intersection3D::forwardOrder);
+  BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength(),
+                    tsfpIntersections[0].pathLength());
+  BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength(),
+                    tsfpIntersections[1].pathLength());
+  BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength(),
+                    tsfpIntersections[2].pathLength());
 
   // now let's create one with a non-valid intersection, it should be shuffled
   // last
@@ -75,24 +66,23 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   std::vector<Intersection3D> tfnsnpIntersections = {tIp, fIp, nIp, sIp, nIp};
 
   // shuffle the intersections
-  std::sort(ntfspIntersections.begin(), ntfspIntersections.end());
-  BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength,
-                    ntfspIntersections[0].pathLength);
-  BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength,
-                    ntfspIntersections[1].pathLength);
-  BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength,
-                    ntfspIntersections[2].pathLength);
-  BOOST_CHECK_EQUAL(bool(ntfspIntersections[3]), false);
+  std::sort(ntfspIntersections.begin(), ntfspIntersections.end(),
+            Intersection3D::forwardOrder);
+  BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength(),
+                    ntfspIntersections[0].pathLength());
+  BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength(),
+                    ntfspIntersections[1].pathLength());
+  BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength(),
+                    ntfspIntersections[2].pathLength());
 
-  std::sort(tfnsnpIntersections.begin(), tfnsnpIntersections.end());
-  BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength,
-                    tfnsnpIntersections[0].pathLength);
-  BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength,
-                    tfnsnpIntersections[1].pathLength);
-  BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength,
-                    tfnsnpIntersections[2].pathLength);
-  BOOST_CHECK_EQUAL(bool(tfnsnpIntersections[3]), false);
-  BOOST_CHECK_EQUAL(bool(tfnsnpIntersections[4]), false);
+  std::sort(tfnsnpIntersections.begin(), tfnsnpIntersections.end(),
+            Intersection3D::forwardOrder);
+  BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength(),
+                    tfnsnpIntersections[0].pathLength());
+  BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength(),
+                    tfnsnpIntersections[1].pathLength());
+  BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength(),
+                    tfnsnpIntersections[2].pathLength());
 
   /// let's make a bunch of negative solution
   Intersection3D fIn(Vector3(0., -1., 0.), -1.,
@@ -106,80 +96,47 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   std::vector<Intersection3D> fstnIntersections = {fIn, sIn, tIn};
 
   // this time around, sort the f-s-t-n to match the t-s-f-n
-  std::sort(fstnIntersections.begin(), fstnIntersections.end());
-  BOOST_CHECK_EQUAL(fstnIntersections[0].pathLength,
-                    tsfnIntersections[0].pathLength);
-  BOOST_CHECK_EQUAL(fstnIntersections[1].pathLength,
-                    tsfnIntersections[1].pathLength);
-  BOOST_CHECK_EQUAL(fstnIntersections[2].pathLength,
-                    tsfnIntersections[2].pathLength);
-
-  // let's sort them with greater
   std::sort(fstnIntersections.begin(), fstnIntersections.end(),
-            std::greater<>());
-  BOOST_CHECK_EQUAL(fstnIntersections[0].pathLength,
-                    tsfnIntersections[2].pathLength);
-  BOOST_CHECK_EQUAL(fstnIntersections[1].pathLength,
-                    tsfnIntersections[1].pathLength);
-  BOOST_CHECK_EQUAL(fstnIntersections[2].pathLength,
-                    tsfnIntersections[0].pathLength);
+            Intersection3D::forwardOrder);
+  BOOST_CHECK_EQUAL(fstnIntersections[0].pathLength(),
+                    tsfnIntersections[0].pathLength());
+  BOOST_CHECK_EQUAL(fstnIntersections[1].pathLength(),
+                    tsfnIntersections[1].pathLength());
+  BOOST_CHECK_EQUAL(fstnIntersections[2].pathLength(),
+                    tsfnIntersections[2].pathLength());
 
   // shuffle negative and positive solutions
   std::vector<Intersection3D> pnsolutions = {tIp, sIn, sIp, fIn, tIn, fIp};
-  std::sort(pnsolutions.begin(), pnsolutions.end());
+  std::sort(pnsolutions.begin(), pnsolutions.end(),
+            Intersection3D::forwardOrder);
 
-  BOOST_CHECK_EQUAL(pnsolutions[0].pathLength, -3.);
-  BOOST_CHECK_EQUAL(pnsolutions[1].pathLength, -2.);
-  BOOST_CHECK_EQUAL(pnsolutions[2].pathLength, -1.);
-  BOOST_CHECK_EQUAL(pnsolutions[3].pathLength, 1.);
-  BOOST_CHECK_EQUAL(pnsolutions[4].pathLength, 2.);
-  BOOST_CHECK_EQUAL(pnsolutions[5].pathLength, 3.);
+  BOOST_CHECK_EQUAL(pnsolutions[0].pathLength(), -3.);
+  BOOST_CHECK_EQUAL(pnsolutions[1].pathLength(), -2.);
+  BOOST_CHECK_EQUAL(pnsolutions[2].pathLength(), -1.);
+  BOOST_CHECK_EQUAL(pnsolutions[3].pathLength(), 1.);
+  BOOST_CHECK_EQUAL(pnsolutions[4].pathLength(), 2.);
+  BOOST_CHECK_EQUAL(pnsolutions[5].pathLength(), 3.);
 
   // sort intersections with zero path length
   Intersection3D zI(Vector3(0., 0., 0.), 0., Intersection3D::Status::onSurface);
   std::vector<Intersection3D> tszfpIntersections = {tIp, sIp, zI, fIp};
 
-  std::sort(tszfpIntersections.begin(), tszfpIntersections.end());
-  BOOST_CHECK_EQUAL(tszfpIntersections[0].pathLength, 0.);
-  BOOST_CHECK_EQUAL(tszfpIntersections[1].pathLength, 1.);
-  BOOST_CHECK_EQUAL(tszfpIntersections[2].pathLength, 2.);
-  BOOST_CHECK_EQUAL(tszfpIntersections[3].pathLength, 3.);
+  std::sort(tszfpIntersections.begin(), tszfpIntersections.end(),
+            Intersection3D::forwardOrder);
+  BOOST_CHECK_EQUAL(tszfpIntersections[0].pathLength(), 0.);
+  BOOST_CHECK_EQUAL(tszfpIntersections[1].pathLength(), 1.);
+  BOOST_CHECK_EQUAL(tszfpIntersections[2].pathLength(), 2.);
+  BOOST_CHECK_EQUAL(tszfpIntersections[3].pathLength(), 3.);
 
   std::vector<Intersection3D> tfsznIntersections = {tIn, fIn, sIn, zI};
   std::vector<Intersection3D> ztfsnIntersections = {zI, tIn, fIn, sIn};
 
   std::sort(tfsznIntersections.begin(), tfsznIntersections.end(),
-            std::greater<>());
-  BOOST_CHECK_EQUAL(tfsznIntersections[0].pathLength, 0.);
-  BOOST_CHECK_EQUAL(tfsznIntersections[1].pathLength, -1.);
-  BOOST_CHECK_EQUAL(tfsznIntersections[2].pathLength, -2.);
-  BOOST_CHECK_EQUAL(tfsznIntersections[3].pathLength, -3.);
-
-  std::sort(ztfsnIntersections.begin(), ztfsnIntersections.end(),
-            std::greater<>());
-  BOOST_CHECK_EQUAL(ztfsnIntersections[0].pathLength, 0.);
-  BOOST_CHECK_EQUAL(ztfsnIntersections[1].pathLength, -1.);
-  BOOST_CHECK_EQUAL(ztfsnIntersections[2].pathLength, -2.);
-  BOOST_CHECK_EQUAL(ztfsnIntersections[3].pathLength, -3.);
-}
-
-/// test swappping of the intersection
-BOOST_AUTO_TEST_CASE(SwapObjectIntersectionTest) {
-  using ObjectIntersection = ObjectIntersection<Object>;
-
-  Intersection3D intersection(Vector3(0., 0., 0.), 0.,
-                              IntersectionStatus::onSurface);
-  Intersection3D alternative(Vector3(10., 0., 0.), 10.,
-                             IntersectionStatus::reachable);
-  ObjectIntersection oIntersection;
-  oIntersection.intersection = intersection;
-  oIntersection.alternative = alternative;
-
-  BOOST_CHECK(oIntersection.intersection.position == Vector3(0., 0., 0.));
-  BOOST_CHECK(oIntersection.alternative.position == Vector3(10., 0., 0.));
-  oIntersection.swapSolutions();
-  BOOST_CHECK(oIntersection.alternative.position == Vector3(0., 0., 0.));
-  BOOST_CHECK(oIntersection.intersection.position == Vector3(10., 0., 0.));
+            Intersection3D::forwardOrder);
+  BOOST_CHECK_EQUAL(tfsznIntersections[0].pathLength(), -3.);
+  BOOST_CHECK_EQUAL(tfsznIntersections[1].pathLength(), -2.);
+  BOOST_CHECK_EQUAL(tfsznIntersections[2].pathLength(), -1.);
+  BOOST_CHECK_EQUAL(tfsznIntersections[3].pathLength(), 0.);
 }
 
 /// test of the object intersection class
@@ -226,15 +183,9 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
 
   // This should give 6 different intersections
   std::set_union(firstSet.begin(), firstSet.end(), secondSet.begin(),
-                 secondSet.end(), std::back_inserter(unionSetStd));
+                 secondSet.end(), std::back_inserter(unionSetStd),
+                 PlaneIntersection::forwardOrder);
   BOOST_CHECK_EQUAL(unionSetStd.size(), 6u);
-
-  // This should give 5 different inteseciton attempts (for each surface 1)
-  SameSurfaceIntersection onSameSurface;
-  std::set_union(firstSet.begin(), firstSet.end(), secondSet.begin(),
-                 secondSet.end(), std::back_inserter(unionSetCst),
-                 onSameSurface);
-  BOOST_CHECK_EQUAL(unionSetCst.size(), 5u);
 }
 
 BOOST_AUTO_TEST_CASE(IntersectionStatusPrinting) {

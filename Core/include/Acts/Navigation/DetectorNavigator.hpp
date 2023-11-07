@@ -141,7 +141,7 @@ class DetectorNavigator {
 
   /// Initialize call - start of propagation
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -181,6 +181,7 @@ class DetectorNavigator {
                  << posInfo(state, stepper) << "Entering navigator::preStep.");
 
     auto& nState = state.navigation;
+    fillNavigationState(state, stepper, nState);
 
     if (inactive()) {
       ACTS_VERBOSE(volInfo(state)
@@ -227,8 +228,9 @@ class DetectorNavigator {
       // Estimate the surface status
       bool boundaryCheck = c.boundaryCheck;
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, surface, state.options.direction, boundaryCheck,
-          state.options.targetTolerance, logger());
+          state.stepping, surface, c.objectIntersection.index(),
+          state.options.direction, boundaryCheck, state.options.targetTolerance,
+          logger());
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper)
@@ -295,8 +297,10 @@ class DetectorNavigator {
 
     // TODO not sure about the boundary check
     auto surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, *nextSurface, state.options.direction, boundaryCheck,
-        state.options.targetTolerance, logger());
+        state.stepping, *nextSurface,
+        nState.surfaceCandidate->objectIntersection.index(),
+        state.options.direction, boundaryCheck, state.options.targetTolerance,
+        logger());
 
     // Check if we are at a surface
     if (surfaceStatus == Intersection3D::Status::onSurface) {
@@ -378,7 +382,7 @@ class DetectorNavigator {
   /// - attempted volume switch
   /// Target finding by association will not be done again
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
@@ -410,6 +414,18 @@ class DetectorNavigator {
     }
 
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
+
+    // Sort properly the surface candidates
+    auto& nCandidates = nState.surfaceCandidates;
+    std::sort(nCandidates.begin(), nCandidates.end(),
+              [&](const auto& a, const auto& b) {
+                // The two path lengths
+                ActsScalar pathToA = a.objectIntersection.pathLength();
+                ActsScalar pathToB = b.objectIntersection.pathLength();
+                return pathToA < pathToB;
+              });
+    // Set the surface candidate
+    nState.surfaceCandidate = nCandidates.begin();
   }
 
   template <typename propagator_state_t, typename stepper_t>

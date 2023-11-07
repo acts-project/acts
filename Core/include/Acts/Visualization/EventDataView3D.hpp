@@ -128,7 +128,7 @@ struct EventDataView3D {
   /// @param gctx The geometry context for which it is drawn
   /// @param momentumScale The scale of the momentum
   /// @param locErrorScale  The scale of the local error
-  /// @param angularErrorScale The sclae of the angular error
+  /// @param angularErrorScale The scale of the angular error
   /// @param parConfig The visualization options for the parameter
   /// @param covConfig The visualization option for the covariance
   /// @param surfConfig The visualization option for the surface
@@ -238,7 +238,7 @@ struct EventDataView3D {
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states
-      if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         return true;
       }
 
@@ -258,7 +258,7 @@ struct EventDataView3D {
       // Second, if necessary and present, draw the calibrated measurement (only
       // draw 2D measurement here)
       // @Todo: how to draw 1D measurement?
-      if (state.hasCalibrated() and state.calibratedSize() == 2) {
+      if (state.hasCalibrated() && state.calibratedSize() == 2) {
         const Vector2& lposition = state.template calibrated<2>();
         const SquareMatrix2 covariance =
             state.template calibratedCovariance<2>();
@@ -269,7 +269,7 @@ struct EventDataView3D {
 
       // Last, if necessary and present, draw the track parameters
       // (a) predicted track parameters
-      if (predictedConfig.visible and state.hasPredicted()) {
+      if (predictedConfig.visible && state.hasPredicted()) {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
@@ -279,7 +279,7 @@ struct EventDataView3D {
             predictedConfig, predictedConfig, ViewConfig(false));
       }
       // (b) filtered track parameters
-      if (filteredConfig.visible and state.hasFiltered()) {
+      if (filteredConfig.visible && state.hasFiltered()) {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
@@ -289,7 +289,7 @@ struct EventDataView3D {
             filteredConfig, filteredConfig, ViewConfig(false));
       }
       // (c) smoothed track parameters
-      if (smoothedConfig.visible and state.hasSmoothed()) {
+      if (smoothedConfig.visible && state.hasSmoothed()) {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),

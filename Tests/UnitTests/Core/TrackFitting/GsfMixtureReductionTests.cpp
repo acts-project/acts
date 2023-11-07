@@ -24,7 +24,6 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Experimental;
 using namespace Acts::UnitLiterals;
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {

@@ -233,7 +233,7 @@ template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
     const SeedFinderOrthogonalConfig<external_spacepoint_t> &config)
     : m_config(config) {
-  if (not config.isInInternalUnits) {
+  if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOrthogonalConfig not in ACTS internal units in "
         "SeedFinderOrthogonal");
@@ -347,11 +347,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
     size_t minCompatibleTopSPs = 2;
-    if (!m_config.seedConfirmation or
+    if (!m_config.seedConfirmation ||
         bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
-    if (m_config.seedConfirmation and seedFilterState.numQualitySeeds) {
+    if (m_config.seedConfirmation && seedFilterState.numQualitySeeds) {
       minCompatibleTopSPs++;
     }
 
@@ -421,7 +421,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
-        if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) >
+        if (B2 == 0 || options.pTPerHelixRadius * std::sqrt(S2 / B2) >
                            2. * m_config.maxPtScattering) {
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *
@@ -445,7 +445,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
       if (Im <= m_config.impactMax) {
         top_valid.push_back(top[t]);
-        // inverse diameter is signed depending if the curvature is
+        // inverse diameter is signed depending on if the curvature is
         // positive/negative in phi
         curvatures.push_back(B / std::sqrt(S2));
         impactParameters.push_back(Im);
@@ -620,7 +620,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Next, we perform a search for bottom candidates in increasing z tracks,
    * which only makes sense if we found any bottom candidates.
    */
-  if (!top_lh_v.empty() and search_bot_lh) {
+  if (!top_lh_v.empty() && search_bot_lh) {
     tree.rangeSearchMapDiscard(
         bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
                          const typename tree_t::coordinate_t &,
@@ -634,7 +634,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   /*
    * And repeat for the top spacepoints for decreasing z tracks!
    */
-  if (!top_hl_v.empty() and search_bot_hl) {
+  if (!top_hl_v.empty() && search_bot_hl) {
     tree.rangeSearchMapDiscard(
         bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
                          const typename tree_t::coordinate_t &,
@@ -662,7 +662,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  if ((!bottom_lh_v.empty() && !top_lh_v.empty()) or
+  if ((!bottom_lh_v.empty() && !top_lh_v.empty()) ||
       (!bottom_hl_v.empty() && !top_hl_v.empty())) {
     m_config.seedFilter->filterSeeds_1SpFixed(
         spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
@@ -700,7 +700,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const Acts::SeedFinderOptions &options,
     const input_container_t &spacePoints, output_container_t &out_cont,
     callable_t &&extract_coordinates) const {
-  if (not options.isInInternalUnits) {
+  if (!options.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in "
         "SeedFinderOrthogonal");
@@ -771,12 +771,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     }
 
     // remove all middle SPs outside phi and z region of interest
-    if (middle.z() < m_config.zOutermostLayers.first or
+    if (middle.z() < m_config.zOutermostLayers.first ||
         middle.z() > m_config.zOutermostLayers.second) {
       continue;
     }
     float spPhi = middle.phi();
-    if (spPhi > m_config.phiMax or spPhi < m_config.phiMin) {
+    if (spPhi > m_config.phiMax || spPhi < m_config.phiMin) {
       continue;
     }
 

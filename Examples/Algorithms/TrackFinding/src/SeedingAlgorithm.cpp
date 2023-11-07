@@ -17,9 +17,9 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Range1D.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
@@ -71,7 +71,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
-  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax and
+  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax &&
       m_cfg.allowSeparateRMax == false) {
     throw std::invalid_argument(
         "Inconsistent config rMax: using different values in gridConfig and "

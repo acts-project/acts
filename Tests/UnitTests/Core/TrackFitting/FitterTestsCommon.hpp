@@ -50,7 +50,7 @@ struct TestOutlierFinder {
   template <typename traj_t>
   bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
-    if (not state.hasCalibrated() or not state.hasPredicted()) {
+    if (!state.hasCalibrated() || !state.hasPredicted()) {
       return false;
     }
     auto residuals = (state.effectiveCalibrated() -
@@ -169,7 +169,7 @@ struct FitterTester {
     auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
-    // this is the default option. set anyways for consistency
+    // this is the default option. set anyway for consistency
     options.referenceSurface = nullptr;
 
     Acts::ConstTrackAccessor<bool> reversed{"reversed"};
@@ -221,10 +221,10 @@ struct FitterTester {
     auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
-    // initial fitter options configured for backward filtereing mode
+    // initial fitter options configured for backward filtering mode
     // backward filtering requires a reference surface
     options.referenceSurface = &start.referenceSurface();
-    // this is the default option. set anyways for consistency
+    // this is the default option. set anyway for consistency
     options.propagatorPlainOptions.direction = Acts::Direction::Forward;
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
@@ -551,8 +551,9 @@ struct FitterTester {
     const auto& outlierSourceLinks = measurements.outlierSourceLinks;
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
     BOOST_REQUIRE_EQUAL(outlierSourceLinks.size(), nMeasurements);
-    // create a boundless target surface near the tracker exit
-    Acts::Vector3 center(3._m, 0., 0.);
+
+    // create a boundless target surface near the tracker entry
+    Acts::Vector3 center(-3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
     auto targetSurface =
         Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);

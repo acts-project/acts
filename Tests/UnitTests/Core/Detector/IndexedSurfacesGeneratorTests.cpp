@@ -24,8 +24,8 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cmath>
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
       std::get<IndexedSurfacesImpl<GridType>>(chainedUpdators);
   const auto& grid = indexedSurfaces.grid;
 
-  // Fine binning created less candidates
+  // Fine binning created fewer candidates
   std::vector<size_t> reference = {38, 39};
   GridType::point_t p = {80., M_PI * 0.49};
   BOOST_CHECK(grid.atPosition(p) == reference);

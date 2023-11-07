@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -77,15 +75,10 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     if (!m_cfg.inputAssociatedTruthParticles.empty()) {
       m_inputAssociatedTruthParticles.initialize(
           m_cfg.inputAssociatedTruthParticles);
-      if (!m_cfg.inputTrackParameters.empty()) {
-        m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
-      } else {
-        m_inputTrajectories.initialize(m_cfg.inputTrajectories);
-      }
     } else {
       m_inputMeasurementParticlesMap.initialize(
           m_cfg.inputMeasurementParticlesMap);
-      m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+      m_inputTracks.initialize(m_cfg.inputTracks);
     }
   }
 
@@ -264,7 +257,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   ACTS_VERBOSE("Total number of detector-accepted truth primary vertices : "
                << m_nVtxDetAcceptance);
 
-  std::vector<Acts::BoundTrackParameters> trackParameters;
+  TrackParametersContainer trackParameters;
   std::vector<SimParticle> associatedTruthParticles;
 
   // The i-th entry in associatedTruthParticles corresponds to the i-th entry in
@@ -272,18 +265,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // parameters a priori:
   if (m_cfg.useTracks) {
     if (!m_cfg.inputAssociatedTruthParticles.empty()) {
-      if (!m_cfg.inputTrackParameters.empty()) {
-        trackParameters = m_inputTrackParameters(ctx);
-      } else {
-        const auto& inputTrajectories = m_inputTrajectories(ctx);
-
-        for (const auto& trajectories : inputTrajectories) {
-          for (auto tip : trajectories.tips()) {
-            if (!trajectories.hasTrackParameters(tip)) {
-              continue;
-            }
-            trackParameters.push_back(trajectories.trackParameters(tip));
-          }
+      for (const auto& track : m_inputTracks(ctx)) {
+        if (!track.hasReferenceSurface()) {
+          ACTS_ERROR("Track " << track.tipIndex()
+                              << " has no reference surface");
+        } else {
+          trackParameters.push_back(track.createParametersAtReference());
         }
       }
 
@@ -320,47 +307,47 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // case. Equivalently, one could say that not all tracksAtVertex will be
     // assigned to a truth particle.
     else {
-      // Get active tips
-      const auto& inputTrajectories = m_inputTrajectories(ctx);
-
       std::vector<ParticleHitCount> particleHitCounts;
 
       const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
-      for (const auto& trajectories : inputTrajectories) {
-        for (auto tip : trajectories.tips()) {
-          if (!trajectories.hasTrackParameters(tip)) {
-            continue;
-          }
-
-          identifyContributingParticles(hitParticlesMap, trajectories, tip,
-                                        particleHitCounts);
-          ActsFatras::Barcode majorityParticleId =
-              particleHitCounts.front().particleId;
-          size_t nMajorityHits = particleHitCounts.front().hitCount;
-
-          auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-              trajectories.multiTrajectory(), tip);
-
-          if (nMajorityHits * 1. / trajState.nMeasurements <
-              m_cfg.truthMatchProbMin) {
-            continue;
-          }
-
-          auto it = std::find_if(allTruthParticles.begin(),
-                                 allTruthParticles.end(), [&](const auto& tp) {
-                                   return tp.particleId() == majorityParticleId;
-                                 });
-
-          if (it == allTruthParticles.end()) {
-            continue;
-          }
-
-          const auto& majorityParticle = *it;
-          trackParameters.push_back(trajectories.trackParameters(tip));
-          associatedTruthParticles.push_back(majorityParticle);
+      for (const auto& track : m_inputTracks(ctx)) {
+        if (!track.hasReferenceSurface()) {
+          continue;
         }
+
+        identifyContributingParticles(hitParticlesMap, track,
+                                      particleHitCounts);
+        ActsFatras::Barcode majorityParticleId =
+            particleHitCounts.front().particleId;
+        size_t nMajorityHits = particleHitCounts.front().hitCount;
+
+        if (nMajorityHits * 1. / track.nMeasurements() <
+            m_cfg.truthMatchProbMin) {
+          continue;
+        }
+
+        auto it = std::find_if(allTruthParticles.begin(),
+                               allTruthParticles.end(), [&](const auto& tp) {
+                                 return tp.particleId() == majorityParticleId;
+                               });
+
+        if (it == allTruthParticles.end()) {
+          continue;
+        }
+
+        trackParameters.push_back(track.createParametersAtReference());
+        const auto& majorityParticle = *it;
+        associatedTruthParticles.push_back(majorityParticle);
       }
+    }
+
+    if (trackParameters.size() != associatedTruthParticles.size()) {
+      ACTS_ERROR(
+          "Number of track parameters and associated truth particles do not "
+          "match. ("
+          << trackParameters.size() << " != " << associatedTruthParticles.size()
+          << ").");
     }
   } else {
     // if not using tracks, then all truth particles
@@ -602,20 +589,22 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Perigee at the true vertex position
           const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
               Acts::Surface::makeShared<Acts::PerigeeSurface>(truePos.head(3));
-          // Setting the geometry/magnetic field context context for the event
+          // Setting the geometry/magnetic field context for the event
           Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
           // Lambda for propagating the tracks to the PCA
           auto propagateToVtx = [&](const auto& params)
               -> std::optional<Acts::BoundTrackParameters> {
-            auto intersection = perigeeSurface->intersect(
-                ctx.geoContext, params.position(ctx.geoContext),
-                params.direction(), false);
+            auto intersection =
+                perigeeSurface
+                    ->intersect(ctx.geoContext, params.position(ctx.geoContext),
+                                params.direction(), false)
+                    .closest();
             pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
-                intersection.intersection.pathLength);
+                intersection.pathLength());
 
             auto result =
                 propagator->propagate(params, *perigeeSurface, pOptions);
-            if (not result.ok()) {
+            if (!result.ok()) {
               ACTS_ERROR("Propagation to true vertex position failed.");
               return std::nullopt;
             }

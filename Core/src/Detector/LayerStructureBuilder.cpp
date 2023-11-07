@@ -20,8 +20,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -109,7 +109,7 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
           {aBinning.binValue, bBinning.binValue},
           {aBinning.expansion, bBinning.expansion}};
   // Run through the cases
-  if (aBinning.axisType == Acts::detail::AxisType::Equidistant and
+  if (aBinning.axisType == Acts::detail::AxisType::Equidistant &&
       bBinning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant-Equidistant
     Acts::Experimental::detail::GridAxisGenerators::EqEq<aType, bType>
@@ -162,12 +162,13 @@ Acts::Experimental::LayerStructureBuilder::construct(
   DetectorVolumeUpdator internalVolumeUpdator = tryNoVolumes();
 
   // Print the auxiliary information
-  if (not m_cfg.auxiliary.empty()) {
+  if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
 
   // Retrieve the layer surfaces
-  SurfaceCandidatesUpdator internalCandidatesUpdator;
+  SurfaceCandidatesUpdator internalCandidatesUpdator =
+      tryAllPortalsAndSurfaces();
   auto internalSurfaces = m_cfg.surfacesProvider->surfaces(gctx);
   ACTS_DEBUG("Building internal layer structure from "
              << internalSurfaces.size() << " provided surfaces.");
@@ -175,10 +176,21 @@ Acts::Experimental::LayerStructureBuilder::construct(
   // Check whether support structure is scheduled to be built, and if so
   // collect those that should be assigned to all bins
   std::vector<size_t> assignToAll = {};
-  if (not m_cfg.supports.empty()) {
+  if (!m_cfg.supports.empty()) {
     ACTS_DEBUG("Adding " << m_cfg.supports.size() << " support structures.")
     // The surface candidate updator
     for (const auto& support : m_cfg.supports) {
+      // Check if the supportsurface has already been built
+      if (support.surface != nullptr) {
+        ACTS_VERBOSE("- Use provided support surface directly.");
+        if (support.assignToAll) {
+          assignToAll.push_back(internalSurfaces.size());
+          ACTS_VERBOSE("  Support surface is assigned to all bins.");
+        }
+        internalSurfaces.push_back(support.surface);
+        continue;
+      }
+
       // Throw an exception is misconfigured
       if (support.type == Surface::SurfaceType::Other) {
         throw std::invalid_argument(
@@ -202,9 +214,11 @@ Acts::Experimental::LayerStructureBuilder::construct(
           support.values, support.transform, support.splits);
     }
   }
-
-  // Create the indexed surface grids
-  if (m_cfg.binnings.size() == 1u) {
+  if (m_cfg.binnings.empty()) {
+    ACTS_DEBUG(
+        "No surface binning provided, navigation will be 'tryAll' (potentially "
+        "slow).");
+  } else if (m_cfg.binnings.size() == 1u) {
     ACTS_DEBUG("- 1-dimensional surface binning detected.");
     // Capture the binning
     auto binning = m_cfg.binnings[0u];
@@ -247,7 +261,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
     }
   }
   // Check if everything went ok
-  if (not internalCandidatesUpdator.connected()) {
+  if (!internalCandidatesUpdator.connected()) {
     throw std::runtime_error(
         "LayerStructureBuilder: could not connect surface candidate updator.");
   }

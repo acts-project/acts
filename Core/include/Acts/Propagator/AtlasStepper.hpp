@@ -28,7 +28,7 @@
 #include <cmath>
 #include <functional>
 
-// This is based original stepper code from the ATLAS RungeKuttePropagagor
+// This is based original stepper code from the ATLAS RungeKuttaPropagator
 namespace Acts {
 
 /// @brief the AtlasStepper implementation for the
@@ -291,7 +291,7 @@ class AtlasStepper {
   };
 
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
-      : m_bField(std::move(bField)){};
+      : m_bField(std::move(bField)) {}
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
@@ -375,7 +375,10 @@ class AtlasStepper {
   }
 
   /// Overstep limit
-  double overstepLimit(const State& /*state*/) const {
+  ///
+  /// @param state The stepping state (thread-local cache)
+  double overstepLimit(const State& state) const {
+    (void)state;
     return -m_overstepLimit;
   }
 
@@ -391,17 +394,18 @@ class AtlasStepper {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger Logger instance to use
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, Direction navDir,
-      const BoundaryCheck& bcheck,
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryCheck& bcheck,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
-        *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
+        *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size
@@ -414,7 +418,7 @@ class AtlasStepper {
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
+                      Direction /*direction*/, bool release = true) const {
     detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
   }
 
@@ -1236,7 +1240,7 @@ class AtlasStepper {
       if (std::abs(EST) > std::abs(state.options.tolerance)) {
         h = h * .5;
         // neutralize the sign of h again
-        state.stepping.stepSize.setValue(h * state.options.direction);
+        state.stepping.stepSize.setAccuracy(h * state.options.direction);
         //        dltm = 0.;
         nStepTrials++;
         continue;

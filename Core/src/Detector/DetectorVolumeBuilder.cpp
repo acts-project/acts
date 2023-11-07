@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
@@ -38,10 +39,10 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   // The outgoing root volumes
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
   // Screen printout of the auxiliary information
-  if (not m_cfg.auxiliary.empty()) {
+  if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
-  ACTS_DEBUG("Building a volume with name " << m_cfg.name);
+  ACTS_DEBUG("Building a volume with name '" << m_cfg.name << "'.");
 
   // Get transform and bounds from the volume
   auto [transform, bounds, portalGenerator] =
@@ -81,6 +82,14 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {
     portalContainer[ip] = p;
   }
+
+  // Assign the geometry ids if configured to do so
+  if (m_cfg.geoIdGenerator != nullptr) {
+    ACTS_DEBUG("Assigning geometry ids to the detector volume");
+    auto cache = m_cfg.geoIdGenerator->generateCache();
+    m_cfg.geoIdGenerator->assignGeometryId(cache, *dVolume);
+  }
+
   // Add to the root volume collection if configured
   rootVolumes.push_back(dVolume);
   // The newly built volume is the single produced volume

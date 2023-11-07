@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
     std::cout << res2.error().message() << std::endl;
   }
 
-  if (res1.ok() and res2.ok()) {
+  if (res1.ok() && res2.ok()) {
     BOOST_CHECK(!(*res1).empty());
     BOOST_CHECK(!(*res2).empty());
     Vector3 result1 = (*res1).back().position();
@@ -256,8 +256,9 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
-    pos = intersection.intersection.position;
+    auto intersection =
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
+    pos = intersection.position();
 
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1

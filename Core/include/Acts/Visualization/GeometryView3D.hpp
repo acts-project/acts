@@ -31,11 +31,11 @@ class DetectorVolume;
 class Portal;
 }  // namespace Experimental
 
-static ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
-static ViewConfig s_viewPassive = ViewConfig({240, 280, 0});
-static ViewConfig s_viewVolume = ViewConfig({220, 220, 0});
-static ViewConfig s_viewGrid = ViewConfig({220, 0, 0});
-static ViewConfig s_viewLine = ViewConfig({0, 0, 220});
+static const ViewConfig s_viewSensitive;
+static const ViewConfig s_viewPassive;
+static const ViewConfig s_viewVolume;
+static const ViewConfig s_viewGrid;
+static const ViewConfig s_viewLine;
 
 struct GeometryView3D {
   /// Helper method to draw Polyhedron objects
