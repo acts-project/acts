@@ -10,20 +10,20 @@
 }
 
 .admonition.seealso .admonition-title::before {
-    content: "";
+    content: ""; /* font awesome: share */
 }
 
 .admonition.caution .admonition-title::before,
 .admonition.danger .admonition-title::before,
 .admonition.warning .admonition-title::before {
-    content: "";
+    content: ""; /* font awesome: triangle-exclamation */
 }
 
 .admonition.error .admonition-title::before {
-  content: "";
+  content: ""; /* font awesome: circle-xmark */
 }
 
 .admonition.hint .admonition-title::before,
 .admonition.tip .admonition-title::before {
-  content: "";
+  content: ""; /* font awesome: lightbulb */
 }
