@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviVac({vacuum}, getDefaultLogger("nav", Logging::VERBOSE));
+  Navigator naviVac({vacuum});
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      prop(es, naviVac, getDefaultLogger("prop", Logging::VERBOSE));
+      prop(es, naviVac);
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -686,7 +686,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviMat({material, true, true, true});
+  Navigator naviMat({material});
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
@@ -850,7 +850,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   std::shared_ptr<const TrackingGeometry> det = tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviDet({det, true, true, true});
+  Navigator naviDet({det});
 
   // Set initial parameters for the particle track
   CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,
@@ -1092,7 +1092,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviVac({detector, true, true, true});
+  Navigator naviVac({detector});
 
   // Set initial parameters for the particle track
   CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,

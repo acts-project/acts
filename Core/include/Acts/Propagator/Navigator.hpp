@@ -406,6 +406,18 @@ class Navigator {
         // Skip if this is a surface
         ACTS_VERBOSE(volInfo(state) << "Surface unreachable, skip.");
         ++state.navigation.candidateIndex;
+
+        if (state.navigation.candidateIndex ==
+            state.navigation.candidates.size()) {
+          ACTS_VERBOSE(
+              volInfo(state)
+              << "Last surface in layer reached. Reinitialize navigation");
+
+          state.navigation.currentLayer = nullptr;
+
+          reinitializeCandidates(state, stepper);
+          reinitialized = true;
+        }
       } else {
         // Renavigate otherwise
         ACTS_VERBOSE(volInfo(state)
