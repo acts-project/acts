@@ -720,7 +720,9 @@ class Navigator {
               state.navigation.candidates.end(),
               NavigationCandidate::forwardOrder);
 
-    state.navigation.currentLayer = nullptr;
+    if (releaseLayer) {
+      state.navigation.currentLayer = nullptr;
+    }
   }
 
   /// Inactive
