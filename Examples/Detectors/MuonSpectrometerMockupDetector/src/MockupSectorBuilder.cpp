@@ -289,7 +289,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
 
   }  // end of number of sectors
 
-  for (std::size_t i = 0; i < cylinderVolumesBounds.size(); ++i) {
+  for (size_t i = 0; i < cylinderVolumesBounds.size(); ++i) {
     detectorCylinderVolumesOfSector.push_back(
         Acts::Experimental::DetectorVolumeFactory::construct(
             Acts::Experimental::defaultPortalAndSubPortalGenerator(), gctx,

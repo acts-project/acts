@@ -55,20 +55,20 @@ inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator!=(
 }
 
 template <typename external_spacepoint_t>
-std::tuple<boost::container::small_vector<size_t, 9>, std::size_t,
-           boost::container::small_vector<size_t, 9>>
+std::tuple<boost::container::small_vector<std::size_t, 9>, std::size_t,
+           boost::container::small_vector<std::size_t, 9>>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
   // Global Index
   std::size_t global_index = m_group->m_grid->globalBinFromLocalBins(
       {m_current_localBins[INDEX::PHI],
        m_group->m_bins[m_current_localBins[INDEX::Z]]});
 
-  boost::container::small_vector<size_t, 9> bottoms =
+  boost::container::small_vector<std::size_t, 9> bottoms =
       m_group->m_bottomBinFinder->findBins(
           m_current_localBins[INDEX::PHI],
           m_group->m_bins[m_current_localBins[INDEX::Z]],
           m_group->m_grid.get());
-  boost::container::small_vector<size_t, 9> tops =
+  boost::container::small_vector<std::size_t, 9> tops =
       m_group->m_topBinFinder->findBins(
           m_current_localBins[INDEX::PHI],
           m_group->m_bins[m_current_localBins[INDEX::Z]],
@@ -159,11 +159,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
   // binSizeR allows to increase or reduce numRBins if needed
-  size_t numRBins = static_cast<size_t>((config.rMax + options.beamPos.norm()) /
-                                        config.binSizeR);
+  std::size_t numRBins = static_cast<std::size_t>(
+      (config.rMax + options.beamPos.norm()) / config.binSizeR);
 
   // keep track of changed bins while sorting
-  boost::container::flat_set<size_t> rBinsIndex;
+  boost::container::flat_set<std::size_t> rBinsIndex;
 
   std::size_t counter = 0;
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
@@ -194,7 +194,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
         counter, sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);
+    std::size_t rIndex =
+        static_cast<std::size_t>(isp->radius() / config.binSizeR);
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;
@@ -241,7 +242,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 }
 
 template <typename external_spacepoint_t>
-inline size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
+inline std::size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
   return m_grid->size();
 }
 

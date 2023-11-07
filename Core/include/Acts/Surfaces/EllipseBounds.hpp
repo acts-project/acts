@@ -27,6 +27,8 @@ namespace Acts {
 
 /// @class EllipseBounds
 ///
+/// @image html EllipseBounds.png
+///
 /// Class to describe the bounds for a planar ellispoid
 /// surface.
 ///
