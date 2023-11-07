@@ -73,7 +73,7 @@ std::ostream& Acts::TrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(7);
   sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
      << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
-     << get(eHalfLengthY) << ", " << get(eRotationAngle) ")";
-  sl << std::setprecision(-1);
+     << get(eHalfLengthY) << ", " << get(eRotationAngle)<< ")";
+   sl << std::setprecision(-1);
   return sl;
 }

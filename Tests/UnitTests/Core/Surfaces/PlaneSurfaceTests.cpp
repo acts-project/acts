@@ -279,9 +279,9 @@ BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
 
   Vector2 edgePoint{longHalfX - 10., halfY};
 
-  BOOST_CHECK_EQUAL(bounds->inside(edgePoint, true), false);
+  BOOST_CHECK_EQUAL(bounds->inside(edgePoint, BoundaryCheck(true)), false);
   BOOST_CHECK_EQUAL(
-      bounds->inside(Eigen::Rotation2D{-rotAngle} * edgePoint, true), true);
+      bounds->inside(Eigen::Rotation2D{-rotAngle} * edgePoint, BoundaryCheck(true)), true);
 }
 
 /// Unit test for testing PlaneSurface alignment derivatives

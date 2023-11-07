@@ -48,21 +48,9 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param halfXnegY minimal half length X, definition at negative Y
   /// @param halfXposY maximal half length X, definition at positive Y
   /// @param halfY half length Y - defined at x=0
-  TrapezoidBounds(double halfXnegY, double halfXposY,
-                  double halfY) noexcept(false)
-      : m_values({halfXnegY, halfXposY, halfY}),
-        m_boundingBox(std::max(halfXnegY, halfXposY), halfY) {
-    checkConsistency();
-  }
-
-  /// Constructor for symmetric Trapezoid with rotation
-  ///
-  /// @param halfXnegY minimal half length X, definition at negative Y
-  /// @param halfXposY maximal half length X, definition at positive Y
-  /// @param halfY half length Y - defined at x=0
   /// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
   TrapezoidBounds(double halfXnegY, double halfXposY, double halfY,
-                  double rotAngle) noexcept(false)
+                  double rotAngle = 0.) noexcept(false)
       : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
         m_boundingBox(std::max(halfXnegY, halfXposY), halfY),
         m_rotMat{Eigen::Rotation2D<double>(rotAngle)} {
