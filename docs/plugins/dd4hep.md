@@ -1,5 +1,9 @@
 # DD4hep plugin
 
+:::{todo}
+Describe new markup and construction for dd4hep plugin and building layerless geometry.
+:::
+
 The DD4hepPlugin allows building of a {class}`Acts::TrackingGeometry` from
 [DD4hep](https://dd4hep.web.cern.ch/dd4hep/) input. DD4hep uses [ROOT](https://root.cern.ch) TGeo as the underlying geometry model.
 
@@ -187,7 +191,7 @@ The volumes are automatically built around the layers. Volume boundaries for
 the volumes are calculated automatically by adding a tolerance to the geometric
 extension of the contained layers. The tolerance parameters `layerEnvelopeR`
 and `layerEnvelopeZ` need to be set in the
-:func:`Acts::convertDD4hepDetector()` function.
+{func}`Acts::convertDD4hepDetector` function.
 
 Furthermore parameters can be handed over for material mapping or the axes
 orientation of modules.
@@ -195,7 +199,7 @@ orientation of modules.
 Summing up the `DetElement` tree in DD4hep should have the following
 structure:
 
-![Detector element structure](/figures/DD4hepPlugin_DetElementStructure.jpg)
+![Detector element structure](figures/DD4hepPlugin_DetElementStructure.jpg)
 
 It is also possible to translate a very simple detector geometry, which just
 consists of cylindrical (for a barrel) or disc (for endcaps) layers which either
@@ -259,7 +263,7 @@ ACTS geometry translation uses parameters attached to DD4hep detector elements v
 ## Usage
 
 To receive the {class}`Acts::TrackingGeometry` the global function
-{func}`Acts::convertDD4hepDetector()` should be used, where the DD4hep world
+{func}`Acts::convertDD4hepDetector` should be used, where the DD4hep world
 `DetElement` needs to be handed over. For a valid translation, that all
 prerequisites described above are met and that the right `VariantParameters`
 are added during the DD4hep construction.

@@ -21,24 +21,29 @@ Key features:
 * Implementations of common vertexing algorithms.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
    getting_started
    tracking
    acts_project
    core/core
-   fatras/fatras
+   Fast Track Simulation (Fatras) <fatras/fatras>
    plugins/plugins
    examples/examples
-   howto/howto
-   contribution/contribution
+
+   Contribution guide <contribution/contribution>
+
+   api/api
 
    versioning
    formats/formats
-   api/api
    codeguide
    authors
    license
 
    white_papers/index.rst
 
+TODOs
+=====
+
+.. todolist::
