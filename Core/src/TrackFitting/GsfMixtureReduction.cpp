@@ -63,10 +63,6 @@ void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
   }
 
   // Remove all components which are labeled with weight -1
-  std::sort(cmpCache.begin(), cmpCache.end(),
-            [&](const auto &a, const auto &b) {
-              return proj(a).weight < proj(b).weight;
-            });
   cmpCache.erase(
       std::remove_if(cmpCache.begin(), cmpCache.end(),
                      [&](const auto &a) { return proj(a).weight == -1.0; }),
@@ -94,8 +90,10 @@ void reduceWithKLDistanceAggressiveImpl(
 
     for (const auto &[_, minI, minJ] : minDistPairs) {
       // Check if we have touched one of these components already
-      if (std::find(toSkip.begin(), toSkip.end(), minI) != toSkip.end() ||
-          std::find(toSkip.begin(), toSkip.end(), minJ) != toSkip.end()) {
+      if (std::find_if(toSkip.begin(), toSkip.end(),
+                       [minI = minI, minJ = minJ](auto i) {
+                         return (i == minI) || (i == minJ);
+                       }) != toSkip.end()) {
         continue;
       }
 
@@ -107,6 +105,7 @@ void reduceWithKLDistanceAggressiveImpl(
       // Since we modified this component in this pass, we shouldn't touch it
       // again
       toSkip.push_back(minI);
+      toSkip.push_back(minJ);
 
       // Set weight of the other component to -1 so we can remove it later and
       // mask its distances
@@ -123,10 +122,6 @@ void reduceWithKLDistanceAggressiveImpl(
   }
 
   // Remove all components which are labeled with weight -1
-  std::sort(cmpCache.begin(), cmpCache.end(),
-            [&](const auto &a, const auto &b) {
-              return proj(a).weight < proj(b).weight;
-            });
   cmpCache.erase(
       std::remove_if(cmpCache.begin(), cmpCache.end(),
                      [&](const auto &a) { return proj(a).weight == -1.0; }),
@@ -165,6 +160,7 @@ void reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
   });
 }
 
+namespace Experimental {
 void reduceMixtureWithKLDistanceAggressive(std::vector<GsfComponent> &cmpCache,
                                            std::size_t maxCmpsAfterMerge,
                                            const Surface &surface) {
@@ -181,4 +177,5 @@ void reduceMixtureWithKLDistanceAggressive(std::vector<GsfComponent> &cmpCache,
   });
 }
 
+}  // namespace Experimental
 }  // namespace Acts
