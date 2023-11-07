@@ -218,10 +218,11 @@ async def pull(
 
                 repo = whp.repo
                 slug = whp.slug
-                title_page_file = config_file.parent / f"{slug}.png"
 
                 image_path = Path(__file__).parent / "white_papers" / "figures"
                 assert image_path.is_dir(), image_path
+
+                title_page_file = image_path / f"{slug}.png"
 
                 latest_release = await get_latest_release(gh, repo)
 
