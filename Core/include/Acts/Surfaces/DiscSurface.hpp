@@ -48,7 +48,7 @@ class SurfaceBounds;
 /// to happen to transfer the local coordinates onto the
 /// cartesian reference frame coordinates.
 ///
-/// @image html figures/DiscSurface.png
+/// @image html DiscSurface.png
 ///
 class DiscSurface : public Surface {
 #ifndef DOXYGEN
