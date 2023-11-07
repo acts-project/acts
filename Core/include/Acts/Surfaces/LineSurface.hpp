@@ -37,7 +37,7 @@ class SurfaceBounds;
 ///
 ///  @note It leaves the type() method virtual, so it can not be instantiated
 ///
-/// @image html figures/LineSurface.png
+/// @image html LineSurface.png
 class LineSurface : public Surface {
 #ifndef DOXYGEN
   friend Surface;
@@ -182,7 +182,7 @@ class LineSurface : public Surface {
   /// of @f$ \vec{d} @f$ on @f$ \vec{measX} @f$:<br> @f$ sign = -sign(\vec{d}
   /// \cdot \vec{measX}) @f$
   ///
-  /// @image html figures/SignOfDriftCircleD0.gif
+  /// @image html SignOfDriftCircleD0.gif
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
