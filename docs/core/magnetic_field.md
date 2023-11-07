@@ -1,3 +1,4 @@
+(magnetic-field-core)=
 # Magnetic field
 
 The magnetic field component of ACTS provides functionality to describe
@@ -104,7 +105,7 @@ cell*. The field cell can be retrieved for any given position. Since during
 typical access patterns, e.g. the propagation, subsequent steps are relatively
 likely to not cross the field cell boundary, the field cell can be cached.
 
-:::{figure} ../figures/bfield/field_cell.svg
+:::{figure} figures/bfield/field_cell.svg
 :width: 300
 :align: center
 Illustration of the field cell concept. Subsequent steps are clustered in the
@@ -121,7 +122,7 @@ methods:
 
 This intermediate interface is again implemented by
 {class}`Acts::InterpolatedBFieldMap`, which is a template class that depends on
-an instance of {class}`Acts::detail::Grid`. Varying configurations are possible,
+an instance of {class}`Acts::Grid`. Varying configurations are possible,
 like a 2D field map that exploits $rz$ symmetry, or a plain 3D grid.
 
 :::{doxygenclass} Acts::InterpolatedBFieldMap
@@ -163,7 +164,7 @@ to speed it up.
 ACTS also provides a field provider that calculates the field vectors
 analytically for a [solenoid](https://en.wikipedia.org/wiki/Solenoid) field. 
 
-:::{figure} ../figures/bfield/quiver.png
+:::{figure} figures/bfield/quiver.png
 :width: 600
 :align: center
 Picture of a solenoid field in rz, with arrows indicating the direction of the
@@ -224,7 +225,7 @@ $$
 
 In the implementation the factor of $(\mu_0\cdot I)$ is defined to be a scaling
 factor. It is evaluated and defined as the magnetic field in the center of the
-coil, i.e. the scale set in {any}`Acts::SolenoidBField::Config::bMagCenter`.
+coil, i.e. the scale set in {member}`Acts::SolenoidBField::Config::bMagCenter`.
 
 As the evaluation of $E_1(k^2)$ and $E_2(k^2)$ is **slow**. The
 {class}`Acts::InterpolatedBFieldMap` easily outperforms

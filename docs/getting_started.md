@@ -52,7 +52,7 @@ These are usually not available through the system package manager and can be fo
 
 All external dependencies must be provided prior to building Acts. Compatible
 versions of all dependencies are provided e.g. by the [LCG
-releases](https://lcginfo.cern.ch/) starting from [LCG 97apython3](https://lcginfo.cern.ch/release/97apython3/).
+releases](https://lcginfo.cern.ch/) starting from [LCG 102b](https://lcginfo.cern.ch/release/102b/).
 For convenience, it is possible to build the required boost and eigen3 dependencies using the ACTS build system; see [Build options](#build-options).
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
@@ -125,12 +125,15 @@ A set of container images is available through the [Acts container
 registry][acts_containers]. The following containers are used as part of the
 continuous integration setup and come with all dependencies pre-installed.
 
--   `centos7-lcg97apython3-gcc9`: based on CentOS 7 with HEP-specific software from
-    LCG 97apython3 using the GCC 9 compiler
--   `centos7-lcg98python3-gcc10`: based on CentOS 7 with HEP-specific software from LCG
-    98python3 using the GCC 10 compiler
--   `ubuntu2004`: based on Ubuntu 20.04 with manual installation of HEP-specific
+-   `centos7-lcg101-gcc11`: based on CentOS 7 with HEP-specific software from
+    LCG 101 using the GCC 11 compiler
+-   `ubuntu2204`: based on Ubuntu 22.04 with manual installation of HEP-specific
     software
+
+:::{attention}
+We stopped producing fully-contained LCG containers in favor of running LCG
+based tests directly from CVMFS.
+:::
 
 To use these locally, you first need to pull the relevant images from the
 registry. Stable versions are tagged as `vX` where `X` is the version number.
@@ -217,33 +220,23 @@ To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to
 $ cmake -B <build> -S <source> -DACTS_BUILD_DOCS=on
 ```
 
-Then the documentation can be build with either of the following two build
-targets
+Then the documentation can be build with this target
 
 ```console
-$ cmake --build <build> --target docs # default fast option
-# or
-$ cmake --build <build> --target docs-with-api # full documentation
+$ cmake --build <build> --target docs
 ```
 
 The default option includes the Doxygen, Sphinx, and the Breathe extension,
 i.e. the source code information can be used in the manually written
-documentation but the full API documentation is not generated. The second
-target builds the full documentation to automatically generate full API
-listings. This is equivalent to the public [Read the Docs][rtd_acts]
-documentation, but the build takes a while to finish.
+documentation. An attempt is made to pull in symbols that are cross-referenced from
+other parts of the documentation. This is not guaranteed to work: in case 
+of errors you will need to manually pull in symbols to be documented.
 
 [doxygen]: https://doxygen.nl/
 [sphinx]: https://www.sphinx-doc.org
 [breathe]: https://breathe.readthedocs.io
 [exhale]: https://exhale.readthedocs.io
 [rtd_acts]: https://acts.readthedocs.io
-
-A special phony target exists to clean the documentation output files:
-
-```console
-$ cmake --build <build> --target clean-docs
-```
 
 ## Build options
 
