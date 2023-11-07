@@ -24,24 +24,6 @@
 
 namespace Acts {
 
-/// @brief TargetOptions struct for geometry interface
-struct TargetOptions {
-  /// Navigation direction
-  Direction navDir = Direction::Forward;
-
-  /// Target Boundary check directive - always false here
-  BoundaryCheck boundaryCheck = false;
-
-  /// Object to check against - always nullptr here
-  const Surface* startObject = nullptr;
-
-  /// The path limit
-  double pathLimit = std::numeric_limits<double>::max();
-
-  /// create target options
-  TargetOptions(Direction ndir) : navDir(ndir) {}
-};
-
 /// This is the condition that the pathLimit has been reached
 struct PathLimitReached {
   /// Boolean switch for Loop protection
@@ -89,7 +71,7 @@ struct PathLimitReached {
 /// it then triggers an propagation abort of the propagation
 struct SurfaceReached {
   const Surface* surface = nullptr;
-  BoundaryCheck boundaryCheck = true;
+  BoundaryCheck boundaryCheck = BoundaryCheck(true);
   std::optional<double> overstepLimit;
 
   SurfaceReached() = default;
