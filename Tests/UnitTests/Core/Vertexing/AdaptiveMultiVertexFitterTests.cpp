@@ -157,8 +157,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   ACTS_DEBUG("All vertices in test case:");
   int cv = 0;
   for (auto& vtx : vtxList) {
-    cv++;
-    ACTS_DEBUG("\t" << cv << ". vertex ptr: " << &vtx);
+    ACTS_DEBUG("\t" << &vtx - vtxList.begin() + 1 << ". vertex ptr: " << &vtx);
     vtxPtrList.push_back(&vtx);
   }
 
@@ -272,15 +271,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   BOOST_CHECK(res1.ok());
 
   ACTS_DEBUG("Vertex positions after fit of vertex 1 and 2:");
-  ACTS_DEBUG("Vtx 1, seed position:\n " << seedListCopy.at(0).fullPosition()
-                                        << "\nFitted position:\n "
-                                        << vtxList.at(0).fullPosition());
-  ACTS_DEBUG("Vtx 2, seed position:\n " << seedListCopy.at(1).fullPosition()
-                                        << "\nFitted position:\n "
-                                        << vtxList.at(1).fullPosition());
-  ACTS_DEBUG("Vtx 3, seed position:\n " << seedListCopy.at(2).fullPosition()
-                                        << "\nFitted position:\n "
-                                        << vtxList.at(2).fullPosition());
+for (size_t vtxIter = 0; vtxIter < 3; vtxIter++) {
+    ACTS_DEBUG("Vtx " << vtxIter + 1 << ", seed position:\n " << seedListCopy.at(vtxIter).fullPosition()
+                                          << "\nFitted position:\n "
+                                          << vtxList.at(vtxIter).fullPosition());
+}
 
   // After fit of first vertex, only first and second vertex seed
   // should have been modified while third vertex should remain untouched
