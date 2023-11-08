@@ -107,7 +107,7 @@ class RoiDescriptor {
   void clear() { m_roiDescriptors.clear(); }  // setComposite(false); }
 
   /// reserve elements in vector
-  void reserve(size_t s) { m_roiDescriptors.reserve(s); }
+  void reserve(std::size_t s) { m_roiDescriptors.reserve(s); }
 
   /// add a RoiDescriptor
   void push_back(const RoiDescriptor* roi) {

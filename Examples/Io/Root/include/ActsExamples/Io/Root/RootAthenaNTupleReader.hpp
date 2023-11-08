@@ -182,7 +182,7 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   std::string name() const final { return "RootAthenaNTupleReader"; }
 
   /// Return the available events range.
-  std::pair<std::size_t, std::size_t> availableEvents() const final {
+  std::pair<size_t, size_t> availableEvents() const final {
     return {0u, m_events};
   }
 
@@ -211,7 +211,7 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   std::mutex m_read_mutex;
 
   /// The number of events
-  std::size_t m_events = 0;
+  size_t m_events = 0;
 
   /// The input tree name
   TChain *m_inputChain = nullptr;

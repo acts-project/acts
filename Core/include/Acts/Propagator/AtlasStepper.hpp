@@ -286,8 +286,8 @@ class AtlasStepper {
     bool debug = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
-    size_t debugPfxWidth = 30;
-    size_t debugMsgWidth = 50;
+    std::size_t debugPfxWidth = 30;
+    std::size_t debugMsgWidth = 50;
   };
 
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
@@ -1155,7 +1155,7 @@ class AtlasStepper {
     bool Helix = false;
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
-    size_t nStepTrials = 0;
+    std::size_t nStepTrials = 0;
     while (h != 0.) {
       // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
@@ -1237,7 +1237,7 @@ class AtlasStepper {
           2. * h *
           (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4)) +
            std::abs((C1 + C6) - (C3 + C4)));
-      if (std::abs(EST) > std::abs(state.options.tolerance)) {
+      if (std::abs(EST) > std::abs(state.options.stepTolerance)) {
         h = h * .5;
         // neutralize the sign of h again
         state.stepping.stepSize.setAccuracy(h * state.options.direction);

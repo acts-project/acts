@@ -18,12 +18,11 @@ The interaction of these two components is handled by the {class}`Acts::Propagat
 Propagator<Navigator, Stepper>
 ```
 
-Additional to these mandatory components, the propagator can be equipped with **Actors** and **Aborters** to allow for custom behaviour. These are function objects that are hooked in the propagation loop. Actors just perform some action on the propagator state (e.g. the {class}`Acts::KalmanFitter` is an actor), aborts can abort propagation (e.g., the {class}`Acts::PathLimitReached`).
+Additional to these mandatory components, the propagator can be equipped with **Actors** and **Aborters** to allow for custom behaviour. These are function objects that are hooked in the propagation loop. Actors just perform some action on the propagator state (e.g. the {class}`Acts::KalmanFitter` is an actor), aborts can abort propagation (e.g., the {struct}`Acts::PathLimitReached`).
 
 The propagator exposes its state to the actors and aborters as arguments to `operator()`. Actors must define a default-constructable `result_type`, which can be modified in each call:
 
 ```c++
-
 template<typename propagator_state_t, typename stepper_t>
 auto operator(propagator_state_t &state, const stepper_t &stepper, result_type &result) const {
   const auto &navigatorState = state.navigation;
@@ -36,7 +35,11 @@ The result of a propagation consists of the track parameters at the endpoint of 
 
 ## Initialization and running
 
-The {class}`Acts::Propagator` is initialized with the helper class {class}`Acts::PropagatorOptions`, which is templated on the list of actors and aborters. This is done with the classes {class}`Acts::ActionList` and {class}`Acts::AbortList` (which are in fact small wrappers around `std::tuple`):
+The {class}`Acts::Propagator` is initialized with the helper class
+{struct}`Acts::PropagatorOptions`, which is templated on the list of actors and
+aborters. This is done with the classes {struct}`Acts::ActionList` and
+{struct}`Acts::AbortList` (which are in fact small wrappers around
+`std::tuple`):
 
 ```c++
 using MyOptions = Acts::PropagatorOptions<
@@ -45,7 +48,7 @@ using MyOptions = Acts::PropagatorOptions<
                   >;
 ```
 
-The actors and aborters are instantiated with the options and can be accessed with the `get`-method that expects the corresponding actor type as template parameter. Besides this, the {class}`Acts::PropagatorOptions` also contains a lot of general options like the `maxStepSize`:
+The actors and aborters are instantiated with the options and can be accessed with the `get`-method that expects the corresponding actor type as template parameter. Besides this, the {struct}`Acts::PropagatorOptions` also contains a lot of general options like the `maxStepSize`:
 
 ```c++
 auto options = MyOptions();
@@ -53,10 +56,10 @@ options.actionList.get<MyActor1>().foo = bar;
 options.maxStepSize = 100;
 ```
 
-All available options can be found in the {struct}`Acts::PropagatorPlainOptions`, from which {class}`Acts::PropagatorOptions` inherits.
+All available options can be found in the {struct}`Acts::PropagatorPlainOptions`, from which {struct}`Acts::PropagatorOptions` inherits.
 
 :::{tip}
-The propagator also contains a loop-protection mechanism. It estimates a circle perimeter from the momentum and the magnetic field, and aborts the propagation when a certain fraction (default: 0.5) of the circle has been propagated. This behaviour can be changed in the {class}`Acts::PropagatorOptions` via the boolean `loopProtection` and the float `loopFraction`.
+The propagator also contains a loop-protection mechanism. It estimates a circle perimeter from the momentum and the magnetic field, and aborts the propagation when a certain fraction (default: 0.5) of the circle has been propagated. This behaviour can be changed in the {struct}`Acts::PropagatorOptions` via the boolean `loopProtection` and the float `loopFraction`.
 :::
 
 To run the propagation, we must call the member function `propagate(...)` with the initial track parameters and the propagator options. There are several overloads to the `propagate(...)` function, which allow further customization:
@@ -75,7 +78,7 @@ if( res.ok() ) {
 
 ## Navigators
 
-Acts comes with two navigators: The standard navigator {class}`Acts::Navigator` that performs the full navigation in the volume/layer/surface hierarchy, and the {class}`Acts::DirectNavigator` that takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {class}`Acts::DirectNavigator::Initializer`.
+Acts comes with two navigators: The standard navigator {class}`Acts::Navigator` that performs the full navigation in the volume/layer/surface hierarchy, and the {class}`Acts::DirectNavigator` that takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {struct}`Acts::DirectNavigator::Initializer`.
 
 The navigators provide information about the current position inside the geometry in their state variable ({struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
 
@@ -108,7 +111,7 @@ The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS s
 
 The extensions encapsulate the relevant equations for different environments. There exists a {type}`Acts::DefaultExtension` that is suited for propagation in a vacuum, and the {type}`Acts::DenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is selected by a bidding-system.
 
-The extension can be configured via the {class}`Acts::StepperExtensionList`:
+The extension can be configured via the {struct}`Acts::StepperExtensionList`:
 
 ```c++
 using Stepper = Acts::EigenStepper<
@@ -123,4 +126,4 @@ By default, the {class}`Acts::EigenStepper` only uses the {type}`Acts::DefaultEx
 
 ### MultiEigenStepperLoop
 
-The {class}`Acts::MultiEigenStepper` is an extension of the {class}`Acts::EigenStepper` and is designed to internally handle a multi-component state, while interfacing as a single component to the navigator. It is mainly used for the {class}`Acts::GaussianSumFitter`.
+The {class}`Acts::MultiEigenStepperLoop` is an extension of the {class}`Acts::EigenStepper` and is designed to internally handle a multi-component state, while interfacing as a single component to the navigator. It is mainly used for the {struct}`Acts::GaussianSumFitter`.

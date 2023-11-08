@@ -87,7 +87,7 @@ class MultivariateNormalDistribution {
 // Sample data from a multi-component multivariate distribution
 template <int D>
 auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
-                            std::size_t n_samples, std::mt19937 &gen) {
+                            size_t n_samples, std::mt19937 &gen) {
   using MultiNormal = MultivariateNormalDistribution<double, D>;
 
   std::vector<MultiNormal> dists;
@@ -199,9 +199,10 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   // the mean might not fulfill the perigee condition.
   Vector3 position = mean.head<3>();
   Vector3 direction = mean.segment<3>(eFreeDir0);
-  auto intersection =
-      surface.intersect(GeometryContext{}, position, direction, false)
-          .closest();
+  auto intersection = surface
+                          .intersect(GeometryContext{}, position, direction,
+                                     BoundaryCheck(false))
+                          .closest();
   mean.head<3>() = intersection.position();
 
   return *detail::transformFreeToBoundParameters(mean, surface,

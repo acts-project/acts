@@ -18,7 +18,6 @@
 
 #include "DD4hepTestsHelper.hpp"
 
-using namespace std;
 using namespace dd4hep;
 
 /// @brief  Helper method to add a layer to the detector
@@ -274,7 +273,7 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
 static Ref_t create_barrel_detector(Detector &dd, xml_h xml,
                                     SensitiveDetector sens) {
   xml_det_t x_det = xml;
-  string detName = x_det.nameStr();
+  std::string detName = x_det.nameStr();
 
   // create the master detector element
   DetElement detectorElement(detName, x_det.id());
@@ -322,7 +321,7 @@ DECLARE_DETELEMENT(BarrelDetector, create_barrel_detector)
 static Ref_t create_endcap_detector(Detector &dd, xml_h xml,
                                     SensitiveDetector sens) {
   xml_det_t x_det = xml;
-  string detName = x_det.nameStr();
+  std::string detName = x_det.nameStr();
 
   // create the master detector element
   DetElement detectorElement(detName, x_det.id());
