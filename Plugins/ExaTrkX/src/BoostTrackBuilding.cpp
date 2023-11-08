@@ -46,8 +46,8 @@ auto weaklyConnectedComponents(vertex_t numNodes,
 namespace Acts {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
-    std::any, std::any edges, std::any weights,
-    std::vector<int>& spacepointIDs) {
+    std::any nodes, std::any edges, std::any weights,
+    std::vector<int>& spacepointIDs, int) {
   ACTS_DEBUG("Start track building");
   const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCPU);
   const auto edgeWeightTensor =
@@ -57,7 +57,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   assert(edgeTensor.size(1) == edgeWeightTensor.size(0));
 
   const auto numSpacepoints = spacepointIDs.size();
-  const auto numEdges = static_cast<std::size_t>(edgeWeightTensor.size(0));
+  const auto numEdges = static_cast<size_t>(edgeWeightTensor.size(0));
 
   if (numEdges == 0) {
     ACTS_WARNING("No edges remained after edge classification");

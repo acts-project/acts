@@ -16,11 +16,11 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   detail::EquidistantAxis z(-5, 7, 6u);
 
   using Grid_t =
-      detail::Grid<Vector3, detail::EquidistantAxis, detail::EquidistantAxis>;
+      Grid<Vector3, detail::EquidistantAxis, detail::EquidistantAxis>;
   using BField_t = InterpolatedBFieldMap<Grid_t>;
 
   Grid_t g(std::make_tuple(std::move(r), std::move(z)));
@@ -168,11 +168,11 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
 
   // some field cell tests
-  BOOST_CHECK(not c.isInside(transformPos((pos << 3, 2, -3.7).finished())));
-  BOOST_CHECK(not c.isInside(transformPos((pos << -2, 3, -4.7).finished())));
-  BOOST_CHECK(not c.isInside(transformPos((pos << -2, 3, 4.7).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << 3, 2, -3.7).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << -2, 3, -4.7).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << -2, 3, 4.7).finished())));
   BOOST_CHECK(c.isInside(transformPos((pos << 0, 2, -4.7).finished())));
-  BOOST_CHECK(not c.isInside(transformPos((pos << 5, 2, 14.).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << 5, 2, 14.).finished())));
 }
 }  // namespace Test
 

@@ -43,10 +43,10 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters output collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
-  if (not m_cfg.magneticField) {
+  if (!m_cfg.magneticField) {
     throw std::invalid_argument("Missing magnetic field");
   }
 
@@ -58,24 +58,10 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 
   // Set up the track parameters covariance (the same for all tracks)
-  m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-      m_cfg.initialVarInflation[Acts::eBoundLoc0] * cfg.sigmaLoc0 *
-      m_cfg.sigmaLoc0;
-  m_covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-      m_cfg.initialVarInflation[Acts::eBoundLoc1] * cfg.sigmaLoc1 *
-      m_cfg.sigmaLoc1;
-  m_covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
-      m_cfg.initialVarInflation[Acts::eBoundPhi] * cfg.sigmaPhi *
-      m_cfg.sigmaPhi;
-  m_covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
-      m_cfg.initialVarInflation[Acts::eBoundTheta] * cfg.sigmaTheta *
-      m_cfg.sigmaTheta;
-  m_covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-      m_cfg.initialVarInflation[Acts::eBoundQOverP] * cfg.sigmaQOverP *
-      m_cfg.sigmaQOverP;
-  m_covariance(Acts::eBoundTime, Acts::eBoundTime) =
-      m_cfg.initialVarInflation[Acts::eBoundTime] * m_cfg.sigmaT0 *
-      m_cfg.sigmaT0;
+  for (size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+    m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
+                         m_cfg.initialSigmas[i];
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
@@ -139,7 +125,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
         m_cfg.bFieldMin, logger());
-    if (not optParams.has_value()) {
+    if (!optParams.has_value()) {
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
                                                               << " failed.");
       continue;

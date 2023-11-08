@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -82,6 +83,7 @@ class GenericBoundTrackParameters {
   /// @param qOverP Charge over momentum
   /// @param cov Bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
+  /// @param tolerance Tolerance used for globalToLocal
   ///
   /// @note The returned result indicates whether the free parameters could
   /// successfully be converted to on-surface parameters.
@@ -89,9 +91,11 @@ class GenericBoundTrackParameters {
       std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
       const Vector4& pos4, const Vector3& dir, Scalar qOverP,
       std::optional<CovarianceMatrix> cov,
-      ParticleHypothesis particleHypothesis) {
+      ParticleHypothesis particleHypothesis,
+      ActsScalar tolerance = s_onSurfaceTolerance) {
     Result<BoundVector> bound = detail::transformFreeToBoundParameters(
-        pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface, geoCtx);
+        pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface, geoCtx,
+        tolerance);
 
     if (!bound.ok()) {
       return bound.error();
@@ -116,10 +120,46 @@ class GenericBoundTrackParameters {
   ParametersVector& parameters() { return m_params; }
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
+  /// Vector of spatial impact parameters (i.e., d0 and z0)
+  ActsVector<2> spatialImpactParameters() const { return m_params.head<2>(); }
+  /// Vector of spatial and temporal impact parameters (i.e., d0, z0, and t)
+  ActsVector<3> impactParameters() const {
+    ActsVector<3> ip;
+    ip.template head<2>() = m_params.template head<2>();
+    ip(2) = m_params(eBoundTime);
+    return ip;
+  }
+
   /// Optional covariance matrix.
   std::optional<CovarianceMatrix>& covariance() { return m_cov; }
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
+  /// Covariance matrix of the spatial impact parameters (i.e., of d0 and z0)
+  std::optional<ActsSquareMatrix<2>> spatialImpactParameterCovariance() const {
+    if (!m_cov.has_value()) {
+      return std::nullopt;
+    }
+
+    return m_cov.value().template topLeftCorner<2, 2>();
+  }
+
+  /// Covariance matrix of the spatial and temporal impact parameters (i.e., of
+  /// d0, z0, and t)
+  std::optional<ActsSquareMatrix<3>> impactParameterCovariance() const {
+    if (!m_cov.has_value()) {
+      return std::nullopt;
+    }
+
+    ActsSquareMatrix<3> ipCov;
+    ipCov.template topLeftCorner<2, 2>() =
+        m_cov.value().template topLeftCorner<2, 2>();
+    ipCov.template block<2, 1>(0, 2) =
+        m_cov.value().template block<2, 1>(0, eBoundTime);
+    ipCov.template block<1, 2>(2, 0) =
+        m_cov.value().template block<1, 2>(eBoundTime, 0);
+    ipCov(2, 2) = m_cov.value()(eBoundTime, eBoundTime);
+    return ipCov;
+  }
 
   /// Access a single parameter value identified by its index.
   ///
@@ -238,14 +278,14 @@ class GenericBoundTrackParameters {
   ///   want and we might decided that we will remove this in the future.
   friend bool operator==(const GenericBoundTrackParameters& lhs,
                          const GenericBoundTrackParameters& rhs) {
-    return (lhs.m_params == rhs.m_params) and (lhs.m_cov == rhs.m_cov) and
-           (lhs.m_surface == rhs.m_surface) and
+    return (lhs.m_params == rhs.m_params) && (lhs.m_cov == rhs.m_cov) &&
+           (lhs.m_surface == rhs.m_surface) &&
            (lhs.m_particleHypothesis == rhs.m_particleHypothesis);
   }
   /// Compare two bound track parameters for bitwise in-equality.
   friend bool operator!=(const GenericBoundTrackParameters& lhs,
                          const GenericBoundTrackParameters& rhs) {
-    return not(lhs == rhs);
+    return !(lhs == rhs);
   }
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,

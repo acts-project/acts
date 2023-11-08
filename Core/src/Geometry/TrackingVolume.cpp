@@ -216,7 +216,7 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
     const Surface& mySurface = bSurfaceMine->surfaceRepresentation();
     auto myMaterial = mySurface.surfaceMaterialSharedPtr();
     // Keep the neighbor material
-    if (myMaterial == nullptr and neighborMaterial != nullptr) {
+    if (myMaterial == nullptr && neighborMaterial != nullptr) {
       Surface* myMutbableSurface = const_cast<Surface*>(&mySurface);
       myMutbableSurface->assignSurfaceMaterial(neighborMaterial);
     }
@@ -371,7 +371,8 @@ void Acts::TrackingVolume::interlinkLayers() {
 void Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-    size_t& vol, const GeometryIdentifierHook& hook, const Logger& logger) {
+    std::size_t& vol, const GeometryIdentifierHook& hook,
+    const Logger& logger) {
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
@@ -482,7 +483,7 @@ Acts::TrackingVolume::compatibleBoundaries(
 
   // The Limits: current, path & overstepping
   double pLimit = options.pathLimit;
-  double oLimit = options.overstepLimit;
+  double oLimit = 0;
 
   // Helper function to test intersection
   auto checkIntersection =
@@ -703,9 +704,10 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
         boundarySurfaces = avol->boundarySurfaces();
     for (const auto& bs : boundarySurfaces) {
       const Surface& srf = bs->surfaceRepresentation();
-      auto sfmi = srf.intersect(gctx, position, direction, false);
+      auto sfmi =
+          srf.intersect(gctx, position, direction, BoundaryCheck(false));
       for (const auto& sfi : sfmi.split()) {
-        if (sfi and sfi.pathLength() > oLimit and sfi.pathLength() <= pLimit) {
+        if (sfi && sfi.pathLength() > oLimit && sfi.pathLength() <= pLimit) {
           sIntersections.push_back(sfi);
         }
       }

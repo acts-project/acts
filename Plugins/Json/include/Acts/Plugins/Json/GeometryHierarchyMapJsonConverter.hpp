@@ -152,10 +152,10 @@ nlohmann::json GeometryHierarchyMapJsonConverter<value_t, decorator_t>::toJson(
   encoded[kHeaderKey]["value-identifier"] = m_valueIdentifier;
   // encode entries
   nlohmann::json entries = nlohmann::json::array();
-  for (std::size_t i = 0; i < container.size(); ++i) {
+  for (size_t i = 0; i < container.size(); ++i) {
     auto entry = encodeIdentifier(container.idAt(i));
     auto value_json = nlohmann::json(container.valueAt(i));
-    if constexpr (not std::is_same<decorator_t, void>::value) {
+    if constexpr (!std::is_same<decorator_t, void>::value) {
       decorateJson(decorator, container.valueAt(i), value_json);
     }
     entry["value"] = std::move(value_json);
@@ -183,7 +183,7 @@ auto GeometryHierarchyMapJsonConverter<value_t, decorator_t>::fromJson(
         "Inconsistent value identifier in Json geometry hierarchy map");
   }
   // decode json entries
-  if (not encoded.contains(kEntriesKey)) {
+  if (!encoded.contains(kEntriesKey)) {
     throw std::invalid_argument(
         "Missing entries in json geometry hierarchy map");
   }

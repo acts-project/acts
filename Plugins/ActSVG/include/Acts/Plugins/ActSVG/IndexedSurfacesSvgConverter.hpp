@@ -19,7 +19,7 @@
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -60,9 +60,8 @@ namespace Svg {
 
 using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 using ProtoGrid = actsvg::proto::grid;
-using ProtoIndexedSurfaceGrid =
-    std::tuple<std::vector<ProtoSurface>, ProtoGrid,
-               std::vector<std::vector<std::size_t>>>;
+using ProtoIndexedSurfaceGrid = std::tuple<std::vector<ProtoSurface>, ProtoGrid,
+                                           std::vector<std::vector<size_t>>>;
 
 namespace IndexedSurfacesConverter {
 /// Nested options struct
@@ -101,9 +100,9 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   // - for 1D phi
   // - for 2D z-phi or phi-z
   bool estimateR =
-      (index_grid::grid_type::DIM == 1 and indexGrid.casts[0u] == binPhi) or
-      (index_grid::grid_type::DIM == 2 and
-       (indexGrid.casts[0u] == binPhi or indexGrid.casts[1u] == binPhi));
+      (index_grid::grid_type::DIM == 1 && indexGrid.casts[0u] == binPhi) ||
+      (index_grid::grid_type::DIM == 2 &&
+       (indexGrid.casts[0u] == binPhi || indexGrid.casts[1u] == binPhi));
 
   for (auto [is, s] : enumerate(surfaces)) {
     // Create the surface converter options
@@ -141,7 +140,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   auto axes = indexGrid.grid.axes();
 
   // Specify the highlight indices
-  std::vector<std::vector<std::size_t>> highlightIndices;
+  std::vector<std::vector<size_t>> highlightIndices;
 
   // 1D connections
   if constexpr (index_grid::grid_type::DIM == 1u) {
@@ -194,7 +193,7 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
              const Experimental::SurfaceCandidatesUpdator& delegate,
              [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
-      typename instance_type::template grid_type<std::vector<std::size_t>>;
+      typename instance_type::template grid_type<std::vector<size_t>>;
   // Defining a Delegate type
   using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<
       GridType, Experimental::IndexedSurfacesImpl>;
@@ -217,7 +216,7 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
 /// @brief Unrolling function for catching the right instance
 ///
 /// @note parameters are as of the `convertImpl` method
-template <typename surface_container, typename tuple_type, std::size_t... I>
+template <typename surface_container, typename tuple_type, size_t... I>
 void unrollConvert(const GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
@@ -246,7 +245,7 @@ ProtoIndexedSurfaceGrid convert(
   // Prep work what is to be filled
   std::vector<ProtoSurface> pSurfaces;
   ProtoGrid pGrid;
-  std::vector<std::vector<std::size_t>> indices;
+  std::vector<std::vector<size_t>> indices;
   ProtoIndexedSurfaceGrid sgi = {pSurfaces, pGrid, indices};
   // Convert if dynamic cast happens to work
   unrollConvert(

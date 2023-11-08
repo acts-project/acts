@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -105,15 +105,14 @@ void addTrackFitting(Context& ctx) {
         .def_static("loadFromFiles",
                     &ActsExamples::BetheHeitlerApprox::loadFromFiles,
                     py::arg("lowParametersPath"), py::arg("lowParametersPath"))
-        .def_static("makeDefault", []() {
-          return Acts::Experimental::makeDefaultBetheHeitlerApprox();
-        });
+        .def_static("makeDefault",
+                    []() { return Acts::makeDefaultBetheHeitlerApprox(); });
 
     mex.def(
         "makeGsfFitterFunction",
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-           BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+           BetheHeitlerApprox betheHeitlerApprox, size_t maxComponents,
            double weightCutoff,
            Acts::MixtureReductionMethod finalReductionMethod, bool abortOnError,
            bool disableAllMaterialHandling, Logging::Level level) {
@@ -128,6 +127,24 @@ void addTrackFitting(Context& ctx) {
         py::arg("weightCutoff"), py::arg("finalReductionMethod"),
         py::arg("abortOnError"), py::arg("disableAllMaterialHandling"),
         py::arg("level"));
+
+    mex.def(
+        "makeGlobalChiSquareFitterFunction",
+        [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+           bool multipleScattering, bool energyLoss,
+           Acts::FreeToBoundCorrection freeToBoundCorrection,
+           Logging::Level level) {
+          return ActsExamples::makeGlobalChiSquareFitterFunction(
+              trackingGeometry, magneticField, multipleScattering, energyLoss,
+              freeToBoundCorrection, *Acts::getDefaultLogger("Gx2f", level));
+        },
+        py::arg("trackingGeometry"), py::arg("magneticField"),
+        py::arg("multipleScattering"), py::arg("energyLoss"),
+        py::arg("freeToBoundCorrection"), py::arg("level"));
+
+    // TODO add other important parameters like nUpdates
+    // TODO add also in trackfitterfunction
   }
 
   {

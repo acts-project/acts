@@ -104,9 +104,11 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
                   // "no bounds" hard-coded
   Vector3 mom{100., 200., 300.};
   // isOnSurface
-  BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom, false));
-  BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom,
-                                  true));  // need to improve bounds()
+  BOOST_CHECK(
+      surface.isOnSurface(tgContext, reference, mom, BoundaryCheck(false)));
+  BOOST_CHECK(
+      surface.isOnSurface(tgContext, reference, mom,
+                          BoundaryCheck(true)));  // need to improve bounds()
   // referenceFrame()
   RotationMatrix3 unitary;
   unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;

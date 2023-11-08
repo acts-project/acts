@@ -92,13 +92,13 @@ inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
                                           ActsScalar value = 0.,
                                           const std::string& unit = "") {
   std::string mlabel = "";
-  if (not variable.empty()) {
+  if (!variable.empty()) {
     mlabel = variable + " = ";
   }
   if (value != 0.) {
     mlabel += actsvg::utils::to_string(static_cast<actsvg::scalar>(value));
   }
-  if (not unit.empty()) {
+  if (!unit.empty()) {
     mlabel += " ";
     mlabel += unit;
   }

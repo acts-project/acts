@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
@@ -599,7 +600,7 @@ class TrackProxy {
 
   /// Return a mutable reference to the number of degrees of freedom for the
   /// track. Mutable version
-  /// @return The the number of degrees of freedom
+  /// @return The number of degrees of freedom
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nDoF() {
     return component<unsigned int>(hashString("ndf"));
@@ -618,6 +619,14 @@ class TrackProxy {
     return m_index;
   }
 
+  /// Return the track parameters at the reference surface
+  /// @note The parameters are created on the fly
+  /// @return the track parameters
+  BoundTrackParameters createParametersAtReference() const {
+    return BoundTrackParameters(referenceSurface().getSharedPtr(), parameters(),
+                                covariance(), particleHypothesis());
+  }
+
   /// Return a reference to the track container backend, mutable version.
   /// @return reference to the track container backend
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
@@ -627,7 +636,7 @@ class TrackProxy {
 
   /// Copy the content of another track proxy into this one
   /// @tparam track_proxy_t the other track proxy's type
-  /// @param other The the track proxy
+  /// @param other The track proxy
   /// @param copyTrackStates Copy the track state sequence from @p other
   template <typename track_proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
@@ -673,19 +682,33 @@ class TrackProxy {
   /// "innermost" track state
   /// @note This is dangerous with branching track state sequences, as it will break them
   /// @note This also automatically forward-links the track!
+  /// @param invertJacobians Whether to invert the Jacobians of the track states
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void reverseTrackStates() {
+  void reverseTrackStates(bool invertJacobians = false) {
     IndexType current = tipIndex();
     IndexType next = kInvalid;
     IndexType prev = kInvalid;
 
     stemIndex() = tipIndex();
 
+    // @TODO: Maybe refactor to not need this variable if invertJacobians == false
+    BoundMatrix nextJacobian;
+
     while (current != kInvalid) {
       auto ts = m_container->trackStateContainer().getTrackState(current);
       prev = ts.previous();
       ts.template component<IndexType>(hashString("next")) = prev;
       ts.previous() = next;
+      if (invertJacobians) {
+        if (next != kInvalid) {
+          BoundMatrix curJacobian = ts.jacobian();
+          ts.jacobian() = nextJacobian.inverse();
+          nextJacobian = curJacobian;
+        } else {
+          nextJacobian = ts.jacobian();
+          ts.jacobian().setZero();
+        }
+      }
       next = current;
       tipIndex() = current;
       current = prev;

@@ -125,6 +125,7 @@ struct MockStepper {
 
 struct MockNavigatorState {
   bool targetReached = false;
+  Acts::Surface *startSurface = nullptr;
   Acts::Surface *currentSurface = nullptr;
 };
 
@@ -133,8 +134,20 @@ struct MockNavigator {
     return state.targetReached;
   }
 
+  void targetReached(MockNavigatorState &state, bool reached) const {
+    state.targetReached = reached;
+  }
+
+  const Acts::Surface *startSurface(const MockNavigatorState &state) const {
+    return state.startSurface;
+  }
+
   const Acts::Surface *currentSurface(const MockNavigatorState &state) const {
     return state.currentSurface;
+  }
+
+  bool endOfWorldReached(const MockNavigatorState & /*state*/) const {
+    return false;
   }
 };
 
@@ -498,7 +511,7 @@ BOOST_AUTO_TEST_CASE(Decay) {
   f.state.stepping.time += 1_ns;
   f.result.properTimeLimit = f.result.particle.properTime() + gammaInv * 0.5_ns;
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
-  BOOST_CHECK(not f.result.isAlive);
+  BOOST_CHECK(!f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
   BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);

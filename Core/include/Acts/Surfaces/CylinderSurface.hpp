@@ -39,7 +39,7 @@ class DetectorElementBase;
 /// since it builds the surfaces of all TrackingVolumes at container level
 /// for a cylindrical tracking geometry.
 ///
-/// @image html figures/CylinderSurface.png
+/// @image html CylinderSurface.png
 
 class CylinderSurface : public RegularSurface {
   friend class Surface;
@@ -192,7 +192,8 @@ class CylinderSurface : public RegularSurface {
   /// @return SurfaceIntersection object (contains intersection & surface)
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track
@@ -217,7 +218,7 @@ class CylinderSurface : public RegularSurface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+                                      std::size_t lseg) const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.

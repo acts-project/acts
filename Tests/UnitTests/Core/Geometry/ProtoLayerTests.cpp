@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
         atNegX, atNegY, atPosX, atPosY};
     surfaceStore.insert(surfaceStore.begin(), sharedSurfaces.begin(),
                         sharedSurfaces.end());
-    if (not shared) {
+    if (!shared) {
       std::vector<const Surface*> surfaces = {atNegX.get(), atNegY.get(),
                                               atPosX.get(), atPosY.get()};
 

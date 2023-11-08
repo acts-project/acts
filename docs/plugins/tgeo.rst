@@ -35,32 +35,32 @@ Examples of supported ``TGeoShape`` transformations to ``Acts::Surface`` objects
 Additionally, an option exists to split surfaces after the transformation
 has taken place by adding a splitter implementation to the ``Acts::TGeoLayerBuilder``, like the ``Acts::TGeoCylinderDiscSplitter``. This can be useful to describe e.g. a cylindrical detector with tangential planar surfaces.
 
-.. figure:: ../figures/plugins/tgeo/TGeoBBox_PlaneSurface.png
+.. figure:: figures/tgeo/TGeoBBox_PlaneSurface.png
   :width: 800
   
   Conversion of a ``TGeoBBox`` shape into a ``Acts::PlaneSurface`` with ``Acts::RectangleBounds``. All axes iterations are allowed for this conversion.
 
-.. figure:: ../figures/plugins/tgeo/TGeoTrd1_PlaneSurface.png
+.. figure:: figures/tgeo/TGeoTrd1_PlaneSurface.png
   :width: 800
   
   Conversion of a ``TGeoTrd1`` shape into a ``Acts::PlaneSurface`` with ``Acts::TrapezoidBounds``. The axes definitions need to be ``(x/X)(z/Z)(*/*)``.
 
-.. figure:: ../figures/plugins/tgeo/TGeoTrd2_PlaneSurface_xz.png
+.. figure:: figures/tgeo/TGeoTrd2_PlaneSurface_xz.png
   :width: 800
   
   Conversion of a ``TGeoTrd2`` shape into a ``Acts::PlaneSurface`` with ``Acts::TrapezoidBounds``. The axes definitions shown are ``(x/X)(z/Z)(*/*)``, the second coordinate has to be the z-axis.
 
-.. figure:: ../figures/plugins/tgeo/TGeoTrd2_PlaneSurface_yz.png
+.. figure:: figures/tgeo/TGeoTrd2_PlaneSurface_yz.png
   :width: 800
   
   Conversion of a ``TGeoTrd2`` shape into a ``Acts::PlaneSurface`` with ``Acts::TrapezoidBounds``. The axes definitions shown are ``(y/Y)(z/Z)(*/*)``, the second coordinate has to be the z-axis.
 
-.. figure:: ../figures/plugins/tgeo/TGeoTube_CylinderSurface.png
+.. figure:: figures/tgeo/TGeoTube_CylinderSurface.png
   :width: 800
   
   Conversion of a ``TGeoTube`` shape into a ``Acts::CylinderSurface`` with ``Acts::CylinderBounds``. The axes definitions has to be ``(x/X)(y/Y)(*/*)``.
 
-.. figure:: ../figures/plugins/tgeo/TGeoTube_DiscSurface.png
+.. figure:: figures/tgeo/TGeoTube_DiscSurface.png
   :width: 800
   
   Conversion of a ``TGeoTube`` shape into a ``Acts::DiscSurface`` with ``Acts::DiscBounds``.The axes definitions has to be ``(x/X)(y/Y)(*/*)``.

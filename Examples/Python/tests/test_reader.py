@@ -18,7 +18,7 @@ from acts.examples import (
     RootParticleWriter,
     RootParticleReader,
     RootMaterialTrackReader,
-    RootTrajectorySummaryReader,
+    RootTrackSummaryReader,
     CsvParticleWriter,
     CsvParticleReader,
     CsvMeasurementWriter,
@@ -122,7 +122,7 @@ def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
 
 @pytest.mark.parametrize(
     "reader",
-    [RootParticleReader, RootTrajectorySummaryReader],
+    [RootParticleReader, RootTrackSummaryReader],
 )
 @pytest.mark.root
 def test_root_reader_interface(reader, conf_const, tmp_path):
@@ -183,7 +183,7 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
         )
     )
 
-    # Write hits, so we can later construct the measurment-particles-map
+    # Write hits, so we can later construct the measurement-particles-map
     s.addWriter(
         CsvSimHitWriter(
             level=acts.logging.INFO,

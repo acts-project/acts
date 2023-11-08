@@ -182,7 +182,8 @@ class ConeSurface : public RegularSurface {
   /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// The pathCorrection for derived classes with thickness
@@ -205,7 +206,7 @@ class ConeSurface : public RegularSurface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+                                      std::size_t lseg) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;

@@ -22,8 +22,8 @@
 namespace Acts {
 
 // Note:
-// The named indices are use to access raw data vectors and matrices at the
-// lowest level. Since the interpretation of some of the components, e.g. local
+// The named indices are used to access raw data vectors and matrices at the
+// lowest level. Since the interpretation of some components, e.g. local
 // position and the inverse-momentum-like component, depend on additional
 // information the names have some ambiguity. This can only be resolved at a
 // higher logical level and no attempt is made to resolve it here.
@@ -89,8 +89,8 @@ namespace Acts {
 // Ensure bound track parameters definition is valid.
 static_assert(std::is_enum_v<BoundIndices>,
               "'BoundIndices' must be an enum type");
-static_assert(std::is_convertible_v<BoundIndices, size_t>,
-              "'BoundIndices' must be convertible to size_t");
+static_assert(std::is_convertible_v<BoundIndices, std::size_t>,
+              "'BoundIndices' must be convertible to std::size_t");
 // Only the order can be user-defined
 static_assert(BoundIndices::eBoundSize == 6u,
               "Bound track parameters must have six components");
@@ -98,8 +98,8 @@ static_assert(BoundIndices::eBoundSize == 6u,
 // Ensure free track parameters definition is valid.
 static_assert(std::is_enum_v<FreeIndices>,
               "'FreeIndices' must be an enum type");
-static_assert(std::is_convertible_v<FreeIndices, size_t>,
-              "'FreeIndices' must be convertible to size_t");
+static_assert(std::is_convertible_v<FreeIndices, std::size_t>,
+              "'FreeIndices' must be convertible to std::size_t");
 // Only the order can be user-defined
 static_assert(FreeIndices::eFreeSize == 8u,
               "Free track parameters must have eight components");

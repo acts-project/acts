@@ -70,7 +70,7 @@ ActsExamples::RootSimHitReader::RootSimHitReader(
   m_inputChain->SetBranchStatus("*", false);
   m_inputChain->SetBranchStatus("event_id", true);
 
-  auto nEntries = static_cast<std::size_t>(m_inputChain->GetEntriesFast());
+  auto nEntries = static_cast<size_t>(m_inputChain->GetEntriesFast());
 
   // Add the first entry
   m_inputChain->GetEntry(0);
@@ -112,9 +112,20 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitReader::read(
       m_eventMap.begin(), m_eventMap.end(),
       [&](const auto& a) { return std::get<0>(a) == context.eventNumber; });
 
-  if (m_inputChain == nullptr || it == m_eventMap.end()) {
-    ACTS_ERROR("Cannot read hits of event " << context.eventNumber);
-    return ActsExamples::ProcessCode::ABORT;
+  if (it == m_eventMap.end()) {
+    // explicitly warn if it happens for the first or last event as that might
+    // indicate a human error
+    if ((context.eventNumber == availableEvents().first) &&
+        (context.eventNumber == availableEvents().second - 1)) {
+      ACTS_WARNING("Reading empty event: " << context.eventNumber);
+    } else {
+      ACTS_DEBUG("Reading empty event: " << context.eventNumber);
+    }
+
+    m_outputSimHits(context, {});
+
+    // Return success flag
+    return ActsExamples::ProcessCode::SUCCESS;
   }
 
   // lock the mutex

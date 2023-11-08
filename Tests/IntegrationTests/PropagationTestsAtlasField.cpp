@@ -23,8 +23,8 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include "PropagationTestHelper.hpp"
 
@@ -39,7 +39,7 @@ namespace Acts {
 
 namespace IntegrationTest {
 
-// Create a mapper from the a text file
+// Create a mapper from a text file
 InterpolatedBFieldMap::FieldMapper<3, 3> readFieldXYZ(
     std::function<size_t(std::array<size_t, 3> binsXYZ,
                          std::array<size_t, 3> nBinsXYZ)>

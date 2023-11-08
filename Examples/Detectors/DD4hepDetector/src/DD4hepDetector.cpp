@@ -40,10 +40,10 @@ auto DD4hepDetector::finalize(
     throw std::runtime_error{
         "Did not receive tracking geometry from DD4hep geometry service"};
   }
-  ContextDecorators dd4ContextDeocrators = {};
+  ContextDecorators dd4ContextDecorators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(dd4tGeometry), std::move(dd4ContextDeocrators));
+      std::move(dd4tGeometry), std::move(dd4ContextDecorators));
 }
 
 }  // namespace DD4hep

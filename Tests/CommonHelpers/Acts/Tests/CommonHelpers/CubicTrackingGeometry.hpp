@@ -21,7 +21,6 @@
 #include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -38,7 +37,7 @@ namespace Acts {
 namespace Test {
 
 struct CubicTrackingGeometry {
-  /// Default constructor for the Cubit tracking geometry
+  /// Default constructor for the Cubic tracking geometry
   ///
   /// @param gctx the geometry context for this geometry at building time
   CubicTrackingGeometry(const GeometryContext& gctx) : geoContext(gctx) {

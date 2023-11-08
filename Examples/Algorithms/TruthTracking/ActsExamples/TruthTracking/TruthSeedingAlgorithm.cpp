@@ -170,8 +170,8 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
                                      spacePointsOnTrack[ib]->r());
           double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
                                      spacePointsOnTrack[im]->r());
-          if (bmDeltaR >= m_cfg.deltaRMin and bmDeltaR <= m_cfg.deltaRMax and
-              mtDeltaR >= m_cfg.deltaRMin and mtDeltaR <= m_cfg.deltaRMax) {
+          if (bmDeltaR >= m_cfg.deltaRMin && bmDeltaR <= m_cfg.deltaRMax &&
+              mtDeltaR >= m_cfg.deltaRMin && mtDeltaR <= m_cfg.deltaRMax) {
             if ((bmDeltaR + mtDeltaR) > maxDeltaR) {
               maxDeltaR = bmDeltaR + mtDeltaR;
               bestSPIndices = {ib, im, it};

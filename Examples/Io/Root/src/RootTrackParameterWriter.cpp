@@ -179,9 +179,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     m_t_phi = phi(truthUnitDir);
     m_t_theta = theta(truthUnitDir);
     m_t_time = truthPos4[Acts::eTime];
-    // momemtum averaging makes even less sense than averaging position and
+    // momentum averaging makes even less sense than averaging position and
     // direction. use the first momentum or set q/p to zero
-    if (not indices.empty()) {
+    if (!indices.empty()) {
       // we assume that the indices are within valid ranges so we do not
       // need to check their validity again.
       const auto simHitIdx0 = indices.begin()->second;

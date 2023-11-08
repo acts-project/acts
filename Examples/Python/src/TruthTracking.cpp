@@ -90,7 +90,7 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
       outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
       sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPRel,
-      initialVarInflation, particleHypothesis, randomNumbers);
+      initialSigmas, initialVarInflation, particleHypothesis, randomNumbers);
 
   {
     using Alg = ActsExamples::ParticleSelector;
@@ -106,6 +106,7 @@ void addTruthTracking(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
+    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(rhoMin);
     ACTS_PYTHON_MEMBER(rhoMax);
@@ -123,6 +124,8 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(mMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(measurementsMin);
+    ACTS_PYTHON_MEMBER(measurementsMax);
     ACTS_PYTHON_MEMBER(removeCharged);
     ACTS_PYTHON_MEMBER(removeNeutral);
     ACTS_PYTHON_MEMBER(removeSecondaries);
@@ -136,6 +139,8 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
     pythonRangeProperty(c, "m", &Config::mMin, &Config::mMax);
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
+    pythonRangeProperty(c, "measurements", &Config::measurementsMin,
+                        &Config::measurementsMax);
   }
 
   {
@@ -182,10 +187,9 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputParticles,
       outputProtoVertices, excludeSecondaries, separateSecondaries);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackModifier, mex, "TrackModifier", inputTrajectories,
-      inputTrackParameters, outputTrajectories, outputTrackParameters,
-      dropCovariance, covScale, killTime);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackModifier, mex,
+                                "TrackModifier", inputTracks, outputTracks,
+                                dropCovariance, covScale, killTime);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",

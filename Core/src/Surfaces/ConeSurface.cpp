@@ -179,7 +179,7 @@ const Acts::ConeBounds& Acts::ConeSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
@@ -188,7 +188,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   double minZ = bounds().get(ConeBounds::eMinZ);
   double maxZ = bounds().get(ConeBounds::eMaxZ);
 
-  if (minZ == -std::numeric_limits<double>::infinity() or
+  if (minZ == -std::numeric_limits<double>::infinity() ||
       maxZ == std::numeric_limits<double>::infinity()) {
     throw std::domain_error(
         "Polyhedron repr of boundless surface not possible");
@@ -196,7 +196,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
 
   auto ctransform = transform(gctx);
 
-  // The tip - created only once and only, if the it's not a cut-off cone
+  // The tip - created only once and only, if it is not a cut-off cone
   bool tipExists = false;
   if (minZ * maxZ <= s_onSurfaceTolerance) {
     vertices.push_back(ctransform * Vector3(0., 0., 0.));
@@ -224,20 +224,20 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   }
   for (auto& z : coneSides) {
     // Remember the first vertex
-    size_t firstIv = vertices.size();
+    std::size_t firstIv = vertices.size();
     // Radius and z offset
     double r = std::abs(z) * bounds().tanAlpha();
     Vector3 zoffset(0., 0., z);
     for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-      int addon = (iseg == phiSegs.size() - 2 and not fullCone) ? 1 : 0;
+      int addon = (iseg == phiSegs.size() - 2 && !fullCone) ? 1 : 0;
       detail::VerticesHelper::createSegment(vertices, {r, r}, phiSegs[iseg],
                                             phiSegs[iseg + 1], lseg, addon,
                                             zoffset, ctransform);
     }
     // Create the faces
     if (tipExists) {
-      for (size_t iv = firstIv + 2; iv < vertices.size() + 1; ++iv) {
-        size_t one = 0, two = iv - 1, three = iv - 2;
+      for (std::size_t iv = firstIv + 2; iv < vertices.size() + 1; ++iv) {
+        std::size_t one = 0, two = iv - 1, three = iv - 2;
         if (z < 0.) {
           std::swap(two, three);
         }
@@ -306,7 +306,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
 
-  if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
+  if (bcheck && !isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection3D::Status::missed;
   }
 
@@ -315,7 +315,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
   Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
-  if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
+  if (bcheck && !isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection3D::Status::missed;
   }
 

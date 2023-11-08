@@ -84,14 +84,14 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
     time, phiInput, theta, p) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   CurvilinearTrackParameters params(pos4, dir, 1 / p, std::nullopt,
                                     ParticleHypothesis::pion0());
   checkParameters(params, phi, theta, p, 0_e, pos4, dir);
-  BOOST_CHECK(not params.covariance());
+  BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
   params = CurvilinearTrackParameters(pos4, dir, 1 / p, cov,
@@ -105,14 +105,14 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     x, y, z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   CurvilinearTrackParameters params(pos4, dir, q / p, std::nullopt,
                                     ParticleHypothesis::pionLike(std::abs(q)));
   checkParameters(params, phi, theta, p, q, pos4, dir);
-  BOOST_CHECK(not params.covariance());
+  BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
   params = CurvilinearTrackParameters(
@@ -126,7 +126,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsAny, x, y,
     z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
@@ -136,7 +136,7 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters params(pos4, dir, qOverP, std::nullopt,
                                     particleHypothesis);
   checkParameters(params, phi, theta, p, q, pos4, dir);
-  BOOST_CHECK(not params.covariance());
+  BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
   params =

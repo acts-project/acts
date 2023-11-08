@@ -67,7 +67,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   // No correction if the incidentAngle is small enough (not necessary ) or too
   // large (correction could be invalid). Fall back to nominal free to bound
   // transformation
-  if (absCosIncidenceAng < m_cosIncidentAngleMinCutoff or
+  if (absCosIncidenceAng < m_cosIncidentAngleMinCutoff ||
       absCosIncidenceAng > m_cosIncidentAngleMaxCutoff) {
     ACTS_VERBOSE("Incident angle: " << std::acos(absCosIncidenceAng)
                                     << " is out of range for correction");
@@ -75,7 +75,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   }
 
   // The number of sigma points
-  size_t sampleSize = 2 * eFreeSize + 1;
+  std::size_t sampleSize = 2 * eFreeSize + 1;
   // The sampled free parameters, the weight for measurement W_m and weight for
   // covariance, W_c
   std::vector<std::tuple<FreeVector, ActsScalar, ActsScalar>> sampledFreeParams;
@@ -135,7 +135,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   auto nominalRes =
       detail::transformFreeToBoundParameters(paramsNom, surface, geoContext);
   // Not successful, fall back to nominal free to bound transformation
-  if (not nominalRes.ok()) {
+  if (!nominalRes.ok()) {
     ACTS_WARNING(
         "Free to bound transformation for nominal free parameters failed.");
     return std::nullopt;
@@ -154,7 +154,8 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     SurfaceIntersection intersection =
         surface
             .intersect(geoContext, params.segment<3>(eFreePos0),
-                       navDir * params.segment<3>(eFreeDir0), false)
+                       navDir * params.segment<3>(eFreeDir0),
+                       BoundaryCheck(false))
             .closest();
     correctedFreeParams.segment<3>(eFreePos0) = intersection.position();
 
@@ -162,7 +163,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     auto result = detail::transformFreeToBoundParameters(correctedFreeParams,
                                                          surface, geoContext);
     // Not successful, fall back to nominal free to bound transformation
-    if (not result.ok()) {
+    if (!result.ok()) {
       ACTS_WARNING(
           "Free to bound transformation for sampled free parameters: \n"
           << correctedFreeParams << " failed.");

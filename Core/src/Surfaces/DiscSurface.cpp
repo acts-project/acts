@@ -151,7 +151,7 @@ const Acts::SurfaceBounds& Acts::DiscSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
@@ -173,7 +173,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
     }
     // These are convex shapes, use the helper method
     // For rings there's a sweet spot when this stops working
-    if (exactPolyhedron or toCenter or not fullDisc) {
+    if (exactPolyhedron || toCenter || !fullDisc) {
       // Transform them into the vertex frame
       wCenter *= 1. / vertices.size();
       if (addCentreFromConvexFace) {
@@ -309,20 +309,20 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != Intersection3D::Status::unreachable and
-      bcheck and m_bounds != nullptr) {
+  if (intersection.status() != Intersection3D::Status::unreachable && bcheck &&
+      m_bounds != nullptr) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
-    if (bcheck.type() == BoundaryCheck::Type::eAbsolute and
+    if (bcheck.type() == BoundaryCheck::Type::eAbsolute &&
         m_bounds->coversFullAzimuth()) {
       double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc0];
-      if (not m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
-                                           modifiedTolerance)) {
+      if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
+                                        modifiedTolerance)) {
         status = Intersection3D::Status::missed;
       }
-    } else if (not insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
+    } else if (!insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
       status = Intersection3D::Status::missed;
     }
   }

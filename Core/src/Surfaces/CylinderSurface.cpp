@@ -174,7 +174,7 @@ const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   auto ctrans = transform(gctx);
 
   // Prepare vertices and faces
@@ -246,7 +246,7 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
       return status;
     }
     const auto& cBounds = bounds();
-    if (cBounds.coversFullAzimuth() and
+    if (cBounds.coversFullAzimuth() &&
         bcheck.type() == BoundaryCheck::Type::eAbsolute) {
       // Project out the current Z value via local z axis
       // Built-in local to global for speed reasons

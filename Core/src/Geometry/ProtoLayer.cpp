@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 

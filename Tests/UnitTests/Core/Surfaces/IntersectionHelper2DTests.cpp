@@ -36,8 +36,8 @@ void basicChecks(bool circleCase = false) {
                                 rY, start, direction)
                           : detail::IntersectionHelper2D::intersectEllipse(
                                 rX, rY, start, direction);
-  BOOST_CHECK(not nosol[0]);
-  BOOST_CHECK(not nosol[1]);
+  BOOST_CHECK(!nosol[0]);
+  BOOST_CHECK(!nosol[1]);
 
   start = Vector2(4., -4.);
   auto twosol = circleCase ? detail::IntersectionHelper2D::intersectCircle(
@@ -58,7 +58,7 @@ void basicChecks(bool circleCase = false) {
 
   BOOST_CHECK(onesolY[0]);
   CHECK_CLOSE_ABS(onesolY[0].position().x(), 0., s_epsilon);
-  BOOST_CHECK(not onesolY[1]);
+  BOOST_CHECK(!onesolY[1]);
 
   start = Vector2(rX, -4);
   direction = Vector2(0., 1.);
@@ -70,7 +70,7 @@ void basicChecks(bool circleCase = false) {
 
   BOOST_CHECK(onesolX[0]);
   CHECK_CLOSE_ABS(onesolX[0].position().y(), 0., s_epsilon);
-  BOOST_CHECK(not onesolX[1]);
+  BOOST_CHECK(!onesolX[1]);
 }
 
 /// Unit test for creating Ellipse intersection
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(LineLineIntersection) {
   auto solution = detail::IntersectionHelper2D::intersectSegment(
       Vector2(5., 3.), Vector2(6., 4), start, dir.normalized());
 
-  BOOST_CHECK(not solution);
+  BOOST_CHECK(!solution);
 
   // Possible
   solution = detail::IntersectionHelper2D::intersectSegment(
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(LineLineIntersection) {
   solution = detail::IntersectionHelper2D::intersectSegment(
       Vector2(-1., -2.5), Vector2(3., 2.5), start, dir, true);
 
-  BOOST_CHECK(not solution);
+  BOOST_CHECK(!solution);
 }
 
 /// Unit test for creating Ellipse intersection

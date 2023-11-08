@@ -116,9 +116,9 @@ void addPropagation(Context& ctx) {
       propagatorImpl, randomNumberSvc, mode, sterileLogger, debugOutput,
       energyLoss, multipleScattering, recordMaterialInteractions, ntests,
       d0Sigma, z0Sigma, phiSigma, thetaSigma, qpSigma, tSigma, phiRange,
-      etaRange, ptRange, ptLoopers, maxStepSize, propagationStepCollection,
-      propagationMaterialCollection, covarianceTransport, covariances,
-      correlations);
+      etaRange, ptRange, particleHypothesis, ptLoopers, maxStepSize,
+      propagationStepCollection, propagationMaterialCollection,
+      covarianceTransport, covariances, correlations);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(

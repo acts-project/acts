@@ -69,8 +69,8 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
 }
 
 std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
-    const GeometryContext& gctx, const Experimental::Portal& portal,
-    std::size_t ip, const Experimental::DetectorVolume& volume,
+    const GeometryContext& gctx, const Experimental::Portal& portal, size_t ip,
+    const Experimental::DetectorVolume& volume,
     const OrientedSurfaces& orientedSurfaces,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Options& option) {
@@ -80,7 +80,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
   const auto& volumeLinks = portal.detectorVolumeUpdators();
 
   // First assumption for outside link (along direction)
-  std::size_t outside = 1u;
+  size_t outside = 1u;
 
   // Find out if you need to take the outside or inside volume
   // for planar surfaces that's easy
@@ -118,7 +118,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
   // in order to make sure the size is adjusted
   if (singleLink != nullptr) {
     // Single link can be written out
-    std::size_t vLink = findVolume(singleLink->dVolume, detectorVolumes);
+    size_t vLink = findVolume(singleLink->dVolume, detectorVolumes);
     auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *surfaceAdjusted,
                                                       surfaceOptions);
     DetrayJsonHelper::addVolumeLink(jPortal["mask"], vLink);
@@ -134,7 +134,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
       const auto& cast = multiLink1D->indexedUpdator.casts[0u];
       const auto& transform = multiLink1D->indexedUpdator.transform;
       const auto& volumes = multiLink1D->indexedUpdator.extractor.dVolumes;
-      if (not transform.isApprox(Transform3::Identity())) {
+      if (!transform.isApprox(Transform3::Identity())) {
         std::runtime_error(
             "PortalJsonConverter: transformed boundary link implementation not "
             "(yet) supported");
@@ -150,12 +150,12 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
       // Pick the surface dimension - via poly
       std::array<ActsScalar, 2u> clipRange = {0., 0.};
       std::vector<ActsScalar> boundValues = surfaceAdjusted->bounds().values();
-      if (surfaceType == Surface::SurfaceType::Cylinder and cast == binZ) {
+      if (surfaceType == Surface::SurfaceType::Cylinder && cast == binZ) {
         ActsScalar zPosition = surfaceAdjusted->center(gctx).z();
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
-      } else if (surfaceType == Surface::SurfaceType::Disc and cast == binR) {
+      } else if (surfaceType == Surface::SurfaceType::Disc && cast == binR) {
         clipRange = {boundValues[RadialBounds::BoundValues::eMinR],
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {

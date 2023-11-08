@@ -53,7 +53,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
     const Logger& logger = getDummyLogger()) {
   // Check the number of provided space points
-  size_t numSP = std::distance(spBegin, spEnd);
+  std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP < 3) {
     ACTS_ERROR("At least three space points are required.")
     return std::nullopt;
@@ -158,7 +158,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger(),
     ActsScalar mass = 139.57018 * UnitConstants::MeV) {
   // Check the number of provided space points
-  size_t numSP = std::distance(spBegin, spEnd);
+  std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP != 3) {
     ACTS_ERROR("There should be exactly three space points provided.")
     return std::nullopt;
@@ -182,7 +182,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
                                               Vector3::Zero()};
   // The first, second and third space point are assumed to be bottom, middle
   // and top space point, respectively
-  for (size_t isp = 0; isp < 3; ++isp) {
+  for (std::size_t isp = 0; isp < 3; ++isp) {
     spacepoint_iterator_t it = std::next(spBegin, isp);
     if (*it == nullptr) {
       ACTS_ERROR("Empty space point found. This should not happen.")
@@ -255,7 +255,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Transform the bottom space point to local coordinates of the provided
   // surface
   auto lpResult = surface.globalToLocal(gctx, spGlobalPositions[0], direction);
-  if (not lpResult.ok()) {
+  if (!lpResult.ok()) {
     ACTS_ERROR(
         "Global to local transformation did not succeed. Please make sure the "
         "bottom space point lies on the provided surface.");
