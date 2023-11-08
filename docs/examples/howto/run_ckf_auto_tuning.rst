@@ -68,7 +68,7 @@ This creates a new optuna study for a given number of trials defined within the 
 		direction='maximize',
 		load_if_exists=True)
 
-The objective function defines the list of parameters to tune along with their range. It suggests a parameter configuration using ``trial.suggest_float`` or ``trial.suggest_int`` function of optuna and runs CKF for this parameter configuration. The output of CKF is read from the performance file named ``performanc_ckf.root`` and a score function is constructed within the objective function. 
+The objective function defines the list of parameters to tune along with their range. It suggests a parameter configuration using ``trial.suggest_float`` or ``trial.suggest_int`` function of optuna and runs CKF for this parameter configuration. The output of CKF is read from the performance file named ``performance_ckf.root`` and a score function is constructed within the objective function.
 
 The objective function and the number of trials are passed to optuna optimize function:
 ``study.optimize(objective, n_trials=100)``. The best parameter configuration after all the trials is read from ``study.best_trial.params.items()``.

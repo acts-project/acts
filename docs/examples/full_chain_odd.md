@@ -36,7 +36,8 @@ All simulation and reconstruction pipelines in Acts begin with a `Sequencer`. It
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 ```
 
-Our first simulation step is the particle gun. It spawns particles and their initial parameters, like position and momentum, inside our detecor.
+Our first simulation step is the particle gun.
+It spawns particles and their initial parameters, like position and momentum, inside our detector.
 
 In our simple example we generate a single muon with random charge (i.e. muon or anti-muon) with 1-10 GeV with uniform pseudorapidity from -3 to 3.
 
@@ -99,7 +100,8 @@ addSeeding(
 )
 ```
 
-The Combinatorial Kalman Filter (CKF) will use the seeds to propagate the trajectory forward and backward in time with the idea to find more measurements along the way. It combines (i.e. smoothes) these measurements and outputs reconstructed tracks which include smoothed track parameters for each measurement.
+The Combinatorial Kalman Filter (CKF) will use the seeds to propagate the trajectory forward and backward in time with the idea to find more measurements along the way.
+It combines (i.e. smooths) these measurements and outputs reconstructed tracks which include smoothed track parameters for each measurement.
 
 ```python
 addCKFTracks(

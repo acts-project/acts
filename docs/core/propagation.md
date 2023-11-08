@@ -88,7 +88,7 @@ The {class}`Acts::Navigator` by default does a straight-line extrapolation to re
 
 ## Steppers
 
-Acts also provides a variety of stepper implementations. Since these in general can work very differently internally, the state itself is not the main interface to the steppers. Instead all steppers provide a common API, to that we can pass instances of the stepper state. This allows a generic and template-based design even for very different steppers:
+Acts also provides a variety of stepper implementations. Since these in general can work very differently internally, the state itself is not the main interface to the steppers. Instead, all steppers provide a common API, to that we can pass instances of the stepper state. This allows a generic and template-based design even for very different steppers:
 
 ```c++
 template<typename propagator_state_t, typename stepper_t>

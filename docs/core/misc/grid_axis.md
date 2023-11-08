@@ -42,7 +42,8 @@ There are three options:
 
 ## Grid creation
 
-The types of the axes have to be known at compile-time, since they are provided to the `Grid` as template parameters. Thus the number of dimensions $N$ of the `Grid` is also fixed at compile-time.
+The types of the axes have to be known at compile-time, since they are provided to the `Grid` as template parameters.
+Thus, the number of dimensions $N$ of the `Grid` is also fixed at compile-time.
 The axes can be any combination of the aforementioned variations.
 
 ```cpp

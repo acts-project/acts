@@ -5,7 +5,7 @@ It is part of the pattern recognition/track  reconstruction/tracking.
 We can run the track fitting algorithms, after we allocated all hits to single tracks with the help of a track finding algorithm.
 It is not necessary, that all points of a track are present.
 
-Currently we have implementations for three different fitters:
+Currently, we have implementations for three different fitters:
 * Kalman Filter
 * GSF
 * Global Chi-Square Fitter (GX2F) [wip]

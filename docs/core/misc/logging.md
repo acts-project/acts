@@ -53,7 +53,7 @@ Code example illustrating the usage:
 void myFunction() {
   // open the logfile
   std::ofstream logfile("log.txt");
-  // setup a logger instance for >= INFO messages, streaming into the log file
+  // set up a logger instance for >= INFO messages, streaming into the log file
   std::unique_ptr<const Acts::Logger> logger
       = Acts::getDefaultLogger("MyLogger", Acts::Logging::INFO, &logfile);
   // make sure the Acts debug macros can work with your logger
@@ -110,7 +110,7 @@ Since Acts makes extensive use of {func}`Acts::getDefaultLogger` to provide
 sufficient information for debugging, you might want to provide a modified
 implementation of this function (using your output filter and printing
 policies) to also pipe this output to your framework. You can use the following
-approach using the possibility to inject custom code by pre-loading shared
+approach using the possibility to inject custom code by preloading shared
 libraries with `LD_PRELOAD`. You need to provide an appropriate implementation
 for a function of the following signature into a separate source file and
 compile it in a shared library

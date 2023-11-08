@@ -98,7 +98,7 @@ changed in Acts.
 The DD4hepPlugin is only build on demand. The DD4hepPlugin depends on the
 TGeoPlugin therefore both plugins need to be installed. During the cmake
 configuration the flags `ACTS_BUILD_PLUGIN_DD4HEP=on` and
-`ACTS_BUILD_PLUGIN_TGEO=on` need to be set. In addition ROOT and DD4hep
+`ACTS_BUILD_PLUGIN_TGEO=on` need to be set. In addition, ROOT and DD4hep
 installations need to be available to cmake.
 
 ## Prerequisites
@@ -162,7 +162,7 @@ following conditions need to be met:
     ```
 
 - The tracking geometry needs to be built from bottom to top to ensure
-  navigation. Therefore the different hierarchies need to be sorted ascending.
+  navigation. Therefore, the different hierarchies need to be sorted ascending.
   Per default the sub detectors are sorted by the id of their `DetElement`.
   In case another sorting needs to be applied, the users can provide their own
   function.
@@ -193,7 +193,7 @@ extension of the contained layers. The tolerance parameters `layerEnvelopeR`
 and `layerEnvelopeZ` need to be set in the
 {func}`Acts::convertDD4hepDetector` function.
 
-Furthermore parameters can be handed over for material mapping or the axes
+Furthermore, parameters can be handed over for material mapping or the axes
 orientation of modules.
 
 Summing up the `DetElement` tree in DD4hep should have the following
@@ -203,7 +203,7 @@ structure:
 
 It is also possible to translate a very simple detector geometry, which just
 consists of cylindrical (for a barrel) or disc (for endcaps) layers which either
-have material, or, are declared sensitive in dd4hep themselves without
+have material, or, are declared sensitive in DD4hep themselves without
 containing any detector modules.
 
 (acts-params)=

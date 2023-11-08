@@ -1,7 +1,7 @@
 # Machine leaning algorithms
 
-Acts allows you to replace some of the components of the tracking chain by machine learning solutions. For now a replacement to the ambiguity solver is available, but when others are implemented they will be explained here.  
-
+Acts allows you to replace some components of the tracking chain by machine learning solutions.
+For now a replacement to the ambiguity solver is available, but when others are implemented they will be explained here.
 
 ## Onnx plugin
 
