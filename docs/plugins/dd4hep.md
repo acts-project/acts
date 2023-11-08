@@ -111,8 +111,8 @@ following conditions need to be met:
   into
   
   1. {barrel}
-  1. {barrel + 2 endcaps}
-  1. {2 endcaps} - in case there is no barrel at this stage (e.g. forward end caps)
+  2. {barrel + 2 endcaps}
+  3. {2 endcaps} - in case there is no barrel at this stage (e.g. forward end caps)
 
   These subdetectors need to be flagged using the correct `DetType`.
 
