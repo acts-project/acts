@@ -158,7 +158,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   ACTS_DEBUG("All vertices in test case:");
   int cv = 0;
   for (auto& vtx : vtxList) {
-    ACTS_DEBUG("\t" << &vtx - vtxList.begin() + 1 << ". vertex ptr: " << &vtx);
+    cv++;
+    ACTS_DEBUG("\t" << cv << ". vertex ptr: " << &vtx);
     vtxPtrList.push_back(&vtx);
   }
 
