@@ -65,6 +65,7 @@ def run() -> None:
         "Acts::FreeVector",
         "Acts::FreeMatrix",
         "Acts::SurfaceVector",
+        "Acts::RegularSurface",
         "Acts::Intersection3D",
         "Acts::OrientedSurface",
         "Acts::OrientedSurfaces",
