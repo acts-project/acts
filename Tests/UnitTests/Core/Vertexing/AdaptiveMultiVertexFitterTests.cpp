@@ -273,11 +273,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   BOOST_CHECK(res1.ok());
 
   ACTS_DEBUG("Vertex positions after fit of vertex 1 and 2:");
-for (size_t vtxIter = 0; vtxIter < 3; vtxIter++) {
-    ACTS_DEBUG("Vtx " << vtxIter + 1 << ", seed position:\n " << seedListCopy.at(vtxIter).fullPosition()
-                                          << "\nFitted position:\n "
-                                          << vtxList.at(vtxIter).fullPosition());
-}
+  for (size_t vtxIter = 0; vtxIter < 3; vtxIter++) {
+    ACTS_DEBUG("Vtx " << vtxIter + 1 << ", seed position:\n "
+                      << seedListCopy.at(vtxIter).fullPosition()
+                      << "\nFitted position:\n "
+                      << vtxList.at(vtxIter).fullPosition());
+  }
 
   // After fit of first vertex, only first and second vertex seed
   // should have been modified while third vertex should remain untouched
