@@ -19,6 +19,7 @@ enum class GsfError {
   NoMeasurementStatesCreatedForward,
   NoMeasurementStatesCreatedBackward,
   NoMeasurementStatesCreatedFinal,
+  ModeFindingFailed,
 };
 
 std::error_code make_error_code(GsfError e);

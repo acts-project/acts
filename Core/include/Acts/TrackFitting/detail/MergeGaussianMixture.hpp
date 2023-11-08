@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/Utilities/Identity.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -220,6 +221,7 @@ auto computeMixtureMode(const components_t components,
         std::declval<components_t>(), std::declval<projector_t>()));
     return ParsType::RowsAtCompileTime;
   }();
+  using R = Acts::Result<ActsVector<D>>;
 
   // Lambda used to correct cyclic coordinates in the computation
   auto cyclicDiff = [](auto d, auto &diff, const auto &a, const auto &b) {
@@ -331,7 +333,11 @@ auto computeMixtureMode(const components_t components,
     }
   }
 
-  return mode;
+  if (!mode) {
+    return R::failure(GsfError::ModeFindingFailed);
+  } else {
+    return R::success(*mode);
+  }
 }
 
 }  // namespace detail
@@ -354,7 +360,8 @@ template <typename mixture_t, typename projector_t = Acts::Identity>
 auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
                           ComponentMergeMethod method,
                           projector_t &&projector = projector_t{}) {
-  using R = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
+  using T = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
+  using R = Acts::Result<T>;
 
   return detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
     BoundVector parameters = BoundVector::Zero();
@@ -363,9 +370,13 @@ auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
         parameters = detail::computeMixtureMean(mixture, projector, desc);
       } break;
       case ComponentMergeMethod::eMode: {
-        // TODO handle std::optional correctly
-        parameters =
-            detail::computeMixtureMode(mixture, projector, desc).value();
+        Acts::Result<BoundVector> modeRes =
+            detail::computeMixtureMode(mixture, projector, desc);
+        if (!modeRes.ok()) {
+          return R{modeRes.error()};
+        } else {
+          parameters = *modeRes;
+        }
       } break;
       case ComponentMergeMethod::eMaxWeight: {
         const auto maxWeightIt = std::max_element(
@@ -381,7 +392,7 @@ auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
         computeMixtureCovariance(mixture, parameters, projector, desc);
     // MARK: fpeMaskEnd(FLTUND)
 
-    return R{parameters, covariance};
+    return R{T{parameters, covariance}};
   });
 }
 
