@@ -44,7 +44,7 @@ struct NavigationState {
     const Portal* portal = nullptr;
     /// The boundary check used for the candidate, boundary checks
     /// can differ for sensitive surfaces and portals
-    BoundaryCheck boundaryCheck = true;
+    BoundaryCheck boundaryCheck = BoundaryCheck(true);
   };
 
   /// Surface candidate vector alias, this allows to use e.g. boost_small vector
@@ -83,7 +83,7 @@ struct NavigationState {
   SurfaceCandidates::const_iterator surfaceCandidate = surfaceCandidates.cend();
 
   /// Boundary directives for surfaces
-  BoundaryCheck surfaceBoundaryCheck = true;
+  BoundaryCheck surfaceBoundaryCheck = BoundaryCheck(true);
 
   /// An overstep tolerance
   ActsScalar overstepTolerance = -0.1;

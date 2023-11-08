@@ -42,16 +42,16 @@ Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::operator*=(
 const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
     const Vector2& lp) const {
   // the first bin
-  size_t ibin0 = m_binUtility.bin(lp, 0);
-  size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(lp, 1) : 0;
+  std::size_t ibin0 = m_binUtility.bin(lp, 0);
+  std::size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(lp, 1) : 0;
   return m_fullMaterial[ibin1][ibin0];
 }
 
 const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
     const Acts::Vector3& gp) const {
   // the first bin
-  size_t ibin0 = m_binUtility.bin(gp, 0);
-  size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(gp, 1) : 0;
+  std::size_t ibin0 = m_binUtility.bin(gp, 0);
+  std::size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(gp, 1) : 0;
   return m_fullMaterial[ibin1][ibin0];
 }
 

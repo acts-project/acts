@@ -188,7 +188,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     Acts::GeometryIdentifier geoId = extractGeometryId(hit);
 
     // find associated truth/ simulation hits
-    std::vector<std::size_t> simHitIndices;
+    std::vector<size_t> simHitIndices;
     {
       auto range = makeRange(std::equal_range(truths.begin(), truths.end(),
                                               hit.hit_id, CompareHitId{}));

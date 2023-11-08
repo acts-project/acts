@@ -26,6 +26,7 @@ namespace Acts {
 
 /// @class DiamondBounds
 ///
+/// @image html DiamondBounds.svg
 /// Bounds for a double trapezoidal ("diamond"), planar Surface.
 class DiamondBounds : public PlanarBounds {
  public:
