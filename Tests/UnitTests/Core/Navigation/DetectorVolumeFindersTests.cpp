@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(RootVolumeFinder) {
 BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
   nState.currentDetector = det012.get();
 
-  using SingleIndex = std::size_t;
+  using SingleIndex = size_t;
 
   using Axis = Acts::detail::Axis<Acts::detail::AxisType::Variable,
                                   Acts::detail::AxisBoundaryType::Bound>;

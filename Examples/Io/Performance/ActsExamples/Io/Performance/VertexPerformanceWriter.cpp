@@ -400,7 +400,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         // since we expect trackParameters and associatedTruthParticles to
         // align.
         bool foundMatchingParams = false;
-        for (std::size_t i = 0; i < trackParameters.size(); ++i) {
+        for (size_t i = 0; i < trackParameters.size(); ++i) {
           const auto& params = trackParameters[i].parameters();
 
           if (origTrack.parameters() == params) {
@@ -489,7 +489,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       auto& innerPullThetaFitted = m_pullThetaFitted.emplace_back();
       auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
 
-      for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
+      for (size_t j = 0; j < associatedTruthParticles.size(); ++j) {
         const auto& particle = associatedTruthParticles[j];
         int priVtxId = particle.particleId().vertexPrimary();
         int secVtxId = particle.particleId().vertexSecondary();

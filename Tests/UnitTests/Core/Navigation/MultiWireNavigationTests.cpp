@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
 
   // Set the number of surfaces along each dimension of the multi wire structure
   // aligned along z axis
-  std::size_t nSurfacesY = 4;
-  std::size_t nSurfacesX = 15;
+  size_t nSurfacesY = 4;
+  size_t nSurfacesX = 15;
 
   double radius = 15.;
   double halfZ = 250.;
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   Vector3 pos = ipos;
 
   // Generate the surfaces
-  for (std::size_t i = 0; i < nSurfacesY; i++) {
-    for (std::size_t j = 0; j < nSurfacesX; j++) {
+  for (size_t i = 0; i < nSurfacesY; i++) {
+    for (size_t j = 0; j < nSurfacesX; j++) {
       pos.x() = ipos.x() + 2 * j * radius;
 
       auto surface = Surface::makeShared<StrawSurface>(

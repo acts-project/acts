@@ -65,15 +65,15 @@ enum class CombinatorialKalmanFilterTargetSurfaceStrategy {
 /// @todo: add other useful info, e.g. chi2
 struct CombinatorialKalmanFilterTipState {
   // Number of passed sensitive surfaces
-  size_t nSensitiveSurfaces = 0;
+  std::size_t nSensitiveSurfaces = 0;
   // Number of track states
-  size_t nStates = 0;
+  std::size_t nStates = 0;
   // Number of (non-outlier) measurements
-  size_t nMeasurements = 0;
+  std::size_t nMeasurements = 0;
   // Number of outliers
-  size_t nOutliers = 0;
+  std::size_t nOutliers = 0;
   // Number of holes
-  size_t nHoles = 0;
+  std::size_t nHoles = 0;
 };
 
 /// Extension struct which holds the delegates to customize the CKF behavior
@@ -254,7 +254,8 @@ struct CombinatorialKalmanFilterResult {
 
   /// The indices of track states and corresponding source links on different
   /// surfaces
-  std::unordered_map<const Surface*, std::unordered_map<size_t, size_t>>
+  std::unordered_map<const Surface*,
+                     std::unordered_map<std::size_t, std::size_t>>
       sourcelinkTips;
 
   /// Indicator if filtering has been done
@@ -669,7 +670,7 @@ class CombinatorialKalmanFilter {
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
       // Initialize the number of branches on current surface
-      size_t nBranchesOnSurface = 0;
+      std::size_t nBranchesOnSurface = 0;
 
       // Count the number of source links on the surface
       auto [slBegin, slEnd] = m_sourcelinkAccessor(*surface);
@@ -695,7 +696,7 @@ class CombinatorialKalmanFilter {
 
         // Retrieve the previous tip and its state
         // The states created on this surface will have the common previous tip
-        size_t prevTip = SIZE_MAX;
+        std::size_t prevTip = SIZE_MAX;
         TipState prevTipState;
         if (!result.activeTips.empty()) {
           prevTip = result.activeTips.back().first;
@@ -763,7 +764,7 @@ class CombinatorialKalmanFilter {
         nBranchesOnSurface = 1;
 
         // Retrieve the previous tip and its state
-        size_t prevTip = SIZE_MAX;
+        std::size_t prevTip = SIZE_MAX;
         TipState tipState;
         if (!result.activeTips.empty()) {
           prevTip = result.activeTips.back().first;
@@ -802,7 +803,7 @@ class CombinatorialKalmanFilter {
 
           // Increment of number of processed states
           tipState.nStates++;
-          size_t currentTip = SIZE_MAX;
+          std::size_t currentTip = SIZE_MAX;
           if (isSensitive) {
             // Increment of number of holes
             tipState.nHoles++;
@@ -868,7 +869,7 @@ class CombinatorialKalmanFilter {
     void createSourceLinkTrackStates(const Acts::GeometryContext& gctx,
                                      result_type& result,
                                      const BoundState& boundState,
-                                     size_t prevTip,
+                                     std::size_t prevTip,
                                      source_link_iterator_t slBegin,
                                      source_link_iterator_t slEnd) const {
       const auto& [boundParams, jacobian, pathLength] = boundState;
@@ -903,7 +904,7 @@ class CombinatorialKalmanFilter {
             "Create temp track state with mask: " << std::bitset<
                 sizeof(std::underlying_type_t<TrackStatePropMask>) * 8>(
                 static_cast<std::underlying_type_t<TrackStatePropMask>>(mask)));
-        size_t tsi = result.stateBuffer->addTrackState(mask, prevTip);
+        std::size_t tsi = result.stateBuffer->addTrackState(mask, prevTip);
         // CAREFUL! This trackstate has a previous index that is not in this
         // MultiTrajectory Visiting brackwards from this track state will
         // fail!
@@ -949,7 +950,7 @@ class CombinatorialKalmanFilter {
         typename std::vector<typename traj_t::TrackStateProxy>::const_iterator
             end,
         result_type& result, bool isOutlier, const TipState& prevTipState,
-        size_t& nBranchesOnSurface) const {
+        std::size_t& nBranchesOnSurface) const {
       using PM = TrackStatePropMask;
 
       std::optional<typename traj_t::TrackStateProxy> firstTrackState{
@@ -1003,7 +1004,7 @@ class CombinatorialKalmanFilter {
         // Inherit the tip state from the previous and will be updated
         // later
         TipState tipState = prevTipState;
-        size_t currentTip = trackState.index();
+        std::size_t currentTip = trackState.index();
 
         // Increment of number of processedState and passed sensitive surfaces
         tipState.nSensitiveSurfaces++;
@@ -1058,10 +1059,10 @@ class CombinatorialKalmanFilter {
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
-    size_t addNonSourcelinkState(const TrackStatePropMask& stateMask,
-                                 const BoundState& boundState,
-                                 result_type& result, bool isSensitive,
-                                 size_t prevTip) const {
+    std::size_t addNonSourcelinkState(const TrackStatePropMask& stateMask,
+                                      const BoundState& boundState,
+                                      result_type& result, bool isSensitive,
+                                      std::size_t prevTip) const {
       // Add a track state
       auto currentTip = result.fittedStates->addTrackState(stateMask, prevTip);
       ACTS_VERBOSE(
@@ -1188,9 +1189,9 @@ class CombinatorialKalmanFilter {
 
       // Get the indices of the first states (can be either a measurement or
       // material);
-      size_t firstStateIndex = lastMeasurementIndex;
+      std::size_t firstStateIndex = lastMeasurementIndex;
       // Count track states to be smoothed
-      size_t nStates = 0;
+      std::size_t nStates = 0;
       result.fittedStates->applyBackwards(lastMeasurementIndex, [&](auto st) {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);

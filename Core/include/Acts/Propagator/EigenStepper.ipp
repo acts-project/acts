@@ -190,7 +190,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   const double initialH =
       state.stepping.stepSize.value() * state.options.direction;
   double h = initialH;
-  size_t nStepTrials = 0;
+  std::size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (true) {

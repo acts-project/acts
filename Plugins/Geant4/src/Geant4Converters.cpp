@@ -153,7 +153,7 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
       static_cast<ActsScalar>(g4Box.GetZHalfLength())};
 
   auto minAt = std::min_element(hG4XYZ.begin(), hG4XYZ.end());
-  std::size_t minPos = std::distance(hG4XYZ.begin(), minAt);
+  size_t minPos = std::distance(hG4XYZ.begin(), minAt);
   ActsScalar thickness = 2. * hG4XYZ[minPos];
 
   std::array<int, 2u> rAxes = {};
@@ -191,7 +191,7 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
                                   hlZ};
 
   auto minAt = std::min_element(dXYZ.begin(), dXYZ.end());
-  std::size_t minPos = std::distance(dXYZ.begin(), minAt);
+  size_t minPos = std::distance(dXYZ.begin(), minAt);
   ActsScalar thickness = 2. * dXYZ[minPos];
 
   ActsScalar halfLengthXminY = 0.;

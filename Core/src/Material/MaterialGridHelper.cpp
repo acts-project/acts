@@ -21,8 +21,8 @@
 Acts::Grid2D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
                               Acts::MaterialGridAxisData gridAxis2) {
   // get the number of bins
-  size_t nBinsAxis1 = std::get<2>(gridAxis1);
-  size_t nBinsAxis2 = std::get<2>(gridAxis2);
+  std::size_t nBinsAxis1 = std::get<2>(gridAxis1);
+  std::size_t nBinsAxis2 = std::get<2>(gridAxis2);
 
   // get the minimum and maximum
   double minAxis1 = std::get<0>(gridAxis1);
@@ -49,9 +49,9 @@ Acts::Grid3D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
                               Acts::MaterialGridAxisData gridAxis2,
                               Acts::MaterialGridAxisData gridAxis3) {
   // get the number of bins
-  size_t nBinsAxis1 = std::get<2>(gridAxis1);
-  size_t nBinsAxis2 = std::get<2>(gridAxis2);
-  size_t nBinsAxis3 = std::get<2>(gridAxis3);
+  std::size_t nBinsAxis1 = std::get<2>(gridAxis1);
+  std::size_t nBinsAxis2 = std::get<2>(gridAxis2);
+  std::size_t nBinsAxis3 = std::get<2>(gridAxis3);
 
   // get the minimum and maximum
   double minAxis1 = std::get<0>(gridAxis1);
@@ -64,11 +64,11 @@ Acts::Grid3D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
   // to
   // left boundary)
   double stepAxis1 =
-      std::fabs(maxAxis1 - minAxis1) / std::max(nBinsAxis1 - 1, size_t(1));
+      std::fabs(maxAxis1 - minAxis1) / std::max(nBinsAxis1 - 1, std::size_t(1));
   double stepAxis2 =
-      std::fabs(maxAxis2 - minAxis2) / std::max(nBinsAxis2 - 1, size_t(1));
+      std::fabs(maxAxis2 - minAxis2) / std::max(nBinsAxis2 - 1, std::size_t(1));
   double stepAxis3 =
-      std::fabs(maxAxis3 - minAxis3) / std::max(nBinsAxis3 - 1, size_t(1));
+      std::fabs(maxAxis3 - minAxis3) / std::max(nBinsAxis3 - 1, std::size_t(1));
   maxAxis1 += stepAxis1;
   maxAxis2 += stepAxis2;
   maxAxis3 += stepAxis3;
@@ -137,7 +137,7 @@ Acts::Grid2D Acts::createGrid2D(
   bool isCartesian = false;
   bool isCylindrical = false;
 
-  for (size_t b = 0; b < bu.size(); b++) {
+  for (std::size_t b = 0; b < bu.size(); b++) {
     if (bu[b].binvalue == Acts::binX || bu[b].binvalue == Acts::binY) {
       isCartesian = true;
     }
@@ -175,7 +175,7 @@ Acts::Grid3D Acts::createGrid3D(
   bool isCartesian = false;
   bool isCylindrical = false;
 
-  for (size_t b = 0; b < bu.size(); b++) {
+  for (std::size_t b = 0; b < bu.size(); b++) {
     if (bu[b].binvalue == Acts::binX || bu[b].binvalue == Acts::binY) {
       isCartesian = true;
     }
@@ -221,7 +221,7 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(Acts::Grid2D& grid) {
 
   // Fill the material Grid by averaging the material in the 2D grid
   Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
-  for (size_t index = 0; index < grid.size(); index++) {
+  for (std::size_t index = 0; index < grid.size(); index++) {
     mGrid.at(index) = grid.at(index).average().parameters();
   }
 
@@ -241,7 +241,7 @@ Acts::MaterialGrid3D Acts::mapMaterialPoints(Acts::Grid3D& grid) {
 
   // Fill the material Grid by averaging the material in the 3D grid
   Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
-  for (size_t index = 0; index < grid.size(); index++) {
+  for (std::size_t index = 0; index < grid.size(); index++) {
     mGrid.at(index) = grid.at(index).average().parameters();
   }
   return mGrid;
