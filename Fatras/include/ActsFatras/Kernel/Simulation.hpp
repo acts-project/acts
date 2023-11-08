@@ -100,7 +100,7 @@ struct SingleParticleSimulation {
     if (particle.hasReferenceSurface()) {
       auto result = propagator.propagate(
           particle.boundParameters(geoCtx).value(), options);
-      if (not result.ok()) {
+      if (!result.ok()) {
         return result.error();
       }
       auto &value = result.value().template get<Result>();
@@ -109,7 +109,7 @@ struct SingleParticleSimulation {
 
     auto result =
         propagator.propagate(particle.curvilinearParameters(), options);
-    if (not result.ok()) {
+    if (!result.ok()) {
       return result.error();
     }
     auto &value = result.value().template get<Result>();
@@ -196,7 +196,7 @@ struct Simulation {
       output_particles_t &simulatedParticlesInitial,
       output_particles_t &simulatedParticlesFinal, hits_t &hits) const {
     assert(
-        (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) and
+        (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) &&
         "Inconsistent initial sizes of the simulated particle containers");
 
     using SingleParticleSimulationResult = Acts::Result<SimulationResult>;
@@ -205,11 +205,11 @@ struct Simulation {
 
     for (const Particle &inputParticle : inputParticles) {
       // only consider simulatable particles
-      if (not selectParticle(inputParticle)) {
+      if (!selectParticle(inputParticle)) {
         continue;
       }
       // required to allow correct particle id numbering for secondaries later
-      if ((inputParticle.particleId().generation() != 0u) or
+      if ((inputParticle.particleId().generation() != 0u) ||
           (inputParticle.particleId().subParticle() != 0u)) {
         return detail::SimulationError::eInvalidInputParticleId;
       }
@@ -238,7 +238,7 @@ struct Simulation {
           result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
         }
 
-        if (not result.ok()) {
+        if (!result.ok()) {
           // remove particle from output container since it was not simulated.
           simulatedParticlesInitial.erase(
               std::next(simulatedParticlesInitial.begin(), iinitial));
@@ -310,7 +310,7 @@ struct Simulation {
   ///
   template <typename particles_t>
   static void renumberTailParticleIds(particles_t &particles,
-                                      std::size_t lastValid) {
+                                      size_t lastValid) {
     // iterate over adjacent pairs; potentially modify the second element.
     // assume e.g. a primary particle 2 with generation=subparticle=0 that
     // generates two secondaries during simulation. we have the following

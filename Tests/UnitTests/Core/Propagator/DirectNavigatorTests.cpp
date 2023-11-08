@@ -136,7 +136,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   std::cout << " - the standard navigator yielded "
             << cSurfaces.collected.size() << " collected surfaces" << std::endl;
 
-  if (not referenceTiming) {
+  if (!referenceTiming) {
     // Create the surface sequence
     std::vector<const Surface*> surfaceSequence;
     surfaceSequence.reserve(cSurfaces.collected.size());

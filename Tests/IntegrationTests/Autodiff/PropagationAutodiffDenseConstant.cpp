@@ -55,7 +55,7 @@ inline std::shared_ptr<const Acts::TrackingGeometry> makeDetector() {
 
   // avoid rebuilding the tracking geometry for every propagator
   static std::shared_ptr<const Acts::TrackingGeometry> detector;
-  if (not detector) {
+  if (!detector) {
     CuboidVolumeBuilder::VolumeConfig vConf;
     vConf.position = {0., 0., 0.};
     vConf.length = {4_m, 4_m, 4_m};

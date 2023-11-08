@@ -27,11 +27,11 @@ template <class T, class Tuple>
 struct TupleIndexOf;
 template <class T, class... Types>
 struct TupleIndexOf<T, std::tuple<T, Types...>> {
-  static constexpr std::size_t value = 0u;
+  static constexpr size_t value = 0u;
 };
 template <class T, class U, class... Types>
 struct TupleIndexOf<T, std::tuple<U, Types...>> {
-  static constexpr std::size_t value =
+  static constexpr size_t value =
       1u + TupleIndexOf<T, std::tuple<Types...>>::value;
 };
 
@@ -102,7 +102,7 @@ class IsPointLikeProcess {
 
 template <typename process_t>
 struct IsContinuousProcess {
-  static constexpr bool value = not IsPointLikeProcess<process_t>::value;
+  static constexpr bool value = !IsPointLikeProcess<process_t>::value;
 };
 
 template <typename processes_t>
@@ -271,13 +271,13 @@ class InteractionList {
   // for the `runContinuous` call, we need to iterate over all available
   // processes and apply the ones that implement the continuous process
   // interface. this is done using an index-based compile-time recursive call.
-  template <typename generator_t, std::size_t kI0, std::size_t... kIs>
+  template <typename generator_t, size_t kI0, size_t... kIs>
   bool runContinuousImpl(generator_t& rng, const Acts::MaterialSlab& slab,
                          Particle& particle, std::vector<Particle>& generated,
                          std::index_sequence<kI0, kIs...> /*indices*/) const {
     const auto& process = std::get<kI0>(m_processes);
     // only call process if it is not masked
-    if (not m_mask[kI0] and process(rng, slab, particle, generated)) {
+    if (!m_mask[kI0] && process(rng, slab, particle, generated)) {
       // exit early in case the process signals an abort
       return true;
     }
@@ -296,12 +296,12 @@ class InteractionList {
   // for the `armPointLike` call, we need to iterate over all available
   // processes and select the ones that generate the smallest limits. this is
   // done using an index-based compile-time recursive call.
-  template <typename generator_t, std::size_t kI0, std::size_t... kIs>
+  template <typename generator_t, size_t kI0, size_t... kIs>
   void armPointLikeImpl(generator_t& rng, const Particle& particle,
                         Selection& selection,
                         std::index_sequence<kI0, kIs...> /*indices*/) const {
     // only arm the process if it is not masked
-    if (not m_mask[kI0]) {
+    if (!m_mask[kI0]) {
       auto [x0Limit, l0Limit] =
           std::get<kI0>(m_processes).generatePathLimits(rng, particle);
       if (x0Limit < selection.x0Limit) {

@@ -57,7 +57,7 @@ class VectorMultiTrajectoryBase {
 
     hist_t hist;
 
-    void toStream(std::ostream& os, size_t n = 1);
+    void toStream(std::ostream& os, std::size_t n = 1);
   };
 
   template <typename T>
@@ -98,8 +98,8 @@ class VectorMultiTrajectoryBase {
       h("index", isMeas, weight(sizeof(IndexData)));
 
       using scalar = typename decltype(ts.predicted())::Scalar;
-      size_t par_size = eBoundSize * sizeof(scalar);
-      size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
+      std::size_t par_size = eBoundSize * sizeof(scalar);
+      std::size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
 
       const IndexData& index = m_index[i];
       if (ts.hasPredicted() &&
@@ -124,8 +124,8 @@ class VectorMultiTrajectoryBase {
         weight(sizeof(decltype(m_measCovOffset)::value_type)));
       if (ts.hasCalibrated() &&
           ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Calibrated)) {
-        size_t meas_size = ts.calibratedSize() * sizeof(scalar);
-        size_t meas_cov_size =
+        std::size_t meas_size = ts.calibratedSize() * sizeof(scalar);
+        std::size_t meas_cov_size =
             ts.calibratedSize() * ts.calibratedSize() * sizeof(scalar);
 
         h("meas", isMeas, weight(meas_size));
@@ -384,27 +384,27 @@ class VectorMultiTrajectory final
     return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   TrackStateProxy::Measurement<measdim> measurement_impl(IndexType istate) {
     IndexType offset = m_measOffset[istate];
     return TrackStateProxy::Measurement<measdim>{&m_meas[offset]};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
     return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   TrackStateProxy::MeasurementCovariance<measdim> measurementCovariance_impl(
       IndexType istate) {
     IndexType offset = m_measCovOffset[istate];
     return TrackStateProxy::MeasurementCovariance<measdim>{&m_measCov[offset]};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
   measurementCovariance_impl(IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
@@ -454,7 +454,7 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
 
-  void allocateCalibrated_impl(IndexType istate, size_t measdim) {
+  void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
     throw_assert(measdim > 0 && measdim <= eBoundSize,
                  "Invalid measurement dimension detected");
 
@@ -533,14 +533,14 @@ class ConstVectorMultiTrajectory final
     return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
     return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
   measurementCovariance_impl(IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];

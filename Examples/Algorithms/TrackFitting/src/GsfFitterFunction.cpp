@@ -77,7 +77,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 
   Acts::GainMatrixUpdater updater;
 
-  std::size_t maxComponents = 0;
+  size_t maxComponents = 0;
   double weightCutoff = 0;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
@@ -132,8 +132,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
     using namespace Acts::GsfConstants;
-    if (not tracks.hasColumn(
-            Acts::hashString(kFinalMultiComponentStateColumn))) {
+    if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
       tracks.template addColumn<FinalMultiComponentState>(key);
     }
@@ -152,8 +151,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
     using namespace Acts::GsfConstants;
-    if (not tracks.hasColumn(
-            Acts::hashString(kFinalMultiComponentStateColumn))) {
+    if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
       tracks.template addColumn<FinalMultiComponentState>(key);
     }
@@ -169,7 +167,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+    BetheHeitlerApprox betheHeitlerApprox, size_t maxComponents,
     double weightCutoff, Acts::MixtureReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {

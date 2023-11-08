@@ -21,8 +21,6 @@ namespace hana = boost::hana;
 
 namespace Acts {
 
-/// @cond
-
 /// @brief ActionList implementation to be used with the propagator
 ///
 /// This is the ActionList struct that is used in the propagator
@@ -31,17 +29,19 @@ namespace Acts {
 template <typename... actors_t>
 struct ActionList : public detail::Extendable<actors_t...> {
  private:
-  static_assert(not detail::has_duplicates_v<actors_t...>,
+  static_assert(!detail::has_duplicates_v<actors_t...>,
                 "same action type specified several times");
 
   using detail::Extendable<actors_t...>::tuple;
 
  public:
+  /// @cond
   // This uses the type collector and unpacks using the `R` meta function
   template <template <typename...> class R>
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::result_type_extractor, actors_t...>,
       hana::template_<R>))::type;
+  /// @endcond
 
   using detail::Extendable<actors_t...>::get;
 
@@ -82,6 +82,7 @@ struct ActionList : public detail::Extendable<actors_t...> {
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
   /// @param [in,out] result This is the result object from actions
+  /// @param [in] args The arguments to be passed to the actions
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename result_t, typename... Args>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
@@ -92,7 +93,5 @@ struct ActionList : public detail::Extendable<actors_t...> {
                  std::forward<Args>(args)...);
   }
 };
-
-/// @endcond
 
 }  // namespace Acts

@@ -18,7 +18,7 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
-#include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
 
 #include <memory>
 
@@ -45,10 +45,9 @@ void addInput(Context& ctx) {
                              fileList, orderedEvents,
                              readCachedSurfaceInformation);
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootTrajectorySummaryReader, mex,
-                             "RootTrajectorySummaryReader", outputTracks,
-                             outputParticles, treeName, filePath,
-                             orderedEvents);
+  ACTS_PYTHON_DECLARE_READER(
+      ActsExamples::RootTrackSummaryReader, mex, "RootTrackSummaryReader",
+      outputTracks, outputParticles, treeName, filePath, orderedEvents);
 
   // CSV READERS
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvParticleReader, mex,

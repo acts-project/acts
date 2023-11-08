@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
                   g.globalBinFromPosition(Point({{2.7}}))) == indices({{3}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2.}})));
   BOOST_CHECK(g.isInside(Point({{0.}})));
   BOOST_CHECK(g.isInside(Point({{2.5}})));
-  BOOST_CHECK(not g.isInside(Point({{4.}})));
-  BOOST_CHECK(not g.isInside(Point({{6.}})));
+  BOOST_CHECK(!g.isInside(Point({{4.}})));
+  BOOST_CHECK(!g.isInside(Point({{6.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1}}), Point({{0.5}}), 1e-6);
@@ -240,18 +240,18 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant) {
                   Point({{1.2, 0.7}}))) == indices({{2, 1}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3}})));
-  BOOST_CHECK(not g.isInside(Point({{4., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{4., 0.3}})));
-  BOOST_CHECK(not g.isInside(Point({{4., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{4., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{4., 0.3}})));
+  BOOST_CHECK(!g.isInside(Point({{4., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 3.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1}}), Point({{0.5, 0.5}}), 1e-6);
@@ -394,18 +394,18 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant) {
                   Point({{1.2, 0.7, 1.4}}))) == indices({{2, 1, 2}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1, -2}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1., 0.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1, -2}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1., 0.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1., 4.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3, 1.7}})));
-  BOOST_CHECK(not g.isInside(Point({{2., -1., -0.4}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 0.3, 3.4}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 3., 0.8}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 3., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 3., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 3., 0.5}})));
+  BOOST_CHECK(!g.isInside(Point({{2., -1., -0.4}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 0.3, 3.4}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 3., 0.8}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 3., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 3., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 3., 0.5}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1, 1}}), Point({{0.5, 0.5, 0.5}}), 1e-6);
@@ -479,11 +479,11 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_variable) {
                   g.globalBinFromPosition(Point({{0.8}}))) == indices({{1}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2.}})));
   BOOST_CHECK(g.isInside(Point({{0.}})));
   BOOST_CHECK(g.isInside(Point({{2.5}})));
-  BOOST_CHECK(not g.isInside(Point({{4.}})));
-  BOOST_CHECK(not g.isInside(Point({{6.}})));
+  BOOST_CHECK(!g.isInside(Point({{4.}})));
+  BOOST_CHECK(!g.isInside(Point({{6.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1}}), Point({{0.5}}), 1e-6);
@@ -590,18 +590,18 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_variable) {
                   Point({{3.2, 1.8}}))) == indices({{3, 2}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3}})));
-  BOOST_CHECK(not g.isInside(Point({{3., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{3., 0.3}})));
-  BOOST_CHECK(not g.isInside(Point({{3., 4.}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 4.}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 4.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{3., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{3., 0.3}})));
+  BOOST_CHECK(!g.isInside(Point({{3., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 4.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1}}), Point({{0.25, 0.5}}), 1e-6);
@@ -714,18 +714,18 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
                   Point({{1.8, 0.7, 3.2}}))) == indices({{2, 2, 3}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1, -2}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1., 0.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1, -2}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1., 0.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1., 4.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3, 1.7}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1., -0.4}})));
-  BOOST_CHECK(not g.isInside(Point({{1., 0.3, 3.4}})));
-  BOOST_CHECK(not g.isInside(Point({{1., 3., 0.8}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 3., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 3., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 3., 0.5}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1., -0.4}})));
+  BOOST_CHECK(!g.isInside(Point({{1., 0.3, 3.4}})));
+  BOOST_CHECK(!g.isInside(Point({{1., 3., 0.8}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 3., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 3., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 3., 0.5}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1, 1}}), Point({{0.5, 0.25, 0.25}}), 1e-6);
@@ -877,18 +877,18 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_mixed) {
                   Point({{1.1, 1.7}}))) == indices({{5, 2}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{0.1, -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{0.1, -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{1., 0.3}})));
-  BOOST_CHECK(not g.isInside(Point({{1., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{0.2, 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{1., 0.3}})));
+  BOOST_CHECK(!g.isInside(Point({{1., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{0.2, 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 3.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1}}), Point({{0.125, 0.25}}), 1e-6);

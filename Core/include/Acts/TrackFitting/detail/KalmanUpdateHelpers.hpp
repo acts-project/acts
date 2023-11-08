@@ -39,13 +39,13 @@ auto kalmanHandleMeasurement(
     const CalibrationContext &calibrationContext, propagator_state_t &state,
     const stepper_t &stepper, const extensions_t &extensions,
     const Surface &surface, const SourceLink &source_link, traj_t &fittedStates,
-    const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
+    const std::size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
   // Add a <mask> TrackState entry multi trajectory. This allocates storage for
   // all components, which we will set later.
   TrackStatePropMask mask = TrackStatePropMask::All;
-  const size_t currentTrackIndex =
+  const std::size_t currentTrackIndex =
       fittedStates.addTrackState(mask, lastTrackIndex);
 
   // now get track state proxy back
@@ -96,7 +96,7 @@ auto kalmanHandleMeasurement(
     // - tag it as a measurement
     // - update the stepping state.
     // Else, just tag it as an outlier
-    if (not extensions.outlierFinder(trackStateProxy)) {
+    if (!extensions.outlierFinder(trackStateProxy)) {
       // Run Kalman update
       auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
                                           state.options.direction, logger);
@@ -138,7 +138,7 @@ auto kalmanHandleMeasurement(
 template <typename propagator_state_t, typename stepper_t, typename traj_t>
 auto kalmanHandleNoMeasurement(
     propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
-    traj_t &fittedStates, const size_t lastTrackIndex, bool doCovTransport,
+    traj_t &fittedStates, const std::size_t lastTrackIndex, bool doCovTransport,
     const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
@@ -146,7 +146,7 @@ auto kalmanHandleNoMeasurement(
   // all components, which we will set later.
   TrackStatePropMask mask =
       ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
-  const size_t currentTrackIndex =
+  const std::size_t currentTrackIndex =
       fittedStates.addTrackState(mask, lastTrackIndex);
 
   // now get track state proxy back

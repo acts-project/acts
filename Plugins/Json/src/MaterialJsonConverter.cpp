@@ -21,7 +21,7 @@
 #include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -179,13 +179,13 @@ void Acts::from_json(const nlohmann::json& j,
   Acts::MaterialSlabMatrix mpMatrix;
   Acts::MappingType mapType = Acts::MappingType::Default;
   for (auto& [key, value] : jMaterial.items()) {
-    if (key == Acts::jsonKey().binkey and not value.empty()) {
+    if (key == Acts::jsonKey().binkey && !value.empty()) {
       from_json(value, bUtility);
     }
-    if (key == Acts::jsonKey().datakey and not value.empty()) {
+    if (key == Acts::jsonKey().datakey && !value.empty()) {
       from_json(value, mpMatrix);
     }
-    if (key == Acts::jsonKey().maptype and not value.empty()) {
+    if (key == Acts::jsonKey().maptype && !value.empty()) {
       from_json(value, mapType);
     }
   }
@@ -302,10 +302,10 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
   Acts::BinUtility bUtility;
   std::vector<Acts::Material> mmat;
   for (auto& [key, value] : jMaterial.items()) {
-    if (key == Acts::jsonKey().binkey and not value.empty()) {
+    if (key == Acts::jsonKey().binkey && !value.empty()) {
       from_json(value, bUtility);
     }
-    if (key == Acts::jsonKey().datakey and not value.empty()) {
+    if (key == Acts::jsonKey().datakey && !value.empty()) {
       for (const auto& bin : value) {
         Acts::Material mat(bin.get<Acts::Material>());
         mmat.push_back(mat);

@@ -157,10 +157,10 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     // compute the inverse mapping on-the-fly
     const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
     // How often a particle was reconstructed.
-    std::unordered_map<ActsFatras::Barcode, std::size_t> reconCount;
+    std::unordered_map<ActsFatras::Barcode, size_t> reconCount;
     reconCount.reserve(particles.size());
     // How often a particle was reconstructed as the majority particle.
-    std::unordered_map<ActsFatras::Barcode, std::size_t> majorityCount;
+    std::unordered_map<ActsFatras::Barcode, size_t> majorityCount;
     majorityCount.reserve(particles.size());
     // For each particle within a track, how many hits did it contribute
     std::vector<ParticleHitCount> particleHitCounts;
@@ -177,7 +177,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
         // empty track hits counts could originate from a  buggy track finder
         // that results in empty tracks or from purely noise track where no hits
         // are from a particle.
-        if (not particleHitCounts.empty()) {
+        if (!particleHitCounts.empty()) {
           auto it = majorityCount
                         .try_emplace(particleHitCounts.front().particleId, 0u)
                         .first;
