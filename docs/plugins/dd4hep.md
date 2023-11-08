@@ -86,12 +86,12 @@ ACTS uses this parameter to resolve the layer detector elements.
 
 ## `DD4hepDetectorElement`
 
-In Acts the surfaces describing the sensitive modules of a detector are directly
+In ACTS the surfaces describing the sensitive modules of a detector are directly
 linked to these of the initial geometry input. In the case of DD4hep the
 {class}`Acts::DD4hepDetectorElement` was introduced which is the direct link of
-Acts to DD4hep. In the case for tracking relevant parameters in the DD4hep
+ACTS to DD4hep. In the case for tracking relevant parameters in the DD4hep
 geometry description are changed (e.g. alignment) it will be automatically
-changed in Acts.
+changed in ACTS.
 
 ## Build
 
@@ -103,7 +103,7 @@ installations need to be available to cmake.
 
 ## Prerequisites
 
-To guarantee a working translation from DD4hep input to Acts geometry the
+To guarantee a working translation from DD4hep input to ACTS geometry the
 following conditions need to be met:
 
 - The detector needs to have a barrel-endcap structure: Every hierarchy of
@@ -171,7 +171,7 @@ There are two modes building the layers around the sensitive detector modules:
 
 - The `DetElement` containing the sensitive modules have a geometrical
   shape.
-  The boundaries of the layers in Acts are taken directly from the given shape.
+  The boundaries of the layers in ACTS are taken directly from the given shape.
 
 - The `DetElement` containing the sensitive modules have no specific shape
   (assembly).

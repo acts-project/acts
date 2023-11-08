@@ -53,7 +53,7 @@ $ go install github.com/google/pprof@latest
 
 ## Link gperftools Libraries When Compiling
 
-The library needed to run the CPU profiler should be linked into the Acts project using the following build option:
+The library needed to run the CPU profiler should be linked into the ACTS project using the following build option:
 
 ```
 -DACTS_ENABLE_CPU_PROFILING=ON

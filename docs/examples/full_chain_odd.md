@@ -1,6 +1,6 @@
 # Walkthrough of the OpenDataDetector full chain example
 
-The OpenDataDetector (ODD) is fictitious silicon detector which resides in its own repository on [GitLab](https://gitlab.cern.ch/acts/OpenDataDetector). It is used for testing and as a performance baseline in Acts.
+The OpenDataDetector (ODD) is fictitious silicon detector which resides in its own repository on [GitLab](https://gitlab.cern.ch/acts/OpenDataDetector). It is used for testing and as a performance baseline in ACTS.
 
 Our full chain ODD example is written in Python and can be found [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/full_chain_odd.py).
 
@@ -30,7 +30,7 @@ The simulation step involves random processes and in order to get the same resul
 rnd = acts.examples.RandomNumbers(seed=42)
 ```
 
-All simulation and reconstruction pipelines in Acts begin with a `Sequencer`. It controls the execution of the different algorithms in the chain. We provide the number of events, the number of threads to use (`-1` to use all the machine's cores) and the desired log level.
+All simulation and reconstruction pipelines in ACTS begin with a `Sequencer`. It controls the execution of the different algorithms in the chain. We provide the number of events, the number of threads to use (`-1` to use all the machine's cores) and the desired log level.
 
 ```python
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)

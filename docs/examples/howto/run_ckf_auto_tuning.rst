@@ -17,7 +17,7 @@ Since Optuna and Orion are independent frameworks, these need to be installed se
    $ pip install pytest --upgrade
    $ pip install cmake dataclasses sphinxcontrib-applehelp sphinxcontrib-jsmath sphinxcontrib-serializinghtml argparse sphinxcontrib-devhelp sphinxcontrib-htmlhelp sphinxcontrib-qthelp AppDirs filelock joblib pandas plotly psutil pyYAML requests scipy tabulate cloudpickle scikit-learn orion==0.2.2 cloudpickle==1.6.0 optuna matplotlib
 
-Once all the dependencies are installed, Build Acts with python bindings and Pythia8 support. 
+Once all the dependencies are installed, Build ACTS with python bindings and Pythia8 support.
 
 .. code-block:: console
 

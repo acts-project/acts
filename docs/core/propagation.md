@@ -1,7 +1,7 @@
 (propagation_impl)=
 # Propagation and extrapolation
 
-The track propagation is an essential part of track reconstruction. This section describes the high-level classes and concepts used for this task in Acts.
+The track propagation is an essential part of track reconstruction. This section describes the high-level classes and concepts used for this task in ACTS.
 
 ## Overview: Steppers, Navigators and Actors
 
@@ -10,7 +10,7 @@ The propagation through a geometry is based on the interaction of two different 
 * The **Stepper** provides the implementation of the solution of the equation of motion (either by analytical means or through numerical integration).
 * The **Navigator** keeps track of the current position in the geometry and adjusts the step size so that the stepper does not step through a surface.
 
-Following the general Acts design, these classes do not manage their internal state via member variables, but provide an internal `State` struct which contains all relevant data and is managed by the propagator.
+Following the general ACTS design, these classes do not manage their internal state via member variables, but provide an internal `State` struct which contains all relevant data and is managed by the propagator.
 
 The interaction of these two components is handled by the {class}`Acts::Propagator` class template that takes the stepper and the navigator as template parameters:
 
@@ -88,7 +88,7 @@ The {class}`Acts::Navigator` by default does a straight-line extrapolation to re
 
 ## Steppers
 
-Acts also provides a variety of stepper implementations. Since these in general can work very differently internally, the state itself is not the main interface to the steppers. Instead, all steppers provide a common API, to that we can pass instances of the stepper state. This allows a generic and template-based design even for very different steppers:
+ACTS also provides a variety of stepper implementations. Since these in general can work very differently internally, the state itself is not the main interface to the steppers. Instead, all steppers provide a common API, to that we can pass instances of the stepper state. This allows a generic and template-based design even for very different steppers:
 
 ```c++
 template<typename propagator_state_t, typename stepper_t>
