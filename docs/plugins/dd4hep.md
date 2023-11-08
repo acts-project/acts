@@ -1,7 +1,7 @@
 # DD4hep plugin
 
 :::{todo}
-Describe new markup and construction for dd4hep plugin and building layerless geometry.
+Describe new markup and construction for DD4hep plugin and building layerless geometry.
 :::
 
 The DD4hepPlugin allows building of a {class}`Acts::TrackingGeometry` from

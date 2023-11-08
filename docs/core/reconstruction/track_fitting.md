@@ -117,7 +117,7 @@ The {class}`Acts::AtlasBetheHeitlerApprox` is constructed with two parameterizat
 ## Global Chi-Square Fitter (GX2F) [wip]
 
 :::{todo}
-Write GX2F documeneation
+Write GX2F documentation
 :::
 
 [^billoir]: https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf
