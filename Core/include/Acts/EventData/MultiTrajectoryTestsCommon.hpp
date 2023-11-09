@@ -14,7 +14,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <random>
@@ -29,6 +28,8 @@ class MultiTrajectoryTestsCommon {
 
   using trajectory_t = typename factory_t::trajectory_t;
   using const_trajectory_t = typename factory_t::const_trajectory_t;
+  using test_track_state_t = typename factory_t::test_track_state_t;
+  using test_source_link_t = typename factory_t::test_source_link_t;
 
  private:
   factory_t m_factory;
@@ -242,14 +243,14 @@ class MultiTrajectoryTestsCommon {
   }
 
   void testTrackStateProxyCrossTalk(std::default_random_engine& rng) {
-    TestTrackState pc(rng, 2u);
+    test_track_state_t pc(rng, 2u);
 
     // multi trajectory w/ a single, fully set, track state
     trajectory_t traj = m_factory.create();
     size_t index = traj.addTrackState();
     {
       auto ts = traj.getTrackState(index);
-      fillTrackState<trajectory_t>(pc, TrackStatePropMask::All, ts);
+      pc.template fillTrackState<trajectory_t>(TrackStatePropMask::All, ts);
     }
     // get two TrackStateProxies that reference the same data
     auto tsa = traj.getTrackState(index);
@@ -284,20 +285,20 @@ class MultiTrajectoryTestsCommon {
     }
     {
       // create a new (invalid) source link
-      TestSourceLink invalid;
+      test_source_link_t invalid;
       invalid.sourceId = -1;
       BOOST_CHECK_NE(
-          tsa.getUncalibratedSourceLink().template get<TestSourceLink>(),
+          tsa.getUncalibratedSourceLink().template get<test_source_link_t>(),
           invalid);
       BOOST_CHECK_NE(
-          tsb.getUncalibratedSourceLink().template get<TestSourceLink>(),
+          tsb.getUncalibratedSourceLink().template get<test_source_link_t>(),
           invalid);
       tsb.setUncalibratedSourceLink(SourceLink{invalid});
       BOOST_CHECK_EQUAL(
-          tsa.getUncalibratedSourceLink().template get<TestSourceLink>(),
+          tsa.getUncalibratedSourceLink().template get<test_source_link_t>(),
           invalid);
       BOOST_CHECK_EQUAL(
-          tsb.getUncalibratedSourceLink().template get<TestSourceLink>(),
+          tsb.getUncalibratedSourceLink().template get<test_source_link_t>(),
           invalid);
     }
     {
@@ -348,12 +349,12 @@ class MultiTrajectoryTestsCommon {
   }
 
   void testTrackStateReassignment(std::default_random_engine& rng) {
-    TestTrackState pc(rng, 1u);
+    test_track_state_t pc(rng, 1u);
 
     trajectory_t t = m_factory.create();
     size_t index = t.addTrackState();
     auto ts = t.getTrackState(index);
-    fillTrackState<trajectory_t>(pc, TrackStatePropMask::All, ts);
+    pc.template fillTrackState<trajectory_t>(TrackStatePropMask::All, ts);
 
     // assert contents of original measurement (just to be safe)
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 1u);
@@ -363,7 +364,7 @@ class MultiTrajectoryTestsCommon {
                       (pc.sourceLink.covariance.topLeftCorner<1, 1>()));
 
     // use temporary measurement to reset calibrated data
-    TestTrackState ttsb(rng, 2u);
+    test_track_state_t ttsb(rng, 2u);
     ts.setUncalibratedSourceLink(SourceLink{ttsb.sourceLink});
     Acts::GeometryContext gctx;
     auto meas = testSourceLinkCalibratorReturn<trajectory_t>(gctx, ts);
@@ -377,13 +378,13 @@ class MultiTrajectoryTestsCommon {
 
   void testTrackStateProxyStorage(std::default_random_engine& rng,
                                   size_t nMeasurements) {
-    TestTrackState pc(rng, nMeasurements);
+    test_track_state_t pc(rng, nMeasurements);
 
     // create trajectory with a single fully-filled random track state
     trajectory_t t = m_factory.create();
     size_t index = t.addTrackState();
     auto ts = t.getTrackState(index);
-    fillTrackState<trajectory_t>(pc, TrackStatePropMask::All, ts);
+    pc.template fillTrackState<trajectory_t>(TrackStatePropMask::All, ts);
 
     // check that the surface is correctly set
     BOOST_CHECK_EQUAL(&ts.referenceSurface(), pc.surface.get());
@@ -413,7 +414,7 @@ class MultiTrajectoryTestsCommon {
 
     // check that the uncalibratedSourceLink source link is set
     BOOST_CHECK_EQUAL(
-        ts.getUncalibratedSourceLink().template get<TestSourceLink>(),
+        ts.getUncalibratedSourceLink().template get<test_source_link_t>(),
         pc.sourceLink);
 
     // check that the calibrated measurement is set
@@ -463,7 +464,7 @@ class MultiTrajectoryTestsCommon {
   void testTrackStateProxyAllocations(std::default_random_engine& rng) {
     using namespace Acts::HashedStringLiteral;
 
-    TestTrackState pc(rng, 2u);
+    test_track_state_t pc(rng, 2u);
 
     // this should allocate for all components in the trackstate, plus filtered
     trajectory_t t = m_factory.create();
@@ -471,9 +472,9 @@ class MultiTrajectoryTestsCommon {
                                TrackStatePropMask::Filtered |
                                TrackStatePropMask::Jacobian);
     auto tso = t.getTrackState(i);
-    fillTrackState<trajectory_t>(pc, TrackStatePropMask::Predicted, tso);
-    fillTrackState<trajectory_t>(pc, TrackStatePropMask::Filtered, tso);
-    fillTrackState<trajectory_t>(pc, TrackStatePropMask::Jacobian, tso);
+    pc.template fillTrackState<trajectory_t>(TrackStatePropMask::Predicted, tso);
+    pc.template fillTrackState<trajectory_t>(TrackStatePropMask::Filtered, tso);
+    pc.template fillTrackState<trajectory_t>(TrackStatePropMask::Jacobian, tso);
 
     BOOST_CHECK(tso.hasPredicted());
     BOOST_CHECK(tso.hasFiltered());
@@ -645,10 +646,10 @@ class MultiTrajectoryTestsCommon {
     size_t i1 = mj.addTrackState();
     ts1 = mj.getTrackState(i0);
     ts2 = mj.getTrackState(i1);
-    TestTrackState rts1(rng, 1u);
-    TestTrackState rts2(rng, 2u);
-    fillTrackState<trajectory_t>(rts1, TrackStatePropMask::All, ts1);
-    fillTrackState<trajectory_t>(rts2, TrackStatePropMask::All, ts2);
+    test_track_state_t rts1(rng, 1u);
+    test_track_state_t rts2(rng, 2u);
+    rts1.template fillTrackState<trajectory_t>(TrackStatePropMask::All, ts1);
+    rts2.template fillTrackState<trajectory_t>(TrackStatePropMask::All, ts2);
 
     auto ots1 = mkts(PM::All);
     auto ots2 = mkts(PM::All);
@@ -664,8 +665,8 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_NE(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
     BOOST_CHECK_NE(
-        ts1.getUncalibratedSourceLink().template get<TestSourceLink>(),
-        ts2.getUncalibratedSourceLink().template get<TestSourceLink>());
+        ts1.getUncalibratedSourceLink().template get<test_source_link_t>(),
+        ts2.getUncalibratedSourceLink().template get<test_source_link_t>());
 
     visit_measurement(ts1.calibratedSize(), [&](auto N) {
       constexpr size_t measdim = decltype(N)::value;
@@ -693,8 +694,8 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
     BOOST_CHECK_EQUAL(
-        ts1.getUncalibratedSourceLink().template get<TestSourceLink>(),
-        ts2.getUncalibratedSourceLink().template get<TestSourceLink>());
+        ts1.getUncalibratedSourceLink().template get<test_source_link_t>(),
+        ts2.getUncalibratedSourceLink().template get<test_source_link_t>());
 
     visit_measurement(ts1.calibratedSize(), [&](auto N) {
       constexpr size_t measdim = decltype(N)::value;
@@ -881,7 +882,7 @@ class MultiTrajectoryTestsCommon {
   }
 
   void testTrackStateProxyShare(std::default_random_engine& rng) {
-    TestTrackState pc(rng, 2u);
+    test_track_state_t pc(rng, 2u);
 
     {
       trajectory_t traj = m_factory.create();
@@ -891,7 +892,7 @@ class MultiTrajectoryTestsCommon {
       auto tsa = traj.getTrackState(ia);
       auto tsb = traj.getTrackState(ib);
 
-      fillTrackState<trajectory_t>(pc, TrackStatePropMask::All, tsa);
+      pc.template fillTrackState<trajectory_t>(TrackStatePropMask::All, tsa);
 
       BOOST_CHECK(tsa.hasPredicted());
       BOOST_CHECK(!tsb.hasPredicted());

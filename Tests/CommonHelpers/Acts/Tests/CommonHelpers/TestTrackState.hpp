@@ -81,46 +81,46 @@ struct TestTrackState {
       }
     }
   }
+
+  // Fill a TrackStateProxy with values from a TestTrackState.
+  //
+  // @param[in] pc TestTrackState with the input values
+  // @param[in] mask Specifies which components are used/filled
+  // @param[out] ts TrackStateProxy which is filled
+  // @param [in] measdim Dimension of the measurement
+  template <typename trajectory_t, typename track_state_t>
+  void fillTrackState(TrackStatePropMask mask,
+                      track_state_t& ts) {
+    // always set the reference surface
+    ts.setReferenceSurface(predicted.referenceSurface().getSharedPtr());
+
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted)) {
+      ts.predicted() = predicted.parameters();
+      assert(predicted.covariance().has_value());
+      ts.predictedCovariance() = *(predicted.covariance());
+    }
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Filtered)) {
+      ts.filtered() = filtered.parameters();
+      assert(filtered.covariance().has_value());
+      ts.filteredCovariance() = *(filtered.covariance());
+    }
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed)) {
+      ts.smoothed() = smoothed.parameters();
+      assert(smoothed.covariance().has_value());
+      ts.smoothedCovariance() = *(smoothed.covariance());
+    }
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Jacobian)) {
+      ts.jacobian() = jacobian;
+    }
+    ts.chi2() = chi2;
+    ts.pathLength() = pathLength;
+    // source link defines the uncalibrated measurement
+    ts.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
+    // create calibrated measurements from source link
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
+      testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{}, ts);
+    }
+  }
 };
-
-// Fill a TrackStateProxy with values from a TestTrackState.
-//
-// @param[in] pc TestTrackState with the input values
-// @param[in] mask Specifies which components are used/filled
-// @param[out] ts TrackStateProxy which is filled
-// @param [in] measdim Dimension of the measurement
-template <typename trajectory_t, typename track_state_t>
-void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
-                    track_state_t& ts) {
-  // always set the reference surface
-  ts.setReferenceSurface(pc.predicted.referenceSurface().getSharedPtr());
-
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted)) {
-    ts.predicted() = pc.predicted.parameters();
-    assert(pc.predicted.covariance().has_value());
-    ts.predictedCovariance() = *(pc.predicted.covariance());
-  }
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Filtered)) {
-    ts.filtered() = pc.filtered.parameters();
-    assert(pc.filtered.covariance().has_value());
-    ts.filteredCovariance() = *(pc.filtered.covariance());
-  }
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed)) {
-    ts.smoothed() = pc.smoothed.parameters();
-    assert(pc.smoothed.covariance().has_value());
-    ts.smoothedCovariance() = *(pc.smoothed.covariance());
-  }
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Jacobian)) {
-    ts.jacobian() = pc.jacobian;
-  }
-  ts.chi2() = pc.chi2;
-  ts.pathLength() = pc.pathLength;
-  // source link defines the uncalibrated measurement
-  ts.setUncalibratedSourceLink(Acts::SourceLink{pc.sourceLink});
-  // create calibrated measurements from source link
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-    testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{}, ts);
-  }
-}
 
 }  // namespace Acts::Test

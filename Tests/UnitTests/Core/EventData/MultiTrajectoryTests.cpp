@@ -19,7 +19,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
-#include "Acts/Tests/CommonHelpers/MultiTrajectoryTestsCommon.hpp"
+#include "Acts/EventData/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
@@ -47,6 +47,8 @@ std::default_random_engine rng(31415);
 struct Factory {
   using trajectory_t = VectorMultiTrajectory;
   using const_trajectory_t = ConstVectorMultiTrajectory;
+  using test_track_state_t = TestTrackState;
+  using test_source_link_t = TestSourceLink;
 
   VectorMultiTrajectory create() { return {}; }
   ConstVectorMultiTrajectory createConst() { return {}; }
@@ -212,7 +214,7 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
 
   TestTrackState pc(rng, 2u);
   auto ts = mt.getTrackState(mt.addTrackState());
-  fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
+  pc.fillTrackState<VectorMultiTrajectory>(TrackStatePropMask::All, ts);
 
   stats = mt.statistics();
 
