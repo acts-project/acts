@@ -269,10 +269,10 @@ class MultiComponentCurvilinearTrackParameters
 
     // Project the position onto the surface, keep everything else as is
     for (const auto& [w, pos4, dir, qop, cov] : curvi) {
-      Vector3 newPos =
-          s->intersect(gctx, pos4.template segment<3>(eFreePos0), dir, false)
-              .closest()
-              .position();
+      Vector3 newPos = s->intersect(gctx, pos4.template segment<3>(eFreePos0),
+                                    dir, BoundaryCheck(false))
+                           .closest()
+                           .position();
 
       BoundVector bv =
           detail::transformFreeToCurvilinearParameters(pos4[eTime], dir, qop);

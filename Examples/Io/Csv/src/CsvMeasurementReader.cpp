@@ -130,9 +130,8 @@ std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
 }
 
 ActsExamples::ClusterContainer makeClusters(
-    const std::unordered_multimap<std::size_t, ActsExamples::CellData>&
-        cellDataMap,
-    std::size_t nMeasurements) {
+    const std::unordered_multimap<size_t, ActsExamples::CellData>& cellDataMap,
+    size_t nMeasurements) {
   using namespace ActsExamples;
   ClusterContainer clusters;
 
@@ -328,7 +327,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
                    fromLegacy);
   }
 
-  std::unordered_multimap<std::size_t, ActsExamples::CellData> cellDataMap;
+  std::unordered_multimap<size_t, ActsExamples::CellData> cellDataMap;
   for (const auto& cd : cellData) {
     cellDataMap.emplace(cd.measurement_id, cd);
   }

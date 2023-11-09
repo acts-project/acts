@@ -50,7 +50,7 @@ bool areFpesEquivalent(
 FpeMonitor::Result::FpeInfo::~FpeInfo() = default;
 
 FpeMonitor::Result::FpeInfo::FpeInfo(
-    std::size_t countIn, FpeType typeIn,
+    size_t countIn, FpeType typeIn,
     std::shared_ptr<const boost::stacktrace::stacktrace> stIn)
     : count{countIn}, type{typeIn}, st{std::move(stIn)} {}
 
@@ -82,8 +82,7 @@ void FpeMonitor::Result::merge(const Result &with) {
   deduplicate();
 }
 
-void FpeMonitor::Result::add(FpeType type, void *stackPtr,
-                             std::size_t bufferSize) {
+void FpeMonitor::Result::add(FpeType type, void *stackPtr, size_t bufferSize) {
   auto st = std::make_unique<boost::stacktrace::stacktrace>(
       boost::stacktrace::stacktrace::from_dump(stackPtr, bufferSize));
 
@@ -142,7 +141,7 @@ bool FpeMonitor::Result::encountered(FpeType type) const {
   return count(type) > 0;
 }
 
-void FpeMonitor::Result::summary(std::ostream &os, std::size_t depth) const {
+void FpeMonitor::Result::summary(std::ostream &os, size_t depth) const {
   os << "FPE result summary:\n";
   static const std::vector<FpeType> types = {
       FpeType::INTDIV, FpeType::INTOVF, FpeType::FLTDIV, FpeType::FLTOVF,
@@ -205,8 +204,8 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
     // collect stack trace skipping 2 frames, which should be the signal handler
     // and the calling facility. This might be platform specific, not sure
     auto [buffer, remaining] = fpe.m_buffer.next();
-    std::size_t depth = boost::stacktrace::safe_dump_to(2, buffer, remaining);
-    std::size_t stored =
+    size_t depth = boost::stacktrace::safe_dump_to(2, buffer, remaining);
+    size_t stored =
         depth * sizeof(boost::stacktrace::frame::native_frame_ptr_t);
     fpe.m_buffer.pushOffset(stored);  // record how much storage was consumed
     fpe.m_recorded.emplace_back(
@@ -325,7 +324,7 @@ std::ostream &operator<<(std::ostream &os, FpeType type) {
 }
 
 std::string FpeMonitor::stackTraceToString(
-    const boost::stacktrace::stacktrace &st, std::size_t depth) {
+    const boost::stacktrace::stacktrace &st, size_t depth) {
   return boost::stacktrace::detail::to_string(st.as_vector().data(),
                                               std::min(depth, st.size()));
 }

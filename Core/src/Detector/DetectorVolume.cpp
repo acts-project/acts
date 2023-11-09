@@ -253,7 +253,7 @@ void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdator(
 }
 
 Acts::Extent Acts::Experimental::DetectorVolume::extent(
-    const GeometryContext& gctx, size_t nseg) const {
+    const GeometryContext& gctx, std::size_t nseg) const {
   Extent volumeExtent;
   for (const auto* p : portals()) {
     volumeExtent.extend(
@@ -263,7 +263,7 @@ Acts::Extent Acts::Experimental::DetectorVolume::extent(
 }
 
 bool Acts::Experimental::DetectorVolume::checkContainment(
-    const GeometryContext& gctx, size_t nseg) const {
+    const GeometryContext& gctx, std::size_t nseg) const {
   // Create the volume extent
   auto volumeExtent = extent(gctx, nseg);
   // Check surfaces

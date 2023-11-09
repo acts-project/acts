@@ -65,11 +65,13 @@ BOOST_AUTO_TEST_CASE(NavigationLayerProperties) {
   BOOST_CHECK_EQUAL(rawSurfacePtr,
                     &(pNavigationLayer->surfaceRepresentation()));
   // isOnLayer()
-  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin, true));
+  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin,
+                                          Acts::BoundaryCheck(true)));
   // isOnLayer()
   Vector3 crazyPosition{1000., 10000., std::nan("")};
   // layer stub has hard-coded globalToLocal return value
-  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, crazyPosition, true));
+  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, crazyPosition,
+                                          BoundaryCheck(true)));
   // resolve()
   BOOST_CHECK(!pNavigationLayer->resolve(true, true, true));
 }

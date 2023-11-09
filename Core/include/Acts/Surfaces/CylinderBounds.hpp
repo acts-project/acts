@@ -24,6 +24,7 @@
 namespace Acts {
 
 /// @class CylinderBounds
+/// @image html CylinderBounds.gif
 ///
 /// Bounds for a cylindrical Surface.
 ///
@@ -111,7 +112,7 @@ class CylinderBounds : public SurfaceBounds {
   /// @param bcheck is the boundary check directive
   /// @return boolean indicator for operation success
   bool inside3D(const Vector3& position,
-                const BoundaryCheck& bcheck = true) const;
+                const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
@@ -124,7 +125,8 @@ class CylinderBounds : public SurfaceBounds {
   ///
   /// @param trans is the global transform
   /// @param lseg  are the numbero if phi segments
-  std::vector<Vector3> createCircles(const Transform3 trans, size_t lseg) const;
+  std::vector<Vector3> createCircles(const Transform3 trans,
+                                     std::size_t lseg) const;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

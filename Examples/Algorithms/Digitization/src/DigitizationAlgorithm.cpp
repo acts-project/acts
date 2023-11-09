@@ -151,7 +151,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
   // Some statistics
-  std::size_t skippedHits = 0;
+  size_t skippedHits = 0;
 
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(simHits)) {

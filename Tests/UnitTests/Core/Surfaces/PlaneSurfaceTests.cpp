@@ -154,14 +154,15 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   /// Test isOnSurface
   Vector3 offSurface{0, 1, -2.};
   BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,
-                                              momentum, true));
-  BOOST_CHECK(
-      !planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum, true));
+                                              momentum, BoundaryCheck(true)));
+  BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
+                                               BoundaryCheck(true)));
   //
   // Test intersection
   Vector3 direction{0., 0., 1.};
   auto sfIntersection =
-      planeSurfaceObject->intersect(tgContext, offSurface, direction, true)
+      planeSurfaceObject
+          ->intersect(tgContext, offSurface, direction, BoundaryCheck(true))
           .closest();
   Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    Intersection3D::Status::reachable};

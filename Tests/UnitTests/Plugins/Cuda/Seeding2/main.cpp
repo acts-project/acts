@@ -133,13 +133,13 @@ int main(int argc, char* argv[]) {
 
   // Allocate memory on the selected CUDA device.
   if (Acts::Cuda::Info::instance().devices().size() <=
-      static_cast<std::size_t>(cmdl.cudaDevice)) {
+      static_cast<size_t>(cmdl.cudaDevice)) {
     std::cerr << "Invalid CUDA device (" << cmdl.cudaDevice << ") requested"
               << std::endl;
     return 1;
   }
-  static constexpr std::size_t MEGABYTES = 1024l * 1024l;
-  std::size_t deviceMemoryAllocation = cmdl.cudaDeviceMemory * MEGABYTES;
+  static constexpr size_t MEGABYTES = 1024l * 1024l;
+  size_t deviceMemoryAllocation = cmdl.cudaDeviceMemory * MEGABYTES;
   if (deviceMemoryAllocation == 0) {
     deviceMemoryAllocation =
         Acts::Cuda::Info::instance().devices()[cmdl.cudaDevice].totalMemory *
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
     decltype(seedFinder_host)::SeedingState state;
-    for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
+    for (size_t i = 0; i < cmdl.groupsToIterate; ++i) {
       auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
       if (spGroup_itr == spGroup.end()) {
         break;
@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) {
   spacePointData.resize(spView.size());
 
   // Perform the seed finding.
-  for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
+  for (size_t i = 0; i < cmdl.groupsToIterate; ++i) {
     auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
     if (spGroup_itr == spGroup_end) {
       break;
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
   //
 
   // Count the total number of reconstructed seeds.
-  std::size_t nSeeds_host = 0, nSeeds_device = 0;
+  size_t nSeeds_host = 0, nSeeds_device = 0;
   for (const auto& seeds : seeds_host) {
     nSeeds_host += seeds.size();
   }
@@ -246,7 +246,7 @@ int main(int argc, char* argv[]) {
 
   // Count how many seeds, reconstructed on the host, can be matched with seeds
   // reconstructed on the accelerator.
-  std::size_t nMatch = 0;
+  size_t nMatch = 0;
   double matchPercentage = 0.0;
   if (!cmdl.onlyGPU) {
     assert(seeds_host.size() == seeds_device.size());
