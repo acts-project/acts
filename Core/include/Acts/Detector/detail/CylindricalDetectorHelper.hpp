@@ -189,7 +189,7 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
 
   // The return boundaries
   std::array<std::set<ActsScalar>, 3u> uniqueBoundaries;
-  auto insertWithPrecision = [&](size_t is, ActsScalar value) -> void {
+  auto insertWithPrecision = [&](std::size_t is, ActsScalar value) -> void {
     if (precision == 0.) {
       uniqueBoundaries[is].insert(value);
       return;
