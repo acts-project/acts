@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(CylinderPortalsSvg) {
 
   // rz view
   std::vector<actsvg::svg::object> zrPortals;
-  std::size_t ip = 0;
+  size_t ip = 0;
   std::for_each(protoPortals.begin(), protoPortals.end(), [&](const auto& p) {
     zrPortals.push_back(
         Acts::Svg::View::zr(p, "Portal_zr" + std::to_string(ip++)));
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(CylinderContainerPortalsSvg) {
   }
   // rz view
   std::vector<actsvg::svg::object> zrPortals;
-  std::size_t ip = 0;
+  size_t ip = 0;
   std::for_each(protoPortals.begin(), protoPortals.end(), [&](const auto& p) {
     zrPortals.push_back(
         Acts::Svg::View::zr(p, "Portal_zr" + std::to_string(ip++)));

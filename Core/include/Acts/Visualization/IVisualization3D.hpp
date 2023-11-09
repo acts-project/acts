@@ -24,7 +24,7 @@ namespace Acts {
 /// conform to.
 class IVisualization3D {
  public:
-  using FaceType = std::vector<size_t>;
+  using FaceType = std::vector<std::size_t>;
 
   /// Draw a vertex at a given location and a color.
   /// @param vtx The vertex position

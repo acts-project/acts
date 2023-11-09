@@ -29,7 +29,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
   double chi2 = 0;
 
   visit_measurement(trackState.calibratedSize, [&](auto N) -> bool {
-    constexpr size_t kMeasurementSize = decltype(N)::value;
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
     using ParametersVector = ActsVector<kMeasurementSize>;
     using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
 

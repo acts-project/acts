@@ -78,8 +78,8 @@ Acts::SurfacePtrVector Acts::DigitizationModule::stepSurfaces(
   const DigitizationCell endCell = m_segmentation->cell(end);
 
   // go along x - first with the naive binning (i.e. w.o lorentz angle)
-  size_t sCellX = startCell.channel0;
-  size_t eCellX = endCell.channel0;
+  std::size_t sCellX = startCell.channel0;
+  std::size_t eCellX = endCell.channel0;
   if (sCellX > eCellX) {
     std::swap(sCellX, eCellX);
   }
@@ -89,8 +89,8 @@ Acts::SurfacePtrVector Acts::DigitizationModule::stepSurfaces(
   }
   ++eCellX;  // @TODO check : safe because we can assume to have eCell+1
   // the surfaces along Y are easy, just the bin surfaces
-  size_t sCellY = startCell.channel1;
-  size_t eCellY = endCell.channel1;
+  std::size_t sCellY = startCell.channel1;
+  std::size_t eCellY = endCell.channel1;
   if (sCellY > eCellY) {
     std::swap(sCellY, eCellY);
   }

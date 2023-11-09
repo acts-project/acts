@@ -1,6 +1,6 @@
 # Walkthrough of the OpenDataDetector full chain example
 
-The OpenDataDatector (ODD) is fictitious silicon detector which resides in its own repository on [GitLab](https://gitlab.cern.ch/acts/OpenDataDetector). It is used for testing and as a performance baseline in Acts.
+The OpenDataDetector (ODD) is fictitious silicon detector which resides in its own repository on [GitLab](https://gitlab.cern.ch/acts/OpenDataDetector). It is used for testing and as a performance baseline in ACTS.
 
 Our full chain ODD example is written in Python and can be found [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/full_chain_odd.py).
 
@@ -30,13 +30,14 @@ The simulation step involves random processes and in order to get the same resul
 rnd = acts.examples.RandomNumbers(seed=42)
 ```
 
-All simulation and reconstruction pipelines in Acts begin with a `Sequencer`. It controls the execution of the different algorithms in the chain. We provide the number of events, the number of threads to use (`-1` to use all the machine's cores) and the desired log level.
+All simulation and reconstruction pipelines in ACTS begin with a `Sequencer`. It controls the execution of the different algorithms in the chain. We provide the number of events, the number of threads to use (`-1` to use all the machine's cores) and the desired log level.
 
 ```python
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 ```
 
-Our first simulation step is the particle gun. It spawns particles and their initial parameters, like position and momentum, inside our detecor.
+Our first simulation step is the particle gun.
+It spawns particles and their initial parameters, like position and momentum, inside our detector.
 
 In our simple example we generate a single muon with random charge (i.e. muon or anti-muon) with 1-10 GeV with uniform pseudorapidity from -3 to 3.
 
@@ -99,7 +100,8 @@ addSeeding(
 )
 ```
 
-The Combinatorial Kalman Filter (CKF) will use the seeds to propagate the trajectory forward and backward in time with the idea to find more measurements along the way. It combines (i.e. smoothes) these measurements and outputs reconstructed tracks which include smoothed track parameters for each measurement.
+The Combinatorial Kalman Filter (CKF) will use the seeds to propagate the trajectory forward and backward in time with the idea to find more measurements along the way.
+It combines (i.e. smooths) these measurements and outputs reconstructed tracks which include smoothed track parameters for each measurement.
 
 ```python
 addCKFTracks(
