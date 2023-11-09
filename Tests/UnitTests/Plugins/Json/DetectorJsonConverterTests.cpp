@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   auto detectorIn =
       Acts::DetectorJsonConverter::fromJson(tContext, jDetectorIn);
 
-  BOOST_CHECK(detectorIn->name() == detector->name());
+  BOOST_CHECK_EQUAL(detectorIn->name(), detector->name());
 
   auto jDetectorInOut =
       Acts::DetectorJsonConverter::toJson(tContext, *detectorIn);

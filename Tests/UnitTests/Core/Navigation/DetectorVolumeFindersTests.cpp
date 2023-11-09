@@ -78,15 +78,15 @@ BOOST_AUTO_TEST_CASE(RootVolumeFinder) {
   // Cylinder 0
   nState.position = Acts::Vector3(5., 0., 0.);
   rvf.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == cyl0.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, cyl0.get());
   // Cylinder 1
   nState.position = Acts::Vector3(50., 0., 0.);
   rvf.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == cyl1.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, cyl1.get());
   // Cylinder 2
   nState.position = Acts::Vector3(150., 0., 0.);
   rvf.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == cyl2.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, cyl2.get());
 
   nState.currentDetector = nullptr;
   BOOST_CHECK_THROW(rvf.update(tContext, nState), std::runtime_error);
@@ -116,15 +116,15 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
   // Cylinder 0
   nState.position = Acts::Vector3(5., 0., 0.);
   idv.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == cyl0.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, cyl0.get());
   // Cylinder 1
   nState.position = Acts::Vector3(50., 0., 0.);
   idv.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == cyl1.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, cyl1.get());
   // Cylinder 2
   nState.position = Acts::Vector3(150., 0., 0.);
   idv.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == cyl2.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, cyl2.get());
 
   nState.currentDetector = nullptr;
   BOOST_CHECK_THROW(idv.update(tContext, nState), std::runtime_error);

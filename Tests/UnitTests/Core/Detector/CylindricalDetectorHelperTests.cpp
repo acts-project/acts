@@ -134,20 +134,20 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
 
     auto protoContainer = connectInR(tContext, rVolumes, {}, logLevel);
     // Check the portal setup
-    BOOST_CHECK(rVolumes[0u]->portalPtrs()[2u] ==
-                rVolumes[1u]->portalPtrs()[3u]);
-    BOOST_CHECK(rVolumes[1u]->portalPtrs()[2u] ==
-                rVolumes[2u]->portalPtrs()[3u]);
-    BOOST_CHECK(rVolumes[0u]->portalPtrs()[0u] ==
-                rVolumes[1u]->portalPtrs()[0u]);
-    BOOST_CHECK(rVolumes[1u]->portalPtrs()[0u] ==
-                rVolumes[2u]->portalPtrs()[0u]);
-    BOOST_CHECK(rVolumes[0u]->portalPtrs()[1u] ==
-                rVolumes[1u]->portalPtrs()[1u]);
-    BOOST_CHECK(rVolumes[1u]->portalPtrs()[1u] ==
-                rVolumes[2u]->portalPtrs()[1u]);
-    BOOST_CHECK(rVolumes[0u]->portalPtrs()[0u] == protoContainer[0u]);
-    BOOST_CHECK(rVolumes[0u]->portalPtrs()[1u] == protoContainer[1u]);
+    BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[2u],
+                      rVolumes[1u]->portalPtrs()[3u]);
+    BOOST_CHECK_EQUAL(rVolumes[1u]->portalPtrs()[2u],
+                      rVolumes[2u]->portalPtrs()[3u]);
+    BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[0u],
+                      rVolumes[1u]->portalPtrs()[0u]);
+    BOOST_CHECK_EQUAL(rVolumes[1u]->portalPtrs()[0u],
+                      rVolumes[2u]->portalPtrs()[0u]);
+    BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[1u],
+                      rVolumes[1u]->portalPtrs()[1u]);
+    BOOST_CHECK_EQUAL(rVolumes[1u]->portalPtrs()[1u],
+                      rVolumes[2u]->portalPtrs()[1u]);
+    BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[0u], protoContainer[0u]);
+    BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[1u], protoContainer[1u]);
 
     // A detector construction that should work
     auto detector =
@@ -249,14 +249,14 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
 
       // Check the portal setup.
       // Glued, remainders are outside skin
-      BOOST_CHECK(zVolumes[0u]->portalPtrs()[1u] ==
-                  zVolumes[1u]->portalPtrs()[0u]);
-      BOOST_CHECK(zVolumes[1u]->portalPtrs()[1u] ==
-                  zVolumes[2u]->portalPtrs()[0u]);
-      BOOST_CHECK(zVolumes[2u]->portalPtrs()[1u] ==
-                  zVolumes[3u]->portalPtrs()[0u]);
-      BOOST_CHECK(protoContainer[0u] == zVolumes[0u]->portalPtrs()[0u]);
-      BOOST_CHECK(protoContainer[1u] == zVolumes[3u]->portalPtrs()[1u]);
+      BOOST_CHECK_EQUAL(zVolumes[0u]->portalPtrs()[1u],
+                        zVolumes[1u]->portalPtrs()[0u]);
+      BOOST_CHECK_EQUAL(zVolumes[1u]->portalPtrs()[1u],
+                        zVolumes[2u]->portalPtrs()[0u]);
+      BOOST_CHECK_EQUAL(zVolumes[2u]->portalPtrs()[1u],
+                        zVolumes[3u]->portalPtrs()[0u]);
+      BOOST_CHECK_EQUAL(protoContainer[0u], zVolumes[0u]->portalPtrs()[0u]);
+      BOOST_CHECK_EQUAL(protoContainer[1u], zVolumes[3u]->portalPtrs()[1u]);
 
       // Covered with the same surface, shich is the outside skin
       std::vector<unsigned int> checkShared = {2u};
@@ -265,13 +265,13 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
       }
 
       for (const auto& ip : checkShared) {
-        BOOST_CHECK(zVolumes[0u]->portalPtrs()[ip] ==
-                    zVolumes[1u]->portalPtrs()[ip]);
-        BOOST_CHECK(zVolumes[1u]->portalPtrs()[ip] ==
-                    zVolumes[2u]->portalPtrs()[ip]);
-        BOOST_CHECK(zVolumes[2u]->portalPtrs()[ip] ==
-                    zVolumes[3u]->portalPtrs()[ip]);
-        BOOST_CHECK(protoContainer[ip] == zVolumes[0u]->portalPtrs()[ip]);
+        BOOST_CHECK_EQUAL(zVolumes[0u]->portalPtrs()[ip],
+                          zVolumes[1u]->portalPtrs()[ip]);
+        BOOST_CHECK_EQUAL(zVolumes[1u]->portalPtrs()[ip],
+                          zVolumes[2u]->portalPtrs()[ip]);
+        BOOST_CHECK_EQUAL(zVolumes[2u]->portalPtrs()[ip],
+                          zVolumes[3u]->portalPtrs()[ip]);
+        BOOST_CHECK_EQUAL(protoContainer[ip], zVolumes[0u]->portalPtrs()[ip]);
       }
 
       auto detector =
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
         auto current = v;
         auto last = phiVolumes[iv - 1u];
         for (const auto& ch : checkShared) {
-          BOOST_CHECK(current->portalPtrs()[ch] == last->portalPtrs()[ch]);
+          BOOST_CHECK_EQUAL(current->portalPtrs()[ch], last->portalPtrs()[ch]);
         }
       }
     }
@@ -648,14 +648,14 @@ BOOST_AUTO_TEST_CASE(RZPhiBoundaries) {
 
   auto boundaries =
       rzphiBoundaries(tContext, volumes, 0., Acts::Logging::VERBOSE);
-  BOOST_CHECK(boundaries.size() == 3u);
+  BOOST_CHECK_EQUAL(boundaries.size(), 3u);
   // Check the r boundaries
   std::vector<ActsScalar> rBoundaries = {0., 20., 40., 60., 120.};
   BOOST_CHECK(boundaries[0u] == rBoundaries);
   // Check the z boundaries
   std::vector<ActsScalar> zBoundaries = {-100., -90., 90., 100.};
   BOOST_CHECK(boundaries[1u] == zBoundaries);
-  BOOST_CHECK(boundaries[2u].size() == 2u);
+  BOOST_CHECK_EQUAL(boundaries[2u].size(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(RZPhiBoundariesWithTolerance) {

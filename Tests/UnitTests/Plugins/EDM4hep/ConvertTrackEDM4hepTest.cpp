@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
   BOOST_CHECK_EQUAL(
       (converted.covariance.value().template topLeftCorner<4, 4>()),
       ActsSquareMatrix<4>::Identity());
-  BOOST_CHECK(converted.covariance.value()(4, 4) > 0);
+  BOOST_CHECK_GT(converted.covariance.value()(4, 4), 0);
   BOOST_CHECK_EQUAL(converted.covariance.value()(5, 5), 25_ns);
 
   // convert back for roundtrip test
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
 
   BOOST_CHECK((converted.covariance.value().template topLeftCorner<4, 4>())
                   .isApprox(ActsSquareMatrix<4>::Identity()));
-  BOOST_CHECK(converted.covariance.value()(4, 4) > 0);
+  BOOST_CHECK_GT(converted.covariance.value()(4, 4), 0);
   BOOST_CHECK_EQUAL(converted.covariance.value()(5, 5), 25_ns);
 
   // convert back for roundtrip test
