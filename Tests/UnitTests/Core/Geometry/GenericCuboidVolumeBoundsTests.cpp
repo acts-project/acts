@@ -188,13 +188,13 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
 
   // Check recreation from bound values
   const auto boundValues = gcvb.values();
-  BOOST_CHECK(boundValues.size() == 24u);
+  BOOST_CHECK_EQUAL(boundValues.size(), 24u);
 
   auto bValueArrray =
       to_array<GenericCuboidVolumeBounds::BoundValues::eSize, ActsScalar>(
           boundValues);
   GenericCuboidVolumeBounds gcvbCopy(bValueArrray);
-  BOOST_CHECK(gcvbCopy.values().size() == 24u);
+  BOOST_CHECK_EQUAL(gcvbCopy.values().size(), 24u);
 
   // Redo the check from above
   rot = AngleAxis3(0.542, Vector3::UnitZ()) *

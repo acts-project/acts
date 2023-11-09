@@ -31,9 +31,9 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
       "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       detectorBoundaries, detectorBinning);
 
-  BOOST_CHECK(detector->parent == nullptr);
+  BOOST_CHECK_EQUAL(detector->parent, nullptr);
   BOOST_CHECK(detector->children.empty());
-  BOOST_CHECK(detector->name == "detector");
+  BOOST_CHECK_EQUAL(detector->name, "detector");
 
   std::vector<Acts::BinningValue> pixelsBinning = {Acts::binZ};
   std::vector<Acts::ActsScalar> pixelsBoundaries = {20., 50., 100.};
@@ -78,11 +78,11 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   Acts::Experimental::detail::BlueprintHelper::sort(*detector);
 
   // Test the recursive sort worked
-  BOOST_CHECK(detector->children.front()->name == "beam_pipe");
-  BOOST_CHECK(detector->children.back()->name == "pixels");
-  BOOST_CHECK(detector->children.back()->children.front()->name == "gap0");
-  BOOST_CHECK(detector->children.back()->children[1u]->name == "layer");
-  BOOST_CHECK(detector->children.back()->children.back()->name == "gap1");
+  BOOST_CHECK_EQUAL(detector->children.front()->name, "beam_pipe");
+  BOOST_CHECK_EQUAL(detector->children.back()->name, "pixels");
+  BOOST_CHECK_EQUAL(detector->children.back()->children.front()->name, "gap0");
+  BOOST_CHECK_EQUAL(detector->children.back()->children[1u]->name, "layer");
+  BOOST_CHECK_EQUAL(detector->children.back()->children.back()->name, "gap1");
 
   std::ofstream fs2("detector_ordered.dot");
   Acts::Experimental::detail::BlueprintDrawer::dotStream(fs2, *detector);
@@ -205,55 +205,55 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   fs.close();
 
   // Simple test
-  BOOST_CHECK(detector->children.size() == 2u);
-  BOOST_CHECK(detector->children[0u]->name == "beam_pipe");
-  BOOST_CHECK(detector->children[1u]->name == "pixel");
+  BOOST_CHECK_EQUAL(detector->children.size(), 2u);
+  BOOST_CHECK_EQUAL(detector->children[0u]->name, "beam_pipe");
+  BOOST_CHECK_EQUAL(detector->children[1u]->name, "pixel");
 
   // Now fill the gaps
   Acts::Experimental::detail::BlueprintHelper::fillGaps(*detector);
 
   // Do the tests again
-  BOOST_CHECK(detector->children.size() == 4u);
-  BOOST_CHECK(detector->children[0u]->name == "beam_pipe");
-  BOOST_CHECK(detector->children[1u]->name == "detector_gap_0");
-  BOOST_CHECK(detector->children[2u]->name == "pixel");
-  BOOST_CHECK(detector->children[3u]->name == "detector_gap_1");
+  BOOST_CHECK_EQUAL(detector->children.size(), 4u);
+  BOOST_CHECK_EQUAL(detector->children[0u]->name, "beam_pipe");
+  BOOST_CHECK_EQUAL(detector->children[1u]->name, "detector_gap_0");
+  BOOST_CHECK_EQUAL(detector->children[2u]->name, "pixel");
+  BOOST_CHECK_EQUAL(detector->children[3u]->name, "detector_gap_1");
 
   // Adjustment of gap parameters
-  BOOST_CHECK(detector->children[1u]->boundaryValues[0] == beamPipeOr);
-  BOOST_CHECK(detector->children[1u]->boundaryValues[1] == pixelIr);
-  BOOST_CHECK(detector->children[1u]->boundaryValues[2] == detectorHz);
+  BOOST_CHECK_EQUAL(detector->children[1u]->boundaryValues[0], beamPipeOr);
+  BOOST_CHECK_EQUAL(detector->children[1u]->boundaryValues[1], pixelIr);
+  BOOST_CHECK_EQUAL(detector->children[1u]->boundaryValues[2], detectorHz);
 
-  BOOST_CHECK(detector->children[3u]->boundaryValues[0] == pixelOr);
-  BOOST_CHECK(detector->children[3u]->boundaryValues[1] == detectorOr);
-  BOOST_CHECK(detector->children[3u]->boundaryValues[2] == detectorHz);
+  BOOST_CHECK_EQUAL(detector->children[3u]->boundaryValues[0], pixelOr);
+  BOOST_CHECK_EQUAL(detector->children[3u]->boundaryValues[1], detectorOr);
+  BOOST_CHECK_EQUAL(detector->children[3u]->boundaryValues[2], detectorHz);
 
   // Check the pixel system: Nec / Barrel / Pec
-  BOOST_CHECK(detector->children[2u]->children.size() == 3u);
-  BOOST_CHECK(detector->children[2u]->children[0u]->children.size() == 3u);
-  BOOST_CHECK(detector->children[2u]->children[1u]->children.size() == 5u);
-  BOOST_CHECK(detector->children[2u]->children[2u]->children.size() == 3u);
+  BOOST_CHECK_EQUAL(detector->children[2u]->children.size(), 3u);
+  BOOST_CHECK_EQUAL(detector->children[2u]->children[0u]->children.size(), 3u);
+  BOOST_CHECK_EQUAL(detector->children[2u]->children[1u]->children.size(), 5u);
+  BOOST_CHECK_EQUAL(detector->children[2u]->children[2u]->children.size(), 3u);
 
   // Nec test
-  BOOST_CHECK(
-      detector->children[2u]->children[0u]->children[0]->boundaryValues[0] ==
+  BOOST_CHECK_EQUAL(
+      detector->children[2u]->children[0u]->children[0]->boundaryValues[0],
       pixelIr);
-  BOOST_CHECK(
-      detector->children[2u]->children[0u]->children[0]->boundaryValues[1] ==
+  BOOST_CHECK_EQUAL(
+      detector->children[2u]->children[0u]->children[0]->boundaryValues[1],
       pixelOr);
 
-  BOOST_CHECK(
-      detector->children[2u]->children[0u]->children[1]->boundaryValues[0] ==
+  BOOST_CHECK_EQUAL(
+      detector->children[2u]->children[0u]->children[1]->boundaryValues[0],
       pixelIr);
-  BOOST_CHECK(
-      detector->children[2u]->children[0u]->children[1]->boundaryValues[1] ==
+  BOOST_CHECK_EQUAL(
+      detector->children[2u]->children[0u]->children[1]->boundaryValues[1],
       pixelOr);
 
-  BOOST_CHECK(
-      detector->children[2u]->children[0u]->children[2]->boundaryValues[0] ==
+  BOOST_CHECK_EQUAL(
+      detector->children[2u]->children[0u]->children[2]->boundaryValues[0],
       pixelIr);
-  BOOST_CHECK(
-      detector->children[2u]->children[0u]->children[2]->boundaryValues[1] ==
+  BOOST_CHECK_EQUAL(
+      detector->children[2u]->children[0u]->children[2]->boundaryValues[1],
       pixelOr);
 
   std::ofstream fs2("detector_without_gaps.dot");
