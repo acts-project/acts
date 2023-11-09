@@ -37,7 +37,7 @@ While objects may be stored as `std::shared_ptr<T>` internally, their access dur
 
 ### Navigation state and delegates
 
-A struct {struct}`Acts::Experimental::NavigationState` holds the current navigation information through the geometry, which comprises of
+A struct {struct}`Acts::Experimental::NavigationState` holds the current navigation information through the geometry, which comprises
 
 - the current {class}`Acts::Experimental::DetectorVolume` in associated with the position within the detector, called `currentVolume`
 - a list of portal candidates to leave the `currentVolume`
@@ -70,7 +70,7 @@ Illustration of a shared direct portal between two volumes, the arrows indicate 
 Illustration of a shared extended portal between several volumes, the arrows indicate the direction of attachment.
 :::
 
-The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitablen `Acts::Experimental::DetectorVolumeUpdator` delegate.
+The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitable `Acts::Experimental::DetectorVolumeUpdator` delegate.
 
 ### The Detector volume object
 
@@ -95,7 +95,7 @@ In case the volume contains surfaces and/or volumes, an adequate navigation stat
 :::{figure} ../figures/EndcapGrid.png
 :width: 600px
 :align: center
-Illustration of a planar module andcap detector with a grid holding the indices to the candidate surfaces.
+Illustration of a planar module endcap detector with a grid holding the indices to the candidate surfaces.
 :::
 
 :::{note}
@@ -108,7 +108,7 @@ The detector object is the holder class of all geometry objects, it has to conta
 
 - at least one detector volume
 - a name string
-- a volume finder delegate (as `Acts::Experimental::DetecorVolumeFinder`) that allows to uniquely associate a point in space with a contained volume of the detector.
+- a volume finder delegate (as `Acts::Experimental::DetectorVolumeFinder`) that allows to uniquely associate a point in space with a contained volume of the detector.
 
 :::{note}
 When the detector is constructed, name duplicates are checked for and if found a `std::exception` is thrown. Similarly, when sensitive surfaces are provided and duplicate `Acts::GeometryIdentifier` objects are found during detector construction a `std::exception` is thrown. The latter can be avoided by using an appropriate (set of) `Acts::GeometyIdGenerator` tool(s) which will guarantee some level of uniqueness.

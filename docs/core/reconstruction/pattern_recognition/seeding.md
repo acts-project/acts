@@ -15,12 +15,12 @@ tracking.
 A good seeding algorithm, therefore, has the following properties:
 
 * It finds at least one seed for each particle that should be found
-* It doesn’t find many seeds which do NOT correspond to particles
-* It doesn’t find many seeds per particle
+* It doesn't find many seeds which do NOT correspond to particles
+* It doesn't find many seeds per particle
 
 The most typical way to create seeds is to combine measurements. In a homogeneous magnetic field, 3 measurements perfectly describe the helical path of a charged particle. One such triplet of measurements would then constitute a seed and defines, in close bounds, where the tracking needs to look for additional measurements to create a track spanning the whole detector. The difficulty is in choosing the correct measurements, as a helix can be fitted through any 3 measurements in a collision event with potentially tens of thousands of measurements. Therefore, many constraints or “cuts” are defined to reduce the number of candidates. Cuts may define where particles originate or the range of energy of particles to be found or otherwise restrict the combination of measurements for seed creation.
 
-## Acts Implementation
+## ACTS Implementation
 
 The seeding implementation in `Core/include/Acts/Seeding/` was written with a focus on parallelism and maintainability and as detector agnostic as possible, only assuming a (near) homogeneous magnetic field with particles originating from the central detector region. Cuts are configurable and can be plugged in as an algorithm which is called by the seeding. The seeding works on measurements or “SpacePoints” (SP), which need to provide $(x,y,z)$ coordinates with the $z$ axis being along the magnetic field, and $x$ and $y$. For the seeding algorithm to function the particle point of origin has to have a radius smaller than the radius of the detector layer closest to the interaction region. In other words, this seeding algorithm is not suitable for secondary particles originating far from the interaction region.
 

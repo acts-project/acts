@@ -1,6 +1,6 @@
 # Logging
 
-The Acts logging facility supports several severity levels which allow you to
+The ACTS logging facility supports several severity levels which allow you to
 control the amount of information displayed at run-time. Logger objects can
 easily be created using the {func}`Acts::getDefaultLogger` function which
 should be sufficient to get you started. In case you need more customized debug
@@ -53,10 +53,10 @@ Code example illustrating the usage:
 void myFunction() {
   // open the logfile
   std::ofstream logfile("log.txt");
-  // setup a logger instance for >= INFO messages, streaming into the log file
+  // set up a logger instance for >= INFO messages, streaming into the log file
   std::unique_ptr<const Acts::Logger> logger
       = Acts::getDefaultLogger("MyLogger", Acts::Logging::INFO, &logfile);
-  // make sure the Acts debug macros can work with your logger
+  // make sure the ACTS debug macros can work with your logger
   ACTS_VERBOSE("This message will not appear in the logfile.");
   ACTS_INFO("But this one will: Hello World!");
   // do not forget to close the logfile
@@ -66,8 +66,8 @@ void myFunction() {
 
 ## Logger integration
 
-In case you are using Acts in another framework which comes with its own
-logging facility (e.g. Gaudi) you can pipe the logging output from Acts
+In case you are using ACTS in another framework which comes with its own
+logging facility (e.g. Gaudi) you can pipe the logging output from ACTS
 tools and algorithms to your framework's logging system by supplying different
 implementations of:
 
@@ -106,11 +106,11 @@ Using this mechanism is now **discouraged** for integration with an experiment
 framework.
 :::
 
-Since Acts makes extensive use of {func}`Acts::getDefaultLogger` to provide
+Since ACTS makes extensive use of {func}`Acts::getDefaultLogger` to provide
 sufficient information for debugging, you might want to provide a modified
 implementation of this function (using your output filter and printing
 policies) to also pipe this output to your framework. You can use the following
-approach using the possibility to inject custom code by pre-loading shared
+approach using the possibility to inject custom code by preloading shared
 libraries with `LD_PRELOAD`. You need to provide an appropriate implementation
 for a function of the following signature into a separate source file and
 compile it in a shared library
@@ -124,7 +124,7 @@ std::unique_ptr<const Logger> getDefaultLogger(const std::string&,
 }
 ```
 
-Then you can run your executable, which uses Acts tools and algorithms, in
+Then you can run your executable, which uses ACTS tools and algorithms, in
 the following way (tested under Unix)
 
 ```console
