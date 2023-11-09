@@ -646,7 +646,8 @@ BOOST_AUTO_TEST_CASE(RZPhiBoundaries) {
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {
       innerV, middleLV, middleDV, middleUV, middleRV, outerV};
 
-  auto boundaries = rzphiBoundaries(tContext, volumes, Acts::Logging::VERBOSE);
+  auto boundaries =
+      rzphiBoundaries(tContext, volumes, 0., Acts::Logging::VERBOSE);
   BOOST_CHECK(boundaries.size() == 3u);
   // Check the r boundaries
   std::vector<ActsScalar> rBoundaries = {0., 20., 40., 60., 120.};
@@ -655,6 +656,28 @@ BOOST_AUTO_TEST_CASE(RZPhiBoundaries) {
   std::vector<ActsScalar> zBoundaries = {-100., -90., 90., 100.};
   BOOST_CHECK(boundaries[1u] == zBoundaries);
   BOOST_CHECK(boundaries[2u].size() == 2u);
+}
+
+BOOST_AUTO_TEST_CASE(RZPhiBoundariesWithTolerance) {
+  auto innerB = std::make_unique<CylinderVolumeBounds>(0., 20., 100);
+  auto innerV = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "Inner", Transform3::Identity(),
+      std::move(innerB), tryAllPortals());
+
+  auto outerB = std::make_unique<CylinderVolumeBounds>(20.001, 100., 100);
+  auto outerV = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "Inner", Transform3::Identity(),
+      std::move(outerB), tryAllPortals());
+
+  std::vector<std::shared_ptr<DetectorVolume>> volumes = {innerV, outerV};
+
+  auto boundariesWoTol =
+      rzphiBoundaries(tContext, volumes, 0., Acts::Logging::VERBOSE);
+  BOOST_CHECK_EQUAL(boundariesWoTol[0u].size(), 4u);
+
+  auto boundariesWTol =
+      rzphiBoundaries(tContext, volumes, 0.01, Acts::Logging::VERBOSE);
+  BOOST_CHECK_EQUAL(boundariesWTol[0u].size(), 3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
