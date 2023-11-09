@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
   BOOST_CHECK(!ts.hasUncalibratedSourceLink());
-  testSourceLinkCalibrator<VectorMultiTrajectory>(
+  TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>(
       tgContext, CalibrationContext{}, SourceLink{std::move(sourceLink)}, ts);
   BOOST_CHECK(ts.hasUncalibratedSourceLink());
 

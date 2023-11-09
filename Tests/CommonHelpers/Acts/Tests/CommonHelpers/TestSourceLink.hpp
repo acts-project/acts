@@ -78,58 +78,60 @@ struct TestSourceLink final {
       return trackingGeometry.findSurface(testSourceLink.m_geometryId);
     }
   };
+
+
+  /// Extract the measurement from a TestSourceLink.
+  ///
+  /// @param gctx Unused
+  /// @param trackState TrackState to calibrated
+  /// @return The measurement used
+  template <typename trajectory_t>
+  static Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
+      const GeometryContext& /*gctx*/, const CalibrationContext& /*cctx*/,
+      const SourceLink& sourceLink,
+      typename trajectory_t::TrackStateProxy trackState) {
+    TestSourceLink sl = sourceLink.template get<TestSourceLink>();
+
+    trackState.setUncalibratedSourceLink(sourceLink);
+
+    if ((sl.indices[0] != Acts::eBoundSize) &&
+        (sl.indices[1] != Acts::eBoundSize)) {
+      auto meas =
+          makeMeasurement(trackState.getUncalibratedSourceLink(), sl.parameters,
+                          sl.covariance, sl.indices[0], sl.indices[1]);
+      trackState.allocateCalibrated(2);
+      trackState.setCalibrated(meas);
+      return meas;
+    } else if (sl.indices[0] != Acts::eBoundSize) {
+      auto meas = makeMeasurement(
+          trackState.getUncalibratedSourceLink(), sl.parameters.head<1>(),
+          sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
+      trackState.allocateCalibrated(1);
+      trackState.setCalibrated(meas);
+      return meas;
+    } else {
+      throw std::runtime_error(
+          "Tried to extract measurement from invalid TestSourceLink");
+    }
+  }
+  
+  /// Extract the measurement from a TestSourceLink.
+  ///
+  /// @param gctx Unused
+  /// @param trackState TrackState to calibrated
+  template <typename trajectory_t>
+  static void testSourceLinkCalibrator(
+      const GeometryContext& gctx, const CalibrationContext& cctx,
+      const SourceLink& sourceLink,
+      typename trajectory_t::TrackStateProxy trackState) {
+    testSourceLinkCalibratorReturn<trajectory_t>(gctx, cctx, sourceLink,
+                                                trackState);
+  }
 };
 
 bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs);
 bool operator!=(const TestSourceLink& lhs, const TestSourceLink& rhs);
 std::ostream& operator<<(std::ostream& os, const TestSourceLink& sourceLink);
-
-/// Extract the measurement from a TestSourceLink.
-///
-/// @param gctx Unused
-/// @param trackState TrackState to calibrated
-/// @return The measurement used
-template <typename trajectory_t>
-Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
-    const GeometryContext& /*gctx*/, const CalibrationContext& /*cctx*/,
-    const SourceLink& sourceLink,
-    typename trajectory_t::TrackStateProxy trackState) {
-  TestSourceLink sl = sourceLink.template get<TestSourceLink>();
-
-  trackState.setUncalibratedSourceLink(sourceLink);
-
-  if ((sl.indices[0] != Acts::eBoundSize) &&
-      (sl.indices[1] != Acts::eBoundSize)) {
-    auto meas =
-        makeMeasurement(trackState.getUncalibratedSourceLink(), sl.parameters,
-                        sl.covariance, sl.indices[0], sl.indices[1]);
-    trackState.allocateCalibrated(2);
-    trackState.setCalibrated(meas);
-    return meas;
-  } else if (sl.indices[0] != Acts::eBoundSize) {
-    auto meas = makeMeasurement(
-        trackState.getUncalibratedSourceLink(), sl.parameters.head<1>(),
-        sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
-    trackState.allocateCalibrated(1);
-    trackState.setCalibrated(meas);
-    return meas;
-  } else {
-    throw std::runtime_error(
-        "Tried to extract measurement from invalid TestSourceLink");
-  }
-}
-/// Extract the measurement from a TestSourceLink.
-///
-/// @param gctx Unused
-/// @param trackState TrackState to calibrated
-template <typename trajectory_t>
-void testSourceLinkCalibrator(
-    const GeometryContext& gctx, const CalibrationContext& cctx,
-    const SourceLink& sourceLink,
-    typename trajectory_t::TrackStateProxy trackState) {
-  testSourceLinkCalibratorReturn<trajectory_t>(gctx, cctx, sourceLink,
-                                               trackState);
-}
 
 }  // namespace Test
 }  // namespace Acts

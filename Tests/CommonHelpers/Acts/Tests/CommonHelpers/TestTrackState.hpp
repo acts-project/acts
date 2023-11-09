@@ -15,6 +15,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <random>
+#include "TestSourceLink.hpp"
 
 namespace Acts::Test {
 
@@ -125,7 +126,9 @@ struct TestTrackState {
     ts.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
     // create calibrated measurements from source link
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-      testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{}, ts);
+      TestSourceLink::testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{},
+                                                            Acts::CalibrationContext{},
+                                                            Acts::SourceLink{sourceLink}, ts);
     }
   }
 };
