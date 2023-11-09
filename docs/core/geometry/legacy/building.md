@@ -35,9 +35,9 @@ binding for the ATLAS experiment.
 
 ```{note}
 While `DD4hep` offers a descriptive language with a dedicated extension mechanism
-that can be used by Acts to interpret the underlying geometry hierarchy and and structure,
+that can be used by ACTS to interpret the underlying geometry hierarchy and and structure,
 there is no such guarantee when having the already as built `TGeo` geometry in hand.
-Therefore a dedicated Acts configuration file based on `json` can be provided that allows
+Therefore a dedicated ACTS configuration file based on `json` can be provided that allows
 to specify parsing restrictions for sub detectors. 
 ```
 
