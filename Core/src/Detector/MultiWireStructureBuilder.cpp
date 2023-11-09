@@ -118,8 +118,7 @@ Acts::Experimental::MultiWireStructureBuilder::construct(
     const Acts::GeometryContext& gctx) {
   if (mCfg.mlBounds.size() != 4u) {
     throw std::invalid_argument(
-        "MultiWireStructureBuilder: Invalid dimension for bounds. Trapezoid "
-        "Volume Bounds are supported.");
+        "MultiWireStructureBuilder: Invalid dimension for bounds. Trapezoid Volume Bounds are supported.");
   }
 
   // Configure the external structure builder for the internal structure
