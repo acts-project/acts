@@ -17,14 +17,14 @@ Each {class}`Acts::Surface` instance reports its type from {func}`Acts::Surface:
 :::
 
 
-| Surface Type          | Local Coordinates | Bound Types available                                                                       |
-|:----------------------|-------------------|:--------------------------------------------------------------------------------------------|
-| {class}`Acts::ConeSurface`         | $[r\phi, z]$         | {class}`Acts::ConeBounds`                                                                                |
-| {class}`Acts::CylinderSurface`     | $[r, \phi]$         | {class}`Acts::CylinderBounds`                                                                            |
-| {class}`Acts::DiscSurface`         | $[r, \phi]$         | {class}`Acts::RadialBounds`, {class}`Acts::DiscTrapezoidBounds`                                                     |
-| {class}`Acts::PlaneSurface`        | $[x, y]$         | {class}`Acts::RectangleBounds`, {class}`Acts::TrapezoidBounds`, <br>{class}`Acts::InfiniteBounds`, {class}`Acts::EllipseBounds` |
-| {class}`Acts::PerigeeSurface`,<br> {class}`Acts::StrawSurface` | $[d, z]$ | {class}`Acts::CylinderBounds`                                                                            |
-| {class}`Acts::LineSurface` | $[d_0, z_0]$ | {class}`Acts::LineBounds` |
+| Surface Type                                                   | Local Coordinates | Bound Types available                                                                                                           |
+|:---------------------------------------------------------------|-------------------|:--------------------------------------------------------------------------------------------------------------------------------|
+| {class}`Acts::ConeSurface`                                     | $[r\phi, z]$      | {class}`Acts::ConeBounds`                                                                                                       |
+| {class}`Acts::CylinderSurface`                                 | $[r, \phi]$       | {class}`Acts::CylinderBounds`                                                                                                   |
+| {class}`Acts::DiscSurface`                                     | $[r, \phi]$       | {class}`Acts::RadialBounds`, {class}`Acts::DiscTrapezoidBounds`                                                                 |
+| {class}`Acts::PlaneSurface`                                    | $[x, y]$          | {class}`Acts::RectangleBounds`, {class}`Acts::TrapezoidBounds`, <br>{class}`Acts::InfiniteBounds`, {class}`Acts::EllipseBounds` |
+| {class}`Acts::PerigeeSurface`,<br> {class}`Acts::StrawSurface` | $[d, z]$          | {class}`Acts::CylinderBounds`                                                                                                   |
+| {class}`Acts::LineSurface`                                     | $[d_0, z_0]$      | {class}`Acts::LineBounds`                                                                                                       |
 
 ```{tip}
 In an ideal setup, the coordinate systems also define the readout

@@ -4,7 +4,7 @@ The ACTS CI runs a suite of physics performance monitoring jobs dubbed
 *physmon*. The purpose is to monitor and detect changes in the physics
 performance, both intentional and accidental.
 
-The associated job will run a number of workflow combinations. Currently this
+The associated job will run a number of workflow combinations. Currently, this
 includes the truth tracking and OpenDataDetector *full chain* workflows. The
 latter is further split into configurations with full seeding, truth smeared or
 truth estimated seeds. These jobs produce performance output files.

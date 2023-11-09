@@ -1,7 +1,7 @@
 Core library
 ============
 
-The Acts core functionality is grouped into modules, where each module contains
+The ACTS core functionality is grouped into modules, where each module contains
 tools related to one particular subject, i.e. experiment geometry or vertexing.
 
 .. toctree::
