@@ -575,6 +575,38 @@ BOOST_AUTO_TEST_CASE(
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
 
+  // Since the track parameters have to be defined wrt the origin at the begin
+  // of the AdaptiveGridDensityVertexFinder, we propagate all the tracks there.
+  // Define Perigee surface at the origin.
+  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+  // Create propagator options
+  PropagatorOptions<> pOptions(geoContext, magFieldContext);
+
+  for (auto& trk : tracks) {
+    // Get intersection of the track with the Perigee if the particle would
+    // move on a straight line.
+    // This allows us to determine whether we need to propagate the track
+    // forward or backward to arrive at the origin.
+    auto intersection = perigeeSurface
+                            ->intersect(geoContext, trk.position(geoContext),
+                                        trk.direction(), BoundaryCheck(false))
+                            .closest();
+
+    // Setting the propagation direction using the intersection length from
+    // above.
+    // We handle zero path length as forward propagation, but we could actually
+    // skip the whole propagation in this case.
+    pOptions.direction =
+        Direction::fromScalarZeroAsPositive(intersection.pathLength());
+
+    // Propagate to the PCA of the origin
+    auto result = propagator->propagate(trk, *perigeeSurface, pOptions);
+
+    // Overwrite the track parameters
+    trk = *result->endParameters;
+  }
+
   if (debugMode) {
     std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
     int maxCout = 10;
@@ -582,6 +614,8 @@ BOOST_AUTO_TEST_CASE(
     for (const auto& trk : tracks) {
       std::cout << count << ". track: " << std::endl;
       std::cout << "params: " << trk << std::endl;
+      std::cout << "reference point:\n"
+                << trk.referenceSurface().center(geoContext) << "\n";
       count++;
       if (count == maxCout) {
         break;
