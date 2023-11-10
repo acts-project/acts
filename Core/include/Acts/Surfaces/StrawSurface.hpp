@@ -29,12 +29,10 @@ class LineBounds;
 ///  Class for a StrawSurface in the TrackingGeometry
 ///  to describe dirft tube and straw like detectors.
 ///
-/// @image html figures/LineSurface.png
+/// @image html LineSurface.png
 ///
 class StrawSurface : public LineSurface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from Transform3 and bounds

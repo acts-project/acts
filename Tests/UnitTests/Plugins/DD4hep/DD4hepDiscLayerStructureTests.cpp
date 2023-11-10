@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
         discInternalsBuilder->construct(tContext);
 
     // All surfaces are filled
-    BOOST_CHECK(surfaces.size() == 44u + passiveAddon);
+    BOOST_CHECK_EQUAL(surfaces.size(), 44u + passiveAddon);
     // No volumes are added
     BOOST_CHECK(volumes.empty());
     // The surface updator is connected

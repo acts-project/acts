@@ -181,21 +181,21 @@ BOOST_AUTO_TEST_CASE(StatefullLambdas) {
 
   BOOST_CHECK(d);
   BOOST_CHECK(d.connected());
-  BOOST_CHECK(d(2) == 1);
+  BOOST_CHECK_EQUAL(d(2), 1);
 
   d.disconnect();
   d = lambda;
 
   BOOST_CHECK(d);
   BOOST_CHECK(d.connected());
-  BOOST_CHECK(d(2) == 2);
+  BOOST_CHECK_EQUAL(d(2), 2);
 
   d.disconnect();
   d.connect(lambda);
 
   BOOST_CHECK(d);
   BOOST_CHECK(d.connected());
-  BOOST_CHECK(d(2) == 3);
+  BOOST_CHECK_EQUAL(d(2), 3);
 
   // This should not compile because of deleted && overloads
   // d.connect([&](int a){ v.push_back(a); return v.size(); });

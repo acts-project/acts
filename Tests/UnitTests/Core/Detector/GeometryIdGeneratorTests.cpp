@@ -94,26 +94,26 @@ BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorReset) {
   }
 
   // Checking the volume
-  BOOST_CHECK(volumes[0]->geometryId().volume() == 1);
+  BOOST_CHECK_EQUAL(volumes[0]->geometryId().volume(), 1);
   for (auto [ip, p] : enumerate(volumes[0]->portals())) {
-    BOOST_CHECK(p->surface().geometryId().boundary() == ip + 1);
+    BOOST_CHECK_EQUAL(p->surface().geometryId().boundary(), ip + 1);
   }
 
-  BOOST_CHECK(volumes[1]->geometryId().volume() == 2);
+  BOOST_CHECK_EQUAL(volumes[1]->geometryId().volume(), 2);
   for (auto [ip, p] : enumerate(volumes[1]->portals())) {
-    BOOST_CHECK(p->surface().geometryId().boundary() == ip + 1);
+    BOOST_CHECK_EQUAL(p->surface().geometryId().boundary(), ip + 1);
   }
   for (auto [is, s] : enumerate(volumes[1]->surfaces())) {
     if (is < 4u) {
-      BOOST_CHECK(s->geometryId().sensitive() == is + 1);
+      BOOST_CHECK_EQUAL(s->geometryId().sensitive(), is + 1);
     } else {
-      BOOST_CHECK(s->geometryId().passive() == is - 3);
+      BOOST_CHECK_EQUAL(s->geometryId().passive(), is - 3);
     }
   }
 
-  BOOST_CHECK(volumes[2]->geometryId().volume() == 3);
+  BOOST_CHECK_EQUAL(volumes[2]->geometryId().volume(), 3);
   for (auto [ip, p] : enumerate(volumes[2]->portals())) {
-    BOOST_CHECK(p->surface().geometryId().boundary() == ip + 1);
+    BOOST_CHECK_EQUAL(p->surface().geometryId().boundary(), ip + 1);
   }
 }
 
@@ -133,20 +133,20 @@ BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorNoReset) {
   }
 
   // Checking the volume
-  BOOST_CHECK(volumes[0]->geometryId().volume() == 1);
+  BOOST_CHECK_EQUAL(volumes[0]->geometryId().volume(), 1);
   unsigned int portalCounter = 1;
   for (auto [ip, p] : enumerate(volumes[0]->portals())) {
-    BOOST_CHECK(p->surface().geometryId().boundary() == portalCounter++);
+    BOOST_CHECK_EQUAL(p->surface().geometryId().boundary(), portalCounter++);
   }
 
-  BOOST_CHECK(volumes[1]->geometryId().volume() == 2);
+  BOOST_CHECK_EQUAL(volumes[1]->geometryId().volume(), 2);
   for (auto [ip, p] : enumerate(volumes[1]->portals())) {
-    BOOST_CHECK(p->surface().geometryId().boundary() == portalCounter++);
+    BOOST_CHECK_EQUAL(p->surface().geometryId().boundary(), portalCounter++);
   }
 
-  BOOST_CHECK(volumes[2]->geometryId().volume() == 3);
+  BOOST_CHECK_EQUAL(volumes[2]->geometryId().volume(), 3);
   for (auto [ip, p] : enumerate(volumes[2]->portals())) {
-    BOOST_CHECK(p->surface().geometryId().boundary() == portalCounter++);
+    BOOST_CHECK_EQUAL(p->surface().geometryId().boundary(), portalCounter++);
   }
 }
 
@@ -166,12 +166,12 @@ BOOST_AUTO_TEST_CASE(ContainerGeoIdGenerator) {
     generator.assignGeometryId(cache, *volume);
   }
 
-  BOOST_CHECK(volumes[0]->geometryId().volume() == 15);
-  BOOST_CHECK(volumes[0]->geometryId().layer() == 1);
-  BOOST_CHECK(volumes[1]->geometryId().volume() == 15);
-  BOOST_CHECK(volumes[1]->geometryId().layer() == 2);
-  BOOST_CHECK(volumes[2]->geometryId().volume() == 15);
-  BOOST_CHECK(volumes[2]->geometryId().layer() == 3);
+  BOOST_CHECK_EQUAL(volumes[0]->geometryId().volume(), 15);
+  BOOST_CHECK_EQUAL(volumes[0]->geometryId().layer(), 1);
+  BOOST_CHECK_EQUAL(volumes[1]->geometryId().volume(), 15);
+  BOOST_CHECK_EQUAL(volumes[1]->geometryId().layer(), 2);
+  BOOST_CHECK_EQUAL(volumes[2]->geometryId().volume(), 15);
+  BOOST_CHECK_EQUAL(volumes[2]->geometryId().layer(), 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
