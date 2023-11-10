@@ -617,7 +617,10 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
-  // TODO check for number of updates
+  BOOST_CHECK_LT(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      10);
 
   ACTS_INFO("*** Test: relChi2changeCutOff -- Finish");
 }

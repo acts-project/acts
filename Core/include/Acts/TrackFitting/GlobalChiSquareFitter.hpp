@@ -643,7 +643,9 @@ class Gx2Fitter {
 
     // Iterate the fit and improve result. Abort after n steps or after
     // convergence
-    for (size_t nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
+    // nUpdate is initialized outside to save its state for the track
+    size_t nUpdate = 0;
+    for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       ACTS_VERBOSE("nUpdate = " << nUpdate + 1 << "/"
                                 << gx2fOptions.nUpdateMax);
 
@@ -784,6 +786,8 @@ class Gx2Fitter {
 
     ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
 
+    trackContainer.template addColumn<size_t>("Gx2fnUpdateColumn");
+
     // Prepare track for return
     auto track = trackContainer.getTrack(trackContainer.addTrack());
     track.tipIndex() = tipIndex;
@@ -793,6 +797,8 @@ class Gx2Fitter {
 
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
+
+    track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
 
     // Return the converted Track
     return track;
