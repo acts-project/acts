@@ -628,7 +628,7 @@ class Gx2Fitter {
     start_parameters_t params = sParameters;
     BoundVector deltaParams = BoundVector::Zero();
     double chi2sum = 0;
-    double oldChi2sum = DBL_MAX;
+    double oldChi2sum = std::numeric_limits<double>::max();
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
 
@@ -787,7 +787,9 @@ class Gx2Fitter {
 
     ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
 
-    trackContainer.template addColumn<size_t>("Gx2fnUpdateColumn");
+    if (!trackContainer.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
+      trackContainer.template addColumn<size_t>("Gx2fnUpdateColumn");
+    }
 
     // Prepare track for return
     auto track = trackContainer.getTrack(trackContainer.addTrack());
@@ -796,10 +798,13 @@ class Gx2Fitter {
     track.covariance() = fullCovariancePredicted;
     track.setReferenceSurface(params.referenceSurface().getSharedPtr());
 
+    if (trackContainer.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
+      ACTS_DEBUG("Add nUpdate to track")
+      track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
+    }
+
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
-
-    track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
 
     // Return the converted Track
     return track;
