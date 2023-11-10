@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   IPEstimator ip3dEst(ip3dEstCfg);
 
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::Config fitterCfg(
-      ip3dEst);
+      std::move(ip3dEst));
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig(bField, propagator);

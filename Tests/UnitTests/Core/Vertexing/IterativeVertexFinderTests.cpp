@@ -167,8 +167,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
-                             ipEstimator);
+    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
+                             std::move(sFinder), ipEstimator);
 
     cfg.reassignTracksAfterFirstFit = true;
 
@@ -385,8 +385,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
-                             ipEstimator);
+    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
+                             std::move(sFinder), ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(std::move(cfg), extractParameters);
@@ -596,8 +596,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   static_assert(VertexFinderConcept<VertexFinder>,
                 "Vertex finder does not fulfill vertex finder concept.");
 
-  VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
-                           ipEstimator);
+  VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
+                           std::move(sFinder), ipEstimator);
   cfg.maxVertices = 200;
   cfg.maximumChi2cutForSeeding = 49;
   cfg.significanceCutSeeding = 12;
