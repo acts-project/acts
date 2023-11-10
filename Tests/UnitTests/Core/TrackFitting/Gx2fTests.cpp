@@ -232,6 +232,10 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.parameters(), startParametersFit.parameters());
   BOOST_CHECK_EQUAL(track.covariance(), BoundMatrix::Identity());
+  BOOST_CHECK_EQUAL(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      0);
 
   ACTS_INFO("*** Test: NoFit -- Finish");
 }
@@ -326,6 +330,10 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
+  BOOST_CHECK_EQUAL(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      5);
 
   ACTS_INFO("*** Test: Fit5Iterations -- Finish");
 }
@@ -429,6 +437,10 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 2e-28, 1e0);
+  BOOST_CHECK_EQUAL(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      5);
 
   ACTS_INFO("*** Test: MixedDetector -- Finish");
 }
@@ -523,6 +535,10 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 0.5, 2e-1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 8e-35, 4e0);
+  BOOST_CHECK_EQUAL(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      5);
 
   ACTS_INFO("*** Test: FitWithBfield -- Finish");
 }
@@ -617,11 +633,13 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
-  // TODO check for number of updates
+  BOOST_CHECK_LT(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      10);
 
   ACTS_INFO("*** Test: relChi2changeCutOff -- Finish");
 }
-
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts
