@@ -566,8 +566,8 @@ class MultiTrajectoryTestsCommon {
     {
       auto ts = mj.getTrackState(
           mj.addTrackState(PM::Filtered | PM::Smoothed | PM::Predicted));
-      BOOST_CHECK(ts.getMask() ==
-                  (PM::Filtered | PM::Smoothed | PM::Predicted));
+      BOOST_CHECK_EQUAL(ts.getMask(),
+                        (PM::Filtered | PM::Smoothed | PM::Predicted));
     }
     {
       for (PM mask : values) {
@@ -639,18 +639,18 @@ class MultiTrajectoryTestsCommon {
     ts2.predictedCovariance().setRandom();
 
     // they are different before
-    BOOST_CHECK(ts1.predicted() != ts2.predicted());
-    BOOST_CHECK(ts1.predictedCovariance() != ts2.predictedCovariance());
+    BOOST_CHECK_NE(ts1.predicted(), ts2.predicted());
+    BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
 
     // ts1 -> ts2 fails
     BOOST_CHECK_THROW(ts2.copyFrom(ts1), std::runtime_error);
-    BOOST_CHECK(ts1.predicted() != ts2.predicted());
-    BOOST_CHECK(ts1.predictedCovariance() != ts2.predictedCovariance());
+    BOOST_CHECK_NE(ts1.predicted(), ts2.predicted());
+    BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
 
     // ts2 -> ts1 is ok
     ts1.copyFrom(ts2);
-    BOOST_CHECK(ts1.predicted() == ts2.predicted());
-    BOOST_CHECK(ts1.predictedCovariance() == ts2.predictedCovariance());
+    BOOST_CHECK_EQUAL(ts1.predicted(), ts2.predicted());
+    BOOST_CHECK_EQUAL(ts1.predictedCovariance(), ts2.predictedCovariance());
 
     size_t i0 = mj.addTrackState();
     size_t i1 = mj.addTrackState();
@@ -821,18 +821,18 @@ class MultiTrajectoryTestsCommon {
     ts2.predictedCovariance().setRandom();
 
     // they are different before
-    BOOST_CHECK(ts1.predicted() != ts2.predicted());
-    BOOST_CHECK(ts1.predictedCovariance() != ts2.predictedCovariance());
+    BOOST_CHECK_NE(ts1.predicted(), ts2.predicted());
+    BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
 
     // ts1 -> ts2 fails
     BOOST_CHECK_THROW(ts2.copyFrom(ts1), std::runtime_error);
-    BOOST_CHECK(ts1.predicted() != ts2.predicted());
-    BOOST_CHECK(ts1.predictedCovariance() != ts2.predictedCovariance());
+    BOOST_CHECK_NE(ts1.predicted(), ts2.predicted());
+    BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
 
     // ts2 -> ts1 is ok
     ts1.copyFrom(ts2);
-    BOOST_CHECK(ts1.predicted() == ts2.predicted());
-    BOOST_CHECK(ts1.predictedCovariance() == ts2.predictedCovariance());
+    BOOST_CHECK_EQUAL(ts1.predicted(), ts2.predicted());
+    BOOST_CHECK_EQUAL(ts1.predictedCovariance(), ts2.predictedCovariance());
 
     {
       BOOST_TEST_CHECKPOINT("Calib auto alloc");

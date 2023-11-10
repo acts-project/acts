@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   auto radialLayers = plHelper.protoLayers(
       tgContext, cylinderSurfaces, ProtoLayerHelper::SortingConfig(binR, 5.));
 
-  BOOST_CHECK(radialLayers.size() == 4);
+  BOOST_CHECK_EQUAL(radialLayers.size(), 4);
 
   std::vector<ColorRGB> sortedColors = {{102, 204, 255},
                                         {102, 255, 153},
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   // Sort into ProtoLayers
   auto discLayersZ = plHelper.protoLayers(tgContext, discSurfaces, {binZ, 5.});
 
-  BOOST_CHECK(discLayersZ.size() == 4);
+  BOOST_CHECK_EQUAL(discLayersZ.size(), 4);
 
   il = 0;
   for (auto& layer : discLayersZ) {
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   // First: Sort into ProtoLayers radially
   auto rSorted = plHelper.protoLayers(
       tgContext, ringSurfaces, ProtoLayerHelper::SortingConfig(binR, 1.));
-  BOOST_CHECK(rSorted.size() == 3);
+  BOOST_CHECK_EQUAL(rSorted.size(), 3);
 
   ColorRGB dColor = {0, 0, 0};
 

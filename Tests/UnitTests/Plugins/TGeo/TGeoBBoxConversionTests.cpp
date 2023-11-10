@@ -71,13 +71,13 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Upper case ---------------------------------
   auto [plane_XYZ, thickness_XYZ] = TGeoSurfaceConverter::toSurface(
       *vol->GetShape(), *gGeoIdentity, "XY*", 1);
-  BOOST_CHECK_NE(plane_XYZ, nullptr);
+  BOOST_REQUIRE_NE(plane_XYZ, nullptr);
   BOOST_CHECK_EQUAL(plane_XYZ->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_XYZ, 2 * dZ, s_epsilon);
 
   auto bounds_XYZ =
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ->bounds()));
-  BOOST_CHECK_NE(bounds_XYZ, nullptr);
+  BOOST_REQUIRE_NE(bounds_XYZ, nullptr);
   double maxX = bounds_XYZ->get(RectangleBounds::eMaxX);
   double minX = bounds_XYZ->get(RectangleBounds::eMinX);
   double maxY = bounds_XYZ->get(RectangleBounds::eMaxY);
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   auto bounds_xyz =
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ->bounds()));
-  BOOST_CHECK_NE(bounds_xyz, nullptr);
+  BOOST_REQUIRE_NE(bounds_xyz, nullptr);
   BOOST_CHECK_EQUAL(bounds_xyz, bounds_XYZ);
   auto transform_xyz = plane_xyz->transform(tgContext);
   auto rotation_xyz = transform_xyz.rotation();
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Mixed case ---------------------------------
   auto [plane_xYz, thickness_xYz] = TGeoSurfaceConverter::toSurface(
       *vol->GetShape(), *gGeoIdentity, "xY*", 1);
-  BOOST_CHECK_NE(plane_xYz, nullptr);
+  BOOST_REQUIRE_NE(plane_xYz, nullptr);
   BOOST_CHECK_EQUAL(plane_xYz->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_xYz, 2 * dZ, s_epsilon);
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Swap case --------------------------------- (x/y) here
   auto [plane_YXz, thickness_YXz] = TGeoSurfaceConverter::toSurface(
       *vol->GetShape(), *gGeoIdentity, "YX*", 1);
-  BOOST_CHECK_NE(plane_YXz, nullptr);
+  BOOST_REQUIRE_NE(plane_YXz, nullptr);
   BOOST_CHECK_EQUAL(plane_YXz->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_YXz, 2 * dZ, s_epsilon);
 

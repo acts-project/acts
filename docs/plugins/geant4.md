@@ -31,7 +31,7 @@ Possible implementations of this type of conversions can be seen in the correspo
   BOOST_CHECK_EQUAL(cache.passiveSurfaces.size(), 0u);
 
   auto [ element, surface ] = cache.sensitiveSurfaces.front();
-  BOOST_CHECK(surface->type() == Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Cylinder);
 ```
 
 #### Inspecting surface conversion within python
