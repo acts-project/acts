@@ -37,11 +37,11 @@ auto mergeComponents(const component_t &a, const component_t &b,
   return ret;
 }
 
-template <typename proj_t, typename angle_desc_t>
+template <typename distance_t, typename proj_t, typename angle_desc_t>
 void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
                               std::size_t maxCmpsAfterMerge, const proj_t &proj,
                               const angle_desc_t &desc) {
-  Acts::detail::SymmetricKLDistanceMatrix<Acts::detail::SymmetricKLDistanceQoP>
+  Acts::detail::SymmetricKLDistanceMatrix<distance_t>
       distances(cmpCache, proj);
 
   auto remainingComponents = cmpCache.size();
@@ -156,14 +156,14 @@ void reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
   // We must differ between surface types, since there can be different
   // local coordinates
   detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-    reduceWithKLDistanceImpl(cmpCache, maxCmpsAfterMerge, proj, desc);
+    reduceWithKLDistanceImpl<Acts::detail::SymmetricKLDistanceQoP>(cmpCache, maxCmpsAfterMerge, proj, desc);
   });
 }
 
-namespace Experimental {
-void reduceMixtureWithKLDistanceAggressive(std::vector<GsfComponent> &cmpCache,
-                                           std::size_t maxCmpsAfterMerge,
-                                           const Surface &surface) {
+
+void reduceMixtureWithFullKLDistance(std::vector<GsfComponent> &cmpCache,
+                                 std::size_t maxCmpsAfterMerge,
+                                 const Surface &surface) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
@@ -173,9 +173,8 @@ void reduceMixtureWithKLDistanceAggressive(std::vector<GsfComponent> &cmpCache,
   // We must differ between surface types, since there can be different
   // local coordinates
   detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-    reduceWithKLDistanceAggressiveImpl(cmpCache, maxCmpsAfterMerge, proj, desc);
+    reduceWithKLDistanceImpl<Acts::detail::SymmetricKLDistanceFull>(cmpCache, maxCmpsAfterMerge, proj, desc);
   });
 }
 
-}  // namespace Experimental
 }  // namespace Acts

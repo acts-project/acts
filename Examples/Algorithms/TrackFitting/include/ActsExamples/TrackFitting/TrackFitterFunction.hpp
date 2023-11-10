@@ -78,8 +78,8 @@ using BetheHeitlerApprox = Acts::AtlasBetheHeitlerApprox<6, 5>;
 ///
 enum class MixtureReductionAlgorithm {
   weightCut,
-  KLDistance,
-  aggressiveKLDistance
+  KLDistanceQoP,
+  KLDistanceFull
 };
 
 /// Makes a fitter function object for the GSF

@@ -81,7 +81,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
   MixtureReductionAlgorithm reductionAlg =
-      MixtureReductionAlgorithm::KLDistance;
+      MixtureReductionAlgorithm::KLDistanceQoP;
   Acts::ComponentMergeMethod mergeMethod =
       Acts::ComponentMergeMethod::eMaxWeight;
 
@@ -124,13 +124,13 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureLargestWeights>();
       } break;
-      case MixtureReductionAlgorithm::KLDistance: {
+      case MixtureReductionAlgorithm::KLDistanceQoP: {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureWithKLDistance>();
       } break;
-      case MixtureReductionAlgorithm::aggressiveKLDistance: {
+      case MixtureReductionAlgorithm::KLDistanceFull: {
         gsfOptions.extensions.mixtureReducer.connect<
-            &Acts::Experimental::reduceMixtureWithKLDistanceAggressive>();
+            &Acts::reduceMixtureWithFullKLDistance>();
       }
     }
 

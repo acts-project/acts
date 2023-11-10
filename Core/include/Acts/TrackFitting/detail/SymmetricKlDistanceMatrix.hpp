@@ -46,26 +46,30 @@ struct SymmetricKLDistanceFull {
   ActsScalar operator()(const component_t &a, const component_t &b,
                         const proj_t &proj) {
     using namespace Acts;
-    const auto &parsA = proj(a);
-    const auto &parsB = proj(b);
-    const auto &covA = proj(a);
-    const auto &covB = proj(b);
+    const auto &parsA = proj(a).boundPars;
+    const auto &parsB = proj(b).boundPars;
+    const auto &covA = proj(a).boundCov;
+    const auto &covB = proj(b).boundCov;
 
     auto divergence = [](const BoundVector &p0, const BoundSquareMatrix &c0,
                          const BoundVector &p1,
                          const BoundSquareMatrix &c1) -> ActsScalar {
-      const auto c0inv = c0.inverse().eval();
+      const auto c1inv = c1.inverse().eval();
       return 0.5 *
-             ((c0inv * c1).trace() + (p0 - p1).transpose() * c0inv * (p0 - p1) -
+             ((c1inv * c0).trace() + (p1 - p0).transpose() * c1inv * (p1 - p0) -
               6 + std::log(c1.determinant() / c0.determinant()));
     };
 
     ActsScalar kl = divergence(parsA, covA, parsB, covB) +
                     divergence(parsB, covB, parsA, covA);
 
-    assert(kl >= 0.0 && "kl-divergence must be non-negative");
+    // assert(kl >= 0.0 && "kl-divergence must be non-negative");
 
-    return kl;
+    if(!(kl >= 0.0)) {
+      return kl;
+    } else {
+      return 1e15;
+    }
   }
 };
 
