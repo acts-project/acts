@@ -84,7 +84,12 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at the current vertex
-      setAllVertexCompatibilities(state, vtx, vertexingOptions);
+      Acts::Result<void> res =
+          setAllVertexCompatibilities(state, vtx, vertexingOptions);
+
+      if (!res.ok()) {
+        return res.error();
+      }
     }  // End loop over vertex collection
 
     // Recalculate all track weights and update vertices
@@ -232,7 +237,11 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Update the 3D impact parameters of all tracks
-  updateImpactParams3D(state, vtx, vertexingOptions);
+  Acts::Result<void> res = updateImpactParams3D(state, vtx, vertexingOptions);
+
+  if (!res.ok()) {
+    return res.error();
+  }
 
   VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
   // Loop over the tracks that are associated with vtx and estimate their
