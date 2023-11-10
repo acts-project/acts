@@ -94,7 +94,6 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
 
   nState.currentVolume = volumes.front().get();
   nState.currentVolume->updateNavigationState(tContext, nState);
-  std::cout << nState.surfaceCandidates.size() << std::endl;
 
   // check the surface candidates after update (12 surfaces + 6 portals)
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 18u);
