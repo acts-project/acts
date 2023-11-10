@@ -101,7 +101,7 @@ def runTruthTrackingGx2f(
 
     # Output
     s.addWriter(
-        acts.examples.RootTrajectoryStatesWriter(
+        acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
@@ -113,7 +113,7 @@ def runTruthTrackingGx2f(
     )
 
     s.addWriter(
-        acts.examples.RootTrajectorySummaryWriter(
+        acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
