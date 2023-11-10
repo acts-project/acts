@@ -121,7 +121,7 @@ struct SeedFinderConfig {
   float rMin = 33 * Acts::UnitConstants::mm;
 
   // Order of z bins to loop over when searching for SPs
-  std::vector<size_t> zBinsCustomLooping = {};
+  std::vector<std::size_t> zBinsCustomLooping = {};
   // Number of Z bins to skip the search for middle SPs
   std::size_t skipZMiddleBinSearch = 0;
 

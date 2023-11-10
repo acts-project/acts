@@ -276,11 +276,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    for (std::size_t grid_glob_bin(0);
+    for (size_t grid_glob_bin(0);
          grid_glob_bin < spacePointsGrouping.grid().size(); ++grid_glob_bin) {
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
-        std::size_t index = sp->index();
+        size_t index = sp->index();
 
         const float topHalfStripLength =
             m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp());

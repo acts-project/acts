@@ -87,7 +87,7 @@ using BetheHeitlerApprox = Acts::AtlasBetheHeitlerApprox<6, 5>;
 std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+    BetheHeitlerApprox betheHeitlerApprox, size_t maxComponents,
     double weightCutoff, Acts::MixtureReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger);

@@ -67,8 +67,8 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
 }
 
 std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
-    const GeometryContext& gctx, const Experimental::Portal& portal,
-    std::size_t ip, const Experimental::DetectorVolume& volume,
+    const GeometryContext& gctx, const Experimental::Portal& portal, size_t ip,
+    const Experimental::DetectorVolume& volume,
     const OrientedSurfaces& orientedSurfaces,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Options& option) {
@@ -78,7 +78,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
   const auto& volumeLinks = portal.detectorVolumeUpdators();
 
   // First assumption for outside link (along direction)
-  std::size_t outside = 1u;
+  size_t outside = 1u;
 
   // Find out if you need to take the outside or inside volume
   // for planar surfaces that's easy
@@ -116,7 +116,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
   // in order to make sure the size is adjusted
   if (singleLink != nullptr) {
     // Single link can be written out
-    std::size_t vLink = findVolume(singleLink->dVolume, detectorVolumes);
+    size_t vLink = findVolume(singleLink->dVolume, detectorVolumes);
     auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *surfaceAdjusted,
                                                       surfaceOptions);
     DetrayJsonHelper::addVolumeLink(jPortal["mask"], vLink);

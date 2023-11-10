@@ -82,7 +82,7 @@ class RootSimHitReader : public IReader {
   std::mutex m_read_mutex;
 
   /// Vector of {eventNr, entryMin, entryMax}
-  std::vector<std::tuple<uint32_t, std::size_t, std::size_t>> m_eventMap;
+  std::vector<std::tuple<uint32_t, size_t, size_t>> m_eventMap;
 
   /// The input tree name
   TChain *m_inputChain = nullptr;

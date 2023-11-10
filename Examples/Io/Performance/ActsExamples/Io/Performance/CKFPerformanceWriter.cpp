@@ -143,7 +143,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   const auto& particles = m_inputParticles(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
-  std::map<ActsFatras::Barcode, std::size_t> particleTruthHitCount;
+  std::map<ActsFatras::Barcode, size_t> particleTruthHitCount;
   for (const auto& [_, pid] : hitParticlesMap) {
     particleTruthHitCount[pid]++;
   }

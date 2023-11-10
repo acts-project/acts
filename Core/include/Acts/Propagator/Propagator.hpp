@@ -32,6 +32,15 @@
 
 namespace Acts {
 
+/// @brief Different stages during propagation
+enum class PropagatorStage {
+  invalid,          ///< Invalid stage
+  prePropagation,   ///< Before the propagation
+  postPropagation,  ///< After the propagation
+  preStep,          ///< Before a step
+  postStep,         ///< After a step
+};
+
 /// @brief Simple class holding result of propagation call
 ///
 /// @tparam parameters_t Type of final track parameters
@@ -269,6 +278,9 @@ class Propagator final {
           stepping{std::move(steppingIn)},
           navigation{std::move(navigationIn)},
           geoContext(topts.geoContext) {}
+
+    /// Propagation stage
+    PropagatorStage stage = PropagatorStage::invalid;
 
     /// These are the options - provided for each propagation step
     propagator_options_t options;

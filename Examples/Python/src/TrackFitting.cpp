@@ -112,7 +112,7 @@ void addTrackFitting(Context& ctx) {
         "makeGsfFitterFunction",
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-           BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+           BetheHeitlerApprox betheHeitlerApprox, size_t maxComponents,
            double weightCutoff,
            Acts::MixtureReductionMethod finalReductionMethod, bool abortOnError,
            bool disableAllMaterialHandling, Logging::Level level) {
