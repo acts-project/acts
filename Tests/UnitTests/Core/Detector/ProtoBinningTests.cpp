@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_CASE(ProtoBinningEquidistant) {
                          10., 5u);
 
   std::vector<Acts::ActsScalar> reference = {0., 2., 4., 6., 8., 10.};
-  BOOST_CHECK(eq.bins() == 5u);
-  BOOST_CHECK(eq.binValue == Acts::binX);
+  BOOST_CHECK_EQUAL(eq.bins(), 5u);
+  BOOST_CHECK_EQUAL(eq.binValue, Acts::binX);
   BOOST_CHECK(eq.axisType == Acts::detail::AxisType::Equidistant);
   BOOST_CHECK(eq.boundaryType == Acts::detail::AxisBoundaryType::Bound);
   BOOST_CHECK_EQUAL_COLLECTIONS(eq.edges.begin(), eq.edges.end(),
@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE(ProtoBinningVariable) {
   auto var =
       ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, varEdges);
 
-  BOOST_CHECK(var.bins() == 4u);
-  BOOST_CHECK(var.binValue == Acts::binX);
+  BOOST_CHECK_EQUAL(var.bins(), 4u);
+  BOOST_CHECK_EQUAL(var.binValue, Acts::binX);
   BOOST_CHECK(var.axisType == Acts::detail::AxisType::Variable);
   BOOST_CHECK(var.boundaryType == Acts::detail::AxisBoundaryType::Bound);
   BOOST_CHECK_EQUAL_COLLECTIONS(var.edges.begin(), var.edges.end(),

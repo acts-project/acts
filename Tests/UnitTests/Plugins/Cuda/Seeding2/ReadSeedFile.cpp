@@ -30,7 +30,7 @@ std::vector<std::unique_ptr<TestSpacePoint> > readSeedFile(
 
   // Read the file's lines one by one, and create spacepoint objects out of
   // them.
-  std::size_t duplicatesFound = 0;
+  size_t duplicatesFound = 0;
   while (!spFile.eof()) {
     std::string line;
     std::getline(spFile, line);

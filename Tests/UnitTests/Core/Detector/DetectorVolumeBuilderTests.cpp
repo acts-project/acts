@@ -163,13 +163,13 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_EmptyVolume) {
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.size(), 1u);
   BOOST_CHECK(volumes.front()->surfaces().empty());
   BOOST_CHECK(volumes.front()->volumes().empty());
 
-  BOOST_CHECK(portals.size() == 4u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
 
-  BOOST_CHECK(roots.volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 1u);
   BOOST_CHECK(roots.volumeFinder.connected());
 }
 
@@ -195,16 +195,16 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithSurface) {
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
-  BOOST_CHECK(volumes.front()->surfaces().size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.size(), 1u);
+  BOOST_CHECK_EQUAL(volumes.front()->surfaces().size(), 1u);
 
-  BOOST_CHECK(volumes.front()->surfaces().front()->geometryId().passive() ==
-              1u);
+  BOOST_CHECK_EQUAL(volumes.front()->surfaces().front()->geometryId().passive(),
+                    1u);
   BOOST_CHECK(volumes.front()->volumes().empty());
 
-  BOOST_CHECK(portals.size() == 4u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
 
-  BOOST_CHECK(roots.volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 1u);
   BOOST_CHECK(roots.volumeFinder.connected());
 }
 
@@ -229,9 +229,9 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolume) {
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
-  BOOST_CHECK(portals.size() == 4u);
-  BOOST_CHECK(roots.volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.size(), 1u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
@@ -256,13 +256,13 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.size(), 1u);
   BOOST_CHECK(volumes.front()->surfaces().empty());
-  BOOST_CHECK(volumes.front()->volumes().size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.front()->volumes().size(), 1u);
 
-  BOOST_CHECK(portals.size() == 4u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
 
-  BOOST_CHECK(roots.volumes.size() == 2u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 2u);
   BOOST_CHECK(roots.volumeFinder.connected());
 }
 

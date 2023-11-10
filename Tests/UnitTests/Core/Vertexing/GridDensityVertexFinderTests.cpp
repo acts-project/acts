@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   }
 
   // Both finders should give same results
-  BOOST_CHECK(zResult1 == zResult2);
+  BOOST_CHECK_EQUAL(zResult1, zResult2);
 }
 
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     zResult2 = result[eZ];
   }
 
-  BOOST_CHECK(zResult1 == zResult2);
+  BOOST_CHECK_EQUAL(zResult1, zResult2);
 
   int trkCount = 0;
   std::vector<const BoundTrackParameters*> removedTracks;
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     zResult2 = result[eZ];
   }
 
-  BOOST_CHECK(zResult1 == zResult2);
+  BOOST_CHECK_EQUAL(zResult1, zResult2);
 }
 
 ///
@@ -447,8 +447,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
     SquareMatrix3 cov = (*res1).back().covariance();
-    BOOST_CHECK(constraintVtx.covariance() != cov);
-    BOOST_CHECK(cov(eZ, eZ) != 0.);
+    BOOST_CHECK_NE(constraintVtx.covariance(), cov);
+    BOOST_CHECK_NE(cov(eZ, eZ), 0.);
     covZZ1 = cov(eZ, eZ);
     if (debugMode) {
       std::cout << "Estimated z-seed width 1: " << cov(eZ, eZ) << std::endl;
@@ -465,8 +465,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
     SquareMatrix3 cov = (*res2).back().covariance();
-    BOOST_CHECK(constraintVtx.covariance() != cov);
-    BOOST_CHECK(cov(eZ, eZ) != 0.);
+    BOOST_CHECK_NE(constraintVtx.covariance(), cov);
+    BOOST_CHECK_NE(cov(eZ, eZ), 0.);
     covZZ2 = cov(eZ, eZ);
     if (debugMode) {
       std::cout << "Estimated z-seed width 2: " << cov(eZ, eZ) << std::endl;
