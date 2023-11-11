@@ -39,10 +39,9 @@ auto mergeComponents(const component_t &a, const component_t &b,
 
 template <typename distance_t, typename proj_t, typename angle_desc_t>
 void reduceWithDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
-                              std::size_t maxCmpsAfterMerge, const proj_t &proj,
-                              const angle_desc_t &desc) {
-  Acts::detail::SymmetricKLDistanceMatrix<distance_t>
-      distances(cmpCache, proj);
+                            std::size_t maxCmpsAfterMerge, const proj_t &proj,
+                            const angle_desc_t &desc) {
+  Acts::detail::SymmetricKLDistanceMatrix<distance_t> distances(cmpCache, proj);
 
   auto remainingComponents = cmpCache.size();
 
@@ -97,7 +96,8 @@ void reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
   // We must differ between surface types, since there can be different
   // local coordinates
   detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-    reduceWithDistanceImpl<Acts::detail::SymmetricKLDistanceQoP>(cmpCache, maxCmpsAfterMerge, proj, desc);
+    reduceWithDistanceImpl<Acts::detail::SymmetricKLDistanceQoP>(
+        cmpCache, maxCmpsAfterMerge, proj, desc);
   });
 }
 

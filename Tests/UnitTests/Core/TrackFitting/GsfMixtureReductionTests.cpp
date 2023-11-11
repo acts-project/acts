@@ -26,7 +26,8 @@
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-using SymmetricKLDistanceMatrix = detail::SymmetricKLDistanceMatrix<detail::SymmetricKLDistanceQoP>;
+using SymmetricKLDistanceMatrix =
+    detail::SymmetricKLDistanceMatrix<detail::SymmetricKLDistanceQoP>;
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   std::vector<GsfComponent> cmps = {

@@ -199,7 +199,7 @@ auto computeMixtureMean(const components_t components,
 
   return mean;
 }
-}
+}  // namespace detail
 
 /// @enum ComponentMergeMethod
 ///

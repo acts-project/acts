@@ -66,7 +66,7 @@ struct SymmetricKLDistanceFull {
 
     assert(kl >= 0.0 && "kl-divergence must be non-negative");
 
-    if(!(kl >= 0.0)) {
+    if (!(kl >= 0.0)) {
       return kl;
     } else {
       return 1e15;
