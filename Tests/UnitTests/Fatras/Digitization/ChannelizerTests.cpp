@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(test_upright_particle) {
 
   auto segments = helper.channelize(pos3, dir3);
 
-  BOOST_CHECK(segments.size() == 1);
+  BOOST_CHECK_EQUAL(segments.size(), 1);
   BOOST_CHECK_CLOSE(segments[0].activation, helper.thickness, 1.e-8);
 }
 
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(test_tilted_particle) {
               << "), activation: " << seg.activation << "\n";
   }
 
-  BOOST_CHECK_EQ(segments.size(), 1);
+  BOOST_CHECK_EQUAL(segments.size(), 1);
   BOOST_CHECK_CLOSE(segments[0].activation, std::hypot(disp, helper.thickness),
                     1.e-8);
 }
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(test_more_tilted_particle) {
 
   auto segments = helper.channelize(hitPosition, hitDirection);
 
-  BOOST_CHECK_EQ(segments.size(), 2);
+  BOOST_CHECK_EQUAL(segments.size(), 2);
   auto sum =
       std::accumulate(segments.begin(), segments.end(), 0.0,
                       [](double s, auto seg) { return s + seg.activation; });
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(test_pathological_upright_particle) {
 
   auto segments = helper.channelize(hitPosition, hitDirection);
 
-  BOOST_CHECK_EQ(segments.size(), 1);
+  BOOST_CHECK_EQUAL(segments.size(), 1);
   BOOST_CHECK_CLOSE(segments[0].activation, helper.thickness, 1.e-8);
 }
 
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(test_pathological_tilted_particle) {
               << "), activation: " << seg.activation << "\n";
   }
 
-  BOOST_CHECK_EQ(segments.size(), 2);
+  BOOST_CHECK_EQUAL(segments.size(), 2);
   auto sum =
       std::accumulate(segments.begin(), segments.end(), 0.0,
                       [](double s, auto seg) { return s + seg.activation; });
