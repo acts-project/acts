@@ -25,7 +25,7 @@ The following snippet will print a JSON string containing the
 configuration for two different volumes. The first volume applies
 gaussian smearing to the first two spatial dimensions and uniform
 smearing to the time dimension. Correspondingly, the parameter list
-for this volume has five entries: two for the simple gaussians and
+for this volume has five entries: two for the simple Gaussians and
 three for the uniform smearer. After this, another volume gets only
 one spatial dimension smeared by a simple gaussian.
 

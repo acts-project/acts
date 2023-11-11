@@ -17,7 +17,7 @@ Since Optuna and Orion are independent frameworks, these need to be installed se
    $ pip install pytest --upgrade
    $ pip install cmake dataclasses sphinxcontrib-applehelp sphinxcontrib-jsmath sphinxcontrib-serializinghtml argparse sphinxcontrib-devhelp sphinxcontrib-htmlhelp sphinxcontrib-qthelp AppDirs filelock joblib pandas plotly psutil pyYAML requests scipy tabulate cloudpickle scikit-learn orion==0.2.2 cloudpickle==1.6.0 optuna matplotlib
 
-Once all the dependencies are installed, Build Acts with python bindings and Pythia8 support. 
+Once all the dependencies are installed, Build ACTS with python bindings and Pythia8 support.
 
 .. code-block:: console
 
@@ -68,7 +68,7 @@ This creates a new optuna study for a given number of trials defined within the 
 		direction='maximize',
 		load_if_exists=True)
 
-The objective function defines the list of parameters to tune along with their range. It suggests a parameter configuration using ``trial.suggest_float`` or ``trial.suggest_int`` function of optuna and runs CKF for this parameter configuration. The output of CKF is read from the performance file named ``performanc_ckf.root`` and a score function is constructed within the objective function. 
+The objective function defines the list of parameters to tune along with their range. It suggests a parameter configuration using ``trial.suggest_float`` or ``trial.suggest_int`` function of optuna and runs CKF for this parameter configuration. The output of CKF is read from the performance file named ``performance_ckf.root`` and a score function is constructed within the objective function.
 
 The objective function and the number of trials are passed to optuna optimize function:
 ``study.optimize(objective, n_trials=100)``. The best parameter configuration after all the trials is read from ``study.best_trial.params.items()``.

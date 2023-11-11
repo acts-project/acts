@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_box) {
   BOOST_CHECK_EQUAL(cache.passiveSurfaces.size(), 0u);
 
   auto [element, surface] = cache.sensitiveSurfaces.front();
-  BOOST_CHECK(surface->type() == Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Plane);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Cylinder) {
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Cylinder) {
   BOOST_CHECK_EQUAL(cache.passiveSurfaces.size(), 0u);
 
   auto [element, surface] = cache.sensitiveSurfaces.front();
-  BOOST_CHECK(surface->type() == Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Cylinder);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

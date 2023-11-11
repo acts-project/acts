@@ -1,6 +1,6 @@
 # Geant4 plugin
 
-The Geant4 plugin allows to build {class}`Acts::TrackingGeometry` amnd {class}`Acts::Experimental::Detector` directly from Geant4 geometry input.
+The Geant4 plugin allows to build {class}`Acts::TrackingGeometry` and {class}`Acts::Experimental::Detector` directly from Geant4 geometry input.
 Both rely on the conversion of `G4VPhysicalVolume` into corresponding `Acts` objects.
 
 ## Object conversion
@@ -8,7 +8,7 @@ Both rely on the conversion of `G4VPhysicalVolume` into corresponding `Acts` obj
 ### Surface conversion
 
 Converting physical volumes into {class}`Acts::Surface` objects that represent sensitive detector elements, is done via the {class}`Acts::Geant4DetectorSurfaceFactory`.
-This helper class allows to select volumes from the Geant4 geometry and convert them either into pairs of {class}`Acts::Geant4DetectorElement` and {class}`Acts::Surface` objects in case of sensitive elements, or simnply surfaces objects into case of passive surfaces.
+This helper class allows to select volumes from the Geant4 geometry and convert them either into pairs of {class}`Acts::Geant4DetectorElement` and {class}`Acts::Surface` objects in case of sensitive elements, or simply surfaces objects in the case of passive surfaces.
 
 The selection is hereby done by providing one or more {class}`Acts::IGeant4PhysicalVolumeSelector` objects to the surface factory.
 
@@ -31,12 +31,12 @@ Possible implementations of this type of conversions can be seen in the correspo
   BOOST_CHECK_EQUAL(cache.passiveSurfaces.size(), 0u);
 
   auto [ element, surface ] = cache.sensitiveSurfaces.front();
-  BOOST_CHECK(surface->type() == Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Cylinder);
 ```
 
 #### Inspecting surface conversion within python
 
-The `ActsExamples` python bindings allow to conveniently test the conversion of `Geant4` volumes into sensitive and passive surfaces, assuming you have a GDML file called `detector.gdml` where `Geant4PhysVolume` objects can be identified by a certain string, e.g. names containing the flag `Sensitive`, or `Passive`. Also multiple match strings are allowed. The converted surfaces can then be displayed with `.obj` (part of the Core functionality) or as `.svg` files (if `ACTS_BUILD_PLUGIN_ACTSVG` is switched on)
+The `ActsExamples` python bindings allow to conveniently test the conversion of `Geant4` volumes into sensitive and passive surfaces, assuming you have a GDML file called `detector.gdml` where `Geant4PhysVolume` objects can be identified by a certain string, e.g. names containing the flag `Sensitive`, or `Passive`. Also, multiple match strings are allowed. The converted surfaces can then be displayed with `.obj` (part of the Core functionality) or as `.svg` files (if `ACTS_BUILD_PLUGIN_ACTSVG` is switched on)
 
 ```python
   # import the necessary modules
