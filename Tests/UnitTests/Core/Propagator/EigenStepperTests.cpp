@@ -49,6 +49,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -685,7 +686,9 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviMat({material, true, true, true});
+  Navigator naviMat(
+      {material, true, true, true},
+      Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
@@ -717,7 +720,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      prop(es, naviMat);
+      prop(es, naviMat,
+           Acts::getDefaultLogger("Propagator", Acts::Logging::VERBOSE));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();

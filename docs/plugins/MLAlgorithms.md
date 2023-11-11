@@ -1,15 +1,15 @@
 # Machine leaning algorithms
 
-Acts allows you to replace some of the components of the tracking chain by machine learning solutions. For now a replacement to the ambiguity solver is available, but when others are implemented they will be explained here.  
-
+ACTS allows you to replace some components of the tracking chain by machine learning solutions.
+For now a replacement to the ambiguity solver is available, but when others are implemented they will be explained here.
 
 ## Onnx plugin
 
-To be able to perform neural network models' inferences in C++ Acts uses [onnxruntime](https://onnxruntime.ai/). An interface to use it has been implemented as an Acts plugin, to use it you will need to compile Acts with the `ACTS_PLUGIN_ONNX` option. For more detail on how to export your model to onnx please see the documentation on their [website](https://onnxruntime.ai/docs/) 
+To be able to perform neural network models' inferences in C++ ACTS uses [onnxruntime](https://onnxruntime.ai/). An interface to use it has been implemented as an ACTS plugin, to use it you will need to compile ACTS with the `ACTS_PLUGIN_ONNX` option. For more detail on how to export your model to onnx please see the documentation on their [website](https://onnxruntime.ai/docs/)
 
 ### OnnxRuntimeBase
 
-The `OnnxRuntimeBase` class implement the inference of a standard MLP via Onnx and just require a link to the `.onnx` file containing the model one wants to use. Please note that right now the implementation of the inference in Acts only work with a single input node and a single output node. The inference can be both perform in single entry mode and in batch mode. In single entry mode, the `runONNXInference` method takes a single vector as entry, each element of the vector corresponding to one of the input features of your network. In batch mode, the input is an `Eigen::Array` with the columns corresponding to the input features and rows to the different batch inputs.
+The `OnnxRuntimeBase` class implement the inference of a standard MLP via Onnx and just require a link to the `.onnx` file containing the model one wants to use. Please note that right now the implementation of the inference in ACTS only work with a single input node and a single output node. The inference can be both perform in single entry mode and in batch mode. In single entry mode, the `runONNXInference` method takes a single vector as entry, each element of the vector corresponding to one of the input features of your network. In batch mode, the input is an `Eigen::Array` with the columns corresponding to the input features and rows to the different batch inputs.
 
 ## AmbiguityResolutionMLAlgorithm
 
