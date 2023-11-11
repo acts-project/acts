@@ -33,9 +33,6 @@ class Channelizer {
   /// @param segmentation the segmentation of the surface
   /// @param thickness the thickness of the surface
   ///
-  /// TODO Why having the thickness as a config parameter,
-  /// and not pulling it from the surface->detectorElement directly?
-  ///
   /// @return the list of channels
   Acts::Result<std::vector<Segmentizer::ChannelSegment>> channelize(
       const Hit& hit, const Acts::Surface& surface,
