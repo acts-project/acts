@@ -38,7 +38,7 @@
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
-#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
+#include "Acts/TrackFitting/GsfMixtureTools.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Holders.hpp"
