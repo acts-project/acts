@@ -36,7 +36,7 @@ struct Helper {
     float pitchSize = 50_um;
     float min = -200_um;
     float max = 200_um;
-    int bins = (max - min) / pitchSize;
+    int bins = static_cast<int>((max - min) / pitchSize);
     segmentation = Acts::BinUtility(bins, min, max, Acts::BinningOption::open,
                                     Acts::BinningValue::binX);
     segmentation += Acts::BinUtility(bins, min, max, Acts::BinningOption::open,
