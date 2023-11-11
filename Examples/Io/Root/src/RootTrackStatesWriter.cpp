@@ -13,6 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -403,9 +404,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
           state.effectiveProjector().transpose() * state.effectiveCalibrated();
       // extract local and global position
       Acts::Vector2 local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
-      // TODO use direction from the track state
-      Acts::Vector3 mom(1, 1, 1);
-      Acts::Vector3 global = surface.localToGlobal(ctx.geoContext, local, mom);
+      Acts::Vector3 global =
+          surface.localToGlobal(ctx.geoContext, local, truthUnitDir);
 
       // fill the measurement info
       m_lx_hit.push_back(local[Acts::ePos0]);
