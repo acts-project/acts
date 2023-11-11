@@ -98,8 +98,7 @@ void addTrackFitting(Context& ctx) {
 
     py::enum_<Acts::ComponentMergeMethod>(mex, "ComponentMergeMethod")
         .value("mean", Acts::ComponentMergeMethod::eMean)
-        .value("maxWeight", Acts::ComponentMergeMethod::eMaxWeight)
-        .value("mode", Acts::ComponentMergeMethod::eMode);
+        .value("maxWeight", Acts::ComponentMergeMethod::eMaxWeight);
 
     py::enum_<ActsExamples::MixtureReductionAlgorithm>(
         mex, "MixtureReductionAlgorithm")
