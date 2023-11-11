@@ -38,7 +38,7 @@ auto mergeComponents(const component_t &a, const component_t &b,
 }
 
 template <typename distance_t, typename proj_t, typename angle_desc_t>
-void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
+void reduceWithDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
                               std::size_t maxCmpsAfterMerge, const proj_t &proj,
                               const angle_desc_t &desc) {
   Acts::detail::SymmetricKLDistanceMatrix<distance_t>
@@ -60,65 +60,6 @@ void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
     distances.maskAssociatedDistances(minJ);
 
     remainingComponents--;
-  }
-
-  // Remove all components which are labeled with weight -1
-  cmpCache.erase(
-      std::remove_if(cmpCache.begin(), cmpCache.end(),
-                     [&](const auto &a) { return proj(a).weight == -1.0; }),
-      cmpCache.end());
-
-  assert(cmpCache.size() == maxCmpsAfterMerge && "size mismatch");
-}
-
-template <typename proj_t, typename angle_desc_t>
-void reduceWithKLDistanceAggressiveImpl(
-    std::vector<Acts::GsfComponent> &cmpCache, std::size_t maxCmpsAfterMerge,
-    const proj_t &proj, const angle_desc_t &desc) {
-  Acts::detail::SymmetricKLDistanceMatrix<Acts::detail::SymmetricKLDistanceQoP>
-      distances(cmpCache, proj);
-
-  auto remainingComponents = cmpCache.size();
-
-  std::vector<std::tuple<double, std::size_t, std::size_t>> minDistPairs;
-  minDistPairs.reserve(distances.size());
-  std::vector<std::size_t> toSkip;
-  while (remainingComponents > maxCmpsAfterMerge) {
-    minDistPairs.clear();
-    toSkip.clear();
-    distances.minDistancePairs(minDistPairs);
-
-    for (const auto &[_, minI, minJ] : minDistPairs) {
-      // Check if we have touched one of these components already
-      if (std::find_if(toSkip.begin(), toSkip.end(),
-                       [minI = minI, minJ = minJ](auto i) {
-                         return (i == minI) || (i == minJ);
-                       }) != toSkip.end()) {
-        continue;
-      }
-
-      // Set one component and compute associated distances
-      cmpCache[minI] =
-          mergeComponents(cmpCache[minI], cmpCache[minJ], proj, desc);
-      distances.recomputeAssociatedDistances(minI, cmpCache, proj);
-
-      // Since we modified this component in this pass, we shouldn't touch it
-      // again
-      toSkip.push_back(minI);
-      toSkip.push_back(minJ);
-
-      // Set weight of the other component to -1 so we can remove it later and
-      // mask its distances
-      proj(cmpCache[minJ]).weight = -1.0;
-      distances.maskAssociatedDistances(minJ);
-
-      remainingComponents--;
-
-      // Break if reached the required amount of components
-      if (remainingComponents == maxCmpsAfterMerge) {
-        break;
-      }
-    }
   }
 
   // Remove all components which are labeled with weight -1
@@ -156,24 +97,7 @@ void reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
   // We must differ between surface types, since there can be different
   // local coordinates
   detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-    reduceWithKLDistanceImpl<Acts::detail::SymmetricKLDistanceQoP>(cmpCache, maxCmpsAfterMerge, proj, desc);
-  });
-}
-
-
-void reduceMixtureWithFullKLDistance(std::vector<GsfComponent> &cmpCache,
-                                 std::size_t maxCmpsAfterMerge,
-                                 const Surface &surface) {
-  if (cmpCache.size() <= maxCmpsAfterMerge) {
-    return;
-  }
-
-  auto proj = [](auto &a) -> decltype(auto) { return a; };
-
-  // We must differ between surface types, since there can be different
-  // local coordinates
-  detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-    reduceWithKLDistanceImpl<Acts::detail::SymmetricKLDistanceFull>(cmpCache, maxCmpsAfterMerge, proj, desc);
+    reduceWithDistanceImpl<Acts::detail::SymmetricKLDistanceQoP>(cmpCache, maxCmpsAfterMerge, proj, desc);
   });
 }
 

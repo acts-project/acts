@@ -41,6 +41,7 @@ struct SymmetricKLDistanceQoP {
   }
 };
 
+// This is not used currently, but keep it for now.
 struct SymmetricKLDistanceFull {
   template <typename component_t, typename proj_t>
   ActsScalar operator()(const component_t &a, const component_t &b,
@@ -63,7 +64,7 @@ struct SymmetricKLDistanceFull {
     ActsScalar kl = divergence(parsA, covA, parsB, covB) +
                     divergence(parsB, covB, parsA, covA);
 
-    // assert(kl >= 0.0 && "kl-divergence must be non-negative");
+    assert(kl >= 0.0 && "kl-divergence must be non-negative");
 
     if(!(kl >= 0.0)) {
       return kl;

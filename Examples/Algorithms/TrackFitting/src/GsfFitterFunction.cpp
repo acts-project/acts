@@ -124,14 +124,10 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureLargestWeights>();
       } break;
-      case MixtureReductionAlgorithm::KLDistanceQoP: {
+      case MixtureReductionAlgorithm::KLDistance: {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureWithKLDistance>();
       } break;
-      case MixtureReductionAlgorithm::KLDistanceFull: {
-        gsfOptions.extensions.mixtureReducer.connect<
-            &Acts::reduceMixtureWithFullKLDistance>();
-      }
     }
 
     return gsfOptions;

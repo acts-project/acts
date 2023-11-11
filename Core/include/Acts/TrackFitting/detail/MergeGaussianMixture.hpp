@@ -199,153 +199,12 @@ auto computeMixtureMean(const components_t components,
 
   return mean;
 }
-
-template <typename components_t, typename projector_t>
-auto unevaluated_context_centralValue(const components_t &cmps,
-                                      const projector_t &proj) {
-  const auto &[w, centralValue, c] = proj(cmps.front());
-  return centralValue;
 }
-
-/// This function implements a mode-search using an iterative fixed-point
-/// algorithm
-/// TODO potential optimization: cache inverse covariances
-// https://faculty.ucmerced.edu/mcarreira-perpinan/papers/cs-99-03.pdf
-template <typename components_t, typename projector_t = Identity,
-          typename angle_desc_t = AngleDescription<Surface::Plane>::Desc>
-auto computeMixtureMode(const components_t components,
-                        projector_t &&proj = projector_t{},
-                        const angle_desc_t &desc = angle_desc_t{}) {
-  constexpr int D = []() {
-    using ParsType = decltype(unevaluated_context_centralValue(
-        std::declval<components_t>(), std::declval<projector_t>()));
-    return ParsType::RowsAtCompileTime;
-  }();
-  using R = Acts::Result<ActsVector<D>>;
-
-  // Lambda used to correct cyclic coordinates in the computation
-  auto cyclicDiff = [](auto d, auto &diff, const auto &a, const auto &b) {
-    diff[d.idx] = difference_periodic(a[d.idx] / d.constant,
-                                      b[d.idx] / d.constant, 2 * M_PI) *
-                  d.constant;
-  };
-
-  // Compute the value of the pdf of a single multivariate gaussian
-  auto single_pdf = [&](const auto &x, const auto &centralValue,
-                        const auto &cov) {
-    const auto a = 1.0 / std::sqrt(std::pow(2 * M_PI, D) * cov.determinant());
-    ActsVector<D> r = x - centralValue;
-    std::apply([&](auto... d) { (cyclicDiff(d, r, x, centralValue), ...); },
-               desc);
-    const auto b = -0.5 * (x - centralValue).transpose() * cov.inverse() *
-                   (x - centralValue);
-    return a * std::exp(b);
-  };
-
-  // Compute the value of the gaussian mixture pdf at x
-  auto mixture_pdf = [&](const auto &x) {
-    double res = 0.0;
-
-    for (const auto &cmp : components) {
-      const auto &[weight, centralValue, cov] = proj(cmp);
-      res += weight * single_pdf(x, centralValue, cov);
-    }
-
-    return res;
-  };
-
-  // The fixed-point equation (see ref)
-  auto f = [&](const auto &x) {
-    const auto p_x = mixture_pdf(x);
-
-    ActsSquareMatrix<D> a = ActsSquareMatrix<D>::Zero();
-    ActsVector<D> b = ActsVector<D>::Zero();
-
-    for (const auto &cmp : components) {
-      const auto &[weight, centralValue, cov] = proj(cmp);
-      const auto p_m_x = weight * single_pdf(x, centralValue, cov) / p_x;
-
-      a += p_m_x * cov.inverse();
-      b += p_m_x * (cov.inverse() * centralValue);
-    }
-
-    return a.inverse() * b;
-  };
-
-  // Compute the hessian of a gaussian mixture at x
-  auto hessian = [&](const auto &x) {
-    ActsSquareMatrix<D> h = ActsSquareMatrix<D>::Zero();
-
-    for (const auto &cmp : components) {
-      const auto &[weight, centralValue, cov] = proj(cmp);
-      const auto a = weight * single_pdf(x, centralValue, cov);
-      ActsVector<D> r = x - centralValue;
-      std::apply([&, &centralValue = centralValue](
-                     auto... d) { (cyclicDiff(d, r, x, centralValue), ...); },
-                 desc);
-      const auto b = (x - centralValue) * (x - centralValue).transpose() - cov;
-      h += a * (cov.inverse() * b * cov.inverse());
-    }
-
-    return h;
-  };
-
-  // We only store the highest mode
-  // TODO Replace with Acts::Result
-  std::optional<ActsVector<D>> mode;
-  double mode_val = 0;
-
-  // Algorithm parameters
-  constexpr double tol = 1.e-8;
-  constexpr double eigv_max = 0.01;
-  constexpr int iter_max = 50;
-
-  // The algorithm
-  for (const auto &cmp : components) {
-    const auto &[weight, centralValue, cov] = proj(cmp);
-
-    ActsVector<D> x = centralValue;
-    ActsVector<D> x_old = ActsVector<D>::Zero();
-
-    for (auto i = 0; i < iter_max; ++i) {
-      x_old = x;
-      x = f(x);
-
-      if ((x - x_old).norm() < tol) {
-        break;
-      }
-    }
-
-    const auto H = hessian(x);
-    const auto evs = H.eigenvalues();
-    const double max_ev = std::max_element(evs.data(), evs.data() + evs.size(),
-                                           [](const auto &a, const auto &b) {
-                                             return a.real() < b.real();
-                                           })
-                              ->real();
-
-    if (max_ev < eigv_max) {
-      const auto this_val = mixture_pdf(x);
-      if (this_val > mode_val) {
-        mode = x;
-        mode_val = this_val;
-      }
-    }
-  }
-
-  if (!mode) {
-    return R::failure(GsfError::ModeFindingFailed);
-  } else {
-    return R::success(*mode);
-  }
-}
-
-}  // namespace detail
 
 /// @enum ComponentMergeMethod
 ///
 /// Available reduction methods for the reduction of a Gaussian mixture
-enum class ComponentMergeMethod { eMean, eMaxWeight, eMode };
+enum class ComponentMergeMethod { eMean, eMaxWeight };
 
 /// Reduce Gaussian mixture
 ///
@@ -368,15 +227,6 @@ auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
     switch (method) {
       case ComponentMergeMethod::eMean: {
         parameters = detail::computeMixtureMean(mixture, projector, desc);
-      } break;
-      case ComponentMergeMethod::eMode: {
-        Acts::Result<BoundVector> modeRes =
-            detail::computeMixtureMode(mixture, projector, desc);
-        if (!modeRes.ok()) {
-          return R{modeRes.error()};
-        } else {
-          parameters = *modeRes;
-        }
       } break;
       case ComponentMergeMethod::eMaxWeight: {
         const auto maxWeightIt = std::max_element(

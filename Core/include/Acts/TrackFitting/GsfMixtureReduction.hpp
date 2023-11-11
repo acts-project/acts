@@ -24,9 +24,8 @@ void reduceMixtureLargestWeights(std::vector<Acts::GsfComponent> &cmpCache,
                                  const Surface &surface);
 
 /// Greedy component reduction algorithm. Reduces the components with the
-/// minimal symmetric KL-distance until the required number of components is
-/// reached. Should yield an optimal reduction result at the cost of relatively
-/// large computing cost.
+/// minimal symmetric KL-distance (applied only to the q/p-dimension) until the
+/// required number of components is reached.
 ///
 /// @param cmpCache the component collection
 /// @param maxCmpsAfterMerge the number of components we want to reach
@@ -34,16 +33,4 @@ void reduceMixtureLargestWeights(std::vector<Acts::GsfComponent> &cmpCache,
 void reduceMixtureWithKLDistance(std::vector<Acts::GsfComponent> &cmpCache,
                                  std::size_t maxCmpsAfterMerge,
                                  const Surface &surface);
-
-/// Greedy component reduction algorithm. Reduces the components with the
-/// minimal symmetric KL-distance until the required number of components is
-/// reached. Should yield an optimal reduction result at the cost of relatively
-/// large computing cost.
-///
-/// @param cmpCache the component collection
-/// @param maxCmpsAfterMerge the number of components we want to reach
-/// @param surface the surface type on which the components are (unused in this method)
-void reduceMixtureWithFullKLDistance(
-    std::vector<Acts::GsfComponent> &cmpCache, std::size_t maxCmpsAfterMerge,
-    const Surface &surface);
 }  // namespace Acts
