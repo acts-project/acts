@@ -292,7 +292,9 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
 
   for (auto& os : cvbOrientedSurfaces) {
     auto onSurface = os.first->binningPosition(geoCtx, binR);
-    auto osNormal = os.first->normal(geoCtx, onSurface);
+    auto locPos =
+        os.first->globalToLocal(geoCtx, onSurface, Vector3::Zero()).value();
+    auto osNormal = os.first->normal(geoCtx, locPos);
     // Check if you step inside the volume with the oriented normal
     Vector3 insideCvb = onSurface + os.second * osNormal;
     Vector3 outsideCvb = onSurface - os.second * osNormal;
