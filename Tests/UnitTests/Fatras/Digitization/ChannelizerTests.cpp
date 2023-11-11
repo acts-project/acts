@@ -45,9 +45,9 @@ struct Helper {
 
   auto channelize(const Acts::Vector3 &pos3, const Acts::Vector3 &dir3) const {
     Acts::Vector4 pos4 = Acts::Vector4::Zero();
-    pos4.segment<3>(1) = pos3;
+    pos4.segment<3>(Acts::ePos0) = pos3;
     Acts::Vector4 mom4 = Acts::Vector4::Zero();
-    mom4.segment<3>(1) = dir3;
+    mom4.segment<3>(Acts::eMom0) = dir3;
     ActsFatras::Hit hit({}, {}, pos4, mom4, mom4);
     auto res = channelizer.channelize(hit, *surface, gctx, driftDir,
                                       segmentation, thickness);
@@ -78,6 +78,12 @@ BOOST_AUTO_TEST_CASE(test_tilted_particle) {
       Acts::Vector3({disp, 0.0, helper.thickness}).normalized();
 
   auto segments = helper.channelize(hitPosition, hitDirection);
+
+  std::cout << "Segments:\n";
+  for (const auto &seg : segments) {
+    std::cout << " - (" << seg.bin[0] << ", " << seg.bin[1]
+              << "), activation: " << seg.activation << "\n";
+  }
 
   BOOST_CHECK(segments.size() == 1);
   BOOST_CHECK_CLOSE(segments[0].activation, std::hypot(disp, helper.thickness),
