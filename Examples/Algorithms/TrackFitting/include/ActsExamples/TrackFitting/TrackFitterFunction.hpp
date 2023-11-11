@@ -19,7 +19,7 @@
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/TrackFitting/detail/MergeGaussianMixture.hpp"
+#include "Acts/TrackFitting/GsfMixtureTools.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
