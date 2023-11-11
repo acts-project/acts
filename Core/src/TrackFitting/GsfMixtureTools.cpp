@@ -6,8 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
+#include "Acts/TrackFitting/GsfMixtureTools.hpp"
 
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/MergeGaussianMixture.hpp"
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 

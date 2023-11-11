@@ -13,19 +13,13 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/TrackFitting/detail/MergeGaussianMixture.hpp"
+#include "Acts/TrackFitting/GsfMixtureTools.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
-
-struct GsfComponent {
-  ActsScalar weight = 0;
-  BoundVector boundPars = BoundVector::Zero();
-  BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
-};
 
 namespace GsfConstants {
 constexpr std::string_view kFinalMultiComponentStateColumn =

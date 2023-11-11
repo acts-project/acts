@@ -9,9 +9,16 @@
 #pragma once
 
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/TrackFitting/detail/MergeGaussianMixture.hpp"
 
 namespace Acts {
+
+/// A component in a Gaussian mixture
+struct GsfComponent {
+  ActsScalar weight = 0;
+  BoundVector boundPars = BoundVector::Zero();
+  BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
+};
 
 /// Very simple mixture reduction method: Just removes the components with the
 /// smallest weight until the required number of components is reached

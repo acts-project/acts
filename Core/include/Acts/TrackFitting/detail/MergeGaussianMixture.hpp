@@ -198,4 +198,4 @@ auto computeMixtureMean(const components_t components,
 
   return mean;
 }
-}
+}  // namespace Acts::detail
