@@ -19,8 +19,7 @@
 #include <optional>
 #include <tuple>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Angle descriptions for the combineBoundGaussianMixture function
 template <BoundIndices Idx>
@@ -199,51 +198,4 @@ auto computeMixtureMean(const components_t components,
 
   return mean;
 }
-}  // namespace detail
-
-/// @enum ComponentMergeMethod
-///
-/// Available reduction methods for the reduction of a Gaussian mixture
-enum class ComponentMergeMethod { eMean, eMaxWeight };
-
-/// Reduce Gaussian mixture
-///
-/// @param mixture The mixture iterable
-/// @param surface The surface, on which the bound state is
-/// @param method How to reduce the mixture
-/// @param projector How to project a element of the iterable to something
-/// like a std::tuple< double, BoundVector, BoundMatrix >
-///
-/// @return parameters and covariance as std::tuple< BoundVector, BoundMatrix >
-template <typename mixture_t, typename projector_t = Acts::Identity>
-auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
-                          ComponentMergeMethod method,
-                          projector_t &&projector = projector_t{}) {
-  using T = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
-  using R = Acts::Result<T>;
-
-  return detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-    BoundVector parameters = BoundVector::Zero();
-    switch (method) {
-      case ComponentMergeMethod::eMean: {
-        parameters = detail::computeMixtureMean(mixture, projector, desc);
-      } break;
-      case ComponentMergeMethod::eMaxWeight: {
-        const auto maxWeightIt = std::max_element(
-            mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
-              return std::get<0>(projector(a)) < std::get<0>(projector(b));
-            });
-        parameters = std::get<1>(projector(*maxWeightIt));
-      }
-    }
-
-    // MARK: fpeMaskBegin(FLTUND, 1, #2347)
-    const auto covariance =
-        computeMixtureCovariance(mixture, parameters, projector, desc);
-    // MARK: fpeMaskEnd(FLTUND)
-
-    return R{T{parameters, covariance}};
-  });
 }
-
-}  // namespace Acts
