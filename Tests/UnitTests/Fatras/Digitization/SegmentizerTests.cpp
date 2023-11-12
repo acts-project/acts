@@ -100,22 +100,22 @@ BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
   Acts::Vector2 nPosition(6.76, 0.5);
   auto nSegments =
       cl.segments(geoCtx, *radialDisc, strips, {nPosition, nPosition});
-  BOOST_CHECK(nSegments.size() == 1);
-  BOOST_CHECK(nSegments[0].bin[0] == 0);
-  BOOST_CHECK(nSegments[0].bin[1] == 161);
+  BOOST_CHECK_EQUAL(nSegments.size(), 1);
+  BOOST_CHECK_EQUAL(nSegments[0].bin[0], 0);
+  BOOST_CHECK_EQUAL(nSegments[0].bin[1], 161);
 
   // Test: now opver more phi strips
   Acts::Vector2 sPositionS(6.76, 0.5);
   Acts::Vector2 sPositionE(7.03, -0.3);
   auto sSegment =
       cl.segments(geoCtx, *radialDisc, strips, {sPositionS, sPositionE});
-  BOOST_CHECK(sSegment.size() == 59);
+  BOOST_CHECK_EQUAL(sSegment.size(), 59);
 
   // Test: jump over R boundary, but stay in phi bin
   sPositionS = Acts::Vector2(6.76, 0.);
   sPositionE = Acts::Vector2(7.83, 0.);
   sSegment = cl.segments(geoCtx, *radialDisc, strips, {sPositionS, sPositionE});
-  BOOST_CHECK(sSegment.size() == 2);
+  BOOST_CHECK_EQUAL(sSegment.size(), 2);
 }
 
 /// Unit test for testing the Segmentizer
