@@ -56,30 +56,30 @@ BOOST_AUTO_TEST_CASE(SegmentizerCartesian) {
   Acts::Vector2 nPosition(0.37, 0.76);
   auto nSegments =
       cl.segments(geoCtx, *planeSurface, pixelated, {nPosition, nPosition});
-  BOOST_CHECK(nSegments.size() == 1);
-  BOOST_CHECK(nSegments[0].bin[0] == 13);
-  BOOST_CHECK(nSegments[0].bin[1] == 17);
+  BOOST_CHECK_EQUAL(nSegments.size(), 1);
+  BOOST_CHECK_EQUAL(nSegments[0].bin[0], 13);
+  BOOST_CHECK_EQUAL(nSegments[0].bin[1], 17);
 
   // Test: Inclined hit into the surface - negative x direction
   Acts::Vector2 ixPositionS(0.37, 0.76);
   Acts::Vector2 ixPositionE(0.02, 0.73);
   auto ixSegments =
       cl.segments(geoCtx, *planeSurface, pixelated, {ixPositionS, ixPositionE});
-  BOOST_CHECK(ixSegments.size() == 4);
+  BOOST_CHECK_EQUAL(ixSegments.size(), 4);
 
   // Test: Inclined hit into the surface - positive y direction
   Acts::Vector2 iyPositionS(0.37, 0.76);
   Acts::Vector2 iyPositionE(0.39, 0.91);
   auto iySegments =
       cl.segments(geoCtx, *planeSurface, pixelated, {iyPositionS, iyPositionE});
-  BOOST_CHECK(iySegments.size() == 3);
+  BOOST_CHECK_EQUAL(iySegments.size(), 3);
 
   // Test: Inclined hit into the surface - x/y direction
   Acts::Vector2 ixyPositionS(-0.27, 0.76);
   Acts::Vector2 ixyPositionE(-0.02, -0.73);
   auto ixySegments = cl.segments(geoCtx, *planeSurface, pixelated,
                                  {ixyPositionS, ixyPositionE});
-  BOOST_CHECK(ixySegments.size() == 18);
+  BOOST_CHECK_EQUAL(ixySegments.size(), 18);
 }
 
 BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
