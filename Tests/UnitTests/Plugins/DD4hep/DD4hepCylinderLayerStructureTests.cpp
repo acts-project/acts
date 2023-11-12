@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
       beamPipeInternalsBuilder->construct(tContext);
 
   // All surfaces are filled
-  BOOST_CHECK(surfaces.size() == 1u);
+  BOOST_CHECK_EQUAL(surfaces.size(), 1u);
   // No volumes are added
   BOOST_CHECK(volumes.empty());
   // The surface updator is connected
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
         barrelInternalsBuilder->construct(tContext);
 
     // All surfaces are filled
-    BOOST_CHECK(surfaces.size() == 14u * 52u + passiveAddon);
+    BOOST_CHECK_EQUAL(surfaces.size(), 14u * 52u + passiveAddon);
     // No volumes are added
     BOOST_CHECK(volumes.empty());
     // The surface updator is connected
