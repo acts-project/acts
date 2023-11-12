@@ -581,7 +581,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   for (const auto& trk : trks1) {
     auto& trkAtVtx =
         state.tracksAtVerticesMap.at(std::make_pair(trk, vtx1Fitted));
-    CHECK_CLOSE_OR_SMALL(trkAtVtx.trackWeight, expVtx1TrkWeights[trkCount], close, small);
+    CHECK_CLOSE_OR_SMALL(trkAtVtx.trackWeight, expVtx1TrkWeights[trkCount],
+                         close, small);
     trkCount++;
   }
   CHECK_CLOSE_OR_SMALL(vtx1FQ.first, expVtx1chi2, close, small);
@@ -594,7 +595,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   for (const auto& trk : trks2) {
     auto& trkAtVtx =
         state.tracksAtVerticesMap.at(std::make_pair(trk, vtx2Fitted));
-    CHECK_CLOSE_OR_SMALL(trkAtVtx.trackWeight, expVtx2TrkWeights[trkCount], close, small);
+    CHECK_CLOSE_OR_SMALL(trkAtVtx.trackWeight, expVtx2TrkWeights[trkCount],
+                         close, small);
     trkCount++;
   }
   CHECK_CLOSE_OR_SMALL(vtx2FQ.first, expVtx2chi2, close, small);
