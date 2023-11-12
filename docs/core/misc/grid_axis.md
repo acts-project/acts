@@ -42,7 +42,8 @@ There are three options:
 
 ## Grid creation
 
-The types of the axes have to be known at compile-time, since they are provided to the `Grid` as template parameters. Thus the number of dimensions $N$ of the `Grid` is also fixed at compile-time.
+The types of the axes have to be known at compile-time, since they are provided to the `Grid` as template parameters.
+Thus, the number of dimensions $N$ of the `Grid` is also fixed at compile-time.
 The axes can be any combination of the aforementioned variations.
 
 ```cpp
@@ -71,18 +72,18 @@ The local bin indices are always defined from 1 to $N_\text{bins}$ for the respe
 The `Grid` can determine the number of neighbors around a given bin. This done by first converting the global bin index to local bin indices, and then varying the local bin indices in each dimension. At this stage, each Axis gets to decide, which indices are considered neighbors, which differs depending on `AxisBinningType`. `Open` considers the underflow and overflow bins, while `Bound` does not. `Closed` considers bins on the other side of the axis.
 The resulting neighbor combination around bin *B* might look like
 
-b x b | 1    | 2    | 3    |
-------|------|------|------|
-1     | x    | 0,+1 | x    |
-2     | -1,0 |  B   | +1,0 |
-3     | x    | 0,-1 | x    |
+| b x b | 1     | 2    | 3     |
+|-------|-------|------|-------|
+| 1     | x     | 0,+1 | x     |
+| 2     | -1, 0 | B    | +1, 0 |
+| 3     | x     | 0,-1 | x     |
 
 Here, the corner combinations are still missing (also true for $N>2$). This is then turned into a hypercube which in $N=2$ results in:
 
-b x b | 1     | 2    | 3     |
-------|-------|------|-------|
-1     | -1,+1 | 0,+1 | +1,+1 |
-2     | -1,0  |  B   | +1,0  |
-3     | -1,-1 | 0,-1 | +1,-1 |
+| b x b | 1     | 2    | 3     |
+|-------|-------|------|-------|
+| 1     | -1,+1 | 0,+1 | +1,+1 |
+| 2     | -1, 0 | B    | +1, 0 |
+| 3     | -1,-1 | 0,-1 | +1,-1 |
 
 These local bin indices are then converted into global bin indices before being returned.

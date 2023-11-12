@@ -416,10 +416,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
                     std::hypot(rhX, rhY), 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
-    BOOST_CHECK(rectangularPh.vertices.size() == 4);
-    BOOST_CHECK(rectangularPh.faces.size() == 1);
+    BOOST_CHECK_EQUAL(rectangularPh.vertices.size() == 4);
+    BOOST_CHECK_EQUAL(rectangularPh.faces.size() == 1);
     std::vector<size_t> expectedRect = {0, 1, 2, 3};
-    BOOST_CHECK(rectangularPh.faces[0] == expectedRect);
+    BOOST_CHECK_EQUAL(rectangularPh.faces[0] == expectedRect);
 
     /// Trapezoidal Plane
     double thX1 = 10_mm;
@@ -443,10 +443,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
                     std::hypot(thX, thY), 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
-    BOOST_CHECK(trapezoidalPh.vertices.size() == 4);
-    BOOST_CHECK(trapezoidalPh.faces.size() == 1);
+    BOOST_CHECK_EQUAL(trapezoidalPh.vertices.size() == 4);
+    BOOST_CHECK_EQUAL(trapezoidalPh.faces.size() == 1);
     std::vector<size_t> expectedTra = {0, 1, 2, 3};
-    BOOST_CHECK(trapezoidalPh.faces[0] == expectedTra);
+    BOOST_CHECK_EQUAL(trapezoidalPh.faces[0] == expectedTra);
 
     /// Ring-like ellispoidal Plane
     double rMaxX = 30_mm;
@@ -506,8 +506,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     auto diamondPlane = Surface::makeShared<PlaneSurface>(transform, diamond);
     auto diamondPh =
         diamondPlane->polyhedronRepresentation(tgContext, segments);
-    BOOST_CHECK(diamondPh.vertices.size() == 6);
-    BOOST_CHECK(diamondPh.faces.size() == 1);
+    BOOST_CHECK_EQUAL(diamondPh.vertices.size() == 6);
+    BOOST_CHECK_EQUAL(diamondPh.faces.size() == 1);
     extent = diamondPh.extent();
     CHECK_CLOSE_ABS((extent.range(binX).min() -hMedX, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binX).max() hMedX, 1e-6);
