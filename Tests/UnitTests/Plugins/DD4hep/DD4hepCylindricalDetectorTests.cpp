@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   // 1 : endcap
   // 2 : barrel
   // 1 : endcap
-  BOOST_CHECK(bpCache.dd4hepStore.size() == 6u);
+  BOOST_CHECK_EQUAL(bpCache.dd4hepStore.size(), 6u);
 
   // Now fill the gaps
   Acts::Experimental::detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
@@ -349,13 +349,13 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
   auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
 
   // Detector construction check
-  BOOST_CHECK(detector != nullptr);
+  BOOST_REQUIRE_NE(detector, nullptr);
   // We should have 14 volumes
   // 1 : beampipe
   // 3 : negative encap
   // 7 : barrel
   // 3 : positive encap
-  BOOST_CHECK(detector->volumes().size() == 14u);
+  BOOST_CHECK_EQUAL(detector->volumes().size(), 14u);
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();
@@ -380,20 +380,20 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
           .construct(tContext, world, dsOptions);
 
   // Detector construction check
-  BOOST_CHECK(detector != nullptr);
+  BOOST_REQUIRE_NE(detector, nullptr);
   // We should have 14 volumes
   // 1 : beampipe
   // 3 : negative endcap
   // 7 : barrel
   // 3 : positive endcap
-  BOOST_CHECK(detector->volumes().size() == 14u);
+  BOOST_CHECK_EQUAL(detector->volumes().size(), 14u);
 
   // We should have 6 store entries now
   // 1 : beam pipe (empty)
   // 1 : endcap
   // 3 : barrel
   // 1 : endcap
-  BOOST_CHECK(detectorStore.size() == 6u);
+  BOOST_CHECK_EQUAL(detectorStore.size(), 6u);
 
   int elements = 0;
   for (auto [key, value] : detectorStore) {
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
   // PixelBarrel_1 has : 448 detector elements.
   // PixelBarrel_2 has : 728 detector elements.
   // PosEndcapLayer_0 has : 44 detector elements.
-  BOOST_CHECK(elements == 1488);
+  BOOST_CHECK_EQUAL(elements, 1488);
 
   // Cross-check with the surfaces
   int surfaces = 0;
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
     surfaces += v->surfaces().size();
   }
   // Sensitives + 1 (beampipe)
-  BOOST_CHECK(surfaces == 1489);
+  BOOST_CHECK_EQUAL(surfaces, 1489);
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();

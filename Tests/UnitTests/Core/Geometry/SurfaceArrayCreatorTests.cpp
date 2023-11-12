@@ -218,7 +218,7 @@ struct SurfaceArrayCreatorFixture {
         trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
-        std::shared_ptr<Surface> srfA =
+        std::shared_ptr<PlaneSurface> srfA =
             Surface::makeShared<PlaneSurface>(trans, bounds);
 
         Vector3 nrm = srfA->normal(tgContext);
