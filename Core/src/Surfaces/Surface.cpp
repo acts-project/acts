@@ -232,11 +232,6 @@ Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
   return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 
-Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
-                                    const Vector3& /*position*/) const {
-  return normal(gctx, Vector2(Vector2::Zero()));
-}
-
 const Acts::Transform3& Acts::Surface::transform(
     const GeometryContext& gctx) const {
   if (m_associatedDetElement != nullptr) {
