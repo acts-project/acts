@@ -20,7 +20,7 @@ struct GsfComponent {
   BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
 };
 
-/// Very simple mixture reduction method: Just removes the components with the
+/// @brief Very simple mixture reduction method: Just removes the components with the
 /// smallest weight until the required number of components is reached
 ///
 /// @param cmpCache the component collection
@@ -30,7 +30,7 @@ void reduceMixtureLargestWeights(std::vector<Acts::GsfComponent> &cmpCache,
                                  std::size_t maxCmpsAfterMerge,
                                  const Surface &surface);
 
-/// Greedy component reduction algorithm. Reduces the components with the
+/// @brief Greedy component reduction algorithm. Reduces the components with the
 /// minimal symmetric KL-distance (applied only to the q/p-dimension) until the
 /// required number of components is reached.
 ///
