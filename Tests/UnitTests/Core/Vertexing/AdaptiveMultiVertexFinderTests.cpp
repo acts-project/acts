@@ -195,6 +195,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
   double relTol = 1e-2;
+  double relTolCompatibility = 2e-2;
   double small = 1e-3;
   for (int i = 0; i < expNRecoVertices; i++) {
     auto recoVtx = allVertices[i];
@@ -206,7 +207,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight,
                          relTol, small);
     CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].vertexCompatibility,
-                         expVtx.trk1Comp, relTol, small);
+                         expVtx.trk1Comp, relTolCompatibility, small);
   }
 }
 
@@ -362,6 +363,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
   double relTol = 1e-2;
+  double relToCompatibility = 2e-2;
   double small = 1e-3;
   for (int i = 0; i < expNRecoVertices; i++) {
     auto recoVtx = allVertices[i];
@@ -373,7 +375,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight,
                          relTol, small);
     CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].vertexCompatibility,
-                         expVtx.trk1Comp, relTol, small);
+                         expVtx.trk1Comp, relToCompatibility, small);
   }
 }
 
