@@ -101,9 +101,9 @@ struct SeedFinderConfig {
   // xyz
   float toleranceParam = 1.1 * Acts::UnitConstants::mm;
 
-  // Parameter which can loosen the tolerance of the track seed to form to a
-  // helix, useful for (e.g.) misaligned seeding
-  float helixCut = 1.;
+  // Parameter which can loosen the tolerance of the track seed to form a
+  // helix. This is useful for e.g. misaligned seeding.
+  float helixCutTolerance = 1.;
 
   // Geometry Settings
   // Detector ROI
@@ -130,10 +130,6 @@ struct SeedFinderConfig {
   // default is 5%
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
-
-  // Parameter which can loosen the tolerance of the track seed to form a
-  // helix. This is useful for e.g. misaligned seeding.
-  float helixCutTolerance = 1.;
 
   // alignment uncertainties, used for uncertainties in the
   // non-measurement-plane of the modules
