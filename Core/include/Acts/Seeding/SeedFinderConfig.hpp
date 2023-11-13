@@ -132,7 +132,7 @@ struct SeedFinderConfig {
   // Number of sigmas of scattering angle to be considered in the minimum pT
   // scattering term
   float sigmaScattering = 5;
-  // Term that accounts for the thickness of scattering medium in radiation lengths in the Lynch \& Dahl correction to the Highland equation
+  // Term that accounts for the thickness of scattering medium in radiation lengths in the Lynch & Dahl correction to the Highland equation
   // default is 5%
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
