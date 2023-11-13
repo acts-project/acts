@@ -171,20 +171,20 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
 }
 
 void Acts::ConeVolumeBounds::checkConsistency() noexcept(false) {
-  if (innerRmin() > outerRmin() or innerRmax() > outerRmax()) {
+  if (innerRmin() > outerRmin() || innerRmax() > outerRmax()) {
     throw std::invalid_argument("ConeVolumeBounds: invalid radial input.");
   }
   if (get(eHalfLengthZ) <= 0) {
     throw std::invalid_argument(
         "ConeVolumeBounds: invalid longitudinal input.");
   }
-  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("ConeVolumeBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
     throw std::invalid_argument("ConeVolumeBounds: invalid phi positioning.");
   }
-  if (get(eInnerAlpha) == 0. and get(eOuterAlpha) == 0.) {
+  if (get(eInnerAlpha) == 0. && get(eOuterAlpha) == 0.) {
     throw std::invalid_argument(
         "ConeVolumeBounds: neither inner nor outer cone.");
   }
@@ -195,7 +195,7 @@ bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   double zmin = z + tol;
   double zmax = z - tol;
   // Quick check outside z
-  if (zmin < -get(eHalfLengthZ) or zmax > get(eHalfLengthZ)) {
+  if (zmin < -get(eHalfLengthZ) || zmax > get(eHalfLengthZ)) {
     return false;
   }
   double r = VectorHelpers::perp(pos);
@@ -205,7 +205,7 @@ bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
     double phi = VectorHelpers::phi(pos);
     double phimin = phi - phitol;
     double phimax = phi + phitol;
-    if (phimin < get(eAveragePhi) - get(eHalfPhiSector) or
+    if (phimin < get(eAveragePhi) - get(eHalfPhiSector) ||
         phimax > get(eAveragePhi) + get(eHalfPhiSector)) {
       return false;
     }
@@ -213,7 +213,7 @@ bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   // We are within phi sector check box r quickly
   double rmin = r + tol;
   double rmax = r - tol;
-  if (rmin > innerRmax() and rmax < outerRmin()) {
+  if (rmin > innerRmax() && rmax < outerRmin()) {
     return true;
   }
   // Finally we need to check the cone
@@ -248,7 +248,7 @@ void Acts::ConeVolumeBounds::buildSurfaceBounds() {
     m_innerConeBounds =
         std::make_shared<ConeBounds>(get(eInnerAlpha), innerZmin, innerZmax,
                                      get(eHalfPhiSector), get(eAveragePhi));
-  } else if (m_innerRmin == m_innerRmax and m_innerRmin > s_epsilon) {
+  } else if (m_innerRmin == m_innerRmax && m_innerRmin > s_epsilon) {
     m_innerCylinderBounds = std::make_shared<CylinderBounds>(
         m_innerRmin, get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
   }

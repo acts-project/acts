@@ -21,7 +21,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -50,7 +49,7 @@ CsvTrackingGeometryWriter::CsvTrackingGeometryWriter(
       m_logger(Acts::getDefaultLogger("CsvTrackingGeometryWriter", level))
 
 {
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
   m_world = m_cfg.trackingGeometry->highestTrackingVolume();
@@ -122,7 +121,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
         dynamic_cast<const Acts::IdentifiedDetectorElement*>(
             surface.associatedDetectorElement());
 
-    if (detElement != nullptr and detElement->digitizationModule()) {
+    if (detElement != nullptr && detElement->digitizationModule()) {
       auto dModule = detElement->digitizationModule();
       // dynamic_cast to CartesianSegmentation
       const auto* cSegmentation =
@@ -275,7 +274,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
 
     // If we only have three layers, then the volume is the layer volume
     // so let's write it - this case will be excluded afterwards
-    if (layers.size() == 3 and writeLayerVolume) {
+    if (layers.size() == 3 && writeLayerVolume) {
       auto slayer = layers[1];
       LayerVolumeData plvDims;
       plvDims.geometry_id = slayer->geometryId().value();
@@ -306,7 +305,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
         const auto* rVolume = layer->representingVolume();
 
         // Write the layer volume, exclude single layer volumes (written above)
-        if (rVolume != nullptr and writeLayerVolume and layers.size() > 3) {
+        if (rVolume != nullptr && writeLayerVolume && layers.size() > 3) {
           // Get the values of the representing volume
           std::vector<Acts::ActsScalar> representingBoundValues =
               rVolume->volumeBounds().values();
@@ -333,8 +332,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
             // Draw the grid itself
             auto binning = sfArray->binningValues();
             auto axes = sfArray->getAxes();
-            if (not binning.empty() and binning.size() == 2 and
-                axes.size() == 2) {
+            if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
               auto loc0Values = axes[0]->getBinEdges();
               sfGrid.nbins_loc0 = loc0Values.size() - 1;
               sfGrid.type_loc0 = int(binning[0]);
@@ -385,7 +383,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
 }  // namespace
 
 ProcessCode CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
-  if (not m_cfg.writePerEvent) {
+  if (!m_cfg.writePerEvent) {
     return ProcessCode::SUCCESS;
   }
 

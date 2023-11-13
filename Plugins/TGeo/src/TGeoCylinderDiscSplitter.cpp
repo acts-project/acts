@@ -37,9 +37,9 @@ Acts::TGeoCylinderDiscSplitter::split(
   ActsScalar tgThickness = tgde->thickness();
 
   // Disc segments are detected, attempt a split
-  if (m_cfg.discPhiSegments > 0 or m_cfg.discRadialSegments > 0) {
+  if (m_cfg.discPhiSegments > 0 || m_cfg.discRadialSegments > 0) {
     // Splitting for discs detected
-    if (sf.type() == Acts::Surface::Disc and
+    if (sf.type() == Acts::Surface::Disc &&
         sf.bounds().type() == Acts::SurfaceBounds::eDisc) {
       ACTS_DEBUG("- splitting detected for a Disc shaped sensor.");
 
@@ -105,8 +105,8 @@ Acts::TGeoCylinderDiscSplitter::split(
   }
 
   // Cylinder segments are detected, attempt a split
-  if (m_cfg.cylinderPhiSegments > 0 or m_cfg.cylinderLongitudinalSegments > 0) {
-    if (sf.type() == Acts::Surface::Cylinder and
+  if (m_cfg.cylinderPhiSegments > 0 || m_cfg.cylinderLongitudinalSegments > 0) {
+    if (sf.type() == Acts::Surface::Cylinder &&
         sf.bounds().type() == Acts::SurfaceBounds::eCylinder) {
       ACTS_DEBUG("- splitting detected for a Cylinder shaped sensor.");
 

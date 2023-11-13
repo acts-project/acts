@@ -92,7 +92,7 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
   auto identifier = detElement->identifier();
   const Acts::Surface& surface = detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();
-  if (bounds.type() != Acts::SurfaceBounds::eRectangle or nSegments <= 1u) {
+  if (bounds.type() != Acts::SurfaceBounds::eRectangle || nSegments <= 1u) {
     ACTS_WARNING("Invalid splitting config for barrel node: " +
                  std::string(detElement->tgeoNode().GetName()) +
                  "! Node will not be slpit.");
@@ -162,7 +162,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   };
   ACTS_DEBUG(printOrigin(surface));
 
-  if (bounds.type() != Acts::SurfaceBounds::eAnnulus or splitRanges.empty()) {
+  if (bounds.type() != Acts::SurfaceBounds::eAnnulus || splitRanges.empty()) {
     ACTS_WARNING("Invalid splitting config for disk node: " +
                  std::string(detElement->tgeoNode().GetName()) +
                  "! Node will not be slpit.");

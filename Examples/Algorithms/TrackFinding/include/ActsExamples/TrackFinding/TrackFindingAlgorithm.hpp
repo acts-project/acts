@@ -97,6 +97,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
     /// Run backward finding
     bool backward = false;
+    /// Maximum number of propagation steps
+    unsigned int maxSteps = 100000;
   };
 
   /// Constructor of the track finding algorithm
@@ -156,24 +158,24 @@ void TrackFindingAlgorithm::computeSharedHits(
   // Compute nSharedhits and Update ckf results
   // hit index -> list of multi traj indexes [traj, meas]
 
-  std::vector<std::size_t> firstTrackOnTheHit(
-      sourceLinks.size(), std::numeric_limits<std::size_t>::max());
-  std::vector<std::size_t> firstStateOnTheHit(
-      sourceLinks.size(), std::numeric_limits<std::size_t>::max());
+  std::vector<size_t> firstTrackOnTheHit(sourceLinks.size(),
+                                         std::numeric_limits<size_t>::max());
+  std::vector<size_t> firstStateOnTheHit(sourceLinks.size(),
+                                         std::numeric_limits<size_t>::max());
 
   for (auto track : tracks) {
     for (auto state : track.trackStatesReversed()) {
-      if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         continue;
       }
 
-      std::size_t hitIndex = state.getUncalibratedSourceLink()
-                                 .template get<IndexSourceLink>()
-                                 .index();
+      size_t hitIndex = state.getUncalibratedSourceLink()
+                            .template get<IndexSourceLink>()
+                            .index();
 
       // Check if hit not already used
       if (firstTrackOnTheHit.at(hitIndex) ==
-          std::numeric_limits<std::size_t>::max()) {
+          std::numeric_limits<size_t>::max()) {
         firstTrackOnTheHit.at(hitIndex) = track.index();
         firstStateOnTheHit.at(hitIndex) = state.index();
         continue;
@@ -188,8 +190,7 @@ void TrackFindingAlgorithm::computeSharedHits(
                             .container()
                             .trackStateContainer()
                             .getTrackState(indexFirstState);
-      if (not firstState.typeFlags().test(
-              Acts::TrackStateFlag::SharedHitFlag)) {
+      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
         firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
       }
 

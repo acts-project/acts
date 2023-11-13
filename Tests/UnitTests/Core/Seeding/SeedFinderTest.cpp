@@ -17,8 +17,8 @@
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Range1D.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
 
   Acts::SeedFinderOptions options;
   options.beamPos = {-.5_mm, -.5_mm};
-  options.bFieldInZ = 1.99724_T;
+  options.bFieldInZ = 2_T;
 
   int numPhiNeighbors = 1;
 

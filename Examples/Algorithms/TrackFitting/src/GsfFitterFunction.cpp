@@ -77,7 +77,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 
   Acts::GainMatrixUpdater updater;
 
-  std::size_t maxComponents = 0;
+  size_t maxComponents = 0;
   double weightCutoff = 0;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
@@ -111,6 +111,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         weightCutoff,
         abortOnError,
         disableAllMaterialHandling};
+    gsfOptions.stateReductionMethod = reductionMethod;
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
@@ -131,8 +132,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
     using namespace Acts::GsfConstants;
-    if (not tracks.hasColumn(
-            Acts::hashString(kFinalMultiComponentStateColumn))) {
+    if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
       tracks.template addColumn<FinalMultiComponentState>(key);
     }
@@ -151,8 +151,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
     using namespace Acts::GsfConstants;
-    if (not tracks.hasColumn(
-            Acts::hashString(kFinalMultiComponentStateColumn))) {
+    if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
       tracks.template addColumn<FinalMultiComponentState>(key);
     }
@@ -168,13 +167,12 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+    BetheHeitlerApprox betheHeitlerApprox, size_t maxComponents,
     double weightCutoff, Acts::MixtureReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {
   // Standard fitter
-  MultiStepper stepper(magneticField, finalReductionMethod,
-                       logger.cloneWithSuffix("Step"));
+  MultiStepper stepper(magneticField, logger.cloneWithSuffix("Step"));
   const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
@@ -188,7 +186,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
                      logger.cloneWithSuffix("GSF"));
 
   // Direct fitter
-  MultiStepper directStepper(std::move(magneticField), finalReductionMethod,
+  MultiStepper directStepper(std::move(magneticField),
                              logger.cloneWithSuffix("Step"));
   Acts::DirectNavigator directNavigator{
       logger.cloneWithSuffix("DirectNavigator")};

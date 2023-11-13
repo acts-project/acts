@@ -29,7 +29,7 @@ namespace Experimental {
 /// It also deals with the conversion from global query to
 /// KDTree lookup positions
 ///
-template <size_t kDIM = 2u, size_t bSize = 100u,
+template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
           typename reference_generator =
               detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfaces {
@@ -161,7 +161,7 @@ class KdtSurfaces {
 ///
 /// This allows to create small region based callable structs at
 /// configuration level that are then connected to an InternalStructureBuilder
-template <size_t kDIM = 2u, size_t bSize = 100u,
+template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
           typename reference_generator =
               detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfacesProvider : public ISurfacesProvider {

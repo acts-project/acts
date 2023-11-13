@@ -39,7 +39,7 @@ struct MeasurementSelectorCuts {
   /// Maximum local chi2 contribution.
   std::vector<double> chi2CutOff{std::numeric_limits<double>::max()};
   /// Maximum number of associated measurements on a single surface.
-  std::vector<size_t> numMeasurementsCutOff{1};
+  std::vector<std::size_t> numMeasurementsCutOff{1};
 };
 
 /// @brief Measurement selection struct selecting those measurements compatible
@@ -111,7 +111,7 @@ class MeasurementSelector {
     const auto& chi2CutOff = cuts->chi2CutOff;
     auto maxChi2Cut = *std::max_element(chi2CutOff.begin(), chi2CutOff.end());
     double minChi2 = std::numeric_limits<double>::max();
-    size_t minIndex = 0;
+    std::size_t minIndex = 0;
     auto trackStateIterEnd = candidates.end();
     {
       auto trackStateIter = candidates.begin();
@@ -217,7 +217,7 @@ class MeasurementSelector {
     }
     const auto eta = std::atanh(std::cos(trackState.predicted()[eBoundTheta]));
     const auto abseta = std::abs(eta);
-    size_t bin = 0;
+    std::size_t bin = 0;
     for (auto etaBin : etaBins) {
       if (etaBin >= abseta) {
         break;

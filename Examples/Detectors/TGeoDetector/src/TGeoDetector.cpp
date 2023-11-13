@@ -284,7 +284,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
         -> void {
       for (const auto& lcfg : lConfigs) {
         for (const auto& scfg : lcfg.splitConfigs) {
-          if (scfg.first == Acts::binR and scfg.second > 0.) {
+          if (scfg.first == Acts::binR && scfg.second > 0.) {
             volumeConfig.ringTolerance =
                 std::max(volumeConfig.ringTolerance, scfg.second);
             volumeConfig.checkRingLayout = true;

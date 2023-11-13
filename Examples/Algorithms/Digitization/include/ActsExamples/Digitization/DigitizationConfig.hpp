@@ -70,7 +70,7 @@ struct GeometricConfig {
 
   /// Charge generation (configurable via the chargeSmearer)
   Acts::ActsScalar charge(Acts::ActsScalar path, RandomEngine &rng) const {
-    if (not chargeSmearer) {
+    if (!chargeSmearer) {
       return path;
     }
     auto res = chargeSmearer(path, rng);
@@ -111,9 +111,9 @@ struct DigiComponentsConfig {
 class DigitizationConfig {
  public:
   DigitizationConfig(bool merge, double sigma, bool commonCorner)
-      : DigitizationConfig(
-            merge, sigma, commonCorner,
-            Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+      : DigitizationConfig(merge, sigma, commonCorner,
+                           Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {
+  }
 
   DigitizationConfig(
       bool doMerge, double mergeNsigma, bool mergeCommonCorner,

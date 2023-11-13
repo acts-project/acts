@@ -160,13 +160,13 @@ ActsExamples::ProcessCode ActsExamples::SvgPointWriter<T, Acc>::writeT(
     // Use the accessor to build an x/y view
     Acts::Vector3 point3D = {xyz.x(data), xyz.y(data), xyz.z(data)};
     // Draw the xy view
-    if (m_cfg.projectionXY and point3D.z() >= m_cfg.zRangeXY[0] and
+    if (m_cfg.projectionXY && point3D.z() >= m_cfg.zRangeXY[0] &&
         point3D.z() <= m_cfg.zRangeXY[1]) {
       auto p = Acts::Svg::EventDataConverter::pointXY(point3D, m_cfg.spSize,
                                                       m_cfg.spStyle, id);
       xyView.add_object(p);
       // Draw a connected text box
-      if (not m_cfg.infoBoxTitle.empty()) {
+      if (!m_cfg.infoBoxTitle.empty()) {
         auto xyIbox = Acts::Svg::infoBox(
             static_cast<actsvg::scalar>(point3D.x() + 10.),
             static_cast<actsvg::scalar>(point3D.y() - 10.), m_cfg.infoBoxTitle,

@@ -20,8 +20,6 @@ from helpers import (
     exatrkxEnabled,
     onnxEnabled,
     AssertCollectionExistsAlg,
-    isCI,
-    doHashChecks,
     failure_threshold,
 )
 
@@ -33,7 +31,6 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
     AlignedDetector,
-    RootParticleWriter,
 )
 
 from acts.examples.odd import getOpenDataDetector
@@ -569,7 +566,6 @@ def test_truth_tracking_kalman(
     root_files = [
         ("trackstates_fitter.root", "trackstates", 19),
         ("tracksummary_fitter.root", "tracksummary", 10),
-        ("performance_track_finder.root", "track_finder_tracks", 19),
         ("performance_track_fitter.root", None, -1),
     ]
 
@@ -608,11 +604,6 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         events=10,
         numThreads=1,
         fpeMasks=[
-            (
-                "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:177",
-                acts.FpeType.FLTUND,
-                1,
-            ),
             (
                 "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:197",
                 acts.FpeType.FLTUND,

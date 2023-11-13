@@ -81,7 +81,8 @@ MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
 
   return Acts::Test::microBenchmark(
       [&] {
-        return surface.intersect(tgContext, origin, direction, boundaryCheck);
+        return surface.intersect(tgContext, origin, direction,
+                                 BoundaryCheck(boundaryCheck));
       },
       nrepts);
 }

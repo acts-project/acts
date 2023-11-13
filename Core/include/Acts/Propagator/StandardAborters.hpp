@@ -30,7 +30,7 @@ struct TargetOptions {
   Direction navDir = Direction::Forward;
 
   /// Target Boundary check directive - always false here
-  BoundaryCheck boundaryCheck = false;
+  BoundaryCheck boundaryCheck = BoundaryCheck(false);
 
   /// Object to check against - always nullptr here
   const Surface* startObject = nullptr;
@@ -67,22 +67,21 @@ struct PathLimitReached {
     // Check if the maximum allowed step size has to be updated
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
-    double tolerance = state.options.targetTolerance;
-    stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
-                        false);
+    double tolerance = state.options.surfaceTolerance;
     bool limitReached = (std::abs(distance) < std::abs(tolerance));
     if (limitReached) {
       ACTS_VERBOSE("Target: x | "
                    << "Path limit reached at distance " << distance);
       // reaching the target means navigation break
       navigator.targetReached(state.navigation, true);
-    } else {
-      ACTS_VERBOSE("Target: 0 | "
-                   << "Target stepSize (path limit) updated to "
-                   << stepper.outputStepSize(state.stepping));
+      return true;
     }
-    // path limit check
-    return limitReached;
+    stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
+                        false);
+    ACTS_VERBOSE("Target: 0 | "
+                 << "Target stepSize (path limit) updated to "
+                 << stepper.outputStepSize(state.stepping));
+    return false;
   }
 };
 
@@ -146,12 +145,12 @@ struct SurfaceReached {
     // TODO the following code is mostly duplicated in updateSingleSurfaceStatus
 
     // Calculate the distance to the surface
-    const double tolerance = state.options.targetTolerance;
+    const double tolerance = state.options.surfaceTolerance;
 
     const auto sIntersection = targetSurface.intersect(
         state.geoContext, stepper.position(state.stepping),
-        state.options.direction * stepper.direction(state.stepping), true,
-        tolerance);
+        state.options.direction * stepper.direction(state.stepping),
+        BoundaryCheck(true), tolerance);
     const auto closest = sIntersection.closest();
 
     // Return true if you fall below tolerance

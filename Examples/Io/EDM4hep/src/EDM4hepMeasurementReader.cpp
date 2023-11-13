@@ -79,7 +79,7 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   m_outputMeasurements(ctx, std::move(measurements));
   m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
   m_outputSourceLinks(ctx, std::move(sourceLinks));
-  if (not m_cfg.outputClusters.empty()) {
+  if (!m_cfg.outputClusters.empty()) {
     m_outputClusters(ctx, std::move(clusters));
   }
 

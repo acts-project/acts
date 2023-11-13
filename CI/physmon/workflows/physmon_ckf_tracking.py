@@ -43,9 +43,6 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             events=500,
             numThreads=-1,
             logLevel=acts.logging.INFO,
-            fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
-                Path(__file__).parent.parent / "fpe_masks.yml"
-            ),
         )
 
         tp = Path(temp)
@@ -139,15 +136,21 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 outputDirRoot=tp,
             )
 
+        s.addAlgorithm(
+            acts.examples.TracksToParameters(
+                level=acts.logging.INFO,
+                inputTracks="tracks",
+                outputTrackParameters="trackParameters",
+            )
+        )
+
         addVertexFitting(
             s,
             setup.field,
-            seeder=acts.VertexSeedFinder.GaussianSeeder,
-            associatedParticles=None
-            if label in ["seeded", "orthogonal"]
-            else "particles_input",
+            trackParameters="trackParameters",
             outputProtoVertices="ivf_protovertices",
             outputVertices="ivf_fittedVertices",
+            seeder=acts.VertexSeedFinder.GaussianSeeder,
             vertexFinder=VertexFinder.Iterative,
             outputDirRoot=tp / "ivf",
         )
@@ -155,12 +158,10 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         addVertexFitting(
             s,
             setup.field,
-            seeder=acts.VertexSeedFinder.GaussianSeeder,
-            associatedParticles=None
-            if label in ["seeded", "orthogonal"]
-            else "particles_input",
+            trackParameters="trackParameters",
             outputProtoVertices="amvf_protovertices",
             outputVertices="amvf_fittedVertices",
+            seeder=acts.VertexSeedFinder.GaussianSeeder,
             vertexFinder=VertexFinder.AMVF,
             outputDirRoot=tp / "amvf",
         )
@@ -171,10 +172,10 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             addVertexFitting(
                 s,
                 setup.field,
-                seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
-                associatedParticles=None,
+                trackParameters="trackParameters",
                 outputProtoVertices="amvf_gridseeder_protovertices",
                 outputVertices="amvf_gridseeder_fittedVertices",
+                seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
                 vertexFinder=VertexFinder.AMVF,
                 outputDirRoot=tp / "amvf_gridseeder",
             )

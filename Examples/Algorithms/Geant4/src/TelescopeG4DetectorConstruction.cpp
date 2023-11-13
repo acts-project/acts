@@ -150,7 +150,7 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
                                                     silicon,     // its material
                                                     "Layer Logic");  // its name
 
-  for (std::size_t i = 0; i < m_cfg.positions.size(); ++i) {
+  for (size_t i = 0; i < m_cfg.positions.size(); ++i) {
     new G4PVPlacement(
         nullptr,                                                // no rotation
         G4ThreeVector(0, 0, m_cfg.positions[i] * mm - center),  // at position

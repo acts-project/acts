@@ -25,10 +25,10 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -229,7 +229,7 @@ stripSideVolumes(
 
   // Principle sides and selected sides, make an intersection
   std::vector<unsigned int> selectedSides;
-  if (not selectedOnly.empty()) {
+  if (!selectedOnly.empty()) {
     std::set_intersection(sides.begin(), sides.end(), selectedOnly.begin(),
                           selectedOnly.end(),
                           std::back_inserter(selectedSides));
@@ -276,7 +276,7 @@ void checkAlignment(
   for (auto [iv, v] : Acts::enumerate(volumes)) {
     if (iv > 0) {
       auto curRotation = v->transform(gctx).rotation();
-      if (not curRotation.isApprox(refRotation)) {
+      if (!curRotation.isApprox(refRotation)) {
         std::string message = "CylindricalDetectorHelper: rotation of volume ";
         message += std::to_string(iv);
         message += std::string(" is not aligned with previous volume");
@@ -404,7 +404,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   rBoundaries.push_back(refValues[CylinderVolumeBounds::BoundValues::eMaxR]);
 
   // Connect in R ? (2u is the index of the outer cylinder)
-  bool connectR = selectedOnly.empty() or
+  bool connectR = selectedOnly.empty() ||
                   std::find(selectedOnly.begin(), selectedOnly.end(), 2u) !=
                       selectedOnly.end();
 
@@ -438,7 +438,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   // Proto container setting
   if (connectR) {
     // The number of portals indicate again if the inner is present or not,
-    if (volumes[0u]->portals().size() == 4u or
+    if (volumes[0u]->portals().size() == 4u ||
         volumes[0u]->portals().size() == 6u) {
       dShell[3u] = volumes[0u]->portalPtrs()[3u];
     }
@@ -458,7 +458,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   std::vector<Acts::Direction> discDirs = {Acts::Direction::Forward,
                                            Acts::Direction::Backward};
   for (const auto [iu, idir] : enumerate(discDirs)) {
-    if (selectedOnly.empty() or
+    if (selectedOnly.empty() ||
         std::find(selectedOnly.begin(), selectedOnly.end(), iu) !=
             selectedOnly.end()) {
       const Surface& refSurface = volumes[0u]->portals()[iu]->surface();
@@ -479,7 +479,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     for (const auto [iu, idir] : enumerate(sectorDirs)) {
       // (iu + 4u) corresponds to the indices of the phi-low and phi-high sector
       // planes.
-      if (selectedOnly.empty() or
+      if (selectedOnly.empty() ||
           std::find(selectedOnly.begin(), selectedOnly.end(), iu + 4u) !=
               selectedOnly.end()) {
         // As it is r-wrapping, the inner tube is guaranteed
@@ -510,9 +510,9 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
       // - if the volume doesn't have an inner portal, indices need to
       //   be shifted by -1 to update the correct index, that's the case for
       //   size 3 and 5 for portals
-      size_t nPortals = iv->portals().size();
-      bool innerPresent = (nPortals == 3u or nPortals == 5u);
-      int iOffset = (innerPresent and i > 2u) ? -1 : 0;
+      std::size_t nPortals = iv->portals().size();
+      bool innerPresent = (nPortals == 3u || nPortals == 5u);
+      int iOffset = (innerPresent && i > 2u) ? -1 : 0;
       ACTS_VERBOSE("-- update portal with index "
                    << i + iOffset << " (including offset " << iOffset << ")");
       iv->updatePortal(p, static_cast<unsigned int>(i + iOffset));
@@ -552,7 +552,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   // Connect in Z ?
   // - 1u corresponds to the index of the high-z disc portal for the reference
   // volume.
-  bool connectZ = selectedOnly.empty() or
+  bool connectZ = selectedOnly.empty() ||
                   std::find(selectedOnly.begin(), selectedOnly.end(), 1u) !=
                       selectedOnly.end();
   // Reference z axis
@@ -594,7 +594,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
       // Throw an exception if the discs are not at the same position
       Vector3 keepPosition = keepDisc->surface().center(gctx);
       Vector3 wastePosition = wasteDisc->surface().center(gctx);
-      if (not keepPosition.isApprox(wastePosition)) {
+      if (!keepPosition.isApprox(wastePosition)) {
         std::string message = "CylindricalDetectorHelper: '";
         message += volumes[iv - 1]->name();
         message += "' does not attach to '";
@@ -648,8 +648,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   ActsScalar avgPhi = refValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
 
   // Check if inner cylinder and sectors are present by the number of portals
-  size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
-  bool innerPresent = (nPortals != 3u and nPortals != 5u);
+  std::size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
+  bool innerPresent = (nPortals != 3u && nPortals != 5u);
   bool sectorsPresent = nPortals > 4u;
 
   // A portal replacement, it comprises of the portal, the index, the
@@ -671,7 +671,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   unsigned int iSecOffset = innerPresent ? 4u : 3u;
   // Prepare the cylinder replacements
   for (const auto [iu, idir] : enumerate(cylinderDirs)) {
-    if (selectedOnly.empty() or
+    if (selectedOnly.empty() ||
         std::find(selectedOnly.begin(), selectedOnly.end(), iu + 2u) !=
             selectedOnly.end()) {
       pReplacements.push_back(createCylinderReplacement(
@@ -688,7 +688,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
                                                Acts::Direction::Backward};
     for (const auto [iu, idir] : enumerate(sectorDirs)) {
       // Access with 3u or 4u but always write 4u (to be caught later)
-      if (selectedOnly.empty() or
+      if (selectedOnly.empty() ||
           std::find(selectedOnly.begin(), selectedOnly.end(), iu + 4u) !=
               selectedOnly.end()) {
         const Surface& refSurface =
@@ -714,7 +714,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
       // Potential offset for tube vs/ cylinder
       // if the volume doesn't have an inner portal, indices need to be shifted
       // by -1 to update the correct index.
-      int iOffset = (i > 2u and not innerPresent) ? -1 : 0;
+      int iOffset = (i > 2u && !innerPresent) ? -1 : 0;
       ACTS_VERBOSE("-- update portal with index " << i);
       iv->updatePortal(p, static_cast<unsigned int>(i + iOffset));
       // Fill the map
@@ -743,8 +743,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   DetectorComponent::PortalContainer dShell;
 
   // Check if inner cylinder and sectors are present by the number of portals
-  size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
-  bool innerPresent = (nPortals != 3u and nPortals != 5u);
+  std::size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
+  bool innerPresent = (nPortals != 3u && nPortals != 5u);
 
   Transform3 refTransform = volumes[0u]->transform(gctx);
 
@@ -893,7 +893,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   volumes[1u]->updatePortal(keepDiscP, 5u);
 
   // If needed, insert new cylinder
-  if (volumes[0u]->portalPtrs().size() == 4u and
+  if (volumes[0u]->portalPtrs().size() == 4u &&
       volumes[1u]->portalPtrs().size() == 8u) {
     // We need a new cylinder spanning over the entire inner tube
     ActsScalar hlZ =
@@ -1089,9 +1089,9 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     auto attachedVolumes = value->attachedDetectorVolumes();
     for (const auto& ava : attachedVolumes) {
       for (const auto& av : ava) {
-        if (wrappingVolume == nullptr and av != nullptr) {
+        if (wrappingVolume == nullptr && av != nullptr) {
           wrappingVolume = av;
-        } else if (wrappingVolume != nullptr and av != wrappingVolume) {
+        } else if (wrappingVolume != nullptr && av != wrappingVolume) {
           throw std::invalid_argument(
               "CylindricalDetectorHelper: wrapping container must represent a "
               "single volume.");
@@ -1137,7 +1137,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   wrappingVolume->updatePortal(keepDiscP, 5u);
 
   // If inner stitching is necessary
-  if (innerContainer.size() == 4u and
+  if (innerContainer.size() == 4u &&
       wrappingVolume->portalPtrs().size() == 8u) {
     // Inner Container portal
     auto& centralSegment = innerContainer[3u];

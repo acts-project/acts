@@ -36,9 +36,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
                                        Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("AdaptiveMultiVertexFinder", level),
       m_cfg(config) {
-  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
-    throw std::invalid_argument(
-        "You have to either provide track parameters or trajectories");
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing input track parameter collection");
   }
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
@@ -47,9 +46,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
     throw std::invalid_argument("Missing output vertices collection");
   }
 
-  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
-
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
@@ -106,7 +103,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.annealingTool = annealingUtility;
   fitterCfg.minWeight = 0.001;
   fitterCfg.doSmoothing = true;
-  Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
+  Fitter fitter(std::move(fitterCfg), logger().cloneWithSuffix("AMVFitter"));
 
   typename Finder::Config finderConfig(std::move(fitter), seedFinder,
                                        ipEstimator, std::move(linearizer),
@@ -116,12 +113,14 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   finderConfig.maxIterations = 200;
 
   // Instantiate the finder
-  Finder finder(finderConfig, logger().cloneWithSuffix("AMVFinder"));
+  Finder finder(std::move(finderConfig), logger().cloneWithSuffix("AMVFinder"));
 
   // retrieve input tracks and convert into the expected format
 
-  auto [inputTrackParameters, inputTrackPointers] =
-      makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
+  const auto& inputTrackParameters = m_inputTrackParameters(ctx);
+  // TODO change this from pointers to tracks parameters to actual tracks
+  auto inputTrackPointers =
+      makeTrackParametersPointerContainer(inputTrackParameters);
 
   if (inputTrackParameters.size() != inputTrackPointers.size()) {
     ACTS_ERROR("Input track containers do not align: "
@@ -129,12 +128,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
                << " != " << inputTrackPointers.size());
   }
 
-  for (const auto& trk : inputTrackParameters) {
-    if (trk.covariance() && trk.covariance()->determinant() <= 0) {
+  for (const auto trk : inputTrackPointers) {
+    if (trk->covariance() && trk->covariance()->determinant() <= 0) {
       // actually we should consider this as an error but I do not want the CI
       // to fail
-      ACTS_WARNING("input track " << trk << " has det(cov) = "
-                                  << trk.covariance()->determinant());
+      ACTS_WARNING("input track " << *trk << " has det(cov) = "
+                                  << trk->covariance()->determinant());
     }
   }
 
@@ -173,7 +172,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   }
 
   // store proto vertices extracted from the found vertices
-  m_outputProtoVertices(ctx, makeProtoVertices(inputTrackParameters, vertices));
+  m_outputProtoVertices(ctx, makeProtoVertices(inputTrackPointers, vertices));
 
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));

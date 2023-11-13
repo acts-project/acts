@@ -65,10 +65,8 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   enum class SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
 
   struct Config {
-    /// Optional. Input track parameters collection
+    /// Input track parameters collection
     std::string inputTrackParameters;
-    /// Optional. Input trajectories container.
-    std::string inputTrajectories;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
@@ -104,11 +102,8 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
-
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};

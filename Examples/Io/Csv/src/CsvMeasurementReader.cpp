@@ -55,7 +55,7 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   // Check if event ranges match (should also catch missing files)
   auto checkRange = [&](const std::string& fileStem) {
     const auto hitmapRange = determineEventFilesRange(m_cfg.inputDir, fileStem);
-    if (hitmapRange.first > m_eventsRange.first or
+    if (hitmapRange.first > m_eventsRange.first ||
         hitmapRange.second < m_eventsRange.second) {
       throw std::runtime_error("event range mismatch for 'event**-" + fileStem +
                                "'");
@@ -63,7 +63,7 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   };
 
   checkRange("measurement-simhit-map.csv");
-  if (not m_cfg.outputClusters.empty()) {
+  if (!m_cfg.outputClusters.empty()) {
     checkRange("cells.csv");
   }
 }
@@ -130,9 +130,8 @@ std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
 }
 
 ActsExamples::ClusterContainer makeClusters(
-    const std::unordered_multimap<std::size_t, ActsExamples::CellData>&
-        cellDataMap,
-    std::size_t nMeasurements) {
+    const std::unordered_multimap<size_t, ActsExamples::CellData>& cellDataMap,
+    size_t nMeasurements) {
   using namespace ActsExamples;
   ClusterContainer clusters;
 
@@ -145,10 +144,10 @@ ActsExamples::ClusterContainer makeClusters(
 
     for (auto it = begin; it != end; ++it) {
       const auto& cellData = it->second;
-      ActsFatras::Channelizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
+      ActsFatras::Segmentizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
                                                          Acts::Vector2::Zero()};
 
-      ActsFatras::Channelizer::Bin2D bin{
+      ActsFatras::Segmentizer::Bin2D bin{
           static_cast<unsigned int>(cellData.channel0),
           static_cast<unsigned int>(cellData.channel1)};
 
@@ -158,7 +157,7 @@ ActsExamples::ClusterContainer makeClusters(
     // update the iterator
 
     // Compute cluster size
-    if (not cluster.channels.empty()) {
+    if (!cluster.channels.empty()) {
       auto compareX = [](const auto& a, const auto& b) {
         return a.bin[0] < b.bin[0];
       };
@@ -328,7 +327,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
                    fromLegacy);
   }
 
-  std::unordered_multimap<std::size_t, ActsExamples::CellData> cellDataMap;
+  std::unordered_multimap<size_t, ActsExamples::CellData> cellDataMap;
   for (const auto& cd : cellData) {
     cellDataMap.emplace(cd.measurement_id, cd);
   }
