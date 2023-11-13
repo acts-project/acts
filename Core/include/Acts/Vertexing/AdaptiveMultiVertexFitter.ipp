@@ -13,25 +13,6 @@
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
-    State& state, const std::vector<Vertex<input_track_t>*>& verticesToFit,
-    const linearizer_t& linearizer,
-    const VertexingOptions<input_track_t>& vertexingOptions) const {
-  // Set all vertices to fit in the current state
-  state.vertexCollection = verticesToFit;
-
-  // Perform fit on all vertices simultaneously
-  auto fitRes = fitImpl(state, linearizer, vertexingOptions);
-
-  if (!fitRes.ok()) {
-    return fitRes.error();
-  }
-
-  return {};
-}
-
-template <typename input_track_t, typename linearizer_t>
-Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     State& state, const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Reset annealing tool
@@ -119,7 +100,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
     return VertexingError::EmptyInput;
   }
 
-  std::vector<Vertex<input_track_t>*> verticesToFit;
+  std::vector<Vertex<input_track_t>*> verticesToFit = {&newVertex};
 
   // List of vertices added in last iteration
   std::vector<Vertex<input_track_t>*> lastIterAddedVertices = {&newVertex};
@@ -164,7 +145,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
   state.vertexCollection = verticesToFit;
 
   // Perform fit on all added vertices
-  auto fitRes = fitImpl(state, linearizer, vertexingOptions);
+  auto fitRes = fit(state, linearizer, vertexingOptions);
   if (!fitRes.ok()) {
     return fitRes.error();
   }

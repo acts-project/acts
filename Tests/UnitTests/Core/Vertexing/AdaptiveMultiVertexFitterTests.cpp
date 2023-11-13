@@ -442,7 +442,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
                                    covMat2, ParticleHypothesis::pion())
           .value(),
   };
-  std::vector<Vertex<BoundTrackParameters>*> vtxList;
 
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
       *bField, magFieldContext);
@@ -457,7 +456,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Vertex<BoundTrackParameters> vtx1(vtxPos1);
 
   // Add to vertex list
-  vtxList.push_back(&vtx1);
+  state.vertexCollection.push_back(&vtx1);
 
   // The constraint vtx for vtx1
   Vertex<BoundTrackParameters> vtx1Constr(vtxPos1);
@@ -484,7 +483,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Vertex<BoundTrackParameters> vtx2(vtxPos2);
 
   // Add to vertex list
-  vtxList.push_back(&vtx2);
+  state.vertexCollection.push_back(&vtx2);
 
   // The constraint vtx for vtx2
   Vertex<BoundTrackParameters> vtx2Constr(vtxPos2);
@@ -513,7 +512,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   state.addVertexToMultiMap(vtx2);
 
   // Fit vertices
-  fitter.fit(state, vtxList, linearizer, vertexingOptions);
+  fitter.fit(state, linearizer, vertexingOptions);
 
   auto vtx1Fitted = state.vertexCollection.at(0);
   auto vtx1PosFitted = vtx1Fitted->position();
