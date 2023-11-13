@@ -88,7 +88,7 @@ struct SeedFinderOrthogonalConfig {
 
   // Maximum allowed cotTheta between two space-points in doublet, used to check
   // if forward angle is within bounds
-  float cotThetaMax = 10.01788;  // equivalent to 3 eta (pseudorapidity)
+  float cotThetaMax = = 7.40627;;  // equivalent to 2.7 eta (pseudorapidity)
 
   // Limiting location of collision region in z-axis used to check if doublet
   // origin is within reasonable bounds
