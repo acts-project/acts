@@ -56,11 +56,11 @@ struct SeedFilterConfig {
    */
 
   // Enable quality seed confirmation, this is different than default seeding
-  // confiramtion because it can also be defined for different (r, z) regions of
+  // confirmation because it can also be defined for different (r, z) regions of
   // the detector (e.g. forward or central region) by SeedConfirmationRange.
-  // Seeds are classied as "high-quality" seeds and normal quality seeds. Normal
-  // quality seeds are only selected if no other "high-quality" seeds has been
-  // found for that inner-middle doublet.
+  // Seeds are classified as "high-quality" seeds and normal quality seeds.
+  // Normal quality seeds are only selected if no other "high-quality" seeds has
+  // been found for that inner-middle doublet.
   bool seedConfirmation = false;
   // Contains parameters for central seed confirmation
   SeedConfirmationRangeConfig centralSeedConfirmationRange;
