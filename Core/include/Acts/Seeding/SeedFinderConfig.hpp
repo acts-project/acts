@@ -131,8 +131,8 @@ struct SeedFinderConfig {
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
 
-  // Parameter which can loosen the tolerance of the track seed to form to a
-  // helix, useful for (e.g.) misaligned seeding
+  // Parameter which can loosen the tolerance of the track seed to form a
+  // helix. This is useful for e.g. misaligned seeding.
   float helixCutTolerance = 1.;
 
   // alignment uncertainties, used for uncertainties in the
