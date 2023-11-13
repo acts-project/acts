@@ -572,43 +572,45 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
         m_eta[ipar].push_back(
             Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0)));
 
-        if (state.hasUncalibratedSourceLink()) {
-          // track parameters residual
-          m_res_eLOC0[ipar].push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
-          m_res_eLOC1[ipar].push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
-          float resPhi = Acts::detail::difference_periodic<float>(
-              parameters[Acts::eBoundPhi], truthPHI,
-              static_cast<float>(2 * M_PI));
-          m_res_ePHI[ipar].push_back(resPhi);
-          m_res_eTHETA[ipar].push_back(parameters[Acts::eBoundTheta] -
-                                       truthTHETA);
-          m_res_eQOP[ipar].push_back(parameters[Acts::eBoundQOverP] - truthQOP);
-          m_res_eT[ipar].push_back(parameters[Acts::eBoundTime] - truthTIME);
-
-          // track parameters pull
-          m_pull_eLOC0[ipar].push_back(
-              (parameters[Acts::eBoundLoc0] - truthLOC0) /
-              std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-          m_pull_eLOC1[ipar].push_back(
-              (parameters[Acts::eBoundLoc1] - truthLOC1) /
-              std::sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-          m_pull_ePHI[ipar].push_back(
-              resPhi / std::sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-          m_pull_eTHETA[ipar].push_back(
-              (parameters[Acts::eBoundTheta] - truthTHETA) /
-              std::sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-          m_pull_eQOP[ipar].push_back(
-              (parameters[Acts::eBoundQOverP] - truthQOP) /
-              std::sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-          double sigmaTime =
-              std::sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
-          m_pull_eT[ipar].push_back(
-              sigmaTime == 0.0
-                  ? nan
-                  : (parameters[Acts::eBoundTime] - truthTIME) / sigmaTime);
+        if (!state.hasUncalibratedSourceLink()) {
+          continue;
         }
 
-        if (ipar == ePredicted && state.hasProjector()) {
+        // track parameters residual
+        m_res_eLOC0[ipar].push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
+        m_res_eLOC1[ipar].push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
+        float resPhi = Acts::detail::difference_periodic<float>(
+            parameters[Acts::eBoundPhi], truthPHI,
+            static_cast<float>(2 * M_PI));
+        m_res_ePHI[ipar].push_back(resPhi);
+        m_res_eTHETA[ipar].push_back(parameters[Acts::eBoundTheta] -
+                                     truthTHETA);
+        m_res_eQOP[ipar].push_back(parameters[Acts::eBoundQOverP] - truthQOP);
+        m_res_eT[ipar].push_back(parameters[Acts::eBoundTime] - truthTIME);
+
+        // track parameters pull
+        m_pull_eLOC0[ipar].push_back(
+            (parameters[Acts::eBoundLoc0] - truthLOC0) /
+            std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+        m_pull_eLOC1[ipar].push_back(
+            (parameters[Acts::eBoundLoc1] - truthLOC1) /
+            std::sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+        m_pull_ePHI[ipar].push_back(
+            resPhi / std::sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+        m_pull_eTHETA[ipar].push_back(
+            (parameters[Acts::eBoundTheta] - truthTHETA) /
+            std::sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+        m_pull_eQOP[ipar].push_back(
+            (parameters[Acts::eBoundQOverP] - truthQOP) /
+            std::sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+        double sigmaTime =
+            std::sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
+        m_pull_eT[ipar].push_back(
+            sigmaTime == 0.0
+                ? nan
+                : (parameters[Acts::eBoundTime] - truthTIME) / sigmaTime);
+
+        if (ipar == ePredicted) {
           // local hit residual info
           auto H = state.effectiveProjector();
           auto V = state.effectiveCalibratedCovariance();
