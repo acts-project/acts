@@ -22,6 +22,8 @@
 #include <vector>
 
 #include <TFile.h>
+#include <TVectorFfwd.h>
+#include <TVectorT.h>
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -95,10 +97,20 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
       "/ nMatchedParticles) = "
       << aveNDuplicatedSeeds);
 
+  auto write_float = [&](float f, const char* name) {
+    TVectorF v(1);
+    v[0] = f;
+    m_outputFile->WriteObject(&v, name);
+  };
+
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
+    write_float(eff, "eff_seeds");
+    write_float(fakeRate, "fakerate_seeds");
+    write_float(duplicationRate, "duplicaterate_seeds");
+    write_float(totalSeedPurity, "purity_seeds");
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
   return ProcessCode::SUCCESS;
