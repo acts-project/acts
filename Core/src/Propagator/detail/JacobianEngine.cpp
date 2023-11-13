@@ -138,6 +138,7 @@ BoundMatrix boundToBoundTransportJacobian(
   // Calculate the jacobian from free to bound at the final surface
   FreeToBoundMatrix freeToBoundJacobian =
       surface.freeToBoundJacobian(geoContext, freeParameters);
+  // https://acts.readthedocs.io/en/latest/white_papers/correction-for-transport-jacobian.html
   // Calculate the full jacobian from the local/bound parameters at the start
   // surface to local/bound parameters at the final surface
   return freeToBoundJacobian *
