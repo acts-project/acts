@@ -130,7 +130,7 @@ struct SeedFinderConfig {
   // default is 5%
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
-	
+
   // Parameter which can loosen the tolerance of the track seed to form to a
   // helix, useful for (e.g.) misaligned seeding
   float helixCutTolerance = 1.;
@@ -284,7 +284,8 @@ struct SeedFinderOptions {
     // TODO: change using ACTS units
     options.pTPerHelixRadius = 1_T * 1e6 * options.bFieldInZ;
     options.minHelixDiameter2 =
-        std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2) * config.helixCutTolerance;
+        std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2) *
+        config.helixCutTolerance;
     options.pT2perRadius =
         std::pow(config.highland / options.pTPerHelixRadius, 2);
     options.sigmapT2perRadius =
