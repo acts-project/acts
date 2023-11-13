@@ -120,56 +120,63 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
             &m_slSurfaceAccessor);
     switch (reductionAlg) {
+      case MixtureReductionAlgorithm::weightCut: {
+        gsfOptions.extensions.mixtureReducer
+            .connect<&Acts::reduceMixtureLargestWeights>();
+      } break;
       case MixtureReductionAlgorithm::KLDistance: {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureWithKLDistance>();
       } break;
+
+        return gsfOptions;
     }
 
-    return gsfOptions;
-  }
+    TrackFitterResult operator()(
+        const std::vector<Acts::SourceLink>& sourceLinks,
+        const TrackParameters& initialParameters,
+        const GeneralFitterOptions& options,
+        const MeasurementCalibratorAdapter& calibrator, TrackContainer& tracks)
+        const override {
+      const auto gsfOptions = makeGsfOptions(options, calibrator);
 
-  TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
-                               const TrackParameters& initialParameters,
-                               const GeneralFitterOptions& options,
-                               const MeasurementCalibratorAdapter& calibrator,
-                               TrackContainer& tracks) const override {
-    const auto gsfOptions = makeGsfOptions(options, calibrator);
+      using namespace Acts::GsfConstants;
+      if (!tracks.hasColumn(
+              Acts::hashString(kFinalMultiComponentStateColumn))) {
+        std::string key(kFinalMultiComponentStateColumn);
+        tracks.template addColumn<FinalMultiComponentState>(key);
+      }
 
-    using namespace Acts::GsfConstants;
-    if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
-      std::string key(kFinalMultiComponentStateColumn);
-      tracks.template addColumn<FinalMultiComponentState>(key);
+      return fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                        initialParameters, gsfOptions, tracks);
     }
 
-    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
-                      gsfOptions, tracks);
-  }
+    TrackFitterResult operator()(
+        const std::vector<Acts::SourceLink>& sourceLinks,
+        const TrackParameters& initialParameters,
+        const GeneralFitterOptions& options,
+        const RefittingCalibrator& calibrator,
+        const std::vector<const Acts::Surface*>& surfaceSequence,
+        TrackContainer& tracks) const override {
+      const auto gsfOptions = makeGsfOptions(options, calibrator);
 
-  TrackFitterResult operator()(
-      const std::vector<Acts::SourceLink>& sourceLinks,
-      const TrackParameters& initialParameters,
-      const GeneralFitterOptions& options,
-      const RefittingCalibrator& calibrator,
-      const std::vector<const Acts::Surface*>& surfaceSequence,
-      TrackContainer& tracks) const override {
-    const auto gsfOptions = makeGsfOptions(options, calibrator);
+      using namespace Acts::GsfConstants;
+      if (!tracks.hasColumn(
+              Acts::hashString(kFinalMultiComponentStateColumn))) {
+        std::string key(kFinalMultiComponentStateColumn);
+        tracks.template addColumn<FinalMultiComponentState>(key);
+      }
 
-    using namespace Acts::GsfConstants;
-    if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
-      std::string key(kFinalMultiComponentStateColumn);
-      tracks.template addColumn<FinalMultiComponentState>(key);
+      return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              initialParameters, gsfOptions, surfaceSequence,
+                              tracks);
     }
-
-    return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                            initialParameters, gsfOptions, surfaceSequence,
-                            tracks);
-  }
-};
+  };
 
 }  // namespace
 
-std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
+std::shared_ptr<TrackFitterFunction>
+ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,

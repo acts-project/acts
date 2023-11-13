@@ -49,6 +49,18 @@ void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
 
 namespace Acts {
 
+void reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
+                                 std::size_t maxCmpsAfterMerge,
+                                 const Surface &) {
+  if (cmpCache.size() <= maxCmpsAfterMerge) {
+    return;
+  }
+
+  std::sort(cmpCache.begin(), cmpCache.end(),
+            [](const auto &a, const auto &b) { return a.weight > b.weight; });
+  cmpCache.resize(maxCmpsAfterMerge);
+}
+
 void reduceMixtureWithKLDistance(std::vector<Acts::GsfComponent> &cmpCache,
                                  std::size_t maxCmpsAfterMerge,
                                  const Surface &surface) {
