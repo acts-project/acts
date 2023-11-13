@@ -55,32 +55,30 @@ enum class ComponentMergeMethod { eMean, eMaxWeight };
 /// @return parameters and covariance as std::tuple< BoundVector, BoundMatrix >
 template <typename mixture_t, typename projector_t = Acts::Identity>
 auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
-                          ComponentMergeMethod method,
-                          projector_t &&projector = projector_t{}) {
-  using T = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
+                           ComponentMergeMethod method,
+                           projector_t &&projector = projector_t{}) {
+  using R = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
+  const auto mean =
+      detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
+        return detail::computeMixtureMean(mixture, projector, desc);
+      });
+  // MARK: fpeMaskBegin(FLTUND, 1, #2347)
+  const auto cov =
+      detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
+        return detail::computeMixtureCovariance(mixture, mean, projector, desc);
+      });
+  // MARK: fpeMaskEnd(FLTUND)
 
-  return detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
-    BoundVector parameters = BoundVector::Zero();
-    switch (method) {
-      case ComponentMergeMethod::eMean: {
-        parameters = detail::computeMixtureMean(mixture, projector, desc);
-      } break;
-      case ComponentMergeMethod::eMaxWeight: {
-        const auto maxWeightIt = std::max_element(
-            mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
-              return std::get<0>(projector(a)) < std::get<0>(projector(b));
-            });
-        parameters = std::get<1>(projector(*maxWeightIt));
-      }
-    }
-
-    // MARK: fpeMaskBegin(FLTUND, 1, #2347)
-    const auto covariance =
-        computeMixtureCovariance(mixture, parameters, projector, desc);
-    // MARK: fpeMaskEnd(FLTUND)
-
-    return T{parameters, covariance};
-  });
+  if (method == ComponentMergeMethod::eMean) {
+    return R{mean, cov};
+  } else {
+    const auto maxWeightIt = std::max_element(
+        mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
+          return std::get<0>(projector(a)) < std::get<0>(projector(b));
+        });
+    const BoundVector meanMaxWeight = std::get<1>(projector(*maxWeightIt));
+    return R{meanMaxWeight, cov};
+  }
 }
 
 }  // namespace Acts
