@@ -100,6 +100,10 @@ struct SeedFinderOrthogonalConfig {
   // default is 5%
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
+	
+  // Parameter which can loosen the tolerance of the track seed to form to a
+  // helix, useful for (e.g.) misaligned seeding
+	float helixCutTolerance = 1.;
 
   // derived values, set on SeedFinder construction
   float highland = 0;
