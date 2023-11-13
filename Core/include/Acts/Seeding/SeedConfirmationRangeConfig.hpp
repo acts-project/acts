@@ -17,14 +17,14 @@ namespace Acts {
 
 /// @brief contains parameters for  seed confirmation
 struct SeedConfirmationRangeConfig {
-  // This is used for quality seed confirmation. Where requirements on the
+  // This is used for quality seed confirmation, where requirements on the
   // number of compatible space-points and impact parameters can also be defined
   // for different (r, z) regions of the detector (e.g. forward or central
-  // region) by SeedConfirmationRange. Seeds are classied as "high-quality"
+  // region) by SeedConfirmationRange. Seeds are classified as "high-quality"
   // seeds and normal quality seeds. Normal quality seeds are only selected if
-  // no other "high-quality" seeds has been found for that inner-middle doublet.
+  // no other "high-quality" seed has been found for that inner-middle doublet.
   // For optimization reasons, the algorithm only calls the seed confirmation
-  // for a certain inner-middle doublet in case a configurable minimum number of
+  // for a certain inner-middle doublet, in case a configurable minimum number of
   // inner-middle-outer triplets have been found.
 
   // Minimum and maximum z position of middle component of the seed used to
