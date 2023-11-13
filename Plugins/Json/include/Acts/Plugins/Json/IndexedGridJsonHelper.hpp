@@ -11,8 +11,8 @@
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <tuple>
 

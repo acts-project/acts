@@ -12,8 +12,8 @@
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <tuple>
 #include <vector>
