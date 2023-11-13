@@ -20,7 +20,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
+#include "Acts/EventData/GenerateParameters.hpp"
 #include "Acts/EventData/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"

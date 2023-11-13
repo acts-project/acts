@@ -22,7 +22,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
+#include "Acts/EventData/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"

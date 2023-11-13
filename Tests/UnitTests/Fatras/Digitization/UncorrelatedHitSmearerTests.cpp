@@ -19,7 +19,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
+#include "Acts/EventData/GenerateParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
