@@ -157,6 +157,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     subCovMat = trkParams->spatialImpactParameterCovariance().value();
   } else {
     subCovMat = trkParams->impactParameterCovariance().value();
+    subCovMat(2, 2) *= 300.;
   }
   ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
 
