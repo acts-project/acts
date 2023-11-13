@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   // ... the corresponding time should be set to 0...
   BOOST_CHECK_EQUAL((*secondRes).first.second, 0.);
   // ... and it should have a positive width
-  BOOST_CHECK((*secondRes).second > 0);
+  BOOST_CHECK_GT((*secondRes).second, 0);
 
   // Add second track to 2D grid
   trackDensityMap = grid2D.addTrack(params2, mainDensityMap2D);
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Calculate new total density ...
   float secondDensitySum1D = densitySum(mainDensityMap1D);
   // ... and check that it's twice as large as before
-  BOOST_CHECK(2 * firstDensitySum1D == secondDensitySum1D);
+  BOOST_CHECK_EQUAL(2 * firstDensitySum1D, secondDensitySum1D);
 
   // Add track 0 again to 2D grid
   firstTrackDensityMap2D = grid2D.addTrack(params0, mainDensityMap2D);
@@ -561,14 +561,14 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Calculate new total density ...
   float secondDensitySum2D = densitySum(mainDensityMap2D);
   // ... and check that it's twice as large as before
-  BOOST_CHECK(2 * firstDensitySum2D == secondDensitySum2D);
+  BOOST_CHECK_EQUAL(2 * firstDensitySum2D, secondDensitySum2D);
 
   // Remove track 0 from 1D grid
   grid1D.subtractTrack(firstTrackDensityMap1D, mainDensityMap1D);
   // Calculate new total density
   float thirdDensitySum1D = densitySum(mainDensityMap1D);
   // Density should be old one again
-  BOOST_CHECK(firstDensitySum1D == thirdDensitySum1D);
+  BOOST_CHECK_EQUAL(firstDensitySum1D, thirdDensitySum1D);
   // Grid size should still match spatialTrkGridSize (removal does not change
   // grid size)
   BOOST_CHECK_EQUAL(mainDensityMap1D.size(), spatialTrkGridSize);
@@ -578,7 +578,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Calculate new total density
   float thirdDensitySum2D = densitySum(mainDensityMap2D);
   // Density should be old one again
-  BOOST_CHECK(firstDensitySum2D == thirdDensitySum2D);
+  BOOST_CHECK_EQUAL(firstDensitySum2D, thirdDensitySum2D);
   // Grid size should still match trkGridSize (removal does not change grid
   // size)
   BOOST_CHECK_EQUAL(mainDensityMap2D.size(), trkGridSize);
