@@ -148,16 +148,17 @@ struct SeedFinderConfig {
    * Seeding parameters used for quality seed confirmation
    */
 
-	// Enable quality seed confirmation, this is different than default seeding
-	// confiramtion because it can also be defined for different (r, z) regions of
-	// the detector (e.g. forward or central region) by SeedConfirmationRange. We also classify seeds as "high-quality" seeds, and seeds
-	// that are not confirmed as "high-quality" are only selected if no other
-	// "high-quality" seeds has been found for that inner-middle doublet
-	bool seedConfirmation = false;
-	// Contains parameters for central seed confirmation
-	SeedConfirmationRangeConfig centralSeedConfirmationRange;
-	// Contains parameters for forward seed confirmation
-	SeedConfirmationRangeConfig forwardSeedConfirmationRange;
+  // Enable quality seed confirmation, this is different than default seeding
+  // confiramtion because it can also be defined for different (r, z) regions of
+  // the detector (e.g. forward or central region) by SeedConfirmationRange. We
+  // also classify seeds as "high-quality" seeds, and seeds that are not
+  // confirmed as "high-quality" are only selected if no other "high-quality"
+  // seeds has been found for that inner-middle doublet
+  bool seedConfirmation = false;
+  // Contains parameters for central seed confirmation
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  // Contains parameters for forward seed confirmation
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
   // Maximum number (minus one) of accepted seeds per middle space-point
   unsigned int maxSeedsPerSpM = 5;
 
