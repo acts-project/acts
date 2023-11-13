@@ -32,8 +32,6 @@ class GsfErrorCategory : public std::error_category {
         return "No measurement states found in the backward pass";
       case GsfError::NoMeasurementStatesCreatedFinal:
         return "No measurement states in the final trajectory";
-      case GsfError::ModeFindingFailed:
-        return "Mode finding failed";
       default:
         return "unknown";
     }

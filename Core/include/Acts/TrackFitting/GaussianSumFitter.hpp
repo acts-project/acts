@@ -449,17 +449,11 @@ struct GaussianSumFitter {
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
 
-      auto finalResult = Acts::mergeGaussianMixture(
+      const auto [finalPars, finalCov] = Acts::mergeGaussianMixture(
           params.components(), params.referenceSurface(),
           options.componentMergeMethod, [](auto& t) {
             return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
           });
-
-      if (!finalResult.ok()) {
-        return finalResult.error();
-      }
-
-      const auto [finalPars, finalCov] = *finalResult;
 
       track.parameters() = finalPars;
       track.covariance() = finalCov;

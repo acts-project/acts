@@ -716,33 +716,16 @@ struct GsfActor {
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
 
-      auto rPrt = mergeGaussianMixture(
+      auto [prtMean, prtCov] = mergeGaussianMixture(
           tmpStates.tips, surface, m_cfg.componentMergeMethod,
           PrtProjector{tmpStates.traj, tmpStates.weights});
-      if (!rPrt.ok()) {
-        result.result = rPrt.error();
-        ACTS_ERROR("Error in component merging (predicted):"
-                   << rPrt.error().message());
-        return;
-      }
-
-      const auto& [prtMean, prtCov] = *rPrt;
       proxy.predicted() = prtMean;
       proxy.predictedCovariance() = prtCov;
 
       if (isMeasurement) {
-        auto rFlt = mergeGaussianMixture(
+        auto [fltMean, fltCov] = mergeGaussianMixture(
             tmpStates.tips, surface, m_cfg.componentMergeMethod,
             FltProjector{tmpStates.traj, tmpStates.weights});
-
-        if (!rFlt.ok()) {
-          result.result = rFlt.error();
-          ACTS_ERROR("Error in component merging (filtered):"
-                     << rFlt.error().message());
-          return;
-        }
-
-        const auto& [fltMean, fltCov] = *rFlt;
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
         proxy.smoothed() = BoundVector::Constant(-2);
@@ -763,18 +746,9 @@ struct GsfActor {
               result.surfacesVisitedBwdAgain.push_back(&surface);
 
               if (trackState.hasSmoothed()) {
-                auto rSmt = mergeGaussianMixture(
+                const auto [smtMean, smtCov] = mergeGaussianMixture(
                     tmpStates.tips, surface, m_cfg.componentMergeMethod,
                     FltProjector{tmpStates.traj, tmpStates.weights});
-
-                if (!rSmt.ok()) {
-                  result.result = rSmt.error();
-                  ACTS_ERROR("Error in component merging (smoothed):"
-                             << rSmt.error().message());
-                  return false;
-                }
-
-                const auto& [smtMean, smtCov] = *rSmt;
 
                 trackState.smoothed() = smtMean;
                 trackState.smoothedCovariance() = smtCov;
