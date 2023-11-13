@@ -348,12 +348,15 @@ class TrigFTF_GNN_TrackingFilter {
     float Dy = 1.0 / (Cy[0][0] + sigma_rz);
     // std::cout << "checking  Dy: " << Dy  << std::endl ; 
         
-    float dchi2_x = 0.0;
-    if (isnan(resid_x * resid_x * Dx) || isinf(resid_x * resid_x * Dx) ){
-      return false ; 
-    } else {
-      dchi2_x = resid_x * resid_x * Dx; 
-    }  
+    // float dchi2_x = 0.0;
+    // if (isnan(resid_x * resid_x * Dx) || isinf(resid_x * resid_x * Dx) ){
+    //   std::cout << "inf issue" << std::endl  ;
+    //   // std::cout << "input res: " << resid_x << " input d: " << Dx << std::endl  ;
+    //   return false ; 
+    // } else {
+    //   dchi2_x = resid_x * resid_x * Dx; 
+    // }  
+    float dchi2_x = resid_x * resid_x * Dx; 
 
     float dchi2_y = resid_y * resid_y * Dy;
 

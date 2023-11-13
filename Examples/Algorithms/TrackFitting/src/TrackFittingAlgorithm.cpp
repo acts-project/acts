@@ -76,7 +76,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   const ClusterContainer* clusters =
       m_inputClusters.isInitialized() ? &m_inputClusters(ctx) : nullptr;
-
+  
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
     ACTS_FATAL("Inconsistent number of proto tracks and parameters "

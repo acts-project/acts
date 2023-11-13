@@ -66,6 +66,8 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
 
   m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
 
+  m_inputClusters.initialize(m_cfg.inputClusters);
+
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
@@ -93,6 +95,18 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
     const AlgorithmContext &ctx) const {
   std::vector<Acts::FTF_SP<SimSpacePoint>> FTF_spacePoints =
       Make_FTF_spacePoints(ctx, m_cfg.ACTS_FTF_Map);
+
+
+  //cluster width 
+  const ClusterContainer* clusters = &m_inputClusters(ctx) ;
+
+  for (const auto& sp : FTF_spacePoints){
+    const auto& sl = sp.SP->sourceLinks().front().get<IndexSourceLink>() ; 
+    const auto& cluster = clusters->at(sl.index()) ; 
+    std::cout << "testing 0: " << cluster.sizeLoc0 << " 1: " << cluster.sizeLoc1 << std::endl ; 
+
+  }
+
 
   for (auto sp : FTF_spacePoints) {
     ACTS_DEBUG("FTF space points: "

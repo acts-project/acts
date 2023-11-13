@@ -869,6 +869,8 @@ def addFTFSeeding(
         inputSourceLinks = "sourcelinks" , 
         trackingGeometry = trackingGeometry, 
         fill_module_csv = False, 
+        inputClusters= "clusters" ,
+
         
     )
 
@@ -876,18 +878,18 @@ def addFTFSeeding(
     return seedingAlg.config.outputSeeds 
 
 
-def addFTFSeeding(
-    sequence: acts.examples.Sequencer,
-    spacePoints: str,
-    seedFinderConfigArg: SeedFinderConfigArg,
-    seedFinderOptionsArg: SeedFinderOptionsArg,
-    seedFilterConfigArg: SeedFilterConfigArg,
-    trackingGeometry: acts.TrackingGeometry,
-    logLevel: acts.logging.Level = None,
-    layerMappingConfigFile: Union[Path, str] = None,
-    geoSelectionConfigFile: Union[Path, str] = None,
-    fastrack_inputConfigFile: Union[Path, str] = None,
-):
+# def addFTFSeeding(
+#     sequence: acts.examples.Sequencer,
+#     spacePoints: str,
+#     seedFinderConfigArg: SeedFinderConfigArg,
+#     seedFinderOptionsArg: SeedFinderOptionsArg,
+#     seedFilterConfigArg: SeedFilterConfigArg,
+#     trackingGeometry: acts.TrackingGeometry,
+#     logLevel: acts.logging.Level = None,
+#     layerMappingConfigFile: Union[Path, str] = None,
+#     geoSelectionConfigFile: Union[Path, str] = None,
+#     fastrack_inputConfigFile: Union[Path, str] = None,
+# ):
     """FTF seeding"""
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()

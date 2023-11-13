@@ -32,7 +32,7 @@ detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=50, numThreads=1, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
@@ -52,7 +52,7 @@ else:
             mean=acts.Vector4(0, 0, 0, 0),
         ),
         rnd=rnd,
-        outputDirRoot=outputDir,
+        # outputDirRoot=outputDir,
     )
 
 addFatras(
@@ -69,7 +69,7 @@ addFatras(
     )
     if ttbar_pu200
     else ParticleSelectorConfig(),
-    outputDirRoot=outputDir,
+    # outputDirRoot=outputDir,
 )
 
 addDigitization(
@@ -78,7 +78,9 @@ addDigitization(
     field,
     digiConfigFile=geo_dir
     / "itk-hgtd/itk-smearing-config.json",  # change this file to make it do digitization
-    outputDirRoot=outputDir,
+    # digiConfigFile=geo_dir
+    # / "itk-hgtd/itk-pixel-digitization.json",  
+    # outputDirRoot=outputDir,
     rnd=rnd,
 )
 
@@ -100,29 +102,29 @@ addSeeding(
 )
 
 addCKFTracks(
-    s,
-    trackingGeometry,
-    field,
-    TrackSelectorConfig(
-        pt=(1.0 * u.GeV if ttbar_pu200 else 0.0, None),
-        absEta=(None, 4.0),
-        nMeasurementsMin=6,
-    ),
-    outputDirRoot=outputDir,
-)
+     s,
+     trackingGeometry,
+     field,
+     TrackSelectorConfig(
+         pt=(1.0 * u.GeV if ttbar_pu200 else 0.0, None),
+         absEta=(None, 4.0),
+         nMeasurementsMin=6,
+     ),
+     outputDirRoot=outputDir,
+ )
 
-addAmbiguityResolution(
-    s,
-    AmbiguityResolutionConfig(maximumSharedHits=3),
-    outputDirRoot=outputDir,
-)
+# addAmbiguityResolution(
+#     s,
+#     AmbiguityResolutionConfig(maximumSharedHits=3),
+#     outputDirRoot=outputDir,
+# )
 
-addVertexFitting(
-    s,
-    field,
-    vertexFinder=VertexFinder.Iterative,
-    outputDirRoot=outputDir,
-)
+# addVertexFitting(
+#     s,
+#     field,
+#     vertexFinder=VertexFinder.Iterative,
+#     outputDirRoot=outputDir,
+# )
 
 s.run()
 
