@@ -187,7 +187,7 @@ void VectorMultiTrajectory::clear_impl() {
 }
 
 void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
-    std::ostream& os, size_t n) {
+    std::ostream& os, std::size_t n) {
   using namespace boost::histogram;
   using cat = axis::category<std::string>;
 
@@ -214,7 +214,7 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
       std::string key = column_axis.bin(c);
       auto v = h.at(c, t);
       if (key == "count") {
-        p(key, static_cast<size_t>(v));
+        p(key, static_cast<std::size_t>(v));
         continue;
       }
       p(key, v / 1024 / 1024, "M");

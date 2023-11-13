@@ -112,7 +112,7 @@ class ConstTrackStateType {
     assert(t.m_raw != nullptr);
     std::bitset<kRawBits> bs{*t.m_raw};
     std::bitset<TrackStateFlag::NumTrackStateFlags> trunc;
-    for (size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
+    for (std::size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
       trunc[i] = bs[i];
     }
     // MeasurementParameterOutlierHoleMaterialSharedhit

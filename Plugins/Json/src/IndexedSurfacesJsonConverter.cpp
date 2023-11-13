@@ -63,9 +63,9 @@ Acts::IndexedSurfacesJsonConverter::fromJson(
 
   // Helper extractor
   auto eqExtractor = [](const nlohmann::json& jAxis)
-      -> std::tuple<std::array<ActsScalar, 2u>, std::size_t> {
+      -> std::tuple<std::array<ActsScalar, 2u>, size_t> {
     std::array<ActsScalar, 2u> range = jAxis["range"];
-    std::size_t bins = jAxis["bins"];
+    size_t bins = jAxis["bins"];
     return std::make_tuple(range, bins);
   };
 

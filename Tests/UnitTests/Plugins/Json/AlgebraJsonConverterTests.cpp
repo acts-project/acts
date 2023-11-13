@@ -100,15 +100,15 @@ BOOST_AUTO_TEST_CASE(TransformNullIdentity) {
   Transform3JsonConverter::Options nulledOption{false, false};
   nlohmann::json nulledOut =
       Transform3JsonConverter::toJson(reference, nulledOption);
-  BOOST_CHECK(nulledOut["translation"] == nullptr);
-  BOOST_CHECK(nulledOut["rotation"] == nullptr);
+  BOOST_CHECK_EQUAL(nulledOut["translation"], nullptr);
+  BOOST_CHECK_EQUAL(nulledOut["rotation"], nullptr);
 
   // Test with writing the identity
   Transform3JsonConverter::Options writtenOption{true, false};
   nlohmann::json writtenOut =
       Transform3JsonConverter::toJson(reference, writtenOption);
-  BOOST_CHECK(writtenOut["translation"] != nullptr);
-  BOOST_CHECK(writtenOut["rotation"] != nullptr);
+  BOOST_CHECK_NE(writtenOut["translation"], nullptr);
+  BOOST_CHECK_NE(writtenOut["rotation"], nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(TransformTranspose) {

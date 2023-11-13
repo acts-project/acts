@@ -60,8 +60,8 @@ class ParticleSelector final : public IAlgorithm {
     double mMin = 0;
     double mMax = std::numeric_limits<double>::infinity();
     /// Measurement number cuts
-    std::size_t measurementsMin = 0;
-    std::size_t measurementsMax = std::numeric_limits<std::size_t>::max();
+    size_t measurementsMin = 0;
+    size_t measurementsMax = std::numeric_limits<size_t>::max();
     /// Remove charged particles.
     bool removeCharged = false;
     /// Remove neutral particles.

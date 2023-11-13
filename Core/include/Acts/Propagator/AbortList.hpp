@@ -20,8 +20,6 @@ namespace hana = boost::hana;
 
 namespace Acts {
 
-/// @cond
-
 /// @brief AbortList object to be used in the propagation
 ///
 /// The abort list is a list of structs or classes that
@@ -39,10 +37,12 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   using detail::Extendable<aborters_t...>::tuple;
 
  public:
+  /// @cond
   // This uses the type collector
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::action_type_extractor, aborters_t...>,
       hana::template_<AbortList>))::type;
+  /// @endcond
 
   using detail::Extendable<aborters_t...>::get;
 
@@ -101,6 +101,7 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   /// @param [in,out] state is the state object from the propagator
   /// @param [in] stepper Stepper used for the propagation
   /// @param [in] navigator Navigator used for the propagation
+  /// @param [in] args are the arguments to be passed to the aborters
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
@@ -110,7 +111,5 @@ struct AbortList : public detail::Extendable<aborters_t...> {
                        std::forward<Args>(args)...);
   }
 };
-
-/// @endcond
 
 }  // namespace Acts

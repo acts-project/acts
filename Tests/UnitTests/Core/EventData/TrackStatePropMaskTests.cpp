@@ -66,31 +66,31 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
       PM b = values[j];
 
       if (i == j) {
-        BOOST_CHECK(cnv(a & b).count() == 1);
+        BOOST_CHECK_EQUAL(cnv(a & b).count(), 1);
       } else {
         BOOST_CHECK(cnv(a & b).none());
       }
     }
   }
 
-  BOOST_CHECK(cnv(PM::Predicted ^ PM::Filtered).count() == 2);
+  BOOST_CHECK_EQUAL(cnv(PM::Predicted ^ PM::Filtered).count(), 2);
   BOOST_CHECK(cnv(PM::Predicted ^ PM::Predicted).none());
-  BOOST_CHECK(~(PM::Predicted | PM::Calibrated) ==
-              (PM::All ^ PM::Predicted ^ PM::Calibrated));
+  BOOST_CHECK_EQUAL(~(PM::Predicted | PM::Calibrated),
+                    (PM::All ^ PM::Predicted ^ PM::Calibrated));
 
   PM base = PM::None;
-  BOOST_CHECK(cnv(base) == 0);
+  BOOST_CHECK_EQUAL(cnv(base), 0);
 
   base &= PM::Filtered;
-  BOOST_CHECK(cnv(base) == 0);
+  BOOST_CHECK_EQUAL(cnv(base), 0);
 
   base |= PM::Filtered;
-  BOOST_CHECK(base == PM::Filtered);
+  BOOST_CHECK_EQUAL(base, PM::Filtered);
 
   base |= PM::Calibrated;
-  BOOST_CHECK(base == (PM::Filtered | PM::Calibrated));
+  BOOST_CHECK_EQUAL(base, (PM::Filtered | PM::Calibrated));
 
   base ^= PM::All;
-  BOOST_CHECK(base == ~(PM::Filtered | PM::Calibrated));
+  BOOST_CHECK_EQUAL(base, ~(PM::Filtered | PM::Calibrated));
 }
 BOOST_AUTO_TEST_SUITE_END()

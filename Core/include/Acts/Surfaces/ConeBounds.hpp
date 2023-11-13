@@ -31,7 +31,7 @@ namespace Acts {
 ///  The cone can open to both sides, steered by \f$ z_min \f$ and \f$ z_max
 ///  \f$.
 ///
-///  @image html figures/ConeBounds.gif
+///  @image html ConeBounds.gif
 ///
 
 class ConeBounds : public SurfaceBounds {
@@ -90,7 +90,7 @@ class ConeBounds : public SurfaceBounds {
   /// @param bcheck is the boundary check directive
   /// @return is a boolean indicating if the position is inside
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck = true) const final;
+              const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
 
   /// Output Method for std::ostream
   ///
