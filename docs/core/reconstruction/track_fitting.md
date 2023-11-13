@@ -5,7 +5,7 @@ It is part of the pattern recognition/track  reconstruction/tracking.
 We can run the track fitting algorithms, after we allocated all hits to single tracks with the help of a track finding algorithm.
 It is not necessary, that all points of a track are present.
 
-Currently we have implementations for three different fitters:
+Currently, we have implementations for three different fitters:
 * Kalman Filter
 * GSF
 * Global Chi-Square Fitter (GX2F) [wip]
@@ -93,7 +93,7 @@ To simplify integration, the GSF returns an {struct}`Acts::KalmanFitterResult` o
 
 If the GSF finds the column with the string identifier *"gsf-final-multi-component-state"* (defined in `Acts::GsfConstants::kFinalMultiComponentStateColumn`) in the track container, it adds the final multi-component state to the track as a `std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>` object.
 
-A GSF example can be found in the Acts Examples Framework [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_gsf.py).
+A GSF example can be found in the ACTS Examples Framework [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_gsf.py).
 
 ### Customising the Bethe-Heitler approximation
 
@@ -117,7 +117,7 @@ The {class}`Acts::AtlasBetheHeitlerApprox` is constructed with two parameterizat
 ## Global Chi-Square Fitter (GX2F) [wip]
 
 :::{todo}
-Write GX2F documeneation
+Write GX2F documentation
 :::
 
 [^billoir]: https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf

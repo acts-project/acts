@@ -107,6 +107,7 @@ def run() -> None:
         "Acts::AbstractVolume",
         "Acts::AnnulusBounds",
         "Acts::DiamondBounds",
+        "Acts::RegularSurface",
         "Acts::ConvexPolygonBounds",
         "Acts::ConvexPolygonBoundsBase",
         "Acts::Logging::LevelOutputDecorator",

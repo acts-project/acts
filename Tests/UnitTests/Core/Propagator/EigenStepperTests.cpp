@@ -718,7 +718,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      prop(es, naviMat);
+      prop(es, naviMat,
+           Acts::getDefaultLogger("Propagator", Acts::Logging::VERBOSE));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();

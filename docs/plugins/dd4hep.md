@@ -1,7 +1,7 @@
 # DD4hep plugin
 
 :::{todo}
-Describe new markup and construction for dd4hep plugin and building layerless geometry.
+Describe new markup and construction for DD4hep plugin and building layerless geometry.
 :::
 
 The DD4hepPlugin allows building of a {class}`Acts::TrackingGeometry` from
@@ -86,24 +86,24 @@ ACTS uses this parameter to resolve the layer detector elements.
 
 ## `DD4hepDetectorElement`
 
-In Acts the surfaces describing the sensitive modules of a detector are directly
+In ACTS the surfaces describing the sensitive modules of a detector are directly
 linked to these of the initial geometry input. In the case of DD4hep the
 {class}`Acts::DD4hepDetectorElement` was introduced which is the direct link of
-Acts to DD4hep. In the case for tracking relevant parameters in the DD4hep
+ACTS to DD4hep. In the case for tracking relevant parameters in the DD4hep
 geometry description are changed (e.g. alignment) it will be automatically
-changed in Acts.
+changed in ACTS.
 
 ## Build
 
 The DD4hepPlugin is only build on demand. The DD4hepPlugin depends on the
 TGeoPlugin therefore both plugins need to be installed. During the cmake
 configuration the flags `ACTS_BUILD_PLUGIN_DD4HEP=on` and
-`ACTS_BUILD_PLUGIN_TGEO=on` need to be set. In addition ROOT and DD4hep
+`ACTS_BUILD_PLUGIN_TGEO=on` need to be set. In addition, ROOT and DD4hep
 installations need to be available to cmake.
 
 ## Prerequisites
 
-To guarantee a working translation from DD4hep input to Acts geometry the
+To guarantee a working translation from DD4hep input to ACTS geometry the
 following conditions need to be met:
 
 - The detector needs to have a barrel-endcap structure: Every hierarchy of
@@ -111,8 +111,8 @@ following conditions need to be met:
   into
   
   1. {barrel}
-  1. {barrel + 2 endcaps}
-  1. {2 endcaps} - in case there is no barrel at this stage (e.g. forward end caps)
+  2. {barrel + 2 endcaps}
+  3. {2 endcaps} - in case there is no barrel at this stage (e.g. forward end caps)
 
   These subdetectors need to be flagged using the correct `DetType`.
 
@@ -162,7 +162,7 @@ following conditions need to be met:
     ```
 
 - The tracking geometry needs to be built from bottom to top to ensure
-  navigation. Therefore the different hierarchies need to be sorted ascending.
+  navigation. Therefore, the different hierarchies need to be sorted ascending.
   Per default the sub detectors are sorted by the id of their `DetElement`.
   In case another sorting needs to be applied, the users can provide their own
   function.
@@ -171,7 +171,7 @@ There are two modes building the layers around the sensitive detector modules:
 
 - The `DetElement` containing the sensitive modules have a geometrical
   shape.
-  The boundaries of the layers in Acts are taken directly from the given shape.
+  The boundaries of the layers in ACTS are taken directly from the given shape.
 
 - The `DetElement` containing the sensitive modules have no specific shape
   (assembly).
@@ -193,7 +193,7 @@ extension of the contained layers. The tolerance parameters `layerEnvelopeR`
 and `layerEnvelopeZ` need to be set in the
 {func}`Acts::convertDD4hepDetector` function.
 
-Furthermore parameters can be handed over for material mapping or the axes
+Furthermore, parameters can be handed over for material mapping or the axes
 orientation of modules.
 
 Summing up the `DetElement` tree in DD4hep should have the following
@@ -203,7 +203,7 @@ structure:
 
 It is also possible to translate a very simple detector geometry, which just
 consists of cylindrical (for a barrel) or disc (for endcaps) layers which either
-have material, or, are declared sensitive in dd4hep themselves without
+have material, or, are declared sensitive in DD4hep themselves without
 containing any detector modules.
 
 (acts-params)=

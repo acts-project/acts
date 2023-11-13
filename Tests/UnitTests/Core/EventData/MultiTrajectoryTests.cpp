@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
   stats.toStream(ss);
   std::string out = ss.str();
   BOOST_CHECK(!out.empty());
-  BOOST_CHECK(out.find("total") != std::string::npos);
+  BOOST_CHECK_NE(out.find("total"), std::string::npos);
 
   const auto& h = stats.hist;
 

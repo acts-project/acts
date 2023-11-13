@@ -34,17 +34,17 @@ BOOST_AUTO_TEST_CASE(CylindricalSupport) {
   auto singleSupport =
       Acts::Experimental::detail::SupportHelper::cylindricalSupport(
           Acts::Transform3::Identity(), {100., 400., M_PI, 0., 0., 0.}, 1u);
-  BOOST_CHECK(singleSupport.size() == 1u);
-  BOOST_CHECK(singleSupport[0u]->type() ==
-              Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(singleSupport.size(), 1u);
+  BOOST_CHECK_EQUAL(singleSupport[0u]->type(),
+                    Acts::Surface::SurfaceType::Cylinder);
 
   // As a split cylinder
   auto splitSupport =
       Acts::Experimental::detail::SupportHelper::cylindricalSupport(
           Acts::Transform3::Identity(), {100., 400., M_PI, 0., 0., 0.}, 32u);
-  BOOST_CHECK(splitSupport.size() == 32u);
+  BOOST_CHECK_EQUAL(splitSupport.size(), 32u);
   for (const auto& ss : splitSupport) {
-    BOOST_CHECK(ss->type() == Acts::Surface::SurfaceType::Plane);
+    BOOST_CHECK_EQUAL(ss->type(), Acts::Surface::SurfaceType::Plane);
   }
 
   // As a split cylinder - sectoral
@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(CylindricalSupport) {
       Acts::Experimental::detail::SupportHelper::cylindricalSupport(
           Acts::Transform3::Identity(),
           {100., 400., 0.25 * M_PI, 0.75 * M_PI, 0., 0.}, 128u);
-  BOOST_CHECK(splitSectoralSupport.size() == 128u);
+  BOOST_CHECK_EQUAL(splitSectoralSupport.size(), 128u);
   for (const auto& ss : splitSectoralSupport) {
-    BOOST_CHECK(ss->type() == Acts::Surface::SurfaceType::Plane);
+    BOOST_CHECK_EQUAL(ss->type(), Acts::Surface::SurfaceType::Plane);
   }
 }
 
@@ -62,24 +62,25 @@ BOOST_AUTO_TEST_CASE(DiscSupport) {
   // As a single disc
   auto singleSupport = Acts::Experimental::detail::SupportHelper::discSupport(
       Acts::Transform3::Identity(), {100., 400., M_PI, 0.}, 1u);
-  BOOST_CHECK(singleSupport.size() == 1u);
-  BOOST_CHECK(singleSupport[0u]->type() == Acts::Surface::SurfaceType::Disc);
+  BOOST_CHECK_EQUAL(singleSupport.size(), 1u);
+  BOOST_CHECK_EQUAL(singleSupport[0u]->type(),
+                    Acts::Surface::SurfaceType::Disc);
 
   // As a split disc
   auto splitSupport = Acts::Experimental::detail::SupportHelper::discSupport(
       Acts::Transform3::Identity(), {100., 400., M_PI, 0.}, 32u);
-  BOOST_CHECK(splitSupport.size() == 32u);
+  BOOST_CHECK_EQUAL(splitSupport.size(), 32u);
   for (const auto& ss : splitSupport) {
-    BOOST_CHECK(ss->type() == Acts::Surface::SurfaceType::Plane);
+    BOOST_CHECK_EQUAL(ss->type(), Acts::Surface::SurfaceType::Plane);
   }
 
   // As a split disc - sectoral
   auto splitSectoralSupport =
       Acts::Experimental::detail::SupportHelper::discSupport(
           Acts::Transform3::Identity(), {100., 400., 0.5 * M_PI, 0.}, 16u);
-  BOOST_CHECK(splitSectoralSupport.size() == 16u);
+  BOOST_CHECK_EQUAL(splitSectoralSupport.size(), 16u);
   for (const auto& ss : splitSectoralSupport) {
-    BOOST_CHECK(ss->type() == Acts::Surface::SurfaceType::Plane);
+    BOOST_CHECK_EQUAL(ss->type(), Acts::Surface::SurfaceType::Plane);
   }
 }
 
@@ -101,9 +102,9 @@ BOOST_AUTO_TEST_CASE(addCylinderSupport) {
   Acts::Experimental::detail::SupportHelper::addSupport(
       lSurfaces, assignToAll, lExtent, Acts::Surface::SurfaceType::Cylinder,
       sValues, std::nullopt, 1u);
-  BOOST_CHECK(lSurfaces.size() == 1u);
-  BOOST_CHECK(assignToAll.size() == 1u);
-  BOOST_CHECK(assignToAll[0u] == 0u);
+  BOOST_CHECK_EQUAL(lSurfaces.size(), 1u);
+  BOOST_CHECK_EQUAL(assignToAll.size(), 1u);
+  BOOST_CHECK_EQUAL(assignToAll[0u], 0u);
   // The radius of the newly created support surface should be 10 out of the
   // maximum
   CHECK_CLOSE_ABS(lSurfaces[0u]->bounds().values()[0u], 120, 1e-3);
@@ -115,7 +116,7 @@ BOOST_AUTO_TEST_CASE(addCylinderSupport) {
   Acts::Experimental::detail::SupportHelper::addSupport(
       lSurfaces, assignToAll, lExtent, Acts::Surface::SurfaceType::Cylinder,
       sValues, std::nullopt, 16u);
-  BOOST_CHECK(lSurfaces.size() == 16u);
+  BOOST_CHECK_EQUAL(lSurfaces.size(), 16u);
   BOOST_CHECK(assignToAll.empty());
 }
 
@@ -137,9 +138,9 @@ BOOST_AUTO_TEST_CASE(addDiscSupport) {
   Acts::Experimental::detail::SupportHelper::addSupport(
       lSurfaces, assignToAll, lExtent, Acts::Surface::SurfaceType::Disc,
       sValues, std::nullopt, 1u);
-  BOOST_CHECK(lSurfaces.size() == 1u);
-  BOOST_CHECK(assignToAll.size() == 1u);
-  BOOST_CHECK(assignToAll[0u] == 0u);
+  BOOST_CHECK_EQUAL(lSurfaces.size(), 1u);
+  BOOST_CHECK_EQUAL(assignToAll.size(), 1u);
+  BOOST_CHECK_EQUAL(assignToAll[0u], 0u);
   // The radius of the newly created support surface should be 10 out of the
   // minimum
   CHECK_CLOSE_ABS(lSurfaces[0u]->transform(tContext).translation().z(), -120,
@@ -152,7 +153,7 @@ BOOST_AUTO_TEST_CASE(addDiscSupport) {
   Acts::Experimental::detail::SupportHelper::addSupport(
       lSurfaces, assignToAll, lExtent, Acts::Surface::SurfaceType::Disc,
       sValues, std::nullopt, 16u);
-  BOOST_CHECK(lSurfaces.size() == 16u);
+  BOOST_CHECK_EQUAL(lSurfaces.size(), 16u);
   BOOST_CHECK(assignToAll.empty());
 }
 

@@ -39,9 +39,7 @@ class SurfaceBounds;
 ///
 /// @image html LineSurface.png
 class LineSurface : public Surface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from Transform3 and bounds
@@ -90,17 +88,8 @@ class LineSurface : public Surface {
   /// @param other is the source surface dor copying
   LineSurface& operator=(const LineSurface& other);
 
-  /// The normal vector is undefined if we do not know the momentum.
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lposition is the local position is ignored
-  ///
-  /// @return a zero vector
-  Vector3 normal(const GeometryContext& gctx,
-                 const Vector2& lposition) const final;
-
-  /// Normal vector return without argument
-  using Surface::normal;
+  Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
+                 const Vector3& direction) const override;
 
   /// The binning position is the position calculated
   /// for a certain binning type
