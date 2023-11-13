@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
-      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+      .connect<&TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);

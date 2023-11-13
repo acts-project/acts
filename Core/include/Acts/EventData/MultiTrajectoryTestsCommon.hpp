@@ -17,6 +17,8 @@
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/GenerateParameters.hpp"
 
 #include <random>
 
