@@ -51,7 +51,7 @@ struct SeedFinderOrthogonalConfig {
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
   // If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can
   // be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}
-  bool useVariableMiddleSPRange = false;
+  bool useVariableMiddleSPRange = true;
   // Range defined in vector for each z bin
   std::vector<std::vector<float>> rRangeMiddleSP;
   // If useVariableMiddleSPRange is true, the radial range will be calculated
