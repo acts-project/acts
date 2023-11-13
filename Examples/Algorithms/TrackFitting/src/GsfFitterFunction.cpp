@@ -54,6 +54,7 @@ class TrackingGeometry;
 }  // namespace Acts
 
 using namespace ActsExamples;
+using namespace Acts::UnitLiterals;
 
 namespace {
 
@@ -101,6 +102,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &updater);
 
+    const double momentumCutoff = 500_MeV;
     Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
         options.geoContext,
         options.magFieldContext,
@@ -110,6 +112,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         &(*options.referenceSurface),
         maxComponents,
         weightCutoff,
+        momentumCutoff,
         abortOnError,
         disableAllMaterialHandling};
     gsfOptions.componentMergeMethod = mergeMethod;
