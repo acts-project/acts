@@ -16,7 +16,7 @@
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 
-BOOST_AUTO_TEST_SUITE(Utillities)
+BOOST_AUTO_TEST_SUITE(Utilities)
 
 BOOST_AUTO_TEST_CASE(TypeListCreation) {
   struct A {};
