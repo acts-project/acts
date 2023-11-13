@@ -442,7 +442,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
       }
 
       // lambda to get the fitted track parameters
-      auto getTrackParams = [](const auto& state, unsigned int ipar)
+      auto getTrackParams = [&](unsigned int ipar)
           -> std::optional<std::pair<Acts::BoundVector, Acts::BoundMatrix>> {
         if (ipar == ePredicted && state.hasPredicted()) {
           return std::make_pair(state.predicted(), state.predictedCovariance());
@@ -476,7 +476,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
       // fill the fitted track parameters
       for (unsigned int ipar = 0; ipar < eSize; ++ipar) {
         // get the fitted track parameters
-        auto trackParamsOpt = getTrackParams(state, ipar);
+        auto trackParamsOpt = getTrackParams(ipar);
         // fill the track parameters status
         m_hasParams[ipar].push_back(trackParamsOpt.has_value());
 
