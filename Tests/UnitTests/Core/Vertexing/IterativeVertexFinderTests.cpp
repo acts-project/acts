@@ -610,13 +610,18 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   }
 
   Vertex<BoundTrackParameters> beamSpot = std::get<BeamSpotData>(csvData);
+  // Set time covariance
+  SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
+  fullCovariance.topLeftCorner<3, 3>() = beamSpot.covariance();
+  fullCovariance(eTime, eTime) = 100_ns;
+  beamSpot.setFullCovariance(fullCovariance);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, beamSpot);
 
   // find vertices
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
 
-  // BOOST_CHECK(findResult.ok());
+  BOOST_CHECK(findResult.ok());
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;
