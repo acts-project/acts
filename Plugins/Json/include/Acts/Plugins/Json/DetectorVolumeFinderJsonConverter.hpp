@@ -15,7 +15,6 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
-#include <tuple>
 #include <vector>
 
 namespace Acts {
@@ -63,15 +62,12 @@ void convert(nlohmann::json& jIndexedVolumes,
 /// @param jIndexedVolumes the json object to be filled
 /// @param delegate the delegate to be translated
 /// @param detray indicate if this is a detray json to be written out
-/// @param axesTuple the tuple of axes to be unrolled
-///
-/// @note parameters are as of the `convertImpl` method
-template <typename tuple_type, std::size_t... I>
+/// @param tList the Type list carrying all the possible types
+template <typename... Args>
 void unrollConvert(nlohmann::json& jIndexedVolumes,
                    const Experimental::DetectorVolumeUpdator& delegate,
-                   bool detray, const tuple_type& axesTuple,
-                   std::index_sequence<I...> /*unused*/) {
-  (convert(jIndexedVolumes, delegate, detray, std::get<I>(axesTuple)), ...);
+                   bool detray, [[maybe_unused]] TypeList<Args...> tList) {
+  (convert(jIndexedVolumes, delegate, detray, Args{}), ...);
 }
 
 /// Convert a volume finder
@@ -90,9 +86,7 @@ static inline nlohmann::json toJson(
   // Convert if dynamic cast happens to work
   nlohmann::json jIndexedVolumes;
   unrollConvert(jIndexedVolumes, delegate, detray,
-                IndexedGridJsonHelper::s_possibleAxes,
-                std::make_index_sequence<std::tuple_size<
-                    decltype(IndexedGridJsonHelper::s_possibleAxes)>::value>());
+                Experimental::detail::GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
   return jIndexedVolumes;
 }

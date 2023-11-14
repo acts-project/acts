@@ -19,9 +19,11 @@
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeList.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
-#include <tuple>
 #include <vector>
 
 namespace Acts {
@@ -72,15 +74,12 @@ void convert(nlohmann::json& jIndexedSurfaces,
 /// @param jIndexedSurfaces the json object to be filled
 /// @param delegate the delegate to be translated
 /// @param detray if the detray json format is written
-/// @param axesTuple the tuple of axes to be unrolled
-///
-/// @note parameters are as of the `convertImpl` method
-template <typename tuple_type, std::size_t... I>
+/// @param tList the type list of possible axes
+template <typename... Args>
 void unrollConvert(nlohmann::json& jIndexedSurfaces,
                    const Experimental::SurfaceCandidatesUpdator& delegate,
-                   bool detray, const tuple_type& axesTuple,
-                   std::index_sequence<I...> /*unused*/) {
-  (convert(jIndexedSurfaces, delegate, detray, std::get<I>(axesTuple)), ...);
+                   bool detray, [[maybe_unused]] TypeList<Args...> tList) {
+  (convert(jIndexedSurfaces, delegate, detray, Args{}), ...);
 }
 
 /// Convert a surface updator
@@ -98,9 +97,7 @@ static inline nlohmann::json toJson(
   // Convert if dynamic cast happens to work
   nlohmann::json jIndexedSurfaces;
   unrollConvert(jIndexedSurfaces, delegate, detray,
-                IndexedGridJsonHelper::s_possibleAxes,
-                std::make_index_sequence<std::tuple_size<
-                    decltype(IndexedGridJsonHelper::s_possibleAxes)>::value>());
+                Experimental::detail::GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
   if (!jIndexedSurfaces.is_null()) {
     jIndexedSurfaces["type"] = "IndexedSurfaces";

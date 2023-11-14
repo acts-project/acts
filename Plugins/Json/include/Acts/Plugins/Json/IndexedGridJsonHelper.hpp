@@ -21,28 +21,6 @@ using namespace Experimental::detail::GridAxisGenerators;
 
 namespace IndexedGridJsonHelper {
 
-// Generate the possible axes in this case
-static auto s_possibleAxes =
-    std::tuple<EqBound, EqOpen, EqClosed,
-               // All 1D Var  options
-               VarBound, VarOpen, VarClosed,
-               // All 2D EqEq options
-               EqBoundEqBound, EqBoundEqOpen, EqBoundEqClosed, EqOpenEqBound,
-               EqOpenEqOpen, EqOpenEqClosed, EqClosedEqBound, EqClosedEqOpen,
-               EqClosedEqClosed,
-               // All 2D EqVar options
-               EqBoundVarBound, EqBoundVarOpen, EqBoundVarClosed,
-               EqOpenVarBound, EqOpenVarOpen, EqOpenVarClosed, EqClosedVarBound,
-               EqClosedVarOpen, EqClosedVarClosed,
-               // All 2D VarEq options
-               VarBoundEqBound, VarBoundEqOpen, VarBoundEqClosed,
-               VarOpenEqBound, VarOpenEqOpen, VarOpenEqClosed, VarClosedEqBound,
-               VarClosedEqOpen, VarClosedEqClosed,
-               // All 2D VarEq options
-               VarBoundVarBound, VarBoundVarOpen, VarBoundVarClosed,
-               VarOpenVarBound, VarOpenVarOpen, VarOpenVarClosed,
-               VarClosedVarBound, VarClosedVarOpen, VarClosedVarClosed>{};
-
 /// @brief The actual conversion method
 template <typename index_grid>
 nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false) {
