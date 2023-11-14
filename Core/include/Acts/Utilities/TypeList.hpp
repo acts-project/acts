@@ -10,6 +10,8 @@
 
 #include <type_traits>
 
+#include <stdlib.h>
+
 namespace Acts {
 
 /// @brief type list implementation
