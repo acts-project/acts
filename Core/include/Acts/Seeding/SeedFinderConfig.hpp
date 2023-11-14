@@ -40,7 +40,7 @@ struct SeedFinderConfig {
   /// which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
-  /// Vector containg the z-bin edges for non equidistant binning in z
+  /// Vector containing the z-bin edges for non equidistant binning in z
   std::vector<float> zBinEdges;
 
   /// Number of z bins to skip during the search for middle space-points. This
@@ -58,7 +58,7 @@ struct SeedFinderConfig {
   /// space-point
 
   /// Radial range for middle space-point
-  /// The range can be defined manualy with (rMinMiddle, rMaxMiddle). If
+  /// The range can be defined manually with (rMinMiddle, rMaxMiddle). If
   /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP is
   /// empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
@@ -81,11 +81,11 @@ struct SeedFinderConfig {
 
   /// Seeding parameters used to define the cuts on space-point doublets
 
-  /// Minimum radial distance between two doublet components (prefere
+  /// Minimum radial distance between two doublet components (prefer
   /// deltaRMinTopSP and deltaRMinBottomSP to set separate values for outer and
   /// inner space-points)
   float deltaRMin = 5 * Acts::UnitConstants::mm;
-  /// Maximum radial distance between two doublet components (prefere
+  /// Maximum radial distance between two doublet components (prefer
   /// deltaRMaxTopSP and deltaRMacBottomSP to set separate values for outer and
   /// inner space-points)
   float deltaRMax = 270 * Acts::UnitConstants::mm;
@@ -142,9 +142,9 @@ struct SeedFinderConfig {
   /// Seeding parameters used for quality seed confirmation
 
   /// Enable quality seed confirmation, this is different than default seeding
-  /// confiramtion because it can also be defined for different (r, z) regions
+  /// confirmation because it can also be defined for different (r, z) regions
   /// of the detector (e.g. forward or central region) by SeedConfirmationRange.
-  /// Seeds are classied as "high-quality" seeds and normal quality seeds.
+  /// Seeds are classified as "high-quality" seeds and normal quality seeds.
   /// Normal quality seeds are only selected if no other "high-quality" seeds
   /// has been found for that inner-middle doublet.
   bool seedConfirmation = false;

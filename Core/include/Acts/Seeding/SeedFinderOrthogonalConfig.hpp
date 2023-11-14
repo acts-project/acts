@@ -41,7 +41,7 @@ struct SeedFinderOrthogonalConfig {
   /// space-point
 
   /// Radial range for middle space-point
-  /// The range can be defined manualy with (rMinMiddle, rMaxMiddle). If
+  /// The range can be defined manually with (rMinMiddle, rMaxMiddle). If
   /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP is
   /// empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
@@ -121,9 +121,9 @@ struct SeedFinderOrthogonalConfig {
   /// Seeding parameters used for quality seed confirmation
 
   /// Enable quality seed confirmation, this is different than default seeding
-  /// confiramtion because it can also be defined for different (r, z) regions
+  /// confirmation because it can also be defined for different (r, z) regions
   /// of the detector (e.g. forward or central region) by SeedConfirmationRange.
-  /// Seeds are classied as "high-quality" seeds and normal quality seeds.
+  /// Seeds are classified as "high-quality" seeds and normal quality seeds.
   /// Normal quality seeds are only selected if no other "high-quality" seeds
   /// has been found for that inner-middle doublet.
   bool seedConfirmation = false;
