@@ -300,11 +300,9 @@ struct GsfActor {
                           result.nInvalidBetheHeitler);
 
       if (componentCache.empty()) {
-        ACTS_WARNING(
-            "No components left after applying energy loss. "
-            "Is the weight cutoff "
-            << m_cfg.weightCutoff << " too high?");
-        ACTS_WARNING("Return to propagator without applying energy loss");
+        ACTS_DEBUG(
+            "No components left after applying energy loss, stop propagation");
+        navigator.navigationBreak(state.navigation, true);
         return;
       }
 
@@ -416,10 +414,9 @@ struct GsfActor {
       assert(p_prev + delta_p > 0. && "new momentum must be > 0");
       new_pars[eBoundQOverP] = old_bound.charge() / (p_prev + delta_p);
 
-      const auto p_new = state.stepping.particleHypothesis.extractMomentum(
-          new_pars[eBoundQOverP]);
-      if (p_new < m_cfg.momentumCutoff) {
-        ACTS_VERBOSE("Skip new component with p=" << p_new << " GeV");
+      if (p_prev + delta_p < m_cfg.momentumCutoff) {
+        ACTS_VERBOSE("Skip new component with p=" << p_prev + delta_p
+                                                  << " GeV");
         continue;
       }
 
