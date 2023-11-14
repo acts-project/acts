@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(TypeListCreation) {
   bool backIsA = std::is_same_v<Acts::detail::back<MyList>, A>;
   BOOST_CHECK(backIsA);
 
-  BOOST_CHECK(Acts::detail::size<MyList> == 4);
+  BOOST_CHECK_EQUAL(Acts::detail::size<MyList>, 4);
 }
 
 BOOST_AUTO_TEST_CASE(TypeListPushFront) {
