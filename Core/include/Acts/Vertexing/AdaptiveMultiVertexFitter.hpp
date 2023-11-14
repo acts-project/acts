@@ -84,7 +84,7 @@ class AdaptiveMultiVertexFitter {
     std::unique_ptr<const Logger> m_logger;
 
     /// @brief Default State constructor
-    // State() = default;
+    State() = default;
 
     // Adds a vertex to trackToVerticesMultiMap
     void addVertexToMultiMap(Vertex<InputTrack_t>& vtx) {
