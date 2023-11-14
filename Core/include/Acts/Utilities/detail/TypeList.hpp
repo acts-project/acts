@@ -16,6 +16,7 @@ namespace Acts {
 namespace detail {
 
 /// @brief type list implementation
+/// @see https://www.codingwiththomas.com/blog/getting-started-with-typelists
 template <typename... Ts>
 struct TypeList {};
 
