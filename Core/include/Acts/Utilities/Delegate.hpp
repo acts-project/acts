@@ -20,6 +20,11 @@ namespace Acts {
 /// Ownership enum for @c Delegate
 enum class DelegateType { Owning, NonOwning };
 
+template <auto C>
+struct DelegateFuncTag {
+  explicit constexpr DelegateFuncTag() = default;
+};
+
 // Specialization needed for defaulting ownership and for R(Args...) syntax
 template <typename, typename H = void, DelegateType = DelegateType::NonOwning>
 class Delegate;
@@ -89,6 +94,26 @@ class Delegate<R(Args...), H, O> {
   template <typename Callable, typename = isNoFunPtr<Callable>>
   Delegate(Callable &callable) {
     connect(callable);
+  }
+
+  /// Constructor with a compile-time free function pointer
+  /// @tparam Callable The compile-time free function pointer
+  /// @note @c DelegateFuncTag is used to communicate the callable type
+  template <auto Callable>
+  Delegate(DelegateFuncTag<Callable>) {
+    connect<Callable>();
+  }
+
+  /// Constructor with a compile-time member function pointer and instance
+  /// @tparam Callable The compile-time member function pointer
+  /// @tparam Type The type of the instance the member function should be called on
+  /// @param instance The instance on which the member function pointer should be called on
+  /// @note @c Delegate does not assume owner ship over @p instance.
+  /// @note @c DelegateFuncTag is used to communicate the callable type
+  template <auto Callable, typename Type, DelegateType T = kOwnership,
+            typename = std::enable_if_t<T == DelegateType::NonOwning>>
+  Delegate(DelegateFuncTag<Callable>, const Type *instance) {
+    connect<Callable>(instance);
   }
 
   /// Constructor from rvalue reference is deleted, should catch construction
