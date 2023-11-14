@@ -197,6 +197,8 @@ Acts::Result<double> Acts::ImpactPointEstimator<
                                   rho * cotTheta * cotTheta);
 
     if (secDerivative < 0.) {
+      ACTS_ERROR(
+          "Encountered negative second derivative during Newton optimization.");
       return VertexingError::NumericFailure;
     }
 
@@ -214,7 +216,7 @@ Acts::Result<double> Acts::ImpactPointEstimator<
   }  // end while loop
 
   if (!hasConverged) {
-    // max iterations reached but did not converge
+    ACTS_ERROR("Newton optimization did not converge.");
     return VertexingError::NotConverged;
   }
   return phi;

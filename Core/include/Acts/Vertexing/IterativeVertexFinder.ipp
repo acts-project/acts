@@ -164,7 +164,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
   auto res = m_cfg.seedFinder.find(seedTracks, vertexingOptions, finderState);
 
   if (!res.ok()) {
-    ACTS_DEBUG("Seeding error: internal. Number of input tracks: "
+    ACTS_ERROR("Seeding error: internal. Number of input tracks: "
                << seedTracks.size());
     return VertexingError::SeedingError;
   }
@@ -172,7 +172,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
   const auto& vertexCollection = *res;
 
   if (vertexCollection.empty()) {
-    ACTS_DEBUG("Seeding error: no seeds. Number of input tracks: "
+    ACTS_ERROR("Seeding error: no seeds. Number of input tracks: "
                << seedTracks.size());
     return VertexingError::SeedingError;
   }
