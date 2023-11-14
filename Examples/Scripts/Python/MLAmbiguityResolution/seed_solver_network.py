@@ -39,13 +39,17 @@ class DuplicateClassifier(nn.Module):
         self.linear1 = nn.Linear(input_dim, n_layers[0])
         self.linear2 = nn.Linear(n_layers[0], n_layers[1])
         self.linear3 = nn.Linear(n_layers[1], n_layers[2])
-        self.output = nn.Linear(n_layers[2], 1)
+        self.linear4 = nn.Linear(n_layers[2], n_layers[3])
+        self.linear5 = nn.Linear(n_layers[3], n_layers[4])
+        self.output = nn.Linear(n_layers[4], 1)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, z):
         z = F.relu(self.linear1(z))
         z = F.relu(self.linear2(z))
         z = F.relu(self.linear3(z))
+        z = F.relu(self.linear4(z))        
+        z = F.relu(self.linear5(z))
         return self.sigmoid(self.output(z))
 
 

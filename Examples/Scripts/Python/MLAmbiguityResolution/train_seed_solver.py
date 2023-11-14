@@ -43,13 +43,6 @@ def prepareTrainingData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     @param[in] data: input DataFrame to be prepared
     @return: array of the network input and the corresponding truth  
     """
-    print("Truth particles : ", data.loc[data["goodSeed"] == True].size)
-    print("Good seed matched : ", data.loc[(data["goodSeed"] == True) & (data["good/duplicate/fake"] == "good")].size)
-    print("Duplicate seed matched : ", data.loc[(data["goodSeed"] == True) & (data["good/duplicate/fake"] == "duplicate")].size)
-    print("Fake seed matched : ", data.loc[(data["goodSeed"] == True) & (data["good/duplicate/fake"] == "fake")].size)
-
-    data.loc[data["good/duplicate/fake"] == "good", "good/duplicate/fake"] = "duplicate"
-    data.loc[data["goodSeed"] == True, "good/duplicate/fake"] = "good"
     # Remove truth and useless variable
     target_column = "good/duplicate/fake"
     # Separate the truth from the input variables
@@ -59,7 +52,6 @@ def prepareTrainingData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
             target_column,
             "seed_id",
             "Hits_ID",
-            "goodSeed",
         ]
     )
     # Compute the normalisation factors

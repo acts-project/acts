@@ -60,6 +60,7 @@ seedFilter_ML = args["MLSeedFilter"]
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
+# outputDir = pathlib.Path.cwd() / "odd_output_seed"
 # acts.examples.dump_args_calls(locals())  # show python binding calls
 
 oddMaterialMap = geoDir / "data/odd-material-maps.root"
@@ -97,7 +98,7 @@ else:
     addPythia8(
         s,
         hardProcess=["Top:qqbar2ttbar=on"],
-        npileup=50,
+        npileup=200,
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
             stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
@@ -170,14 +171,16 @@ addSeeding(
     else TruthSeedRanges(),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
-    # outputDirCsv=outputDir,
+    outputDirCsv=outputDir,
 )
 if seedFilter_ML:
     addSeedFilterML(
         s,
-        SeedFilterMLDBScanConfig(epsilonDBScan=0.03, minPointsDBScan=2),
-        onnxModelFile=os.path.dirname(__file__)
-        + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
+        SeedFilterMLDBScanConfig(epsilonDBScan=0.1, minPointsDBScan=2),
+        onnxModelFile="/Users/allaire/Desktop/ACTS-ML-PR/acts/Work/seedduplicateClassifier.onnx",
+        outputDirRoot=outputDir,
+        # onnxModelFile=os.path.dirname(__file__)
+        # + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
     )
 
 addCKFTracks(
@@ -192,7 +195,7 @@ addCKFTracks(
     ),
     outputDirRoot=outputDir,
     writeCovMat=True,
-    # outputDirCsv=outputDir,
+    outputDirCsv=outputDir,
 )
 
 if ambiguity_MLSolver:
@@ -214,7 +217,7 @@ else:
         ),
         outputDirRoot=outputDir,
         writeCovMat=True,
-        # outputDirCsv=outputDir,
+        outputDirCsv=outputDir,
     )
 
 addVertexFitting(

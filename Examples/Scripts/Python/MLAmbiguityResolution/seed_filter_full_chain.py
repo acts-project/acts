@@ -37,8 +37,6 @@ def prepareInferenceData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     target_column = "good/duplicate/fake"
     # Separate the truth from the input variables
 
-    data.loc[data["good/duplicate/fake"] == "good", "good/duplicate/fake"] = "duplicate"
-    data.loc[data["goodSeed"] == True, "good/duplicate/fake"] = "good"
     y = LabelEncoder().fit(data[target_column]).transform(data[target_column])
     input = data.drop(
         columns=[
@@ -46,7 +44,6 @@ def prepareInferenceData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
             "seed_id",
             "Hits_ID",
             "cluster",
-            "goodSeed",
         ]
     )
     # Prepare the input feature
@@ -102,7 +99,7 @@ import time
 start = time.time()
 
 # ttbar events as test input
-CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-1][0-9]-seed_cleaned.csv"))
+CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-1][0-9]-seed_matched.csv"))
 data = readDataSet(CKF_files)
 
 # Data of each events after clustering
@@ -187,14 +184,6 @@ for event in plotData:
         .groupby(["cluster"])["cluster"]
         .transform("size")
     )
-    # Create histogram filled with the number of truth particle per cluster
-    event["nb_truth"] = event.groupby(["cluster"])["particleId"].transform("nunique")
-    # Create histogram filled with the number of cluster per truth particle
-    event["nb_cluster"] = event.groupby(event.index)["cluster"].transform("nunique")
-        
-    # Create histogram filled with the number seed per truth particle
-    event["nb_seed_truth"] = event.groupby(event.index).transform("size")
-    event["nb_seed_removed"] = event["nb_seed_truth"] - event["nb_cluster"]
 
     plotDF2 = pd.concat([plotDF2, event])
 
@@ -222,30 +211,6 @@ plt.ylabel("Arbitrary unit")
 plt.savefig("nb_good.png")
 plt.clf()
 
-plotDF2["nb_truth"].hist(bins=5, weights=1 / plotDF2["nb_seed"], range=[0, 5])
-plt.xlabel("nb truth/[cluster]")
-plt.ylabel("Arbitrary unit")
-plt.savefig("nb_truth.png")
-plt.clf()
-
-plotDF2["nb_cluster"].hist(bins=50, weights=1 / plotDF2["nb_seed_truth"], range=[0, 50])
-plt.xlabel("nb cluster/[truth particle]")
-plt.ylabel("Arbitrary unit")
-plt.savefig("nb_cluster.png")
-plt.clf()
-
-plotDF2["nb_seed_truth"].hist(bins=50, weights=1 / plotDF2["nb_seed_truth"], range=[0, 50])
-plt.xlabel("nb seed/[truth particle]")
-plt.ylabel("Arbitrary unit")
-plt.savefig("nb_seed_truth.png")
-plt.clf()
-
-plotDF2["nb_seed_removed"].hist(bins=50, weights=1 / plotDF2["nb_seed_truth"], range=[0, 50])
-plt.xlabel("nb seed removed/[truth particle]")
-plt.ylabel("Arbitrary unit")
-plt.savefig("nb_seed_removed.png")
-plt.clf()
-
 t3 = time.time()
 
 # Performed the MLP based ambiguity resolution
@@ -271,7 +236,6 @@ for clusteredEvent in clusteredData:
         == cleanedEvent["score"]
     )
     cleanedEvent = cleanedEvent[idx]
-    # cleanedEvent = cleanedEvent
     cleanedData.append(cleanedEvent)
 
 t4 = time.time()
