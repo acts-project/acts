@@ -265,14 +265,14 @@ inline std::vector<double> CylinderVolumeBounds::values() const {
 }
 
 inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) >= get(eMaxR)) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) >= get(eMaxR)) {
     throw std::invalid_argument("CylinderVolumeBounds: invalid radial input.");
   }
   if (get(eHalfLengthZ) <= 0) {
     throw std::invalid_argument(
         "CylinderVolumeBounds: invalid longitudinal input.");
   }
-  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument(
         "CylinderVolumeBounds: invalid phi sector setup.");
   }

@@ -36,6 +36,7 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -103,9 +104,6 @@ struct PropagatorState {
       // Previous step size for overstep estimation (ignored here)
       double previousStepSize = 0.;
 
-      /// The tolerance for the stepping
-      double tolerance = s_onSurfaceTolerance;
-
       GeometryContext geoContext = GeometryContext();
     };
 
@@ -145,14 +143,13 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    Intersection3D::Status updateSurfaceStatus(State& state,
-                                               const Surface& surface,
-                                               Direction navDir,
-                                               const BoundaryCheck& bcheck,
-                                               ActsScalar surfaceTolerance,
-                                               const Logger& logger) const {
+    Intersection3D::Status updateSurfaceStatus(
+        State& state, const Surface& surface, std::uint8_t index,
+        Direction navDir, const BoundaryCheck& bcheck,
+        ActsScalar surfaceTolerance, const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(
-          *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
+          *this, state, surface, index, navDir, bcheck, surfaceTolerance,
+          logger);
     }
 
     template <typename object_intersection_t>
@@ -244,7 +241,7 @@ struct PropagatorState {
 
     const Acts::Logger& logger = Acts::getDummyLogger();
 
-    ActsScalar targetTolerance = s_onSurfaceTolerance;
+    ActsScalar surfaceTolerance = s_onSurfaceTolerance;
   };
 
   /// Navigation cache: the start surface
@@ -510,7 +507,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // A layer has been found
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
   // The index should points to the begin
-  BOOST_CHECK(state.navigation.navLayerIndex == 0);
+  BOOST_CHECK_EQUAL(state.navigation.navLayerIndex, 0);
   // Cache the beam pipe radius
   double beamPipeR = perp(state.navigation.navLayer().position());
   // step size has been updated
@@ -536,7 +533,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The layer number has not changed
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
   // The index still points to the begin
-  BOOST_CHECK(state.navigation.navLayerIndex == 0);
+  BOOST_CHECK_EQUAL(state.navigation.navLayerIndex, 0);
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 

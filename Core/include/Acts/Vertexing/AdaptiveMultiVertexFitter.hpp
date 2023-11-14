@@ -147,7 +147,7 @@ class AdaptiveMultiVertexFitter {
   template <
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFitter(Config& cfg,
+  AdaptiveMultiVertexFitter(Config cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFitter",
                                                  Logging::INFO))
@@ -163,7 +163,7 @@ class AdaptiveMultiVertexFitter {
   /// object
   /// @param logger The logging instance
   AdaptiveMultiVertexFitter(
-      Config& cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFitter", Logging::INFO))
       : m_cfg(std::move(cfg)),

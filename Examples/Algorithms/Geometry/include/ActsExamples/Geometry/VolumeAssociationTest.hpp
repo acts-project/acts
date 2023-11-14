@@ -31,7 +31,7 @@ class VolumeAssociationTest final : public IAlgorithm {
     /// Name of the object
     std::string name = "VolumeAssociationTets";
     /// Number of tests
-    std::size_t ntests = 1000;
+    size_t ntests = 1000;
     /// The random number service
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The random number range

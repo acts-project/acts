@@ -153,7 +153,7 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
       static_cast<ActsScalar>(g4Box.GetZHalfLength())};
 
   auto minAt = std::min_element(hG4XYZ.begin(), hG4XYZ.end());
-  std::size_t minPos = std::distance(hG4XYZ.begin(), minAt);
+  size_t minPos = std::distance(hG4XYZ.begin(), minAt);
   ActsScalar thickness = 2. * hG4XYZ[minPos];
 
   std::array<int, 2u> rAxes = {};
@@ -191,7 +191,7 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
                                   hlZ};
 
   auto minAt = std::min_element(dXYZ.begin(), dXYZ.end());
-  std::size_t minPos = std::distance(dXYZ.begin(), minAt);
+  size_t minPos = std::distance(dXYZ.begin(), minAt);
   ActsScalar thickness = 2. * dXYZ[minPos];
 
   ActsScalar halfLengthXminY = 0.;
@@ -283,7 +283,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
   auto assignMaterial = [&](Acts::Surface& sf, ActsScalar moriginal,
                             ActsScalar mcompressed) -> void {
     auto g4Material = g4LogVol->GetMaterial();
-    if (convertMaterial and g4Material != nullptr) {
+    if (convertMaterial && g4Material != nullptr) {
       if (compressed < 0.) {
         mcompressed = moriginal;
       }
@@ -299,7 +299,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
   // Into a rectangle
   auto g4Box = dynamic_cast<const G4Box*>(g4Solid);
   if (g4Box != nullptr) {
-    if (forcedType == Surface::SurfaceType::Other or
+    if (forcedType == Surface::SurfaceType::Other ||
         forcedType == Surface::SurfaceType::Plane) {
       auto [bounds, axes, original] =
           Geant4ShapeConverter{}.rectangleBounds(*g4Box);
@@ -316,7 +316,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
   // Into a Trapezoid
   auto g4Trd = dynamic_cast<const G4Trd*>(g4Solid);
   if (g4Trd != nullptr) {
-    if (forcedType == Surface::SurfaceType::Other or
+    if (forcedType == Surface::SurfaceType::Other ||
         forcedType == Surface::SurfaceType::Plane) {
       auto [bounds, axes, original] =
           Geant4ShapeConverter{}.trapezoidBounds(*g4Trd);
@@ -337,13 +337,13 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
     ActsScalar diffZ = 2 * g4Tubs->GetZHalfLength();
     // Detect if cylinder or disc case
     ActsScalar original = 0.;
-    if (forcedType == Surface::SurfaceType::Cylinder or
-        (diffR < diffZ and forcedType == Surface::SurfaceType::Other)) {
+    if (forcedType == Surface::SurfaceType::Cylinder ||
+        (diffR < diffZ && forcedType == Surface::SurfaceType::Other)) {
       auto [bounds, originalT] = Geant4ShapeConverter{}.cylinderBounds(*g4Tubs);
       original = originalT;
       surface = Acts::Surface::makeShared<CylinderSurface>(toGlobal,
                                                            std::move(bounds));
-    } else if (forcedType == Surface::SurfaceType::Disc or
+    } else if (forcedType == Surface::SurfaceType::Disc ||
                forcedType == Surface::SurfaceType::Other) {
       auto [bounds, originalT] = Geant4ShapeConverter{}.radialBounds(*g4Tubs);
       original = originalT;

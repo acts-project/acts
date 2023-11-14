@@ -24,8 +24,6 @@
 #include <sstream>
 #include <vector>
 
-using namespace std;
-
 template class Acts::TrigFTF_GNN_Layer<ActsExamples::SimSpacePoint>;
 template class Acts::TrigFTF_GNN_Geometry<ActsExamples::SimSpacePoint>;
 template class Acts::TrigFTF_GNN_Node<ActsExamples::SimSpacePoint>;
@@ -137,7 +135,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
 std::map<std::pair<int, int>, std::pair<int, int>>
 ActsExamples::SeedingFTFAlgorithm::Make_ACTS_FTF_Map() const {
-  map<std::pair<int, int>, std::pair<int, int>> ACTS_FTF;
+  std::map<std::pair<int, int>, std::pair<int, int>> ACTS_FTF;
   std::ifstream data(
       m_cfg.layerMappingFile);  // 0 in this file refers to no FTF ID
   std::string line;
@@ -199,7 +197,7 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
       int ACTS_mod_id = index_source_link.geometryId().sensitive();
 
       // dont want strips or HGTD
-      if (ACTS_vol_id == 2 or ACTS_vol_id == 22 or ACTS_vol_id == 23 or
+      if (ACTS_vol_id == 2 || ACTS_vol_id == 22 || ACTS_vol_id == 23 ||
           ACTS_vol_id == 24) {
         continue;
       }
@@ -355,9 +353,9 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
     }
 
     if (m_cfg.fill_module_csv) {
-      fstream fout;
+      std::fstream fout;
       fout.open("ACTS_modules.csv",
-                ios::out | ios::app);  // add to file each time
+                std::ios::out | std::ios::app);  // add to file each time
       // print to csv for each module, no repeats so dont need to make
       // map for averaging
       fout << ACTS_vol_id << ", "                                  // vol

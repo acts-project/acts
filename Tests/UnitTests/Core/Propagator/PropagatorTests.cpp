@@ -111,7 +111,8 @@ struct SurfaceObserver {
       const double distance =
           surface
               ->intersect(state.geoContext, stepper.position(state.stepping),
-                          stepper.direction(state.stepping), true)
+                          stepper.direction(state.stepping),
+                          BoundaryCheck(true))
               .closest()
               .pathLength();
       // Adjust the step size so that we cannot cross the target surface

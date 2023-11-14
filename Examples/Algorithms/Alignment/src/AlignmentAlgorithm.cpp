@@ -61,7 +61,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   }
 
   size_t numTracksUsed = protoTracks.size();
-  if (m_cfg.maxNumTracks > 0 and
+  if (m_cfg.maxNumTracks > 0 &&
       m_cfg.maxNumTracks < static_cast<int>(protoTracks.size())) {
     numTracksUsed = m_cfg.maxNumTracks;
   }
@@ -70,7 +70,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   std::vector<std::vector<IndexSourceLink>> sourceLinkTrackContainer;
   sourceLinkTrackContainer.reserve(numTracksUsed);
   std::vector<IndexSourceLink> trackSourceLinks;
-  for (std::size_t itrack = 0; itrack < numTracksUsed; ++itrack) {
+  for (size_t itrack = 0; itrack < numTracksUsed; ++itrack) {
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
 

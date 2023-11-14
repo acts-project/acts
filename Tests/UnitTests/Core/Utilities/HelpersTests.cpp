@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
   using B = typename Matrices::second_type;
   using C = ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime>;
 
-  for (std::size_t i = 0; i < 100; ++i) {
+  for (size_t i = 0; i < 100; ++i) {
     A a = A::Random();
     B b = B::Random();
 

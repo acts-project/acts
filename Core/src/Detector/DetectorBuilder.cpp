@@ -29,7 +29,7 @@ std::shared_ptr<const Acts::Experimental::Detector>
 Acts::Experimental::DetectorBuilder::construct(
     const GeometryContext& gctx) const {
   // Screen printout of the auxiliary information
-  if (not m_cfg.auxiliary.empty()) {
+  if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
   ACTS_DEBUG("Building a detector with name " << m_cfg.name);

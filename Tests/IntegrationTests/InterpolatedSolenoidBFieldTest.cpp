@@ -14,9 +14,9 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -57,9 +57,8 @@ auto makeFieldMap(const SolenoidBField& field) {
   auto map =
       solenoidFieldMap({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
   // I know this is the correct grid type
-  using Grid_t =
-      Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                         Acts::detail::EquidistantAxis>;
+  using Grid_t = Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+                            Acts::detail::EquidistantAxis>;
   const Grid_t& grid = map.getGrid();
   using index_t = Grid_t::index_t;
   using point_t = Grid_t::point_t;

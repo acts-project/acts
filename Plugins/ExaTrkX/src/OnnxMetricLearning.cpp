@@ -57,7 +57,7 @@ void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
 }
 
 std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
-    std::vector<float>& inputValues, std::size_t, int) {
+    std::vector<float>& inputValues, size_t, int) {
   Ort::AllocatorWithDefaultOptions allocator;
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);

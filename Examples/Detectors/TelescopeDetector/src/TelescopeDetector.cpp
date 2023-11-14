@@ -30,7 +30,7 @@ auto ActsExamples::Telescope::TelescopeDetector::finalize(
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
   // Check if the bounds values are valid
-  if (cfg.surfaceType == 1 and cfg.bounds[0] >= cfg.bounds[1]) {
+  if (cfg.surfaceType == 1 && cfg.bounds[0] >= cfg.bounds[1]) {
     throw std::invalid_argument(
         "The minR should be smaller than the maxR for disc surface bounds.");
   }

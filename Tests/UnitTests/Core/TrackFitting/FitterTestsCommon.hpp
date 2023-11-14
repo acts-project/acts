@@ -26,6 +26,7 @@
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <iterator>
 
@@ -50,7 +51,7 @@ struct TestOutlierFinder {
   template <typename traj_t>
   bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
-    if (not state.hasCalibrated() or not state.hasPredicted()) {
+    if (!state.hasCalibrated() || !state.hasPredicted()) {
       return false;
     }
     auto residuals = (state.effectiveCalibrated() -
@@ -86,7 +87,8 @@ auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
+  Acts::Navigator navigator(
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
       stepper, std::move(navigator));
@@ -100,7 +102,8 @@ auto makeConstantFieldPropagator(
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
+  Acts::Navigator navigator(
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
   auto field =
       std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   stepper_t stepper(std::move(field));

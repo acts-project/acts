@@ -45,11 +45,11 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
     throw std::invalid_argument(
         "DetectorVolume: construction with nullptr bounds.");
   }
-  if (not m_detectorVolumeUpdator.connected()) {
+  if (!m_detectorVolumeUpdator.connected()) {
     throw std::invalid_argument(
         "DetectorVolume: navigation state updator delegate is not connected.");
   }
-  if (not m_surfaceCandidatesUpdator.connected()) {
+  if (!m_surfaceCandidatesUpdator.connected()) {
     throw std::invalid_argument(
         "DetectorVolume: navigation state updator delegate is not connected.");
   }
@@ -253,7 +253,7 @@ void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdator(
 }
 
 Acts::Extent Acts::Experimental::DetectorVolume::extent(
-    const GeometryContext& gctx, size_t nseg) const {
+    const GeometryContext& gctx, std::size_t nseg) const {
   Extent volumeExtent;
   for (const auto* p : portals()) {
     volumeExtent.extend(
@@ -263,20 +263,20 @@ Acts::Extent Acts::Experimental::DetectorVolume::extent(
 }
 
 bool Acts::Experimental::DetectorVolume::checkContainment(
-    const GeometryContext& gctx, size_t nseg) const {
+    const GeometryContext& gctx, std::size_t nseg) const {
   // Create the volume extent
   auto volumeExtent = extent(gctx, nseg);
   // Check surfaces
   for (const auto* s : surfaces()) {
     auto sExtent = s->polyhedronRepresentation(gctx, nseg).extent();
-    if (not volumeExtent.contains(sExtent)) {
+    if (!volumeExtent.contains(sExtent)) {
       return false;
     }
   }
   // Check volumes
   for (const auto* v : volumes()) {
     auto vExtent = v->extent(gctx, nseg);
-    if (not volumeExtent.contains(vExtent)) {
+    if (!volumeExtent.contains(vExtent)) {
       return false;
     }
   }
@@ -288,7 +288,7 @@ void Acts::Experimental::DetectorVolume::closePortals() {
   for (auto& p : m_portals.internal) {
     // Create a null link
     for (auto [ivu, vu] : enumerate(p->detectorVolumeUpdators())) {
-      if (not vu.connected()) {
+      if (!vu.connected()) {
         auto eowDir = Direction::fromIndex(ivu);
         auto eow = std::make_unique<const EndOfWorldImpl>();
         Acts::Experimental::DetectorVolumeUpdator eowLink;

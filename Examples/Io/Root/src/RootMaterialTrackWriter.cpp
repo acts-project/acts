@@ -173,7 +173,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       Acts::Vector3 positionSum = Acts::Vector3::Zero();
       double pathCorrectionSum = 0;
 
-      for (std::size_t start = 0, end = 0; end < materialInteractions.size();
+      for (size_t start = 0, end = 0; end < materialInteractions.size();
            ++end) {
         const auto& mintStart = materialInteractions[start];
         const auto& mintEnd = materialInteractions[end];
@@ -288,10 +288,11 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
           m_sur_y.push_back(mint.intersection.y());
           m_sur_z.push_back(mint.intersection.z());
         } else if (surface != nullptr) {
-          auto sfIntersection = surface
-                                    ->intersect(ctx.geoContext, mint.position,
-                                                mint.direction, true)
-                                    .closest();
+          auto sfIntersection =
+              surface
+                  ->intersect(ctx.geoContext, mint.position, mint.direction,
+                              Acts::BoundaryCheck(true))
+                  .closest();
           m_sur_id.push_back(surface->geometryId().value());
           m_sur_pathCorrection.push_back(1.0);
           m_sur_x.push_back(sfIntersection.position().x());
@@ -333,7 +334,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       // store volume information
       if (m_cfg.storeVolume) {
         Acts::GeometryIdentifier vlayerID;
-        if (not mint.volume.empty()) {
+        if (!mint.volume.empty()) {
           vlayerID = mint.volume.geometryId();
           m_vol_id.push_back(vlayerID.value());
         } else {

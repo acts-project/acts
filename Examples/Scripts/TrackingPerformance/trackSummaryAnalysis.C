@@ -34,7 +34,7 @@ using namespace ROOT;
 
 /// This ROOT script will plot the residual and pull of perigee track parameters
 /// (d0, z0, phi, theta, q/p, pT, t) from root file produced by the
-/// RootTrajectorySummaryWriter
+/// RootTrackSummaryWriter
 ///
 /// @param inFiles the list of input files
 /// @param inTree the name of the input tree
@@ -66,7 +66,7 @@ int trackSummaryAnalysis(
   TChain* treeChain = new TChain(inTree.c_str());
   for (const auto& inFile : inFiles) {
     treeChain->Add(inFile.c_str());
-    // Open root file written by RootTrajectoryWriter
+    // Open root file written by RootTrackWriter
     std::cout << "*** Adding file: " << inFile << std::endl;
   }
 
@@ -283,7 +283,7 @@ int trackSummaryAnalysis(
   // Preparation phase for handles
 #ifdef NLOHMANN_AVAILABLE
   nlohmann::json handle_configs;
-  if (not inConfig.empty()) {
+  if (! inConfig.empty()) {
     std::ifstream ifs(inConfig.c_str());
     handle_configs = nlohmann::json::parse(ifs);
   }
@@ -298,19 +298,19 @@ int trackSummaryAnalysis(
   /// @param peakE the number of entries used for range peaking
   auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag, unsigned int peakE) -> void {
     bool rangeDetermined = false;
-    if (not inConfig.empty()) {
+    if (! inConfig.empty()) {
       if (handle_configs.contains((handleTag).Data())) {
         auto handle_config = handle_configs[(handleTag).Data()];
         handle.range = handle_config["range"].get<std::array<float, 2>>();
         rangeDetermined = true;
       }
     }
-    if (not rangeDetermined) {
+    if (! rangeDetermined) {
       estimateResiudalRange(handle, *rangeCanvas, *tracks.tree, peakE,
                             ++histBarcode);
     }
 
-    if (not outConfig.empty()) {
+    if (! outConfig.empty()) {
       nlohmann::json range_config;
       range_config["range"] = handle.range;
       handle_configs[(handleTag).Data()] = range_config;
@@ -565,7 +565,7 @@ int trackSummaryAnalysis(
   }
 
 #ifdef NLOHMANN_AVAILABLE
-  if (not outConfig.empty()) {
+  if (! outConfig.empty()) {
     std::ofstream config_out;
     config_out.open(outConfig.c_str());
     config_out << handle_configs.dump(4);

@@ -53,7 +53,7 @@ $ go install github.com/google/pprof@latest
 
 ## Link gperftools Libraries When Compiling
 
-The library needed to run the CPU profilier should be linked into the ACTS project using the following build option:
+The library needed to run the CPU profiler should be linked into the ACTS project using the following build option:
 
 ```
 -DACTS_ENABLE_CPU_PROFILING=ON
@@ -67,7 +67,7 @@ Similarly, to enable the memory profiler the following build option should be us
 
 ## Alternative to Recompiling
 
-Alternatively, you can avoid rebuiding the project by pointing the `LD_PRELOAD` environment variable to the profiler library for CPU profiling:
+Alternatively, you can avoid rebuilding the project by pointing the `LD_PRELOAD` environment variable to the profiler library for CPU profiling:
 
 ```
 LD_PRELOAD="<path/to/libprofiler.so>" <other_options> <path/to/binary> <binary_flags>

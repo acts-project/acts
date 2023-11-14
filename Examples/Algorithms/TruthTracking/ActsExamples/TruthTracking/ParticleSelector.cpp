@@ -54,8 +54,8 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
   ACTS_DEBUG("remove secondary particles " << m_cfg.removeSecondaries);
 
   // We only initialize this if we actually select on this
-  if (m_cfg.measurementsMin > 0 or
-      m_cfg.measurementsMax < std::numeric_limits<std::size_t>::max()) {
+  if (m_cfg.measurementsMin > 0 ||
+      m_cfg.measurementsMax < std::numeric_limits<size_t>::max()) {
     m_inputMap.initialize(m_cfg.inputMeasurementParticlesMap);
     ACTS_DEBUG("selection particle number of measurements ["
                << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
@@ -76,12 +76,12 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     particlesMeasMap = invertIndexMultimap(m_inputMap(ctx));
   }
 
-  std::size_t nInvalidCharge = 0;
-  std::size_t nInvalidMeasurementCount = 0;
+  size_t nInvalidCharge = 0;
+  size_t nInvalidMeasurementCount = 0;
 
   // helper functions to select tracks
   auto within = [](auto x, auto min, auto max) {
-    return (min <= x) and (x < max);
+    return (min <= x) && (x < max);
   };
 
   auto isValidParticle = [&](const ActsFatras::Particle& p) {
@@ -89,12 +89,12 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // define charge selection
-    const bool validNeutral = (p.charge() == 0) and not m_cfg.removeNeutral;
-    const bool validCharged = (p.charge() != 0) and not m_cfg.removeCharged;
-    const bool validCharge = validNeutral or validCharged;
-    const bool validSecondary = not m_cfg.removeSecondaries or !p.isSecondary();
+    const bool validNeutral = (p.charge() == 0) && !m_cfg.removeNeutral;
+    const bool validCharged = (p.charge() != 0) && !m_cfg.removeCharged;
+    const bool validCharge = validNeutral || validCharged;
+    const bool validSecondary = !m_cfg.removeSecondaries || !p.isSecondary();
 
-    nInvalidCharge += static_cast<std::size_t>(not validCharge);
+    nInvalidCharge += static_cast<size_t>(!validCharge);
 
     // default valid measurement count to true and only change if we have loaded
     // the measurement particles map
@@ -102,25 +102,24 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     if (particlesMeasMap) {
       auto [b, e] = particlesMeasMap->equal_range(p.particleId());
       validMeasurementCount =
-          within(static_cast<std::size_t>(std::distance(b, e)),
+          within(static_cast<size_t>(std::distance(b, e)),
                  m_cfg.measurementsMin, m_cfg.measurementsMax);
 
       ACTS_VERBOSE("Found " << std::distance(b, e) << " measurements for "
                             << p.particleId());
     }
 
-    nInvalidMeasurementCount +=
-        static_cast<std::size_t>(not validMeasurementCount);
+    nInvalidMeasurementCount += static_cast<size_t>(!validMeasurementCount);
 
-    return validCharge and validSecondary and validMeasurementCount and
-           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
-           within(eta, m_cfg.etaMin, m_cfg.etaMax) and
-           within(phi, m_cfg.phiMin, m_cfg.phiMax) and
+    return validCharge && validSecondary && validMeasurementCount &&
+           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
+           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
+           within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
+           within(phi, m_cfg.phiMin, m_cfg.phiMax) &&
            within(std::abs(p.position()[Acts::ePos2]), m_cfg.absZMin,
-                  m_cfg.absZMax) and
-           within(rho, m_cfg.rhoMin, m_cfg.rhoMax) and
-           within(p.time(), m_cfg.timeMin, m_cfg.timeMax) and
+                  m_cfg.absZMax) &&
+           within(rho, m_cfg.rhoMin, m_cfg.rhoMax) &&
+           within(p.time(), m_cfg.timeMin, m_cfg.timeMax) &&
            within(p.mass(), m_cfg.mMin, m_cfg.mMax);
   };
 

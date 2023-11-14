@@ -59,9 +59,9 @@ class Sequencer {
  public:
   struct FpeMask {
     std::string file;
-    std::pair<std::size_t, std::size_t> lines;
+    std::pair<size_t, size_t> lines;
     Acts::FpeType type;
-    std::size_t count;
+    size_t count;
   };
 
   struct Config {
@@ -88,7 +88,7 @@ class Sequencer {
     bool trackFpes = true;
     std::vector<FpeMask> fpeMasks{};
     bool failOnFirstFpe = false;
-    std::size_t fpeStackTraceLength = 8;
+    size_t fpeStackTraceLength = 8;
   };
 
   Sequencer(const Config &cfg);
@@ -161,7 +161,7 @@ class Sequencer {
   /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
   std::pair<size_t, size_t> determineEventsRange() const;
 
-  std::pair<std::string, std::size_t> fpeMaskCount(
+  std::pair<std::string, size_t> fpeMaskCount(
       const boost::stacktrace::stacktrace &st, Acts::FpeType type) const;
 
   void fpeReport() const;
@@ -182,7 +182,7 @@ class Sequencer {
 
   std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
 
-  std::atomic<std::size_t> m_nUnmaskedFpe = 0;
+  std::atomic<size_t> m_nUnmaskedFpe = 0;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };
