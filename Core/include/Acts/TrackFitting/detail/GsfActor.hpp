@@ -317,7 +317,8 @@ struct GsfActor {
     // Break the navigation if we found all measurements
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
-      navigator.targetReached(state.navigation, true);
+      ACTS_VERBOSE("Stop navigation because all measurements are found");
+      navigator.navigationBreak(state.navigation, true);
     }
   }
 
