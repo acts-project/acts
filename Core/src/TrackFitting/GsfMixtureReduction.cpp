@@ -51,13 +51,14 @@ namespace Acts {
 
 void reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
                                  std::size_t maxCmpsAfterMerge,
-                                 const Surface &) {
+                                 const Surface & /*unused*/) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
 
-  std::sort(cmpCache.begin(), cmpCache.end(),
-            [](const auto &a, const auto &b) { return a.weight > b.weight; });
+  std::nth_element(
+      cmpCache.begin(), cmpCache.begin() + maxCmpsAfterMerge, cmpCache.end(),
+      [](const auto &a, const auto &b) { return a.weight > b.weight; });
   cmpCache.resize(maxCmpsAfterMerge);
 }
 
