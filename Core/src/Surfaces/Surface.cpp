@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -231,11 +230,6 @@ Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not translation())
   auto tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
-}
-
-Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
-                                    const Vector3& /*position*/) const {
-  return normal(gctx, Vector2(Vector2::Zero()));
 }
 
 const Acts::Transform3& Acts::Surface::transform(

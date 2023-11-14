@@ -17,9 +17,9 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Range1D.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
@@ -71,7 +71,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
-  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax and
+  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax &&
       m_cfg.allowSeparateRMax == false) {
     throw std::invalid_argument(
         "Inconsistent config rMax: using different values in gridConfig and "
@@ -276,11 +276,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    for (std::size_t grid_glob_bin(0);
+    for (size_t grid_glob_bin(0);
          grid_glob_bin < spacePointsGrouping.grid().size(); ++grid_glob_bin) {
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
-        std::size_t index = sp->index();
+        size_t index = sp->index();
 
         const float topHalfStripLength =
             m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp());

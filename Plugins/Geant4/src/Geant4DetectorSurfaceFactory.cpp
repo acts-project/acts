@@ -34,19 +34,19 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
 
   // Get the logical volume
   auto g4LogicalVolume = g4PhysVol.GetLogicalVolume();
-  std::size_t nDaughters = g4LogicalVolume->GetNoDaughters();
-  for (std::size_t d = 0; d < nDaughters; ++d) {
+  size_t nDaughters = g4LogicalVolume->GetNoDaughters();
+  for (size_t d = 0; d < nDaughters; ++d) {
     auto daughter = g4LogicalVolume->GetDaughter(d);
     construct(cache, newToGlobal, *daughter, option);
   }
 
   // Check if the volume is accepted by a sensitive or passive selector
-  bool sensitive = option.sensitiveSurfaceSelector != nullptr and
+  bool sensitive = option.sensitiveSurfaceSelector != nullptr &&
                    option.sensitiveSurfaceSelector->select(g4PhysVol);
-  bool passive = option.passiveSurfaceSelector != nullptr and
+  bool passive = option.passiveSurfaceSelector != nullptr &&
                  option.passiveSurfaceSelector->select(g4PhysVol);
 
-  if (sensitive or passive) {
+  if (sensitive || passive) {
     // Conversion and selection code
     ++cache.matchedG4Volumes;
 

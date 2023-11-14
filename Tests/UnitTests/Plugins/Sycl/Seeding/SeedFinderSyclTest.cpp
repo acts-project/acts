@@ -113,7 +113,7 @@ auto setupSeedFinderConfiguration()
 
 auto setupSeedFinderOptions() {
   Acts::SeedFinderOptions options;
-  options.bFieldInZ = 1.99724_T;
+  options.bFieldInZ = 2_T;
   options.beamPos = {-.5_mm, -.5_mm};
   return options;
 }

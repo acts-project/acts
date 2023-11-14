@@ -28,7 +28,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_CASE(covariance_transport_invalid) {
   CovarianceCache covCache;
-  BOOST_CHECK(covCache.applyTransport == false);
+  BOOST_CHECK(!covCache.applyTransport);
 }
 
 BOOST_AUTO_TEST_CASE(covariance_transport_bound_start) {
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(covariance_transport_bound_start) {
   CovarianceCache covCache(tgContext, *planeSurface, position, boundParameters,
                            boundCovariance);
   // Test that the transport should be applied now
-  BOOST_CHECK(covCache.applyTransport == true);
+  BOOST_CHECK(covCache.applyTransport);
   // Test that the set covariance is 5x5 and what it has been set
   BOOST_CHECK_EQUAL(std::get<BoundSquareMatrix>(covCache.covariance),
                     boundCovariance);
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(covariance_transport_bound_start) {
                     std::bad_variant_access);
   // Test that the bound to free jacobian has a value
   BOOST_CHECK(covCache.boundToFreeJacobian.has_value());
-  BOOST_CHECK(not covCache.boundToFreeJacobian.value().isApprox(
+  BOOST_CHECK(!covCache.boundToFreeJacobian.value().isApprox(
       BoundToFreeMatrix::Zero()));
   // Test that the free transport jacobian, derivative is properly set up
   BOOST_CHECK_EQUAL(covCache.freeTransportJacobian, FreeMatrix::Identity());
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(covariance_transport_curvilinear_start) {
 
   CovarianceCache covCache(position, direction, boundCovariance);
   // Test that the transport should be applied now
-  BOOST_CHECK(covCache.applyTransport == true);
+  BOOST_CHECK(covCache.applyTransport);
   // Test that the set covariance is 5x5 and what it has been set
   BOOST_CHECK_EQUAL(std::get<BoundSquareMatrix>(covCache.covariance),
                     boundCovariance);
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(covariance_transport_curvilinear_start) {
 
   // Test that the bound to free jacobian has a value
   BOOST_CHECK(covCache.boundToFreeJacobian.has_value());
-  BOOST_CHECK(not covCache.boundToFreeJacobian.value().isApprox(
+  BOOST_CHECK(!covCache.boundToFreeJacobian.value().isApprox(
       BoundToFreeMatrix::Zero()));
   // Test that the free transport jacobian, derivative is properly set up
   BOOST_CHECK_EQUAL(covCache.freeTransportJacobian, FreeMatrix::Identity());
@@ -196,14 +196,14 @@ BOOST_AUTO_TEST_CASE(covariance_transport_free_start) {
   FreeSquareMatrix freeCovariance = 8. * FreeSquareMatrix::Identity();
 
   CovarianceCache covCache(freeParameters, freeCovariance);
-  BOOST_CHECK(covCache.applyTransport == true);
+  BOOST_CHECK(covCache.applyTransport);
   // Test that the set covariance is 5x5 and what it has been set
   BOOST_CHECK_THROW(std::get<BoundSquareMatrix>(covCache.covariance),
                     std::bad_variant_access);
   BOOST_CHECK_EQUAL(std::get<FreeSquareMatrix>(covCache.covariance),
                     freeCovariance);
   // Test that the bound to free jacobian has NO value
-  BOOST_CHECK(not covCache.boundToFreeJacobian.has_value());
+  BOOST_CHECK(!covCache.boundToFreeJacobian.has_value());
   // Test that the free transport jacobian, derivative is properly set up
   BOOST_CHECK_EQUAL(covCache.freeTransportJacobian, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(covCache.freeToPathDerivatives, FreeVector::Zero());

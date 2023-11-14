@@ -46,7 +46,9 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   for (auto& sSurface : stepSurfaces) {
     // try it out by intersecting, but do not force the direction
     auto sIntersection =
-        sSurface->intersect(gctx, startPoint, trackDirection, true).closest();
+        sSurface
+            ->intersect(gctx, startPoint, trackDirection, BoundaryCheck(true))
+            .closest();
     if (sIntersection) {
       // now record
       stepIntersections.push_back(sIntersection.intersection());
@@ -85,7 +87,7 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   // intersect them - fast exit for cases where
   // readout and counter readout are hit
   Vector3 intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
-  size_t attempts = 0;
+  std::size_t attempts = 0;
   // the collected intersections
   std::vector<Acts::Intersection3D> boundaryIntersections;
   // run them - and check for the fast exit
@@ -93,9 +95,10 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
     // count as an attempt
     ++attempts;
     // try it out by intersecting, but do not force the direction
-    auto bIntersection =
-        bSurface->intersect(gctx, intersection3D, trackDirection, true)
-            .closest();
+    auto bIntersection = bSurface
+                             ->intersect(gctx, intersection3D, trackDirection,
+                                         BoundaryCheck(true))
+                             .closest();
     if (bIntersection) {
       // now record
       boundaryIntersections.push_back(bIntersection.intersection());

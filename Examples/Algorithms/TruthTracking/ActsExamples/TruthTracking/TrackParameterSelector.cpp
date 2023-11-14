@@ -37,21 +37,21 @@ ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // helper functions to select tracks
   auto within = [](double x, double min, double max) {
-    return (min <= x) and (x < max);
+    return (min <= x) && (x < max);
   };
   auto isValidTrack = [&](const auto& trk) {
     const auto theta = trk.template get<Acts::eBoundTheta>();
     const auto eta = -std::log(std::tan(theta / 2));
     // define charge selection
-    return within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
-           within(eta, m_cfg.etaMin, m_cfg.etaMax) and
+    return within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
+           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
+           within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
            within(trk.template get<Acts::eBoundPhi>(), m_cfg.phiMin,
-                  m_cfg.phiMax) and
+                  m_cfg.phiMax) &&
            within(trk.template get<Acts::eBoundLoc0>(), m_cfg.loc0Min,
-                  m_cfg.loc0Max) and
+                  m_cfg.loc0Max) &&
            within(trk.template get<Acts::eBoundLoc1>(), m_cfg.loc1Min,
-                  m_cfg.loc1Max) and
+                  m_cfg.loc1Max) &&
            within(trk.template get<Acts::eBoundTime>(), m_cfg.timeMin,
                   m_cfg.timeMax);
   };

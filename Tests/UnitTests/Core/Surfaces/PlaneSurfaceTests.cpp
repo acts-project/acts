@@ -101,14 +101,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
       binningPosition);
   //
   /// Test referenceFrame
-  Vector3 globalPosition{2.0, 2.0, 0.0};
+  Vector3 arbitraryGlobalPosition{2.0, 2.0, 2.0};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
   RotationMatrix3 expectedFrame;
   expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
-  CHECK_CLOSE_OR_SMALL(
-      planeSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
-      expectedFrame, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(planeSurfaceObject->referenceFrame(
+                           tgContext, arbitraryGlobalPosition, momentum),
+                       expectedFrame, 1e-6, 1e-9);
   //
   /// Test normal, given 3D position
   Vector3 normal3D(0., 0., 1.);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test localToGlobal
   Vector2 localPosition{1.5, 1.7};
-  globalPosition =
+  Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   //
   // expected position is the translated one
@@ -154,14 +154,15 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   /// Test isOnSurface
   Vector3 offSurface{0, 1, -2.};
   BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,
-                                              momentum, true));
-  BOOST_CHECK(
-      !planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum, true));
+                                              momentum, BoundaryCheck(true)));
+  BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
+                                               BoundaryCheck(true)));
   //
   // Test intersection
   Vector3 direction{0., 0., 1.};
   auto sfIntersection =
-      planeSurfaceObject->intersect(tgContext, offSurface, direction, true)
+      planeSurfaceObject
+          ->intersect(tgContext, offSurface, direction, BoundaryCheck(true))
           .closest();
   Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    Intersection3D::Status::reachable};

@@ -221,7 +221,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param nseg is the number of segments to approximate
   ///
   /// @return an Extent object
-  Extent extent(const GeometryContext& gctx, size_t nseg = 1) const;
+  Extent extent(const GeometryContext& gctx, std::size_t nseg = 1) const;
 
   /// Initialize/update the navigation status in this environment
   ///
@@ -361,7 +361,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param nseg is the number of segments to approximate
   ///
   /// @return a boolean indicating if the objects are properly contained
-  bool checkContainment(const GeometryContext& gctx, size_t nseg = 1) const;
+  bool checkContainment(const GeometryContext& gctx,
+                        std::size_t nseg = 1) const;
 
   /// build the bounding box
   ///
@@ -469,7 +470,7 @@ struct AllSurfacesExtractor {
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
+      [[maybe_unused]] const std::vector<std::size_t>& indices = {}) {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
           "AllSurfacesExtractor: no detector volume given.");
@@ -491,7 +492,7 @@ struct IndexedSurfacesExtractor {
   /// @return a vector of raw Surface pointers
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t>& indices) {
+      const NavigationState& nState, const std::vector<std::size_t>& indices) {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
           "IndexedSurfacesExtractor: no detector volume given.");
@@ -519,7 +520,7 @@ struct AllSubVolumesExtractor {
   inline static const std::vector<const DetectorVolume*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
+      [[maybe_unused]] const std::vector<std::size_t>& indices = {}) {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
           "AllSubVolumesExtractor: no detector volume given.");
@@ -539,7 +540,7 @@ struct IndexedSubVolumesExtractor {
   /// @return a vector of raw DetectorVolume pointers
   inline static const std::vector<const DetectorVolume*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t>& indices) {
+      const NavigationState& nState, const std::vector<std::size_t>& indices) {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
           "AllSubVolumesExtractor: no detector volume given.");

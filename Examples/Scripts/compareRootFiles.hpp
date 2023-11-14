@@ -130,7 +130,7 @@ Ordering compare(const std::vector<U>& v1, const std::vector<U>& v2) {
   // ...if the size is identical...
   else {
     // ...then try to order by contents of increasing index...
-    for (std::size_t i = 0; i < v1.size(); ++i) {
+    for (size_t i = 0; i < v1.size(); ++i) {
       if (v1[i] < v2[i]) {
         return Ordering::SMALLER;
       } else if (v1[i] > v2[i]) {
@@ -148,17 +148,16 @@ Ordering compare(const std::vector<U>& v1, const std::vector<U>& v2) {
 // The following functions are generic implementations of sorting algorithms,
 // which require only a comparison operator, a swapping operator, and an
 // inclusive range of indices to be sorted in order to operate
-using IndexComparator = std::function<Ordering(std::size_t, std::size_t)>;
-using IndexSwapper = std::function<void(std::size_t, std::size_t)>;
+using IndexComparator = std::function<Ordering(size_t, size_t)>;
+using IndexSwapper = std::function<void(size_t, size_t)>;
 
 // Selection sort has pertty bad asymptotic scaling, but it is non-recursive
 // and in-place, which makes it a good choice for smaller inputs
-void selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
+void selectionSort(const size_t firstIndex, const size_t lastIndex,
                    const IndexComparator& compare, const IndexSwapper& swap) {
-  using namespace std;
-  for (size_t targetIndex = firstIndex; targetIndex < lastIndex;
+  for (std::size_t targetIndex = firstIndex; targetIndex < lastIndex;
        ++targetIndex) {
-    size_t minIndex = targetIndex;
+    std::size_t minIndex = targetIndex;
     for (std::size_t readIndex = targetIndex + 1; readIndex <= lastIndex;
          ++readIndex) {
       if (compare(readIndex, minIndex) == Ordering::SMALLER) {
@@ -172,11 +171,11 @@ void selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
 }
 
 // Quick sort is used as the top-level sorting algorithm for our datasets
-void quickSort(const std::size_t firstIndex, const std::size_t lastIndex,
+void quickSort(const size_t firstIndex, const size_t lastIndex,
                const IndexComparator& compare, const IndexSwapper& swap) {
   // We switch to non-recursive selection sort when the range becomes too small.
   // This optimization voids the need for detection of 0- and 1-element input.
-  static const std::size_t NON_RECURSIVE_THRESHOLD = 25;
+  static const size_t NON_RECURSIVE_THRESHOLD = 25;
   if (lastIndex - firstIndex < NON_RECURSIVE_THRESHOLD) {
     selectionSort(firstIndex, lastIndex, compare, swap);
     return;
@@ -185,14 +184,14 @@ void quickSort(const std::size_t firstIndex, const std::size_t lastIndex,
   // We'll use the midpoint as a pivot. Later on, we can switch to more
   // elaborate pivot selection schemes if their usefulness for our use case
   // (pseudorandom events with thread-originated reordering) is demonstrated.
-  std::size_t pivotIndex = firstIndex + (lastIndex - firstIndex) / 2;
+  size_t pivotIndex = firstIndex + (lastIndex - firstIndex) / 2;
 
   // Partition the data around the pivot using Hoare's scheme
-  std::size_t splitIndex;
+  size_t splitIndex = 0;
   {
     // Start with two indices one step beyond each side of the array
-    std::size_t i = firstIndex - 1;
-    std::size_t j = lastIndex + 1;
+    size_t i = firstIndex - 1;
+    size_t j = lastIndex + 1;
     while (true) {
       // Move left index forward at least once, and until an element which is
       // greater than or equal to the pivot is detected.
@@ -277,7 +276,7 @@ struct BranchComparisonHarness {
   struct TreeMetadata {
     TTreeReader& tree1Reader;
     TTreeReader& tree2Reader;
-    const std::size_t entryCount;
+    const size_t entryCount;
   };
 
   // This exception will be thrown if an unsupported branch type is encountered
@@ -364,25 +363,25 @@ struct BranchComparisonHarness {
                             branchName, tree1Data, tree2Data});
 
     // Setup event comparison and swapping for each tree
-    result.sortHarness = std::make_pair(
-        std::make_pair(
-            [&tree1Data](std::size_t i, std::size_t j) -> Ordering {
-              return compare(tree1Data[i], tree1Data[j]);
-            },
-            [&tree1Data](std::size_t i, std::size_t j) {
-              std::swap(tree1Data[i], tree1Data[j]);
-            }),
-        std::make_pair(
-            [&tree2Data](std::size_t i, std::size_t j) -> Ordering {
-              return compare(tree2Data[i], tree2Data[j]);
-            },
-            [&tree2Data](std::size_t i, std::size_t j) {
-              std::swap(tree2Data[i], tree2Data[j]);
-            }));
+    result.sortHarness =
+        std::make_pair(std::make_pair(
+                           [&tree1Data](size_t i, size_t j) -> Ordering {
+                             return compare(tree1Data[i], tree1Data[j]);
+                           },
+                           [&tree1Data](size_t i, size_t j) {
+                             std::swap(tree1Data[i], tree1Data[j]);
+                           }),
+                       std::make_pair(
+                           [&tree2Data](size_t i, size_t j) -> Ordering {
+                             return compare(tree2Data[i], tree2Data[j]);
+                           },
+                           [&tree2Data](size_t i, size_t j) {
+                             std::swap(tree2Data[i], tree2Data[j]);
+                           }));
 
     // Setup order-sensitive tree comparison
     result.eventDataEqual = [&tree1Data, &tree2Data]() -> bool {
-      for (std::size_t i = 0; i < tree1Data.size(); ++i) {
+      for (size_t i = 0; i < tree1Data.size(); ++i) {
         if (compare(tree1Data[i], tree2Data[i]) != Ordering::EQUAL) {
           return false;
         }
@@ -393,7 +392,7 @@ struct BranchComparisonHarness {
     // Add a debugging method to dump event data
     result.dumpEventData = [&tree1Data, &tree2Data] {
       std::cout << "File 1                \tFile 2" << std::endl;
-      for (std::size_t i = 0; i < tree1Data.size(); ++i) {
+      for (size_t i = 0; i < tree1Data.size(); ++i) {
         std::cout << toString(tree1Data[i]) << "      \t"
                   << toString(tree2Data[i]) << std::endl;
       }

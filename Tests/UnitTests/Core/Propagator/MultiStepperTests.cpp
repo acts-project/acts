@@ -72,9 +72,9 @@ const auto defaultNullBField = std::make_shared<NullBField>();
 const auto particleHypothesis = ParticleHypothesis::pion();
 
 struct Options {
-  double tolerance = 1e-4;
+  double stepTolerance = 1e-4;
   double stepSizeCutOff = 0.0;
-  std::size_t maxRungeKuttaStepTrials = 10;
+  size_t maxRungeKuttaStepTrials = 10;
   Direction direction = defaultNDir;
   const Acts::Logger &logger = Acts::getDummyLogger();
 };
@@ -107,7 +107,7 @@ using components_t = typename T::components;
 // Makes random bound parameters and covariance and a plane surface at {0,0,0}
 // with normal {1,0,0}. Optionally some external fixed bound parameters can be
 // supplied
-auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
+auto makeDefaultBoundPars(bool cov = true, size_t n = 4,
                           std::optional<BoundVector> ext_pars = std::nullopt) {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps;
@@ -138,7 +138,7 @@ void test_multi_stepper_state() {
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
-  constexpr std::size_t N = 4;
+  constexpr size_t N = 4;
   const auto multi_pars = makeDefaultBoundPars(Cov, N, BoundVector::Ones());
 
   MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize);
@@ -152,7 +152,7 @@ void test_multi_stepper_state() {
   for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.jacTransport(), FreeMatrix::Identity());
     BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
-    if constexpr (not Cov) {
+    if constexpr (!Cov) {
       BOOST_CHECK_EQUAL(cmp.jacToGlobal(), BoundToFreeMatrix::Zero());
       BOOST_CHECK_EQUAL(cmp.cov(), BoundSquareMatrix::Zero());
     }
@@ -167,9 +167,9 @@ void test_multi_stepper_state() {
   // thus not part of the interface. However, we want to check them for
   // consistency.
   if constexpr (Acts::Concepts::exists<components_t, MultiState>) {
-    BOOST_CHECK(not state.covTransport);
+    BOOST_CHECK(!state.covTransport);
     for (const auto &cmp : state.components) {
-      BOOST_CHECK(cmp.state.covTransport == Cov);
+      BOOST_CHECK_EQUAL(cmp.state.covTransport, Cov);
     }
   }
 }
@@ -240,8 +240,8 @@ void test_multi_stepper_vs_eigen_stepper() {
     multi_stepper.transportCovarianceToCurvilinear(multi_state);
 
     // Check equality
-    BOOST_REQUIRE(multi_result.ok() == true);
-    BOOST_REQUIRE(multi_result.ok() == single_result.ok());
+    BOOST_REQUIRE(multi_result.ok());
+    BOOST_REQUIRE_EQUAL(multi_result.ok(), single_result.ok());
 
     BOOST_CHECK_EQUAL(*single_result, *multi_result);
 
@@ -393,16 +393,17 @@ void test_multi_stepper_surface_status_update() {
   // Update surface status and check
   {
     auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
-                                                    Direction::Forward, false);
+                                                    0, Direction::Forward,
+                                                    BoundaryCheck(false));
 
-    BOOST_CHECK(status == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
 
-    BOOST_CHECK((*cmp_iterable.begin()).status() ==
-                Intersection3D::Status::reachable);
-    BOOST_CHECK((*(++cmp_iterable.begin())).status() ==
-                Intersection3D::Status::missed);
+    BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
+                      Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
+                      Intersection3D::Status::missed);
   }
 
   // Step forward now
@@ -418,31 +419,33 @@ void test_multi_stepper_surface_status_update() {
   // Update surface status and check again
   {
     auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
-                                                    Direction::Forward, false);
+                                                    0, Direction::Forward,
+                                                    BoundaryCheck(false));
 
-    BOOST_CHECK(status == Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(status, Intersection3D::Status::onSurface);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
 
-    BOOST_CHECK((*cmp_iterable.begin()).status() ==
-                Intersection3D::Status::onSurface);
-    BOOST_CHECK((*(++cmp_iterable.begin())).status() ==
-                Intersection3D::Status::missed);
+    BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
+                      Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
+                      Intersection3D::Status::missed);
   }
 
   // Start surface should be unreachable
   {
     auto status = multi_stepper.updateSurfaceStatus(multi_state, *start_surface,
-                                                    Direction::Forward, false);
+                                                    0, Direction::Forward,
+                                                    BoundaryCheck(false));
 
-    BOOST_CHECK(status == Intersection3D::Status::unreachable);
+    BOOST_CHECK_EQUAL(status, Intersection3D::Status::unreachable);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
 
-    BOOST_CHECK((*cmp_iterable.begin()).status() ==
-                Intersection3D::Status::unreachable);
-    BOOST_CHECK((*(++cmp_iterable.begin())).status() ==
-                Intersection3D::Status::unreachable);
+    BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
+                      Intersection3D::Status::unreachable);
+    BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
+                      Intersection3D::Status::unreachable);
   }
 }
 
@@ -492,14 +495,15 @@ void test_component_bound_state() {
 
   // Step forward now
   {
-    multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
-                                      Direction::Forward, false);
+    multi_stepper.updateSurfaceStatus(multi_state, *right_surface, 0,
+                                      Direction::Forward, BoundaryCheck(false));
     auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
-    single_stepper.updateSurfaceStatus(single_state, *right_surface,
-                                       Direction::Forward, false);
+    single_stepper.updateSurfaceStatus(single_state, *right_surface, 0,
+                                       Direction::Forward,
+                                       BoundaryCheck(false));
     auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }
@@ -521,7 +525,7 @@ void test_component_bound_state() {
     auto failed_bound_state =
         (*(++cmp_iterable.begin()))
             .boundState(*right_surface, true, FreeToBoundCorrection(false));
-    BOOST_CHECK(not failed_bound_state.ok());
+    BOOST_CHECK(!failed_bound_state.ok());
   }
 }
 
@@ -561,8 +565,8 @@ void test_combined_bound_state_function() {
 
   const auto [bound_pars, jacobian, pathLength] = *res;
 
-  BOOST_CHECK(jacobian == decltype(jacobian)::Zero());
-  BOOST_CHECK(pathLength == 0.0);
+  BOOST_CHECK_EQUAL(jacobian, decltype(jacobian)::Zero());
+  BOOST_CHECK_EQUAL(pathLength, 0.0);
   BOOST_CHECK(bound_pars.parameters().isApprox(pars, 1.e-8));
   BOOST_CHECK(bound_pars.covariance()->isApprox(cov, 1.e-8));
 }
@@ -649,11 +653,11 @@ void test_single_component_interface_function() {
     auto sstepper = cmp.singleStepper(multi_stepper);
     auto &sstepping = cmp.singleState(multi_prop_state).stepping;
 
-    BOOST_CHECK(sstepper.position(sstepping) ==
-                cmp.pars().template segment<3>(eFreePos0));
-    BOOST_CHECK(sstepper.direction(sstepping) ==
-                cmp.pars().template segment<3>(eFreeDir0));
-    BOOST_CHECK(sstepper.time(sstepping) == cmp.pars()[eFreeTime]);
+    BOOST_CHECK_EQUAL(sstepper.position(sstepping),
+                      cmp.pars().template segment<3>(eFreePos0));
+    BOOST_CHECK_EQUAL(sstepper.direction(sstepping),
+                      cmp.pars().template segment<3>(eFreeDir0));
+    BOOST_CHECK_EQUAL(sstepper.time(sstepping), cmp.pars()[eFreeTime]);
     BOOST_CHECK_CLOSE(sstepper.qOverP(sstepping), cmp.pars()[eFreeQOverP],
                       1.e-8);
   };

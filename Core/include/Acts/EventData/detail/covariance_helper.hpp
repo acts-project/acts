@@ -33,7 +33,7 @@ struct covariance_helper {
     if (covariance.hasNaN()) {
       return false;
     }
-    size_t nIteration = 0;
+    std::size_t nIteration = 0;
     while (nIteration < NumIter) {
       if (isSemiPositive(covariance)) {
         return true;

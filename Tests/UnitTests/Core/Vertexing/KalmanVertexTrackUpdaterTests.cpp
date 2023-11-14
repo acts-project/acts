@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
 
     // After update, track should be closer to the vertex
-    BOOST_CHECK(newDistance < oldDistance);
+    BOOST_CHECK_LT(newDistance, oldDistance);
 
   }  // end for loop
 
