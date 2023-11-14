@@ -111,7 +111,7 @@ class AdaptiveMultiVertexFitter {
       // Check if the value was found before erasing
       if (it == vertexCollection.end()) {
         ACTS_ERROR("vtxToRemove is not part of vertexCollection.");
-        return VertexingError::InvalidMemoryAccess;
+        return VertexingError::ElementNotFound;
       }
       // Erase the element if found
       vertexCollection.erase(it);
