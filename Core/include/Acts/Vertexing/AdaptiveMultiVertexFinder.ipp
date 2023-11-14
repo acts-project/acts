@@ -24,8 +24,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   // Seed tracks
   std::vector<const InputTrack_t*> seedTracks = allTracks;
 
-  FitterState_t fitterState(*m_cfg.bField, vertexingOptions.magFieldContext,
-                            m_logger->cloneWithSuffix("State"));
+  FitterState_t fitterState(*m_cfg.bField, vertexingOptions.magFieldContext);
   SeedFinderState_t seedFinderState;
 
   std::vector<std::unique_ptr<Vertex<InputTrack_t>>> allVertices;
@@ -565,7 +564,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
   // we called addVtxToFit, vtx and all vertices that share tracks with vtx were
   // added to vertexCollection. Now, we want to refit the same set of vertices
   // excluding vx. Therefore, we remove vtx from vertexCollection.
-  auto removeResult = fitterState.removeVertexFromCollection(vtx);
+  auto removeResult = fitterState.removeVertexFromCollection(vtx, logger());
   if (!removeResult.ok()) {
     return removeResult.error();
   }

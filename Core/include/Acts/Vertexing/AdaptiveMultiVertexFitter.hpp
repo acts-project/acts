@@ -53,12 +53,9 @@ class AdaptiveMultiVertexFitter {
   /// @brief The fitter state
   struct State {
     State(const MagneticFieldProvider& field,
-          const Acts::MagneticFieldContext& magContext,
-          std::unique_ptr<const Logger> logger =
-              getDefaultLogger("AdaptiveMultiVertexFitterState", Logging::INFO))
+          const Acts::MagneticFieldContext& magContext)
         : ipState(field.makeCache(magContext)),
-          linearizerState(field.makeCache(magContext)),
-          m_logger(std::move(logger)) {}
+          linearizerState(field.makeCache(magContext)) {}
     // Vertex collection to be fitted
     std::vector<Vertex<InputTrack_t>*> vertexCollection;
 
@@ -80,8 +77,6 @@ class AdaptiveMultiVertexFitter {
     std::map<std::pair<const InputTrack_t*, Vertex<InputTrack_t>*>,
              TrackAtVertex<InputTrack_t>>
         tracksAtVerticesMap;
-
-    std::unique_ptr<const Logger> m_logger;
 
     /// @brief Default State constructor
     State() = default;
@@ -105,7 +100,8 @@ class AdaptiveMultiVertexFitter {
       }
     }
 
-    Result<void> removeVertexFromCollection(Vertex<InputTrack_t>& vtxToRemove) {
+    Result<void> removeVertexFromCollection(Vertex<InputTrack_t>& vtxToRemove,
+                                            const Logger& logger) {
       auto it = std::find(vertexCollection.begin(), vertexCollection.end(),
                           &vtxToRemove);
       // Check if the value was found before erasing
@@ -117,10 +113,6 @@ class AdaptiveMultiVertexFitter {
       vertexCollection.erase(it);
       return {};
     }
-
-   private:
-    /// Private access to logging instance
-    const Logger& logger() const { return *m_logger; }
   };
 
   struct Config {
