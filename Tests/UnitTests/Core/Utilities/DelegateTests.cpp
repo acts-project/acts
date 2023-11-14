@@ -238,7 +238,8 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
   {
     auto s = std::make_unique<const SignatureTest>();
     Delegate<void(int&, int)> d;
-    d.connect<&SignatureTest::modify>(std::move(s));
+    // This should not compile, as it would be a memory leak
+    // d.connect<&SignatureTest::modify>(std::move(s));
 
     int v = 0;
     d(v, 42);
