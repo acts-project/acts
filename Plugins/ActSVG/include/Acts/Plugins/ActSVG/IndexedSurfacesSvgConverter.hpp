@@ -190,17 +190,13 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
 /// @brief Unrolling function for catching the right instance
 ///
 /// @note parameters are as of the `convertImpl` method
-template <typename surface_container, typename Head, typename... Tail>
+template <typename surface_container, typename... Args>
 void unrollConvert(const GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
                    const Experimental::SurfaceCandidatesUpdator& delegate,
-                   TypeList<Head, Tail...>) {
-  convert(gctx, surfaces, cOptions, sgi, delegate, Head{});
-  if constexpr (sizeof...(Tail) > 0) {
-    TypeList<Tail...> remainingTypes;
-    unrollConvert(gctx, surfaces, cOptions, sgi, delegate, remainingTypes);
-  }
+                   TypeList<Args...>) {
+  (convert(gctx, surfaces, cOptions, sgi, delegate, Args{}), ...);
 }
 
 /// Convert a surface array into needed constituents
