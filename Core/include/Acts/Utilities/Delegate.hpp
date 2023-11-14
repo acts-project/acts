@@ -220,7 +220,8 @@ class Delegate<R(Args...), H, O> {
   /// @tparam Type The type of the instance the member function should be called on
   /// @param instance The instance on which the member function pointer should be called on
   /// @note @c Delegate assumes owner ship over @p instance.
-  template <auto Callable, typename Type>
+  template <auto Callable, typename Type, DelegateType T = kOwnership,
+            typename = std::enable_if_t<T == DelegateType::Owning>>
   void connect(std::unique_ptr<const Type> instance) {
     using member_ptr_type = return_type (Type::*)(Args...) const;
     static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
@@ -234,8 +235,6 @@ class Delegate<R(Args...), H, O> {
             const auto *concretePayload = static_cast<const Type *>(payload);
             delete concretePayload;
           });
-    } else {
-      m_payload.payload = instance.release();
     }
 
     m_function = [](const holder_type *payload, Args... args) -> return_type {
