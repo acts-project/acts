@@ -508,7 +508,7 @@ struct GsfActor {
                             const SourceLink& source_link) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
-    // This allows to easily project the to weight, filtered pars, filtered cov
+    // This allows to easily project the state to weight, filtered pars, filtered cov
     const FiltProjector proj{tmpStates.traj, tmpStates.weights};
 
     // Boolean flag, to distinguish measurement and outlier states. This flag
