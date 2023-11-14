@@ -231,7 +231,7 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   std::array<std::vector<float>, 4>
       m_pT;  ///< predicted/filtered/smoothed/unbiased parameter pT
 
-  std::vector<float> m_chi2;  ///< chisq from filtering
+  std::vector<float> m_chi2;  ///< chi2 from filtering
 };
 
 }  // namespace ActsExamples
