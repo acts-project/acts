@@ -32,6 +32,13 @@ nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
       ia.getBoundaryType() == Acts::detail::AxisBoundaryType::Bound ? 1 : 2;
   jAxis["binning"] = ia.isEquidistant() ? 0 : 1;
   jAxis["bins"] = ia.getNBins();
-  jAxis["edges"] = ia.getBinEdges();
+  if (ia.isEquidistant()) {
+    std::array<ActsScalar, 2u> range = {ia.getBinEdges().front(),
+                                        ia.getBinEdges().back()};
+    jAxis["edges"] = range;
+
+  } else {
+    jAxis["edges"] = ia.getBinEdges();
+  }
   return jAxis;
 }

@@ -24,6 +24,7 @@
 #include "Acts/Utilities/TypeList.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <climits>
 #include <vector>
 
 namespace Acts {
@@ -63,7 +64,7 @@ void convert(nlohmann::json& jIndexedSurfaces,
       nlohmann::json jAccLink;
       jAccLink["type"] =
           DetrayJsonHelper::accelerationLink(indexedSurfaces.casts);
-      jAccLink["index"] = 0;
+      jAccLink["index"] = std::numeric_limits<size_t>::max();
       jIndexedSurfaces["acc_link"] = jAccLink;
     }
   }
