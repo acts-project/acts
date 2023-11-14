@@ -67,12 +67,6 @@ Simplified overview of the GSF algorithm.
 ### The Multi-Stepper
 To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`, which is based on the {class}`Acts::EigenStepper` and thus shares a lot of code with it. It interfaces to the navigation as one aggregate state to limit the navigation overhead, but internally processes a multi-component state. How this aggregation is performed can be configured via a template parameter, by default weighted average is used ({struct}`Acts::WeightedComponentReducerLoop`).
 
-At the end of the fit the multi-component state must be reduced to a single set of parameters with a corresponding covariance matrix. This is supported by the {class}`Acts::MultiEigenStepperLoop` in two different ways currently: The *mean* method computes the mean and the covariance matrix of the multi-component state, whereas the *maximum weight* method just returns the component with the maximum weight. This can be configured in the constructor of the {class}`Acts::MultiEigenStepperLoop` with the {enum}`Acts::MixtureReductionMethod`. In the future there is planned to add a *mode* finding method as well.
-
-:::{note}
-In practice it turned out that the *maximum weight* method leads to better results so far.
-:::
-
 Even though the multi-stepper interface exposes only one aggregate state and thus is compatible with most standard tools, there is a special aborter is required to stop the navigation when the surface is reached, the {struct}`Acts::MultiStepperSurfaceReached`. It checks if all components have reached the target surface already and updates their state accordingly. Optionally, it also can stop the propagation when the aggregate state reaches the surface.
 
 
@@ -87,9 +81,24 @@ outline:
 ---
 ```
 
-The fit can be customized with several options, e.g., the maximum number of components. All options can be found in the {struct}`Acts::GsfOptions`.
+The fit can be customized with several options. Important ones are:
+* *maximum components*: How many components at maximum should be kept.
+* *weight cut*: When to drop components.
+* *component merging*: How a multi-component state is reduced to a single set of parameters and covariance. The method can be chosen with the enum {enum}`Acts::ComponentMergeMethod`. Two methods are supported currently:
+    * The *mean* computes the mean and the covariance of the mean.
+    * *max weight* takes the parameters of component with the maximum weight and computes the variance around these. This is a cheap approximation of the mode, which is not implemented currently.
 
-To simplify integration, the GSF returns an {struct}`Acts::KalmanFitterResult` object, the same as the {class}`Acts::KalmanFitter`. This allows to use the same analysis tools for both fitters.
+:::{note}
+A good starting configuration is to use 12 components, the *max weight* merging and the *KL distance* reduction.
+:::
+
+All options can be found in the {struct}`Acts::GsfOptions`:
+
+```{doxygenstruct} Acts::GsfOptions
+---
+outline:
+---
+```
 
 If the GSF finds the column with the string identifier *"gsf-final-multi-component-state"* (defined in `Acts::GsfConstants::kFinalMultiComponentStateColumn`) in the track container, it adds the final multi-component state to the track as a `std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>` object.
 
