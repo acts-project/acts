@@ -14,6 +14,7 @@
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -117,7 +118,10 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   CHECK_CLOSE_REL(thicknessPL, 2 * hThickness, 10e-6);
 
   // check the lorentz angle - let's take the second one
-  auto nLorentzPlane = segSurfacesXPL[2]->normal(tgContext);
+  const auto* pSurface =
+      dynamic_cast<const Acts::PlaneSurface*>(segSurfacesXPL[2].get());
+  BOOST_REQUIRE(pSurface != nullptr);
+  auto nLorentzPlane = pSurface->normal(tgContext);
 
   Vector3 nNominal(1., 0., 0.);
   double tAngle = acos(nLorentzPlane.dot(nNominal));

@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
 
   Experimental::Gx2FitterOptions gx2fOptions(
       geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 0, true);
+      false, false, FreeToBoundCorrection(false), 0, true, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -232,6 +232,10 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.parameters(), startParametersFit.parameters());
   BOOST_CHECK_EQUAL(track.covariance(), BoundMatrix::Identity());
+  BOOST_CHECK_EQUAL(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      0);
 
   ACTS_INFO("*** Test: NoFit -- Finish");
 }
@@ -301,7 +305,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-      rSurface, false, false, FreeToBoundCorrection(false), 5, true);
+      rSurface, false, false, FreeToBoundCorrection(false), 5, true, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -326,6 +330,10 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
+  BOOST_CHECK_EQUAL(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      5);
 
   ACTS_INFO("*** Test: Fit5Iterations -- Finish");
 }
@@ -404,7 +412,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-      rSurface, false, false, FreeToBoundCorrection(false), 5, true);
+      rSurface, false, false, FreeToBoundCorrection(false), 5, true, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -429,6 +437,10 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 2e-28, 1e0);
+  BOOST_CHECK_EQUAL(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      5);
 
   ACTS_INFO("*** Test: MixedDetector -- Finish");
 }
@@ -497,7 +509,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-      rSurface, false, false, FreeToBoundCorrection(false), 5, false);
+      rSurface, false, false, FreeToBoundCorrection(false), 5, false, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -523,10 +535,111 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 0.5, 2e-1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 8e-35, 4e0);
+  BOOST_CHECK_EQUAL(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      5);
 
   ACTS_INFO("*** Test: FitWithBfield -- Finish");
 }
 
+BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
+  ACTS_INFO("*** Test: relChi2changeCutOff -- Start");
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
+  Detector detector;
+  const size_t nSurfaces = 5;
+  detector.geometry = makeToyDetector(tgContext, nSurfaces);
+
+  ACTS_DEBUG("Go to propagator");
+
+  auto parametersMeasurements = makeParameters();
+  auto startParametersFit = makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree,
+                                           80_degree, 1_GeV, 1_e);
+
+  // Context objects
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  // Acts::CalibrationContext calCtx;
+  std::default_random_engine rng(42);
+
+  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
+  MeasurementResolutionMap resolutions = {
+      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
+
+  // simulation propagator
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  auto measurements = createMeasurements(
+      simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
+  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
+
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Start fitting");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
+
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter =
+      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  MagneticFieldContext mfContext;
+  CalibrationContext calContext;
+
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
+      rSurface, false, false, FreeToBoundCorrection(false), 500, true, 1e-5);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  // Fit the track
+  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                        startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(res.ok());
+
+  auto& track = *res;
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
+  BOOST_CHECK(track.hasReferenceSurface());
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  // We need quite coarse checks here, since on different builds
+  // the created measurements differ in the randomness
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
+  BOOST_CHECK_LT(
+      (track
+           .template component<std::size_t, hashString("Gx2fnUpdateColumn")>()),
+      10);
+
+  ACTS_INFO("*** Test: relChi2changeCutOff -- Finish");
+}
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts

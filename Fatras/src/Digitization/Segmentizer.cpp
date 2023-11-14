@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/Digitization/Channelizer.hpp"
+#include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
@@ -19,8 +19,8 @@
 #include <cmath>
 #include <memory>
 
-std::vector<ActsFatras::Channelizer::ChannelSegment>
-ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
+std::vector<ActsFatras::Segmentizer::ChannelSegment>
+ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
                                   const Acts::Surface& surface,
                                   const Acts::BinUtility& segmentation,
                                   const Segment2D& segment) const {
