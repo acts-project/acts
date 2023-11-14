@@ -157,6 +157,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     subCovMat = trkParams->spatialImpactParameterCovariance().value();
   } else {
     subCovMat = trkParams->impactParameterCovariance().value();
+    // Quickfix: The time covariance seems to be too small for the vertex fit to
+    // work. Here, we inflate it manually.
+    subCovMat *= 300;
   }
   ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
 
