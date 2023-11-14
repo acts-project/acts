@@ -232,7 +232,6 @@ struct GaussianSumFitter {
     if (intersectionStatusStartSurface != Intersection3D::Status::onSurface) {
       ACTS_DEBUG(
           "Surface intersection of start parameters WITH bound-check failed");
-      // return GsfError::StartParametersNotOnStartSurface;
     }
 
     // To be able to find measurements later, we put them into a map
