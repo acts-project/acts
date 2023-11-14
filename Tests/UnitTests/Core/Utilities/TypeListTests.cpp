@@ -11,6 +11,7 @@
 
 #include "Acts/Utilities/detail/TypeList.hpp"
 
+#include <typeinfo>
 #include <type_traits>
 
 namespace bdata = boost::unit_test::data;
