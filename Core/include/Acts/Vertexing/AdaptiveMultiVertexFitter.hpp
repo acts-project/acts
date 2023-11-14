@@ -18,6 +18,7 @@
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <functional>
@@ -52,9 +53,12 @@ class AdaptiveMultiVertexFitter {
   /// @brief The fitter state
   struct State {
     State(const MagneticFieldProvider& field,
-          const Acts::MagneticFieldContext& magContext)
+          const Acts::MagneticFieldContext& magContext,
+          std::unique_ptr<const Logger> logger =
+              getDefaultLogger("AdaptiveMultiVertexFitterState", Logging::INFO))
         : ipState(field.makeCache(magContext)),
-          linearizerState(field.makeCache(magContext)) {}
+          linearizerState(field.makeCache(magContext)),
+          m_logger(std::move(logger)) {}
     // Vertex collection to be fitted
     std::vector<Vertex<InputTrack_t>*> vertexCollection;
 
@@ -77,8 +81,10 @@ class AdaptiveMultiVertexFitter {
              TrackAtVertex<InputTrack_t>>
         tracksAtVerticesMap;
 
+    std::unique_ptr<const Logger> m_logger;
+
     /// @brief Default State constructor
-    State() = default;
+    // State() = default;
 
     // Adds a vertex to trackToVerticesMultiMap
     void addVertexToMultiMap(Vertex<InputTrack_t>& vtx) {
@@ -99,15 +105,22 @@ class AdaptiveMultiVertexFitter {
       }
     }
 
-    void removeVertexFromCollection(Vertex<InputTrack_t>& vtxToRemove) {
+    Result<void> removeVertexFromCollection(Vertex<InputTrack_t>& vtxToRemove) {
       auto it = std::find(vertexCollection.begin(), vertexCollection.end(),
                           &vtxToRemove);
       // Check if the value was found before erasing
-      if (it != vertexCollection.end()) {
-        // Erase the element if found
-        vertexCollection.erase(it);
+      if (it == vertexCollection.end()) {
+        ACTS_ERROR("vtxToRemove is not part of vertexCollection.");
+        return VertexingError::InvalidMemoryAccess;
       }
+      // Erase the element if found
+      vertexCollection.erase(it);
+      return {};
     }
+
+   private:
+    /// Private access to logging instance
+    const Logger& logger() const { return *m_logger; }
   };
 
   struct Config {
