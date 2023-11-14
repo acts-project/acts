@@ -167,9 +167,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
 BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
   auto dummy = Acts::Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0},
                                                          Vector3{1, 0, 0});
-  const size_t NComps = 4;
   std::vector<GsfComponent> cmps;
-  
 
   // weights do not need to be normalized for this test
   for (auto w : {1.0, 2.0, 3.0, 4.0}) {
