@@ -12,13 +12,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/HashedString.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/EventData/GenerateParameters.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/GenerateParameters.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/HashedString.hpp"
+
 
 #include <random>
 
@@ -364,22 +367,25 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 1u);
     BOOST_CHECK_EQUAL(ts.effectiveCalibrated(),
                       (pc.sourceLink.parameters.template head<1>()));
-    BOOST_CHECK_EQUAL(ts.effectiveCalibratedCovariance(),
-                      (pc.sourceLink.covariance.template topLeftCorner<1, 1>()));
+    BOOST_CHECK_EQUAL(
+        ts.effectiveCalibratedCovariance(),
+        (pc.sourceLink.covariance.template topLeftCorner<1, 1>()));
 
     // use temporary measurement to reset calibrated data
     test_track_state_t ttsb(rng, 2u);
     ts.setUncalibratedSourceLink(SourceLink{ttsb.sourceLink});
     Acts::GeometryContext gctx;
     Acts::CalibrationContext cctx;
-    BOOST_CHECK_EQUAL(
-        ts.getUncalibratedSourceLink().template get<test_source_link_t>().sourceId,
-        pc.sourceLink.sourceId);
-    auto meas = test_source_link_t::template testSourceLinkCalibratorReturn<trajectory_t>(
-        gctx, cctx, SourceLink{ttsb.sourceLink}, ts);
-    BOOST_CHECK_EQUAL(
-        ts.getUncalibratedSourceLink().template get<test_source_link_t>().sourceId,
-        ttsb.sourceLink.sourceId);
+    BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink()
+                          .template get<test_source_link_t>()
+                          .sourceId,
+                      pc.sourceLink.sourceId);
+    auto meas = test_source_link_t::template testSourceLinkCalibratorReturn<
+        trajectory_t>(gctx, cctx, SourceLink{ttsb.sourceLink}, ts);
+    BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink()
+                          .template get<test_source_link_t>()
+                          .sourceId,
+                      ttsb.sourceLink.sourceId);
     auto m2 = std::get<Measurement<BoundIndices, 2u>>(meas);
 
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
@@ -462,8 +468,8 @@ class MultiTrajectoryTestsCommon {
       Acts::GeometryContext gctx;
       Acts::CalibrationContext cctx;
       // create a temporary measurement to extract the projector matrix
-      auto meas = test_source_link_t::template testSourceLinkCalibratorReturn<trajectory_t>(
-          gctx, cctx, SourceLink{pc.sourceLink}, ts);
+      auto meas = test_source_link_t::template testSourceLinkCalibratorReturn<
+          trajectory_t>(gctx, cctx, SourceLink{pc.sourceLink}, ts);
       std::visit(
           [&](const auto& m) {
             fullProj.topLeftCorner(nMeasurements, eBoundSize) = m.projector();
@@ -486,7 +492,8 @@ class MultiTrajectoryTestsCommon {
                                TrackStatePropMask::Filtered |
                                TrackStatePropMask::Jacobian);
     auto tso = t.getTrackState(i);
-    pc.template fillTrackState<trajectory_t>(TrackStatePropMask::Predicted, tso);
+    pc.template fillTrackState<trajectory_t>(TrackStatePropMask::Predicted,
+                                             tso);
     pc.template fillTrackState<trajectory_t>(TrackStatePropMask::Filtered, tso);
     pc.template fillTrackState<trajectory_t>(TrackStatePropMask::Jacobian, tso);
 

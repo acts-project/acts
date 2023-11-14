@@ -344,8 +344,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   Acts::GainMatrixSmoother kfSmoother;
 
   KalmanFitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&Test::TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator.connect<
+      &Test::TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   extensions.updater
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);

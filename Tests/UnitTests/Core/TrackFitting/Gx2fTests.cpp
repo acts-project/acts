@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator.connect<
+      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
@@ -294,8 +294,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator.connect<
+      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
@@ -401,8 +401,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator.connect<
+      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
@@ -498,8 +498,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   Gx2Fitter fitter(simPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator.connect<
+      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
@@ -597,8 +597,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator.connect<
+      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);

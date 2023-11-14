@@ -79,7 +79,6 @@ struct TestSourceLink final {
     }
   };
 
-
   /// Extract the measurement from a TestSourceLink.
   ///
   /// @param gctx Unused
@@ -114,7 +113,7 @@ struct TestSourceLink final {
           "Tried to extract measurement from invalid TestSourceLink");
     }
   }
-  
+
   /// Extract the measurement from a TestSourceLink.
   ///
   /// @param gctx Unused
@@ -125,7 +124,7 @@ struct TestSourceLink final {
       const SourceLink& sourceLink,
       typename trajectory_t::TrackStateProxy trackState) {
     testSourceLinkCalibratorReturn<trajectory_t>(gctx, cctx, sourceLink,
-                                                trackState);
+                                                 trackState);
   }
 };
 

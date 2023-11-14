@@ -8,13 +8,14 @@
 
 #pragma once
 
+#include "Acts/EventData/GenerateParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <random>
+
 #include "TestSourceLink.hpp"
 
 namespace Acts::Test {
@@ -97,8 +98,7 @@ struct TestTrackState {
   // @param[out] ts TrackStateProxy which is filled
   // @param [in] measdim Dimension of the measurement
   template <typename trajectory_t, typename track_state_t>
-  void fillTrackState(TrackStatePropMask mask,
-                      track_state_t& ts) {
+  void fillTrackState(TrackStatePropMask mask, track_state_t& ts) {
     // always set the reference surface
     ts.setReferenceSurface(predicted.referenceSurface().getSharedPtr());
 
@@ -126,9 +126,9 @@ struct TestTrackState {
     ts.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
     // create calibrated measurements from source link
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-      TestSourceLink::testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{},
-                                                            Acts::CalibrationContext{},
-                                                            Acts::SourceLink{sourceLink}, ts);
+      TestSourceLink::testSourceLinkCalibrator<trajectory_t>(
+          Acts::GeometryContext{}, Acts::CalibrationContext{},
+          Acts::SourceLink{sourceLink}, ts);
     }
   }
 };

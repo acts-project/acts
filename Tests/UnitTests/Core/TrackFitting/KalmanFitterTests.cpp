@@ -91,8 +91,8 @@ std::default_random_engine rng(42);
 
 auto makeDefaultKalmanFitterOptions() {
   KalmanFitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator.connect<
+      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
       &kfUpdater);
   extensions.smoother

@@ -196,8 +196,8 @@ struct Fixture {
 
   Acts::CombinatorialKalmanFilterExtensions<Trajectory> getExtensions() const {
     Acts::CombinatorialKalmanFilterExtensions<Trajectory> extensions;
-    extensions.calibrator
-        .template connect<&TestSourceLink::testSourceLinkCalibrator<Trajectory>>();
+    extensions.calibrator.template connect<
+        &TestSourceLink::testSourceLinkCalibrator<Trajectory>>();
     extensions.updater.template connect<&KalmanUpdater::operator()<Trajectory>>(
         &kfUpdater);
     extensions.smoother
