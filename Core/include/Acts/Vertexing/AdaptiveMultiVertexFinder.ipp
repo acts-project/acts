@@ -577,6 +577,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
     }
   }
 
+  // If no vertices share tracks with vtx we don't need to refit
+  if (fitterState.vertexCollection.empty()) {
+    return {};
+  }
+
   // Do the fit with removed vertex
   auto fitResult =
       m_cfg.vertexFitter.fit(fitterState, m_cfg.linearizer, vertexingOptions);
