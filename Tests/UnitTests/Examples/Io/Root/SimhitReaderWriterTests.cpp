@@ -24,7 +24,7 @@ using namespace Acts::Test;
 
 std::mt19937 gen(23);
 
-auto makeTestSimhits(std::size_t nSimHits) {
+auto makeTestSimhits(size_t nSimHits) {
   std::uniform_int_distribution<uint64_t> distIds(
       1, std::numeric_limits<uint64_t>::max());
   std::uniform_int_distribution<int32_t> distIndex(1, 20);
@@ -93,16 +93,16 @@ BOOST_AUTO_TEST_CASE(RoundTripTest) {
   ///////////
 
   auto check = [](const auto &testhits, const auto &refhits, auto tol) {
-    BOOST_CHECK(testhits.size() == refhits.size());
+    BOOST_CHECK_EQUAL(testhits.size(), refhits.size());
 
     for (const auto &[ref, test] : Acts::zip(refhits, testhits)) {
       CHECK_CLOSE_ABS(test.fourPosition(), ref.fourPosition(), tol);
       CHECK_CLOSE_ABS(test.momentum4After(), ref.momentum4After(), tol);
       CHECK_CLOSE_ABS(test.momentum4Before(), ref.momentum4Before(), tol);
 
-      BOOST_CHECK(ref.geometryId() == test.geometryId());
-      BOOST_CHECK(ref.particleId() == test.particleId());
-      BOOST_CHECK(ref.index() == test.index());
+      BOOST_CHECK_EQUAL(ref.geometryId(), test.geometryId());
+      BOOST_CHECK_EQUAL(ref.particleId(), test.particleId());
+      BOOST_CHECK_EQUAL(ref.index(), test.index());
     }
   };
 

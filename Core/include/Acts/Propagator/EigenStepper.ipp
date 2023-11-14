@@ -184,13 +184,13 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3]));
     error_estimate = std::max(error_estimate, 1e-20);
 
-    return success(error_estimate <= state.options.tolerance);
+    return success(error_estimate <= state.options.stepTolerance);
   };
 
   const double initialH =
       state.stepping.stepSize.value() * state.options.direction;
   double h = initialH;
-  size_t nStepTrials = 0;
+  std::size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (true) {
@@ -204,7 +204,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
 
     const double stepSizeScaling =
         std::min(std::max(0.25f, std::sqrt(std::sqrt(static_cast<float>(
-                                     state.options.tolerance /
+                                     state.options.stepTolerance /
                                      std::abs(2. * error_estimate))))),
                  4.0f);
     h *= stepSizeScaling;
@@ -257,7 +257,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   const double stepSizeScaling = std::min(
       std::max(0.25f,
                std::sqrt(std::sqrt(static_cast<float>(
-                   state.options.tolerance / std::abs(error_estimate))))),
+                   state.options.stepTolerance / std::abs(error_estimate))))),
       4.0f);
   const double nextAccuracy = std::abs(h * stepSizeScaling);
   const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());

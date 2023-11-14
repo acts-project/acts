@@ -151,7 +151,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   DetectorVolumeUpdator m_detectorVolumeUpdator;
 
   /// Name/index map to find volumes by name and detect duplicates
-  std::unordered_map<std::string, size_t> m_volumeNameIndex;
+  std::unordered_map<std::string, std::size_t> m_volumeNameIndex;
 
   /// Geometry Id hierarchy map of all sensitive surfaces
   GeometryHierarchyMap<const Surface*> m_sensitiveHierarchyMap;

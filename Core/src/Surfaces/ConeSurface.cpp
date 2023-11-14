@@ -29,29 +29,33 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 Acts::ConeSurface::ConeSurface(const ConeSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
 Acts::ConeSurface::ConeSurface(const GeometryContext& gctx,
                                const ConeSurface& other,
                                const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+    : GeometryObject(),
+      RegularSurface(gctx, other, shift),
+      m_bounds(other.m_bounds) {}
 
 Acts::ConeSurface::ConeSurface(const Transform3& transform, double alpha,
                                bool symmetric)
     : GeometryObject(),
-      Surface(transform),
+      RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric)) {}
 
 Acts::ConeSurface::ConeSurface(const Transform3& transform, double alpha,
                                double zmin, double zmax, double halfPhi)
     : GeometryObject(),
-      Surface(transform),
+      RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi)) {
 }
 
 Acts::ConeSurface::ConeSurface(const Transform3& transform,
                                std::shared_ptr<const ConeBounds> cbounds)
-    : GeometryObject(), Surface(transform), m_bounds(std::move(cbounds)) {
+    : GeometryObject(),
+      RegularSurface(transform),
+      m_bounds(std::move(cbounds)) {
   throw_assert(m_bounds, "ConeBounds must not be nullptr");
 }
 
@@ -107,9 +111,8 @@ Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
   return mFrame;
 }
 
-Acts::Vector3 Acts::ConeSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*direction*/) const {
+Acts::Vector3 Acts::ConeSurface::localToGlobal(const GeometryContext& gctx,
+                                               const Vector2& lposition) const {
   // create the position in the local 3d frame
   double r = lposition[Acts::eBoundLoc1] * bounds().tanAlpha();
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -119,7 +122,7 @@ Acts::Vector3 Acts::ConeSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::ConeSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/, double tolerance) const {
+    double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > tolerance) {
@@ -176,7 +179,7 @@ const Acts::ConeBounds& Acts::ConeSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
@@ -221,7 +224,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   }
   for (auto& z : coneSides) {
     // Remember the first vertex
-    size_t firstIv = vertices.size();
+    std::size_t firstIv = vertices.size();
     // Radius and z offset
     double r = std::abs(z) * bounds().tanAlpha();
     Vector3 zoffset(0., 0., z);
@@ -233,8 +236,8 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
     }
     // Create the faces
     if (tipExists) {
-      for (size_t iv = firstIv + 2; iv < vertices.size() + 1; ++iv) {
-        size_t one = 0, two = iv - 1, three = iv - 2;
+      for (std::size_t iv = firstIv + 2; iv < vertices.size() + 1; ++iv) {
+        std::size_t one = 0, two = iv - 1, three = iv - 2;
         if (z < 0.) {
           std::swap(two, three);
         }

@@ -54,9 +54,9 @@ class DD4hepDetectorSurfaceFactory {
     /// The created non-const surfaces - for further processing,
     std::vector<DD4hepPassiveSurface> passiveSurfaces;
     /// matching and conversion statistics: surfaces
-    std::size_t convertedSurfaces = 0;
+    size_t convertedSurfaces = 0;
     /// matching and conversion statistics: materials
-    std::size_t convertedMaterials = 0;
+    size_t convertedMaterials = 0;
     /// The collected binnings
     std::vector<Experimental::ProtoBinning> binnings = {};
     /// The collected supports

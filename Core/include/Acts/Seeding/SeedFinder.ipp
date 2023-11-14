@@ -481,7 +481,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   state.curvatures.reserve(numTopSP);
   state.impactParameters.reserve(numTopSP);
 
-  size_t t0 = 0;
+  std::size_t t0 = 0;
 
   // clear previous results and then loop on bottoms and tops
   state.candidates_collector.clear();
@@ -533,7 +533,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     // minimum number of compatible top SPs to trigger the filter for a certain
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
-    size_t minCompatibleTopSPs = 2;
+    std::size_t minCompatibleTopSPs = 2;
     if (!m_config.seedConfirmation ||
         state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
@@ -542,7 +542,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       minCompatibleTopSPs++;
     }
 
-    for (size_t index_t = t0; index_t < numTopSP; index_t++) {
+    for (std::size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
 
       auto lt = state.linCircleTop[t];

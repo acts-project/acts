@@ -26,8 +26,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
+#include "ActsFatras/Digitization/Segmentizer.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <cstddef>
@@ -69,20 +68,6 @@ class DigitizationAlgorithm final : public IAlgorithm {
   const DigitizationConfig& config() const { return m_cfg; }
 
  private:
-  /// Helper method for the geometric channelizing part
-  ///
-  /// @param geoCfg is the geometric digitization configuration
-  /// @param hit the Simultated hit
-  /// @param surface the Surface on which this is supposed to happen
-  /// @param gctx the Geometry context
-  /// @param rng the Random number engine for the drift smearing
-  ///
-  /// @return the list of channels
-  std::vector<ActsFatras::Channelizer::ChannelSegment> channelizing(
-      const GeometricConfig& geoCfg, const SimHit& hit,
-      const Acts::Surface& surface, const Acts::GeometryContext& gctx,
-      RandomEngine& rng) const;
-
   /// Helper method for creating digitized parameters from clusters
   ///
   /// @todo ADD random smearing
@@ -93,7 +78,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
   /// @return the list of digitized parameters
   DigitizedParameters localParameters(
       const GeometricConfig& geoCfg,
-      const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
+      const std::vector<ActsFatras::Segmentizer::ChannelSegment>& channels,
       RandomEngine& rng) const;
 
   /// Nested smearer struct that holds geometric digitizer and smearing
@@ -113,9 +98,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
   DigitizationConfig m_cfg;
   /// Digitizers within geometry hierarchy
   Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
-  /// Geometric digtizers
-  ActsFatras::PlanarSurfaceDrift m_surfaceDrift;
-  ActsFatras::PlanarSurfaceMask m_surfaceMask;
+  /// Geometric digtizer
   ActsFatras::Channelizer m_channelizer;
 
   ReadDataHandle<SimHitContainer> m_simContainerReadHandle{this,
