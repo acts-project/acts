@@ -98,8 +98,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
       << aveNDuplicatedSeeds);
 
   auto write_float = [&](float f, const char* name) {
-    TVectorF v(1);
-    v[0] = f;
+    std::vector<float> v {f};
     m_outputFile->WriteObject(&v, name);
   };
 
