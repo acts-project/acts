@@ -80,7 +80,7 @@ class Objective:
         self.k_dup = k_dup
         self.k_time = k_time
 
-    def __call__(self, trial):
+    def __call__(self, trial, ckf_perf=True):
         params = []
 
         maxSeedsPerSpM = trial.suggest_int("maxSeedsPerSpM", 0, 10)
@@ -110,24 +110,41 @@ class Objective:
             "deltaRMax",
         ]
 
-        outputDir = Path(srcDir / "Output_CKF")
-        outputfile = srcDir / "Output_CKF/performance_ckf.root"
+        if ckf_perf:
+            outFileName = "Output_CKF"
+            outputfile = srcDir / outFileName / "performance_ckf.root"
+            effContName = "particles"
+            contName = "tracks"
+        else:
+            outFileName = "Output_Seeding"
+            outputfile = srcDir / outFileName / "performance_seeding.root"
+            effContName = "seeds"
+            contName = "seeds"
+
+        outputDir = Path(srcDir / outFileName)
         outputDir.mkdir(exist_ok=True)
         run_ckf(params, keys, outputDir)
         rootFile = uproot.open(outputfile)
-        self.res["eff"].append(rootFile["eff_particles"].member("fElements")[0])
-        self.res["fakerate"].append(rootFile["fakerate_tracks"].member("fElements")[0])
+        self.res["eff"].append(rootFile["eff_" + effContName].member("fElements")[0])
+        self.res["fakerate"].append(
+            rootFile["fakerate_" + contName].member("fElements")[0]
+        )
         self.res["duplicaterate"].append(
-            rootFile["duplicaterate_tracks"].member("fElements")[0]
+            rootFile["duplicaterate_" + contName].member("fElements")[0]
         )
 
-        timingfile = srcDir / "Output_CKF/timing.tsv"
+        timingfile = srcDir / outFileName / "timing.tsv"
         timing = pd.read_csv(timingfile, sep="\t")
-        time_ckf = float(
-            timing[timing["identifier"].str.match("Algorithm:TrackFindingAlgorithm")][
-                "time_perevent_s"
-            ]
-        )
+
+        if ckf_perf:
+            time_ckf = float(
+                timing[
+                    timing["identifier"].str.match("Algorithm:TrackFindingAlgorithm")
+                ]["time_perevent_s"]
+            )
+        else:
+            time_ckf = 0
+
         time_seeding = float(
             timing[timing["identifier"].str.match("Algorithm:SeedingAlgorithm")][
                 "time_perevent_s"
