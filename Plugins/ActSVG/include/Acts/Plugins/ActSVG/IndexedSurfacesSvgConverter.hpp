@@ -195,7 +195,7 @@ void unrollConvert(const GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
                    const Experimental::SurfaceCandidatesUpdator& delegate,
-                   [[maybe_unused]] TypeList<Head, Tail...> tList) {
+                   TypeList<Head, Tail...>) {
   convert(gctx, surfaces, cOptions, sgi, delegate, Head{});
   if constexpr (sizeof...(Tail) > 0) {
     TypeList<Tail...> remainingTypes;
