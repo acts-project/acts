@@ -57,6 +57,7 @@ numfig = True
 
 myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath", "html_image"]
 myst_heading_anchors = 3
+myst_dmath_allow_labels = True
 
 linkcheck_retries = 5
 linkcheck_ignore = [
@@ -161,7 +162,8 @@ if tags.has("run_apidoc"):
     if not api_index_target.exists():
         shutil.copyfile(doc_dir / "api/api_index.rst", api_index_target)
     print("breathe apidoc completed")
-else:
+
+if tags.has("lazy_autodoc") or on_readthedocs:
     extensions += ["lazy_autodoc"]
 
 
