@@ -181,12 +181,12 @@ Measurement EDM4hepUtil::readMeasurement(
       // TODO get EDM4hep fixed
       // misusing some fields to store ACTS specific information
       // don't ask ...
-      ActsFatras::Channelizer::Bin2D bin{
+      ActsFatras::Segmentizer::Bin2D bin{
           static_cast<unsigned int>(c.getType()),
           static_cast<unsigned int>(c.getQuality())};
-      ActsFatras::Channelizer::Segment2D path2D;
+      ActsFatras::Segmentizer::Segment2D path2D;
       double activation = c.getTime();
-      ActsFatras::Channelizer::ChannelSegment cell{bin, path2D, activation};
+      ActsFatras::Segmentizer::ChannelSegment cell{bin, path2D, activation};
 
       toCluster->channels.push_back(cell);
     }
@@ -252,7 +252,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
 
 void EDM4hepUtil::writeTrajectory(
     const Acts::GeometryContext& gctx, double Bz, const Trajectories& from,
-    edm4hep::MutableTrack to, std::size_t fromIndex,
+    edm4hep::MutableTrack to, size_t fromIndex,
     const Acts::ParticleHypothesis& particleHypothesis,
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap) {
   const auto& multiTrajectory = from.multiTrajectory();

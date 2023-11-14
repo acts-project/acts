@@ -184,11 +184,11 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
 
   auto [volumes, portals, roots] = tripleZ->construct(tContext);
 
-  BOOST_CHECK(portals.size() == 4u);
-  BOOST_CHECK(roots.volumes.size() == 3u);
-  BOOST_CHECK(roots.volumes[0]->geometryId().volume() == 3u);
-  BOOST_CHECK(roots.volumes[1]->geometryId().volume() == 2u);
-  BOOST_CHECK(roots.volumes[2]->geometryId().volume() == 1u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 3u);
+  BOOST_CHECK_EQUAL(roots.volumes[0]->geometryId().volume(), 3u);
+  BOOST_CHECK_EQUAL(roots.volumes[1]->geometryId().volume(), 2u);
+  BOOST_CHECK_EQUAL(roots.volumes[2]->geometryId().volume(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
@@ -222,11 +222,11 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
 
   auto [volumes, portals, roots] = barrelR->construct(tContext);
 
-  BOOST_CHECK(portals.size() == 4u);
-  BOOST_CHECK(roots.volumes.size() == 3u);
-  BOOST_CHECK(roots.volumes[0]->geometryId().volume() == 1u);
-  BOOST_CHECK(roots.volumes[1]->geometryId().volume() == 2u);
-  BOOST_CHECK(roots.volumes[2]->geometryId().volume() == 3u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 3u);
+  BOOST_CHECK_EQUAL(roots.volumes[0]->geometryId().volume(), 1u);
+  BOOST_CHECK_EQUAL(roots.volumes[1]->geometryId().volume(), 2u);
+  BOOST_CHECK_EQUAL(roots.volumes[2]->geometryId().volume(), 3u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
@@ -259,8 +259,8 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
 
   auto [volumes, portals, roots] = barrelPhi->construct(tContext);
 
-  BOOST_CHECK(portals.size() == 4u);
-  BOOST_CHECK(roots.volumes.size() == 5u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 5u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
@@ -329,8 +329,8 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
       detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));
 
   auto [volumes, portals, roots] = detector->construct(tContext);
-  BOOST_CHECK(portals.size() == 3u);
-  BOOST_CHECK(roots.volumes.size() == 6u);
+  BOOST_CHECK_EQUAL(portals.size(), 3u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 6u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

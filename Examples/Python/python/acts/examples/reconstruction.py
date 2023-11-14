@@ -981,9 +981,8 @@ def addTruthTrackingGsf(
     gsfOptions = {
         "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
         "maxComponents": 12,
-        "abortOnError": False,
-        "disableAllMaterialHandling": False,
-        "finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
+        "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
+        "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
         "level": customLogLevel(),
     }

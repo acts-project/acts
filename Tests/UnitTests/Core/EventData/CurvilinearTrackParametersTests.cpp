@@ -16,6 +16,8 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -43,6 +45,11 @@ void checkParameters(const CurvilinearTrackParameters& params, double phi,
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
   const auto pos = pos4.segment<3>(ePos0);
 
+  const auto* referenceSurface =
+      dynamic_cast<const PlaneSurface*>(&params.referenceSurface());
+  BOOST_REQUIRE_MESSAGE(referenceSurface != nullptr,
+                        "Reference surface is not a plane");
+
   // native values
   CHECK_SMALL(params.template get<eBoundLoc0>(), eps);
   CHECK_SMALL(params.template get<eBoundLoc1>(), eps);
@@ -63,9 +70,8 @@ void checkParameters(const CurvilinearTrackParameters& params, double phi,
   CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
   // curvilinear reference surface
-  CHECK_CLOSE_OR_SMALL(params.referenceSurface().center(geoCtx), pos, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.referenceSurface().normal(geoCtx), unitDir, eps,
-                       eps);
+  CHECK_CLOSE_OR_SMALL(referenceSurface->center(geoCtx), pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(referenceSurface->normal(geoCtx), unitDir, eps, eps);
   // TODO verify reference frame
 }
 

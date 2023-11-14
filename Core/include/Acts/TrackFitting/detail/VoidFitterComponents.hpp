@@ -39,7 +39,7 @@ Result<void> voidFitterUpdater(const GeometryContext& /*gctx*/,
 
 template <typename traj_t>
 Result<void> voidFitterSmoother(const GeometryContext& /*gctx*/,
-                                traj_t& trackStates, size_t entry,
+                                traj_t& trackStates, std::size_t entry,
                                 const Logger& /*logger*/) {
   trackStates.applyBackwards(entry, [](auto trackState) {
     trackState.smoothed() = trackState.filtered();

@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <memory>
 
@@ -88,7 +88,7 @@ struct SpacePointGridOptions {
 };
 
 template <typename external_spacepoint_t>
-using SpacePointGrid = detail::Grid<
+using SpacePointGrid = Grid<
     std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>,
     detail::Axis<detail::AxisType::Equidistant,
                  detail::AxisBoundaryType::Closed>,

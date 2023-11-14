@@ -24,8 +24,8 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cmath>
@@ -60,14 +60,14 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType = decltype(aGenerator)::grid_type<std::vector<size_t>>;
   using DelegateType =
       IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK(castedDelegate != nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType = decltype(aGenerator)::grid_type<std::vector<size_t>>;
 
   using DelegateType =
       IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK(castedDelegate != nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType = decltype(aGenerator)::grid_type<std::vector<size_t>>;
 
   using DelegateType =
       IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK(castedDelegate != nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType = decltype(aGenerator)::grid_type<std::vector<size_t>>;
 
   using DelegateType =
       IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK(castedDelegate != nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -246,14 +246,14 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType = decltype(aGenerator)::grid_type<std::vector<size_t>>;
   using DelegateType =
       IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK(castedDelegate != nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
   // Bin expansion created again more elements
   std::vector<size_t> reference = {38, 39};
   GridType::point_t p = {80., M_PI * 0.49};
-  BOOST_CHECK(grid.atPosition(p).size() > 2u);
+  BOOST_CHECK_GT(grid.atPosition(p).size(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(Cylinder2D) {
@@ -280,14 +280,14 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
 
   auto indexedCylinder = icSurfaces(tContext, aGenerator, rGenerator);
 
-  using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
+  using GridType = decltype(aGenerator)::grid_type<std::vector<size_t>>;
   using DelegateType =
       IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
 
   const auto* instance = indexedCylinder.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
 
-  BOOST_CHECK(castedDelegate != nullptr);
+  BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
   const auto& chainedUpdators = castedDelegate->updators;
   const auto& indexedSurfaces =

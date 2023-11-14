@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   auto [surfaces0, volumes0, surfacesUpdator0, volumeUpdator0] =
       endcapBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces0.size() == 22u);
+  BOOST_CHECK_EQUAL(surfaces0.size(), 22u);
   BOOST_CHECK(surfacesUpdator0.connected());
   BOOST_CHECK(volumes0.empty());
   BOOST_CHECK(volumeUpdator0.connected());
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   auto [surfaces1, volumes1, surfacesUpdator1, volumeUpdator1] =
       endcapBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces1.size() == 22u + 1u);
-  BOOST_CHECK(surfaces1.back()->type() == Acts::Surface::SurfaceType::Disc);
+  BOOST_CHECK_EQUAL(surfaces1.size(), 22u + 1u);
+  BOOST_CHECK_EQUAL(surfaces1.back()->type(), Acts::Surface::SurfaceType::Disc);
   BOOST_CHECK(surfacesUpdator1.connected());
   BOOST_CHECK(volumes1.empty());
   BOOST_CHECK(volumeUpdator1.connected());
@@ -110,8 +110,9 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   auto [surfaces2, volumes2, surfacesUpdator2, volumeUpdator2] =
       endcapBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces2.size() == 22u + 11u);
-  BOOST_CHECK(surfaces2.back()->type() == Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(surfaces2.size(), 22u + 11u);
+  BOOST_CHECK_EQUAL(surfaces2.back()->type(),
+                    Acts::Surface::SurfaceType::Plane);
   BOOST_CHECK(surfacesUpdator2.connected());
   BOOST_CHECK(volumes2.empty());
   BOOST_CHECK(volumeUpdator2.connected());
@@ -143,7 +144,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   auto [surfaces0, volumes0, surfacesUpdator0, volumeUpdator0] =
       barrelBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces0.size() == 448u);
+  BOOST_CHECK_EQUAL(surfaces0.size(), 448u);
   BOOST_CHECK(surfacesUpdator0.connected());
   BOOST_CHECK(volumes0.empty());
   BOOST_CHECK(volumeUpdator0.connected());
@@ -161,7 +162,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   auto [surfaces1, volumes1, surfacesUpdator1, volumeUpdator1] =
       barrelBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces1.size() == 448u + 1u);
+  BOOST_CHECK_EQUAL(surfaces1.size(), 448u + 1u);
   BOOST_CHECK(surfacesUpdator1.connected());
   BOOST_CHECK(volumes1.empty());
   BOOST_CHECK(volumeUpdator1.connected());
@@ -179,7 +180,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   auto [surfaces2, volumes2, surfacesUpdator2, volumeUpdator2] =
       barrelBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces2.size() == 448u + 32u);
+  BOOST_CHECK_EQUAL(surfaces2.size(), 448u + 32u);
   BOOST_CHECK(surfacesUpdator2.connected());
   BOOST_CHECK(volumes2.empty());
   BOOST_CHECK(volumeUpdator2.connected());
