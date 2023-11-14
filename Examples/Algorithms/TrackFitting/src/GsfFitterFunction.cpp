@@ -24,7 +24,6 @@
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -81,8 +80,10 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   double weightCutoff = 0;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
-  Acts::MixtureReductionMethod reductionMethod =
-      Acts::MixtureReductionMethod::eMaxWeight;
+  MixtureReductionAlgorithm reductionAlg =
+      MixtureReductionAlgorithm::KLDistance;
+  Acts::ComponentMergeMethod mergeMethod =
+      Acts::ComponentMergeMethod::eMaxWeight;
 
   IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
@@ -111,15 +112,19 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         weightCutoff,
         abortOnError,
         disableAllMaterialHandling};
-    gsfOptions.stateReductionMethod = reductionMethod;
+    gsfOptions.componentMergeMethod = mergeMethod;
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
     gsfOptions.extensions.surfaceAccessor
         .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
             &m_slSurfaceAccessor);
-    gsfOptions.extensions.mixtureReducer
-        .connect<&Acts::reduceMixtureWithKLDistance>();
+    switch (reductionAlg) {
+      case MixtureReductionAlgorithm::KLDistance: {
+        gsfOptions.extensions.mixtureReducer
+            .connect<&Acts::reduceMixtureWithKLDistance>();
+      } break;
+    }
 
     return gsfOptions;
   }
@@ -167,9 +172,9 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    BetheHeitlerApprox betheHeitlerApprox, size_t maxComponents,
-    double weightCutoff, Acts::MixtureReductionMethod finalReductionMethod,
-    bool abortOnError, bool disableAllMaterialHandling,
+    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+    double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
+    MixtureReductionAlgorithm mixtureReductionAlgorithm,
     const Acts::Logger& logger) {
   // Standard fitter
   MultiStepper stepper(magneticField, logger.cloneWithSuffix("Step"));
@@ -202,9 +207,8 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
       std::move(trackFitter), std::move(directTrackFitter), geo);
   fitterFunction->maxComponents = maxComponents;
   fitterFunction->weightCutoff = weightCutoff;
-  fitterFunction->abortOnError = abortOnError;
-  fitterFunction->disableAllMaterialHandling = disableAllMaterialHandling;
-  fitterFunction->reductionMethod = finalReductionMethod;
+  fitterFunction->mergeMethod = componentMergeMethod;
+  fitterFunction->reductionAlg = mixtureReductionAlgorithm;
 
   return fitterFunction;
 }

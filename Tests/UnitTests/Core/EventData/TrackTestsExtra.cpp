@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     t3.copyFrom(t);  // this should work
 
     BOOST_CHECK_NE(t3.tipIndex(), MultiTrajectoryTraits::kInvalid);
-    BOOST_CHECK(t3.nTrackStates() > 0);
+    BOOST_CHECK_GT(t3.nTrackStates(), 0);
     BOOST_REQUIRE_EQUAL(t.nTrackStates(), t3.nTrackStates());
 
     for (auto [tsa, tsb] :
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     t5.copyFrom(t4);  // this should work
 
     BOOST_CHECK_NE(t5.tipIndex(), MultiTrajectoryTraits::kInvalid);
-    BOOST_CHECK(t5.nTrackStates() > 0);
+    BOOST_CHECK_GT(t5.nTrackStates(), 0);
     BOOST_REQUIRE_EQUAL(t4.nTrackStates(), t5.nTrackStates());
 
     for (auto [tsa, tsb] :

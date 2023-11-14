@@ -21,7 +21,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
+#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/Utilities/Identity.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"

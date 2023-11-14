@@ -100,7 +100,7 @@ which is returned unmodified to every call to
 For more complex magnetic field implementations
 {class}`Acts::InterpolatedMagneticField` can be used. The idea here is to calculate
 an interpolated value of the magnetic field from a grid of known field values.
-In 3D, this means the interpolation is done from the 8 cornerpoints of a *field
+In 3D, this means the interpolation is done from the 8 corner points of a *field
 cell*. The field cell can be retrieved for any given position. Since during
 typical access patterns, e.g. the propagation, subsequent steps are relatively
 likely to not cross the field cell boundary, the field cell can be cached.

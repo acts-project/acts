@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 
 namespace {
 
@@ -52,6 +53,11 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
     const Acts::Surface& surface, const Acts::Vector3& refPosition,
     const Acts::Svg::PortalConverter::Options& portalOptions,
     int sign) noexcept(false) {
+  const auto* regSurface = dynamic_cast<const Acts::RegularSurface*>(&surface);
+  if (regSurface == nullptr) {
+    throw std::invalid_argument(
+        "convertMultiLink: surface is not RegularSurface.");
+  }
   // The return links
   std::vector<Acts::Svg::ProtoLink> pLinks;
   const auto& volumes = multiLink.indexedUpdator.extractor.dVolumes;
@@ -82,7 +88,7 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
       } else {
         throw std::invalid_argument("convertMultiLink: incorrect binning.");
       }
-      Acts::Vector3 direction = surface.normal(gctx, position);
+      Acts::Vector3 direction = regSurface->normal(gctx, position);
       pLinks.push_back(makeProtoLink(portalOptions, position,
                                      Acts::Vector3(sign * direction), v));
     }

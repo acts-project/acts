@@ -144,10 +144,10 @@ ActsExamples::ClusterContainer makeClusters(
 
     for (auto it = begin; it != end; ++it) {
       const auto& cellData = it->second;
-      ActsFatras::Channelizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
+      ActsFatras::Segmentizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
                                                          Acts::Vector2::Zero()};
 
-      ActsFatras::Channelizer::Bin2D bin{
+      ActsFatras::Segmentizer::Bin2D bin{
           static_cast<unsigned int>(cellData.channel0),
           static_cast<unsigned int>(cellData.channel1)};
 

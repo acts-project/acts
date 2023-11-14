@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   for (const auto &axes : allowedAxes) {
     auto [plane, thickness] = TGeoSurfaceConverter::toSurface(
         *vol->GetShape(), *gGeoIdentity, axes, 1);
-    BOOST_CHECK_NE(plane, nullptr);
+    BOOST_REQUIRE_NE(plane, nullptr);
     BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
     BOOST_CHECK_EQUAL(thickness, dZ * 2.);
 

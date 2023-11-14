@@ -1,10 +1,10 @@
-Acts Common Tracking Software
+ACTS Common Tracking Software
 =============================
 
-Acts is an experiment-independent toolkit for (charged) particle track
+ACTS is an experiment-independent toolkit for (charged) particle track
 reconstruction in (high energy) physics experiments implemented in modern C++.
 
-The Acts project provides high-level track reconstruction modules that can be
+The ACTS project provides high-level track reconstruction modules that can be
 used for any tracking detector. The tracking detector geometry description is
 optimized for efficient navigation and fast extrapolation of tracks. Converters
 for several common geometry description packages are available. In addition to

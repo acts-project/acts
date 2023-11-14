@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridXY, {binX, binY}, cOptions);
-  BOOST_CHECK(pGrid._type == actsvg::proto::grid::type::e_x_y);
+  BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
   auto edgesX = axisX.getBinEdges();
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridXY, {binX, binY}, cOptions);
-  BOOST_CHECK(pGrid._type == actsvg::proto::grid::type::e_x_y);
+  BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
   auto edgesX = axisX.getBinEdges();
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridZPhi, {binZ, binPhi}, cOptions);
-  BOOST_CHECK(pGrid._type == actsvg::proto::grid::type::e_z_phi);
+  BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_z_phi);
 
   pGrid._reference_r = 80.;
 
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridRPhi, {binR, binPhi}, cOptions);
-  BOOST_CHECK(pGrid._type == actsvg::proto::grid::type::e_r_phi);
+  BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_r_phi);
 
   // Labelling the grid tiles
   auto edgesR = axisR.getBinEdges();

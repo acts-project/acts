@@ -1,6 +1,6 @@
 add_library(
   ActsFatras SHARED
-  src/Digitization/Channelizer.cpp
+  src/Digitization/Segmentizer.cpp
   src/Digitization/DigitizationError.cpp
   src/Digitization/PlanarSurfaceMask.cpp
   src/Digitization/PlanarSurfaceDrift.cpp
