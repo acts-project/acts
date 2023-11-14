@@ -229,13 +229,11 @@ class Delegate<R(Args...), H, O> {
                   "Callable given does not correspond exactly to required call "
                   "signature");
 
-    if constexpr (kOwnership == DelegateType::Owning) {
-      m_payload.payload = std::unique_ptr<const holder_type, deleter_type>(
-          instance.release(), [](const holder_type *payload) {
-            const auto *concretePayload = static_cast<const Type *>(payload);
-            delete concretePayload;
-          });
-    }
+    m_payload.payload = std::unique_ptr<const holder_type, deleter_type>(
+        instance.release(), [](const holder_type *payload) {
+          const auto *concretePayload = static_cast<const Type *>(payload);
+          delete concretePayload;
+        });
 
     m_function = [](const holder_type *payload, Args... args) -> return_type {
       assert(payload != nullptr && "Payload is required, but not set");
