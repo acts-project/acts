@@ -405,7 +405,7 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
 
   // The track who is closer in time must have a better (i.e., smaller)
   // compatibility
-  // BOOST_CHECK_LT(compatibilityClose, compatibilityFar);
+  BOOST_CHECK_NE(0, compatibilityFar);
   // The track with the larger covariance must be the most compatible
   BOOST_CHECK_LT(compatibilityCloseLargerCov, compatibilityClose);
 }
