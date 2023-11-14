@@ -213,19 +213,19 @@ class ConstPodioTrackStateContainer final
     if (std::find(available.begin(), available.end(), trackStatesKey) ==
         available.end()) {
       throw std::runtime_error{"Track state collection '" + trackStatesKey +
-                               "'not found in frame"};
+                               "' not found in frame"};
     }
 
     if (std::find(available.begin(), available.end(), paramsKey) ==
         available.end()) {
       throw std::runtime_error{"Track state parameters collection '" +
-                               paramsKey + "'not found in frame"};
+                               paramsKey + "' not found in frame"};
     }
 
     if (std::find(available.begin(), available.end(), jacsKey) ==
         available.end()) {
       throw std::runtime_error{"Track state jacobian collection '" + jacsKey +
-                               "'not found in frame"};
+                               "' not found in frame"};
     }
 
     loadCollection<ActsPodioEdm::TrackStateCollection>(m_collection, frame,
