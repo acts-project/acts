@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
   std::vector<std::array<unsigned int, 4u> > zphiBinning = {
       {1u, 1u, 0u, 0u}, {14u, 52u, 1u, 1u}, {28u, 104u, 0u, 0u}};
 
-  size_t itest = 0;
+  std::size_t itest = 0;
   for (auto [nz, nphi, ez, ephi] : zphiBinning) {
     // Create an XML from it
     std::ofstream cxml;

@@ -66,7 +66,7 @@ void ActsExamples::identifyContributingParticles(
 
 void ActsExamples::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-    const Trajectories& trajectories, size_t tip,
+    const Trajectories& trajectories, std::size_t tip,
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
 

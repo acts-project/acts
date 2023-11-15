@@ -37,7 +37,7 @@ template <bool ascending, bool strict, typename T, T... values>
 struct are_sorted;
 template <typename T, T MIN, T MAX, T... values>
 struct are_within;
-template <typename T, size_t index, T... values>
+template <typename T, std::size_t index, T... values>
 struct at_index;
 }  // namespace detail
 

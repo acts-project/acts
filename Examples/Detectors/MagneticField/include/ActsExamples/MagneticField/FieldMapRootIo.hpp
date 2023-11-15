@@ -34,7 +34,7 @@ namespace ActsExamples {
 ///
 /// @code
 /// In this case the function would look like:
-/// [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
+/// [](std::array<std::size_t, 2> binsRZ, std::array<std::size_t, 2> nBinsRZ) {
 ///    return (binsRZ.at(0) * nBinsRZ.at(1) + binsRZ.at(1));
 /// }
 /// @endcode
@@ -53,8 +53,8 @@ namespace ActsExamples {
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromRoot(
-    const std::function<size_t(std::array<size_t, 2> binsRZ,
-                               std::array<size_t, 2> nBinsRZ)>&
+    const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
+                                    std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
     Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
@@ -80,7 +80,8 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromRoot(
 ///
 /// @code
 /// In this case the function would look like:
-/// [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
+/// [](std::array<std::size_t, 3> binsXYZ, std::array<std::size_t, 3> nBinsXYZ)
+/// {
 ///   return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2))
 ///        + binsXYZ.at(1) * nBinsXYZ.at(2)
 ///        + binsXYZ.at(2));
@@ -100,8 +101,8 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromRoot(
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 detail::InterpolatedMagneticField3 makeMagneticFieldMapXyzFromRoot(
-    const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                               std::array<size_t, 3> nBinsXYZ)>&
+    const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
+                                    std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
     Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
