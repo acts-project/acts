@@ -177,8 +177,8 @@ predicate_result compare(const Container& val, const Container& ref,
                          ScalarComparison&& compareImpl) {
   // Make sure that the two input containers have the same number of items
   // (in order to provide better error reporting when they don't)
-  size_t numVals = std::distance(std::cbegin(val), std::cend(val));
-  size_t numRefs = std::distance(std::cbegin(ref), std::cend(ref));
+  std::size_t numVals = std::distance(std::cbegin(val), std::cend(val));
+  std::size_t numRefs = std::distance(std::cbegin(ref), std::cend(ref));
   if (numVals != numRefs) {
     predicate_result res(false);
     res.message() << "The container size does not match (value has " << numVals

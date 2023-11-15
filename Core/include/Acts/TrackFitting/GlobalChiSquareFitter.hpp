@@ -645,7 +645,7 @@ class Gx2Fitter {
     // Iterate the fit and improve result. Abort after n steps or after
     // convergence
     // nUpdate is initialized outside to save its state for the track
-    size_t nUpdate = 0;
+    std::size_t nUpdate = 0;
     for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       ACTS_VERBOSE("nUpdate = " << nUpdate + 1 << "/"
                                 << gx2fOptions.nUpdateMax);
@@ -757,7 +757,7 @@ class Gx2Fitter {
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
     bool aMatrixIsInvertible = false;
     if (gx2fOptions.zeroField) {
-      constexpr size_t reducedMatrixSize = 4;
+      constexpr std::size_t reducedMatrixSize = 4;
 
       auto safeReducedCovariance = safeInverse(
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
@@ -768,7 +768,7 @@ class Gx2Fitter {
             *safeReducedCovariance;
       }
     } else {
-      constexpr size_t reducedMatrixSize = 5;
+      constexpr std::size_t reducedMatrixSize = 5;
 
       auto safeReducedCovariance = safeInverse(
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
@@ -788,7 +788,7 @@ class Gx2Fitter {
     ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
 
     if (!trackContainer.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
-      trackContainer.template addColumn<size_t>("Gx2fnUpdateColumn");
+      trackContainer.template addColumn<std::size_t>("Gx2fnUpdateColumn");
     }
 
     // Prepare track for return

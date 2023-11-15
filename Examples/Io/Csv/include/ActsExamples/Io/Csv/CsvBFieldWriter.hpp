@@ -59,7 +59,7 @@ class CsvBFieldWriter {
     ///
     /// Set the number of scalars in our coordinates to 3 if we have 3D
     /// Cartesian coordinates, or 2 for cylindrical.
-    static constexpr size_t NDims = Coord == CoordinateType::RZ ? 2 : 3;
+    static constexpr std::size_t NDims = Coord == CoordinateType::RZ ? 2 : 3;
 
     /// @brief Output file to write the magnetic field to.
     std::string fileName = "bfield.csv";
@@ -75,7 +75,7 @@ class CsvBFieldWriter {
     ///
     /// The same logic as above holds for the ranges, use the user-supplied
     /// value if available, otherwise use the value from the grid.
-    std::array<Functor<size_t>, NDims> bins{};
+    std::array<Functor<std::size_t>, NDims> bins{};
 
     /// @brief Magnetic field to read from.
     ///

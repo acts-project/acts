@@ -76,7 +76,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 
   Acts::GainMatrixUpdater updater;
 
-  size_t maxComponents = 0;
+  std::size_t maxComponents = 0;
   double weightCutoff = 0;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;

@@ -92,14 +92,14 @@ ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
 void packCovariance(const ActsSquareMatrix<6>& from, float* to) {
   for (int i = 0; i < from.rows(); i++) {
     for (int j = 0; j <= i; j++) {
-      size_t k = (i + 1) * i / 2 + j;
+      std::size_t k = (i + 1) * i / 2 + j;
       to[k] = from(i, j);
     }
   }
 }
 
 void unpackCovariance(const float* from, ActsSquareMatrix<6>& to) {
-  auto k = [](size_t i, size_t j) { return (i + 1) * i / 2 + j; };
+  auto k = [](std::size_t i, std::size_t j) { return (i + 1) * i / 2 + j; };
   for (int i = 0; i < to.rows(); i++) {
     for (int j = 0; j < to.cols(); j++) {
       to(i, j) = from[j <= i ? k(i, j) : k(j, i)];

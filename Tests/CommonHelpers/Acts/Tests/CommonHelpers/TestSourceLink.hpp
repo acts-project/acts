@@ -37,7 +37,7 @@ namespace Test {
 /// this is interpreted depends on the specific tests.
 struct TestSourceLink final {
   GeometryIdentifier m_geometryId{};
-  size_t sourceId = 0u;
+  std::size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
   Acts::ActsVector<2> parameters;
@@ -45,7 +45,8 @@ struct TestSourceLink final {
 
   /// Construct a source link for a 1d measurement.
   TestSourceLink(BoundIndices idx, ActsScalar val, ActsScalar var,
-                 GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
+                 GeometryIdentifier gid = GeometryIdentifier(),
+                 std::size_t sid = 0u)
       : m_geometryId(gid),
         sourceId(sid),
         indices{idx, eBoundSize},
@@ -55,7 +56,8 @@ struct TestSourceLink final {
   TestSourceLink(BoundIndices idx0, BoundIndices idx1,
                  const Acts::ActsVector<2>& params,
                  const Acts::ActsSquareMatrix<2>& cov,
-                 GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
+                 GeometryIdentifier gid = GeometryIdentifier(),
+                 std::size_t sid = 0u)
       : m_geometryId(gid),
         sourceId(sid),
         indices{idx0, idx1},
@@ -68,7 +70,7 @@ struct TestSourceLink final {
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
 
-  constexpr size_t index() const { return sourceId; }
+  constexpr std::size_t index() const { return sourceId; }
 
   struct SurfaceAccessor {
     const Acts::TrackingGeometry& trackingGeometry;

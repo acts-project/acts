@@ -21,7 +21,7 @@ namespace Test {
 /// Generate a random parameters vector and covariance matrix.
 ///
 /// @return std:::pair<ParametersVector, CovarianceMatrix>
-template <typename scalar_t, size_t kSize, typename generator_t>
+template <typename scalar_t, std::size_t kSize, typename generator_t>
 inline auto generateParametersCovariance(generator_t& rng)
     -> std::pair<Eigen::Matrix<scalar_t, kSize, 1>,
                  Eigen::Matrix<scalar_t, kSize, kSize>> {
