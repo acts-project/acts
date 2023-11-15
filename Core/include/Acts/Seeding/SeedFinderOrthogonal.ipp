@@ -85,9 +85,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
   res[DimPhi].shrinkMin(pL - m_config.deltaPhiMax);
   res[DimPhi].shrinkMax(pL + m_config.deltaPhiMax);
 
-  /*
-   * Cut: Ensure that z-distance between SPs is within max and min values.
-   */
+  // Cut: Ensure that z-distance between SPs is within max and min values.
   res[DimZ].shrinkMin(zL - m_config.deltaZMax);
   res[DimZ].shrinkMax(zL + m_config.deltaZMax);
 
