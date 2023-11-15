@@ -114,7 +114,7 @@ std::shared_ptr<TrackFitterFunction> makeGlobalChiSquareFitterFunction(
     bool multipleScattering = true, bool energyLoss = true,
     Acts::FreeToBoundCorrection freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
-    size_t nUpdateMax = 5, bool zeroField = false,
+    std::size_t nUpdateMax = 5, bool zeroField = false,
     double relChi2changeCutOff = 1e-7,
     const Acts::Logger& logger = *Acts::getDefaultLogger("Gx2f",
                                                          Acts::Logging::INFO));
