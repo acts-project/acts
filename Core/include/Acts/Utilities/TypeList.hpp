@@ -8,9 +8,8 @@
 
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
-
-#include <stdlib.h>
 
 namespace Acts {
 
