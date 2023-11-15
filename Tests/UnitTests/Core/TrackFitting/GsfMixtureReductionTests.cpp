@@ -163,3 +163,27 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(cmps[0].weight, 1.0, 1.e-8);
 }
+
+BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
+  auto dummy = Acts::Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0},
+                                                       Vector3{1, 0, 0});
+  std::vector<GsfComponent> cmps;
+
+  // weights do not need to be normalized for this test
+  for (auto w : {1.0, 2.0, 3.0, 4.0}) {
+    GsfComponent a;
+    a.boundPars = BoundVector::Zero();
+    a.boundCov = BoundSquareMatrix::Identity();
+    a.weight = w;
+    cmps.push_back(a);
+  }
+
+  Acts::reduceMixtureLargestWeights(cmps, 2, *dummy);
+
+  BOOST_CHECK_EQUAL(cmps.size(), 2);
+  std::sort(cmps.begin(), cmps.end(),
+            [](const auto &a, const auto &b) { return a.weight < b.weight; });
+
+  BOOST_CHECK_EQUAL(cmps[0].weight, 3.0);
+  BOOST_CHECK_EQUAL(cmps[1].weight, 4.0);
+}

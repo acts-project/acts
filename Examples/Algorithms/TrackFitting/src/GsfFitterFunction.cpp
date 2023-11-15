@@ -120,6 +120,10 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
             &m_slSurfaceAccessor);
     switch (reductionAlg) {
+      case MixtureReductionAlgorithm::weightCut: {
+        gsfOptions.extensions.mixtureReducer
+            .connect<&Acts::reduceMixtureLargestWeights>();
+      } break;
       case MixtureReductionAlgorithm::KLDistance: {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureWithKLDistance>();

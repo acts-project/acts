@@ -75,7 +75,7 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
 using BetheHeitlerApprox = Acts::AtlasBetheHeitlerApprox<6, 5>;
 
 /// Available algorithms for the mixture reduction
-enum class MixtureReductionAlgorithm { KLDistance };
+enum class MixtureReductionAlgorithm { weightCut, KLDistance };
 
 /// Makes a fitter function object for the GSF
 ///
