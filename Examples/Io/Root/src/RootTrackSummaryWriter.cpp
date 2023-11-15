@@ -488,8 +488,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     }
 
     if (tracks.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
-      int nUpdate = static_cast<int>(track.
-          template component<std::size_t, Acts::hashString("Gx2fnUpdateColumn")>());
+      int nUpdate = static_cast<int>(
+          track.template component<std::size_t,
+                                   Acts::hashString("Gx2fnUpdateColumn")>());
       m_nUpdatesGx2f.push_back(nUpdate);
     } else {
       m_nUpdatesGx2f.push_back(-1);

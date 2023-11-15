@@ -227,7 +227,7 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   std::vector<float> m_cov_eT_eQOP;
   std::vector<float> m_cov_eT_eT;
 
-  std::vector<int> m_nUpdatesGx2f; ///< The number of updates (gx2f)
+  std::vector<int> m_nUpdatesGx2f;  ///< The number of updates (gx2f)
 };
 
 }  // namespace ActsExamples
