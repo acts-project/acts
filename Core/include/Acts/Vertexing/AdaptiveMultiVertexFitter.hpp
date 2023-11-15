@@ -137,7 +137,7 @@ class AdaptiveMultiVertexFitter {
     bool doSmoothing{false};
 
     // Use time information when calculating the vertex compatibility
-    bool useTime{true};
+    bool useTime{false};
   };
 
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
