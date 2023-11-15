@@ -195,7 +195,7 @@ void unrollConvert(const GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
                    const Experimental::SurfaceCandidatesUpdator& delegate,
-                   TypeList<Args...>) {
+                   TypeList<Args...> /*unused*/) {
   (convert(gctx, surfaces, cOptions, sgi, delegate, Args{}), ...);
 }
 

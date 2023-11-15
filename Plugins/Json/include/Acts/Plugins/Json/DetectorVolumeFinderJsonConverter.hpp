@@ -66,7 +66,7 @@ void convert(nlohmann::json& jIndexedVolumes,
 template <typename... Args>
 void unrollConvert(nlohmann::json& jIndexedVolumes,
                    const Experimental::DetectorVolumeUpdator& delegate,
-                   bool detray, TypeList<Args...>) {
+                   bool detray, TypeList<Args...> /*unused*/) {
   (convert(jIndexedVolumes, delegate, detray, Args{}), ...);
 }
 

@@ -79,7 +79,7 @@ void convert(nlohmann::json& jIndexedSurfaces,
 template <typename... Args>
 void unrollConvert(nlohmann::json& jIndexedSurfaces,
                    const Experimental::SurfaceCandidatesUpdator& delegate,
-                   bool detray, TypeList<Args...>) {
+                   bool detray, TypeList<Args...> /*unused*/) {
   (convert(jIndexedSurfaces, delegate, detray, Args{}), ...);
 }
 
