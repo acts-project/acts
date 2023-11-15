@@ -110,12 +110,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
   const auto& particles = m_inputParticles(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
-  size_t nSeeds = seeds.size();
-  size_t nMatchedSeeds = 0;
+  std::size_t nSeeds = seeds.size();
+  std::size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
-  std::unordered_map<ActsFatras::Barcode, size_t> truthCount;
+  std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
 
-  for (size_t itrack = 0; itrack < seeds.size(); ++itrack) {
+  for (std::size_t itrack = 0; itrack < seeds.size(); ++itrack) {
     const auto& seed = seeds[itrack];
     const auto track = seedToPrototrack(seed);
     std::vector<ParticleHitCount> particleHitCounts;

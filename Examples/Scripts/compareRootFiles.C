@@ -208,9 +208,9 @@ compareRootFiles(std::string file1,
               << std::endl;
 
     std::cout << "    o Comparing tree-wide metadata..." << std::endl;
-    const size_t t1EntryCount = tree1->GetEntries();
+    const std::size_t t1EntryCount = tree1->GetEntries();
     {
-      const size_t t2EntryCount = tree2->GetEntries();
+      const std::size_t t2EntryCount = tree2->GetEntries();
       CHECK_EQUAL(t1EntryCount,
                   t2EntryCount,
                   "      ~ Number of entries does not match!");
@@ -307,7 +307,7 @@ compareRootFiles(std::string file1,
     }
 
     std::cout << "    o Reading event data..." << std::endl;
-    for (size_t i = 0; i < t1EntryCount; ++i) {
+    for (std::size_t i = 0; i < t1EntryCount; ++i) {
       // Move to the next TTree entry (= next event)
       t1Reader.Next();
       t2Reader.Next();
@@ -322,8 +322,8 @@ compareRootFiles(std::string file1,
     {
       std::cout << "      ~ Defining event comparison operator..." << std::endl;
       IndexComparator t1CompareEvents
-          = [&branchComparisonHarnesses](size_t i,
-                                         size_t j) -> Ordering {
+          = [&branchComparisonHarnesses](std::size_t i,
+                                         std::size_t j) -> Ordering {
         for (auto& branchHarness : branchComparisonHarnesses) {
           const auto order = branchHarness.sortHarness.first.first(i, j);
           if (order != Ordering::EQUAL) { return order; }
@@ -333,7 +333,7 @@ compareRootFiles(std::string file1,
 
       std::cout << "      ~ Defining event swapping operator..." << std::endl;
       IndexSwapper t1SwapEvents
-          = [&branchComparisonHarnesses](size_t i, size_t j) {
+          = [&branchComparisonHarnesses](std::size_t i, std::size_t j) {
               for (auto& branchHarness : branchComparisonHarnesses) {
                 branchHarness.sortHarness.first.second(i, j);
               }
@@ -347,8 +347,8 @@ compareRootFiles(std::string file1,
     {
       std::cout << "      ~ Defining event comparison operator..." << std::endl;
       IndexComparator t2CompareEvents
-          = [&branchComparisonHarnesses](size_t i,
-                                         size_t j) -> Ordering {
+          = [&branchComparisonHarnesses](std::size_t i,
+                                         std::size_t j) -> Ordering {
         for (auto& branchHarness : branchComparisonHarnesses) {
           const auto order = branchHarness.sortHarness.second.first(i, j);
           if (order != Ordering::EQUAL) { return order; }
@@ -358,7 +358,7 @@ compareRootFiles(std::string file1,
 
       std::cout << "      ~ Defining event swapping operator..." << std::endl;
       IndexSwapper t2SwapEvents
-          = [&branchComparisonHarnesses](size_t i, size_t j) {
+          = [&branchComparisonHarnesses](std::size_t i, std::size_t j) {
               for (auto& branchHarness : branchComparisonHarnesses) {
                 branchHarness.sortHarness.second.second(i, j);
               }

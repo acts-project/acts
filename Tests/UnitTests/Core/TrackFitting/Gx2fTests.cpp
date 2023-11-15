@@ -75,7 +75,7 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 }
 
 std::shared_ptr<const TrackingGeometry> makeToyDetector(
-    const GeometryContext& tgContext, const size_t nSurfaces = 5) {
+    const GeometryContext& tgContext, const std::size_t nSurfaces = 5) {
   if (nSurfaces < 1) {
     throw std::invalid_argument("At least 1 surfaces needs to be created.");
   }
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   std::default_random_engine rng(42);
 
   Detector detector;
-  const size_t nSurfaces = 5;
+  const std::size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
   auto parametersMeasurements = makeParameters();
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  const size_t nSurfaces = 5;
+  const std::size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  const size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 7;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  const size_t nSurfaces = 5;
+  const std::size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  const size_t nSurfaces = 5;
+  const std::size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
