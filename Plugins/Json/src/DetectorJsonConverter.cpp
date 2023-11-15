@@ -32,7 +32,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
 
   nlohmann::json jDetector;
 
-  size_t nSurfaces = 0;
+  std::size_t nSurfaces = 0;
   std::vector<const Experimental::Portal*> portals;
 
   for (const auto* volume : detector.volumes()) {
@@ -93,7 +93,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   nlohmann::json jDetector;
   nlohmann::json jData;
 
-  size_t nSurfaces = 0;
+  std::size_t nSurfaces = 0;
 
   auto volumes = detector.volumes();
 
@@ -115,7 +115,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   nlohmann::json jVolumeGrid;
   nlohmann::json jVolumeGridAxes;
   jVolumeGrid["axes"] = jVolumeGridAxes;
-  jVolumeGrid["entries"] = std::vector<size_t>{};
+  jVolumeGrid["entries"] = std::vector<std::size_t>{};
   jVolumeGridParent["grid"] = jVolumeGrid;
   jData["volume_grid"] = jVolumeGridParent;
 
@@ -162,7 +162,7 @@ Acts::DetectorJsonConverter::fromJson(const GeometryContext& gctx,
   for (auto [iv, v] : enumerate(volumes)) {
     // Get the Volumes and update the portals with the loaded ones
     auto jVolume = jVolumes[iv];
-    std::vector<size_t> portalLinks = jVolume["portal_links"];
+    std::vector<std::size_t> portalLinks = jVolume["portal_links"];
     for (auto [ip, ipl] : enumerate(portalLinks)) {
       auto portal = portals[ipl];
       v->updatePortal(portal, ip);

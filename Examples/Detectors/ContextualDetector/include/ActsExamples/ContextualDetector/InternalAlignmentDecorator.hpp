@@ -79,10 +79,10 @@ class InternalAlignmentDecorator : public AlignmentDecorator {
   ///< Protect multiple alignments to be loaded at once
   std::mutex m_alignmentMutex;
   struct IovStatus {
-    size_t lastAccessed;
+    std::size_t lastAccessed;
   };
   std::unordered_map<unsigned int, IovStatus> m_activeIovs;
-  size_t m_eventsSeen{0};
+  std::size_t m_eventsSeen{0};
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
