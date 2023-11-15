@@ -62,7 +62,7 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
       dTrees;
   if (!m_cfg.boundIndices.empty()) {
     ACTS_DEBUG("Bound indices are declared, preparing trees.");
-    for (size_t ikv = 0; ikv < m_cfg.boundIndices.size(); ++ikv) {
+    for (std::size_t ikv = 0; ikv < m_cfg.boundIndices.size(); ++ikv) {
       auto geoID = m_cfg.boundIndices.idAt(ikv);
       auto bIndices = m_cfg.boundIndices.valueAt(ikv);
       auto dTree = std::make_unique<DigitizationTree>(geoID);

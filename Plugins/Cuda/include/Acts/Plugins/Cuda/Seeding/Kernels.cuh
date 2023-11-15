@@ -57,6 +57,7 @@ void searchTriplet(
     const int* nTrplPerSpBLimit_cpu, const int* nTrplPerSpBLimit_cuda,
     const float* deltaInvHelixDiameter, const float* impactWeightFactor,
     const float* deltaRMin, const float* compatSeedWeight,
-    const size_t* compatSeedLimit_cpu, const size_t* compatSeedLimit_cuda,
-    int* nTrplPerSpM, Triplet* TripletsPerSpM, cudaStream_t* stream);
+    const std::size_t* compatSeedLimit_cpu,
+    const std::size_t* compatSeedLimit_cuda, int* nTrplPerSpM,
+    Triplet* TripletsPerSpM, cudaStream_t* stream);
 }  // namespace Acts

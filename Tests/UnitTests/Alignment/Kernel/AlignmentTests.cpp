@@ -247,7 +247,7 @@ struct KalmanFitterInputTrajectory {
 /// Function to create trajectories for kalman fitter
 ///
 std::vector<KalmanFitterInputTrajectory> createTrajectories(
-    std::shared_ptr<const TrackingGeometry> geo, size_t nTrajectories) {
+    std::shared_ptr<const TrackingGeometry> geo, std::size_t nTrajectories) {
   // simulation propagator
   const auto simPropagator = makeStraightPropagator(std::move(geo));
 
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Set the surfaces to be aligned (fix the layer 8)
   unsigned int iSurface = 0;
-  std::unordered_map<const Surface*, size_t> idxedAlignSurfaces;
+  std::unordered_map<const Surface*, std::size_t> idxedAlignSurfaces;
   // Loop over the detector elements
   for (auto& det : detector.detectorStore) {
     const auto& surface = det->surface();

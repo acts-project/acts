@@ -26,10 +26,10 @@ struct getSize {};
 
 template <typename... Ts>
 struct getSize<TypeList<Ts...>>
-    : std::integral_constant<size_t, sizeof...(Ts)> {};
+    : std::integral_constant<std::size_t, sizeof...(Ts)> {};
 
 template <typename L>
-constexpr inline size_t size{getSize<L>()};
+constexpr inline std::size_t size{getSize<L>()};
 /// @}
 
 /// Access the first type
