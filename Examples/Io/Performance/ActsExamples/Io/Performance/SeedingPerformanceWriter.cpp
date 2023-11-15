@@ -95,8 +95,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
       "/ nMatchedParticles) = "
       << aveNDuplicatedSeeds);
 
-  auto write_float = [&](float f, const char* name) {
-    std::vector<float> v {f};
+  auto writeFloat = [&](float f, const char* name) {
+    std::vector<float> v{f};
     m_outputFile->WriteObject(&v, name);
   };
 
@@ -104,10 +104,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
-    write_float(eff, "eff_seeds");
-    write_float(fakeRate, "fakerate_seeds");
-    write_float(duplicationRate, "duplicaterate_seeds");
-    write_float(totalSeedPurity, "purity_seeds");
+    writeFloat(eff, "eff_seeds");
+    writeFloat(fakeRate, "fakerate_seeds");
+    writeFloat(duplicationRate, "duplicaterate_seeds");
+    writeFloat(totalSeedPurity, "purity_seeds");
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
   return ProcessCode::SUCCESS;
