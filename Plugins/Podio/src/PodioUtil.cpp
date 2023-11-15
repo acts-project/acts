@@ -39,12 +39,12 @@ namespace {
 template <typename bounds_t>
 std::shared_ptr<const bounds_t> createBounds(
     const ActsPodioEdm::Surface& surface) {
-  constexpr size_t S = bounds_t::eSize;
+  constexpr std::size_t S = bounds_t::eSize;
   throw_assert(surface.boundValuesSize == S,
                "Unexpected number of bound values");
 
   std::array<double, S> values{};
-  for (size_t i = 0; i < S; i++) {
+  for (std::size_t i = 0; i < S; i++) {
     values.at(i) = surface.boundValues.at(i);
   }
   return std::make_shared<bounds_t>(values);
@@ -73,7 +73,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
       throw std::runtime_error{"Too many bound values to store"};
     }
 
-    for (size_t i = 0; i < values.size(); i++) {
+    for (std::size_t i = 0; i < values.size(); i++) {
       result.boundValues.at(i) = values.at(i);
     }
     result.boundValuesSize = values.size();
@@ -174,8 +174,8 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
           break;
         case B::eConvexPolygon:
           template_switch_lambda<6, 32>(surface.boundValuesSize, [&](auto N) {
-            constexpr size_t nValues = decltype(N)::value;
-            constexpr size_t nVertices = nValues / 2;
+            constexpr std::size_t nValues = decltype(N)::value;
+            constexpr std::size_t nVertices = nValues / 2;
             pBounds = createBounds<ConvexPolygonBounds<nVertices>>(surface);
           });
           // @TODO: Maybe handle dynamic convex polygons?

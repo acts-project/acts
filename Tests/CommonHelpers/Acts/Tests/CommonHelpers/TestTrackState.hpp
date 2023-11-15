@@ -31,9 +31,9 @@ struct TestTrackState {
   // Generate a random TestTrackState.
   //
   // @param rng Random number generator
-  // @param size_t nMeasurement either 1 or 2
+  // @param std::size_t nMeasurement either 1 or 2
   template <typename rng_t>
-  TestTrackState(rng_t& rng, size_t measdim)
+  TestTrackState(rng_t& rng, std::size_t measdim)
       : surface(Surface::makeShared<PlaneSurface>(Vector3::Zero(),
                                                   Vector3::UnitZ())),
         // set bogus parameters first since they are not default-constructible

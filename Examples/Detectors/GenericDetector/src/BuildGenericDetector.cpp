@@ -29,12 +29,12 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
   double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
   double zStep = 2 * std::abs(zStart) / (nZbins - 1);
   // loop over the bins
-  for (size_t zBin = 0; zBin < size_t(nZbins); ++zBin) {
+  for (std::size_t zBin = 0; zBin < std::size_t(nZbins); ++zBin) {
     // prepare z and r
     double moduleZ = zStart + zBin * zStep;
     double moduleR =
         (zBin % 2) != 0u ? radius - 0.5 * zStagger : radius + 0.5 * zStagger;
-    for (size_t phiBin = 0; phiBin < size_t(nPhiBins); ++phiBin) {
+    for (std::size_t phiBin = 0; phiBin < std::size_t(nPhiBins); ++phiBin) {
       // calculate the current phi value
       double modulePhi = minPhi + phiBin * phiStep;
       mPositions.push_back(Acts::Vector3(moduleR * cos(modulePhi),
@@ -48,7 +48,7 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
 std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
     double z, double ringStagger, std::vector<double> phiStagger,
     std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
-    const std::vector<size_t>& discBinning,
+    const std::vector<std::size_t>& discBinning,
     const std::vector<double>& moduleHalfLength) {
   // calculate the radii
   std::vector<double> radii;
@@ -87,7 +87,7 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
   }
   // now prepare the return method
   std::vector<std::vector<Acts::Vector3>> mPositions;
-  for (size_t ir = 0; ir < radii.size(); ++ir) {
+  for (std::size_t ir = 0; ir < radii.size(); ++ir) {
     // generate the z value
     // convention inner ring is closer to origin : makes sense
     double rz = radii.size() == 1 ? z
@@ -113,7 +113,7 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   double phiStep = 2 * M_PI / (nPhiBins);
   double minPhi = -M_PI + 0.5 * phiStep;
   // phi loop
-  for (size_t iphi = 0; iphi < size_t(nPhiBins); ++iphi) {
+  for (std::size_t iphi = 0; iphi < std::size_t(nPhiBins); ++iphi) {
     // if we have a phi sub stagger presents
     double rzs = 0.;
     // phi stagger affects 0 vs 1, 2 vs 3 ... etc

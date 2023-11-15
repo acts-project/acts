@@ -55,7 +55,7 @@ int processGeometry(int argc, char* argv[],
 
   // Now read the standard options
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
-  size_t nEvents =
+  std::size_t nEvents =
       ActsExamples::Options::readSequencerConfig(vm).events.value_or(1);
 
   // The geometry, material and decoration
@@ -65,13 +65,13 @@ int processGeometry(int argc, char* argv[],
 
   // The detectors
   auto volumeLogLevel =
-      Acts::Logging::Level(vm["geo-volume-loglevel"].as<size_t>());
+      Acts::Logging::Level(vm["geo-volume-loglevel"].as<std::size_t>());
 
-  for (size_t ievt = 0; ievt < nEvents; ++ievt) {
+  for (std::size_t ievt = 0; ievt < nEvents; ++ievt) {
     // Setup the event and algorithm context
     ActsExamples::WhiteBoard eventStore(
         Acts::getDefaultLogger("EventStore#" + std::to_string(ievt), logLevel));
-    size_t ialg = 0;
+    std::size_t ialg = 0;
 
     // The geometry context
     ActsExamples::AlgorithmContext context(ialg, ievt, eventStore);

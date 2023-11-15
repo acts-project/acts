@@ -67,7 +67,7 @@ std::default_random_engine generator(42);
 void createDetector(GeometryContext& tgContext,
                     std::vector<const Surface*>& surfaces,
                     std::shared_ptr<const TrackingGeometry>& detector,
-                    const size_t nSurfaces = 7) {
+                    const std::size_t nSurfaces = 7) {
   using namespace UnitLiterals;
 
   if (nSurfaces < 1) {
@@ -224,7 +224,7 @@ static inline std::string testMeasurement(IVisualization3D& helper) {
   GeometryContext tgContext = GeometryContext();
 
   // Create a detector
-  const size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 7;
   std::vector<const Surface*> surfaces;
   std::shared_ptr<const TrackingGeometry> detector;
   createDetector(tgContext, surfaces, detector, nSurfaces);
@@ -285,7 +285,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   CalibrationContext calContext = CalibrationContext();
 
   // Create a detector
-  const size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 7;
   std::vector<const Surface*> surfaces;
   std::shared_ptr<const TrackingGeometry> detector;
   createDetector(tgContext, surfaces, detector, nSurfaces);

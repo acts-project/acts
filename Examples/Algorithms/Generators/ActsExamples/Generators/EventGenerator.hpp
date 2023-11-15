@@ -57,8 +57,8 @@ class EventGenerator final : public ActsExamples::IReader {
     /// @brief Generate the multiplicity of vertices
     ///
     /// @param rng Shared random number generator instance
-    /// @return size_t The multiplicity for the event
-    virtual size_t operator()(RandomEngine& rng) const = 0;
+    /// @return std::size_t The multiplicity for the event
+    virtual std::size_t operator()(RandomEngine& rng) const = 0;
   };
 
   /// @brief Generator interface for a vertex position
@@ -106,7 +106,7 @@ class EventGenerator final : public ActsExamples::IReader {
   /// Name of the reader.
   std::string name() const final;
   /// Available events range. Always return [0,SIZE_MAX) since we generate them.
-  std::pair<size_t, size_t> availableEvents() const final;
+  std::pair<std::size_t, std::size_t> availableEvents() const final;
   /// Generate an event.
   ProcessCode read(const AlgorithmContext& ctx) final;
 

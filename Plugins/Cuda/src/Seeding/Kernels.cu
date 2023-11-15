@@ -45,7 +45,8 @@ __global__ void cuSearchTriplet(
     const int* nTrplPerSpMLimit, const int* nTrplPerSpBLimit,
     const float* deltaInvHelixDiameter, const float* impactWeightFactor,
     const float* deltaRMin, const float* compatSeedWeight,
-    const size_t* compatSeedLimit, int* nTrplPerSpM, Triplet* TripletsPerSpM);
+    const std::size_t* compatSeedLimit, int* nTrplPerSpM,
+    Triplet* TripletsPerSpM);
 
 namespace Acts {
 
@@ -107,8 +108,9 @@ void searchTriplet(
     const int* nTrplPerSpBLimit_cpu, const int* nTrplPerSpBLimit_cuda,
     const float* deltaInvHelixDiameter, const float* impactWeightFactor,
     const float* deltaRMin, const float* compatSeedWeight,
-    const size_t* compatSeedLimit_cpu, const size_t* compatSeedLimit_cuda,
-    int* nTrplPerSpM, Triplet* TripletsPerSpM, cudaStream_t* stream) {
+    const std::size_t* compatSeedLimit_cpu,
+    const std::size_t* compatSeedLimit_cuda, int* nTrplPerSpM,
+    Triplet* TripletsPerSpM, cudaStream_t* stream) {
   if (grid.x == 0) {
     return;
   }
@@ -399,7 +401,8 @@ __global__ void cuSearchTriplet(
     const int* nTrplPerSpMLimit, const int* nTrplPerSpBLimit,
     const float* deltaInvHelixDiameter, const float* impactWeightFactor,
     const float* deltaRMin, const float* compatSeedWeight,
-    const size_t* compatSeedLimit, int* nTrplPerSpM, Triplet* TripletsPerSpM) {
+    const std::size_t* compatSeedLimit, int* nTrplPerSpM,
+    Triplet* TripletsPerSpM) {
   extern __shared__ Triplet sh[];
   Triplet* triplets = (Triplet*)sh;
   float* compatibleSeedR = (float*)&triplets[*nTrplPerSpBLimit];

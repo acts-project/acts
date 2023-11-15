@@ -100,7 +100,7 @@ struct GaussTrunc {
 struct GaussClipped {
   double sigma;
 
-  size_t maxAttemps = 1000;
+  std::size_t maxAttemps = 1000;
 
   std::pair<double, double> range = {std::numeric_limits<double>::lowest(),
                                      std::numeric_limits<double>::max()};
@@ -120,7 +120,7 @@ struct GaussClipped {
   Acts::Result<std::pair<double, double>> operator()(double value,
                                                      RandomEngine& rnd) const {
     std::normal_distribution<> dist{0., sigma};
-    for (size_t attempt = 0; attempt < maxAttemps; ++attempt) {
+    for (std::size_t attempt = 0; attempt < maxAttemps; ++attempt) {
       double svalue = value + dist(rnd);
       if (svalue >= range.first && svalue <= range.second) {
         return std::pair{svalue, dist.stddev()};
@@ -138,9 +138,10 @@ struct Uniform {
 
   /// Construct with a @param pitch standard deviation and @param range
   Uniform(double pitch, const std::pair<double, double>& range_)
-      : binningData(Acts::open, Acts::binX,
-                    static_cast<size_t>((range_.second - range_.first) / pitch),
-                    range_.first, range_.second) {}
+      : binningData(
+            Acts::open, Acts::binX,
+            static_cast<std::size_t>((range_.second - range_.first) / pitch),
+            range_.first, range_.second) {}
 
   /// Constructor with a binning data in order to get the bin borders.
   ///
@@ -175,9 +176,10 @@ struct Digital {
 
   /// Construct with a @param pitch standard deviation and @param range
   Digital(double pitch, const std::pair<double, double>& range_)
-      : binningData(Acts::open, Acts::binX,
-                    static_cast<size_t>((range_.second - range_.first) / pitch),
-                    range_.first, range_.second) {}
+      : binningData(
+            Acts::open, Acts::binX,
+            static_cast<std::size_t>((range_.second - range_.first) / pitch),
+            range_.first, range_.second) {}
 
   /// Constructor with a bin utility in order to get the bin borders.
   ///

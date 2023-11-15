@@ -84,7 +84,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
-  size_t nSpacePoints = 0;
+  std::size_t nSpacePoints = 0;
   for (const auto& isp : m_inputSpacePoints) {
     nSpacePoints += (*isp)(ctx).size();
   }
@@ -161,11 +161,11 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
     // between the bottom and top space point
     // @todo add the check of deltaZ
     bool seedFound = false;
-    std::array<size_t, 3> bestSPIndices{};
+    std::array<std::size_t, 3> bestSPIndices{};
     double maxDeltaR = std::numeric_limits<double>::min();
-    for (size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
-      for (size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
-        for (size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
+    for (std::size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
+      for (std::size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
+        for (std::size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
           double bmDeltaR = std::abs(spacePointsOnTrack[im]->r() -
                                      spacePointsOnTrack[ib]->r());
           double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
