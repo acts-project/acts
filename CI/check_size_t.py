@@ -29,7 +29,7 @@ def main():
         for filename in files:
             # get the full path of the file
             filepath = root / filename
-            if filepath.suffix not in (".hpp", ".cpp", ".ipp"):
+            if filepath.suffix not in (".hpp", ".cpp", ".ipp", ".h", ".C", ".c"):
                 continue
 
             if any([fnmatch(str(filepath), e) for e in args.exclude]):
