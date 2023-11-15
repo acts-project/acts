@@ -107,6 +107,7 @@ def run() -> None:
         "Acts::AbstractVolume",
         "Acts::AnnulusBounds",
         "Acts::DiamondBounds",
+        "Acts::RegularSurface",
         "Acts::ConvexPolygonBounds",
         "Acts::ConvexPolygonBoundsBase",
         "Acts::Logging::LevelOutputDecorator",
@@ -122,6 +123,8 @@ def run() -> None:
         "Acts::getDefaultLogger",
         "Acts::getDummyLogger",
         "Acts::makeDefaultBetheHeitlerApprox",
+        "Acts::reduceMixtureLargestWeights",
+        "Acts::reduceMixtureWithKLDistance",
         "Acts::convertDD4hepDetector",
     }
 
@@ -152,7 +155,7 @@ def run() -> None:
     # add members to their parents
 
     api_preamble = """
-    """
+"""
 
     with api_index_target.open("w") as fh:
         fh.write("# API Reference\n\n")

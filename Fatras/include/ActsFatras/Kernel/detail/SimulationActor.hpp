@@ -185,7 +185,8 @@ struct SimulationActor {
         // again: interact only if there is valid material to interact with
         if (slab) {
           // adapt material for non-zero incidence
-          auto normal = surface.normal(state.geoContext, local);
+          auto normal = surface.normal(state.geoContext, before.position(),
+                                       before.direction());
           // dot-product(unit normal, direction) = cos(incidence angle)
           // particle direction is normalized, not sure about surface normal
           auto cosIncidenceInv = normal.norm() / normal.dot(before.direction());
