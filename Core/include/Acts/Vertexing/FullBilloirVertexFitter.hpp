@@ -23,7 +23,7 @@ namespace Acts {
 /// @brief Vertex fitter class implementing the Billoir vertex fitter
 ///
 /// This class implements the Billoir vertex fitter from Ref. (1). It is also
-/// useful to have a look at Ref. (2). The cross-covariance matrix are derived
+/// useful to have a look at Ref. (2). The cross-covariance matrices are derived
 /// in Ref. (3). Note that the Billoir vertex fitter outputs one 4D vertex
 /// position and nTrack momenta at this very point.
 ///
