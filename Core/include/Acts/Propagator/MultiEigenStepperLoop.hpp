@@ -25,7 +25,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 

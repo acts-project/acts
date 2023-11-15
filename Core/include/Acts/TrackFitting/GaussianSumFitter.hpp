@@ -76,6 +76,20 @@ struct GaussianSumFitter {
   /// The actor type
   using GsfActor = detail::GsfActor<bethe_heitler_approx_t, traj_t>;
 
+  /// This allows to break the propagation by setting the navigationBreak
+  /// TODO refactor once we can do this more elegantly
+  struct NavigationBreakAborter {
+    NavigationBreakAborter() = default;
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
+                    const navigator_t& navigator,
+                    const Logger& /*logger*/) const {
+      return navigator.navigationBreak(state.navigation);
+    }
+  };
+
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t,
             typename track_container_t, template <typename> class holder_t>
@@ -92,7 +106,7 @@ struct GaussianSumFitter {
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
       using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
-      using Aborters = AbortList<>;
+      using Aborters = AbortList<NavigationBreakAborter>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
                                                       opts.magFieldContext);
@@ -147,7 +161,7 @@ struct GaussianSumFitter {
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
-      using Aborters = AbortList<EndOfWorldReached>;
+      using Aborters = AbortList<EndOfWorldReached, NavigationBreakAborter>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
                                                       opts.magFieldContext);
@@ -449,9 +463,9 @@ struct GaussianSumFitter {
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
 
-      const auto [finalPars, finalCov] = Acts::reduceGaussianMixture(
+      const auto [finalPars, finalCov] = detail::mergeGaussianMixture(
           params.components(), params.referenceSurface(),
-          options.stateReductionMethod, [](auto& t) {
+          options.componentMergeMethod, [](auto& t) {
             return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
           });
 
