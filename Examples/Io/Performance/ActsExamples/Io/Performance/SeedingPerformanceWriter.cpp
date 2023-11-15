@@ -22,8 +22,6 @@
 #include <vector>
 
 #include <TFile.h>
-#include <TVectorFfwd.h>
-#include <TVectorT.h>
 
 namespace ActsExamples {
 struct AlgorithmContext;
