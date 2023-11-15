@@ -245,7 +245,7 @@ class TryAllNavigator {
         state.options.direction * stepper.direction(state.stepping);
 
     double nearLimit = state.options.surfaceTolerance;
-    double farLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
+    double farLimit = std::numeric_limits<double>::max();
 
     std::vector<IntersectionCandidate> intersectionCandidates;
 
