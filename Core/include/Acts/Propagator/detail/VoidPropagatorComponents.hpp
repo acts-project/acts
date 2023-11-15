@@ -103,8 +103,10 @@ struct VoidNavigator {
   ///
   /// Empty call, compiler should optimise that
   template <typename propagator_state_t, typename stepper_t>
-  void postStep(propagator_state_t& /*state*/,
-                const stepper_t& /*stepper*/) const {}
+  bool postStep(propagator_state_t& /*state*/,
+                const stepper_t& /*stepper*/) const {
+    return true;
+  }
 };
 
 }  // namespace detail

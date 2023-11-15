@@ -127,18 +127,9 @@ void addPropagation(Context& ctx) {
   {
     auto stepper = py::class_<Acts::EigenStepper<>>(m, "EigenStepper");
     stepper.def(
-        // Add custom constructor lambda so that not specifying the overstep
-        // limit takes the default from C++ EigenStepper
-        py::init(
-            [](std::shared_ptr<const Acts::MagneticFieldProvider> bField,
-               std::optional<double> overstepLimit) -> Acts::EigenStepper<> {
-              if (overstepLimit) {
-                return {std::move(bField), overstepLimit.value()};
-              } else {
-                return {std::move(bField)};
-              }
-            }),
-        py::arg("bField"), py::arg("overstepLimit") = std::nullopt);
+        py::init([](std::shared_ptr<const Acts::MagneticFieldProvider> bField)
+                     -> Acts::EigenStepper<> { return {std::move(bField)}; }),
+        py::arg("bField"));
 
     addPropagator<Acts::EigenStepper<>, Acts::Navigator>(prop, "Eigen");
   }

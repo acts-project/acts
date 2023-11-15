@@ -39,6 +39,14 @@ class AnyIntersection {
     return std::get<intersection_t>(m_intersection).object();
   }
 
+  const Surface* representation() const {
+    return std::visit(
+        [](const auto& intersection) -> const Surface* {
+          return intersection.representation();
+        },
+        m_intersection);
+  }
+
   const Intersection3D& intersection() const {
     return std::visit(
         [](const auto& intersection) -> const Intersection3D& {
@@ -67,14 +75,6 @@ class AnyIntersection {
         m_intersection);
   }
 
-  const Surface* representation() const {
-    return std::visit(
-        [](const auto& intersection) -> const Surface* {
-          return intersection.representation();
-        },
-        m_intersection);
-  }
-
   std::uint8_t index() const {
     return std::visit(
         [](const auto& intersection) { return intersection.index(); },
@@ -95,6 +95,61 @@ class AnyIntersection {
 
  private:
   Any m_intersection;
+};
+
+class AnyMultiIntersection {
+ public:
+  using Any = std::variant<SurfaceMultiIntersection, LayerMultiIntersection,
+                           BoundaryMultiIntersection>;
+  using SplitIntersections =
+      boost::container::static_vector<AnyIntersection,
+                                      s_maximumNumberOfIntersections>;
+
+  AnyMultiIntersection(const Any& any) : m_multiIntersection(any) {}
+  AnyMultiIntersection(Any&& any) : m_multiIntersection(std::move(any)) {}
+
+  AnyIntersection operator[](std::uint8_t index) const {
+    return std::visit(
+        [&](const auto& intersection) {
+          return AnyIntersection(intersection[index]);
+        },
+        m_multiIntersection);
+  }
+
+  template <typename intersection_t>
+  bool checkType() const {
+    return std::holds_alternative<intersection_t>(m_multiIntersection);
+  }
+
+  std::size_t size() const {
+    return std::visit(
+        [](const auto& intersection) { return intersection.size(); },
+        m_multiIntersection);
+  }
+
+  template <typename intersection_t>
+  const typename intersection_t::Object* object() const {
+    return std::get<intersection_t>(m_multiIntersection).object();
+  }
+
+  const Surface* representation() const {
+    return std::visit(
+        [](const auto& intersection) -> const Surface* {
+          return intersection.representation();
+        },
+        m_multiIntersection);
+  }
+
+  SplitIntersections split() const {
+    SplitIntersections result;
+    for (std::size_t i = 0; i < size(); ++i) {
+      result.push_back(operator[](i));
+    }
+    return result;
+  }
+
+ private:
+  Any m_multiIntersection;
 };
 
 }  // namespace Acts

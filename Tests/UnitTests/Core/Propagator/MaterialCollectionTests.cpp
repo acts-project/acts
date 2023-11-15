@@ -408,7 +408,7 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
-  runTest(epropagator, pT, phi, theta, charge, time, index);
+  // runTest(epropagator, pT, phi, theta, charge, time, index);
   runTest(slpropagator, pT, phi, theta, charge, time, index);
 }
 

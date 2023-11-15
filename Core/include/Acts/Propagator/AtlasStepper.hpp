@@ -374,14 +374,6 @@ class AtlasStepper {
     return state.particleHypothesis;
   }
 
-  /// Overstep limit
-  ///
-  /// @param state The stepping state (thread-local cache)
-  double overstepLimit(const State& state) const {
-    (void)state;
-    return -m_overstepLimit;
-  }
-
   /// Time access
   double time(const State& state) const { return state.pVector[3]; }
 
@@ -1432,9 +1424,6 @@ class AtlasStepper {
 
  private:
   std::shared_ptr<const MagneticFieldProvider> m_bField;
-
-  /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = 100 * UnitConstants::um;
 };
 
 }  // namespace Acts

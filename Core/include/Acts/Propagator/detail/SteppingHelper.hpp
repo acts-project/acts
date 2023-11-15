@@ -53,11 +53,11 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     return Intersection3D::Status::onSurface;
   }
 
-  const double newLimit = stepper.overstepLimit(state);
+  const double nearLimit = std::numeric_limits<double>::lowest();
   const double farLimit = std::numeric_limits<double>::max();
 
   if (sIntersection && detail::checkIntersection(sIntersection.intersection(),
-                                                 newLimit, farLimit, logger)) {
+                                                 nearLimit, farLimit, logger)) {
     ACTS_VERBOSE("Surface is reachable");
     stepper.setStepSize(state, sIntersection.pathLength());
     return Intersection3D::Status::reachable;

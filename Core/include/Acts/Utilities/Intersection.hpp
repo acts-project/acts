@@ -246,6 +246,10 @@ class ObjectMultiIntersection {
     return {m_intersections[index], m_object, m_representation, index};
   }
 
+  constexpr const MultiIntersection3D& intersections() const {
+    return m_intersections;
+  }
+
   constexpr std::size_t size() const { return m_intersections.size(); }
 
   constexpr const object_t* object() const { return m_object; }

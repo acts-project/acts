@@ -72,7 +72,7 @@ struct PathLimitReached {
 struct SurfaceReached {
   const Surface* surface = nullptr;
   BoundaryCheck boundaryCheck = BoundaryCheck(true);
-  std::optional<double> overstepLimit;
+  double overstepLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
   SurfaceReached(double oLimit) : overstepLimit(oLimit) {}
@@ -103,8 +103,9 @@ struct SurfaceReached {
 
     // not using the stepper overstep limit here because it does not always work
     // for perigee surfaces
-    const double nearLimit =
-        overstepLimit.value_or(stepper.overstepLimit(state.stepping));
+    // note: the near limit is necessary for surfaces with more than one
+    // intersections in order to discard the ones which are behind us
+    const double nearLimit = overstepLimit;
     const double farLimit = std::numeric_limits<double>::max();
     const double tolerance = state.options.surfaceTolerance;
 
