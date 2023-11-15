@@ -103,6 +103,7 @@ void addTrackFitting(Context& ctx) {
 
     py::enum_<ActsExamples::MixtureReductionAlgorithm>(
         mex, "MixtureReductionAlgorithm")
+        .value("weightCut", MixtureReductionAlgorithm::weightCut)
         .value("KLDistance", MixtureReductionAlgorithm::KLDistance);
 
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
