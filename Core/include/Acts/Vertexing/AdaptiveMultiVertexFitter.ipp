@@ -93,7 +93,11 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     }  // End loop over vertex collection
 
     // Recalculate all track weights and update vertices
-    setWeightsAndUpdate(state, linearizer, vertexingOptions);
+    auto res = setWeightsAndUpdate(state, linearizer, vertexingOptions);
+
+    if (!res.ok()) {
+      return res.error();
+    }
 
     // Cool the system down, i.e., reduce the temperature parameter. At lower
     // temperatures, outlying tracks are downweighted more.
