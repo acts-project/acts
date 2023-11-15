@@ -22,9 +22,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SurfaceCollector.hpp"
+#include "Acts/Propagator/TryAllNavigator.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -41,6 +46,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <system_error>
 #include <tuple>
@@ -61,6 +67,7 @@ namespace Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// This is a simple cache struct to mimic the
 /// Propagator cache
@@ -73,10 +80,6 @@ struct PropagatorState {
     using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-    using BField = int;
-
-    template <typename, typename>
-    using return_parameter_type = void;
 
     /// This is a simple cache struct to mimic the
     /// Stepper cache in the propagation
@@ -298,10 +301,13 @@ void step(stepper_state_t& sstate) {
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
+const double Bz = 2_T;
+auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
+
 // the debug boolean
 bool debug = true;
 
-BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
+BOOST_AUTO_TEST_CASE(Navigator_preStep) {
   // position and direction vector
   Vector4 position4(0., 0., 0, 0);
   Vector3 momentum(1., 1., 0);
@@ -408,7 +414,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
+BOOST_AUTO_TEST_CASE(Navigator_postStep) {
   // create a navigator
   Navigator::Config navCfg;
   navCfg.trackingGeometry = tGeometry;
@@ -660,6 +666,394 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     std::cout << state.options.debugString << std::endl;
     state.options.debugString = "";
   }
+}
+
+using BField = ConstantBField;
+using EigenStepper = Acts::EigenStepper<>;
+using EigenPropagator = Propagator<EigenStepper, Navigator>;
+using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
+using ReferenceEigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
+using ReferenceStraightLinePropagator =
+    Propagator<StraightLineStepper, TryAllNavigator>;
+
+EigenStepper estepper(bField);
+StraightLineStepper slstepper;
+
+EigenPropagator epropagator(estepper, Navigator({tGeometry, true, true, true}));
+StraightLinePropagator slpropagator(slstepper,
+                                    Navigator({tGeometry, true, true, true}));
+ReferenceEigenPropagator refepropagator(estepper,
+                                        TryAllNavigator({tGeometry, true, true,
+                                                         true}));
+ReferenceStraightLinePropagator refslpropagator(
+    slstepper, TryAllNavigator({tGeometry, true, true, true}));
+
+const int ntests = 500;
+const int skip = 0;
+bool debugMode = false;
+
+/// the actual test nethod that runs the test can be used with several
+/// propagator types
+///
+/// @tparam propagator_t is the actual propagator type
+///
+/// @param prop is the propagator instance
+/// @param pT the transverse momentum
+/// @param phi the azimuthal angle of the track at creation
+/// @param theta the polar angle of the track at creation
+/// @param charge is the charge of the particle
+/// @param index is the run index from the test
+template <typename propagator_t>
+void runSelfConsistencyTest(const propagator_t& prop, double pT, double phi,
+                            double theta, int charge, double time, int index) {
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
+
+  if (index < skip) {
+    return;
+  }
+
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
+                                   std::nullopt, ParticleHypothesis::pion());
+
+  // Action list and abort list
+  using SurfaceCollector = SurfaceCollector<SurfaceSelector>;
+  using ActionListType = ActionList<SurfaceCollector>;
+  using AbortListType = AbortList<>;
+
+  using Options = PropagatorOptions<ActionListType, AbortListType>;
+
+  // forward surface test
+  Options fwdOptions(tgContext, mfContext);
+  fwdOptions.maxStepSize = 25_cm;
+  fwdOptions.pathLimit = 25_cm;
+
+  // get the surface collector and configure it
+  auto& fwdSurfaceCollector =
+      fwdOptions.actionList.template get<SurfaceCollector>();
+  fwdSurfaceCollector.selector.selectSensitive = true;
+  fwdSurfaceCollector.selector.selectMaterial = true;
+  fwdSurfaceCollector.selector.selectPassive = true;
+
+  if (debugMode) {
+    std::cout << ">>> Forward Propagation : start." << std::endl;
+  }
+  const auto& fwdResult = prop.propagate(start, fwdOptions).value();
+  if (debugMode) {
+    std::cout << ">>> Forward Propagation : end." << std::endl;
+  }
+  const auto& fwdSurfaces =
+      fwdResult.template get<SurfaceCollector::result_type>().collected;
+
+  // get the forward output to the screen
+  if (debugMode) {
+    // check if the surfaces are free
+    std::cout << ">>> Surface hits found on ..." << std::endl;
+    for (const auto& fwdSteps : fwdSurfaces) {
+      std::cout << "--> Surface with " << fwdSteps.surface->geometryId()
+                << std::endl;
+    }
+  }
+
+  // backward surface test
+  Options bwdOptions(tgContext, mfContext);
+  bwdOptions.maxStepSize = 25_cm;
+  bwdOptions.pathLimit = -25_cm;
+  bwdOptions.direction = Direction::Backward;
+
+  // get the surface collector and configure it
+  auto& bwdMSurfaceCollector =
+      bwdOptions.actionList.template get<SurfaceCollector>();
+  bwdMSurfaceCollector.selector.selectSensitive = true;
+  bwdMSurfaceCollector.selector.selectMaterial = true;
+  bwdMSurfaceCollector.selector.selectPassive = true;
+
+  const auto& startSurface = start.referenceSurface();
+
+  if (debugMode) {
+    std::cout << ">>> Backward Propagation : start." << std::endl;
+  }
+  const auto& bwdResult =
+      prop.propagate(*fwdResult.endParameters, startSurface, bwdOptions)
+          .value();
+  if (debugMode) {
+    std::cout << ">>> Backward Propagation : end." << std::endl;
+  }
+  const auto& bwdSurfaces =
+      bwdResult.template get<SurfaceCollector::result_type>().collected;
+
+  // get the backward output to the screen
+  if (debugMode) {
+    // check if the surfaces are free
+    std::cout << ">>> Surface hits found on ..." << std::endl;
+    for (auto& bwdSteps : bwdSurfaces) {
+      std::cout << "--> Surface with " << bwdSteps.surface->geometryId()
+                << std::endl;
+    }
+  }
+
+  // forward-backward compatibility test
+  BOOST_CHECK_EQUAL(bwdSurfaces.size(), fwdSurfaces.size());
+
+  // stepping from one surface to the next
+  // now go from surface to surface and check
+  Options fwdStepOptions(tgContext, mfContext);
+  fwdStepOptions.maxStepSize = 25_cm;
+  fwdStepOptions.pathLimit = 25_cm;
+
+  // get the surface collector and configure it
+  auto& fwdStepSurfaceCollector =
+      fwdOptions.actionList.template get<SurfaceCollector>();
+  fwdStepSurfaceCollector.selector.selectSensitive = true;
+  fwdStepSurfaceCollector.selector.selectMaterial = true;
+  fwdStepSurfaceCollector.selector.selectPassive = true;
+
+  std::vector<SurfaceHit> fwdStepSurfaces;
+
+  if (debugMode) {
+    // check if the surfaces are free
+    std::cout << ">>> Forward steps to be processed sequentially ..."
+              << std::endl;
+    for (auto& fwdSteps : fwdSurfaces) {
+      std::cout << "--> Surface with " << fwdSteps.surface->geometryId()
+                << std::endl;
+    }
+  }
+
+  // move forward step by step through the surfaces
+  BoundTrackParameters sParameters = start;
+  std::vector<BoundTrackParameters> stepParameters;
+  for (auto& fwdSteps : fwdSurfaces) {
+    if (debugMode) {
+      std::cout << ">>> Forward step : "
+                << sParameters.referenceSurface().geometryId() << " --> "
+                << fwdSteps.surface->geometryId() << std::endl;
+    }
+
+    // make a forward step
+    const auto& fwdStep =
+        prop.propagate(sParameters, (*fwdSteps.surface), fwdStepOptions)
+            .value();
+
+    const auto& fwdStepSurfacesTmp =
+        fwdStep.template get<SurfaceCollector::result_type>().collected;
+    fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
+                           fwdStepSurfacesTmp.end());
+
+    if (fwdStep.endParameters.has_value()) {
+      // make sure the parameters do not run out of scope
+      stepParameters.push_back(*fwdStep.endParameters);
+      sParameters = stepParameters.back();
+    }
+  }
+  // final destination surface
+  const Surface& dSurface = fwdResult.endParameters->referenceSurface();
+  if (debugMode) {
+    std::cout << ">>> Forward step : "
+              << sParameters.referenceSurface().geometryId() << " --> "
+              << dSurface.geometryId() << std::endl;
+  }
+  const auto& fwdStepFinal =
+      prop.propagate(sParameters, dSurface, fwdStepOptions).value();
+  const auto& fwdStepSurfacesTmp =
+      fwdStepFinal.template get<SurfaceCollector::result_type>().collected;
+  fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
+                         fwdStepSurfacesTmp.end());
+
+  // TODO forward-forward step compatibility test
+
+  // stepping from one surface to the next : backwards
+  // now go from surface to surface and check
+  Options bwdStepOptions(tgContext, mfContext);
+  bwdStepOptions.maxStepSize = 25_cm;
+  bwdStepOptions.pathLimit = -25_cm;
+  bwdStepOptions.direction = Direction::Backward;
+
+  // get the surface collector and configure it
+  auto& bwdStepSurfaceCollector =
+      bwdOptions.actionList.template get<SurfaceCollector>();
+  bwdStepSurfaceCollector.selector.selectSensitive = true;
+  bwdStepSurfaceCollector.selector.selectMaterial = true;
+  bwdStepSurfaceCollector.selector.selectPassive = true;
+
+  std::vector<SurfaceHit> bwdStepSurfaces;
+
+  if (debugMode) {
+    // check if the surfaces are free
+    std::cout << ">>> Backward steps to be processed sequentially ..."
+              << std::endl;
+    for (auto& bwdSteps : bwdSurfaces) {
+      std::cout << "--> Surface with " << bwdSteps.surface->geometryId()
+                << std::endl;
+    }
+  }
+
+  // move forward step by step through the surfaces
+  sParameters = *fwdResult.endParameters;
+  for (auto& bwdSteps : bwdSurfaces) {
+    if (debugMode) {
+      std::cout << ">>> Backward step : "
+                << sParameters.referenceSurface().geometryId() << " --> "
+                << bwdSteps.surface->geometryId() << std::endl;
+    }
+
+    // make a forward step
+    const auto& bwdStep =
+        prop.propagate(sParameters, (*bwdSteps.surface), bwdStepOptions)
+            .value();
+
+    const auto& bwdStepSurfacesTmp =
+        bwdStep.template get<SurfaceCollector::result_type>().collected;
+    bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
+                           bwdStepSurfacesTmp.end());
+
+    if (bwdStep.endParameters.has_value()) {
+      // make sure the parameters do not run out of scope
+      stepParameters.push_back(*bwdStep.endParameters);
+      sParameters = stepParameters.back();
+    }
+  }
+  // final destination surface
+  const Surface& dbSurface = start.referenceSurface();
+  if (debugMode) {
+    std::cout << ">>> Backward step : "
+              << sParameters.referenceSurface().geometryId() << " --> "
+              << dSurface.geometryId() << std::endl;
+  }
+  const auto& bwdStepFinal =
+      prop.propagate(sParameters, dbSurface, bwdStepOptions).value();
+  const auto& bwdStepSurfacesTmp =
+      bwdStepFinal.template get<SurfaceCollector::result_type>().collected;
+  bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
+                         bwdStepSurfacesTmp.end());
+
+  // TODO backward-backward step compatibility test
+
+  BOOST_CHECK_EQUAL(bwdStepSurfaces.size(), fwdStepSurfaces.size());
+}
+
+/// the actual test nethod that runs the test can be used with several
+/// propagator types
+///
+/// @tparam propagator_probe_t is the probe propagator type
+/// @tparam propagator_ref_t is the reference propagator type
+///
+/// @param propProbe is the probe propagator instance
+/// @param propRef is the reference propagator instance
+/// @param pT the transverse momentum
+/// @param phi the azimuthal angle of the track at creation
+/// @param theta the polar angle of the track at creation
+/// @param charge is the charge of the particle
+/// @param index is the run index from the test
+template <typename propagator_probe_t, typename propagator_ref_t>
+void runConsistencyTest(const propagator_probe_t& propProbe,
+                        const propagator_ref_t& propRef, double pT, double phi,
+                        double theta, int charge, double time, int index) {
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
+
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
+                                   std::nullopt, ParticleHypothesis::pion());
+
+  // Action list and abort list
+  using SurfaceCollector = SurfaceCollector<SurfaceSelector>;
+  using ActionListType = ActionList<SurfaceCollector>;
+  using AbortListType = AbortList<>;
+
+  using Options = PropagatorOptions<ActionListType, AbortListType>;
+
+  auto run = [&](const auto& prop) {
+    // forward surface test
+    Options fwdOptions(tgContext, mfContext);
+    fwdOptions.maxStepSize = 25_cm;
+    fwdOptions.pathLimit = 25_cm;
+
+    // get the surface collector and configure it
+    auto& fwdSurfaceCollector =
+        fwdOptions.actionList.template get<SurfaceCollector>();
+    fwdSurfaceCollector.selector.selectSensitive = true;
+    fwdSurfaceCollector.selector.selectMaterial = true;
+    fwdSurfaceCollector.selector.selectPassive = true;
+
+    const auto& fwdResult = prop.propagate(start, fwdOptions).value();
+    const auto& fwdSurfaces =
+        fwdResult.template get<SurfaceCollector::result_type>().collected;
+
+    // get the forward output to the screen
+    if (debugMode) {
+      // check if the surfaces are free
+      std::cout << ">>> Surface hits found on ..." << std::endl;
+      for (const auto& fwdSteps : fwdSurfaces) {
+        std::cout << "--> Surface with " << fwdSteps.surface->geometryId()
+                  << std::endl;
+      }
+    }
+
+    return fwdSurfaces;
+  };
+
+  if (index < skip) {
+    return;
+  }
+
+  if (debugMode) {
+    std::cout << ">>> Probe Propagation : start." << std::endl;
+  }
+  const auto& probeSurfaces = run(propProbe);
+  if (debugMode) {
+    std::cout << ">>> Probe Propagation : end." << std::endl;
+  }
+
+  if (debugMode) {
+    std::cout << ">>> Reference Propagation : start." << std::endl;
+  }
+  const auto& refSurfaces = run(propRef);
+  if (debugMode) {
+    std::cout << ">>> Reference Propagation : end." << std::endl;
+  }
+
+  // probe-ref compatibility test
+  BOOST_CHECK_EQUAL(probeSurfaces.size(), refSurfaces.size());
+}
+
+BOOST_DATA_TEST_CASE(
+    Navigator_random,
+    bdata::random((bdata::seed = 20,
+                   bdata::distribution =
+                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
+        bdata::random((bdata::seed = 21,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
+        bdata::random((bdata::seed = 22,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
+        bdata::random(
+            (bdata::seed = 23,
+             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+        bdata::random(
+            (bdata::seed = 24,
+             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+        bdata::xrange(ntests),
+    pT, phi, theta, charge, time, index) {
+  if (debugMode) {
+    std::cout << ">>> Test self consistency epropagator" << index << std::endl;
+  }
+  runSelfConsistencyTest(epropagator, pT, phi, theta, charge, time, index);
+  if (debugMode) {
+    std::cout << ">>> Test self consistency slpropagator" << index << std::endl;
+  }
+  runSelfConsistencyTest(slpropagator, pT, phi, theta, charge, time, index);
+
+  if (debugMode) {
+    std::cout << ">>> Test consistency epropagator" << index << std::endl;
+  }
+  runConsistencyTest(epropagator, refepropagator, pT, phi, theta, charge, time,
+                     index);
+  if (debugMode) {
+    std::cout << ">>> Test consistency slpropagator" << index << std::endl;
+  }
+  runConsistencyTest(slpropagator, refslpropagator, pT, phi, theta, charge,
+                     time, index);
 }
 
 }  // namespace Test
