@@ -197,7 +197,6 @@ Acts::Result<double> Acts::ImpactPointEstimator<
                                   rho * cotTheta * cotTheta);
 
     if (secDerivative < 0.) {
-      std::cout << "\nNegative second derivative in Newton\n";
       return VertexingError::NumericFailure;
     }
 
