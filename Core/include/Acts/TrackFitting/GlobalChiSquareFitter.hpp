@@ -104,6 +104,7 @@ struct Gx2FitterOptions {
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   /// @param nUpdateMax_ Max number of iterations for updating the parameters
   /// @param zeroField_ Disables the QoP fit in case of missing B-field
+  /// @param relChi2changeCutOff_ Check for convergence (abort condition)
   Gx2FitterOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
                    std::reference_wrapper<const CalibrationContext> cctx,
