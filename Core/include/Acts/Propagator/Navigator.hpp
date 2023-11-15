@@ -490,6 +490,8 @@ class Navigator {
 
     ACTS_VERBOSE(volInfo(state) << "Handle surface " << surface.geometryId());
 
+    ++state.navigation.candidateIndex;
+
     if (intersection.template checkType<SurfaceIntersection>()) {
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
 
