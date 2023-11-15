@@ -62,7 +62,6 @@ void convert(nlohmann::json& jIndexedVolumes,
 /// @param jIndexedVolumes the json object to be filled
 /// @param delegate the delegate to be translated
 /// @param detray indicate if this is a detray json to be written out
-/// @param tList the Type list carrying all the possible types
 template <typename... Args>
 void unrollConvert(nlohmann::json& jIndexedVolumes,
                    const Experimental::DetectorVolumeUpdator& delegate,

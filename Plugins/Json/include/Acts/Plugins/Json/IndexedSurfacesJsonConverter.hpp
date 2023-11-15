@@ -75,7 +75,6 @@ void convert(nlohmann::json& jIndexedSurfaces,
 /// @param jIndexedSurfaces the json object to be filled
 /// @param delegate the delegate to be translated
 /// @param detray if the detray json format is written
-/// @param tList the type list of possible axes
 template <typename... Args>
 void unrollConvert(nlohmann::json& jIndexedSurfaces,
                    const Experimental::SurfaceCandidatesUpdator& delegate,
