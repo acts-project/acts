@@ -100,7 +100,7 @@ class Delegate<R(Args...), H, O> {
   /// @tparam Callable The compile-time free function pointer
   /// @note @c DelegateFuncTag is used to communicate the callable type
   template <auto Callable>
-  Delegate(DelegateFuncTag<Callable>) {
+  Delegate(DelegateFuncTag<Callable> /*tag*/) {
     connect<Callable>();
   }
 
@@ -112,7 +112,7 @@ class Delegate<R(Args...), H, O> {
   /// @note @c DelegateFuncTag is used to communicate the callable type
   template <auto Callable, typename Type, DelegateType T = kOwnership,
             typename = std::enable_if_t<T == DelegateType::NonOwning>>
-  Delegate(DelegateFuncTag<Callable>, const Type *instance) {
+  Delegate(DelegateFuncTag<Callable> /*tag*/, const Type *instance) {
     connect<Callable>(instance);
   }
 
