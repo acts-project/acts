@@ -74,10 +74,10 @@ inline bool operator==(const TestSpacePoint& lhs, const TestSpacePoint& rhs) {
                      [](const auto& lsl, const auto& rsl) {
                        return lsl.template get<TestSourceLink>() ==
                               rsl.template get<TestSourceLink>();
-                     }) and
-          lhs.x() == rhs.x()) and
-         (lhs.y() == rhs.y()) and (lhs.z() == rhs.z()) and
-         (lhs.varianceR() == rhs.varianceR()) and
+                     }) &&
+          lhs.x() == rhs.x()) &&
+         (lhs.y() == rhs.y()) && (lhs.z() == rhs.z()) &&
+         (lhs.varianceR() == rhs.varianceR()) &&
          (lhs.varianceZ() == rhs.varianceZ());
 }
 

@@ -116,16 +116,18 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
         break;
       }
     }
+    // MARK: fpeMaskBegin(FLTUND, 1, #2590)
     bool keepVertex = isGoodVertex &&
                       keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
+    // MARK: fpeMaskEnd(FLTUND)
     ACTS_DEBUG("New vertex will be saved: " << keepVertex);
 
     // Delete vertex from allVertices list again if it's not kept
-    if (not keepVertex) {
+    if (!keepVertex) {
       auto deleteVertexResult =
           deleteLastVertex(vtxCandidate, allVertices, allVerticesPtr,
                            fitterState, vertexingOptions);
-      if (not deleteVertexResult.ok()) {
+      if (!deleteVertexResult.ok()) {
         return deleteVertexResult.error();
       }
     }
@@ -172,7 +174,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
                               bool useVertexConstraintInFit,
                               Vertex<InputTrack_t>& seedVertex) const -> void {
   if (useVertexConstraintInFit) {
-    if (not m_cfg.useSeedConstraint) {
+    if (!m_cfg.useSeedConstraint) {
       // Set seed vertex constraint to old constraint before seeding
       seedVertex.setFullCovariance(currentConstraint.fullCovariance());
     } else {
@@ -199,7 +201,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
   // After all, the vertex seed does have a non-zero convariance in general and
   // it probably should be used.
   Vertex<InputTrack_t> newVtx = vtx;
-  if (not m_cfg.useVertexCovForIPEstimation) {
+  if (!m_cfg.useVertexCovForIPEstimation) {
     newVtx.setFullCovariance(SquareMatrix4::Zero());
   }
 
@@ -521,7 +523,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const double sumCovZ = otherZCov + candidateZCov;
 
     double significance = 0;
-    if (not m_cfg.do3dSplitting) {
+    if (!m_cfg.do3dSplitting) {
       if (sumCovZ <= 0) {
         // TODO FIXME this should never happen
         continue;

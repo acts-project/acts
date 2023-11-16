@@ -56,8 +56,8 @@ struct MaterialInteractor {
                   const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
     // In case of Volume material update the result of the previous step
-    if (recordInteractions and not result.materialInteractions.empty() and
-        not result.materialInteractions.back().volume.empty() and
+    if (recordInteractions && !result.materialInteractions.empty() &&
+        !result.materialInteractions.back().volume.empty() &&
         result.materialInteractions.back().updatedVolumeStep == false) {
       updateResult(state, stepper, result);
     }
@@ -67,25 +67,25 @@ struct MaterialInteractor {
       return;
     }
     // Do nothing if nothing is what is requested.
-    if (not(multipleScattering or energyLoss or recordInteractions)) {
+    if (!(multipleScattering || energyLoss || recordInteractions)) {
       return;
     }
     // We only have material interactions if there is potential material
     const Surface* surface = navigator.currentSurface(state.navigation);
     const TrackingVolume* volume = navigator.currentVolume(state.navigation);
 
-    if (not(surface and surface->surfaceMaterial()) and
-        not(volume and volume->volumeMaterial())) {
+    if (!(surface && surface->surfaceMaterial()) &&
+        !(volume && volume->volumeMaterial())) {
       return;
     }
 
-    if (surface and surface->surfaceMaterial()) {
+    if (surface && surface->surfaceMaterial()) {
       // Prepare relevant input particle properties
       detail::PointwiseMaterialInteraction d(surface, state, stepper);
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (not d.evaluateMaterialSlab(state, navigator)) {
+      if (!d.evaluateMaterialSlab(state, navigator)) {
         return;
       }
 
@@ -113,12 +113,12 @@ struct MaterialInteractor {
       d.updateState(state, stepper, mode);
       // Record the result
       recordResult(d, result);
-    } else if (recordInteractions && volume and volume->volumeMaterial()) {
+    } else if (recordInteractions && volume && volume->volumeMaterial()) {
       // Prepare relevant input particle properties
       detail::VolumeMaterialInteraction d(volume, state, stepper);
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (not d.evaluateMaterialSlab(state, navigator)) {
+      if (!d.evaluateMaterialSlab(state, navigator)) {
         return;
       }
       // Record the result

@@ -34,7 +34,7 @@ using namespace ROOT;
 /// Plot the bound parameter resolutions
 ///
 /// (loc1, phi, theta, q/p, t) at all track states from root file produced by
-/// the RootTrajectoryStatesWriter
+/// the RootTrackStatesWriter
 ///
 /// @param inFile the input root file
 /// @param treeName the input tree name (default: 'trackstates)
@@ -71,7 +71,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
 
   // Section 0: file handling ---------------------------------------------
   //
-  // Open root file written by RootTrajectoryWriter
+  // Open root file written by RootTrackWriter
   // Create output root file
   std::cout << "Opening file: " << inFile << std::endl;
   TFile* file = TFile::Open(inFile.c_str(), "read");
@@ -128,7 +128,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   h2_geo_dim->Write();
 
   // Save the plots on screen
-  if (not saveAs.empty()) {
+  if (!saveAs.empty()) {
     geometryCanvas->SaveAs((std::string("all_vol_lay_ids.") + saveAs).c_str());
   }
 
@@ -173,7 +173,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   ///
   /// ensures a unique identification
   auto volLayIdCut = [](int vol, int lay) -> std::array<std::string, 2> {
-    if (vol < 0 and lay < 0) {
+    if (vol < 0 && lay < 0) {
       return {std::string("all_"), ""};
     }
 
@@ -204,7 +204,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       float range = pullRange * h1_range->GetRMS();
       ranges[ir] = range;
     }
-    if (not saveAs.empty()) {
+    if (! saveAs.empty()) {
       rangeCanvas->SaveAs(
           (vlIdCut[0] + std::string("res_ranges.") + saveAs).c_str());
     }
@@ -411,7 +411,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
 
     for (unsigned int i = 0; i < tsReader.nMeasurements; i++) {
       // global profile filling
-      if (predicted and tsReader.predicted->at(i)) {
+      if (predicted && tsReader.predicted->at(i)) {
         auto x_prt = tsReader.g_x_prt->at(i);
         auto y_prt = tsReader.g_y_prt->at(i);
         auto r_prt = std::hypot(x_prt, y_prt);
@@ -429,7 +429,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         p2d_pull_zr_prt[4]->Fill(z_prt, r_prt, tsReader.pull_QOP_prt->at(i));
         p2d_pull_zr_prt[5]->Fill(z_prt, r_prt, tsReader.pull_T_prt->at(i));
       }
-      if (filtered and tsReader.filtered->at(i)) {
+      if (filtered && tsReader.filtered->at(i)) {
         auto x_flt = tsReader.g_x_flt->at(i);
         auto y_flt = tsReader.g_y_flt->at(i);
         auto r_flt = std::hypot(x_flt, y_flt);
@@ -447,7 +447,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         p2d_pull_zr_flt[4]->Fill(z_flt, r_flt, tsReader.pull_QOP_flt->at(i));
         p2d_pull_zr_flt[5]->Fill(z_flt, r_flt, tsReader.pull_T_flt->at(i));
       }
-      if (smoothed and tsReader.smoothed->at(i)) {
+      if (smoothed && tsReader.smoothed->at(i)) {
         auto x_smt = tsReader.g_x_smt->at(i);
         auto y_smt = tsReader.g_y_smt->at(i);
         auto r_smt = std::hypot(x_smt, y_smt);
@@ -476,7 +476,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       for (const auto& fid : fillIds) {
         auto vlID = volLayIdCut(fid[0], fid[1])[0];
         // Fill predicated parameters
-        if (predicted and tsReader.predicted->at(i)) {
+        if (predicted && tsReader.predicted->at(i)) {
           res_prt[vlID + paramNames[0]]->Fill(tsReader.res_LOC0_prt->at(i), 1);
           res_prt[vlID + paramNames[1]]->Fill(tsReader.res_LOC1_prt->at(i), 1);
           res_prt[vlID + paramNames[2]]->Fill(tsReader.res_PHI_prt->at(i), 1);
@@ -494,7 +494,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
           pull_prt[vlID + paramNames[5]]->Fill(tsReader.pull_T_prt->at(i), 1);
         }
         // Fill filtered parameters
-        if (filtered and tsReader.filtered->at(i)) {
+        if (filtered && tsReader.filtered->at(i)) {
           res_flt[vlID + paramNames[0]]->Fill(tsReader.res_LOC0_flt->at(i), 1);
           res_flt[vlID + paramNames[1]]->Fill(tsReader.res_LOC1_flt->at(i), 1);
           res_flt[vlID + paramNames[2]]->Fill(tsReader.res_PHI_flt->at(i), 1);
@@ -512,7 +512,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
           pull_flt[vlID + paramNames[5]]->Fill(tsReader.pull_T_flt->at(i), 1);
         }
         // Fill smoothed parameters
-        if (smoothed and tsReader.smoothed->at(i)) {
+        if (smoothed && tsReader.smoothed->at(i)) {
           res_smt[vlID + paramNames[0]]->Fill(tsReader.res_LOC0_smt->at(i), 1);
           res_smt[vlID + paramNames[1]]->Fill(tsReader.res_LOC1_smt->at(i), 1);
           res_smt[vlID + paramNames[2]]->Fill(tsReader.res_PHI_smt->at(i), 1);
@@ -562,7 +562,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       profiles[ipar]->Write();
     }
     // Save the canvas: mean
-    if (not saveAs.empty()) {
+    if (! saveAs.empty()) {
       respull_mean_prf->SaveAs((std::string("all_") + res_pull +
                                 std::string("_mean_prf_") + type +
                                 std::string(".") + saveAs)
@@ -602,7 +602,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       var->Write();
     }
     // Save the canvas: pulls
-    if (not saveAs.empty()) {
+    if (! saveAs.empty()) {
       respull_var_prf->SaveAs((std::string("all_") + res_pull +
                                std::string("_var_prf_") + type +
                                std::string(".") + saveAs)
@@ -657,7 +657,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
           legend->AddEntry(res_flt[name], "filtered", "l");
         }
         if (predicted) {
-          std::string drawOptions = (smoothed or filtered) ? "same" : "";
+          std::string drawOptions = (smoothed || filtered) ? "same" : "";
           res_prt[name]->DrawNormalized(drawOptions.c_str());
           res_prt[name]->Write();
           legend->AddEntry(res_prt[name], "predicted", "l");
@@ -668,7 +668,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         legend->SetTextFont(42);
         legend->Draw();
       }
-      if (not saveAs.empty()) {
+      if (! saveAs.empty()) {
         residuals->SaveAs((vlID + std::string("residuals.") + saveAs).c_str());
       }
 
@@ -732,7 +732,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         }
 
         if (predicted) {
-          auto drawOptions = (smoothed or filtered) ? "pe same" : "pe";
+          auto drawOptions = (smoothed || filtered) ? "pe same" : "pe";
 
           auto scale = 1. / pull_prt[name]->Integral("width");
           pull_prt[name]->Scale(scale);
@@ -769,7 +769,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       }
 
       // Save the Canvases as pictures
-      if (not saveAs.empty()) {
+      if (! saveAs.empty()) {
         pulls->SaveAs((vlID + std::string("pulls.") + saveAs).c_str());
       }
     }

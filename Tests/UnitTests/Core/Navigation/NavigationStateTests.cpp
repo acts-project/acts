@@ -65,14 +65,14 @@ BOOST_AUTO_TEST_CASE(NavigationState) {
   const auto volume = dVolume.get();
 
   Acts::Experimental::DetectorVolumeFiller::fill(nState, volume);
-  BOOST_CHECK(nState.currentVolume == volume);
+  BOOST_CHECK_EQUAL(nState.currentVolume, volume);
 
   Acts::Experimental::PortalsFiller::fill(nState, portals);
-  BOOST_CHECK(nState.surfaceCandidates.size() == portals.size());
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), portals.size());
 
   Acts::Experimental::SurfacesFiller::fill(nState, surfaces);
-  BOOST_CHECK(nState.surfaceCandidates.size() ==
-              portals.size() + surfaces.size());
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(),
+                    portals.size() + surfaces.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

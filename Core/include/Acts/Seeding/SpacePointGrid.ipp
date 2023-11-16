@@ -15,12 +15,12 @@ std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
 Acts::SpacePointGridCreator::createGrid(
     const Acts::SpacePointGridConfig& config,
     const Acts::SpacePointGridOptions& options) {
-  if (not config.isInInternalUnits) {
+  if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SpacePointGridConfig not in ACTS internal units in "
         "SpacePointGridCreator::createGrid");
   }
-  if (not options.isInInternalUnits) {
+  if (!options.isInInternalUnits) {
     throw std::runtime_error(
         "SpacePointGridOptions not in ACTS internal units in "
         "SpacePointGridCreator::createGrid");

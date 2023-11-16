@@ -166,8 +166,8 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   // frame. it should be equal if the track is a transverse track w/ theta =
   // 90deg. in that case there might be numerical deviations and we need to
   // check that it is less or equal within the numerical tolerance.
-  BOOST_CHECK((dist3 < distT) or
-              (theta == 90_degree and std::abs(dist3 - distT) < 1_nm));
+  BOOST_CHECK((dist3 < distT) ||
+              (theta == 90_degree && std::abs(dist3 - distT) < 1_nm));
 
   // estimate parameters at the closest point in 3d
   auto res = ipEstimator.estimate3DImpactParameters(
@@ -260,7 +260,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   PropagatorOptions pOptions(geoContext, magFieldContext);
   auto intersection = refPerigeeSurface
                           ->intersect(geoContext, params.position(geoContext),
-                                      params.direction(), false)
+                                      params.direction(), BoundaryCheck(false))
                           .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
@@ -405,9 +405,9 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
 
   // The track who is closer in time must have a better (i.e., smaller)
   // compatibility
-  BOOST_CHECK(compatibilityClose < compatibilityFar);
+  BOOST_CHECK_LT(compatibilityClose, compatibilityFar);
   // The track with the larger covariance must be the most compatible
-  BOOST_CHECK(compatibilityCloseLargerCov < compatibilityClose);
+  BOOST_CHECK_LT(compatibilityCloseLargerCov, compatibilityClose);
 }
 
 // Compare calculations w/ known good values from Athena.
@@ -482,10 +482,10 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
   BOOST_CHECK(lifetimes_signs.ok());
 
   // Check that d0 sign is positive
-  BOOST_CHECK((*lifetimes_signs).first > 0.);
+  BOOST_CHECK_GT((*lifetimes_signs).first, 0.);
 
   // Check that z0 sign is negative
-  BOOST_CHECK((*lifetimes_signs).second < 0.);
+  BOOST_CHECK_LT((*lifetimes_signs).second, 0.);
 
   // Check the 3d sign
 
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
   BOOST_CHECK(sign3d.ok());
 
   // Check 3D sign (should be positive)
-  BOOST_CHECK((*sign3d) > 0.);
+  BOOST_CHECK_GT((*sign3d), 0.);
 }
 
 // Check `.getImpactParameters`.

@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(SingleDetectorVolumeUpdator) {
 
   // Update the volume and check that it is indeed updated
   sVolumeUpdator.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == sVolume.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, sVolume.get());
 }
 
 BOOST_AUTO_TEST_CASE(AllSurfaces) {
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(AllSurfaces) {
   BOOST_CHECK(nState.surfaceCandidates.empty());
   AllSurfacesProvider allSurfaces;
   allSurfaces.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 3u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 3u);
 }
 
 BOOST_AUTO_TEST_CASE(AllPortals) {
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(AllPortals) {
   BOOST_CHECK(nState.surfaceCandidates.empty());
   AllPortalsProvider allPortals;
   allPortals.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 2u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
           std::tie(allPortals, allSurfaces));
 
   allPortalsAllSurfaces.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 5u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 5u);
 }
 
 BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
           std::tie(allPortals, grid1DSurfaces));
 
   allPortalsGrid1DSurfaces.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 4u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 4u);
 }
 
 BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
           std::tie(allPortals, grid2DSurfaces));
 
   allPortalsGrid2DSurfaces.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 3u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

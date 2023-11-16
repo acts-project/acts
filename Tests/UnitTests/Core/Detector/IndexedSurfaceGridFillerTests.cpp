@@ -21,11 +21,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cmath>
@@ -48,11 +48,11 @@ namespace {
 
 /// Helper method to count how many bins are not empty
 template <typename indexed_surface_grid>
-std::size_t countBins(const indexed_surface_grid& isGrid) {
-  std::size_t nonEmptyBins = 0u;
-  for (std::size_t igb = 0u; igb < isGrid.grid.size(); ++igb) {
+size_t countBins(const indexed_surface_grid& isGrid) {
+  size_t nonEmptyBins = 0u;
+  for (size_t igb = 0u; igb < isGrid.grid.size(); ++igb) {
     const auto& gb = isGrid.grid.at(igb);
-    if (not gb.empty()) {
+    if (!gb.empty()) {
       ++nonEmptyBins;
     }
   }
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(BinSequence) {
 
   // Test standard bound local bin sequence
   auto seq48e0b10B = binSequence({4u, 8u}, 0u, 10u, AxisBoundaryType::Bound);
-  std::vector<std::size_t> reference = {4u, 5u, 6u, 7u, 8u};
+  std::vector<size_t> reference = {4u, 5u, 6u, 7u, 8u};
   BOOST_CHECK(seq48e0b10B == reference);
 
   // Test bound local bin sequence with expansion 1u
@@ -143,10 +143,10 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
   // Fill the surface
   filler.fill(tContext, indexedGridXY, surfaces, generator);
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
+  size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   // Check the correct number of filled bins
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 1u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 1u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
@@ -180,9 +180,9 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
   // Fill the surface
   filler.fill(tContext, indexedGridXY, surfaces, generator);
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
+  size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 1u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 1u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
@@ -217,9 +217,9 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
   // Fill the surface
   filler.fill(tContext, indexedGridXY, surfaces, generator);
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
+  size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 25u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 25u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
@@ -254,9 +254,9 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
   // Fill the surface
   filler.fill(tContext, indexedGridXY, surfaces, generator);
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
+  size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 49u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 49u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
@@ -291,10 +291,9 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
   // Fill the surface
   filler.fill(tContext, indexedGridZPhi, surfaces, generator);
 
-  std::size_t nonEmptyBins =
-      countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
+  size_t nonEmptyBins = countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 6u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 6u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
@@ -327,10 +326,9 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   // Fill the surface
   filler.fill(tContext, indexedGridZPhi, surfaces, generator);
 
-  std::size_t nonEmptyBins =
-      countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
+  size_t nonEmptyBins = countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 9u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 9u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

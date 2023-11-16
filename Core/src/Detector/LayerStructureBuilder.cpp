@@ -20,8 +20,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -52,7 +52,7 @@ template <Acts::detail::AxisBoundaryType aType>
 Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Surface>> lSurfaces,
-    std::vector<size_t> assignToAll,
+    std::vector<std::size_t> assignToAll,
     const Acts::Experimental::ProtoBinning& binning) {
   // The surface candidate updator & a generator for polyhedrons
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
@@ -95,7 +95,7 @@ template <Acts::detail::AxisBoundaryType aType,
 Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     const Acts::GeometryContext& gctx,
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
-    const std::vector<size_t>& assignToAll,
+    const std::vector<std::size_t>& assignToAll,
     const Acts::Experimental::ProtoBinning& aBinning,
     const Acts::Experimental::ProtoBinning& bBinning) {
   // The surface candidate updator & a generator for polyhedrons
@@ -109,7 +109,7 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
           {aBinning.binValue, bBinning.binValue},
           {aBinning.expansion, bBinning.expansion}};
   // Run through the cases
-  if (aBinning.axisType == Acts::detail::AxisType::Equidistant and
+  if (aBinning.axisType == Acts::detail::AxisType::Equidistant &&
       bBinning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant-Equidistant
     Acts::Experimental::detail::GridAxisGenerators::EqEq<aType, bType>
@@ -162,7 +162,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
   DetectorVolumeUpdator internalVolumeUpdator = tryNoVolumes();
 
   // Print the auxiliary information
-  if (not m_cfg.auxiliary.empty()) {
+  if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
 
@@ -175,8 +175,8 @@ Acts::Experimental::LayerStructureBuilder::construct(
 
   // Check whether support structure is scheduled to be built, and if so
   // collect those that should be assigned to all bins
-  std::vector<size_t> assignToAll = {};
-  if (not m_cfg.supports.empty()) {
+  std::vector<std::size_t> assignToAll = {};
+  if (!m_cfg.supports.empty()) {
     ACTS_DEBUG("Adding " << m_cfg.supports.size() << " support structures.")
     // The surface candidate updator
     for (const auto& support : m_cfg.supports) {
@@ -261,7 +261,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
     }
   }
   // Check if everything went ok
-  if (not internalCandidatesUpdator.connected()) {
+  if (!internalCandidatesUpdator.connected()) {
     throw std::runtime_error(
         "LayerStructureBuilder: could not connect surface candidate updator.");
   }

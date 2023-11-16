@@ -14,8 +14,8 @@ add_library(
   src/CsvTrackingGeometryWriter.cpp
   src/CsvTrackParameterReader.cpp
   src/CsvTrackParameterWriter.cpp
-  src/CsvMultiTrajectoryWriter.cpp 
   src/CsvSeedWriter.cpp 
+  src/CsvTrackWriter.cpp 
   src/CsvProtoTrackWriter.cpp
   src/CsvSpacePointWriter.cpp
   src/CsvBFieldWriter.cpp)
