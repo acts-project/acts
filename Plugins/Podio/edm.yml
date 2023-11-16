@@ -58,7 +58,7 @@ components:
         - uint64_t projector
         - bool hasProjector
 
-        - double chi2
+        - float chi2
         - double pathLength
         - uint64_t typeFlags
 
