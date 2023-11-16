@@ -33,7 +33,7 @@ class ScalingCalibrator : public MeasurementCalibrator {
     TH2D y_offset;
     TH2D y_scale;
 
-    ConstantTuple at(size_t sizeLoc0, size_t sizeLoc1) const {
+    ConstantTuple at(std::size_t sizeLoc0, std::size_t sizeLoc1) const {
       ConstantTuple ct;
       ct.x_offset =
           x_offset.GetBinContent(x_offset.FindFixBin(sizeLoc0, sizeLoc1));

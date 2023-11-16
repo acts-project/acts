@@ -20,6 +20,11 @@ namespace Acts {
 /// Ownership enum for @c Delegate
 enum class DelegateType { Owning, NonOwning };
 
+template <auto C>
+struct DelegateFuncTag {
+  explicit constexpr DelegateFuncTag() = default;
+};
+
 // Specialization needed for defaulting ownership and for R(Args...) syntax
 template <typename, typename H = void, DelegateType = DelegateType::NonOwning>
 class Delegate;
@@ -89,6 +94,26 @@ class Delegate<R(Args...), H, O> {
   template <typename Callable, typename = isNoFunPtr<Callable>>
   Delegate(Callable &callable) {
     connect(callable);
+  }
+
+  /// Constructor with a compile-time free function pointer
+  /// @tparam Callable The compile-time free function pointer
+  /// @note @c DelegateFuncTag is used to communicate the callable type
+  template <auto Callable>
+  Delegate(DelegateFuncTag<Callable> /*tag*/) {
+    connect<Callable>();
+  }
+
+  /// Constructor with a compile-time member function pointer and instance
+  /// @tparam Callable The compile-time member function pointer
+  /// @tparam Type The type of the instance the member function should be called on
+  /// @param instance The instance on which the member function pointer should be called on
+  /// @note @c Delegate does not assume owner ship over @p instance.
+  /// @note @c DelegateFuncTag is used to communicate the callable type
+  template <auto Callable, typename Type, DelegateType T = kOwnership,
+            typename = std::enable_if_t<T == DelegateType::NonOwning>>
+  Delegate(DelegateFuncTag<Callable> /*tag*/, const Type *instance) {
+    connect<Callable>(instance);
   }
 
   /// Constructor from rvalue reference is deleted, should catch construction
@@ -195,7 +220,8 @@ class Delegate<R(Args...), H, O> {
   /// @tparam Type The type of the instance the member function should be called on
   /// @param instance The instance on which the member function pointer should be called on
   /// @note @c Delegate assumes owner ship over @p instance.
-  template <auto Callable, typename Type>
+  template <auto Callable, typename Type, DelegateType T = kOwnership,
+            typename = std::enable_if_t<T == DelegateType::Owning>>
   void connect(std::unique_ptr<const Type> instance) {
     using member_ptr_type = return_type (Type::*)(Args...) const;
     static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
@@ -203,15 +229,11 @@ class Delegate<R(Args...), H, O> {
                   "Callable given does not correspond exactly to required call "
                   "signature");
 
-    if constexpr (kOwnership == DelegateType::Owning) {
-      m_payload.payload = std::unique_ptr<const holder_type, deleter_type>(
-          instance.release(), [](const holder_type *payload) {
-            const auto *concretePayload = static_cast<const Type *>(payload);
-            delete concretePayload;
-          });
-    } else {
-      m_payload.payload = instance.release();
-    }
+    m_payload.payload = std::unique_ptr<const holder_type, deleter_type>(
+        instance.release(), [](const holder_type *payload) {
+          const auto *concretePayload = static_cast<const Type *>(payload);
+          delete concretePayload;
+        });
 
     m_function = [](const holder_type *payload, Args... args) -> return_type {
       assert(payload != nullptr && "Payload is required, but not set");

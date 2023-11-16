@@ -93,7 +93,7 @@ struct SurfaceObserver {
 
   /// Simple result struct to be returned
   struct this_result {
-    size_t surfaces_passed = 0;
+    std::size_t surfaces_passed = 0;
     double surface_passed_r = std::numeric_limits<double>::max();
   };
 

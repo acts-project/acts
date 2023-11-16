@@ -23,11 +23,11 @@ inline void runSessionWithIoBinding(Ort::Session& sess,
   }
 
   Ort::IoBinding iobinding(sess);
-  for (size_t idx = 0; idx < inputNames.size(); ++idx) {
+  for (std::size_t idx = 0; idx < inputNames.size(); ++idx) {
     iobinding.BindInput(inputNames[idx], inputData[idx]);
   }
 
-  for (size_t idx = 0; idx < outputNames.size(); ++idx) {
+  for (std::size_t idx = 0; idx < outputNames.size(); ++idx) {
     iobinding.BindOutput(outputNames[idx], outputData[idx]);
   }
 
