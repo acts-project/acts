@@ -152,30 +152,6 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   auto bounds = std::make_shared<const CuboidVolumeBounds>(
       cfg.length.x() * 0.5, cfg.length.y() * 0.5, cfg.length.z() * 0.5);
 
-  if (cfg.layerCfg.empty()) {
-    // Build dummy layer if no layer is given (tmp solution)
-    SurfaceConfig sCfg;
-    sCfg.position = cfg.position;
-    // Rotation of the surfaces: +pi/2 around axis y
-    Vector3 xPos(0., 0., 1.);
-    Vector3 yPos(0., 1., 0.);
-    Vector3 zPos(-1., 0., 0.);
-    sCfg.rotation.col(0) = xPos;
-    sCfg.rotation.col(1) = yPos;
-    sCfg.rotation.col(2) = zPos;
-    // Bounds
-    sCfg.rBounds = std::make_shared<const RectangleBounds>(
-        RectangleBounds(cfg.length.y() * 0.5, cfg.length.z() * 0.5));
-
-    LayerConfig lCfg;
-    lCfg.surfaceCfg = {sCfg};
-    lCfg.envelopeX = {0.1 * UnitConstants::mm, 0.1 * UnitConstants::mm};
-    lCfg.envelopeY = {0.1 * UnitConstants::mm, 0.1 * UnitConstants::mm};
-    lCfg.envelopeZ = {0.1 * UnitConstants::mm, 0.1 * UnitConstants::mm};
-
-    cfg.layerCfg.push_back(lCfg);
-  }
-
   // Gather the layers
   LayerVector layVec;
   if (cfg.layers.empty()) {

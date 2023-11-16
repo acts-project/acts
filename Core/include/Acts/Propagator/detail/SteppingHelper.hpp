@@ -38,8 +38,8 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const Surface& surface, std::uint8_t index, Direction navDir,
     const BoundaryCheck& bcheck, ActsScalar surfaceTolerance,
     const Logger& logger) {
-  ACTS_VERBOSE(
-      "Update single surface status for surface: " << surface.geometryId());
+  ACTS_VERBOSE("Update single surface status for surface: "
+               << surface.geometryId() << " index " << (int)index);
 
   auto sIntersection = surface.intersect(
       state.geoContext, stepper.position(state),
