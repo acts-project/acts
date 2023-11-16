@@ -322,7 +322,7 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("- measurement states: " << fwdGsfResult.measurementStates);
 
     std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler;
-    double maxPathXOverX0 = fwdResult.maxPathXOverX0;
+    double maxPathXOverX0 = fwdGsfResult.maxPathXOverX0;
 
     //////////////////
     // Backward pass
