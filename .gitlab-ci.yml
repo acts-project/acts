@@ -440,18 +440,9 @@ lcg_104:
 
   parallel:
     matrix:
-      - OS: [centos7]
-        COMPILER: 
-          - gcc11
-          - gcc12
-
       - OS: [alma9]
         COMPILER: 
-          - gcc11
-          - gcc12
           - gcc13
           - clang16
 
-      - OS: [centos8]
-        COMPILER: [gcc11]
 
