@@ -73,7 +73,7 @@ std::string ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader::name()
   return "CsvPlanarClusterReader";
 }
 
-std::pair<size_t, size_t>
+std::pair<std::size_t, std::size_t>
 ActsExamples::CsvPlanarClusterReader::availableEvents() const {
   return m_eventsRange;
 }
@@ -114,7 +114,7 @@ struct CompareGeometryId {
 template <typename Data>
 inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
-    const std::vector<std::string>& optionalColumns, size_t event) {
+    const std::vector<std::string>& optionalColumns, std::size_t event) {
   std::string path = ActsExamples::perEventFilepath(inputDir, filename, event);
   dfe::NamedTupleCsvReader<Data> reader(path, optionalColumns);
 
@@ -128,7 +128,7 @@ inline std::vector<Data> readEverything(
 }
 
 std::vector<ActsExamples::HitData> readHitsByGeometryId(
-    const std::string& inputDir, size_t event) {
+    const std::string& inputDir, std::size_t event) {
   // geometry_id and t are optional columns
   auto hits = readEverything<ActsExamples::HitData>(
       inputDir, "hits.csv", {"geometry_id", "t"}, event);
@@ -138,7 +138,7 @@ std::vector<ActsExamples::HitData> readHitsByGeometryId(
 }
 
 std::vector<ActsExamples::CellDataLegacy> readCellsByHitId(
-    const std::string& inputDir, size_t event) {
+    const std::string& inputDir, std::size_t event) {
   // timestamp is an optional element
   auto cells = readEverything<ActsExamples::CellDataLegacy>(
       inputDir, "cells.csv", {"timestamp"}, event);
@@ -148,7 +148,7 @@ std::vector<ActsExamples::CellDataLegacy> readCellsByHitId(
 }
 
 std::vector<ActsExamples::TruthHitData> readTruthHitsByHitId(
-    const std::string& inputDir, size_t event) {
+    const std::string& inputDir, std::size_t event) {
   // define all optional columns
   std::vector<std::string> optionalColumns = {
       "geometry_id", "tt",      "te",     "deltapx",
@@ -188,7 +188,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     Acts::GeometryIdentifier geoId = extractGeometryId(hit);
 
     // find associated truth/ simulation hits
-    std::vector<size_t> simHitIndices;
+    std::vector<std::size_t> simHitIndices;
     {
       auto range = makeRange(std::equal_range(truths.begin(), truths.end(),
                                               hit.hit_id, CompareHitId{}));
