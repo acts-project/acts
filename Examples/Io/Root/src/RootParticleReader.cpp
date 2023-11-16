@@ -84,8 +84,8 @@ ActsExamples::RootParticleReader::RootParticleReader(
   }
 }
 
-std::pair<size_t, size_t> ActsExamples::RootParticleReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::RootParticleReader::availableEvents() const {
   return {0u, m_events};
 }
 

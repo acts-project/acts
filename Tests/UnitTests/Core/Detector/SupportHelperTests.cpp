@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(DiscSupport) {
 
 BOOST_AUTO_TEST_CASE(addCylinderSupport) {
   std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;
-  std::vector<size_t> assignToAll;
+  std::vector<std::size_t> assignToAll;
 
   // The Extent
   Acts::Extent lExtent;
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(addCylinderSupport) {
 
 BOOST_AUTO_TEST_CASE(addDiscSupport) {
   std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;
-  std::vector<size_t> assignToAll;
+  std::vector<std::size_t> assignToAll;
 
   // The Extent
   Acts::Extent lExtent;
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(addDiscSupport) {
 
 BOOST_AUTO_TEST_CASE(addMisconfiguredSupport) {
   std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;
-  std::vector<size_t> assignToAll;
+  std::vector<std::size_t> assignToAll;
 
   // Get the main support parameters:
   // - doff .. offset (in r.z)
