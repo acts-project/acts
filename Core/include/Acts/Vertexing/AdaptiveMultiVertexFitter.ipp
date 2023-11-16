@@ -47,6 +47,26 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
   // Number of iterations counter
   unsigned int nIter = 0;
 
+  // Makro for throwing error message in debug mode
+  auto logDebugData = [this, &state]() {
+    ACTS_DEBUG("Encountered an error when fitting the following "
+               << state.vertexCollection.size() << " vertices:");
+    for (std::size_t vtxInd = 0; vtxInd < state.vertexCollection.size();
+         ++vtxInd) {
+      auto vtx = *(state.vertexCollection[vtxInd]);
+      ACTS_DEBUG("Position of " << vtxInd << ". vertex:");
+      ACTS_DEBUG(vtx.fullPosition());
+      ACTS_DEBUG(" associated tracks:");
+      const auto& trks = state.vtxInfoMap[&vtx].trackLinks;
+      for (std::size_t trkInd = 0; trkInd < trks.size(); ++trkInd) {
+        const auto& trkAtVtx =
+            state.tracksAtVerticesMap.at(std::make_pair(trks[trkInd], &vtx));
+        ACTS_DEBUG(trkInd << ". track parameters:");
+        ACTS_DEBUG(m_extractParameters(*(trkAtVtx.originalParams)));
+      }
+    }
+  };
+
   // Start iterating
   while (nIter < m_cfg.maxIterations &&
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
@@ -73,6 +93,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
         auto prepareVertexResult =
             prepareVertexForFit(state, vtx, vertexingOptions);
         if (!prepareVertexResult.ok()) {
+          logDebugData();
           return prepareVertexResult.error();
         }
       }
@@ -94,6 +115,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       auto setCompatibilitiesResult =
           setAllVertexCompatibilities(state, vtx, vertexingOptions);
       if (!setCompatibilitiesResult.ok()) {
+        logDebugData();
         return setCompatibilitiesResult.error();
       }
     }  // End loop over vertex collection
@@ -102,6 +124,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     auto setWeightsResult =
         setWeightsAndUpdate(state, linearizer, vertexingOptions);
     if (!setWeightsResult.ok()) {
+      logDebugData();
       return setWeightsResult.error();
     }
 
