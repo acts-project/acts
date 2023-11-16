@@ -63,7 +63,6 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
@@ -138,13 +137,6 @@ jobs:
 
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
-
-      - name: Examples
-        shell: bash
-        run: >
-          export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
-          && source /usr/local/bin/thisdd4hep_only.sh
-          && ./CI/run_examples.sh
 
       - name: Python level tests
         shell: bash
@@ -422,7 +414,6 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF
