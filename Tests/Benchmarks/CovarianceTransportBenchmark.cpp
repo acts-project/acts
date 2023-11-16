@@ -19,8 +19,8 @@
 int main(int argc, char* argv[]) {
   using namespace Acts;
 
-  size_t iterations = 3;
-  size_t runs = 1000;
+  std::size_t iterations = 3;
+  std::size_t runs = 1000;
   if (argc >= 2) {
     iterations = std::stoi(argv[1]);
   }

@@ -109,8 +109,8 @@ void ActsExamples::FakeRatePlotTool::fill(
 
 void ActsExamples::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
-    const ActsFatras::Particle& truthParticle, size_t nTruthMatchedTracks,
-    size_t nFakeTracks) const {
+    const ActsFatras::Particle& truthParticle, std::size_t nTruthMatchedTracks,
+    std::size_t nFakeTracks) const {
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 

@@ -126,6 +126,21 @@ BOOST_AUTO_TEST_CASE(ConnectRuntime) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(ConnectConstructFuncPtr) {
+  Delegate<int(int, int)> add{DelegateFuncTag<&sumImpl>{}};
+  BOOST_CHECK(add);
+  BOOST_CHECK(add.connected());
+  BOOST_CHECK_EQUAL(add(4, 4), 8);
+
+  Subtractor s{18};
+  Delegate<int(int)> sub{DelegateFuncTag<&Subtractor::execute>{}, &s};
+
+  BOOST_CHECK(sub);
+  BOOST_CHECK(sub.connected());
+
+  BOOST_CHECK_EQUAL(sub(7), 7 - 18);
+}
+
 void modify(int& v, int a) {
   v = a;
 }
@@ -223,11 +238,9 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
   {
     auto s = std::make_unique<const SignatureTest>();
     Delegate<void(int&, int)> d;
-    d.connect<&SignatureTest::modify>(std::move(s));
-
-    int v = 0;
-    d(v, 42);
-    BOOST_CHECK_EQUAL(v, 42);
+    (void)d;
+    // This should not compile, as it would be a memory leak
+    // d.connect<&SignatureTest::modify>(std::move(s));
   }
 
   {

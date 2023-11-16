@@ -29,7 +29,7 @@ struct AlgorithmContext {
   ///
   /// @note the event dependent contexts are to be added by the
   /// Sequencer::m_decorators list
-  AlgorithmContext(size_t alg, size_t event, WhiteBoard& store)
+  AlgorithmContext(std::size_t alg, std::size_t event, WhiteBoard& store)
       : algorithmNumber(alg), eventNumber(event), eventStore(store) {}
 
   /// @brief ++operator overload to increase the algorithm number
@@ -38,8 +38,8 @@ struct AlgorithmContext {
     return (*this);
   }
 
-  size_t algorithmNumber;            ///< Unique algorithm identifier
-  size_t eventNumber;                ///< Unique event identifier
+  std::size_t algorithmNumber;       ///< Unique algorithm identifier
+  std::size_t eventNumber;           ///< Unique event identifier
   WhiteBoard& eventStore;            ///< Per-event data store
   Acts::GeometryContext geoContext;  ///< Per-event geometry context
   Acts::MagneticFieldContext
