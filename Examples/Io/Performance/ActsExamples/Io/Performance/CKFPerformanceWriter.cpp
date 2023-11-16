@@ -140,14 +140,14 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // The number of majority particle hits and fitted track parameters
-  using RecoTrackInfo = std::pair<size_t, Acts::BoundTrackParameters>;
+  using RecoTrackInfo = std::pair<std::size_t, Acts::BoundTrackParameters>;
   using Acts::VectorHelpers::perp;
 
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
-  std::map<ActsFatras::Barcode, size_t> particleTruthHitCount;
+  std::map<ActsFatras::Barcode, std::size_t> particleTruthHitCount;
   for (const auto& [_, pid] : hitParticlesMap) {
     particleTruthHitCount[pid]++;
   }
@@ -155,7 +155,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // Counter of truth-matched reco tracks
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
   // Counter of truth-unmatched reco tracks
-  std::map<ActsFatras::Barcode, size_t> unmatched;
+  std::map<ActsFatras::Barcode, std::size_t> unmatched;
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
 
@@ -193,7 +193,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     // collection
     ActsFatras::Barcode majorityParticleId =
         particleHitCounts.front().particleId;
-    size_t nMajorityHits = particleHitCounts.front().hitCount;
+    std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
     // Check if the trajectory is matched with truth.
     // If not, it will be class ified as 'fake'
@@ -249,7 +249,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
                 [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
                   return lhs.first > rhs.first;
                 });
-      for (size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
+      for (std::size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
         const auto& [nMajorityHits, fittedParameters] =
             matchedTracks.at(itrack);
         // The tracks with maximum number of majority hits is taken as the
@@ -271,7 +271,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   for (const auto& particle : particles) {
     auto particleId = particle.particleId();
     // Investigate the truth-matched tracks
-    size_t nMatchedTracks = 0;
+    std::size_t nMatchedTracks = 0;
     bool isReconstructed = false;
     auto imatched = matched.find(particleId);
     if (imatched != matched.end()) {
@@ -309,7 +309,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
                                nMatchedTracks - 1);
 
     // Investigate the fake (i.e. truth-unmatched) tracks
-    size_t nFakeTracks = 0;
+    std::size_t nFakeTracks = 0;
     auto ifake = unmatched.find(particleId);
     if (ifake != unmatched.end()) {
       nFakeTracks = ifake->second;

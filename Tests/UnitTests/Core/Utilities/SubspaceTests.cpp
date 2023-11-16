@@ -53,7 +53,7 @@ using ScalarsAndFixedSizeSubspaces = std::tuple<
 // clang-format on
 
 /// Construct a random vector of the specified size.
-template <typename scalar_t, size_t kSize>
+template <typename scalar_t, std::size_t kSize>
 Eigen::Matrix<scalar_t, kSize, 1> makeRandomVector() {
   Eigen::Matrix<scalar_t, kSize, 1> vec;
   vec.setRandom();
@@ -61,17 +61,17 @@ Eigen::Matrix<scalar_t, kSize, 1> makeRandomVector() {
 }
 
 /// Construct a vector w/ monotonically inceasing values starting at 0.
-std::vector<size_t> makeMonotonicIndices(size_t n) {
-  std::vector<size_t> indices(n);
+std::vector<std::size_t> makeMonotonicIndices(std::size_t n) {
+  std::vector<std::size_t> indices(n);
   std::iota(indices.begin(), indices.end(), 0u);
   return indices;
 }
 
 /// Build a sorted array from the first kSize indices.
-template <size_t kSize>
-std::array<size_t, kSize> selectFixedIndices(
-    const std::vector<size_t>& fullIndices) {
-  std::array<size_t, kSize> indices{};
+template <std::size_t kSize>
+std::array<std::size_t, kSize> selectFixedIndices(
+    const std::vector<std::size_t>& fullIndices) {
+  std::array<std::size_t, kSize> indices{};
   for (auto i = 0u; i < kSize; ++i) {
     indices[i] = fullIndices[i];
   }

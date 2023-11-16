@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
   CylindricalTrackingGeometry::DetectorStore dStore;
   auto pSurfaces = pixelSurfaces(dStore);
   // Count the number of surfacees
-  size_t refNumber = 6u * 22u + 14u * (16u + 32u + 52u + 78u);
+  std::size_t refNumber = 6u * 22u + 14u * (16u + 32u + 52u + 78u);
   BOOST_CHECK_EQUAL(pSurfaces.size(), refNumber);
 
   using KDTS = Acts::Experimental::KdtSurfaces<>;

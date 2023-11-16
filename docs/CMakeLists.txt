@@ -14,7 +14,7 @@ list(APPEND sphinx_command "-b;html")
 list(APPEND sphinx_command "-d;${sphinx_doctrees}")
 list(APPEND sphinx_command "-j;auto")
 list(APPEND sphinx_command "-W;--keep-going")
-list(APPEND sphinx_command "-t;run_doxygen")
+list(APPEND sphinx_command "-t;run_doxygen;-t;lazy_autodoc")
 
 if(DEFINED ENV{CI})
   list(APPEND sphinx_command "-b;linkcheck")
