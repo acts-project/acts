@@ -50,7 +50,7 @@ class MultiTrajectoryTestsCommon {
     auto i2b = t.addTrackState(kMask, i1b);
 
     // print each trajectory component
-    std::vector<size_t> act;
+    std::vector<std::size_t> act;
     auto collect = [&](auto p) {
       act.push_back(p.index());
       BOOST_CHECK(!p.hasCalibrated());
@@ -60,7 +60,7 @@ class MultiTrajectoryTestsCommon {
       BOOST_CHECK(!p.hasProjector());
     };
 
-    std::vector<size_t> exp = {i2a, i1a, i0};
+    std::vector<std::size_t> exp = {i2a, i1a, i0};
     t.visitBackwards(i2a, collect);
     BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(),
                                   exp.end());
@@ -137,7 +137,7 @@ class MultiTrajectoryTestsCommon {
     auto i1 = t.addTrackState(kMask, i0);
     auto i2 = t.addTrackState(kMask, i1);
 
-    size_t n = 0;
+    std::size_t n = 0;
     t.applyBackwards(i2, [&](const auto&) {
       n++;
       return false;
@@ -248,7 +248,7 @@ class MultiTrajectoryTestsCommon {
 
     // multi trajectory w/ a single, fully set, track state
     trajectory_t traj = m_factory.create();
-    size_t index = traj.addTrackState();
+    std::size_t index = traj.addTrackState();
     {
       auto ts = traj.getTrackState(index);
       fillTrackState<trajectory_t>(pc, TrackStatePropMask::All, ts);
@@ -318,7 +318,7 @@ class MultiTrajectoryTestsCommon {
     {
       // reset only the effective measurements
       auto [measPar, measCov] = generateBoundParametersCovariance(rng);
-      size_t nMeasurements = tsb.effectiveCalibrated().rows();
+      std::size_t nMeasurements = tsb.effectiveCalibrated().rows();
       auto effPar = measPar.head(nMeasurements);
       auto effCov = measCov.topLeftCorner(nMeasurements, nMeasurements);
       tsb.allocateCalibrated(eBoundSize);
@@ -353,7 +353,7 @@ class MultiTrajectoryTestsCommon {
     TestTrackState pc(rng, 1u);
 
     trajectory_t t = m_factory.create();
-    size_t index = t.addTrackState();
+    std::size_t index = t.addTrackState();
     auto ts = t.getTrackState(index);
     fillTrackState<trajectory_t>(pc, TrackStatePropMask::All, ts);
 
@@ -385,12 +385,12 @@ class MultiTrajectoryTestsCommon {
   }
 
   void testTrackStateProxyStorage(std::default_random_engine& rng,
-                                  size_t nMeasurements) {
+                                  std::size_t nMeasurements) {
     TestTrackState pc(rng, nMeasurements);
 
     // create trajectory with a single fully-filled random track state
     trajectory_t t = m_factory.create();
-    size_t index = t.addTrackState();
+    std::size_t index = t.addTrackState();
     auto ts = t.getTrackState(index);
     fillTrackState<trajectory_t>(pc, TrackStatePropMask::All, ts);
 
@@ -445,7 +445,7 @@ class MultiTrajectoryTestsCommon {
           pc.sourceLink.covariance.topLeftCorner(nMeasurements, nMeasurements);
 
       visit_measurement(ts.calibratedSize(), [&](auto N) {
-        constexpr size_t measdim = decltype(N)::value;
+        constexpr std::size_t measdim = decltype(N)::value;
         BOOST_CHECK_EQUAL(ts.template calibrated<measdim>(), expMeas);
         BOOST_CHECK_EQUAL(ts.template calibratedCovariance<measdim>(), expCov);
       });
@@ -478,9 +478,9 @@ class MultiTrajectoryTestsCommon {
 
     // this should allocate for all components in the trackstate, plus filtered
     trajectory_t t = m_factory.create();
-    size_t i = t.addTrackState(TrackStatePropMask::Predicted |
-                               TrackStatePropMask::Filtered |
-                               TrackStatePropMask::Jacobian);
+    std::size_t i = t.addTrackState(TrackStatePropMask::Predicted |
+                                    TrackStatePropMask::Filtered |
+                                    TrackStatePropMask::Jacobian);
     auto tso = t.getTrackState(i);
     fillTrackState<trajectory_t>(pc, TrackStatePropMask::Predicted, tso);
     fillTrackState<trajectory_t>(pc, TrackStatePropMask::Filtered, tso);
@@ -652,8 +652,8 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL(ts1.predicted(), ts2.predicted());
     BOOST_CHECK_EQUAL(ts1.predictedCovariance(), ts2.predictedCovariance());
 
-    size_t i0 = mj.addTrackState();
-    size_t i1 = mj.addTrackState();
+    std::size_t i0 = mj.addTrackState();
+    std::size_t i1 = mj.addTrackState();
     ts1 = mj.getTrackState(i0);
     ts2 = mj.getTrackState(i1);
     TestTrackState rts1(rng, 1u);
@@ -679,7 +679,7 @@ class MultiTrajectoryTestsCommon {
         ts2.getUncalibratedSourceLink().template get<TestSourceLink>());
 
     visit_measurement(ts1.calibratedSize(), [&](auto N) {
-      constexpr size_t measdim = decltype(N)::value;
+      constexpr std::size_t measdim = decltype(N)::value;
       BOOST_CHECK_NE(ts1.template calibrated<measdim>(),
                      ts2.template calibrated<measdim>());
       BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
@@ -708,7 +708,7 @@ class MultiTrajectoryTestsCommon {
         ts2.getUncalibratedSourceLink().template get<TestSourceLink>());
 
     visit_measurement(ts1.calibratedSize(), [&](auto N) {
-      constexpr size_t measdim = decltype(N)::value;
+      constexpr std::size_t measdim = decltype(N)::value;
       BOOST_CHECK_EQUAL(ts1.template calibrated<measdim>(),
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
@@ -733,7 +733,7 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
 
     visit_measurement(ts1.calibratedSize(), [&](auto N) {
-      constexpr size_t measdim = decltype(N)::value;
+      constexpr std::size_t measdim = decltype(N)::value;
       BOOST_CHECK_NE(ts1.template calibrated<measdim>(),
                      ts2.template calibrated<measdim>());
       BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
@@ -755,7 +755,7 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL(ts1.predictedCovariance(), ts2.predictedCovariance());
 
     visit_measurement(ts1.calibratedSize(), [&](auto N) {
-      constexpr size_t measdim = decltype(N)::value;
+      constexpr std::size_t measdim = decltype(N)::value;
       BOOST_CHECK_EQUAL(ts1.template calibrated<measdim>(),
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
@@ -896,8 +896,8 @@ class MultiTrajectoryTestsCommon {
 
     {
       trajectory_t traj = m_factory.create();
-      size_t ia = traj.addTrackState(TrackStatePropMask::All);
-      size_t ib = traj.addTrackState(TrackStatePropMask::None);
+      std::size_t ia = traj.addTrackState(TrackStatePropMask::All);
+      std::size_t ib = traj.addTrackState(TrackStatePropMask::None);
 
       auto tsa = traj.getTrackState(ia);
       auto tsb = traj.getTrackState(ib);
@@ -938,9 +938,9 @@ class MultiTrajectoryTestsCommon {
 
     {
       trajectory_t traj = m_factory.create();
-      size_t i = traj.addTrackState(TrackStatePropMask::All &
-                                    ~TrackStatePropMask::Filtered &
-                                    ~TrackStatePropMask::Smoothed);
+      std::size_t i = traj.addTrackState(TrackStatePropMask::All &
+                                         ~TrackStatePropMask::Filtered &
+                                         ~TrackStatePropMask::Smoothed);
 
       auto ts = traj.getTrackState(i);
 

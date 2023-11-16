@@ -64,7 +64,7 @@ struct AllPortalsExtractor {
   inline static const std::vector<const Portal*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
+      [[maybe_unused]] const std::vector<std::size_t>& indices = {}) {
     return nState.currentVolume->portals();
   }
 };
@@ -79,7 +79,7 @@ struct AllSurfacesExtractor {
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
+      [[maybe_unused]] const std::vector<std::size_t>& indices = {}) {
     return nState.currentVolume->surfaces();
   }
 };
@@ -93,7 +93,7 @@ struct IndexedSurfacesExtractor {
   /// @param indices are access indices into the surfaces store
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t>& indices) {
+      const NavigationState& nState, const std::vector<std::size_t>& indices) {
     // Get the surface container
     const auto& surfaces = nState.currentVolume->surfaces();
     // The extracted surfaces
@@ -123,14 +123,14 @@ class TestAxis : public IAxis {
 
   ActsScalar getMax() const final { return 1.; }
 
-  size_t getNBins() const final { return 1; };
+  std::size_t getNBins() const final { return 1; };
 };
 
 class MultiGrid1D {
  public:
-  static constexpr size_t DIM = 1u;
+  static constexpr std::size_t DIM = 1u;
 
-  const std::vector<size_t>& atPosition(
+  const std::vector<std::size_t>& atPosition(
       const std::array<ActsScalar, 1u>& /*position*/) const {
     return e;
   }
@@ -139,14 +139,14 @@ class MultiGrid1D {
   TestAxis ta;
 
  private:
-  std::vector<size_t> e = {0u, 1u};
+  std::vector<std::size_t> e = {0u, 1u};
 };
 
 class MultiGrid2D {
  public:
-  static constexpr size_t DIM = 2u;
+  static constexpr std::size_t DIM = 2u;
 
-  const std::vector<size_t>& atPosition(
+  const std::vector<std::size_t>& atPosition(
       const std::array<ActsScalar, 2u>& /*position*/) const {
     return e;
   }
@@ -155,7 +155,7 @@ class MultiGrid2D {
   TestAxis ta;
 
  private:
-  std::vector<size_t> e = {1u};
+  std::vector<std::size_t> e = {1u};
 };
 }  // namespace Acts
 

@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
   if (!quiet) {
     for (auto& regionVec : seedVector) {
-      for (size_t i = 0; i < regionVec.size(); i++) {
+      for (std::size_t i = 0; i < regionVec.size(); i++) {
         const Acts::Seed<SpacePoint>* seed = &regionVec[i];
         const SpacePoint* sp = seed->sp()[0];
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
