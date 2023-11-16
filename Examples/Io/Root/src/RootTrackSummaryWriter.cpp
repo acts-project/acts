@@ -262,7 +262,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     }
 
     // Initialize the truth particle info
-    ActsFatras::Barcode majorityParticleId(std::numeric_limits<size_t>::max());
+    ActsFatras::Barcode majorityParticleId(
+        std::numeric_limits<std::size_t>::max());
     unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
     int t_charge = std::numeric_limits<int>::max();
     float t_time = NaNfloat;

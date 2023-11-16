@@ -246,7 +246,7 @@ class ConstPodioTrackStateContainer final
 
     for (const auto& col : available) {
       std::string prefix = trackStatesKey + "_extra__";
-      size_t p = col.find(prefix);
+      std::size_t p = col.find(prefix);
       if (p == std::string::npos) {
         continue;
       }
@@ -313,14 +313,14 @@ class ConstPodioTrackStateContainer final
     return ConstCovariance{m_jacs->at(ijacobian).getData().values.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType index) const {
     return ConstTrackStateProxy::Measurement<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
   measurementCovariance_impl(IndexType index) const {
     return ConstTrackStateProxy::MeasurementCovariance<measdim>{
@@ -418,27 +418,27 @@ class MutablePodioTrackStateContainer final
     return Covariance{m_jacs->at(ijacobian).data().values.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType index) const {
     return ConstTrackStateProxy::Measurement<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   TrackStateProxy::Measurement<measdim> measurement_impl(IndexType index) {
     return TrackStateProxy::Measurement<measdim>{
         m_collection->at(index).data().measurement.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
   measurementCovariance_impl(IndexType index) const {
     return ConstTrackStateProxy::MeasurementCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   TrackStateProxy::MeasurementCovariance<measdim> measurementCovariance_impl(
       IndexType index) {
     return TrackStateProxy::MeasurementCovariance<measdim>{
@@ -602,7 +602,7 @@ class MutablePodioTrackStateContainer final
                       std::make_unique<podio_detail::DynamicColumn<T>>(key)});
   }
 
-  void allocateCalibrated_impl(IndexType istate, size_t measdim) {
+  void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
     assert(measdim > 0 && "Zero measdim not supported");
     auto& data = m_collection->at(istate).data();
     data.measdim = measdim;

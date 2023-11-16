@@ -143,7 +143,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
   ACTS_VERBOSE("Writing " << trackParams.size() << " track parameters");
 
   // Loop over the estimated track parameters
-  for (size_t iparams = 0; iparams < trackParams.size(); ++iparams) {
+  for (std::size_t iparams = 0; iparams < trackParams.size(); ++iparams) {
     // The reference surface of the parameters, i.e. also the reference surface
     // of the first space point
     const auto& surface = trackParams[iparams].referenceSurface();

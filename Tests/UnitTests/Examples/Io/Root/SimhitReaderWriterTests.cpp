@@ -24,7 +24,7 @@ using namespace Acts::Test;
 
 std::mt19937 gen(23);
 
-auto makeTestSimhits(size_t nSimHits) {
+auto makeTestSimhits(std::size_t nSimHits) {
   std::uniform_int_distribution<uint64_t> distIds(
       1, std::numeric_limits<uint64_t>::max());
   std::uniform_int_distribution<int32_t> distIndex(1, 20);

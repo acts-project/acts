@@ -249,7 +249,7 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
 std::vector<Acts::TrigInDetSiLayer>
 ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
   std::vector<Acts::TrigInDetSiLayer> input_vector;
-  std::vector<size_t> count_vector;
+  std::vector<std::size_t> count_vector;
 
   m_cfg.trackingGeometry->visitSurfaces([this, &input_vector, &count_vector](
                                             const Acts::Surface *surface) {
@@ -337,7 +337,7 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
         find_if(input_vector.begin(), input_vector.end(),
                 [combined_id](auto n) { return n.m_subdet == combined_id; });
     if (current_index != input_vector.end()) {  // not end so does exist
-      size_t index = std::distance(input_vector.begin(), current_index);
+      std::size_t index = std::distance(input_vector.begin(), current_index);
       input_vector[index].m_refCoord += rc;
       input_vector[index].m_minBound += minBound;
       input_vector[index].m_maxBound += maxBound;

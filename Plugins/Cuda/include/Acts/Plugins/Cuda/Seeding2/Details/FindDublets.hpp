@@ -26,9 +26,9 @@ namespace Details {
 /// steps of the code.
 ///
 /// Note that @c middleBottomCounts and @c middleTopCounts have type
-/// "unsigned int" instead of "size_t", because the GPU code needs to
+/// "unsigned int" instead of "std::size_t", because the GPU code needs to
 /// execute atomic operations on these arrays. And CUDA does not define such
-/// operations on size_t (i.e. unsigned long).
+/// operations on std::size_t (i.e. unsigned long).
 ///
 /// @param[in] maxBlockSize The maximum block size to use on the GPU
 /// @param[in] nBottomSPs The number of bottom spacepoints in @c bottomSPs
@@ -56,16 +56,17 @@ namespace Details {
 ///             @c nMiddleSPs x @c nTopSPs, holding the top spacepoint
 ///             indices for the identified middle-top dublets
 ///
-void findDublets(size_t maxBlockSize, size_t nBottomSPs,
-                 const device_array<SpacePoint>& bottomSPs, size_t nMiddleSPs,
-                 const device_array<SpacePoint>& middleSPs, size_t nTopSPs,
+void findDublets(std::size_t maxBlockSize, std::size_t nBottomSPs,
+                 const device_array<SpacePoint>& bottomSPs,
+                 std::size_t nMiddleSPs,
+                 const device_array<SpacePoint>& middleSPs, std::size_t nTopSPs,
                  const device_array<SpacePoint>& topSPs, float deltaRMin,
                  float deltaRMax, float cotThetaMax, float collisionRegionMin,
                  float collisionRegionMax,
                  device_array<unsigned int>& middleBottomCounts,
-                 device_array<size_t>& middleBottomDublets,
+                 device_array<std::size_t>& middleBottomDublets,
                  device_array<unsigned int>& middleTopCounts,
-                 device_array<size_t>& middleTopDublets);
+                 device_array<std::size_t>& middleTopDublets);
 
 }  // namespace Details
 }  // namespace Cuda

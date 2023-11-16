@@ -127,7 +127,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     const AlgorithmContext& ctx,
-    const std::unordered_map<size_t, Acts::RecordedMaterialTrack>&
+    const std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>&
         materialTracks) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -173,7 +173,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       Acts::Vector3 positionSum = Acts::Vector3::Zero();
       double pathCorrectionSum = 0;
 
-      for (size_t start = 0, end = 0; end < materialInteractions.size();
+      for (std::size_t start = 0, end = 0; end < materialInteractions.size();
            ++end) {
         const auto& mintStart = materialInteractions[start];
         const auto& mintEnd = materialInteractions[end];
@@ -202,7 +202,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     }
 
     // Reserve the vector then
-    size_t mints = materialInteractions.size();
+    std::size_t mints = materialInteractions.size();
     m_step_sx.reserve(mints);
     m_step_sy.reserve(mints);
     m_step_sz.reserve(mints);
