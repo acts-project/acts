@@ -107,9 +107,9 @@ inline static void addVolumeLink(nlohmann::json& jSurface, int vLink) {
 ///
 /// @return the acceleration link idnetifier
 template <typename binning_values_t>
-inline static size_t accelerationLink(const binning_values_t& casts) {
+inline static std::size_t accelerationLink(const binning_values_t& casts) {
   // Default is `brute_force`
-  size_t accLink = 0u;
+  std::size_t accLink = 0u;
   if (casts.size() == 2u) {
     if (casts[0u] == binX && casts[1u] == binY) {
       accLink = 1u;

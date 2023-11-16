@@ -23,7 +23,7 @@ namespace {
 
 /// @brief  The generator struct
 struct IndexedSurfacesGenerator {
-  using value_type = std::vector<size_t>;
+  using value_type = std::vector<std::size_t>;
 
   /// @brief  Helper function to create and connect the IndexedSurfacesImpl
   ///
