@@ -77,7 +77,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 
   Acts::GainMatrixUpdater updater;
 
-  size_t maxComponents = 0;
+  std::size_t maxComponents = 0;
   double weightCutoff = 0;
   const double momentumCutoff = 500_MeV;
   bool abortOnError = false;
@@ -123,6 +123,10 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
             &m_slSurfaceAccessor);
     switch (reductionAlg) {
+      case MixtureReductionAlgorithm::weightCut: {
+        gsfOptions.extensions.mixtureReducer
+            .connect<&Acts::reduceMixtureLargestWeights>();
+      } break;
       case MixtureReductionAlgorithm::KLDistance: {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureWithKLDistance>();

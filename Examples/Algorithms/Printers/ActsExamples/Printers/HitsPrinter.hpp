@@ -36,7 +36,7 @@ class HitsPrinter : public IAlgorithm {
  public:
   using Clusters = ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
   using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-  using HitIds = std::vector<size_t>;
+  using HitIds = std::vector<std::size_t>;
 
   struct Config {
     /// Input cluster collection.
@@ -46,12 +46,12 @@ class HitsPrinter : public IAlgorithm {
     /// Input hit id collection
     std::string inputHitIds;
     // Print hits selected by their indices (zero length to disable).
-    size_t selectIndexStart = 0u;
-    size_t selectIndexLength = 0u;
+    std::size_t selectIndexStart = 0u;
+    std::size_t selectIndexLength = 0u;
     // Print hits within a certain geometry range (zero to disable).
-    size_t selectVolume = 0u;
-    size_t selectLayer = 0u;
-    size_t selectModule = 0u;
+    std::size_t selectVolume = 0u;
+    std::size_t selectLayer = 0u;
+    std::size_t selectModule = 0u;
   };
 
   HitsPrinter(const Config& cfg, Acts::Logging::Level level);

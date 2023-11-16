@@ -51,9 +51,9 @@ ActsExamples::ProcessCode ActsExamples::VolumeAssociationTest::execute(
     return Acts::Vector3(r * cos(phi), r * sin(phi), z);
   };
 
-  size_t failedSearch = 0;
-  size_t failedAssignment = 0;
-  for (size_t it = 0; it < m_cfg.ntests; ++it) {
+  std::size_t failedSearch = 0;
+  std::size_t failedAssignment = 0;
+  for (std::size_t it = 0; it < m_cfg.ntests; ++it) {
     auto pos = testPosition();
     auto dv = m_cfg.detector->findDetectorVolume(ctx.geoContext, pos);
     if (dv == nullptr) {
