@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds)};
   const double thickness(1.0);
   SurfaceArrayCreator sac;
-  size_t binsX(2), binsY(4);
+  std::size_t binsX(2), binsY(4);
   auto pSurfaceArray = sac.surfaceArrayOnPlane(tgContext, aSurfaces, binsX,
                                                binsY, BinningValue::binZ);
   auto pPlaneLayerFromSurfaces =
