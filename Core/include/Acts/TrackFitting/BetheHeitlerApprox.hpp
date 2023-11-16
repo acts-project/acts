@@ -98,7 +98,7 @@ struct BetheHeitlerApproxSingleCmp {
 /// mixture. To enable an approximation for continuous input variables, the
 /// weights, means and variances are internally parametrized as a Nth order
 /// polynomial.
-/// @todo This class is rather unflexible: It forces two data representations, 
+/// @todo This class is rather unflexible: It forces two data representations,
 /// making it a bit awkward to add a single parameterization. It would be good
 /// to generalize this at some point.
 template <int NComponents, int PolyDegree>
@@ -120,7 +120,7 @@ class AtlasBetheHeitlerApprox {
   Data m_highData;
   bool m_lowTransform;
   bool m_highTransform;
-  
+
   constexpr static double m_noChangeLimit = 0.0001;
   constexpr static double m_singleGaussianLimit = 0.002;
   double m_lowLimit = 0.10;
@@ -139,7 +139,9 @@ class AtlasBetheHeitlerApprox {
   /// @param lowLimit the upper limit for the low data
   /// @param highLimit the upper limit for the high data
   constexpr AtlasBetheHeitlerApprox(const Data &lowData, const Data &highData,
-                                    bool lowTransform, bool highTransform, double lowLimit=0.1, double highLimit=0.2)
+                                    bool lowTransform, bool highTransform,
+                                    double lowLimit = 0.1,
+                                    double highLimit = 0.2)
       : m_lowData(lowData),
         m_highData(highData),
         m_lowTransform(lowTransform),
@@ -237,7 +239,8 @@ class AtlasBetheHeitlerApprox {
   /// @param lowLimit the upper limit for the low x/x0-data
   /// @param highLimit the upper limit for the high x/x0-data
   static auto loadFromFiles(const std::string &low_parameters_path,
-                            const std::string &high_parameters_path, double lowLimit = 0.1, double highLimit = 0.2) {
+                            const std::string &high_parameters_path,
+                            double lowLimit = 0.1, double highLimit = 0.2) {
     auto read_file = [](const std::string &filepath) {
       std::ifstream file(filepath);
 

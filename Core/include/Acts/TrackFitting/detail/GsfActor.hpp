@@ -330,7 +330,7 @@ struct GsfActor {
                            const navigator_t& navigator,
                            const TemporaryStates& tmpStates,
                            std::vector<ComponentCache>& componentCache,
-                           result_type &result) const {
+                           result_type& result) const {
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       auto proxy = tmpStates.traj.getTrackState(idx);
@@ -363,7 +363,7 @@ struct GsfActor {
         state.stepping.geoContext,
         old_bound.position(state.stepping.geoContext), old_bound.direction());
     slab.scaleThickness(pathCorrection);
-    
+
     const double pathXOverX0 = slab.thicknessInX0();
 
     // Emit a warning if the approximation is not valid for this x/x0
@@ -376,8 +376,7 @@ struct GsfActor {
     }
 
     // Get the mixture
-    const auto mixture =
-        m_cfg.bethe_heitler_approx->mixture(pathXOverX0);
+    const auto mixture = m_cfg.bethe_heitler_approx->mixture(pathXOverX0);
 
     // Create all possible new components
     for (const auto& gaussian : mixture) {
