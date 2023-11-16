@@ -441,8 +441,8 @@ struct ParticleReader : public TreeReader {
     std::string eventNumberStr = std::to_string(eventNumber);
     std::string findStartEntry = "event_id<" + eventNumberStr;
     std::string findParticlesSize = "event_id==" + eventNumberStr;
-    size_t startEntry = tree->GetEntries(findStartEntry.c_str());
-    size_t nParticles = tree->GetEntries(findParticlesSize.c_str());
+    std::size_t startEntry = tree->GetEntries(findStartEntry.c_str());
+    std::size_t nParticles = tree->GetEntries(findParticlesSize.c_str());
     if (nParticles == 0) {
       throw std::invalid_argument(
           "No particles found. Please check the input file.");

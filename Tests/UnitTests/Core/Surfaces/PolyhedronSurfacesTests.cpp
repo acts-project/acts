@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
     auto cone = std::make_shared<ConeBounds>(alpha, 0_mm, hzpos);
     auto oneCone = Surface::makeShared<ConeSurface>(transform, cone);
     auto oneConePh = oneCone->polyhedronRepresentation(tgContext, segments);
-    size_t expectedFaces = segments < 4 ? 4 : segments;
+    std::size_t expectedFaces = segments < 4 ? 4 : segments;
     BOOST_CHECK_EQUAL(oneConePh.faces.size(), expectedFaces);
     BOOST_CHECK_EQUAL(oneConePh.vertices.size(), expectedFaces + 1);
     // Check the extent in space
@@ -164,8 +164,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
     std::string modename = std::get<std::string>(mode);
     bool modetrg = std::get<bool>(mode);
 
-    size_t expectedFaces = segments < 4 ? 4 : segments;
-    size_t expectedVertices = segments < 4 ? 8 : 2 * segments;
+    std::size_t expectedFaces = segments < 4 ? 4 : segments;
+    std::size_t expectedVertices = segments < 4 ? 8 : 2 * segments;
 
     /// The full cone on one side
     auto cylinder = std::make_shared<CylinderBounds>(r, hZ);
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
     BOOST_CHECK_EQUAL(rectangularPh.vertices.size() == 4);
     BOOST_CHECK_EQUAL(rectangularPh.faces.size() == 1);
-    std::vector<size_t> expectedRect = {0, 1, 2, 3};
+    std::vector<std::size_t> expectedRect = {0, 1, 2, 3};
     BOOST_CHECK_EQUAL(rectangularPh.faces[0] == expectedRect);
 
     /// Trapezoidal Plane
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
     BOOST_CHECK_EQUAL(trapezoidalPh.vertices.size() == 4);
     BOOST_CHECK_EQUAL(trapezoidalPh.faces.size() == 1);
-    std::vector<size_t> expectedTra = {0, 1, 2, 3};
+    std::vector<std::size_t> expectedTra = {0, 1, 2, 3};
     BOOST_CHECK_EQUAL(trapezoidalPh.faces[0] == expectedTra);
 
     /// Ring-like ellispoidal Plane

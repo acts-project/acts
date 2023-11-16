@@ -128,7 +128,7 @@ struct FitterTester {
   TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
 
   // expected number of measurements for the given detector
-  constexpr static size_t nMeasurements = 6u;
+  constexpr static std::size_t nMeasurements = 6u;
 
   // detector resolutions
   MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
@@ -259,7 +259,7 @@ struct FitterTester {
 
     // count the number of `smoothed` states
     if (expected_reversed && expected_smoothed) {
-      size_t nSmoothed = 0;
+      std::size_t nSmoothed = 0;
       for (const auto ts : track.trackStatesReversed()) {
         nSmoothed += ts.hasSmoothed();
       }
@@ -314,7 +314,7 @@ struct FitterTester {
 
     // count the number of `smoothed` states
     if (expected_reversed && expected_smoothed) {
-      size_t nSmoothed = 0;
+      std::size_t nSmoothed = 0;
       for (const auto ts : track.trackStatesReversed()) {
         nSmoothed += ts.hasSmoothed();
       }
@@ -452,7 +452,7 @@ struct FitterTester {
 
     // always keep the first and last measurement. leaving those in seems to not
     // count the respective surfaces as holes.
-    for (size_t i = 1u; (i + 1u) < sourceLinks.size(); ++i) {
+    for (std::size_t i = 1u; (i + 1u) < sourceLinks.size(); ++i) {
       // remove the i-th measurement
       auto withHole = sourceLinks;
       withHole.erase(std::next(withHole.begin(), i));
@@ -500,7 +500,7 @@ struct FitterTester {
     Acts::ConstTrackAccessor<bool> reversed{"reversed"};
     Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
 
-    for (size_t i = 0; i < sourceLinks.size(); ++i) {
+    for (std::size_t i = 0; i < sourceLinks.size(); ++i) {
       // replace the i-th measurement with an outlier
       auto withOutlier = sourceLinks;
       withOutlier[i] = outlierSourceLinks[i];
@@ -514,7 +514,7 @@ struct FitterTester {
       const auto& track = res.value();
       BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
       // count the number of outliers
-      size_t nOutliers = 0;
+      std::size_t nOutliers = 0;
       for (const auto state : track.trackStatesReversed()) {
         nOutliers += state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
       }

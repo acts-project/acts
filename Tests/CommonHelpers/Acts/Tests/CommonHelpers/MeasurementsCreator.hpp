@@ -57,7 +57,7 @@ struct MeasurementsCreator {
 
   MeasurementResolutionMap resolutions;
   std::default_random_engine* rng = nullptr;
-  size_t sourceId = 0;
+  std::size_t sourceId = 0;
   // how far away from the measurements the outliers should be
   double distanceOutlier = 10 * Acts::UnitConstants::mm;
 
@@ -156,7 +156,7 @@ Measurements createMeasurements(const propagator_t& propagator,
                                 const track_parameters_t& trackParameters,
                                 const MeasurementResolutionMap& resolutions,
                                 std::default_random_engine& rng,
-                                size_t sourceId = 0u) {
+                                std::size_t sourceId = 0u) {
   using Actions = Acts::ActionList<MeasurementsCreator>;
   using Aborters = Acts::AbortList<Acts::EndOfWorldReached>;
 

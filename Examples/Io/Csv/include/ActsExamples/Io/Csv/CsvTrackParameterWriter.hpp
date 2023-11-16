@@ -46,7 +46,7 @@ class CsvTrackParameterWriter final : public IWriter {
     /// Input filename stem.
     std::string outputStem;
     /// Number of decimal digits for floating point precision in output.
-    size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    std::size_t outputPrecision = std::numeric_limits<float>::max_digits10;
   };
 
   /// Constructor with
