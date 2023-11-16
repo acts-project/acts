@@ -84,20 +84,11 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at the current vertex
-      Acts::Result<void> res =
-          setAllVertexCompatibilities(state, vtx, vertexingOptions);
-
-      if (!res.ok()) {
-        return res.error();
-      }
+      setAllVertexCompatibilities(state, vtx, vertexingOptions);
     }  // End loop over vertex collection
 
     // Recalculate all track weights and update vertices
-    auto res = setWeightsAndUpdate(state, linearizer, vertexingOptions);
-
-    if (!res.ok()) {
-      return res.error();
-    }
+    setWeightsAndUpdate(state, linearizer, vertexingOptions);
 
     // Cool the system down, i.e., reduce the temperature parameter. At lower
     // temperatures, outlying tracks are downweighted more.
@@ -241,11 +232,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Update the 3D impact parameters of all tracks
-  Acts::Result<void> res = updateImpactParams3D(state, vtx, vertexingOptions);
-
-  if (!res.ok()) {
-    return res.error();
-  }
+  updateImpactParams3D(state, vtx, vertexingOptions);
 
   VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
   // Loop over the tracks that are associated with vtx and estimate their
