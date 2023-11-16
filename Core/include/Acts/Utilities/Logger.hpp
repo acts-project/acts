@@ -728,7 +728,7 @@ class Logger {
 
   template <typename... Args>
   void log(Logging::Level lvl, const std::string& message,
-           Args&&... args) const {
+           Logging::structured_log_key_v<Args>&&... args) const {
     if (!doPrint(lvl)) {
       return;
     }
@@ -737,7 +737,10 @@ class Logger {
     auto add_to_json = [&j](auto&& arg) {
       j[std::string{arg.key()}] = std::forward<decltype(arg)>(arg).value();
     };
-    { (add_to_json(std::forward<Args>(args)), ...); }
+    {
+      (add_to_json(std::forward<Logging::structured_log_key_v<Args>>(args)),
+       ...);
+    }
 
     j["message"] = message;
 
