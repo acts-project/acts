@@ -70,11 +70,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
         vtxInfo.relinearize = true;
         // Recalculate the track impact parameters at the current vertex
         // position
-        auto prepareVertexResult =
-            prepareVertexForFit(state, vtx, vertexingOptions);
-        if (!prepareVertexResult.ok()) {
-          return prepareVertexResult.error();
-        }
+        prepareVertexForFit(state, vtx, vertexingOptions);
       }
 
       // Check if we use the constraint during the vertex fit
@@ -91,19 +87,11 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at the current vertex
-      auto setCompatibilitiesResult =
-          setAllVertexCompatibilities(state, vtx, vertexingOptions);
-      if (!setCompatibilitiesResult.ok()) {
-        return setCompatibilitiesResult.error();
-      }
+      setAllVertexCompatibilities(state, vtx, vertexingOptions);
     }  // End loop over vertex collection
 
     // Recalculate all track weights and update vertices
-    auto setWeightsResult =
-        setWeightsAndUpdate(state, linearizer, vertexingOptions);
-    if (!setWeightsResult.ok()) {
-      return setWeightsResult.error();
-    }
+    setWeightsAndUpdate(state, linearizer, vertexingOptions);
 
     // Cool the system down, i.e., reduce the temperature parameter. At lower
     // temperatures, outlying tracks are downweighted more.
