@@ -107,6 +107,4 @@ struct SourceLinkAdapterIterator {
 /// Delegate to unpack the surface associated with a source link
 using SourceLinkSurfaceAccessor = Delegate<const Surface*(const SourceLink&)>;
 
-}  // namespace detail
-
 }  // namespace Acts
