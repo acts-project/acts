@@ -134,7 +134,7 @@ void Sequencer::addContextDecorator(
     throw std::invalid_argument("Can not add empty/NULL context decorator");
   }
   m_decorators.push_back(std::move(decorator));
-  ACTS_INFO("Added context decarator '" << m_decorators.back()->name() << "'");
+  ACTS_INFO("Added context decorator '" << m_decorators.back()->name() << "'");
 }
 
 void Sequencer::addReader(std::shared_ptr<IReader> reader) {

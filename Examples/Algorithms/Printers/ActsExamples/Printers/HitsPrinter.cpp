@@ -71,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
     if (nend <= ihit) {
       ACTS_WARNING("event "
                    << ctx.eventNumber << " collection '" << m_cfg.inputClusters
-                   << " hit index selection is outside the available range");
+                   << "' hit index selection is outside the available range");
     } else {
       ACTS_INFO("event " << ctx.eventNumber << " collection '"
                          << m_cfg.inputClusters << "' contains "

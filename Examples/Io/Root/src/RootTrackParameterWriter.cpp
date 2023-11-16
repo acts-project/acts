@@ -76,7 +76,7 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
     auto path = m_cfg.filePath;
     m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
     if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + path);
+      throw std::ios_base::failure("Could not open '" + path + "'");
     }
   }
   m_outputFile->cd();

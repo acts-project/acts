@@ -274,7 +274,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     if (std::find(available.begin(), available.end(), tracksKey) ==
         available.end()) {
       throw std::runtime_error{"Track collection '" + tracksKey +
-                               "'not found in frame"};
+                               "' not found in frame"};
     }
 
     const auto* collection = frame.get(tracksKey);

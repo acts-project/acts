@@ -42,7 +42,7 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   std::string materialName = material->GetName();
   for (const auto& emat : m_cfg.excludeMaterials) {
     if (emat == materialName) {
-      ACTS_VERBOSE("Exclude step in material '" << materialName << ".");
+      ACTS_VERBOSE("Exclude step in material '" << materialName << "'.");
       return;
     }
   }
