@@ -14,6 +14,7 @@
 #include <variant>
 
 namespace Acts {
+namespace detail {
 
 class AnyIntersection {
  public:
@@ -152,4 +153,5 @@ class AnyMultiIntersection {
   Any m_multiIntersection;
 };
 
+}  // namespace detail
 }  // namespace Acts

@@ -14,8 +14,8 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Propagator/AnyIntersection.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/AnyIntersection.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -107,10 +107,10 @@ class Navigator {
   };
 
   struct NavigationCandidate {
-    AnyIntersection intersection;
+    detail::AnyIntersection intersection;
     BoundaryCheck boundaryCheck;
 
-    NavigationCandidate(AnyIntersection _intersection,
+    NavigationCandidate(detail::AnyIntersection _intersection,
                         BoundaryCheck _boundaryCheck)
         : intersection(std::move(_intersection)),
           boundaryCheck(std::move(_boundaryCheck)) {}
@@ -575,8 +575,8 @@ class Navigator {
       }
 
       for (const auto& boundary : boundaries) {
-        state.navigation.candidates.emplace_back(AnyIntersection(boundary),
-                                                 BoundaryCheck(true));
+        state.navigation.candidates.emplace_back(
+            detail::AnyIntersection(boundary), BoundaryCheck(true));
       }
     }
 
@@ -613,7 +613,7 @@ class Navigator {
 
       for (const auto& layer : layers) {
         state.navigation.candidates.emplace_back(
-            AnyIntersection(layer), m_cfg.boundaryCheckLayerResolving);
+            detail::AnyIntersection(layer), m_cfg.boundaryCheckLayerResolving);
       }
     }
   }
@@ -668,8 +668,8 @@ class Navigator {
       }
 
       for (const auto& surface : surfaces) {
-        state.navigation.candidates.emplace_back(AnyIntersection(surface),
-                                                 BoundaryCheck(true));
+        state.navigation.candidates.emplace_back(
+            detail::AnyIntersection(surface), BoundaryCheck(true));
       }
     }
   }

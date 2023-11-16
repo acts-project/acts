@@ -14,9 +14,10 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Propagator/AnyIntersection.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/detail/AnyIntersection.hpp"
+#include "Acts/Propagator/detail/NavigationCandidate.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -48,56 +49,11 @@ class TryAllNavigator {
     bool resolvePassive = false;
   };
 
-  struct NavigationCandidate {
-    using SurfaceObject = const Surface*;
-    using LayerObject = const Layer*;
-    using BoundaryObject = const BoundarySurfaceT<TrackingVolume>*;
-    using AnyObject = std::variant<SurfaceObject, LayerObject, BoundaryObject>;
-
-    AnyObject object;
-    const Surface* representation = nullptr;
-    BoundaryCheck boundaryCheck;
-
-    NavigationCandidate(AnyObject _object, const Surface* _representation,
-                        BoundaryCheck _boundaryCheck)
-        : object(_object),
-          representation(_representation),
-          boundaryCheck(std::move(_boundaryCheck)) {}
-
-    AnyMultiIntersection intersect(const GeometryContext& gctx,
-                                   const Vector3& position,
-                                   const Vector3& direction,
-                                   ActsScalar tolerance) const {
-      if (std::holds_alternative<SurfaceObject>(object)) {
-        const auto& surface = std::get<SurfaceObject>(object);
-        auto intersection = representation->intersect(gctx, position, direction,
-                                                      boundaryCheck, tolerance);
-        return AnyMultiIntersection(SurfaceMultiIntersection(
-            intersection.intersections(), surface, representation));
-      }
-      if (std::holds_alternative<LayerObject>(object)) {
-        const auto& layer = std::get<LayerObject>(object);
-        auto intersection = representation->intersect(gctx, position, direction,
-                                                      boundaryCheck, tolerance);
-        return AnyMultiIntersection(LayerMultiIntersection(
-            intersection.intersections(), layer, representation));
-      }
-      if (std::holds_alternative<BoundaryObject>(object)) {
-        const auto& boundary = std::get<BoundaryObject>(object);
-        auto intersection = boundary->surfaceRepresentation().intersect(
-            gctx, position, direction, boundaryCheck, tolerance);
-        return AnyMultiIntersection(BoundaryMultiIntersection(
-            intersection.intersections(), boundary, representation));
-      }
-      throw std::runtime_error("unknown type");
-    }
-  };
-
   struct IntersectionCandidate {
-    AnyIntersection intersection;
+    detail::AnyIntersection intersection;
     BoundaryCheck boundaryCheck;
 
-    IntersectionCandidate(AnyIntersection _intersection,
+    IntersectionCandidate(detail::AnyIntersection _intersection,
                           BoundaryCheck _boundaryCheck)
         : intersection(std::move(_intersection)),
           boundaryCheck(std::move(_boundaryCheck)) {}
@@ -119,7 +75,7 @@ class TryAllNavigator {
     const Surface* currentSurface = nullptr;
     const TrackingVolume* currentVolume = nullptr;
 
-    std::vector<NavigationCandidate> candidates;
+    std::vector<detail::NavigationCandidate> candidates;
     std::optional<IntersectionCandidate> intersectionCandidate;
 
     bool targetReached = false;
@@ -405,7 +361,7 @@ class TryAllNavigator {
       return;
     }
 
-    auto addCandidate = [&](NavigationCandidate::AnyObject object,
+    auto addCandidate = [&](detail::NavigationCandidate::AnyObject object,
                             const Surface* representation,
                             BoundaryCheck boundaryCheck) {
       state.navigation.candidates.emplace_back(object, representation,
