@@ -13,10 +13,13 @@
 #include <cstddef>
 #include <fstream>
 #include <memory>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 using namespace Acts::Logging;
 
@@ -143,4 +146,89 @@ BOOST_AUTO_TEST_CASE(DEBUG_test) {
 BOOST_AUTO_TEST_CASE(VERBOSE_test) {
   debug_level_test("verbose_log.txt", VERBOSE);
 }
+
+struct StructuredInfo {
+  int value;
+  float threshold;
+  std::string name;
+
+  StructuredInfo(int v, float t, std::string n)
+      : value(v), threshold(t), name(std::move(n)) {}
+
+  StructuredInfo(const StructuredInfo&) = delete;
+  StructuredInfo& operator=(const StructuredInfo&) = delete;
+
+  NLOHMANN_DEFINE_TYPE_INTRUSIVE(StructuredInfo, value, threshold, name);
+};
+
+BOOST_AUTO_TEST_CASE(StructuredLogTest) {
+  using Acts::Logging::slog;
+  std::stringstream sstr;
+  auto _logger = detail::create_logger("TestLogger", &sstr, Logging::INFO);
+  const auto& logger = *_logger;
+
+  static_assert(JsonConvertible<std::string>);
+  struct NotConvertible {};
+  static_assert(!JsonConvertible<NotConvertible>);
+  static_assert(JsonConvertible<StructuredInfo>);
+
+  std::string padded_name = "TestLogger";
+  padded_name.resize(30, ' ');
+
+  logger.log(Logging::DEBUG, "Message", slog("key") = "value");
+  BOOST_CHECK_EQUAL(sstr.str(), "");  // does not get logged at all
+                                      //
+  logger.log(Logging::WARNING, "Message", slog("key") = "value");
+
+  const std::regex struct_expr{R"RE((\w+) +(\w+) +STRUCT: (\{.*\})\s)RE"};
+
+  std::string act = sstr.str();
+  std::smatch m;
+  BOOST_CHECK(std::regex_match(act, m, struct_expr));
+  BOOST_CHECK_EQUAL(m[1], "TestLogger");
+  BOOST_CHECK_EQUAL(m[2], "WARNING");
+  nlohmann::json exp = {
+      {"message", "Message"},
+      {"key", "value"},
+  };
+  BOOST_CHECK_EQUAL(nlohmann::json::parse(m[3].str()), exp);
+
+  sstr.str("");
+
+  using namespace Acts::LoggingLiterals;
+  logger.log(Logging::INFO, "Message 2", "some_key"_slog = "my_value");
+
+  act = sstr.str();
+  BOOST_CHECK(std::regex_match(act, m, struct_expr));
+  BOOST_CHECK_EQUAL(m[1], "TestLogger");
+  BOOST_CHECK_EQUAL(m[2], "INFO");
+  exp = {
+      {"message", "Message 2"},
+      {"some_key", "my_value"},
+  };
+  BOOST_CHECK_EQUAL(nlohmann::json::parse(m[3].str()), exp);
+
+  sstr.str("");
+
+  logger.log(Logging::INFO, "Message 3",
+             "rich_info"_slog = StructuredInfo{1, 2.0, "test"});
+
+  act = sstr.str();
+  BOOST_CHECK(std::regex_match(act, m, struct_expr));
+  BOOST_CHECK_EQUAL(m[1], "TestLogger");
+  BOOST_CHECK_EQUAL(m[2], "INFO");
+  exp = {
+      {"message", "Message 3"},
+      {
+          "rich_info",
+          {
+              {"value", 1},
+              {"threshold", 2.0},
+              {"name", "test"},
+          },
+      },
+  };
+  BOOST_CHECK_EQUAL(nlohmann::json::parse(m[3].str()), exp);
+}
+
 }  // namespace Acts::Test

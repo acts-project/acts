@@ -23,6 +23,8 @@
 #include <thread>
 #include <utility>
 
+#include <nlohmann/json.hpp>
+
 /// @defgroup Logging Logging
 
 // clang-format off
@@ -623,7 +625,66 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// pointer to destination output stream
   std::ostream* m_out;
 };
+
+template <typename T>
+concept JsonConvertible = requires(T t, nlohmann::json j) {
+  { j = t };
+};
+
+template <JsonConvertible T>
+class structured_log_key_v;
+class structured_log_key {
+ public:
+  explicit structured_log_key(std::string_view key) : m_key{key} {
+    if (m_key.empty() || m_key == "message") {
+      throw std::runtime_error{"Invalid structured logging key '" +
+                               std::string{key} + "'"};
+    }
+  }
+
+  structured_log_key(const structured_log_key&) = delete;
+  structured_log_key(structured_log_key&&) = delete;
+  structured_log_key& operator=(const structured_log_key&) = delete;
+  structured_log_key& operator=(structured_log_key&&) = delete;
+
+  template <JsonConvertible T>
+  structured_log_key_v<T> operator=(T&& value) {
+    return structured_log_key_v<T>{m_key, std::forward<T>(value)};
+  };
+
+  std::string_view key() const { return m_key; }
+
+ protected:
+  std::string_view m_key;
+};
+
+template <JsonConvertible T>
+class structured_log_key_v : public structured_log_key {
+ public:
+  explicit structured_log_key_v(std::string_view key, T&& value)
+      : structured_log_key{key}, m_value{std::move(value)} {}
+
+  structured_log_key_v(const structured_log_key_v&) = delete;
+  structured_log_key_v(structured_log_key_v&&) = delete;
+  structured_log_key_v& operator=(const structured_log_key_v&) = delete;
+  structured_log_key_v& operator=(structured_log_key_v&&) = delete;
+
+  T&& value() && { return std::move(m_value); }
+
+ private:
+  T&& m_value;
+};
+
+using slog = structured_log_key;
+
 }  // namespace Logging
+
+namespace LoggingLiterals {
+inline Logging::structured_log_key operator""_slog(const char* key,
+                                                   std::size_t len) {
+  return Logging::structured_log_key{std::string_view{key, len}};
+}
+}  // namespace LoggingLiterals
 
 /// @brief class for printing debug output
 ///
@@ -658,6 +719,26 @@ class Logger {
     if (doPrint(lvl)) {
       m_printPolicy->flush(lvl, input);
     }
+  }
+
+  template <typename... Args>
+  void log(Logging::Level lvl, const std::string& message,
+           Args&&... args) const {
+    if (!doPrint(lvl)) {
+      return;
+    }
+
+    nlohmann::json j;
+    auto add_to_json = [&j](auto&& arg) {
+      j[std::string{arg.key()}] = std::forward<decltype(arg)>(arg).value();
+    };
+    { (add_to_json(std::forward<Args>(args)), ...); }
+
+    j["message"] = message;
+
+    std::ostringstream os;
+    os << "STRUCT: " << j.dump();
+    m_printPolicy->flush(lvl, os.str());
   }
 
   /// Return the print policy for this logger
