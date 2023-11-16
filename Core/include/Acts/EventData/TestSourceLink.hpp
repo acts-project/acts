@@ -70,19 +70,19 @@ struct TestSourceLink final {
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
   bool operator==(const TestSourceLink& rhs) const {
-    (m_geometryId == rhs.m_geometryId) && (sourceId == rhs.sourceId) &&
+    return (m_geometryId == rhs.m_geometryId) && (sourceId == rhs.sourceId) &&
         (indices == rhs.indices) && (parameters == rhs.parameters) &&
         (covariance == rhs.covariance);
   }
-  bool operator!=(const TestSourceLink& rhs) const { return !(&this == rhs); }
+  bool operator!=(const TestSourceLink& rhs) const { return !(*this == rhs); }
   std::ostream& print(std::ostream& os) const {
-    os << "TestsSourceLink(geometryId=" << sourceLink.m_geometryId
-       << ",sourceId=" << sourceLink.sourceId;
-    if (sourceLink.indices[0] != eBoundSize) {
-      os << ",index0=" << sourceLink.indices[0];
+    os << "TestsSourceLink(geometryId=" << m_geometryId
+       << ",sourceId=" << sourceId;
+    if (indices[0] != eBoundSize) {
+      os << ",index0=" << indices[0];
     }
-    if (sourceLink.indices[1] != eBoundSize) {
-      os << ",index1=" << sourceLink.indices[1];
+    if (indices[1] != eBoundSize) {
+      os << ",index1=" << indices[1];
     }
     os << ")";
     return os;
