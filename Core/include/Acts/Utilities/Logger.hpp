@@ -655,7 +655,7 @@ class structured_log_key {
   template <ACTS_CONCEPT(JsonConvertible) T>
   structured_log_key_v<T> operator=(T&& value) {
     return structured_log_key_v<T>{m_key, std::forward<T>(value)};
-  };
+  }
 
   std::string_view key() const { return m_key; }
 
