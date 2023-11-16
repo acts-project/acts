@@ -10,13 +10,13 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>

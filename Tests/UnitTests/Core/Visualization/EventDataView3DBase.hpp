@@ -12,6 +12,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TestSourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -30,7 +31,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -67,7 +67,7 @@ std::default_random_engine generator(42);
 void createDetector(GeometryContext& tgContext,
                     std::vector<const Surface*>& surfaces,
                     std::shared_ptr<const TrackingGeometry>& detector,
-                    const size_t nSurfaces = 7) {
+                    const std::size_t nSurfaces = 7) {
   using namespace UnitLiterals;
 
   if (nSurfaces < 1) {
@@ -224,7 +224,7 @@ static inline std::string testMeasurement(IVisualization3D& helper) {
   GeometryContext tgContext = GeometryContext();
 
   // Create a detector
-  const size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 7;
   std::vector<const Surface*> surfaces;
   std::shared_ptr<const TrackingGeometry> detector;
   createDetector(tgContext, surfaces, detector, nSurfaces);
@@ -285,7 +285,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   CalibrationContext calContext = CalibrationContext();
 
   // Create a detector
-  const size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 7;
   std::vector<const Surface*> surfaces;
   std::shared_ptr<const TrackingGeometry> detector;
   createDetector(tgContext, surfaces, detector, nSurfaces);
@@ -344,8 +344,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   Acts::GainMatrixSmoother kfSmoother;
 
   KalmanFitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator.connect<
-      &Test::TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator
+      .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   extensions.updater
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);

@@ -16,6 +16,7 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TestSourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -32,7 +33,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestSpacePoint.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 

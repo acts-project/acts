@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TestSourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
@@ -34,7 +35,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -76,8 +76,8 @@ std::default_random_engine rng(42);
 
 KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
   KalmanFitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator.connect<
-      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
       &kfUpdater);
   extensions.smoother
@@ -247,7 +247,7 @@ struct KalmanFitterInputTrajectory {
 /// Function to create trajectories for kalman fitter
 ///
 std::vector<KalmanFitterInputTrajectory> createTrajectories(
-    std::shared_ptr<const TrackingGeometry> geo, size_t nTrajectories) {
+    std::shared_ptr<const TrackingGeometry> geo, std::size_t nTrajectories) {
   // simulation propagator
   const auto simPropagator = makeStraightPropagator(std::move(geo));
 
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Set the surfaces to be aligned (fix the layer 8)
   unsigned int iSurface = 0;
-  std::unordered_map<const Surface*, size_t> idxedAlignSurfaces;
+  std::unordered_map<const Surface*, std::size_t> idxedAlignSurfaces;
   // Loop over the detector elements
   for (auto& det : detector.detectorStore) {
     const auto& surface = det->surface();

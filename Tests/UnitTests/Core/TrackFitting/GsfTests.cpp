@@ -18,6 +18,7 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TestSourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -34,7 +35,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
@@ -74,8 +74,8 @@ FitterTester tester;
 
 GsfExtensions<VectorMultiTrajectory> getExtensions() {
   GsfExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator.connect<
-      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   extensions.updater
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);

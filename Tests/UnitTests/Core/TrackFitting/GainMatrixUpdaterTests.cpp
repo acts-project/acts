@@ -12,11 +12,11 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TestSourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
   BOOST_CHECK(!ts.hasUncalibratedSourceLink());
-  TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>(
+  testSourceLinkCalibrator<VectorMultiTrajectory>(
       tgContext, CalibrationContext{}, SourceLink{std::move(sourceLink)}, ts);
   BOOST_CHECK(ts.hasUncalibratedSourceLink());
 

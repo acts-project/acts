@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TestSourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
@@ -28,7 +29,6 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -75,7 +75,7 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 }
 
 std::shared_ptr<const TrackingGeometry> makeToyDetector(
-    const GeometryContext& tgContext, const size_t nSurfaces = 5) {
+    const GeometryContext& tgContext, const std::size_t nSurfaces = 5) {
   if (nSurfaces < 1) {
     throw std::invalid_argument("At least 1 surfaces needs to be created.");
   }
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   std::default_random_engine rng(42);
 
   Detector detector;
-  const size_t nSurfaces = 5;
+  const std::size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
   auto parametersMeasurements = makeParameters();
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator.connect<
-      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  const size_t nSurfaces = 5;
+  const std::size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
@@ -294,8 +294,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator.connect<
-      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  const size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 7;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
@@ -401,8 +401,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator.connect<
-      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  const size_t nSurfaces = 5;
+  const std::size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
@@ -498,8 +498,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   Gx2Fitter fitter(simPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator.connect<
-      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  const size_t nSurfaces = 5;
+  const std::size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
@@ -597,8 +597,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator.connect<
-      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);

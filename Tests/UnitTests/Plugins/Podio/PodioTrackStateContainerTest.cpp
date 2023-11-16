@@ -20,8 +20,6 @@
 #include "Acts/Plugins/Podio/PodioTrackStateContainer.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
@@ -98,8 +96,6 @@ struct MapHelper : public NullHelper {
 struct Factory {
   using trajectory_t = MutablePodioTrackStateContainer;
   using const_trajectory_t = ConstPodioTrackStateContainer;
-  using test_track_state_t = TestTrackState;
-  using test_source_link_t = TestSourceLink;
 
   // list used to have stable addresses, irrelevant for testing
   std::list<ActsPodioEdm::TrackStateCollection> m_collections;

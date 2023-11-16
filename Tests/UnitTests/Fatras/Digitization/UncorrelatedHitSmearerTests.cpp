@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(BoundAll) {
     auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
     BOOST_CHECK(ret.ok());
     auto [par, cov] = ret.value();
-    for (size_t i = 0; i < s.indices.size(); ++i) {
+    for (std::size_t i = 0; i < s.indices.size(); ++i) {
       BOOST_TEST_INFO("Comparing smeared measurement "
                       << i << " originating from bound parameter "
                       << s.indices[i]);
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(BoundAll) {
     auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
     BOOST_CHECK(ret.ok());
     auto [par, cov] = ret.value();
-    for (size_t i = 0; i < s.indices.size(); ++i) {
+    for (std::size_t i = 0; i < s.indices.size(); ++i) {
       BOOST_TEST_INFO("Comparing smeared measurement "
                       << i << " originating from bound parameter "
                       << s.indices[i]);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(FreeAll) {
     auto ret = s(f.rng, f.hit);
     BOOST_CHECK(ret.ok());
     auto [par, cov] = ret.value();
-    for (size_t i = 0; i < s.indices.size(); ++i) {
+    for (std::size_t i = 0; i < s.indices.size(); ++i) {
       BOOST_TEST_INFO("Comparing smeared measurement "
                       << i << " originating from free parameter "
                       << s.indices[i]);
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(FreeAll) {
     auto ret = s(f.rng, f.hit);
     BOOST_CHECK(ret.ok());
     auto [par, cov] = ret.value();
-    for (size_t i = 0; i < s.indices.size(); ++i) {
+    for (std::size_t i = 0; i < s.indices.size(); ++i) {
       BOOST_TEST_INFO("Comparing smeared measurement "
                       << i << " originating from free parameter "
                       << s.indices[i]);

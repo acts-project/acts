@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TestSourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -22,7 +23,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -91,8 +91,8 @@ std::default_random_engine rng(42);
 
 auto makeDefaultKalmanFitterOptions() {
   KalmanFitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator.connect<
-      &TestSourceLink::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
       &kfUpdater);
   extensions.smoother
