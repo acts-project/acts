@@ -15,3 +15,6 @@ gctx = acts.GeometryContext()
 detector, detectorStore, decorators = dd4hepDetector.finalize(gctx, [str(odd_xml)], None)
 
 acts.examples.writeDetectorToJsonDetray(gctx, detector, 'odd')
+
+acts.examples.writeDetectorToSvg(gctx, detector, 'odd', ['xy', 'zr'])
+

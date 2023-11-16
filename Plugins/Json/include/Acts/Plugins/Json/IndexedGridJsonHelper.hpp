@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-
->>>>>>> 83cb3de1e (first shot at it)
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -15,13 +11,8 @@
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
-<<<<<<< HEAD
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-=======
-#include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
->>>>>>> 83cb3de1e (first shot at it)
 
 #include <tuple>
 
@@ -30,31 +21,6 @@ using namespace Experimental::detail::GridAxisGenerators;
 
 namespace IndexedGridJsonHelper {
 
-<<<<<<< HEAD
-=======
-// Generate the possible axes in this case
-static auto s_possibleAxes =
-    std::tuple<EqBound, EqOpen, EqClosed,
-               // All 1D Var  options
-               VarBound, VarOpen, VarClosed,
-               // All 2D EqEq options
-               EqBoundEqBound, EqBoundEqOpen, EqBoundEqClosed, EqOpenEqBound,
-               EqOpenEqOpen, EqOpenEqClosed, EqClosedEqBound, EqClosedEqOpen,
-               EqClosedEqClosed,
-               // All 2D EqVar options
-               EqBoundVarBound, EqBoundVarOpen, EqBoundVarClosed,
-               EqOpenVarBound, EqOpenVarOpen, EqOpenVarClosed, EqClosedVarBound,
-               EqClosedVarOpen, EqClosedVarClosed,
-               // All 2D VarEq options
-               VarBoundEqBound, VarBoundEqOpen, VarBoundEqClosed,
-               VarOpenEqBound, VarOpenEqOpen, VarOpenEqClosed, VarClosedEqBound,
-               VarClosedEqOpen, VarClosedEqClosed,
-               // All 2D VarEq options
-               VarBoundVarBound, VarBoundVarOpen, VarBoundVarClosed,
-               VarOpenVarBound, VarOpenVarOpen, VarOpenVarClosed,
-               VarClosedVarBound, VarClosedVarOpen, VarClosedVarClosed>{};
-
->>>>>>> 83cb3de1e (first shot at it)
 /// @brief The actual conversion method
 template <typename index_grid>
 nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false) {
@@ -73,13 +39,8 @@ nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false) {
   }
   jIndexedGrid["casts"] = jCasts;
   jIndexedGrid["transform"] =
-<<<<<<< HEAD
       Transform3JsonConverter::toJson(indexGrid.transform);
   if (detray) {
-=======
-      Transform3JsonConverter::toJson(indexGrid.transform);      
-  if (detray){
->>>>>>> 83cb3de1e (first shot at it)
     jIndexedGrid = GridJsonConverter::toJsonDetray(indexGrid.grid);
   } else {
     jIndexedGrid["grid"] = GridJsonConverter::toJson(indexGrid.grid);

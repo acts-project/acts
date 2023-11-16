@@ -23,7 +23,6 @@ namespace {
 
 /// @brief  The generator struct
 struct IndexedSurfacesGenerator {
-<<<<<<< HEAD
   using value_type = std::vector<std::size_t>;
 
   /// @brief  Helper function to create and connect the IndexedSurfacesImpl
@@ -52,37 +51,6 @@ struct IndexedSurfacesGenerator {
     auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
         std::tie(allPortals, indexedSurfaces));
 
-=======
-
-  using value_type = std::vector<size_t>;
-
-  /// @brief  Helper function to create and connect the IndexedSurfacesImpl
-  ///
-  /// @tparam grid_type the type of the grid, indicates also the dimension
-  ///
-  /// @param grid the grid object
-  /// @param bv the bin value array
-  /// @param transform the transform for the indexed surfaces inmplementaiton
-  ///
-  /// @return a connected SurfaceCandidatesUpdator object
-  template <typename grid_type>
-  Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
-      grid_type&& grid,
-      const std::array<Acts::BinningValue, grid_type::DIM>& bv,
-      const Acts::Transform3& transform) {
-    Acts::Experimental::IndexedSurfacesImpl<grid_type> indexedSurfaces(
-        std::move(grid), bv, transform);
-
-    // The portal delegate
-    Acts::Experimental::AllPortalsImpl allPortals;
-
-    // The chained delegate: indexed surfaces and all portals
-    using DelegateType = Acts::Experimental::IndexedSurfacesAllPortalsImpl<
-        grid_type, Acts::Experimental::IndexedSurfacesImpl>;
-    auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
-        std::tie(allPortals, indexedSurfaces));
-
->>>>>>> 83cb3de1e (first shot at it)
     // Create the delegate and connect it
     Acts::Experimental::SurfaceCandidatesUpdator nStateUpdator;
     nStateUpdator.connect<&DelegateType::update>(
@@ -97,7 +65,6 @@ struct IndexedSurfacesGenerator {
 Acts::Experimental::SurfaceCandidatesUpdator
 Acts::IndexedSurfacesJsonConverter::fromJson(
     const nlohmann::json& jSurfaceNavigation) {
-<<<<<<< HEAD
   if (!jSurfaceNavigation.is_null()) {
     // The return object
     auto sfCandidates = IndexedGridJsonHelper::generateFromJson<
@@ -106,14 +73,6 @@ Acts::IndexedSurfacesJsonConverter::fromJson(
     if (sfCandidates.connected()) {
       return sfCandidates;
     }
-=======
-  // The return object
-  auto sfCandidates = IndexedGridJsonHelper::generateFromJson<
-      Experimental::SurfaceCandidatesUpdator, IndexedSurfacesGenerator>(
-      jSurfaceNavigation, "IndexedSurfaces");
-  if (sfCandidates.connected()) {
-    return sfCandidates;
->>>>>>> 83cb3de1e (first shot at it)
   }
   // Return the object
   return Experimental::tryAllPortalsAndSurfaces();

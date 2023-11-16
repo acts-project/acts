@@ -215,6 +215,15 @@ void addJson(Context& ctx) {
               out.open(name + "_material_detray.json");
               out << jMaterial.dump(4);
               out.close();
+
+              out.open(name + "_surface_grids_detray.json");
+              out << jSurfaceGrids.dump(4);
+              out.close();
+
+              out.open(name + "_material_detray.json");
+              out << jMaterial.dump(4);
+              out.close();
+
             });
   }
 

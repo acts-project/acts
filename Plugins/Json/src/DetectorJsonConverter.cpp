@@ -96,13 +96,6 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   auto ti = std::localtime(&tt);
 
   nlohmann::json jFile;
-<<<<<<< HEAD
-=======
-
-  // (1) Detector section
-  nlohmann::json jDetector;
-  nlohmann::json jData;
->>>>>>> 83cb3de1e (first shot at it)
 
   // (1) Detector section
   nlohmann::json jGeometry;
@@ -129,31 +122,13 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
       nSurfaces += jVolume["surfaces"].size();
     }
   }
-<<<<<<< HEAD
   jGeometryData["volumes"] = jVolumes;
   jGeometryData["volume_grid"] = DetectorVolumeFinderJsonConverter::toJson(
       detector.detectorVolumeFinder(), true);
-=======
-  jData["volumes"] = jVolumes;
-
-  jData["volume_grid"] = DetectorVolumeFinderJsonConverter::toJson(
-      detector.detectorVolumeFinder(), true);
-
-  // Get the time stamp
-  // Write the header
-  nlohmann::json jHeader;
-
-  nlohmann::json jHeaderCommon;
-  jHeaderCommon["detector"] = detector.name();
-  jHeaderCommon["date"] = std::asctime(ti);
-  jHeaderCommon["version"] = "detray - 0.44.0";
-  jHeaderCommon["tag"] = "geometry";
->>>>>>> 83cb3de1e (first shot at it)
 
   // (1) Geometry
   // For detray, the number of surfaces and portals are collected
   // from the translated volumes
-<<<<<<< HEAD
   jGeometryHeader["type"] = "detray";
   jGeometryHeader["common"] = jCommonHeader;
   jGeometryHeader["surface_count"] = nSurfaces;
@@ -187,20 +162,6 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
 
   jSurfaceGrids["header"] = jSurfaceGridsHeader;
   jSurfaceGrids["data"] = jSurfaceGridsData;
-=======
-  jHeader["type"] = "detray";
-  jHeader["common"] = jHeaderCommon;
-  jHeader["surface_count"] = nSurfaces;
-  jHeader["volume_count"] = detector.volumes().size();
-
-  jDetector["header"] = jHeader;
-  jDetector["data"] = jData;
-
-  jFile["geometry"] = jDetector;
-
-  // (2) surface grid section
-  nlohmann::json jSurfaceGrids;
->>>>>>> 83cb3de1e (first shot at it)
 
   jFile["surface_grids"] = jSurfaceGrids;
 

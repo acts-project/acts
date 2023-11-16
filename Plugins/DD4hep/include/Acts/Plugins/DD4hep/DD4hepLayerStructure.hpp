@@ -11,10 +11,14 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 
+#include <tuple>
+#include <optional>
 #include <memory>
 #include <string>
 
@@ -59,8 +63,14 @@ class DD4hepLayerStructure {
     std::string name = "";
     /// An out put log level
     Logging::Level logLevel = Logging::INFO;
+    // The extent structure - optionally
+    std::optional<Extent> extent = std::nullopt;
+    /// The extent constraints - optionally
+    std::vector<BinningValue> extentContraints = {};
     /// Approximation for the polyhedron binning nSegments
     unsigned int nSegments = 1u;
+    /// Patch the binning with the extent if possible
+    bool patchBinningWithExtent = true;
     /// Conversion options
     DD4hepDetectorSurfaceFactory::Options conversionOptions;
   };
@@ -72,12 +82,14 @@ class DD4hepLayerStructure {
   /// It takes the detector element from DD4hep and some optional parameters
   ///
   /// @param dd4hepStore [in, out] the detector store for the built elements
+  /// @param gcxt the geometry context
   /// @param dd4hepElement the dd4hep detector element
   /// @param options containing the optional descriptions
   ///
-  /// @return a LayerStructureBuilder
-  std::shared_ptr<LayerStructureBuilder> builder(
+  /// @return a LayerStructureBuilder, and an optional extent
+  std::tuple<std::shared_ptr<LayerStructureBuilder>, std::optional<Extent>> builder(
       DD4hepDetectorElement::Store& dd4hepStore,
+      const GeometryContext& gctx,
       const dd4hep::DetElement& dd4hepElement, const Options& options) const;
 
  private:

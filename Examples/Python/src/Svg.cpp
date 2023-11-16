@@ -6,8 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Plugins/ActSVG/DetectorSvgConverter.hpp"
+#include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
@@ -152,6 +155,42 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(infoBoxTitle);
     ACTS_PYTHON_MEMBER(outputDir);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    mex.def(
+        "writeDetectorToSvg",
+        [](const Acts::GeometryContext& gctx,
+           const Acts::Experimental::Detector& detector,
+           const std::string& name,
+           const std::vector<const std::string>& views) -> void {
+          // Get the detector
+          auto svgDetector = Svg::DetectorConverter::convert(
+              gctx, detector, Svg::DetectorConverter::Options{});
+
+          std::ofstream out;
+          // x-y view 
+          if (std::find(views.begin(), views.end(), "xy") != views.end()) {
+            auto xyDetector = Svg::View::xy(svgDetector, name);
+            Acts::Svg::toFile({xyDetector}, name + "_xy.svg");
+          }
+          // z-r view 
+          if (std::find(views.begin(), views.end(), "zr") != views.end()) {
+            auto xyDetector = Svg::View::zr(svgDetector, name);
+            Acts::Svg::toFile({xyDetector}, name + "_zr.svg");
+          }
+          // Specifc views for volumes
+          for (const auto& v : detector.volumes()){
+            auto [ svgVolume, indexGrid ]  = Svg::DetectorVolumeConverter::convert(
+                  gctx, *v, Svg::DetectorVolumeConverter::Options{});
+            if (std::find(views.begin(), views.end(), "volumes_zr") != views.end()) {
+              auto zrVolume = Svg::View::zr(svgVolume, v->name());
+              Acts::Svg::toFile({zrVolume}, v->name() + "_zr.svg");
+            }          
+          }
+
+
+        });
   }
 }
 }  // namespace Acts::Python

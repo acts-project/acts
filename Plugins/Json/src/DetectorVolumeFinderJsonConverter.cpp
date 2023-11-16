@@ -22,12 +22,7 @@
 namespace {
 /// @brief  The generator struct
 struct IndexedVolumesGenerator {
-<<<<<<< HEAD
   using value_type = std::size_t;
-=======
-
-  using value_type = size_t;
->>>>>>> 83cb3de1e (first shot at it)
 
   /// @brief  Helper function to create and connect the IndexedVolumesImpl
   ///
