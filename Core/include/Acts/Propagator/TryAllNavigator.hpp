@@ -431,6 +431,7 @@ class TryAllNavigator {
   template <typename propagator_state_t>
   void reinitializeCandidates(propagator_state_t& state) const {
     state.navigation.candidates.clear();
+    state.navigation.intersectionCandidate.reset();
 
     initializeVolumeCandidates(state);
   }
