@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -236,7 +237,6 @@ class TryAllNavigator {
 
     // Navigator preStep always resets the current surface
     state.navigation.currentSurface = nullptr;
-    state.navigation.intersectionCandidate.reset();
 
     ACTS_VERBOSE(volInfo(state) << "intersect candidates");
 
@@ -246,6 +246,23 @@ class TryAllNavigator {
 
     double nearLimit = state.options.surfaceTolerance;
     double farLimit = std::numeric_limits<double>::max();
+
+    // handle overstepping
+    if (state.navigation.intersectionCandidate.has_value()) {
+      const IntersectionCandidate& previousIntersection =
+          state.navigation.intersectionCandidate.value();
+
+      const Surface& surface =
+          *previousIntersection.intersection.representation();
+      std::uint8_t index = previousIntersection.intersection.index();
+      BoundaryCheck boundaryCheck = previousIntersection.boundaryCheck;
+
+      auto intersection = surface.intersect(
+          state.geoContext, position, direction, boundaryCheck,
+          state.options.surfaceTolerance)[index];
+
+      nearLimit = intersection.pathLength();
+    }
 
     std::vector<IntersectionCandidate> intersectionCandidates;
 
@@ -349,6 +366,8 @@ class TryAllNavigator {
       return true;
     }
 
+    state.navigation.intersectionCandidate.reset();
+
     if (intersection.template checkType<SurfaceIntersection>()) {
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
     } else if (intersection.template checkType<LayerIntersection>()) {
@@ -417,6 +436,14 @@ class TryAllNavigator {
       ACTS_VERBOSE(volInfo(state) << "Found " << layers.size() << " layers.");
 
       for (const auto& layer : layers) {
+        if (!layer->resolve(m_cfg.resolveSensitive, m_cfg.resolveMaterial,
+                            m_cfg.resolvePassive)) {
+          continue;
+        }
+
+        addCandidate(layer.get(), &layer->surfaceRepresentation(),
+                     BoundaryCheck(true));
+
         if (layer->approachDescriptor() != nullptr) {
           const auto& approaches =
               layer->approachDescriptor()->containedSurfaces();

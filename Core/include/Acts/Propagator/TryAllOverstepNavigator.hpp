@@ -488,6 +488,14 @@ class TryAllOverstepNavigator {
       ACTS_VERBOSE(volInfo(state) << "Found " << layers.size() << " layers.");
 
       for (const auto& layer : layers) {
+        if (!layer->resolve(m_cfg.resolveSensitive, m_cfg.resolveMaterial,
+                            m_cfg.resolvePassive)) {
+          continue;
+        }
+
+        addCandidate(layer.get(), &layer->surfaceRepresentation(),
+                     BoundaryCheck(true));
+
         if (layer->approachDescriptor() != nullptr) {
           const auto& approaches =
               layer->approachDescriptor()->containedSurfaces();

@@ -66,7 +66,7 @@ using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
-const double Bz = 2_T;
+double Bz = 2_T;
 auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
 
 EigenStepper estepper(bField);
@@ -77,8 +77,8 @@ StraightLineStepper slstepper;
 Navigator slnavigator({tGeometry});
 StraightLinePropagator slpropagator(slstepper, std::move(slnavigator));
 
-const int ntests = 500;
-const int skip = 0;
+int ntests = 500;
+int skip = 0;
 bool debugMode = false;
 
 /// the actual test nethod that runs the test can be used with several

@@ -267,11 +267,6 @@ class Navigator {
       state.navigation.startVolume =
           m_cfg.trackingGeometry->lowestTrackingVolume(
               state.geoContext, stepper.position(state.stepping));
-      state.navigation.startLayer =
-          state.navigation.startVolume
-              ? state.navigation.startVolume->associatedLayer(
-                    state.geoContext, stepper.position(state.stepping))
-              : nullptr;
     }
 
     // Special handling if the start surface is a boundary surface since the
