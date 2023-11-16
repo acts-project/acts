@@ -296,6 +296,9 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @param state Fitter state
   void doVertexSmoothing(State& state) const;
+
+  void logDebugData(const State& state,
+                    const GeometryContext& geoContext) const;
 };
 
 }  // namespace Acts
