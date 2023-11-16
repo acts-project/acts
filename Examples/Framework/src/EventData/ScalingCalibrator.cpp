@@ -53,9 +53,9 @@ std::pair<Acts::GeometryIdentifier, std::string> parseMapKey(
   std::smatch matches;
 
   if (std::regex_search(mapkey, matches, reg) && matches.size() == 5) {
-    size_t vol = std::stoull(matches[1].str());
-    size_t lyr = std::stoull(matches[2].str());
-    size_t mod = std::stoull(matches[3].str());
+    std::size_t vol = std::stoull(matches[1].str());
+    std::size_t lyr = std::stoull(matches[2].str());
+    std::size_t mod = std::stoull(matches[3].str());
 
     Acts::GeometryIdentifier geoId;
     geoId.setVolume(vol);
@@ -166,7 +166,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
         fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
         fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
 
-        constexpr size_t kSize =
+        constexpr std::size_t kSize =
             std::remove_reference_t<decltype(meas)>::size();
         std::array<Acts::BoundIndices, kSize> indices = meas.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;

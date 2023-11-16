@@ -23,13 +23,13 @@ void AlignedDetectorWithOptions::addOptions(
   // specify the rotation setp
   opt.add_options()(
       "align-seed",
-      boost::program_options::value<size_t>()->default_value(1324354657),
+      boost::program_options::value<std::size_t>()->default_value(1324354657),
       "Seed for the decorator random numbers.")(
       "align-iovsize",
-      boost::program_options::value<size_t>()->default_value(100),
+      boost::program_options::value<std::size_t>()->default_value(100),
       "Size of a valid IOV.")(
       "align-flushsize",
-      boost::program_options::value<size_t>()->default_value(200),
+      boost::program_options::value<std::size_t>()->default_value(200),
       "Span until garbage collection is active.")(
       "align-no-gc", boost::program_options::bool_switch())(
       "align-sigma-iplane",
@@ -45,7 +45,7 @@ void AlignedDetectorWithOptions::addOptions(
       boost::program_options::value<double>()->default_value(0.),
       "Sigma of the out-of-plane rotation misalignment in [mrad]")(
       "align-loglevel",
-      boost::program_options::value<size_t>()->default_value(3),
+      boost::program_options::value<std::size_t>()->default_value(3),
       "Output log level of the alignment decorator.")(
       "align-firstnominal",
       boost::program_options::value<bool>()->default_value(false),
@@ -63,23 +63,23 @@ auto AlignedDetectorWithOptions::finalize(
   using Config = Contextual::AlignedDetector::Config;
   Config cfg;
 
-  cfg.buildLevel = vm["geo-generic-buildlevel"].template as<size_t>();
+  cfg.buildLevel = vm["geo-generic-buildlevel"].template as<std::size_t>();
   // set geometry building logging level
-  cfg.surfaceLogLevel =
-      Acts::Logging::Level(vm["geo-surface-loglevel"].template as<size_t>());
+  cfg.surfaceLogLevel = Acts::Logging::Level(
+      vm["geo-surface-loglevel"].template as<std::size_t>());
   cfg.layerLogLevel =
-      Acts::Logging::Level(vm["geo-layer-loglevel"].template as<size_t>());
-  cfg.volumeLogLevel =
-      Acts::Logging::Level(vm["geo-volume-loglevel"].template as<size_t>());
+      Acts::Logging::Level(vm["geo-layer-loglevel"].template as<std::size_t>());
+  cfg.volumeLogLevel = Acts::Logging::Level(
+      vm["geo-volume-loglevel"].template as<std::size_t>());
 
   cfg.buildProto = (vm["mat-input-type"].template as<std::string>() == "proto");
 
   cfg.decoratorLogLevel =
-      Acts::Logging::Level(vm["align-loglevel"].template as<size_t>());
+      Acts::Logging::Level(vm["align-loglevel"].template as<std::size_t>());
 
-  cfg.seed = vm["align-seed"].template as<size_t>();
-  cfg.iovSize = vm["align-iovsize"].template as<size_t>();
-  cfg.flushSize = vm["align-flushsize"].template as<size_t>();
+  cfg.seed = vm["align-seed"].template as<std::size_t>();
+  cfg.iovSize = vm["align-iovsize"].template as<std::size_t>();
+  cfg.flushSize = vm["align-flushsize"].template as<std::size_t>();
   cfg.doGarbageCollection = !vm["align-no-gc"].as<bool>();
 
   // The misalignments
