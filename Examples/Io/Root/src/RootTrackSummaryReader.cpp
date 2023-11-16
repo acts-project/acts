@@ -106,7 +106,7 @@ ActsExamples::RootTrackSummaryReader::RootTrackSummaryReader(
   }
 }
 
-std::pair<size_t, size_t>
+std::pair<std::size_t, std::size_t>
 ActsExamples::RootTrackSummaryReader::availableEvents() const {
   return {0u, m_events};
 }

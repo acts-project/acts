@@ -35,9 +35,9 @@ namespace Test {
 
 double halfX = 5_mm;
 double halfY = 10_mm;
-size_t ntests = 100;
-size_t nbinsx = 100;
-size_t nbinsy = 200;
+std::size_t ntests = 100;
+std::size_t nbinsx = 100;
+std::size_t nbinsy = 200;
 double hThickness = 75_um;
 double lAngle = 0.1;
 double tanAlpha = tan(lAngle);

@@ -44,7 +44,7 @@ std::unordered_map<int, std::vector<int>> dbscanTrackClustering(
 
   arma::mat data(2, trackMap.size());
   int trackID = 0;
-  arma::Row<size_t> assignments;
+  arma::Row<std::size_t> assignments;
 
   // Get the input feature of the network for all the tracks
   for (const auto& [key, val] : trackMap) {
@@ -53,7 +53,7 @@ std::unordered_map<int, std::vector<int>> dbscanTrackClustering(
     data(1, trackID) = Acts::VectorHelpers::phi(traj.momentum());
     trackID++;
   }
-  size_t clusterNb = dbscan.Cluster(data, assignments);
+  std::size_t clusterNb = dbscan.Cluster(data, assignments);
   trackID = 0;
 
   // Cluster track with DBScan

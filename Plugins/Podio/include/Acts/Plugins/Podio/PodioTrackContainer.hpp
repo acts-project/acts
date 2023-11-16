@@ -164,7 +164,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     return m_dynamic.find(key) != m_dynamic.end();
   }
 
-  size_t size_impl() const { return m_collection->size(); }
+  std::size_t size_impl() const { return m_collection->size(); }
   // END INTERFACE HELPER
 
   const Surface* referenceSurface_impl(IndexType itrack) const {
@@ -274,7 +274,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     if (std::find(available.begin(), available.end(), tracksKey) ==
         available.end()) {
       throw std::runtime_error{"Track collection '" + tracksKey +
-                               "'not found in frame"};
+                               "' not found in frame"};
     }
 
     const auto* collection = frame.get(tracksKey);
@@ -295,7 +295,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
     for (const auto& col : available) {
       std::string prefix = tracksKey + "_extra__";
-      size_t p = col.find(prefix);
+      std::size_t p = col.find(prefix);
       if (p == std::string::npos) {
         continue;
       }
@@ -341,7 +341,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     return m_dynamic.find(key) != m_dynamic.end();
   }
 
-  size_t size_impl() const { return m_collection->size(); }
+  std::size_t size_impl() const { return m_collection->size(); }
 
   const Surface* referenceSurface_impl(IndexType itrack) const {
     return m_surfaces.at(itrack).get();
