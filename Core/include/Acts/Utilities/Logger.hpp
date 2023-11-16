@@ -632,8 +632,8 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
 #if defined(__cpp_concepts)
 template <typename T>
 concept JsonConvertible = requires(T t, nlohmann::json j) {
-                            { j = t };
-                          };
+  {j = t};
+};
 #endif
 
 template <ACTS_CONCEPT(JsonConvertible) T>
