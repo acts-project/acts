@@ -89,7 +89,7 @@ class CsvTrackWriter : public WriterT<ConstTrackContainer> {
   ///
   struct TrackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
     size_t trackId = 0;
-    int seedId = 0;
+    unsigned int seedId = 0;
     ActsFatras::Barcode particleId;
     size_t nMajorityHits = 0;
     std::string trackType;

@@ -63,7 +63,7 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
         std::atanh(std::cos(params[i].parameters()[Acts::eBoundTheta]));
     double phi = params[i].parameters()[Acts::eBoundPhi];
     // Fill the clustering input
-    clusteringParams.push_back({phi, eta, seeds[i].z(), pT / 10});
+    clusteringParams.push_back({phi, eta, seeds[i].z() / 50, pT});
     // Fill the NN input
     networkInput.row(NNindex) << pT, eta, phi, seeds[i].sp()[0]->x(),
         seeds[i].sp()[0]->y(), seeds[i].sp()[0]->z(), seeds[i].sp()[1]->x(),

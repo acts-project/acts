@@ -28,38 +28,31 @@ def matchGood(Seed_files: list[str], CKF_files: list[str]) -> pd.DataFrame:
         data_seed.loc[data_seed["good/duplicate/fake"] == "good", "good/duplicate/fake"] = "duplicate"
         data_seed.loc[data_seed["goodSeed"] == True, "good/duplicate/fake"] = "good"
 
+        cleanedData = pd.DataFrame()
+
         for ID in data_seed["particleId"].unique():
             if (
                 data_seed.loc[data_seed["particleId"] == ID, "goodSeed"] == False
             ).all():
                 data_seed.loc[data_seed["particleId"] == ID, "good/duplicate/fake"] = "fake"
+            else:
+                cleanedData = pd.concat([data_seed.loc[data_seed["particleId"] == ID], cleanedData])
+
         # Save the cleaned dataset for future use (the cleaning is time consuming)
         matched = f_seed[:-4] + "_matched.csv"
         matchedData = data_seed.sort_values("seed_id")
         matchedData = matchedData.set_index("seed_id")
-        matchedData.drop(columns=["goodSeed"])
+        matchedData = matchedData.drop(columns=["goodSeed"])
         matchedData.to_csv(matched)
         data = pd.concat([data, matchedData])
 
-        # Remove the particle ID where all seeds are fakes and no good seed is available
-        cleanedData = pd.DataFrame()
-        print(len(data_seed["particleId"].unique()))
-        print(len(data_seed.loc[data_seed["goodSeed"] == True]))
-        for ID in data_seed["particleId"].unique():
-            if not (
-                data_seed.loc[data_seed["particleId"] == ID, "goodSeed"] == False
-            ).all():
-                cleanedData = pd.concat(
-                    [data_seed.loc[data_seed["particleId"] == ID], cleanedData]
-                )
         # Save the cleaned dataset for future use (the cleaning is time consuming)
-        print(len(data_seed))
-        print(len(cleanedData))
         cleaned = f_seed[:-4] + "_cleaned.csv"
         cleanedData = cleanedData.sort_values("seed_id")
         cleanedData = cleanedData.set_index("seed_id")
-        cleanedData.drop(columns=["goodSeed"])
+        cleanedData = cleanedData.drop(columns=["goodSeed"])
         cleanedData.to_csv(cleaned)
+        
     return data
 
 

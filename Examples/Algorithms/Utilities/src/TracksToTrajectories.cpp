@@ -42,7 +42,6 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
   if (tracks.hasColumn(Acts::hashString("trackGroup"))) {
     // track group by seed is available, produce grouped trajectories
     std::optional<unsigned int> lastSeed;
-    std::optional<unsigned int> curentSeed;
     Trajectories::IndexedParameters parameters;
     std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
 
@@ -50,11 +49,10 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
       if (!lastSeed) {
         lastSeed = seedNumber(track);
       }
-      curentSeed = seedNumber(track);
-      if (curentSeed.value() != lastSeed.value()) {
+      if (seedNumber(track) != lastSeed.value()) {
         // make copies and clear vectors
         trajectories.emplace_back(tracks.trackStateContainer(), tips,
-                                  parameters, lastSeed.value() - 1);
+                                  parameters);
         tips.clear();
         parameters.clear();
       }
@@ -75,7 +73,7 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
 
     // last entry: move vectors
     trajectories.emplace_back(tracks.trackStateContainer(), std::move(tips),
-                              std::move(parameters), curentSeed.value() - 1);
+                              std::move(parameters));
 
   } else {
     // no grouping by seed, make one trajectory per track
