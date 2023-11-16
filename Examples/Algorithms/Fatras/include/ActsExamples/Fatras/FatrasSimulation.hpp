@@ -88,7 +88,7 @@ class FatrasSimulation final : public IAlgorithm {
     /// This is just a performance optimization hint and has no impact on the
     /// algorithm function. It is used to guess the amount of memory to
     /// pre-allocate to avoid allocation during event simulation.
-    size_t averageHitsPerParticle = 16u;
+    std::size_t averageHitsPerParticle = 16u;
   };
 
   /// Construct the algorithm from a config.

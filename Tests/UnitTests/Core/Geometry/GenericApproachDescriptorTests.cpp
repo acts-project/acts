@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
                     someSurfaces.size());
 
-  for (size_t i = 0; i < someSurfaces.size(); i++) {
+  for (std::size_t i = 0; i < someSurfaces.size(); i++) {
     BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().at(i),
                       someSurfaces.at(i).get());
   }
