@@ -215,7 +215,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
-  ACTS_VERBOSE('\t' << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
+  ACTS_VERBOSE("\t" << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
   // assign min/max
   double min = cylinder ? rMin : zMin;
@@ -249,7 +249,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
-  ACTS_VERBOSE('\t' << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
+  ACTS_VERBOSE("\t" << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
   // create the layers
   LayerVector layers;
@@ -743,7 +743,7 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
                                   << " volumes at face tubeOuterCover:");
     for (tVolIter = glueVolumesOuterTube.begin();
          tVolIter != glueVolumesOuterTube.end(); ++tVolIter) {
-      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     }
   }
   // return success

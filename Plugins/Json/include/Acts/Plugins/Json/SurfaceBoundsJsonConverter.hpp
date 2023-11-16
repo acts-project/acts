@@ -52,7 +52,7 @@ nlohmann::json toJsonDetray(const SurfaceBounds& bounds, bool portal = false);
 /// @return a shared_ptr to a surface object for type polymorphism
 template <typename bounds_t>
 std::shared_ptr<const bounds_t> fromJson(const nlohmann::json& j) {
-  const size_t kValues = bounds_t::BoundValues::eSize;
+  const std::size_t kValues = bounds_t::BoundValues::eSize;
   std::array<ActsScalar, kValues> bValues{};
   std::vector<ActsScalar> bVector = j["values"];
   std::copy_n(bVector.begin(), kValues, bValues.begin());
