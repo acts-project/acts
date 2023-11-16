@@ -403,7 +403,7 @@ void test_multi_stepper_surface_status_update() {
     BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
                       Intersection3D::Status::reachable);
     BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
-                      Intersection3D::Status::missed);
+                      Intersection3D::Status::reachable);
   }
 
   // Step forward now
@@ -429,23 +429,23 @@ void test_multi_stepper_surface_status_update() {
     BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
                       Intersection3D::Status::onSurface);
     BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
-                      Intersection3D::Status::missed);
+                      Intersection3D::Status::onSurface);
   }
 
-  // Start surface should be unreachable
+  // Start surface should be reachable
   {
     auto status = multi_stepper.updateSurfaceStatus(multi_state, *start_surface,
                                                     0, Direction::Forward,
                                                     BoundaryCheck(false));
 
-    BOOST_CHECK_EQUAL(status, Intersection3D::Status::unreachable);
+    BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
 
     BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
-                      Intersection3D::Status::unreachable);
+                      Intersection3D::Status::reachable);
     BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
-                      Intersection3D::Status::unreachable);
+                      Intersection3D::Status::reachable);
   }
 }
 
@@ -522,10 +522,10 @@ void test_component_bound_state() {
     BOOST_REQUIRE(ok_bound_state.ok());
     BOOST_CHECK(*single_bound_state == *ok_bound_state);
 
-    auto failed_bound_state =
+    auto not_failed_bound_state =
         (*(++cmp_iterable.begin()))
             .boundState(*right_surface, true, FreeToBoundCorrection(false));
-    BOOST_CHECK(!failed_bound_state.ok());
+    BOOST_CHECK(not_failed_bound_state.ok());
   }
 }
 
