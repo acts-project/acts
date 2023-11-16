@@ -34,8 +34,8 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
 
   // Get the logical volume
   auto g4LogicalVolume = g4PhysVol.GetLogicalVolume();
-  size_t nDaughters = g4LogicalVolume->GetNoDaughters();
-  for (size_t d = 0; d < nDaughters; ++d) {
+  std::size_t nDaughters = g4LogicalVolume->GetNoDaughters();
+  for (std::size_t d = 0; d < nDaughters; ++d) {
     auto daughter = g4LogicalVolume->GetDaughter(d);
     construct(cache, newToGlobal, *daughter, option);
   }

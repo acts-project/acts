@@ -24,8 +24,6 @@ class GsfErrorCategory : public std::error_category {
     switch (static_cast<GsfError>(c)) {
       case GsfError::StartParametersHaveNoCovariance:
         return "Start parameters have no Covariance";
-      case GsfError::StartParametersNotOnStartSurface:
-        return "Start parameters don't lie in the start surface";
       case GsfError::NoMeasurementStatesCreatedForward:
         return "No measurement states found in the forward pass";
       case GsfError::NoMeasurementStatesCreatedBackward:

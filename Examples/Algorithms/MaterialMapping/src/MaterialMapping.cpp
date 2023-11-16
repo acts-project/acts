@@ -101,8 +101,8 @@ ActsExamples::MaterialMapping::~MaterialMapping() {
 ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     const ActsExamples::AlgorithmContext& context) const {
   // Take the collection from the EventStore
-  std::unordered_map<size_t, Acts::RecordedMaterialTrack> mtrackCollection =
-      m_inputMaterialTracks(context);
+  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
+      mtrackCollection = m_inputMaterialTracks(context);
 
   if (m_cfg.materialSurfaceMapper) {
     // To make it work with the framework needs a lock guard

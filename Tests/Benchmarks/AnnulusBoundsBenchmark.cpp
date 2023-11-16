@@ -62,7 +62,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   BoundaryCheck bcCov{cov, 1};
 
   // visualization to make sense of things
-  for (size_t i = 0; i < 10000; i++) {
+  for (std::size_t i = 0; i < 10000; i++) {
     const Vector2 loc{xDist(rng), yDist(rng)};
     auto locPC = toStripFrame(loc);
     bool isInsideAbs = aBounds.inside(locPC, bcAbs);

@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
       {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
-  const size_t cmp_to_mask = 2;
+  const std::size_t cmp_to_mask = 2;
 
   detail::SymmetricKLDistanceMatrix mat_full(cmps, proj);
   mat_full.maskAssociatedDistances(cmp_to_mask);
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   // Assume that the components are on a generic plane surface
   auto surface = Acts::Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0},
                                                          Vector3{1, 0, 0});
-  const size_t NComps = 4;
+  const std::size_t NComps = 4;
   std::vector<GsfComponent> cmps;
 
   for (auto i = 0ul; i < NComps; ++i) {
