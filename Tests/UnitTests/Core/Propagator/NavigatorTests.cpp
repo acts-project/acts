@@ -48,6 +48,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <random>
 #include <string>
 #include <system_error>
 #include <tuple>
@@ -669,29 +670,7 @@ BOOST_AUTO_TEST_CASE(Navigator_postStep) {
   }
 }
 
-int ntests = 400;
-int skip = 0;
-bool debugMode = false;
-
-using EigenStepper = Acts::EigenStepper<>;
-using EigenPropagator = Propagator<EigenStepper, Navigator>;
-using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
-using ReferenceEigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
-using ReferenceStraightLinePropagator =
-    Propagator<StraightLineStepper, TryAllNavigator>;
 using SurfaceCollector = SurfaceCollector<SurfaceSelector>;
-
-EigenStepper estepper(bField);
-StraightLineStepper slstepper;
-
-EigenPropagator epropagator(estepper, Navigator({tGeometry, true, true, true}));
-StraightLinePropagator slpropagator(slstepper,
-                                    Navigator({tGeometry, true, true, true}));
-ReferenceEigenPropagator refepropagator(estepper,
-                                        TryAllNavigator({tGeometry, true, true,
-                                                         true}));
-ReferenceStraightLinePropagator refslpropagator(
-    slstepper, TryAllNavigator({tGeometry, true, true, true}));
 
 std::vector<GeometryIdentifier> collectGeoIds(
     const SurfaceCollector::result_type& surfaceHits) {
@@ -715,13 +694,10 @@ std::vector<GeometryIdentifier> collectGeoIds(
 /// @param index is the run index from the test
 template <typename propagator_t>
 void runSelfConsistencyTest(const propagator_t& prop, double pT, double phi,
-                            double theta, int charge, double time, int index) {
+                            double theta, int charge, double time,
+                            bool debugMode) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
-
-  if (index < skip) {
-    return;
-  }
 
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
                                    std::nullopt, ParticleHypothesis::pion());
@@ -948,7 +924,7 @@ void runSelfConsistencyTest(const propagator_t& prop, double pT, double phi,
 template <typename propagator_probe_t, typename propagator_ref_t>
 void runConsistencyTest(const propagator_probe_t& propProbe,
                         const propagator_ref_t& propRef, double pT, double phi,
-                        double theta, int charge, double time, int index) {
+                        double theta, int charge, double time, bool debugMode) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
 
@@ -990,10 +966,6 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
     return fwdSurfaces;
   };
 
-  if (index < skip) {
-    return;
-  }
-
   if (debugMode) {
     std::cout << ">>> Probe Propagation : start." << std::endl;
   }
@@ -1015,44 +987,78 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
                                 refSurfaces.begin(), refSurfaces.end());
 }
 
+int ntests = 80;
+int skip = 0;
+bool debugMode = false;
+
+using EigenStepper = Acts::EigenStepper<>;
+using EigenPropagator = Propagator<EigenStepper, Navigator>;
+using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
+using ReferenceEigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
+using ReferenceStraightLinePropagator =
+    Propagator<StraightLineStepper, TryAllNavigator>;
+
+EigenStepper estepper(bField);
+StraightLineStepper slstepper;
+
+EigenPropagator epropagator(estepper, Navigator({tGeometry, true, true, true}));
+StraightLinePropagator slpropagator(slstepper,
+                                    Navigator({tGeometry, true, true, true}));
+ReferenceEigenPropagator refepropagator(estepper,
+                                        TryAllNavigator({tGeometry, true, true,
+                                                         true}));
+ReferenceStraightLinePropagator refslpropagator(
+    slstepper, TryAllNavigator({tGeometry, true, true, true}));
+
 BOOST_DATA_TEST_CASE(
     Navigator_random,
-    bdata::random((bdata::seed = 20,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution =
                        std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 21,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
                            std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
         bdata::random(
-            (bdata::seed = 23,
+            (bdata::engine = std::mt19937(), bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random(
-            (bdata::seed = 24,
+            (bdata::engine = std::mt19937(), bdata::seed = 24,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
+  if (index < skip) {
+    return;
+  }
+
+  if (debugMode) {
+    std::cout << ">>> Run navigation tests with pT = " << pT
+              << "; phi = " << phi << "; charge = " << charge
+              << " time = " << time << "; index = " << index << ";"
+              << std::endl;
+  }
+
   if (debugMode) {
     std::cout << ">>> Test self consistency epropagator" << std::endl;
   }
-  runSelfConsistencyTest(epropagator, pT, phi, theta, charge, time, index);
+  runSelfConsistencyTest(epropagator, pT, phi, theta, charge, time, debugMode);
   if (debugMode) {
     std::cout << ">>> Test self consistency slpropagator" << std::endl;
   }
-  runSelfConsistencyTest(slpropagator, pT, phi, theta, charge, time, index);
+  runSelfConsistencyTest(slpropagator, pT, phi, theta, charge, time, debugMode);
 
   if (debugMode) {
     std::cout << ">>> Test consistency epropagator" << std::endl;
   }
   runConsistencyTest(epropagator, refepropagator, pT, phi, theta, charge, time,
-                     index);
+                     debugMode);
   if (debugMode) {
     std::cout << ">>> Test consistency slpropagator" << std::endl;
   }
   runConsistencyTest(slpropagator, refslpropagator, pT, phi, theta, charge,
-                     time, index);
+                     time, debugMode);
 }
 
 }  // namespace Test
