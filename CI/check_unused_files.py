@@ -136,8 +136,8 @@ def main():
             if filepath.suffix in suffix_header + suffix_source:
                 if file_can_be_removed(filepath.stem, dirs_base_code):
                     unused_files += (str(filepath),)
-                    # remove_cmd = "rm " + str(filepath)
-                    # os.system(remove_cmd)
+                    remove_cmd = "rm " + str(filepath)
+                    os.system(remove_cmd)
 
             # TODO Find test to check python files
             if filepath.suffix in suffix_python:
@@ -148,15 +148,15 @@ def main():
             if filepath.suffix in suffix_doc:
                 if file_can_be_removed(filepath.stem, dirs_base_docs):
                     unused_files += (str(filepath),)
-                    # remove_cmd = "rm " + str(filepath)
-                    # os.system(remove_cmd)
+                    remove_cmd = "rm " + str(filepath)
+                    os.system(remove_cmd)
 
             # Check and print other files
             if filepath.suffix in suffix_image + suffix_other:
                 if file_can_be_removed(filename, dirs_base):
                     unused_files += (str(filepath),)
-                    # remove_cmd = "rm " + str(filepath)
-                    # os.system(remove_cmd)
+                    remove_cmd = "rm " + str(filepath)
+                    os.system(remove_cmd)
 
     if len(wrong_extension) != 0:
         print(
