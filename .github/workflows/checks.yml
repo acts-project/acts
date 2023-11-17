@@ -136,3 +136,11 @@ jobs:
       - name: Check
         run: >
           CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}
+  unused_files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - name: Check
+        run: >
+          CI/check_unused_files.py
