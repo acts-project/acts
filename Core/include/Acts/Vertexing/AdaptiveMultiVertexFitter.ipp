@@ -49,6 +49,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
       if (xyDiff.norm() > m_cfg.maxDistToLinPoint) {
         // Set flag for relinearization
         vtxInfo.relinearize = true;
+        // Recalculate the track impact parameters at the current vertex
+        // position
+        prepareVertexForFit(state, vtx, vertexingOptions);
       }
 
       // Check if we use the constraint during the vertex fit
@@ -101,6 +104,12 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
   }
 
   std::vector<Vertex<input_track_t>*> verticesToFit = {&newVertex};
+
+  // Save the 3D impact parameters of all tracks associated with newVertex.
+  auto res = prepareVertexForFit(state, &newVertex, vertexingOptions);
+  if (!res.ok()) {
+    return res.error();
+  }
 
   // List of vertices added in last iteration
   std::vector<Vertex<input_track_t>*> lastIterAddedVertices = {&newVertex};
@@ -161,47 +170,25 @@ bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    updateImpactParams3D(
+Acts::Result<void> Acts::
+    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
-  // Vertex position, i.e., point wrt which the impact parameters are estimated
-  const Vector3& vtxPosition = vtxInfo.oldPosition.template head<3>();
+  // Vertex seed position
+  const Vector3& seedPos = vtxInfo.seedPosition.template head<3>();
 
   // Loop over all tracks at the vertex
   for (const auto& trk : vtxInfo.trackLinks) {
-    // Track parameters
-    auto trkParams = m_extractParameters(*trk);
-
-    // Origin of the track reference surface
-    Vector3 surfaceOrigin = trkParams.referenceSurface()
-                                .transform(vertexingOptions.geoContext)
-                                .translation();
-    // Skip the impact point estimation if the impact parameters of trk wrt the
-    // current vertex position were already calculated.
-    if (surfaceOrigin == vtxPosition &&
-        vtxInfo.impactParams3D.find(trk) != vtxInfo.impactParams3D.end()) {
-      continue;
-    }
-
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-        trkParams, vtxPosition, state.ipState);
+        m_extractParameters(*trk), seedPos, state.ipState);
     if (!res.ok()) {
       return res.error();
     }
-
-    // Try to create a new map entry. If "trk" already exists as key, the
-    // corresponding value will not be overwritten and the boolean "inserted"
-    // will be set to false ...
-    auto [it, inserted] = vtxInfo.impactParams3D.emplace(trk, *res);
-    // ... and we have to overwrite manually.
-    if (!inserted) {
-      it->second = *res;
-    }
+    // Save 3D impact parameters of the track
+    vtxInfo.impactParams3D.emplace(trk, res.value());
   }
   return {};
 }
@@ -212,14 +199,26 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
-  // Update the 3D impact parameters of all tracks
-  updateImpactParams3D(state, vtx, vertexingOptions);
-
   VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
-  // Loop over the tracks that are associated with vtx and estimate their
+
+  // Loop over all tracks that are associated with vtx and estimate their
   // compatibility
   for (const auto& trk : vtxInfo.trackLinks) {
     auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
+    // Recover from cases where linearization point != 0 but
+    // more tracks were added later on
+    if (vtxInfo.impactParams3D.find(trk) == vtxInfo.impactParams3D.end()) {
+      auto res = m_cfg.ipEst.estimate3DImpactParameters(
+          vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+          m_extractParameters(*trk), VectorHelpers::position(vtxInfo.linPoint),
+          state.ipState);
+      if (!res.ok()) {
+        return res.error();
+      }
+      // Set impactParams3D for current trackAtVertex
+      vtxInfo.impactParams3D.emplace(trk, res.value());
+    }
+    // Set compatibility with current vertex
     Acts::Result<double> compatibilityResult(0.);
     if (m_cfg.useTime) {
       compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<4>(
