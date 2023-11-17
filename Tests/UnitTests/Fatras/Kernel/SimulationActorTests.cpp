@@ -63,8 +63,8 @@ struct MockInteractionList {
   struct Selection {
     double x0Limit = std::numeric_limits<double>::infinity();
     double l0Limit = std::numeric_limits<double>::infinity();
-    size_t x0Process = SIZE_MAX;
-    size_t l0Process = SIZE_MAX;
+    std::size_t x0Process = SIZE_MAX;
+    std::size_t l0Process = SIZE_MAX;
   };
 
   double energyLoss = 0;
@@ -86,7 +86,7 @@ struct MockInteractionList {
   }
 
   template <typename generator_t>
-  bool runPointLike(generator_t & /*generator*/, size_t /*processIndex*/,
+  bool runPointLike(generator_t & /*generator*/, std::size_t /*processIndex*/,
                     Particle & /*particle*/,
                     std::vector<Particle> & /*generated*/) const {
     return false;

@@ -86,7 +86,7 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + path);
+    throw std::ios_base::failure("Could not open '" + path + "'");
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
@@ -320,7 +320,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                                       particleHitCounts);
         ActsFatras::Barcode majorityParticleId =
             particleHitCounts.front().particleId;
-        size_t nMajorityHits = particleHitCounts.front().hitCount;
+        std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
         if (nMajorityHits * 1. / track.nMeasurements() <
             m_cfg.truthMatchProbMin) {
@@ -400,7 +400,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         // since we expect trackParameters and associatedTruthParticles to
         // align.
         bool foundMatchingParams = false;
-        for (size_t i = 0; i < trackParameters.size(); ++i) {
+        for (std::size_t i = 0; i < trackParameters.size(); ++i) {
           const auto& params = trackParameters[i].parameters();
 
           if (origTrack.parameters() == params) {
@@ -489,7 +489,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       auto& innerPullThetaFitted = m_pullThetaFitted.emplace_back();
       auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
 
-      for (size_t j = 0; j < associatedTruthParticles.size(); ++j) {
+      for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
         const auto& particle = associatedTruthParticles[j];
         int priVtxId = particle.particleId().vertexPrimary();
         int secVtxId = particle.particleId().vertexSecondary();

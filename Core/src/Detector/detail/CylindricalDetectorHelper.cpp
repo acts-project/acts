@@ -353,7 +353,7 @@ void checkBounds(
             message += "' does not match with '";
           }
           message += volumes[iv]->name();
-          message += "\n";
+          message += "'\n";
           message += " - at bound values ";
           message += std::to_string(refValues[r]);
           message += " / " + std::to_string(curValues[c]);
@@ -599,7 +599,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
         message += volumes[iv - 1]->name();
         message += "' does not attach to '";
         message += volumes[iv]->name();
-        message += "\n";
+        message += "'\n";
         message += " - along z with values ";
         message += Acts::toString(keepPosition);
         message += " / " + Acts::toString(wastePosition);
@@ -784,7 +784,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
       message += volumes[iv - 1]->name();
       message += "' does not attach to '";
       message += volumes[iv]->name();
-      message += "\n";
+      message += "'\n";
       message += " - within phi sectors ";
       message += std::to_string(lowPhi);
       message +=

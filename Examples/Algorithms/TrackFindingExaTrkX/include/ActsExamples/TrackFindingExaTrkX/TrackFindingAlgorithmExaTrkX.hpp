@@ -68,7 +68,7 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     float clusterYScale = 1.f;
 
     /// Target graph properties
-    size_t targetMinHits = 3;
+    std::size_t targetMinHits = 3;
     double targetMinPT = 500 * Acts::UnitConstants::MeV;
   };
 

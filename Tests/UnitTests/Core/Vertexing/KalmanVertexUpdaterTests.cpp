@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     }
 
     // After update, vertex should be closer to the track
-    BOOST_CHECK(newDistance < oldDistance);
+    BOOST_CHECK_LT(newDistance, oldDistance);
 
     // Note: KalmanVertexUpdater updates the vertex w.r.t. the
     // newly given track, but does NOT add the track to the

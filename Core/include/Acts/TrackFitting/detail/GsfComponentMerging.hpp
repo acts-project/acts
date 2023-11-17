@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Identity.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -18,8 +19,7 @@
 #include <optional>
 #include <tuple>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Angle descriptions for the combineBoundGaussianMixture function
 template <BoundIndices Idx>
@@ -203,13 +203,6 @@ auto gaussianMixtureMeanCov(const components_t components,
   return RetType{mean, cov};
 }
 
-}  // namespace detail
-
-/// @enum MixtureReductionMethod
-///
-/// Available reduction methods for the reduction of a Gaussian mixture
-enum class MixtureReductionMethod { eMean, eMaxWeight };
-
 /// Reduce Gaussian mixture
 ///
 /// @param mixture The mixture iterable
@@ -220,16 +213,16 @@ enum class MixtureReductionMethod { eMean, eMaxWeight };
 ///
 /// @return parameters and covariance as std::tuple< BoundVector, BoundMatrix >
 template <typename mixture_t, typename projector_t = Acts::Identity>
-auto reduceGaussianMixture(const mixture_t &mixture, const Surface &surface,
-                           MixtureReductionMethod method,
-                           projector_t &&projector = projector_t{}) {
+auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
+                          ComponentMergeMethod method,
+                          projector_t &&projector = projector_t{}) {
   using R = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
   const auto [mean, cov] =
       detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
         return detail::gaussianMixtureMeanCov(mixture, projector, desc);
       });
 
-  if (method == MixtureReductionMethod::eMean) {
+  if (method == ComponentMergeMethod::eMean) {
     return R{mean, cov};
   } else {
     const auto maxWeightIt = std::max_element(
@@ -242,4 +235,4 @@ auto reduceGaussianMixture(const mixture_t &mixture, const Surface &surface,
   }
 }
 
-}  // namespace Acts
+}  // namespace Acts::detail

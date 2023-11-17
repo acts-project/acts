@@ -723,7 +723,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * options.minHelixDiameter2 * m_config.helixCut) {
+      if (S2 < B2 * options.minHelixDiameter2) {
         continue;
       }
 

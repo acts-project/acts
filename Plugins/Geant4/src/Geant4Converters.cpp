@@ -153,7 +153,7 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
       static_cast<ActsScalar>(g4Box.GetZHalfLength())};
 
   auto minAt = std::min_element(hG4XYZ.begin(), hG4XYZ.end());
-  size_t minPos = std::distance(hG4XYZ.begin(), minAt);
+  std::size_t minPos = std::distance(hG4XYZ.begin(), minAt);
   ActsScalar thickness = 2. * hG4XYZ[minPos];
 
   std::array<int, 2u> rAxes = {};
@@ -171,6 +171,8 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
     case 2: {
       rAxes = {0, 1};
     } break;
+    default:  // do nothing
+      break;
   }
   auto rBounds = std::make_shared<RectangleBounds>(hG4XYZ[std::abs(rAxes[0u])],
                                                    hG4XYZ[std::abs(rAxes[1u])]);
@@ -191,7 +193,7 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
                                   hlZ};
 
   auto minAt = std::min_element(dXYZ.begin(), dXYZ.end());
-  size_t minPos = std::distance(dXYZ.begin(), minAt);
+  std::size_t minPos = std::distance(dXYZ.begin(), minAt);
   ActsScalar thickness = 2. * dXYZ[minPos];
 
   ActsScalar halfLengthXminY = 0.;
@@ -381,7 +383,7 @@ Acts::Material Acts::Geant4MaterialConverter::material(
     Ar = g4Elements->at(0)->GetN();
     Z = g4Material.GetZ();
   } else {
-    for (size_t i = 0; i < g4NElements; i++) {
+    for (std::size_t i = 0; i < g4NElements; i++) {
       Ar += g4Elements->at(i)->GetN() * g4Fraction[i];
       Z += g4Elements->at(i)->GetZ() * g4Fraction[i];
     }
