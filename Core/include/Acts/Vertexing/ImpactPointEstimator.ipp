@@ -256,6 +256,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Note that we assume a constant B field here!
   auto fieldRes = m_cfg.bField->getField(refPoint, state.fieldCache);
   if (!fieldRes.ok()) {
+    ACTS_ERROR("In getDistanceAndMomentum, the B field at\n"
+               << refPoint << "\ncould not be retrieved.");
     return fieldRes.error();
   }
   double bZ = (*fieldRes)[eZ];

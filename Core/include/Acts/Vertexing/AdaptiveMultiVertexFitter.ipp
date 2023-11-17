@@ -382,7 +382,8 @@ void Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::logDebugData(
     auto vtx = state.vertexCollection[vtxInd];
     ACTS_DEBUG("Position of " << vtxInd << ". vertex seed:\n"
                               << state.vtxInfoMap.at(vtx).seedPosition);
-    ACTS_DEBUG("Current position of said vertex:\n" << vtx->fullPosition());
+    ACTS_DEBUG("Position of said vertex after the last fitting step:\n"
+               << state.vtxInfoMap.at(vtx).oldPosition);
     ACTS_DEBUG("Associated tracks:");
     const auto& trks = state.vtxInfoMap.at(vtx).trackLinks;
     for (std::size_t trkInd = 0; trkInd < trks.size(); ++trkInd) {
