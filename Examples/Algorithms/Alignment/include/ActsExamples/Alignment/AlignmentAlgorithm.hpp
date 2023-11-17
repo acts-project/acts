@@ -24,6 +24,31 @@
 
 namespace ActsExamples {
 
+class AlignmentGroup {
+
+public:
+    AlignmentGroup(const std::string& name, const std::vector<GeometryIdentifier>& geoIds)
+        : m_name(name), m_map(constructHierarchyMap(geoIds)) {
+    }
+
+    // Access the name of the group
+    std::string getNameOfGroup() const {
+        return m_name;
+    }
+
+private:
+    std::string m_name;  //  storing the name in the class
+    GeometryHierarchyMap<bool> m_map;
+
+    GeometryHierarchyMap<bool> constructHierarchyMap(const std::vector<GeometryIdentifier>& geoIds) {
+        std::vector<GeometryHierarchyMap<bool>::InputElement> ies;
+        for (const auto& geoId : geoIds) {
+            ies.emplace_back(geoId, true);
+        }
+        return GeometryHierarchyMap<bool>(ies);
+    }
+};
+
 class AlignmentAlgorithm final : public IAlgorithm {
  public:
   using AlignmentResult = Acts::Result<ActsAlignment::AlignmentResult>;
@@ -82,6 +107,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
     std::size_t maxNumIterations = 100;
     /// Number of tracks to be used for alignment
     int maxNumTracks = -1;
+    std::vector<AlignmentGroup> m_groups;
   };
 
   /// Constructor of the alignment algorithm
