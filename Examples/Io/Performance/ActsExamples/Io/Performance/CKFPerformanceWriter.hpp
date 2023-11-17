@@ -109,14 +109,14 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
   TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
 
   // Adding numbers for efficiency, fake, duplicate calculations
-  size_t m_nTotalTracks = 0;
-  size_t m_nTotalMatchedTracks = 0;
-  size_t m_nTotalFakeTracks = 0;
-  size_t m_nTotalDuplicateTracks = 0;
-  size_t m_nTotalParticles = 0;
-  size_t m_nTotalMatchedParticles = 0;
-  size_t m_nTotalDuplicateParticles = 0;
-  size_t m_nTotalFakeParticles = 0;
+  std::size_t m_nTotalTracks = 0;
+  std::size_t m_nTotalMatchedTracks = 0;
+  std::size_t m_nTotalFakeTracks = 0;
+  std::size_t m_nTotalDuplicateTracks = 0;
+  std::size_t m_nTotalParticles = 0;
+  std::size_t m_nTotalMatchedParticles = 0;
+  std::size_t m_nTotalDuplicateParticles = 0;
+  std::size_t m_nTotalFakeParticles = 0;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{

@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   std::vector<ActsScalar> pModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   // Fill surfaces from cylinder layers
-  for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
+  for (std::size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
         detectorStore, pModuleHalfX[ilp], pModuleHalfY[ilp],
         pModuleThickness[ilp], pModuleTiltPhi[ilp], pLayerRadii[ilp], 2_mm,
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   std::vector<ActsScalar> dModuleTilt = {0.075, 0.075, 0.075, 0.075};
   std::vector<ActsScalar> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
-  for (size_t ilp = 0; ilp < discZ.size(); ++ilp) {
+  for (std::size_t ilp = 0; ilp < discZ.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
         detectorStore, dModuleHalfXMinY[ilp], dModuleHalfXMaxY[ilp],
         dModuleHalfY[ilp], dModuleThickness[ilp], dModuleTilt[ilp],

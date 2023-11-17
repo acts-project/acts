@@ -57,7 +57,7 @@ struct TorchTypeMap<double> {
 /// @Note Tensor does not take ownership! `.clone()` afterwards to get
 /// ownership of the data
 template <typename T>
-at::Tensor vectorToTensor2D(std::vector<T> &vec, size_t cols) {
+at::Tensor vectorToTensor2D(std::vector<T> &vec, std::size_t cols) {
   assert(vec.size() % cols == 0);
 
   auto opts =

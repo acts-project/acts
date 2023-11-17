@@ -76,7 +76,7 @@ ActsExamples::Telescope::buildDetector(
   }
 
   // Construct the surfaces and layers
-  size_t nLayers = positions.size();
+  std::size_t nLayers = positions.size();
   std::vector<Acts::LayerPtr> layers(nLayers);
   for (unsigned int i = 0; i < nLayers; ++i) {
     // The translation without rotation yet

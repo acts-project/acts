@@ -47,7 +47,7 @@ inline static bool isEqual(const BinningData& ba, const BinningData& bb,
 
   bool equalBoundaries = (ba.boundaries().size() == bb.boundaries().size());
   if (equalBoundaries) {
-    for (size_t ib = 0; ib < ba.boundaries().size(); ++ib) {
+    for (std::size_t ib = 0; ib < ba.boundaries().size(); ++ib) {
       equalBoundaries =
           (std::abs(ba.boundaries()[ib] - bb.boundaries()[ib]) < tolerance);
       if (!equalBoundaries) {
@@ -72,7 +72,7 @@ inline static bool isEqual(const BinUtility& ba, const BinUtility& bb,
   bool equal = (ba.binningData().size() == bb.binningData().size());
   BOOST_CHECK(equal);
   if (equal) {
-    for (size_t ib = 0; ib < ba.binningData().size(); ++ib) {
+    for (std::size_t ib = 0; ib < ba.binningData().size(); ++ib) {
       equal = isEqual(ba.binningData()[ib], bb.binningData()[ib], tolerance);
       BOOST_CHECK(equal);
     }

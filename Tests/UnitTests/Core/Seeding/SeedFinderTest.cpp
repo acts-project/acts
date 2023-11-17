@@ -50,16 +50,16 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
       std::stringstream ss(line);
       std::string linetype;
       ss >> linetype;
-      float x = 0, y = 0, z = 0, r = 0, varianceR = 0, varianceZ = 0;
       if (linetype == "lxyz") {
+        float x = 0, y = 0, z = 0, varianceR = 0, varianceZ = 0;
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-        r = std::hypot(x, y);
-        float f22 = varianceR;
-        float wid = varianceZ;
-        float cov = wid * wid * .08333;
-        if (cov < f22) {
-          cov = f22;
+        const float r = std::hypot(x, y);
+
+        float cov = varianceZ * varianceZ * .08333;
+        if (cov < varianceR) {
+          cov = varianceR;
         }
+
         if (std::abs(z) > 450.) {
           varianceZ = 9. * cov;
           varianceR = .06;
@@ -67,6 +67,7 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
           varianceR = 9. * cov;
           varianceZ = .06;
         }
+
         SpacePoint* sp =
             new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
         //     if(r < 200.){
@@ -220,7 +221,7 @@ int main(int argc, char** argv) {
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
   if (!quiet) {
     for (auto& regionVec : seedVector) {
-      for (size_t i = 0; i < regionVec.size(); i++) {
+      for (std::size_t i = 0; i < regionVec.size(); i++) {
         const Acts::Seed<SpacePoint>* seed = &regionVec[i];
         const SpacePoint* sp = seed->sp()[0];
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()

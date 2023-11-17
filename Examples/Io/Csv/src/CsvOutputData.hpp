@@ -307,7 +307,7 @@ struct TrackParameterData {
 };
 
 struct ProtoTrackData {
-  size_t trackId;
+  std::size_t trackId;
   Index measurementId;
   double x, y, z;
 
