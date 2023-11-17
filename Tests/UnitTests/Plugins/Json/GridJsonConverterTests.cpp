@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBound) {
   using GridTypeEQB2 = typename EqBoundEqBound::template grid_type<std::size_t>;
   GridTypeEQB2 eqBound2Grid(eqBound2());
 
-  // Lets write in local coordinates
+  // Let's write in local coordinates
   using GridPoint = typename GridTypeEQB2::point_t;
 
   // First row access
