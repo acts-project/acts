@@ -83,10 +83,10 @@ authors:
   given-names: Stephen Nicholas
   orcid: https://orcid.org/0000-0002-3747-3229
 cff-version: 1.1.0
-date-released: '2023-10-25'
+date-released: '2023-11-17'
 doi: 10.5281/zenodo.5141419
 license: MPL-2.0
 message: If you use this software, please cite it using these metadata.
 repository-code: https://github.com/acts-project/acts
 title: A Common Tracking Software Project
-version: v30.3.0
+version: v31.0.0
