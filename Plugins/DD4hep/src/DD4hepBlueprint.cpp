@@ -25,7 +25,8 @@ Acts::Experimental::DD4hepBlueprint::DD4hepBlueprint(
 
 std::unique_ptr<Acts::Experimental::Blueprint::Node>
 Acts::Experimental::DD4hepBlueprint::create(
-    Cache& cache, const dd4hep::DetElement& dd4hepElement) const {
+    Cache& cache, const GeometryContext& gctx,
+    const dd4hep::DetElement& dd4hepElement) const {
   ACTS_DEBUG("Drawing a blueprint from the DD4hep element '"
              << dd4hepElement.name() << "'.");
 
@@ -37,13 +38,13 @@ Acts::Experimental::DD4hepBlueprint::create(
       Acts::VolumeBounds::eCylinder, bValues, binning);
 
   // Recursively parse the tree
-  recursiveParse(cache, *root, dd4hepElement);
+  recursiveParse(cache, *root, gctx, dd4hepElement);
   // Return the top node
   return root;
 }
 
 void Acts::Experimental::DD4hepBlueprint::recursiveParse(
-    Cache& cache, Blueprint::Node& mother,
+    Cache& cache, Blueprint::Node& mother, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, unsigned int hiearchyLevel) const {
   // This will allow to skip empty hierarchy levels
   Blueprint::Node* current = &mother;
@@ -58,20 +59,21 @@ void Acts::Experimental::DD4hepBlueprint::recursiveParse(
     // Check if it complies with the given definition
     bool ntt = getParamOr<bool>(nType, dd4hepElement, false);
     if (ntt) {
-      ACTS_VERBOSE(ofs << "ACTS node '" << nType
-                       << "' attached to dd4hep element '"
-                       << dd4hepElement.name() << "',");
+      ACTS_DEBUG(ofs << "ACTS node '" << nType
+                     << "' attached to dd4hep element '" << dd4hepElement.name()
+                     << "',");
+      // Extract potential internal builders and tools
+      auto [internalsBuilder, rootsFinderBuilder, geoIdGenerator, auxInt,
+            extOpt] =
+          extractInternals(cache.dd4hepStore, gctx, dd4hepElement, nType);
       // Extract the bounds type, values and binning
       auto [transform, bValueType, bValues, binning, auxExt] =
-          extractExternals(dd4hepElement, nType);
-      // Extract potential internal builders and tools
-      auto [internalsBuilder, rootsFinderBuilder, geoIdGenerator, auxInt] =
-          extractInternals(cache.dd4hepStore, dd4hepElement, nType);
+          extractExternals(gctx, dd4hepElement, nType, extOpt);
       // Screen output of position and shape
-      ACTS_VERBOSE(ofs << " - translation  : "
-                       << toString(transform.translation()));
-      ACTS_VERBOSE(ofs << " - bounds type  : " << bValueType);
-      ACTS_VERBOSE(ofs << " - bound values : " << toString(bValues));
+      ACTS_DEBUG(ofs << " - translation  : "
+                     << toString(transform.translation()));
+      ACTS_DEBUG(ofs << " - bounds type  : " << bValueType);
+      ACTS_DEBUG(ofs << " - bound values : " << toString(bValues));
       // If it is not the world node, create a new one
       if (nType == "acts_world") {
         mother.transform = transform;
@@ -124,7 +126,7 @@ void Acts::Experimental::DD4hepBlueprint::recursiveParse(
                      << children.size() << " children.");
     for (auto& child : children) {
       dd4hep::DetElement dd4hepChild = child.second;
-      recursiveParse(cache, *current, dd4hepChild,
+      recursiveParse(cache, *current, gctx, dd4hepChild,
                      hiearchyLevel + hierarchyAddOn);
     }
   }
@@ -134,35 +136,60 @@ std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType,
            std::vector<Acts::ActsScalar>, std::vector<Acts::BinningValue>,
            std::string>
 Acts::Experimental::DD4hepBlueprint::extractExternals(
-    const dd4hep::DetElement& dd4hepElement,
-    const std::string& baseName) const {
+    [[maybe_unused]] const GeometryContext& gctx,
+    const dd4hep::DetElement& dd4hepElement, const std::string& baseName,
+    const std::optional<Extent>& extOpt) const {
   std::string aux = "";
+
+  /// Get the transform - extract from values first
+  auto transform = extractTransform(dd4hepElement, baseName, unitLength);
+
   // Get the bounds type
-  auto bValueInt = Acts::getParamOr<int>(
-      baseName + "_type", dd4hepElement,
-      static_cast<int>(Acts::VolumeBounds::BoundsType::eOther));
-  auto bValueType = static_cast<Acts::VolumeBounds::BoundsType>(bValueInt);
-  // Get the bounds values
-  auto bValues = Acts::extractSeries<Acts::ActsScalar>(
-      dd4hepElement, baseName + "_bvalues", unitLength);
+  auto bValueInt =
+      getParamOr<int>(baseName + "_type", dd4hepElement,
+                      static_cast<int>(VolumeBounds::BoundsType::eOther));
+  auto bValueType = static_cast<VolumeBounds::BoundsType>(bValueInt);
+  std::vector<ActsScalar> bValues = {};
+
+  // Get the bound values from parsed internals if possible
+  if (extOpt.has_value() && bValueType == VolumeBounds::BoundsType::eCylinder) {
+    // Set as defaults
+    bValues = {0., 0., 0.};
+    auto parsedExtent = extOpt.value();
+    if (parsedExtent.constrains(binR)) {
+      bValues[0u] = std::floor(parsedExtent.min(binR));
+      bValues[1u] = std::ceil(parsedExtent.max(binR));
+    }
+    if (parsedExtent.constrains(binZ)) {
+      ActsScalar minZ = parsedExtent.min(binZ) > 0.
+                            ? std::floor(parsedExtent.min(binZ))
+                            : std::ceil(parsedExtent.min(binZ));
+      ActsScalar maxZ = parsedExtent.max(binZ) > 0.
+                            ? std::floor(parsedExtent.max(binZ))
+                            : std::ceil(parsedExtent.max(binZ));
+      bValues[2u] = 0.5 * (maxZ - minZ);
+      transform.translation().z() = 0.5 * (maxZ + minZ);
+    }
+    ACTS_VERBOSE("   cylindrical bounds determined from internals as "
+                 << toString(bValues));
+  }
+
+  // Get the bounds values from the series if not found before
+  if (bValues.empty()) {
+    bValues = extractSeries<ActsScalar>(dd4hepElement, baseName + "_bvalues",
+                                        unitLength);
+    ACTS_VERBOSE(" - cylindrical determined from variant parameters as "
+                 << toString(bValues));
+  }
+
   // Get the binning values
-  std::vector<Acts::BinningValue> bBinning = {};
   auto binningString =
-      Acts::getParamOr<std::string>(baseName + "_binning", dd4hepElement, "");
+      getParamOr<std::string>(baseName + "_binning", dd4hepElement, "");
+  std::vector<BinningValue> bBinning =
+      Acts::stringToBinningValues(binningString);
   if (!binningString.empty()) {
     aux += "vol. binning : " + binningString;
-    std::string del = ",";
-    int end = binningString.find(del);
-    end = (end == -1) ? binningString.length() : end;
-    // Split and convert
-    while (end != -1) {
-      std::string b = binningString.substr(0, end);
-      bBinning.push_back(Acts::stringToBinningValue(b));
-      end = binningString.find(del);
-    }
   }
-  /// Get the transform
-  auto transform = Acts::extractTransform(dd4hepElement, baseName, unitLength);
   // Return the tuple
   return std::make_tuple(transform, bValueType, bValues, bBinning, aux);
 }
@@ -170,10 +197,10 @@ Acts::Experimental::DD4hepBlueprint::extractExternals(
 std::tuple<std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
            std::shared_ptr<const Acts::Experimental::IRootVolumeFinderBuilder>,
            std::shared_ptr<const Acts::Experimental::IGeometryIdGenerator>,
-           std::array<std::string, 3u>>
+           std::array<std::string, 3u>, std::optional<Acts::Extent>>
 Acts::Experimental::DD4hepBlueprint::extractInternals(
     Acts::DD4hepDetectorElement::Store& dd4hepStore,
-    const dd4hep::DetElement& dd4hepElement,
+    const GeometryContext& gctx, const dd4hep::DetElement& dd4hepElement,
     const std::string& baseName) const {
   // Return objects
   std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>
@@ -182,6 +209,8 @@ Acts::Experimental::DD4hepBlueprint::extractInternals(
       rootsFinderBuilder = nullptr;
   std::shared_ptr<const Acts::Experimental::IGeometryIdGenerator>
       geoIdGenerator = nullptr;
+  /// The hand-over information for externals
+  std::optional<Extent> ext = std::nullopt;
   /// Auxiliary information
   std::array<std::string, 3u> aux = {"", "", ""};
 
@@ -196,8 +225,32 @@ Acts::Experimental::DD4hepBlueprint::extractInternals(
       // Create a new layer builder
       DD4hepLayerStructure::Options lOptions;
       lOptions.name = dd4hepElement.name();
-      internalsBuilder =
-          m_cfg.layerStructure->builder(dd4hepStore, dd4hepElement, lOptions);
+      // Check if the extent should be measured
+      auto interenalsMeasure = Acts::getParamOr<std::string>(
+          baseName + "_internals_measure", dd4hepElement, "");
+      auto internalsClearance = Acts::getParamOr<ActsScalar>(
+          baseName + "_internals_clearance", dd4hepElement, 0.);
+      auto internalBinningValues = stringToBinningValues(interenalsMeasure);
+      if (!internalBinningValues.empty()) {
+        ACTS_VERBOSE(" - internals extent measurement requested");
+        Extent internalsExtent;
+        ExtentEnvelope clearance = zeroEnvelopes;
+        for (const auto& bv : internalBinningValues) {
+          clearance[bv] = {internalsClearance, internalsClearance};
+        }
+        internalsExtent.setEnvelope(clearance);
+        lOptions.extent = internalsExtent;
+        lOptions.extentContraints = internalBinningValues;
+      }
+      // Create the builder from the dd4hep element
+      auto [ib, extOpt] = m_cfg.layerStructure->builder(
+          dd4hepStore, gctx, dd4hepElement, lOptions);
+      internalsBuilder = std::move(ib);
+      if (extOpt.has_value()) {
+        ACTS_VERBOSE(" - internals extent measured as "
+                     << extOpt.value().toString());
+      }
+      ext = extOpt;
     }
   }
 
@@ -223,5 +276,5 @@ Acts::Experimental::DD4hepBlueprint::extractInternals(
   }
 
   return std::make_tuple(internalsBuilder, rootsFinderBuilder, geoIdGenerator,
-                         aux);
+                         aux, ext);
 }
