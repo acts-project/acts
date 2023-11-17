@@ -114,7 +114,7 @@ void writeMeasurement(const Measurement& from,
 /// - relation to the particles
 void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
                      const Trajectories& from, edm4hep::MutableTrack to,
-                     size_t fromIndex,
+                     std::size_t fromIndex,
                      const Acts::ParticleHypothesis& particleHypothesis,
                      const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap);
 
