@@ -89,20 +89,20 @@ struct PlaneSelector {
 // - simple extrapolation test
 BOOST_DATA_TEST_CASE(
     test_extrapolation_,
-    bdata::random((bdata::seed = 0,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                    bdata::distribution =
                        std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
                            std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
         bdata::random(
-            (bdata::seed = 3,
+            (bdata::engine = std::mt19937(), bdata::seed = 3,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random(
-            (bdata::seed = 4,
+            (bdata::engine = std::mt19937(), bdata::seed = 4,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
@@ -132,20 +132,20 @@ BOOST_DATA_TEST_CASE(
 // - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
     test_surface_collection_,
-    bdata::random((bdata::seed = 10,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 10,
                    bdata::distribution =
                        std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 11,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 11,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 12,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 12,
                        bdata::distribution =
                            std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
         bdata::random(
-            (bdata::seed = 13,
+            (bdata::engine = std::mt19937(), bdata::seed = 13,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random(
-            (bdata::seed = 14,
+            (bdata::engine = std::mt19937(), bdata::seed = 14,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
@@ -198,20 +198,20 @@ BOOST_DATA_TEST_CASE(
 // - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
     test_material_interactor_,
-    bdata::random((bdata::seed = 20,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution =
                        std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 21,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
                            std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
         bdata::random(
-            (bdata::seed = 23,
+            (bdata::engine = std::mt19937(), bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random(
-            (bdata::seed = 24,
+            (bdata::engine = std::mt19937(), bdata::seed = 24,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
@@ -246,20 +246,20 @@ BOOST_DATA_TEST_CASE(
 // - this tests the loop protection
 BOOST_DATA_TEST_CASE(
     loop_protection_test,
-    bdata::random((bdata::seed = 20,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution =
                        std::uniform_real_distribution<>(0.1_GeV, 0.5_GeV))) ^
-        bdata::random((bdata::seed = 21,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
                            std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
         bdata::random(
-            (bdata::seed = 23,
+            (bdata::engine = std::mt19937(), bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::random(
-            (bdata::seed = 24,
+            (bdata::engine = std::mt19937(), bdata::seed = 24,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {

@@ -249,12 +249,12 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
 BOOST_DATA_TEST_CASE(
     bfield_symmetry_random,
     bdata::random(
-        (bdata::seed = 0,
+        (bdata::engine = std::mt19937(), bdata::seed = 0,
          bdata::distribution = std::uniform_real_distribution<>(-10., 10.))) ^
-        bdata::random((bdata::seed = 0,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-10., 10.))) ^
-        bdata::random((bdata::seed = 0,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-20., 20.))) ^
         bdata::xrange(10),

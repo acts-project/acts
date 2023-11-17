@@ -129,9 +129,9 @@ struct PropagatorState {
 BOOST_DATA_TEST_CASE(
     loop_aborter_test,
     bdata::random(
-        (bdata::seed = 21,
+        (bdata::engine = std::mt19937(), bdata::seed = 21,
          bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
         bdata::xrange(1),
@@ -168,17 +168,17 @@ const int skip = 0;
 // stops where expected
 BOOST_DATA_TEST_CASE(
     propagator_loop_protection_test,
-    bdata::random((bdata::seed = 20,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution =
                        std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 21,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
                            std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
         bdata::random(
-            (bdata::seed = 23,
+            (bdata::engine = std::mt19937(), bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
