@@ -107,6 +107,7 @@ struct KalmanFitterExtensions {
     outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
     reverseFilteringLogic
         .template connect<&detail::voidReverseFilteringLogic<traj_t>>();
+    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
   }
 };
 

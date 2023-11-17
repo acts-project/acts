@@ -40,7 +40,7 @@ std::ostream &operator<<(std::ostream &os, FpeType type);
 class FpeMonitor {
  public:
   struct Buffer {
-    Buffer(size_t bufferSize)
+    Buffer(std::size_t bufferSize)
         : m_data{std::make_unique<std::byte[]>(bufferSize)},
           m_size{bufferSize} {}
 
@@ -53,35 +53,35 @@ class FpeMonitor {
       other.m_offset = 0;
     }
 
-    std::pair<void *, size_t> next() {
+    std::pair<void *, std::size_t> next() {
       return {m_data.get() + m_offset, m_size - m_offset};
     }
 
-    void pushOffset(size_t offset) {
+    void pushOffset(std::size_t offset) {
       assert(m_offset + offset < m_size);
       m_offset = offset;
     }
 
     void reset() { m_offset = 0; }
 
-    size_t size() const { return m_size; }
-    size_t offset() const { return m_offset; }
+    std::size_t size() const { return m_size; }
+    std::size_t offset() const { return m_offset; }
 
     std::byte *data() { return m_data.get(); }
 
    private:
     std::unique_ptr<std::byte[]> m_data;
-    size_t m_size{};
-    size_t m_offset{};
+    std::size_t m_size{};
+    std::size_t m_offset{};
   };
 
   struct Result {
     struct FpeInfo {
-      size_t count;
+      std::size_t count;
       FpeType type;
       std::shared_ptr<const boost::stacktrace::stacktrace> st;
 
-      FpeInfo(size_t countIn, FpeType typeIn,
+      FpeInfo(std::size_t countIn, FpeType typeIn,
               std::shared_ptr<const boost::stacktrace::stacktrace> stIn);
       ~FpeInfo();
     };
@@ -99,14 +99,15 @@ class FpeMonitor {
 
     bool contains(FpeType type, const boost::stacktrace::stacktrace &st) const;
 
-    void summary(std::ostream &os,
-                 size_t depth = std::numeric_limits<size_t>::max()) const;
+    void summary(
+        std::ostream &os,
+        std::size_t depth = std::numeric_limits<std::size_t>::max()) const;
 
     Result() = default;
 
     operator bool() const { return !m_stracktraces.empty(); }
 
-    void add(Acts::FpeType type, void *stackPtr, size_t bufferSize);
+    void add(Acts::FpeType type, void *stackPtr, std::size_t bufferSize);
 
    private:
     std::vector<FpeInfo> m_stracktraces;
@@ -127,7 +128,7 @@ class FpeMonitor {
   void rearm();
 
   static std::string stackTraceToString(const boost::stacktrace::stacktrace &st,
-                                        size_t depth);
+                                        std::size_t depth);
   static std::string getSourceLocation(const boost::stacktrace::frame &frame);
 
  private:
@@ -151,7 +152,7 @@ class FpeMonitor {
 
   Buffer m_buffer{65536};
 
-  boost::container::static_vector<std::tuple<FpeType, void *, size_t>, 128>
+  boost::container::static_vector<std::tuple<FpeType, void *, std::size_t>, 128>
       m_recorded;
 };
 

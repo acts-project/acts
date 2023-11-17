@@ -8,10 +8,13 @@
 
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -58,7 +61,8 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Logger& logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
-  Vector3 normal = surface.normal(geoContext);
+  Vector3 normal =
+      surface.normal(geoContext, freeParams.segment<3>(eFreePos0), dir);
   ActsScalar absCosIncidenceAng = std::abs(dir.dot(normal));
   // No correction if the incidentAngle is small enough (not necessary ) or too
   // large (correction could be invalid). Fall back to nominal free to bound

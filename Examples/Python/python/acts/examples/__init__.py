@@ -527,7 +527,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
     @classmethod
     def _printFpeSummary(cls, masks: List[FpeMask]):
-        if len(masks) == 0:
+        if len(masks) == 0 or "ACTS_SEQUENCER_DISABLE_FPEMON" in os.environ:
             return
 
         # Try to make a nice summary with rich, or fallback to a plain text one

@@ -61,7 +61,7 @@ The `execute` method will be called once for each event.
 Other methods can also be added to your class.
 It is good to remember that the algorithmic code in ACTS is typically stateless,
 and if the state needs to be passed between the calls it should be done explicitly.
-An algorithm is stateless if does not modify its own attributes while executing.
+An algorithm is stateless if it does not modify its own attributes while executing.
 This way it becomes reentrant and in consequence thread safe.
 For instance if the event processing is best organized with such methods:
 
@@ -143,7 +143,7 @@ destruction of this object at the end of event processing is taken care of.
 It is customary that an algorithm requires configuration parameters.
 For example, in a seeding algorithm these parameters could include which detector layers should be used.
 The configuration can be provided to an algorithm through an additional class/structure.
-For algorithm it is typically an inner class named `Config`.
+For algorithm, it is typically an inner class named `Config`.
 
 That is how the configuration object could look like for `MySeedingAlgorithm`:
 

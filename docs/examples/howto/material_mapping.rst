@@ -125,7 +125,7 @@ The picture ``volumes_and_layers.png`` show you the volumes and all layers const
 
 .. image:: figures/materialMapping/volumes_and_layers.png
 
-For each volume containing layers, another picture is produced to show the representative layers (without ``approach`` index) and highlight the ones with ``approach`` index. The picture below show layers for one of the ODD volumes. Knowledge of the approach layers is needed to select the lyers you want the material to be mapped onto.
+For each volume containing layers, another picture is produced to show the representative layers (without ``approach`` index) and highlight the ones with ``approach`` index. The picture below show layers for one of the ODD volumes. Knowledge of the approach layers is needed to select the layers you want the material to be mapped onto.
 
 .. image:: figures/materialMapping/layers_for_volume_17.png
 
