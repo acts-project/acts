@@ -11,10 +11,7 @@ def file_can_be_removed(searchstring, scope):
 
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     output, _ = p.communicate()
-    if output == b"":
-        return True
-
-    return False
+    return output == b""
 
 
 def main():
