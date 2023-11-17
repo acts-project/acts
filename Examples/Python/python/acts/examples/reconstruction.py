@@ -368,7 +368,7 @@ def addSeeding(
                 parEstimateAlg.config.outputTrackParameters,
                 logLevel,
             )
-            
+
         if outputDirCsv is not None:
             outputDirCsv = Path(outputDirCsv)
 
