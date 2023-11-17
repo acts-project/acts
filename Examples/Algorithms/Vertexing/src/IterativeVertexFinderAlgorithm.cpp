@@ -71,9 +71,8 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Set up propagator with void navigator
-  auto propagator =
-      std::make_shared<Propagator>(stepper, Acts::VoidNavigator{},
-                                   logger().cloneWithSuffix("Propagator"));
+  auto propagator = std::make_shared<Propagator>(
+      stepper, Acts::VoidNavigator{}, logger().cloneWithSuffix("Propagator"));
   // Setup the vertex fitter
   Fitter::Config vertexFitterCfg;
   Fitter vertexFitter(vertexFitterCfg,
