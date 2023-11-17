@@ -83,6 +83,7 @@ struct Gx2FitterExtensions {
     calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
     updater.template connect<&detail::voidFitterUpdater<traj_t>>();
     outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
+    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
   }
 };
 
