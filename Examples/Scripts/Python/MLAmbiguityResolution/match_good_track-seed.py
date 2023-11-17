@@ -25,7 +25,9 @@ def matchGood(Seed_files: list[str], CKF_files: list[str]) -> pd.DataFrame:
         # Add a good seed column to the seed dataset
         data_seed["goodSeed"] = data_seed["seed_id"].isin(goodSeed)
 
-        data_seed.loc[data_seed["good/duplicate/fake"] == "good", "good/duplicate/fake"] = "duplicate"
+        data_seed.loc[
+            data_seed["good/duplicate/fake"] == "good", "good/duplicate/fake"
+        ] = "duplicate"
         data_seed.loc[data_seed["goodSeed"] == True, "good/duplicate/fake"] = "good"
 
         cleanedData = pd.DataFrame()
@@ -34,9 +36,13 @@ def matchGood(Seed_files: list[str], CKF_files: list[str]) -> pd.DataFrame:
             if (
                 data_seed.loc[data_seed["particleId"] == ID, "goodSeed"] == False
             ).all():
-                data_seed.loc[data_seed["particleId"] == ID, "good/duplicate/fake"] = "fake"
+                data_seed.loc[
+                    data_seed["particleId"] == ID, "good/duplicate/fake"
+                ] = "fake"
             else:
-                cleanedData = pd.concat([data_seed.loc[data_seed["particleId"] == ID], cleanedData])
+                cleanedData = pd.concat(
+                    [data_seed.loc[data_seed["particleId"] == ID], cleanedData]
+                )
 
         # Save the cleaned dataset for future use (the cleaning is time consuming)
         matched = f_seed[:-4] + "_matched.csv"
@@ -52,7 +58,7 @@ def matchGood(Seed_files: list[str], CKF_files: list[str]) -> pd.DataFrame:
         cleanedData = cleanedData.set_index("seed_id")
         cleanedData = cleanedData.drop(columns=["goodSeed"])
         cleanedData.to_csv(cleaned)
-        
+
     return data
 
 
