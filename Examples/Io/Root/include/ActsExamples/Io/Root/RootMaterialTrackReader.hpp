@@ -62,7 +62,7 @@ class RootMaterialTrackReader : public IReader {
   std::string name() const override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const override;
+  std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream
   ///
@@ -82,17 +82,17 @@ class RootMaterialTrackReader : public IReader {
   /// The config class
   Config m_cfg;
 
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "OutputMaterialTracks"};
 
   /// mutex used to protect multi-threaded reads
   std::mutex m_read_mutex;
 
   /// The number of events
-  size_t m_events = 0;
+  std::size_t m_events = 0;
 
   /// The batch size (number of track per events)
-  size_t m_batchSize = 0;
+  std::size_t m_batchSize = 0;
 
   /// The input tree name
   TChain* m_inputChain = nullptr;

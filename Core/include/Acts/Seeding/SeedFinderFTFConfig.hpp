@@ -42,6 +42,10 @@ struct SeedFinderFTFConfig {
   /// for load space points
   unsigned int maxSeedsPerSpM = 5;
 
+  // Parameter which can loosen the tolerance of the track seed to form a
+  // helix. This is useful for e.g. misaligned seeding.
+  float helixCutTolerance = 1.;
+
   float m_phiSliceWidth{};
   float m_nMaxPhiSlice{};
   bool m_useClusterWidth = false;

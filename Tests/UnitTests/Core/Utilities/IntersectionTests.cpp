@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(IntersectionStatusPrinting) {
   for (int i = 0; i < 4; ++i) {
     std::stringstream ss;
     ss << status_values[i];
-    BOOST_CHECK(ss.str() == expected_messages[i]);
+    BOOST_CHECK_EQUAL(ss.str(), expected_messages[i]);
   }
 }
 

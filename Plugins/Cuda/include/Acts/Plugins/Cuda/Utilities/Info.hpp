@@ -51,7 +51,7 @@ class Info {
     /// Whether the device supports multiple kernel executions in parallel
     bool concurrentKernels = false;
     /// The total amount of (global) memory on the device
-    size_t totalMemory = 0;
+    std::size_t totalMemory = 0;
   };  // struct Device
 
   /// Get all the available CUDA devices

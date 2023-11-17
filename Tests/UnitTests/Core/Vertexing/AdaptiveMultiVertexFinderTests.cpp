@@ -198,8 +198,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     CHECK_CLOSE_OR_SMALL(recoVtx.covariance(), expVtx.covariance, relTol,
                          small);
     BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
-    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].weight, expVtx.trk1Weight,
-                         relTol, small);
+    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].weight, expVtx.trk1Weight, relTol,
+                         small);
     CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].vertexCompatibility,
                          expVtx.trk1Comp, relTol, small);
   }
