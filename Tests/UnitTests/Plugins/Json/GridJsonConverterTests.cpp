@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBoundClosed) {
       typename EqBoundEqClosed::template grid_type<std::size_t>;
   GridTypeEQBEQC eqBoundEqClosedGrid(eqBoundEqClosed());
 
-  // Lets write in local coordinates
+  // Let's write in local coordinates
   using GridPoint = typename GridTypeEQBEQC::point_t;
 
   // First row access
