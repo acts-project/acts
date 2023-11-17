@@ -399,11 +399,14 @@ void test_multi_stepper_surface_status_update() {
     BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
+    auto cmp_1 = *cmp_iterable.begin();
+    auto cmp_2 = *(++cmp_iterable.begin());
 
-    BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
-                      Intersection3D::Status::reachable);
-    BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
-                      Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cmp_1.status(), Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cmp_2.status(), Intersection3D::Status::reachable);
+
+    BOOST_CHECK_EQUAL(cmp_1.cmp.state.stepSize.value(), 1.0);
+    BOOST_CHECK_EQUAL(cmp_2.cmp.state.stepSize.value(), -1.0);
   }
 
   // Step forward now
@@ -425,11 +428,11 @@ void test_multi_stepper_surface_status_update() {
     BOOST_CHECK_EQUAL(status, Intersection3D::Status::onSurface);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
+    auto cmp_1 = *cmp_iterable.begin();
+    auto cmp_2 = *(++cmp_iterable.begin());
 
-    BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
-                      Intersection3D::Status::onSurface);
-    BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
-                      Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(cmp_1.status(), Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(cmp_2.status(), Intersection3D::Status::onSurface);
   }
 
   // Start surface should be reachable
@@ -441,11 +444,14 @@ void test_multi_stepper_surface_status_update() {
     BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
+    auto cmp_1 = *cmp_iterable.begin();
+    auto cmp_2 = *(++cmp_iterable.begin());
 
-    BOOST_CHECK_EQUAL((*cmp_iterable.begin()).status(),
-                      Intersection3D::Status::reachable);
-    BOOST_CHECK_EQUAL((*(++cmp_iterable.begin())).status(),
-                      Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cmp_1.status(), Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cmp_2.status(), Intersection3D::Status::reachable);
+
+    BOOST_CHECK_EQUAL(cmp_1.cmp.state.stepSize.value(), -1.0);
+    BOOST_CHECK_EQUAL(cmp_2.cmp.state.stepSize.value(), 1.0);
   }
 }
 
@@ -515,17 +521,17 @@ void test_component_bound_state() {
     BOOST_REQUIRE(single_bound_state.ok());
 
     auto cmp_iterable = multi_stepper.componentIterable(multi_state);
+    auto cmp_1 = *cmp_iterable.begin();
+    auto cmp_2 = *(++cmp_iterable.begin());
 
-    auto ok_bound_state =
-        (*cmp_iterable.begin())
-            .boundState(*right_surface, true, FreeToBoundCorrection(false));
-    BOOST_REQUIRE(ok_bound_state.ok());
-    BOOST_CHECK(*single_bound_state == *ok_bound_state);
+    auto bound_state_1 =
+        cmp_1.boundState(*right_surface, true, FreeToBoundCorrection(false));
+    BOOST_REQUIRE(bound_state_1.ok());
+    BOOST_CHECK(*single_bound_state == *bound_state_1);
 
-    auto not_failed_bound_state =
-        (*(++cmp_iterable.begin()))
-            .boundState(*right_surface, true, FreeToBoundCorrection(false));
-    BOOST_CHECK(not_failed_bound_state.ok());
+    auto bound_state_2 =
+        cmp_2.boundState(*right_surface, true, FreeToBoundCorrection(false));
+    BOOST_CHECK(bound_state_2.ok());
   }
 }
 
