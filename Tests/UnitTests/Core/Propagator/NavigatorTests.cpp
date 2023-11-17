@@ -669,7 +669,7 @@ BOOST_AUTO_TEST_CASE(Navigator_postStep) {
   }
 }
 
-int ntests = 10;
+int ntests = 400;
 int skip = 0;
 bool debugMode = false;
 
