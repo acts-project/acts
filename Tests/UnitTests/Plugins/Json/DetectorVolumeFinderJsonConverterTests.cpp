@@ -34,12 +34,23 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   using GridType = typename AxesGeneratorType::template grid_type<std::size_t>;
   GridType grid(zrAxes());
 
-  grid.at(1u) = 0u;
-  grid.at(2u) = 1u;
-  grid.at(3u) = 2u;
-  grid.at(4u) = 3u;
-  grid.at(5u) = 4u;
-  grid.at(6u) = 5u;
+  using PointType = typename GridType::point_t;
+
+  PointType p11 = {-800., 5.};
+  PointType p12 = {-800., 20.};
+  PointType p13 = {-800., 32.};
+
+  grid.atPosition(p11) = 11u;
+  grid.atPosition(p12) = 12u;
+  grid.atPosition(p13) = 13u;
+
+  PointType p21 = {0., 5.};
+  PointType p22 = {0., 20.};
+  PointType p23 = {0., 32.};
+
+  grid.atPosition(p21) = 21u;
+  grid.atPosition(p22) = 22u;
+  grid.atPosition(p23) = 23u;
 
   auto casts = std::array<Acts::BinningValue, 2u>{Acts::binZ, Acts::binR};
 
@@ -70,14 +81,14 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
 
   BOOST_CHECK(readInIndexedDetectorVolumesImpl != nullptr);
 
-  const auto& readInGrid = readInIndexedDetectorVolumesImpl->grid;
+  const auto& gridRead = readInIndexedDetectorVolumesImpl->grid;
 
-  BOOST_CHECK_EQUAL(readInGrid.at(1u), 0u);
-  BOOST_CHECK_EQUAL(readInGrid.at(2u), 1u);
-  BOOST_CHECK_EQUAL(readInGrid.at(3u), 2u);
-  BOOST_CHECK_EQUAL(readInGrid.at(4u), 3u);
-  BOOST_CHECK_EQUAL(readInGrid.at(5u), 4u);
-  BOOST_CHECK_EQUAL(readInGrid.at(6u), 5u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p11), 11u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p12), 12u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p13), 13u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p21), 21u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p22), 22u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p23), 23u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
