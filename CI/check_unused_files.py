@@ -10,7 +10,8 @@ def file_can_be_removed(searchstring, scope):
     cmd = "grep -IR '" + searchstring + "' " + " ".join(scope)
 
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    if p.returncode == 1:
+    output, _ = p.communicate()
+    if output == b"":
         return True
 
     return False
@@ -33,6 +34,7 @@ def main():
         ".gitignore",
         "README.md",
         "CMakeLists.txt",
+        "DetUtils.h",
         # Filename not completed in source
         "vertexing_event_mu20_beamspot.csv",
         "vertexing_event_mu20_tracks.csv",
