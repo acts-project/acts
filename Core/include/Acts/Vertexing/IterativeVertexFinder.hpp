@@ -76,11 +76,11 @@ class IterativeVertexFinder {
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
     Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder,
-           const IPEstimator& est)
+           IPEstimator est)
         : vertexFitter(std::move(fitter)),
           linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
-          ipEst(est) {}
+          ipEst(std::move(est)) {}
 
     /// Vertex fitter
     vfitter_t vertexFitter;
