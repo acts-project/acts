@@ -3,14 +3,17 @@
 from pathlib import Path
 import os
 import sys
+import subprocess
 
 
 def file_can_be_removed(searchstring, scope):
-    cmd = "grep -IR '" + searchstring + "' " + " ".join(scope) + " > _unused_files_tmp"
-    os.system(cmd)
-    output = os.popen("cat _unused_files_tmp").read()
+    cmd = "grep -IR '" + searchstring + "' " + " ".join(scope)
 
-    return output.count("\n") == 0
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    if p.returncode == 1:
+        return True
+
+    return False
 
 
 def main():
@@ -81,12 +84,12 @@ def main():
         ".yml",
     )
     suffix_allowed = (
-            suffix_header
-            + suffix_source
-            + suffix_image
-            + suffix_python
-            + suffix_doc
-            + suffix_other
+        suffix_header
+        + suffix_source
+        + suffix_image
+        + suffix_python
+        + suffix_doc
+        + suffix_other
     )
 
     exit = 0
@@ -181,8 +184,6 @@ def main():
 
     if exit == 0:
         print("Finished check_unused_files.py without any errors.")
-
-    os.system("rm _unused_files_tmp")
 
     return exit
 
