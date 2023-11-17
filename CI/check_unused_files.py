@@ -49,7 +49,6 @@ def main():
     suffix_header = (
         ".hpp",
         ".cuh",
-        ".h",  # TODO discontinue .h over time
     )
     suffix_source = (
         ".ipp",
