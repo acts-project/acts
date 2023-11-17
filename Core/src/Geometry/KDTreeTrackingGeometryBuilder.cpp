@@ -143,8 +143,6 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
       return tVolume;
     }
   }
-
-  return nullptr;
 }
 
 /// @return a new tracking volume

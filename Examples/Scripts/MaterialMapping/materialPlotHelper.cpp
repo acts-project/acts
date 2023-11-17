@@ -46,7 +46,7 @@ void Initialise_info(sinfo& surface_info,
 
   std::string Id_temp = surface_id;
   std::string delimiter = " | ";
-  size_t del_pos = 0;
+  std::size_t del_pos = 0;
   std::vector<std::string> Ids;
   while ((del_pos = Id_temp.find(delimiter)) != std::string::npos) {
     Ids.push_back(Id_temp.substr(0, del_pos));

@@ -69,7 +69,7 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + path);
+    throw std::ios_base::failure("Could not open '" + path + "'");
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
@@ -262,7 +262,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     }
 
     // Initialize the truth particle info
-    ActsFatras::Barcode majorityParticleId(std::numeric_limits<size_t>::max());
+    ActsFatras::Barcode majorityParticleId(
+        std::numeric_limits<std::size_t>::max());
     unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
     int t_charge = std::numeric_limits<int>::max();
     float t_time = NaNfloat;

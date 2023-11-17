@@ -54,7 +54,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
   // We proceed by finding the number of bins, as well as the minimum and
   // maximum coordinates. This process depends quite heavily on the structure
   // of the magnetic field, so we need some compile-time conditionals.
-  std::array<size_t, ConfigType::NDims> bins{};
+  std::array<std::size_t, ConfigType::NDims> bins{};
   Vector min, max;
 
   if constexpr (Grid) {
@@ -69,7 +69,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
     // If our magnetic field is grid-like, we know that it has a built-in size
     // and bin count. We can use these, but the user may want to override the
     // values with custom values.
-    for (size_t i = 0; i < ConfigType::NDims; ++i) {
+    for (std::size_t i = 0; i < ConfigType::NDims; ++i) {
       // For each dimension, we first get the corresponding value from the
       // grid-based vector field...
       bins[i] = field.getNBins()[i];
@@ -93,7 +93,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
     // If the vector field is not grid based, then there is no side and we are
     // forced to use the user-supplied data. Remember that in this case, the
     // values are not optional.
-    for (size_t i = 0; i < ConfigType::NDims; ++i) {
+    for (std::size_t i = 0; i < ConfigType::NDims; ++i) {
       bins[i] = config.bins[i];
       min[i] = config.range[i][0];
       max[i] = config.range[i][1];
@@ -103,7 +103,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
   // Next, we calculate the size (in physical space) of each bin.
   Vector delta;
 
-  for (size_t i = 0; i < ConfigType::NDims; ++i) {
+  for (std::size_t i = 0; i < ConfigType::NDims; ++i) {
     delta[i] = (max[i] - min[i]) / (bins[i] - 1);
   }
 
@@ -120,14 +120,14 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
                                            << " x " << bins[2] << " to file "
                                            << config.fileName << "...");
 
-    size_t total_items = bins[0] * bins[1] * bins[2];
+    std::size_t total_items = bins[0] * bins[1] * bins[2];
 
     // For Cartesian coordinates, iterate over bins in the x, y, and z
     // directions. Note that we iterate one additional time because we are
     // writing the _edges_ of the bins, and the final bin needs to be closed.
-    for (size_t x = 0; x < bins[0]; ++x) {
-      for (size_t y = 0; y < bins[1]; ++y) {
-        for (size_t z = 0; z < bins[2]; ++z) {
+    for (std::size_t x = 0; x < bins[0]; ++x) {
+      for (std::size_t y = 0; y < bins[1]; ++y) {
+        for (std::size_t z = 0; z < bins[2]; ++z) {
           // Compute the geometric position of this bin, then request the
           // magnetic field vector at that position.
           Acts::Vector3 pos = {x * delta[0] + min[0], y * delta[1] + min[1],
@@ -164,7 +164,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
           // This final part is some diagnostic to convince the user that the
           // program is still running. We periodically provide the user with
           // some useful data.
-          size_t idx = (x * bins[1] * bins[2]) + (y * bins[2]) + z + 1;
+          std::size_t idx = (x * bins[1] * bins[2]) + (y * bins[2]) + z + 1;
 
           if (idx % 10000 == 0 || idx == total_items) {
             ACTS_VERBOSE("Wrote " << idx << " out of " << total_items
@@ -179,13 +179,13 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
                                           << " to file " << config.fileName
                                           << "...");
 
-    size_t total_items = bins[0] * bins[1];
+    std::size_t total_items = bins[0] * bins[1];
 
     // For cylindrical coordinates, we only need to iterate over the r and z
     // coordinates, because we assume rotational cylindrical symmetry. This
     // makes the procedure quite a bit faster, too. Great!
-    for (size_t r = 0; r < bins[0]; ++r) {
-      for (size_t z = 0; z < bins[1]; ++z) {
+    for (std::size_t r = 0; r < bins[0]; ++r) {
+      for (std::size_t z = 0; z < bins[1]; ++z) {
         // Calculate the position (still in three dimensions), assuming that
         // the phi coordinate is zero. Then grab the field.
         Acts::Vector3 pos(min[0] + r * delta[0], 0.f, min[1] + z * delta[1]);
@@ -218,7 +218,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
 
         // As before, print some progress reports for the user to enjoy while
         // they wait.
-        size_t idx = (r * bins[1]) + z + 1;
+        std::size_t idx = (r * bins[1]) + z + 1;
 
         if (idx % 10000 == 0 || idx == total_items) {
           ACTS_VERBOSE("Wrote " << idx << " out of " << total_items
