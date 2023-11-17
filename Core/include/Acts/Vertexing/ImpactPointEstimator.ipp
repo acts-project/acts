@@ -98,6 +98,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   if (result.ok()) {
     return *result->endParameters;
   } else {
+    ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
+    ACTS_DEBUG(
+        "The plane surface to which we tried to propagate has its origin at\n"
+        << vtxPos);
     return result.error();
   }
 }
@@ -391,6 +395,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
+    ACTS_ERROR("Error during propagation in getImpactParameters.");
+    ACTS_DEBUG(
+        "The Perigee surface to which we tried to propagate has its origin at\n"
+        << vtx.position());
     return result.error();
   }
 
