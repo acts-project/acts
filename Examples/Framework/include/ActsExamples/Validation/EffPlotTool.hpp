@@ -34,7 +34,7 @@ class EffPlotTool {
         {"Eta", PlotHelpers::Binning("#eta", 40, -4, 4)},
         {"Phi", PlotHelpers::Binning("#phi", 100, -3.15, 3.15)},
         {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)},
-        {"DeltaR", PlotHelpers::Binning("DeltaR", 40, 0, 1)}};
+        {"DeltaR", PlotHelpers::Binning("DeltaR", 100, 0, 0.3)}};
   };
 
   /// @brief Nested Cache struct
