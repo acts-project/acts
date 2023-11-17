@@ -117,8 +117,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
+                              ipEstimator, std::move(linearizer), bField);
 
   Finder finder(std::move(finderConfig));
   Finder::State state;
@@ -279,8 +279,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
+                              ipEstimator, std::move(linearizer), bField);
   Finder::State state;
 
   Finder finder(std::move(finderConfig), extractParameters);
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
   Finder finder(std::move(finderConfig));
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE(
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
   Finder finder(std::move(finderConfig));
