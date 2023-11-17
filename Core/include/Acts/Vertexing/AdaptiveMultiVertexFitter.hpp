@@ -18,6 +18,7 @@
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <functional>
@@ -98,6 +99,20 @@ class AdaptiveMultiVertexFitter {
         }
       }
     }
+
+    Result<void> removeVertexFromCollection(Vertex<InputTrack_t>& vtxToRemove,
+                                            const Logger& logger) {
+      auto it = std::find(vertexCollection.begin(), vertexCollection.end(),
+                          &vtxToRemove);
+      // Check if the value was found before erasing
+      if (it == vertexCollection.end()) {
+        ACTS_ERROR("vtxToRemove is not part of vertexCollection.");
+        return VertexingError::ElementNotFound;
+      }
+      // Erase the element if found
+      vertexCollection.erase(it);
+      return {};
+    }
   };
 
   struct Config {
@@ -170,20 +185,6 @@ class AdaptiveMultiVertexFitter {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
-  /// @brief Performs a simultaneous fit of all vertices in `verticesToFit`
-  /// by invoking `fitImpl`.
-  ///
-  /// @param state Fitter state
-  /// @param verticesToFit Vector containing all vertices to be fitted
-  /// @param linearizer Track linearizer
-  /// @param vertexingOptions Vertexing options
-  ///
-  /// @return Result<void> object
-  Result<void> fit(
-      State& state, const std::vector<Vertex<InputTrack_t>*>& verticesToFit,
-      const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
-
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
   /// with newVertex.
@@ -204,6 +205,18 @@ class AdaptiveMultiVertexFitter {
       const Linearizer_t& linearizer,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
+  /// @brief Performs a simultaneous fit of all vertices in
+  /// state.vertexCollection
+  ///
+  /// @param state Fitter state
+  /// @param linearizer Track linearizer
+  /// @param vertexingOptions Vertexing options
+  ///
+  /// @return Result<void> object
+  Result<void> fit(
+      State& state, const Linearizer_t& linearizer,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+
  private:
   /// Configuration object
   const Config m_cfg;
@@ -218,18 +231,6 @@ class AdaptiveMultiVertexFitter {
 
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
-
-  /// @brief Performs a simultaneous fit of all vertices in
-  /// state.vertexCollection
-  ///
-  /// @param state Fitter state
-  /// @param linearizer Track linearizer
-  /// @param vertexingOptions Vertexing options
-  ///
-  /// @return Result<void> object
-  Result<void> fitImpl(
-      State& state, const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Tests if vertex is already in list of vertices or not
   ///

@@ -119,7 +119,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   BOOST_CHECK_EQUAL(expHits.size(), actHits.size());
-  for (size_t i = 0; i < expHits.size(); i++) {
+  for (std::size_t i = 0; i < expHits.size(); i++) {
     const Surface* exp = expHits[i];
     const Surface* act = actHits[i];
 

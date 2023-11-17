@@ -129,7 +129,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
       if (m_cfg.initialSigmas) {
         // use the initial sigmas if set
-        for (size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+        for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
           cov(i, i) = m_cfg.initialVarInflation[i] * (*m_cfg.initialSigmas)[i] *
                       (*m_cfg.initialSigmas)[i];
         }
