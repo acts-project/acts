@@ -10,6 +10,7 @@
 
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/LinearizerConcept.hpp"
@@ -70,8 +71,13 @@ class FullBilloirVertexFitter {
   template <
       typename T = input_track_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  FullBilloirVertexFitter(const Config& cfg)
-      : m_cfg(cfg), extractParameters([](T params) { return params; }) {}
+  FullBilloirVertexFitter(const Config& cfg,
+                          std::unique_ptr<const Logger> logger =
+                              getDefaultLogger("FullBilloirVertexFitter",
+                                               Logging::INFO))
+      : m_cfg(cfg),
+        extractParameters([](T params) { return params; }),
+        m_logger(std::move(logger)) {}
 
   /// @brief Constructor for user-defined input_track_t type =!
   /// BoundTrackParameters
@@ -81,8 +87,10 @@ class FullBilloirVertexFitter {
   /// object
   FullBilloirVertexFitter(
       const Config& cfg,
-      std::function<BoundTrackParameters(input_track_t)> func)
-      : m_cfg(cfg), extractParameters(func) {}
+      std::function<BoundTrackParameters(input_track_t)> func,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("FullBilloirVertexFitter", Logging::INFO))
+      : m_cfg(cfg), extractParameters(func), m_logger(std::move(logger)) {}
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
@@ -107,6 +115,12 @@ class FullBilloirVertexFitter {
   /// overwritten to return BoundTrackParameters for other input_track_t
   /// objects.
   std::function<BoundTrackParameters(input_track_t)> extractParameters;
+
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger;
+
+  /// Private access to logging instance
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

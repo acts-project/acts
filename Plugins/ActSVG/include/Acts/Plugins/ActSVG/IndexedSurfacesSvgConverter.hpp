@@ -20,6 +20,7 @@
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/TypeList.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -27,34 +28,6 @@
 #include <vector>
 
 namespace Acts {
-
-namespace Experimental {
-
-using namespace detail::GridAxisGenerators;
-
-// Generate the possible axes in this case
-static auto s_possibleAxes =
-    std::tuple<EqBound, EqOpen, EqClosed,
-               // All 1D Var  options
-               VarBound, VarOpen, VarClosed,
-               // All 2D EqEq options
-               EqBoundEqBound, EqBoundEqOpen, EqBoundEqClosed, EqOpenEqBound,
-               EqOpenEqOpen, EqOpenEqClosed, EqClosedEqBound, EqClosedEqOpen,
-               EqClosedEqClosed,
-               // All 2D EqVar options
-               EqBoundVarBound, EqBoundVarOpen, EqBoundVarClosed,
-               EqOpenVarBound, EqOpenVarOpen, EqOpenVarClosed, EqClosedVarBound,
-               EqClosedVarOpen, EqClosedVarClosed,
-               // All 2D VarEq options
-               VarBoundEqBound, VarBoundEqOpen, VarBoundEqClosed,
-               VarOpenEqBound, VarOpenEqOpen, VarOpenEqClosed, VarClosedEqBound,
-               VarClosedEqOpen, VarClosedEqClosed,
-               // All 2D VarEq options
-               VarBoundVarBound, VarBoundVarOpen, VarBoundVarClosed,
-               VarOpenVarBound, VarOpenVarOpen, VarOpenVarClosed,
-               VarClosedVarBound, VarClosedVarOpen, VarClosedVarClosed>{};
-
-}  // namespace Experimental
 
 namespace Svg {
 
@@ -217,14 +190,13 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
 /// @brief Unrolling function for catching the right instance
 ///
 /// @note parameters are as of the `convertImpl` method
-template <typename surface_container, typename tuple_type, std::size_t... I>
+template <typename surface_container, typename... Args>
 void unrollConvert(const GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
                    const Experimental::SurfaceCandidatesUpdator& delegate,
-                   const tuple_type& axesTuple, std::index_sequence<I...>) {
-  (convert(gctx, surfaces, cOptions, sgi, delegate, std::get<I>(axesTuple)),
-   ...);
+                   TypeList<Args...> /*unused*/) {
+  (convert(gctx, surfaces, cOptions, sgi, delegate, Args{}), ...);
 }
 
 /// Convert a surface array into needed constituents
@@ -249,10 +221,8 @@ ProtoIndexedSurfaceGrid convert(
   std::vector<std::vector<std::size_t>> indices;
   ProtoIndexedSurfaceGrid sgi = {pSurfaces, pGrid, indices};
   // Convert if dynamic cast happens to work
-  unrollConvert(
-      gctx, surfaces, cOptions, sgi, delegate, Experimental::s_possibleAxes,
-      std::make_index_sequence<
-          std::tuple_size<decltype(Experimental::s_possibleAxes)>::value>());
+  unrollConvert(gctx, surfaces, cOptions, sgi, delegate,
+                Experimental::detail::GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
   return sgi;
 }
