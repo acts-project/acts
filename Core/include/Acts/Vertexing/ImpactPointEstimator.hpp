@@ -92,6 +92,13 @@ class ImpactPointEstimator {
                            "ImpactPointEstimator", Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(logger)) {}
 
+  /// @brief Copy constructor to clone logger (class owns a unique pointer to it,
+  /// which can't be copied)
+  ///
+  /// @param other Impact point estimator to be cloned
+  ImpactPointEstimator(const ImpactPointEstimator& other)
+      : m_cfg(other.m_cfg), m_logger(other.logger().clone()) {}
+
   /// @brief Calculates 3D distance between a track and a vertex
   ///
   /// @param gctx The geometry context
@@ -214,7 +221,7 @@ class ImpactPointEstimator {
   const Config m_cfg;
 
   /// Logging instance
-  std::shared_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
