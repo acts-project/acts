@@ -34,7 +34,7 @@
 #include <boost/type_erasure/any_cast.hpp>
 
 #include "ATLASCuts.hpp"
-#include "CommandLineArguments.h"
+#include "CommandLineArguments.hpp"
 #include "SpacePoint.hpp"
 #include "vecmem/memory/sycl/device_memory_resource.hpp"
 #include "vecmem/memory/sycl/host_memory_resource.hpp"
