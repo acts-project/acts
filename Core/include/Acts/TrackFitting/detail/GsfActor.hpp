@@ -392,7 +392,7 @@ struct GsfActor {
         old_bound.position(state.stepping.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
-    auto pathCorrection = surface.pathCorrection(
+    const auto pathCorrection = surface.pathCorrection(
         state.stepping.geoContext,
         old_bound.position(state.stepping.geoContext), old_bound.direction());
     slab.scaleThickness(pathCorrection);
@@ -406,12 +406,11 @@ struct GsfActor {
       ++result.nInvalidBetheHeitler.tmp();
       ACTS_DEBUG(
           "Bethe-Heitler approximation encountered invalid value for x/x0="
-          << slab.thicknessInX0() << " at surface " << surface.geometryId());
+          << pathXOverX0 << " at surface " << surface.geometryId());
     }
 
     // Get the mixture
-    const auto mixture =
-        m_cfg.bethe_heitler_approx->mixture(slab.thicknessInX0());
+    const auto mixture = m_cfg.bethe_heitler_approx->mixture(pathXOverX0);
 
     // Create all possible new components
     for (const auto& gaussian : mixture) {

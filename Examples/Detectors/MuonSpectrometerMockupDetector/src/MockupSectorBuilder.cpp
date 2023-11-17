@@ -55,7 +55,6 @@ ActsExamples::MockupSectorBuilder::buildChamber(
     const ActsExamples::MockupSectorBuilder::ChamberConfig& chamberConfig) {
   if (g4World == nullptr) {
     throw std::invalid_argument("MockupSector: No g4World initialized");
-    return nullptr;
   }
 
   const Acts::GeometryContext gctx;
@@ -162,7 +161,6 @@ ActsExamples::MockupSectorBuilder::buildSector(
         detVolumes) {
   if (mCfg.NumberOfSectors > maxNumberOfSectors) {
     throw std::invalid_argument("MockupSector:Number of max sectors exceeded");
-    return nullptr;
   }
 
   const Acts::GeometryContext gctx;
