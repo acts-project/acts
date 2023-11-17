@@ -60,8 +60,8 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
     return ProcessCode::ABORT;
   }
 
-  size_t numTracksUsed = protoTracks.size();
-  if (m_cfg.maxNumTracks > 0 and
+  std::size_t numTracksUsed = protoTracks.size();
+  if (m_cfg.maxNumTracks > 0 &&
       m_cfg.maxNumTracks < static_cast<int>(protoTracks.size())) {
     numTracksUsed = m_cfg.maxNumTracks;
   }

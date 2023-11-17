@@ -92,7 +92,7 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
   auto identifier = detElement->identifier();
   const Acts::Surface& surface = detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();
-  if (bounds.type() != Acts::SurfaceBounds::eRectangle or nSegments <= 1u) {
+  if (bounds.type() != Acts::SurfaceBounds::eRectangle || nSegments <= 1u) {
     ACTS_WARNING("Invalid splitting config for barrel node: " +
                  std::string(detElement->tgeoNode().GetName()) +
                  "! Node will not be slpit.");
@@ -123,7 +123,7 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
              std::to_string(rectBounds->halfLengthX()) + ", " +
              std::to_string(rectBounds->halfLengthY()));
 
-  for (size_t i = 0; i < nSegments; i++) {
+  for (std::size_t i = 0; i < nSegments; i++) {
     Acts::Vector3 globalTranslation =
         surface.localToGlobal(gctx, localTranslation, {}) -
         transform.translation();
@@ -162,7 +162,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   };
   ACTS_DEBUG(printOrigin(surface));
 
-  if (bounds.type() != Acts::SurfaceBounds::eAnnulus or splitRanges.empty()) {
+  if (bounds.type() != Acts::SurfaceBounds::eAnnulus || splitRanges.empty()) {
     ACTS_WARNING("Invalid splitting config for disk node: " +
                  std::string(detElement->tgeoNode().GetName()) +
                  "! Node will not be slpit.");
@@ -183,7 +183,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   std::array<double, Acts::AnnulusBounds::eSize> values{};
   std::copy_n(boundsValues.begin(), Acts::AnnulusBounds::eSize, values.begin());
 
-  for (size_t i = 0; i < nSegments; i++) {
+  for (std::size_t i = 0; i < nSegments; i++) {
     values[Acts::AnnulusBounds::eMinR] = splitRanges[i].first;
     values[Acts::AnnulusBounds::eMaxR] = splitRanges[i].second;
     auto annulusBounds = std::make_shared<Acts::AnnulusBounds>(values);

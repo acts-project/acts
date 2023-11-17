@@ -4,7 +4,8 @@ add_library(
   src/SeedsToPrototracks.cpp
   src/TrajectoriesToPrototracks.cpp
   src/TrackSelectorAlgorithm.cpp
-  src/TracksToTrajectories.cpp)
+  src/TracksToTrajectories.cpp
+  src/TracksToParameters.cpp)
 target_include_directories(
   ActsExamplesUtilities
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

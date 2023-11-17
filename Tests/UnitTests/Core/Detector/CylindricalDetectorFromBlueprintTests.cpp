@@ -15,6 +15,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
+#include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -225,7 +226,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   Acts::Experimental::detail::BlueprintHelper::fillGaps(*detectorBpr);
 
   std::fstream fs("cylindrical_detector_blueprint.dot", std::ios::out);
-  detectorBpr->dotStream(fs, "blueprint2cylinder");
+  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *detectorBpr);
   fs.close();
 
   // ----------------------------- end of blueprint
@@ -245,7 +246,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
 
   auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
 
-  BOOST_CHECK(detector != nullptr);
+  BOOST_REQUIRE_NE(detector, nullptr);
 
   // There should be 14 volumes, and they should be built in order
   // beam_pipe
@@ -262,21 +263,21 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   // pixel_pec_layer
   // pixel_pec_gap_1
   // detector_gap_1
-  BOOST_CHECK(detector->volumes().size() == 14u);
-  BOOST_CHECK(detector->volumes()[0]->name() == "beam_pipe");
-  BOOST_CHECK(detector->volumes()[1]->name() == "detector_gap_0");
-  BOOST_CHECK(detector->volumes()[2]->name() == "pixel_nec_gap_0");
-  BOOST_CHECK(detector->volumes()[3]->name() == "pixel_nec_layer");
-  BOOST_CHECK(detector->volumes()[4]->name() == "pixel_nec_gap_1");
-  BOOST_CHECK(detector->volumes()[5]->name() == "pixel_barrel_gap_0");
-  BOOST_CHECK(detector->volumes()[6]->name() == "pixel_barrel_l0");
-  BOOST_CHECK(detector->volumes()[7]->name() == "pixel_barrel_gap_1");
-  BOOST_CHECK(detector->volumes()[8]->name() == "pixel_barrel_l1");
-  BOOST_CHECK(detector->volumes()[9]->name() == "pixel_barrel_gap_2");
-  BOOST_CHECK(detector->volumes()[10]->name() == "pixel_pec_gap_0");
-  BOOST_CHECK(detector->volumes()[11]->name() == "pixel_pec_layer");
-  BOOST_CHECK(detector->volumes()[12]->name() == "pixel_pec_gap_1");
-  BOOST_CHECK(detector->volumes()[13]->name() == "detector_gap_1");
+  BOOST_CHECK_EQUAL(detector->volumes().size(), 14u);
+  BOOST_CHECK_EQUAL(detector->volumes()[0]->name(), "beam_pipe");
+  BOOST_CHECK_EQUAL(detector->volumes()[1]->name(), "detector_gap_0");
+  BOOST_CHECK_EQUAL(detector->volumes()[2]->name(), "pixel_nec_gap_0");
+  BOOST_CHECK_EQUAL(detector->volumes()[3]->name(), "pixel_nec_layer");
+  BOOST_CHECK_EQUAL(detector->volumes()[4]->name(), "pixel_nec_gap_1");
+  BOOST_CHECK_EQUAL(detector->volumes()[5]->name(), "pixel_barrel_gap_0");
+  BOOST_CHECK_EQUAL(detector->volumes()[6]->name(), "pixel_barrel_l0");
+  BOOST_CHECK_EQUAL(detector->volumes()[7]->name(), "pixel_barrel_gap_1");
+  BOOST_CHECK_EQUAL(detector->volumes()[8]->name(), "pixel_barrel_l1");
+  BOOST_CHECK_EQUAL(detector->volumes()[9]->name(), "pixel_barrel_gap_2");
+  BOOST_CHECK_EQUAL(detector->volumes()[10]->name(), "pixel_pec_gap_0");
+  BOOST_CHECK_EQUAL(detector->volumes()[11]->name(), "pixel_pec_layer");
+  BOOST_CHECK_EQUAL(detector->volumes()[12]->name(), "pixel_pec_gap_1");
+  BOOST_CHECK_EQUAL(detector->volumes()[13]->name(), "detector_gap_1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

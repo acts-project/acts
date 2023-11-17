@@ -19,10 +19,10 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
   std::vector<ActsScalar> phiSegments;
   std::vector<ActsScalar> quarters = {-M_PI, -0.5 * M_PI, 0., 0.5 * M_PI, M_PI};
   // It does not cover the full azimuth
-  if (phiMin != -M_PI or phiMax != M_PI) {
+  if (phiMin != -M_PI || phiMax != M_PI) {
     phiSegments.push_back(phiMin);
     for (unsigned int iq = 1; iq < 4; ++iq) {
-      if (phiMin < quarters[iq] and phiMax > quarters[iq]) {
+      if (phiMin < quarters[iq] && phiMax > quarters[iq]) {
         phiSegments.push_back(quarters[iq]);
       }
     }
@@ -31,7 +31,7 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
     phiSegments = quarters;
   }
   // Insert the reference phis if
-  if (not phiRefs.empty()) {
+  if (!phiRefs.empty()) {
     for (const auto& phiRef : phiRefs) {
       // Trying to find the right patch
       auto match = std::find_if(
@@ -57,7 +57,7 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
   std::vector<Vector2> ivertices;  // inner vertices
   std::vector<Vector2> overtices;  // outer verices
 
-  bool innerExists = (innerRx > 0. and innerRy > 0.);
+  bool innerExists = (innerRx > 0. && innerRy > 0.);
   bool closed = std::abs(halfPhi - M_PI) < s_onSurfaceTolerance;
 
   // Get the phi segments from the helper method
@@ -66,7 +66,7 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
 
   // The inner (if exists) and outer bow
   for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-    int addon = (iseg == phiSegs.size() - 2 and not closed) ? 1 : 0;
+    int addon = (iseg == phiSegs.size() - 2 && !closed) ? 1 : 0;
     if (innerExists) {
       createSegment<Vector2, Transform2>(ivertices, {innerRx, innerRy},
                                          phiSegs[iseg], phiSegs[iseg + 1], lseg,
@@ -78,13 +78,13 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
   }
 
   // We want to keep the same counter-clockwise orientation for displaying
-  if (not innerExists) {
-    if (not closed) {
+  if (!innerExists) {
+    if (!closed) {
       // Add the center case we have a sector
       rvertices.push_back(Vector2(0., 0.));
     }
     rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
-  } else if (not closed) {
+  } else if (!closed) {
     rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
     rvertices.insert(rvertices.end(), ivertices.rbegin(), ivertices.rend());
   } else {
@@ -110,7 +110,7 @@ bool Acts::detail::VerticesHelper::onHyperPlane(
   // Create the hyperplane
   auto hyperPlane = Eigen::Hyperplane<ActsScalar, 3>::Through(
       vertices[0], vertices[1], vertices[2]);
-  for (size_t ip = 3; ip < vertices.size(); ++ip) {
+  for (std::size_t ip = 3; ip < vertices.size(); ++ip) {
     if (hyperPlane.absDistance(vertices[ip]) > tolerance) {
       return false;
     }

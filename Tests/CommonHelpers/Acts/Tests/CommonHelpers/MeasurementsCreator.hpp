@@ -57,7 +57,7 @@ struct MeasurementsCreator {
 
   MeasurementResolutionMap resolutions;
   std::default_random_engine* rng = nullptr;
-  size_t sourceId = 0;
+  std::size_t sourceId = 0;
   // how far away from the measurements the outliers should be
   double distanceOutlier = 10 * Acts::UnitConstants::mm;
 
@@ -78,13 +78,13 @@ struct MeasurementsCreator {
     using namespace Acts::UnitLiterals;
 
     // only generate measurements on surfaces
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
     const Acts::Surface& surface = *navigator.currentSurface(state.navigation);
     const Acts::GeometryIdentifier geoId = surface.geometryId();
     // only generate measurements on sensitive surface
-    if (not geoId.sensitive()) {
+    if (!geoId.sensitive()) {
       ACTS_VERBOSE("Create no measurements on non-sensitive surface " << geoId);
       return;
     }
@@ -156,7 +156,7 @@ Measurements createMeasurements(const propagator_t& propagator,
                                 const track_parameters_t& trackParameters,
                                 const MeasurementResolutionMap& resolutions,
                                 std::default_random_engine& rng,
-                                size_t sourceId = 0u) {
+                                std::size_t sourceId = 0u) {
   using Actions = Acts::ActionList<MeasurementsCreator>;
   using Aborters = Acts::AbortList<Acts::EndOfWorldReached>;
 

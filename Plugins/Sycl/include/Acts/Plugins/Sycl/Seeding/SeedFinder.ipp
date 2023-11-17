@@ -133,9 +133,9 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
       const InternalSpacePoint<external_spacepoint_t>>::value_type>
       candidates;
 
-  for (size_t mi = 0; mi < seeds.size(); ++mi) {
+  for (std::size_t mi = 0; mi < seeds.size(); ++mi) {
     candidates.clear();
-    for (size_t j = 0; j < seeds[mi].size(); ++j) {
+    for (std::size_t j = 0; j < seeds[mi].size(); ++j) {
       auto& bottomSP = *(bottomSPvec[seeds[mi][j].bottom]);
       auto& middleSP = *(middleSPvec[mi]);
       auto& topSP = *(topSPvec[seeds[mi][j].top]);

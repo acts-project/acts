@@ -113,7 +113,7 @@ auto setupSeedFinderConfiguration()
 
 auto setupSeedFinderOptions() {
   Acts::SeedFinderOptions options;
-  options.bFieldInZ = 1.99724_T;
+  options.bFieldInZ = 2_T;
   options.beamPos = {-.5_mm, -.5_mm};
   return options;
 }
@@ -287,7 +287,7 @@ auto main(int argc, char** argv) -> int {
       nSeed_sycl += outVec.size();
     }
 
-    for (size_t i = 0; i < seedVector_cpu.size(); i++) {
+    for (std::size_t i = 0; i < seedVector_cpu.size(); i++) {
       auto regionVec_cpu = seedVector_cpu[i];
       auto regionVec_sycl = seedVector_sycl[i];
 

@@ -30,32 +30,34 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
 Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                        const CylinderSurface& other,
                                        const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+    : GeometryObject(),
+      RegularSurface(gctx, other, shift),
+      m_bounds(other.m_bounds) {}
 
 Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
                                        double radius, double halfz,
                                        double halfphi, double avphi,
                                        double bevelMinZ, double bevelMaxZ)
-    : Surface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const CylinderBounds>(
           radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
     const DetectorElementBase& detelement)
-    : Surface(detelement), m_bounds(std::move(cbounds)) {
+    : RegularSurface(detelement), m_bounds(std::move(cbounds)) {
   /// surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
 
 Acts::CylinderSurface::CylinderSurface(
     const Transform3& transform, std::shared_ptr<const CylinderBounds> cbounds)
-    : Surface(transform), m_bounds(std::move(cbounds)) {
+    : RegularSurface(transform), m_bounds(std::move(cbounds)) {
   throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
 
@@ -107,8 +109,7 @@ Acts::Surface::SurfaceType Acts::CylinderSurface::type() const {
 }
 
 Acts::Vector3 Acts::CylinderSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*direction*/) const {
+    const GeometryContext& gctx, const Vector2& lposition) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -118,7 +119,7 @@ Acts::Vector3 Acts::CylinderSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::CylinderSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/, double tolerance) const {
+    double tolerance) const {
   double inttol = tolerance;
   if (tolerance == s_onSurfaceTolerance) {
     // transform default value!
@@ -146,7 +147,7 @@ Acts::Vector3 Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2& lposition) const {
   double phi = lposition[Acts::eBoundLoc0] / m_bounds->get(CylinderBounds::eR);
   Vector3 localNormal(cos(phi), sin(phi), 0.);
-  return Vector3(transform(gctx).matrix().block<3, 3>(0, 0) * localNormal);
+  return transform(gctx).linear() * localNormal;
 }
 
 Acts::Vector3 Acts::CylinderSurface::normal(
@@ -156,7 +157,7 @@ Acts::Vector3 Acts::CylinderSurface::normal(
   Vector3 pos3D = sfTransform.inverse() * position;
   // set the z coordinate to 0
   pos3D.z() = 0.;
-  // normalize and rotate back into global if needed
+  // normalize and rotate back into global
   return sfTransform.linear() * pos3D.normalized();
 }
 
@@ -173,7 +174,7 @@ const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   auto ctrans = transform(gctx);
 
   // Prepare vertices and faces
@@ -245,7 +246,7 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
       return status;
     }
     const auto& cBounds = bounds();
-    if (cBounds.coversFullAzimuth() and
+    if (cBounds.coversFullAzimuth() &&
         bcheck.type() == BoundaryCheck::Type::eAbsolute) {
       // Project out the current Z value via local z axis
       // Built-in local to global for speed reasons

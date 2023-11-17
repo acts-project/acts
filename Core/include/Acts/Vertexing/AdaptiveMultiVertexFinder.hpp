@@ -58,12 +58,12 @@ class AdaptiveMultiVertexFinder {
     /// @param ipEst ImpactPointEstimator
     /// @param lin Track linearizer
     /// @param bIn Input magnetic field
-    Config(vfitter_t fitter, const sfinder_t& sfinder,
-           const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
+    Config(vfitter_t fitter, sfinder_t sfinder,
+           ImpactPointEstimator<InputTrack_t, Propagator_t> ipEst,
            Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
-          seedFinder(sfinder),
-          ipEstimator(ipEst),
+          seedFinder(std::move(sfinder)),
+          ipEstimator(std::move(ipEst)),
           linearizer(std::move(lin)),
           bField{std::move(bIn)} {}
 
@@ -169,7 +169,7 @@ class AdaptiveMultiVertexFinder {
   template <
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFinder(Config& cfg,
+  AdaptiveMultiVertexFinder(Config cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFinder",
                                                  Logging::INFO))
@@ -185,7 +185,7 @@ class AdaptiveMultiVertexFinder {
   /// object
   /// @param logger The logging instance
   AdaptiveMultiVertexFinder(
-      Config& cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),

@@ -59,9 +59,10 @@ BOOST_DATA_TEST_CASE(
     // collect all surfaces that are hit
     for (const auto& bndSrf : bndSurfaces) {
       const auto& srf = bndSrf->surfaceRepresentation();
-      auto srmi = srf.intersect(tgContext, ray.origin(), ray.dir(), true);
+      auto srmi = srf.intersect(tgContext, ray.origin(), ray.dir(),
+                                Acts::BoundaryCheck(true));
       for (const auto& sri : srmi.split()) {
-        if (sri and sri.pathLength() >= s_onSurfaceTolerance) {
+        if (sri && sri.pathLength() >= s_onSurfaceTolerance) {
           // does intersect
           hits.push_back(sri);
         }
@@ -118,7 +119,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   BOOST_CHECK_EQUAL(expHits.size(), actHits.size());
-  for (size_t i = 0; i < expHits.size(); i++) {
+  for (std::size_t i = 0; i < expHits.size(); i++) {
     const Surface* exp = expHits[i];
     const Surface* act = actHits[i];
 

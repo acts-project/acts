@@ -20,6 +20,14 @@
 
 namespace Acts {
 
+/// @enum ComponentMergeMethod
+///
+/// Available reduction methods for the reduction of a Gaussian mixture
+enum class ComponentMergeMethod { eMean, eMaxWeight };
+
+/// @struct GsfComponent
+///
+/// Encapsulates a component of a Gaussian mixture as used by the GSF
 struct GsfComponent {
   ActsScalar weight = 0;
   BoundVector boundPars = BoundVector::Zero();
@@ -74,6 +82,9 @@ struct GsfExtensions {
     calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
     updater.template connect<&detail::voidFitterUpdater<traj_t>>();
     outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
+    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
+    mixtureReducer
+        .template connect<&detail::voidComponentReducer<GsfComponent>>();
   }
 };
 
@@ -99,8 +110,7 @@ struct GsfOptions {
 
   std::string_view finalMultiComponentStateColumn = "";
 
-  MixtureReductionMethod stateReductionMethod =
-      MixtureReductionMethod::eMaxWeight;
+  ComponentMergeMethod componentMergeMethod = ComponentMergeMethod::eMaxWeight;
 
 #if __cplusplus < 202002L
   GsfOptions() = delete;

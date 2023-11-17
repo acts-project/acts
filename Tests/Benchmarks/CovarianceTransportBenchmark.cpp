@@ -19,8 +19,8 @@
 int main(int argc, char* argv[]) {
   using namespace Acts;
 
-  size_t iterations = 3;
-  size_t runs = 1000;
+  std::size_t iterations = 3;
+  std::size_t runs = 1000;
   if (argc >= 2) {
     iterations = std::stoi(argv[1]);
   }
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
         const auto& covariance = std::get<BoundSquareMatrix>(variantCovariance);
         const auto& jacobian = std::get<BoundMatrix>(variantJacobian);
 
-        if (covariance(eBoundLoc0, eBoundLoc0) > 0 and
+        if (covariance(eBoundLoc0, eBoundLoc0) > 0 &&
             jacobian(eBoundLoc0, eBoundLoc1) > 0.) {
           ++sillyCounter;
         }

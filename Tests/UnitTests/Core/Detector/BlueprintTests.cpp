@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Detector/Blueprint.hpp"
+#include "Acts/Detector/detail/BlueprintDrawer.hpp"
 
 #include <fstream>
 
@@ -30,9 +31,9 @@ BOOST_AUTO_TEST_CASE(BlueprintTest) {
       bValues, binning);
   // Check the root node
   BOOST_CHECK(root->isRoot());
-  BOOST_CHECK(root->parent == nullptr);
+  BOOST_CHECK_EQUAL(root->parent, nullptr);
   BOOST_CHECK(root->children.empty());
-  BOOST_CHECK(root->name == "detector");
+  BOOST_CHECK_EQUAL(root->name, "detector");
 
   auto leaf0 = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "volume_0", Acts::Transform3::Identity(), Acts::VolumeBounds::eOther,
@@ -62,26 +63,26 @@ BOOST_AUTO_TEST_CASE(BlueprintTest) {
   branch->add(std::move(leaf2));
 
   // Branch has two children
-  BOOST_CHECK(branch->children.size() == 2u);
+  BOOST_CHECK_EQUAL(branch->children.size(), 2u);
 
   // Parent of the leaves is the branch
-  BOOST_CHECK(leaf1Ptr->parent == branchPtr);
-  BOOST_CHECK(leaf2Ptr->parent == branchPtr);
+  BOOST_CHECK_EQUAL(leaf1Ptr->parent, branchPtr);
+  BOOST_CHECK_EQUAL(leaf2Ptr->parent, branchPtr);
 
   root->add(std::move(branch));
 
   // Root stays root
   BOOST_CHECK(root->isRoot());
   // Parent of the branch is the root
-  BOOST_CHECK(branchPtr->parent == root.get());
+  BOOST_CHECK_EQUAL(branchPtr->parent, root.get());
 
   root->add(std::move(leaf0));
 
   // Parent of the leaf is the root
-  BOOST_CHECK(leaf0Ptr->parent == root.get());
+  BOOST_CHECK_EQUAL(leaf0Ptr->parent, root.get());
 
   std::ofstream fs("blueprint.dot");
-  root->dotStream(fs);
+  Acts::Experimental::detail::BlueprintDrawer::dotStream(fs, *root);
   fs.close();
 }
 

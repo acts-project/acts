@@ -14,9 +14,11 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -69,10 +71,24 @@ class DirectNavigator {
                     const navigator_t& /*navigator*/, result_type& r,
                     const Logger& /*logger*/) const {
       // Only act once
-      if (not r.initialized) {
+      if (!r.initialized) {
         // Initialize the surface sequence
         state.navigation.navSurfaces = navSurfaces;
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
+
+        // In case the start surface is in the list of nav surfaces
+        // we need to correct the iterator to point to the next surface
+        // in the vector
+        if (state.navigation.startSurface) {
+          auto surfaceIter = std::find(state.navigation.navSurfaces.begin(),
+                                       state.navigation.navSurfaces.end(),
+                                       state.navigation.startSurface);
+          // if current surface in the list, point to the next surface
+          if (surfaceIter != state.navigation.navSurfaces.end()) {
+            state.navigation.navSurfaceIter = ++surfaceIter;
+          }
+        }
+
         r.initialized = true;
       }
     }
@@ -197,8 +213,18 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    (void)state;
     (void)stepper;
+
+    // Call the navigation helper prior to actual navigation
+    ACTS_VERBOSE(volInfo(state) << "Initialization.");
+
+    // We set the current surface to the start surface
+    state.navigation.currentSurface = state.navigation.startSurface;
+    if (state.navigation.currentSurface) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current surface set to start surface "
+                   << state.navigation.currentSurface->geometryId());
+    }
   }
 
   /// @brief Navigator pre step call
@@ -223,10 +249,19 @@ class DirectNavigator {
 
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish & update the surface status
+      // TODO we do not know the intersection index - passing the closer one
+      const auto& surface = **state.navigation.navSurfaceIter;
+      const auto index =
+          chooseIntersection(
+              state.geoContext, surface, stepper.position(state.stepping),
+              state.options.direction * stepper.direction(state.stepping),
+              BoundaryCheck(false), std::numeric_limits<double>::max(),
+              stepper.overstepLimit(state.stepping),
+              state.options.surfaceTolerance)
+              .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter,
-          state.options.direction, false, state.options.targetTolerance,
-          *m_logger);
+          state.stepping, surface, index, state.options.direction,
+          BoundaryCheck(false), state.options.surfaceTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::unreachable) {
         ACTS_VERBOSE(
             "Surface not reachable anymore, switching to next one in "
@@ -272,10 +307,19 @@ class DirectNavigator {
     // Check if we are on surface
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish the surface status
+      // TODO we do not know the intersection index - passing the closer one
+      const auto& surface = **state.navigation.navSurfaceIter;
+      const auto index =
+          chooseIntersection(
+              state.geoContext, surface, stepper.position(state.stepping),
+              state.options.direction * stepper.direction(state.stepping),
+              BoundaryCheck(false), std::numeric_limits<double>::max(),
+              stepper.overstepLimit(state.stepping),
+              state.options.surfaceTolerance)
+              .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter,
-          state.options.direction, false, state.options.targetTolerance,
-          *m_logger);
+          state.stepping, surface, index, state.options.direction,
+          BoundaryCheck(false), state.options.surfaceTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;
@@ -297,6 +341,34 @@ class DirectNavigator {
   }
 
  private:
+  template <typename propagator_state_t>
+  std::string volInfo(const propagator_state_t& state) const {
+    return (state.navigation.currentVolume
+                ? state.navigation.currentVolume->volumeName()
+                : "No Volume") +
+           " | ";
+  }
+
+  ObjectIntersection<Surface> chooseIntersection(const GeometryContext& gctx,
+                                                 const Surface& surface,
+                                                 const Vector3& position,
+                                                 const Vector3& direction,
+                                                 const BoundaryCheck& bcheck,
+                                                 double pLimit, double oLimit,
+                                                 double tolerance) const {
+    auto intersections =
+        surface.intersect(gctx, position, direction, bcheck, tolerance);
+
+    for (auto& intersection : intersections.split()) {
+      if (detail::checkIntersection(intersection, pLimit, oLimit, tolerance,
+                                    logger())) {
+        return intersection;
+      }
+    }
+
+    return ObjectIntersection<Surface>::invalid();
+  }
+
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;

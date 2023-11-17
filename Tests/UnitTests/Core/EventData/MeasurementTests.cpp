@@ -61,7 +61,7 @@ BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
     if (i == index) {
       BOOST_CHECK(meas.contains(i));
     } else {
-      BOOST_CHECK(not meas.contains(i));
+      BOOST_CHECK(!meas.contains(i));
     }
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
@@ -134,7 +134,7 @@ BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
     if (i == index) {
       BOOST_CHECK(meas.contains(i));
     } else {
-      BOOST_CHECK(not meas.contains(i));
+      BOOST_CHECK(!meas.contains(i));
     }
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
@@ -177,12 +177,12 @@ BOOST_AUTO_TEST_CASE(VariantBound) {
   std::visit(
       [](const auto& m) {
         BOOST_CHECK_EQUAL(m.size(), 1);
-        BOOST_CHECK(not m.contains(eBoundLoc0));
-        BOOST_CHECK(not m.contains(eBoundLoc1));
-        BOOST_CHECK(not m.contains(eBoundTime));
-        BOOST_CHECK(not m.contains(eBoundPhi));
+        BOOST_CHECK(!m.contains(eBoundLoc0));
+        BOOST_CHECK(!m.contains(eBoundLoc1));
+        BOOST_CHECK(!m.contains(eBoundTime));
+        BOOST_CHECK(!m.contains(eBoundPhi));
         BOOST_CHECK(m.contains(eBoundTheta));
-        BOOST_CHECK(not m.contains(eBoundQOverP));
+        BOOST_CHECK(!m.contains(eBoundQOverP));
       },
       meas);
 
@@ -211,14 +211,14 @@ BOOST_AUTO_TEST_CASE(VariantFree) {
   std::visit(
       [](const auto& m) {
         BOOST_CHECK_EQUAL(m.size(), 2);
-        BOOST_CHECK(not m.contains(eFreePos0));
-        BOOST_CHECK(not m.contains(eFreePos1));
+        BOOST_CHECK(!m.contains(eFreePos0));
+        BOOST_CHECK(!m.contains(eFreePos1));
         BOOST_CHECK(m.contains(eFreePos2));
         BOOST_CHECK(m.contains(eFreeTime));
-        BOOST_CHECK(not m.contains(eFreeDir0));
-        BOOST_CHECK(not m.contains(eFreeDir1));
-        BOOST_CHECK(not m.contains(eFreeDir2));
-        BOOST_CHECK(not m.contains(eFreeQOverP));
+        BOOST_CHECK(!m.contains(eFreeDir0));
+        BOOST_CHECK(!m.contains(eFreeDir1));
+        BOOST_CHECK(!m.contains(eFreeDir2));
+        BOOST_CHECK(!m.contains(eFreeQOverP));
       },
       meas);
 

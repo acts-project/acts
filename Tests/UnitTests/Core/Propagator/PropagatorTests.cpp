@@ -93,7 +93,7 @@ struct SurfaceObserver {
 
   /// Simple result struct to be returned
   struct this_result {
-    size_t surfaces_passed = 0;
+    std::size_t surfaces_passed = 0;
     double surface_passed_r = std::numeric_limits<double>::max();
   };
 
@@ -111,7 +111,8 @@ struct SurfaceObserver {
       const double distance =
           surface
               ->intersect(state.geoContext, stepper.position(state.stepping),
-                          stepper.direction(state.stepping), true)
+                          stepper.direction(state.stepping),
+                          BoundaryCheck(true))
               .closest()
               .pathLength();
       // Adjust the step size so that we cannot cross the target surface

@@ -64,7 +64,7 @@ struct AllPortalsExtractor {
   inline static const std::vector<const Portal*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
+      [[maybe_unused]] const std::vector<std::size_t>& indices = {}) {
     return nState.currentVolume->portals();
   }
 };
@@ -79,7 +79,7 @@ struct AllSurfacesExtractor {
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
+      [[maybe_unused]] const std::vector<std::size_t>& indices = {}) {
     return nState.currentVolume->surfaces();
   }
 };
@@ -93,7 +93,7 @@ struct IndexedSurfacesExtractor {
   /// @param indices are access indices into the surfaces store
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t>& indices) {
+      const NavigationState& nState, const std::vector<std::size_t>& indices) {
     // Get the surface container
     const auto& surfaces = nState.currentVolume->surfaces();
     // The extracted surfaces
@@ -123,14 +123,14 @@ class TestAxis : public IAxis {
 
   ActsScalar getMax() const final { return 1.; }
 
-  size_t getNBins() const final { return 1; };
+  std::size_t getNBins() const final { return 1; };
 };
 
 class MultiGrid1D {
  public:
-  static constexpr size_t DIM = 1u;
+  static constexpr std::size_t DIM = 1u;
 
-  const std::vector<size_t>& atPosition(
+  const std::vector<std::size_t>& atPosition(
       const std::array<ActsScalar, 1u>& /*position*/) const {
     return e;
   }
@@ -139,14 +139,14 @@ class MultiGrid1D {
   TestAxis ta;
 
  private:
-  std::vector<size_t> e = {0u, 1u};
+  std::vector<std::size_t> e = {0u, 1u};
 };
 
 class MultiGrid2D {
  public:
-  static constexpr size_t DIM = 2u;
+  static constexpr std::size_t DIM = 2u;
 
-  const std::vector<size_t>& atPosition(
+  const std::vector<std::size_t>& atPosition(
       const std::array<ActsScalar, 2u>& /*position*/) const {
     return e;
   }
@@ -155,7 +155,7 @@ class MultiGrid2D {
   TestAxis ta;
 
  private:
-  std::vector<size_t> e = {1u};
+  std::vector<std::size_t> e = {1u};
 };
 }  // namespace Acts
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(SingleDetectorVolumeUpdator) {
 
   // Update the volume and check that it is indeed updated
   sVolumeUpdator.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == sVolume.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, sVolume.get());
 }
 
 BOOST_AUTO_TEST_CASE(AllSurfaces) {
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(AllSurfaces) {
   BOOST_CHECK(nState.surfaceCandidates.empty());
   AllSurfacesProvider allSurfaces;
   allSurfaces.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 3u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 3u);
 }
 
 BOOST_AUTO_TEST_CASE(AllPortals) {
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(AllPortals) {
   BOOST_CHECK(nState.surfaceCandidates.empty());
   AllPortalsProvider allPortals;
   allPortals.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 2u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
           std::tie(allPortals, allSurfaces));
 
   allPortalsAllSurfaces.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 5u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 5u);
 }
 
 BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
           std::tie(allPortals, grid1DSurfaces));
 
   allPortalsGrid1DSurfaces.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 4u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 4u);
 }
 
 BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
           std::tie(allPortals, grid2DSurfaces));
 
   allPortalsGrid2DSurfaces.update(tContext, nState);
-  BOOST_CHECK(nState.surfaceCandidates.size() == 3u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

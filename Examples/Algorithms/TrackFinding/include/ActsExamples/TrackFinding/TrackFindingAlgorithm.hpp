@@ -138,8 +138,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 
-  mutable std::atomic<size_t> m_nTotalSeeds{0};
-  mutable std::atomic<size_t> m_nFailedSeeds{0};
+  mutable std::atomic<std::size_t> m_nTotalSeeds{0};
+  mutable std::atomic<std::size_t> m_nFailedSeeds{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {
@@ -165,7 +165,7 @@ void TrackFindingAlgorithm::computeSharedHits(
 
   for (auto track : tracks) {
     for (auto state : track.trackStatesReversed()) {
-      if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         continue;
       }
 
@@ -190,8 +190,7 @@ void TrackFindingAlgorithm::computeSharedHits(
                             .container()
                             .trackStateContainer()
                             .getTrackState(indexFirstState);
-      if (not firstState.typeFlags().test(
-              Acts::TrackStateFlag::SharedHitFlag)) {
+      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
         firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
       }
 
