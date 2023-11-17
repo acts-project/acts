@@ -49,7 +49,8 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
 
   DD4hepBlueprint dd4hepBlueprintDrawer(
       bpdCfg, getDefaultLogger("DD4hepBlueprint", options.logLevel));
-  auto dd4hepBlueprint = dd4hepBlueprintDrawer.create(bpdCache, gctx, dd4hepElement);
+  auto dd4hepBlueprint =
+      dd4hepBlueprintDrawer.create(bpdCache, gctx, dd4hepElement);
   detectorStore = bpdCache.dd4hepStore;
 
   // Draw the raw graph

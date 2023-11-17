@@ -14,13 +14,13 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
-#include <tuple>
-#include <optional>
 #include <memory>
+#include <optional>
 #include <string>
+#include <tuple>
 
 namespace dd4hep {
 class DetElement;
@@ -87,10 +87,10 @@ class DD4hepLayerStructure {
   /// @param options containing the optional descriptions
   ///
   /// @return a LayerStructureBuilder, and an optional extent
-  std::tuple<std::shared_ptr<LayerStructureBuilder>, std::optional<Extent>> builder(
-      DD4hepDetectorElement::Store& dd4hepStore,
-      const GeometryContext& gctx,
-      const dd4hep::DetElement& dd4hepElement, const Options& options) const;
+  std::tuple<std::shared_ptr<LayerStructureBuilder>, std::optional<Extent>>
+  builder(DD4hepDetectorElement::Store& dd4hepStore,
+          const GeometryContext& gctx, const dd4hep::DetElement& dd4hepElement,
+          const Options& options) const;
 
  private:
   /// The workorse: the surface factory

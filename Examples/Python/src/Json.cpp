@@ -223,22 +223,22 @@ void addJson(Context& ctx) {
               out.open(name + "_material_detray.json");
               out << jMaterial.dump(4);
               out.close();
-
             });
   }
 
   {
-    mex.def("readDetectorFromJson",
-            [](const Acts::GeometryContext& gctx,
-               const std::string& fileName) -> auto {
-              auto in = std::ifstream(
-                  fileName, std::ifstream::in | std::ifstream::binary);
-              nlohmann::json jDetectorIn;
-              in >> jDetectorIn;
-              in.close();
+    mex.def(
+        "readDetectorFromJson",
+        [](const Acts::GeometryContext& gctx,
+           const std::string& fileName) -> auto{
+          auto in = std::ifstream(fileName,
+                                  std::ifstream::in | std::ifstream::binary);
+          nlohmann::json jDetectorIn;
+          in >> jDetectorIn;
+          in.close();
 
-              return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
-            });
+          return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
+        });
   }
 }
 }  // namespace Acts::Python

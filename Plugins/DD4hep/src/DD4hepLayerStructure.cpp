@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
+
 #include "Acts/Utilities/BinningType.hpp"
 
 Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
@@ -62,18 +63,21 @@ Acts::Experimental::DD4hepLayerStructure::builder(
 
   // Patch the binning to the extent parameters
   if (fCache.sExtent.has_value() && options.patchBinningWithExtent) {
-      const auto& extent = fCache.sExtent.value();
-      // Check if the binning 
-      ACTS_VERBOSE("Checking if surface binning ranges can be patched.");
-      for (auto& b : fCache.binnings){
-        if (extent.constrains(b.binValue)){
-          ACTS_VERBOSE("Binning '" << binningValueNames()[b.binValue] << "' is patched.");
-          ACTS_VERBOSE(" <- from : [" << b.edges.front() << ", " << b.edges.back() << "]");
-          b.edges.front() = extent.min(b.binValue);          
-          b.edges.back() = extent.max(b.binValue);
-          ACTS_VERBOSE(" -> to   : [" << b.edges.front() << ", " << b.edges.back() << "]");
-        }
+    const auto& extent = fCache.sExtent.value();
+    // Check if the binning
+    ACTS_VERBOSE("Checking if surface binning ranges can be patched.");
+    for (auto& b : fCache.binnings) {
+      if (extent.constrains(b.binValue)) {
+        ACTS_VERBOSE("Binning '" << binningValueNames()[b.binValue]
+                                 << "' is patched.");
+        ACTS_VERBOSE(" <- from : [" << b.edges.front() << ", " << b.edges.back()
+                                    << "]");
+        b.edges.front() = extent.min(b.binValue);
+        b.edges.back() = extent.max(b.binValue);
+        ACTS_VERBOSE(" -> to   : [" << b.edges.front() << ", " << b.edges.back()
+                                    << "]");
       }
+    }
   }
 
   // Translate binings and supports
@@ -119,8 +123,10 @@ Acts::Experimental::DD4hepLayerStructure::builder(
 
   // Make one common extent
   if (fCache.sExtent.has_value() && fCache.pExtent.has_value()) {
-    ACTS_DEBUG("Sensitive extent determinded: " << fCache.sExtent.value().toString());
-    ACTS_DEBUG("Passive   extent determinded: " << fCache.pExtent.value().toString());
+    ACTS_DEBUG(
+        "Sensitive extent determinded: " << fCache.sExtent.value().toString());
+    ACTS_DEBUG(
+        "Passive   extent determinded: " << fCache.pExtent.value().toString());
     fCache.sExtent.value().extend(fCache.pExtent.value());
   }
 

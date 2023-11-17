@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
     lsOptions.name = "DiscLayer";
     lsOptions.logLevel = Acts::Logging::VERBOSE;
 
-    auto [ discInternalsBuilder, discExt ] =
+    auto [discInternalsBuilder, discExt] =
         discStructure.builder(dd4hepStore, tContext, world, lsOptions);
 
     // Build the internal volume structure

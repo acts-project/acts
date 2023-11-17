@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   // Create the grid with the provided axis generator
   using GridType = typename AxesGeneratorType::template grid_type<std::size_t>;
   GridType grid(zrAxes());
-  
+
   grid.at(1u) = 0;
   grid.at(2u) = 1;
   grid.at(3u) = 2;
@@ -58,11 +58,10 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   nlohmann::json rFinderJson =
       Acts::DetectorVolumeFinderJsonConverter::toJson(rootVolumeFinder);
 
-  auto readInRootVolumeFinder = 
+  auto readInRootVolumeFinder =
       Acts::DetectorVolumeFinderJsonConverter::fromJson(rFinderJson);
 
   BOOST_CHECK(readInRootVolumeFinder.instance() != nullptr);
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

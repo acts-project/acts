@@ -232,22 +232,23 @@ Acts::Experimental::DD4hepBlueprint::extractInternals(
           baseName + "_internals_clearance", dd4hepElement, 0.);
       auto internalBinningValues = stringToBinningValues(interenalsMeasure);
       if (!internalBinningValues.empty()) {
-          ACTS_VERBOSE(" - internals extent measurement requested");
-          Extent internalsExtent;
-          ExtentEnvelope clearance = zeroEnvelopes;          
-          for (const auto& bv : internalBinningValues) {
-            clearance[bv] = { internalsClearance, internalsClearance };
-          }
-          internalsExtent.setEnvelope(clearance);
-          lOptions.extent = internalsExtent;
-          lOptions.extentContraints = internalBinningValues;
-      }                     
+        ACTS_VERBOSE(" - internals extent measurement requested");
+        Extent internalsExtent;
+        ExtentEnvelope clearance = zeroEnvelopes;
+        for (const auto& bv : internalBinningValues) {
+          clearance[bv] = {internalsClearance, internalsClearance};
+        }
+        internalsExtent.setEnvelope(clearance);
+        lOptions.extent = internalsExtent;
+        lOptions.extentContraints = internalBinningValues;
+      }
       // Create the builder from the dd4hep element
       auto [ib, extOpt] = m_cfg.layerStructure->builder(
           dd4hepStore, gctx, dd4hepElement, lOptions);
       internalsBuilder = std::move(ib);
       if (extOpt.has_value()) {
-        ACTS_VERBOSE(" - internals extent measured as " << extOpt.value().toString());
+        ACTS_VERBOSE(" - internals extent measured as "
+                     << extOpt.value().toString());
       }
       ext = extOpt;
     }

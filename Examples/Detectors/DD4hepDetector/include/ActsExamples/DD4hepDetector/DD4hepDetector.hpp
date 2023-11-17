@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 

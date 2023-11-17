@@ -13,15 +13,15 @@
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <optional>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -122,8 +122,7 @@ class DD4hepBlueprint {
   std::tuple<std::shared_ptr<const IInternalStructureBuilder>,
              std::shared_ptr<const IRootVolumeFinderBuilder>,
              std::shared_ptr<const IGeometryIdGenerator>,
-             std::array<std::string, 3u>,
-             std::optional<Extent>>
+             std::array<std::string, 3u>, std::optional<Extent>>
   extractInternals(DD4hepDetectorElement::Store& dd4hepStore,
                    const GeometryContext& gctx,
                    const dd4hep::DetElement& dd4hepElement,
