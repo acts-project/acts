@@ -226,6 +226,9 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   std::vector<float> m_cov_eT_eTHETA;
   std::vector<float> m_cov_eT_eQOP;
   std::vector<float> m_cov_eT_eT;
+
+  std::vector<float> m_gsf_max_material_fwd;
+  std::vector<float> m_gsf_sum_material_fwd;
 };
 
 }  // namespace ActsExamples
