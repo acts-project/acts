@@ -48,7 +48,8 @@ namespace ActsExamples {
 /// It writes out a MaterialTrack which is usually generated from
 /// Geant4 material mapping
 class RootMaterialTrackWriter
-    : public WriterT<std::unordered_map<size_t, Acts::RecordedMaterialTrack>> {
+    : public WriterT<
+          std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>> {
  public:
   struct Config {
     std::string collection =
@@ -93,7 +94,7 @@ class RootMaterialTrackWriter
   /// @param clusters is the data to be written out
   ProcessCode writeT(
       const AlgorithmContext& ctx,
-      const std::unordered_map<size_t, Acts::RecordedMaterialTrack>&
+      const std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>&
           materialtracks) override;
 
  private:

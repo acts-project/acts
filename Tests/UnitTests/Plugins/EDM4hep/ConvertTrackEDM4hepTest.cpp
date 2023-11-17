@@ -251,8 +251,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     return {par, cov};
   };
 
-  size_t numT = nTracks(rng);
-  for (size_t t = 0; t < numT; t++) {
+  std::size_t numT = nTracks(rng);
+  for (std::size_t t = 0; t < numT; t++) {
     auto track = tracks.getTrack(tracks.addTrack());
     {
       auto [par, cov] = genParams();
@@ -262,8 +262,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     track.setReferenceSurface(
         Acts::Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
 
-    size_t numTs = nTs(rng);
-    for (size_t i = 0; i < numTs; i++) {
+    std::size_t numTs = nTs(rng);
+    for (std::size_t i = 0; i < numTs; i++) {
       auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
       double crit = r(rng);
       if (crit < 0.1) {
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   }
 
   BOOST_CHECK_EQUAL(tracks.size(), readTracks.size());
-  size_t t = 0;
+  std::size_t t = 0;
 
   auto origTrackIt = tracks.begin();
   auto readTrackIt = readTracks.begin();
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     auto origTsIt = orig.trackStatesReversed().begin();
     auto readTsIt = read.trackStatesReversed().begin();
 
-    size_t tsi = 0;
+    std::size_t tsi = 0;
     while (origTsIt != orig.trackStatesReversed().end() &&
            readTsIt != read.trackStatesReversed().end()) {
       BOOST_TEST_INFO_SCOPE("TS: #" << tsi);

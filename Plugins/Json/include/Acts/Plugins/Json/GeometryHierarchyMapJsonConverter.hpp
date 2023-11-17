@@ -152,7 +152,7 @@ nlohmann::json GeometryHierarchyMapJsonConverter<value_t, decorator_t>::toJson(
   encoded[kHeaderKey]["value-identifier"] = m_valueIdentifier;
   // encode entries
   nlohmann::json entries = nlohmann::json::array();
-  for (size_t i = 0; i < container.size(); ++i) {
+  for (std::size_t i = 0; i < container.size(); ++i) {
     auto entry = encodeIdentifier(container.idAt(i));
     auto value_json = nlohmann::json(container.valueAt(i));
     if constexpr (!std::is_same<decorator_t, void>::value) {

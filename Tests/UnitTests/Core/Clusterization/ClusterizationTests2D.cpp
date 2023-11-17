@@ -107,7 +107,7 @@ bool cellComp(const Cell2D& left, const Cell2D& right) {
 
 struct Cluster2D {
   std::vector<Cell2D> cells;
-  size_t hash{0};
+  std::size_t hash{0};
 };
 
 void clusterAddCell(Cluster2D& cl, const Cell2D& cell) {
@@ -206,10 +206,10 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
   using Cluster = Cluster2D;
   using ClusterC = std::vector<Cluster>;
 
-  size_t sizeX = 1000;
-  size_t sizeY = 1000;
-  size_t startSeed = 71902647;
-  size_t ntries = 100;
+  std::size_t sizeX = 1000;
+  std::size_t sizeY = 1000;
+  std::size_t startSeed = 71902647;
+  std::size_t ntries = 100;
 
   std::cout << "Grid_2D_rand test with parameters: " << std::endl;
   std::cout << " sizeX = " << sizeX << std::endl;
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
     std::sort(newCls.begin(), newCls.end(), clHashComp);
 
     BOOST_CHECK_EQUAL(cls.size(), newCls.size());
-    for (size_t i = 0; i < cls.size(); i++) {
+    for (std::size_t i = 0; i < cls.size(); i++) {
       BOOST_CHECK_EQUAL(cls.at(i).hash, newCls.at(i).hash);
     }
   }

@@ -36,7 +36,7 @@ class Range {
   Iterator begin() const { return m_begin; }
   Iterator end() const { return m_end; }
   bool empty() const { return m_begin == m_end; }
-  size_t size() const { return std::distance(m_begin, m_end); }
+  std::size_t size() const { return std::distance(m_begin, m_end); }
 
  private:
   Iterator m_begin;
