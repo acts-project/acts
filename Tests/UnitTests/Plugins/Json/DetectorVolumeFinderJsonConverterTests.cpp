@@ -73,13 +73,13 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   auto readInRootVolumeFinder =
       Acts::DetectorVolumeFinderJsonConverter::fromJson(rFinderJson);
 
-  BOOST_CHECK(readInRootVolumeFinder.instance() != nullptr);
+  BOOST_REQUIRE(readInRootVolumeFinder.instance() != nullptr);
 
   auto readInIndexedDetectorVolumesImpl =
       dynamic_cast<const IndexedDetectorVolumesImpl*>(
           readInRootVolumeFinder.instance());
 
-  BOOST_CHECK(readInIndexedDetectorVolumesImpl != nullptr);
+  BOOST_REQUIRE(readInIndexedDetectorVolumesImpl != nullptr);
 
   const auto& gridRead = readInIndexedDetectorVolumesImpl->grid;
 
