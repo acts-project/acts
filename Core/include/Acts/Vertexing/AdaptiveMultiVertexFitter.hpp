@@ -119,7 +119,7 @@ class AdaptiveMultiVertexFitter {
     /// @brief Config constructor
     ///
     /// @param est ImpactPointEstimator
-    Config(const IPEstimator& est) : ipEst(est) {}
+    Config(IPEstimator est) : ipEst(std::move(est)) {}
 
     // ImpactPointEstimator
     IPEstimator ipEst;

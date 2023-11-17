@@ -59,11 +59,11 @@ class AdaptiveMultiVertexFinder {
     /// @param lin Track linearizer
     /// @param bIn Input magnetic field
     Config(vfitter_t fitter, sfinder_t sfinder,
-           const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
+           ImpactPointEstimator<InputTrack_t, Propagator_t> ipEst,
            Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
-          ipEstimator(ipEst),
+          ipEstimator(std::move(ipEst)),
           linearizer(std::move(lin)),
           bField{std::move(bIn)} {}
 
