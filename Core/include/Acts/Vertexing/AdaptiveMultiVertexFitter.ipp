@@ -124,6 +124,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
     const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
+    ACTS_ERROR(
+        "newVertex does not have any associated tracks (i.e., its trackLinks "
+        "are empty).")
     return VertexingError::EmptyInput;
   }
 
