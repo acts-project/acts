@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -52,6 +53,26 @@ inline BinningValue stringToBinningValue(const std::string &binningString) {
   }
 }
 
+/// Helper method to cenvert a binning list string to a vector of binning values
+/// e.g. "r,z" -> {binR, binZ}
+///
+/// @param binningString
+///
+/// @return a vector of binninng values
+inline std::vector<BinningValue> stringToBinningValues(
+    const std::string &binningString, const char &del = ',') {
+  if (binningString.empty()) {
+    return {};
+  }
+  std::vector<BinningValue> bBinning;
+  std::stringstream s(binningString);
+  std::string b = "";
+  while (getline(s, b, del)) {
+    bBinning.push_back(stringToBinningValue(b));
+  }
+  return bBinning;
+}
+
 /// Helper method to decode the binning from what would appear in the
 /// xml into variant parameters, such that it can be understood in the
 /// downstream processing.
@@ -64,10 +85,10 @@ inline BinningValue stringToBinningValue(const std::string &binningString) {
 /// Example for e.g. bname = \"surface_binning\":
 ///
 /// - Equidistant binning in r and phi:
-///   \< surface_binning nr=\"2\" rmin=\"25\" rmax=\"100\" nphi=\"22\"
+///   \<acts_surface_binning nr=\"2\" rmin=\"25\" rmax=\"100\" nphi=\"22\"
 ///   phimin=\"-3.1415\" phimax=\"3.1415\" \/ \>
 /// - Variable binning in z:
-///   \< surface_binning zboundaries=\"-100,-90,90,100\" \/ \>
+///   \<acts_surface_binning zboundaries=\"-100,-90,90,100\" \/ \>
 ///
 /// And 2D combinations of this are allowed.
 ///
@@ -88,6 +109,10 @@ inline void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
     // Gather the bin expansion parameter, expansion of 0 is default
     int nExpansion =
         Acts::getAttrValueOr<int>(xmlBinning, std::string(bv + "expansion"), 0);
+    // Auto-range detection
+    bool autoRange = Acts::getAttrValueOr<bool>(
+        xmlBinning, std::string(bv + "autorange"), false);
+    variantParams.set<bool>(bname + "_" + bv + "_autorange", autoRange);
     variantParams.set<int>(bname + "_" + bv + "_exp", nExpansion);
     // Equidistant binning detected
     if (nBins > 0) {
@@ -96,12 +121,14 @@ inline void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
       // Set the number of bins
       variantParams.set<int>(bname + "_" + bv + "_n", nBins);
       // Set min/max paraeter
-      variantParams.set<double>(
-          bname + "_" + bv + "_min",
-          xmlBinning.attr<double>(std::string(bv + "min").c_str()));
-      variantParams.set<double>(
-          bname + "_" + bv + "_max",
-          xmlBinning.attr<double>(std::string(bv + "max").c_str()));
+      if (!autoRange) {
+        variantParams.set<double>(
+            bname + "_" + bv + "_min",
+            xmlBinning.attr<double>(std::string(bv + "min").c_str()));
+        variantParams.set<double>(
+            bname + "_" + bv + "_max",
+            xmlBinning.attr<double>(std::string(bv + "max").c_str()));
+      }
     } else {
       // Variable binning detected
       variantParams.set<std::string>(bname + "_" + bv + "_type", "variable");
