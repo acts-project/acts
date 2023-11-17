@@ -184,7 +184,8 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
   Vertex<InputTrack_t> seedVertex = vertexCollection.back();
 
   ACTS_DEBUG("Use " << seedTracks.size() << " tracks for vertex seed finding.")
-  ACTS_DEBUG("Found seed at position: " << seedVertex.fullPosition.transpose());
+  ACTS_DEBUG(
+      "Found seed at position: " << seedVertex.fullPosition().transpose());
 
   return seedVertex;
 }
