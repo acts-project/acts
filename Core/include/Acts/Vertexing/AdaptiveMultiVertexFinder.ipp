@@ -56,7 +56,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     Vertex<InputTrack_t>& vtxCandidate = *allVertices.back();
     allVerticesPtr.push_back(&vtxCandidate);
 
-    ACTS_DEBUG("Position of current vertex candidate after seeding: "
+    ACTS_DEBUG("Position of vertex candidate after seeding: "
                << vtxCandidate.fullPosition().transpose());
     if (vtxCandidate.position().z() ==
         vertexingOptions.constraint.position().z()) {
@@ -79,7 +79,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       return prepResult.error();
     }
     if (!(*prepResult)) {
-      ACTS_DEBUG("Could not prepare for fit anymore. Break.");
+      ACTS_DEBUG(
+          "Could not prepare for fit. Discarding the vertex candindate.");
       allVertices.pop_back();
       allVerticesPtr.pop_back();
       break;
@@ -93,7 +94,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     if (!fitResult.ok()) {
       return fitResult.error();
     }
-    ACTS_DEBUG("New position of current vertex candidate after fit: "
+    ACTS_DEBUG("Position of vertex candidate after the fit: "
                << vtxCandidate.fullPosition().transpose());
     // Check if vertex is good vertex
     auto [nCompatibleTracks, isGoodVertex] =
@@ -560,6 +561,14 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
 
   // Update fitter state with removed vertex candidate
   fitterState.removeVertexFromMultiMap(vtx);
+  // fitterState.vertexCollection contains all vertices that will be fit. When
+  // we called addVtxToFit, vtx and all vertices that share tracks with vtx were
+  // added to vertexCollection. Now, we want to refit the same set of vertices
+  // excluding vx. Therefore, we remove vtx from vertexCollection.
+  auto removeResult = fitterState.removeVertexFromCollection(vtx, logger());
+  if (!removeResult.ok()) {
+    return removeResult.error();
+  }
 
   for (auto& entry : fitterState.tracksAtVerticesMap) {
     // Delete all linearized tracks for current (bad) vertex
@@ -568,9 +577,14 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
     }
   }
 
+  // If no vertices share tracks with vtx we don't need to refit
+  if (fitterState.vertexCollection.empty()) {
+    return {};
+  }
+
   // Do the fit with removed vertex
-  auto fitResult = m_cfg.vertexFitter.addVtxToFit(
-      fitterState, vtx, m_cfg.linearizer, vertexingOptions);
+  auto fitResult =
+      m_cfg.vertexFitter.fit(fitterState, m_cfg.linearizer, vertexingOptions);
   if (!fitResult.ok()) {
     return fitResult.error();
   }

@@ -171,6 +171,8 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
     case 2: {
       rAxes = {0, 1};
     } break;
+    default:  // do nothing
+      break;
   }
   auto rBounds = std::make_shared<RectangleBounds>(hG4XYZ[std::abs(rAxes[0u])],
                                                    hG4XYZ[std::abs(rAxes[1u])]);
