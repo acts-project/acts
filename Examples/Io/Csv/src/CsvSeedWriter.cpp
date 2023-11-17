@@ -82,11 +82,12 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     throw std::ios_base::failure("Could not open '" + path + "' to write");
   }
 
-  std::unordered_map<size_t, seedInfo> infoMap;
-  std::unordered_map<ActsFatras::Barcode, std::pair<size_t, float>> goodSeed;
+  std::unordered_map<std::size_t, seedInfo> infoMap;
+  std::unordered_map<ActsFatras::Barcode, std::pair<std::size_t, float>>
+      goodSeed;
 
   // Loop over the estimated track parameters
-  for (size_t iparams = 0; iparams < trackParams.size(); ++iparams) {
+  for (std::size_t iparams = 0; iparams < trackParams.size(); ++iparams) {
     // The estimated bound parameters vector
     const auto params = trackParams[iparams].parameters();
 
