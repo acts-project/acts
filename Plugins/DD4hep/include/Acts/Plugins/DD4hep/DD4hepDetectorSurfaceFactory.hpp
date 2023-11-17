@@ -72,7 +72,7 @@ class DD4hepDetectorSurfaceFactory {
     /// Optionally provide an Extent constraints to measure the layers
     std::vector<BinningValue> extentContraints = {};
     /// The approximination for extent measuring
-    size_t nExtentSegments = 1u;
+    std::size_t nExtentSegments = 1u;
   };
 
   /// Nested options struct to steer the conversion
@@ -139,7 +139,7 @@ class DD4hepDetectorSurfaceFactory {
   /// @param dd4hepElement the detector element
   /// @param options to steer the conversion
   ///
-  /// @note the cache is handed through in order to opionally measure the
+  /// @note the cache is handed through in order to optionally measure the
   /// extent of the sensitive surface and register it
   ///
   /// @return a created detector element and surface
@@ -166,7 +166,7 @@ class DD4hepDetectorSurfaceFactory {
   /// @param thickness the thickness of the condensed component
   /// @param options to steer the conversion
   ///
-  /// @note the cache is handed through in order to opionally measure the
+  /// @note the cache is handed through in order to optionally measure the
   /// extent of the sensitive surface and register it
   ///
   /// @note void function that also checks the options if the attachment should be applied

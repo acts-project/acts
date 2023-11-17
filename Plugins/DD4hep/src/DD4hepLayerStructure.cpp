@@ -124,9 +124,9 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   // Make one common extent
   if (fCache.sExtent.has_value() && fCache.pExtent.has_value()) {
     ACTS_DEBUG(
-        "Sensitive extent determinded: " << fCache.sExtent.value().toString());
+        "Sensitive extent determined: " << fCache.sExtent.value().toString());
     ACTS_DEBUG(
-        "Passive   extent determinded: " << fCache.pExtent.value().toString());
+        "Passive   extent determined: " << fCache.pExtent.value().toString());
     fCache.sExtent.value().extend(fCache.pExtent.value());
   }
 

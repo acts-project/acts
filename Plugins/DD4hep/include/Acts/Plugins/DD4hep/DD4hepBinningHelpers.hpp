@@ -110,8 +110,8 @@ inline void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
     int nExpansion =
         Acts::getAttrValueOr<int>(xmlBinning, std::string(bv + "expansion"), 0);
     // Auto-range detection
-    bool autoRange =
-        Acts::getAttrValueOr<int>(xmlBinning, std::string(bv + "autorange"), 0);
+    bool autoRange = Acts::getAttrValueOr<bool>(
+        xmlBinning, std::string(bv + "autorange"), false);
     variantParams.set<bool>(bname + "_" + bv + "_autorange", autoRange);
     variantParams.set<int>(bname + "_" + bv + "_exp", nExpansion);
     // Equidistant binning detected
