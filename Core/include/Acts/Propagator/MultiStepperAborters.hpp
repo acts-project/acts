@@ -68,6 +68,10 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
 
         return true;
       }
+
+      ACTS_VERBOSE(
+          "MultiStepperSurfaceReached aborter | "
+          "Target intersection not found. Maybe next time?");
     }
 
     bool reached = true;
@@ -83,6 +87,12 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
       } else {
         cmp.status() = Acts::Intersection3D::Status::onSurface;
       }
+    }
+
+    if (reached) {
+      ACTS_VERBOSE(
+          "MultiStepperSurfaceReached aborter | "
+          "Reached target in single component mode");
     }
 
     return reached;
