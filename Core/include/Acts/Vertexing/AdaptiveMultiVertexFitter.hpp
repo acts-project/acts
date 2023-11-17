@@ -242,14 +242,15 @@ class AdaptiveMultiVertexFitter {
       Vertex<InputTrack_t>* vtx,
       const std::vector<Vertex<InputTrack_t>*>& verticesVec) const;
 
-  /// @brief Checks whether the impact parameters of the associated
-  /// tracks were calculated wrt the vertex position. Updates them
-  /// if needed.
+  /// @brief 1) Calls ImpactPointEstimator::estimate3DImpactParameters
+  /// for all tracks that are associated with vtx (i.e., all elements
+  /// of the trackLinks vector in the VertexInfo of vtx).
+  /// 2) Saves the 3D impact parameters in the VertexInfo of vtx.
   ///
   /// @param state Vertex fitter state
   /// @param vtx Vertex object
   /// @param vertexingOptions Vertexing options
-  Result<void> updateImpactParams3D(
+  Result<void> prepareVertexForFit(
       State& state, Vertex<InputTrack_t>* vtx,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
