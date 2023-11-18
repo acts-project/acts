@@ -79,7 +79,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 
   std::size_t maxComponents = 0;
   double weightCutoff = 0;
-  const double momentumCutoff = 500_MeV;
+  double momentumCutoff = 0;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
   MixtureReductionAlgorithm reductionAlg =
@@ -180,7 +180,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
+    double weightCutoff, double momentumCutoff, Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
     const Acts::Logger& logger) {
   // Standard fitter
@@ -214,6 +214,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
       std::move(trackFitter), std::move(directTrackFitter), geo);
   fitterFunction->maxComponents = maxComponents;
   fitterFunction->weightCutoff = weightCutoff;
+  fitterFunction->momentumCutoff = momentumCutoff;
   fitterFunction->mergeMethod = componentMergeMethod;
   fitterFunction->reductionAlg = mixtureReductionAlgorithm;
 
