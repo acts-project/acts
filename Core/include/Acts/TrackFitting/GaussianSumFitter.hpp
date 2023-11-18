@@ -386,7 +386,7 @@ struct GaussianSumFitter {
 
       assert(!fwdGsfResult.lastMeasurementComponents.empty());
       assert(fwdGsfResult.lastMeasurementSurface != nullptr);
-      normalizeWeights(fwdGsfResult.lastMeasurementComponents,
+      Acts::detail::normalizeWeights(fwdGsfResult.lastMeasurementComponents,
                        [](auto& c) -> double& { return std::get<double>(c); });
       MultiComponentBoundTrackParameters params(
           fwdGsfResult.lastMeasurementSurface->getSharedPtr(),
