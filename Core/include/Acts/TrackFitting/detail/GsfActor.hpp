@@ -557,6 +557,9 @@ struct GsfActor {
 
     result.lastMeasurementTip = result.currentTip;
     result.lastMeasurementSurface = &surface;
+
+    // Note, that we do not normalize the components here.
+    // This must be done before initializing the backward pass.
     result.lastMeasurementComponents.clear();
 
     FiltProjector proj{tmpStates.traj, tmpStates.weights};
