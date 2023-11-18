@@ -89,7 +89,7 @@ def runGeometry(
 
 if "__main__" == __name__:
     detector, trackingGeometry, decorators = AlignedDetector.create()
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    # detector, trackingGeometry, decorators = GenericDetector.create()
     # detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
