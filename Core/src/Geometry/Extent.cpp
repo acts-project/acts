@@ -79,10 +79,6 @@ void Acts::Extent::extend(const Extent& rhs,
   }
 }
 
-void Acts::Extent::setConstrain(BinningValue bValue) {
-  m_constrains.set(bValue);
-}
-
 void Acts::Extent::addConstrain(const Acts::Extent& rhs,
                                 const ExtentEnvelope& envelope) {
   for (const auto& bValue : s_binningValues) {
