@@ -98,6 +98,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   if (result.ok()) {
     return *result->endParameters;
   } else {
+    ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
+    ACTS_DEBUG(
+        "The plane surface to which we tried to propagate has its origin at\n"
+        << vtxPos);
     return result.error();
   }
 }
@@ -205,6 +209,8 @@ Acts::Result<double> Acts::ImpactPointEstimator<
                                   rho * cotTheta * cotTheta);
 
     if (secDerivative < 0.) {
+      ACTS_ERROR(
+          "Encountered negative second derivative during Newton optimization.");
       return VertexingError::NumericFailure;
     }
 
@@ -222,7 +228,7 @@ Acts::Result<double> Acts::ImpactPointEstimator<
   }  // end while loop
 
   if (!hasConverged) {
-    // max iterations reached but did not converge
+    ACTS_ERROR("Newton optimization did not converge.");
     return VertexingError::NotConverged;
   }
   return phi;
@@ -250,6 +256,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Note that we assume a constant B field here!
   auto fieldRes = m_cfg.bField->getField(refPoint, state.fieldCache);
   if (!fieldRes.ok()) {
+    ACTS_ERROR("In getDistanceAndMomentum, the B field at\n"
+               << refPoint << "\ncould not be retrieved.");
     return fieldRes.error();
   }
   double bZ = (*fieldRes)[eZ];
@@ -389,6 +397,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
+    ACTS_ERROR("Error during propagation in getImpactParameters.");
+    ACTS_DEBUG(
+        "The Perigee surface to which we tried to propagate has its origin at\n"
+        << vtx.position());
     return result.error();
   }
 

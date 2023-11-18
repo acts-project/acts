@@ -87,11 +87,13 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
 
   // Set up ImpactPointEstimator
   IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
-  IPEstimator ipEstimator(ipEstimatorCfg);
+  IPEstimator ipEstimator(ipEstimatorCfg,
+                          logger().cloneWithSuffix("ImpactPointEstimator"));
 
   // Set up the helical track linearizer
   Linearizer::Config ltConfig(m_cfg.bField, propagator);
-  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
+  Linearizer linearizer(ltConfig,
+                        logger().cloneWithSuffix("HelicalTrackLinearizer"));
 
   // Set up deterministic annealing with user-defined temperatures
   Acts::AnnealingUtility::Config annealingConfig;
@@ -103,9 +105,10 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.annealingTool = annealingUtility;
   fitterCfg.minWeight = 0.001;
   fitterCfg.doSmoothing = true;
-  Fitter fitter(std::move(fitterCfg), logger().cloneWithSuffix("AMVFitter"));
+  Fitter fitter(std::move(fitterCfg),
+                logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
-  typename Finder::Config finderConfig(std::move(fitter), seedFinder,
+  typename Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
                                        ipEstimator, std::move(linearizer),
                                        m_cfg.bField);
   finderConfig.looseConstrValue = 1e2;
@@ -113,7 +116,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   finderConfig.maxIterations = 200;
 
   // Instantiate the finder
-  Finder finder(std::move(finderConfig), logger().cloneWithSuffix("AMVFinder"));
+  Finder finder(std::move(finderConfig), logger().clone());
 
   // retrieve input tracks and convert into the expected format
 
