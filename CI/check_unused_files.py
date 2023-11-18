@@ -32,6 +32,7 @@ def main():
         "README.md",
         "CMakeLists.txt",
         "DetUtils.h",
+        "CommandLineArguments.h",
         # Filename not completed in source
         "vertexing_event_mu20_beamspot.csv",
         "vertexing_event_mu20_tracks.csv",
