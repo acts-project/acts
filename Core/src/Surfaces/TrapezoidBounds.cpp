@@ -32,25 +32,31 @@ bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
     double tolX = bcheck.tolerance()[eBoundLoc0];
     double tolY = bcheck.tolerance()[eBoundLoc1];
 
-    // check outside x range + tolerance
-    if (std::abs(x) - std::max(hlXnY, hlXpY) > tolX) {
-      return false;
-    }
+    double distY = std::abs(y) - hlY;
 
     // check outside y range + tolerance
-    if (std::abs(y) - hlY > tolY) {
+    if (distY > tolY) {
       return false;
     }
 
-    // check inside x range + tolerance, inside y range
-    if ((std::abs(x) - std::min(hlXnY, hlXpY) <= tolX) &&
-        (std::abs(y) - hlY <= 0)) {
+    // distance x to outer rectangle
+    double distOuterX = std::abs(x) - std::max(hlXnY, hlXpY);
+
+    // check outside x range + tolerance
+    if (distOuterX > tolX) {
+      return false;
+    }
+
+    // distance x to inner rectangle
+    double distInnerX = std::abs(x) - std::min(hlXnY, hlXpY);
+
+    // check inside x range, inside y range + tolerance (already checked above)
+    if (distInnerX <= 0) {
       return true;
     }
 
-    // check inside x range, inside y range + tolerance
-    if ((std::abs(x) - std::min(hlXnY, hlXpY) <= 0) &&
-        (std::abs(y) - hlY <= tolY)) {
+    // check inside x range + tolerance, inside y range
+    if ((distInnerX <= tolX) && (distY <= 0)) {
       return true;
     }
   }
