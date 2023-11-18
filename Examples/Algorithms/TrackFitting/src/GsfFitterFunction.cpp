@@ -180,7 +180,8 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, double momentumCutoff, Acts::ComponentMergeMethod componentMergeMethod,
+    double weightCutoff, double momentumCutoff,
+    Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
     const Acts::Logger& logger) {
   // Standard fitter
