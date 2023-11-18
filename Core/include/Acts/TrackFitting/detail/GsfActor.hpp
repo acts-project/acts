@@ -46,7 +46,11 @@ struct GsfResult {
 
   /// The last multi-component measurement state. Used to initialize the
   /// backward pass.
-  std::optional<MultiComponentBoundTrackParameters> lastMeasurementState;
+  std::vector<std::tuple<double, BoundVector, BoundMatrix>>
+      lastMeasurementComponents;
+
+  /// The last measurement surface. Used to initialize the backward pass.
+  const Acts::Surface* lastMeasurementSurface = nullptr;
 
   /// Some counting
   std::size_t measurementStates = 0;
@@ -131,6 +135,8 @@ struct GsfActor {
     std::vector<MultiTrajectoryTraits::IndexType> tips;
     std::map<MultiTrajectoryTraits::IndexType, double> weights;
   };
+
+  using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
   /// @brief GSF actor operation
   ///
@@ -260,7 +266,8 @@ struct GsfActor {
         return;
       }
 
-      updateStepper(state, stepper, tmpStates);
+      FiltProjector proj{tmpStates.traj, tmpStates.weights};
+      updateStepper(state, stepper, surface, tmpStates.tips, proj);
     }
     // We have material, we thus need a component cache since we will
     // convolute the components and later reduce them again before updating
@@ -305,7 +312,8 @@ struct GsfActor {
 
       removeLowWeightComponents(componentCache);
 
-      updateStepper(state, stepper, navigator, componentCache);
+      auto proj = [](const auto& a) -> decltype(a) { return a; };
+      updateStepper(state, stepper, surface, componentCache, proj);
     }
 
     // If we have only done preUpdate before, now do postUpdate
@@ -451,50 +459,19 @@ struct GsfActor {
     }
   }
 
-  /// Function that updates the stepper from the MultiTrajectory
-  template <typename propagator_state_t, typename stepper_t>
-  void updateStepper(propagator_state_t& state, const stepper_t& stepper,
-                     const TemporaryStates& tmpStates) const {
-    auto cmps = stepper.componentIterable(state.stepping);
-
-    for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
-      // we set ignored components to missed, so we can remove them after
-      // the loop
-      if (tmpStates.weights.at(idx) < m_cfg.weightCutoff) {
-        cmp.status() = Intersection3D::Status::missed;
-        continue;
-      }
-
-      auto proxy = tmpStates.traj.getTrackState(idx);
-
-      cmp.pars() =
-          MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, proxy);
-      cmp.cov() = proxy.filteredCovariance();
-      cmp.weight() = tmpStates.weights.at(idx);
-    }
-
-    stepper.removeMissedComponents(state.stepping);
-
-    // TODO we have two normalization passes here now, this can probably be
-    // optimized
-    detail::normalizeWeights(cmps,
-                             [&](auto cmp) -> double& { return cmp.weight(); });
-  }
-
   /// Function that updates the stepper from the ComponentCache
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  /// TODO move this function to the stepper, but this is breaking, so don't do
+  /// it now
+  template <typename propagator_state_t, typename stepper_t, typename range_t,
+            typename proj_t>
   void updateStepper(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& navigator,
-                     const std::vector<ComponentCache>& componentCache) const {
-    const auto& surface = *navigator.currentSurface(state.navigation);
-
+                     const Surface& surface, const range_t& range,
+                     const proj_t& proj) const {
     // Clear components before adding new ones
     stepper.clearComponents(state.stepping);
 
-    // Finally loop over components
-    for (const auto& [weight, pars, cov] : componentCache) {
-      // Add the component to the stepper
+    for (const auto& cmp : range) {
+      const auto& [weight, pars, cov] = proj(cmp);
       BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
                                  stepper.particleHypothesis(state.stepping));
 
@@ -505,12 +482,10 @@ struct GsfActor {
         continue;
       }
 
-      auto& cmp = *res;
-      cmp.jacToGlobal() = surface.boundToFreeJacobian(state.geoContext, pars);
-      cmp.pathAccumulated() = state.stepping.pathAccumulated;
-      cmp.jacobian() = Acts::BoundMatrix::Identity();
-      cmp.derivative() = Acts::FreeVector::Zero();
-      cmp.jacTransport() = Acts::FreeMatrix::Identity();
+      auto& newCmp = *res;
+      newCmp.jacToGlobal() =
+          surface.boundToFreeJacobian(state.geoContext, pars);
+      newCmp.pathAccumulated() = state.stepping.pathAccumulated;
     }
   }
 
@@ -571,28 +546,18 @@ struct GsfActor {
       ++result.measurementStates;
     }
 
-    addCombinedState(result, tmpStates, surface);
+    updateMultiTrajectory(result, tmpStates, surface);
+
     result.lastMeasurementTip = result.currentTip;
+    result.lastMeasurementSurface = &surface;
+    result.lastMeasurementComponents.clear();
 
-    using FiltProjector =
-        MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
     FiltProjector proj{tmpStates.traj, tmpStates.weights};
-
-    std::vector<std::tuple<double, BoundVector, BoundMatrix>> v;
-
-    // TODO Check why can zero weights can occur
     for (const auto& idx : tmpStates.tips) {
-      const auto [w, p, c] = proj(idx);
-      if (w > 0.0) {
-        v.push_back({w, p, c});
-      }
+      const auto& [w, p, c] = proj(idx);
+      assert(w > 0.0);
+      result.lastMeasurementComponents.push_back({w, p, c});
     }
-
-    normalizeWeights(v, [](auto& c) -> double& { return std::get<double>(c); });
-
-    result.lastMeasurementState = MultiComponentBoundTrackParameters(
-        surface.getSharedPtr(), std::move(v),
-        stepper.particleHypothesis(state.stepping));
 
     // Return success
     return Acts::Result<void>::success();
@@ -644,7 +609,7 @@ struct GsfActor {
 
     ++result.processedStates;
 
-    addCombinedState(result, tmpStates, surface);
+    updateMultiTrajectory(result, tmpStates, surface);
 
     return Result<void>::success();
   }
@@ -690,8 +655,9 @@ struct GsfActor {
     }
   }
 
-  void addCombinedState(result_type& result, const TemporaryStates& tmpStates,
-                        const Surface& surface) const {
+  void updateMultiTrajectory(result_type& result,
+                             const TemporaryStates& tmpStates,
+                             const Surface& surface) const {
     using PrtProjector =
         MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
     using FltProjector =
