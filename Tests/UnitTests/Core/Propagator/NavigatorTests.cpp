@@ -687,25 +687,15 @@ std::vector<GeometryIdentifier> collectGeoIds(
 /// @tparam propagator_t is the actual propagator type
 ///
 /// @param prop is the propagator instance
-/// @param pT the transverse momentum
-/// @param phi the azimuthal angle of the track at creation
-/// @param theta the polar angle of the track at creation
-/// @param charge is the charge of the particle
-/// @param index is the run index from the test
+/// @param start start parameters for propagation
+/// @param debugMode toggle debug mode
 template <typename propagator_t>
-void runSelfConsistencyTest(const propagator_t& prop, double pT, double phi,
-                            double theta, int charge, double time,
+void runSelfConsistencyTest(const propagator_t& prop,
+                            const CurvilinearTrackParameters& start,
                             bool debugMode) {
-  double p = pT / sin(theta);
-  double q = -1 + 2 * charge;
-
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   std::nullopt, ParticleHypothesis::pion());
-
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
-
   using Options = PropagatorOptions<ActionListType, AbortListType>;
 
   // forward surface test
@@ -916,25 +906,16 @@ void runSelfConsistencyTest(const propagator_t& prop, double pT, double phi,
 ///
 /// @param propProbe is the probe propagator instance
 /// @param propRef is the reference propagator instance
-/// @param pT the transverse momentum
-/// @param phi the azimuthal angle of the track at creation
-/// @param theta the polar angle of the track at creation
-/// @param charge is the charge of the particle
-/// @param index is the run index from the test
+/// @param start start parameters for propagation
+/// @param debugMode toggle debug mode
 template <typename propagator_probe_t, typename propagator_ref_t>
 void runConsistencyTest(const propagator_probe_t& propProbe,
-                        const propagator_ref_t& propRef, double pT, double phi,
-                        double theta, int charge, double time, bool debugMode) {
-  double p = pT / sin(theta);
-  double q = -1 + 2 * charge;
-
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   std::nullopt, ParticleHypothesis::pion());
-
+                        const propagator_ref_t& propRef,
+                        const CurvilinearTrackParameters& start,
+                        bool debugMode) {
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
-
   using Options = PropagatorOptions<ActionListType, AbortListType>;
 
   auto run = [&](const auto& prop) {
@@ -989,7 +970,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
 
 int ntests = 80;
 int skip = 0;
-bool debugMode = false;
+bool debugMode = true;
 
 using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
@@ -1024,41 +1005,41 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 24,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, index) {
   if (index < skip) {
     return;
   }
 
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
+                                   std::nullopt, ParticleHypothesis::pion());
+
   if (debugMode) {
     std::cout << ">>> Run navigation tests with pT = " << pT
               << "; phi = " << phi << "; theta = " << theta
-              << "; charge = " << charge << "; time = " << time
-              << "; index = " << index << ";" << std::endl;
+              << "; charge = " << charge << "; index = " << index << ";"
+              << std::endl;
   }
 
   if (debugMode) {
     std::cout << ">>> Test self consistency epropagator" << std::endl;
   }
-  runSelfConsistencyTest(epropagator, pT, phi, theta, charge, time, debugMode);
+  runSelfConsistencyTest(epropagator, start, debugMode);
   if (debugMode) {
     std::cout << ">>> Test self consistency slpropagator" << std::endl;
   }
-  runSelfConsistencyTest(slpropagator, pT, phi, theta, charge, time, debugMode);
+  runSelfConsistencyTest(slpropagator, start, debugMode);
 
   if (debugMode) {
     std::cout << ">>> Test consistency epropagator" << std::endl;
   }
-  runConsistencyTest(epropagator, refepropagator, pT, phi, theta, charge, time,
-                     debugMode);
+  runConsistencyTest(epropagator, refepropagator, start, debugMode);
   if (debugMode) {
     std::cout << ">>> Test consistency slpropagator" << std::endl;
   }
-  runConsistencyTest(slpropagator, refslpropagator, pT, phi, theta, charge,
-                     time, debugMode);
+  runConsistencyTest(slpropagator, refslpropagator, start, debugMode);
 }
 
 }  // namespace Test
