@@ -970,7 +970,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
 
 int ntests = 80;
 int skip = 0;
-bool debugMode = true;
+bool debugMode = false;
 
 using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
@@ -984,34 +984,40 @@ StraightLineStepper slstepper;
 
 EigenPropagator epropagator(estepper,
                             Navigator({tGeometry, true, true, true},
-                                      getDefaultLogger("nav",
-                                                       Logging::VERBOSE)),
-                            getDefaultLogger("prop", Logging::VERBOSE));
-StraightLinePropagator slpropagator(
-    slstepper,
-    Navigator({tGeometry, true, true, true},
-              getDefaultLogger("nav", Logging::VERBOSE)),
-    getDefaultLogger("prop", Logging::VERBOSE));
-ReferenceEigenPropagator refepropagator(estepper,
-                                        TryAllNavigator({tGeometry, true, true,
-                                                         true}));
+                                      getDefaultLogger("nav", Logging::INFO)),
+                            getDefaultLogger("prop", Logging::INFO));
+StraightLinePropagator slpropagator(slstepper,
+                                    Navigator({tGeometry, true, true, true},
+                                              getDefaultLogger("nav",
+                                                               Logging::INFO)),
+                                    getDefaultLogger("prop", Logging::INFO));
+ReferenceEigenPropagator refepropagator(
+    estepper,
+    TryAllNavigator({tGeometry, true, true, true},
+                    getDefaultLogger("nav", Logging::INFO)),
+    getDefaultLogger("prop", Logging::INFO));
 ReferenceStraightLinePropagator refslpropagator(
-    slstepper, TryAllNavigator({tGeometry, true, true, true}));
+    slstepper,
+    TryAllNavigator({tGeometry, true, true, true},
+                    getDefaultLogger("nav", Logging::INFO)),
+    getDefaultLogger("prop", Logging::INFO));
 
 BOOST_DATA_TEST_CASE(
     Navigator_random,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.5_GeV, 10_GeV))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 22,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
   if (index < skip) {
