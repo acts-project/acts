@@ -207,12 +207,12 @@ Acts::Layer::compatibleSurfaces(
   std::sort(
       sIntersections.begin(), sIntersections.end(),
       [](const auto& a, const auto& b) { return a.object() < b.object(); });
-  // Now look for duplicates. As we just sorted by path length, duplicates
+  // Now look for duplicates. As we just sorted by object address, duplicates
   // should be subsequent
   auto it = std::unique(
       sIntersections.begin(), sIntersections.end(),
       [](const SurfaceIntersection& a, const SurfaceIntersection& b) -> bool {
-        return a.object() == b.object();
+        return a.object() == b.object() && a.index() == b.index();
       });
 
   // resize to remove all items that are past the unique range
