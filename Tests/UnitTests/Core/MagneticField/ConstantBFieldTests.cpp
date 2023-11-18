@@ -36,12 +36,28 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// -# ConstantBField::ConstantBField(Vector3 B)
 /// -# ConstantBField::getField(const double* xyz, double* B) const
 /// -# ConstantBField::getField(const Vector3& pos) const
-BOOST_DATA_TEST_CASE(ConstantBField_components,
-                     bdata::random(-2_T, 2_T) ^ bdata::random(-1_T, 4_T) ^
-                         bdata::random(0_T, 10_T) ^ bdata::random(-10_m, 10_m) ^
-                         bdata::random(-10_m, 10_m) ^
-                         bdata::random(-10_m, 10_m) ^ bdata::xrange(10),
-                     x, y, z, bx, by, bz, index) {
+BOOST_DATA_TEST_CASE(
+    ConstantBField_components,
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 2,
+         bdata::distribution = std::uniform_real_distribution<>(-2_T, 2_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-1_T, 4_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(0_T, 10_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-10_m, 10_m))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-10_m, 10_m))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-10_m, 10_m))) ^
+        bdata::xrange(10),
+    x, y, z, bx, by, bz, index) {
   (void)index;
   const Vector3 Btrue(bx, by, bz);
   const Vector3 pos(x, y, z);
@@ -63,12 +79,28 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
 /// -# ConstantBField::setField(const Vector3& B)
 /// -# ConstantBField::getField(const double* xyz, double* B) const
 /// -# ConstantBField::getField(const Vector3& pos) const
-BOOST_DATA_TEST_CASE(ConstantBField_update,
-                     bdata::random(-2_T, 2_T) ^ bdata::random(-1_T, 4_T) ^
-                         bdata::random(0_T, 10_T) ^ bdata::random(-10_m, 10_m) ^
-                         bdata::random(-10_m, 10_m) ^
-                         bdata::random(-10_m, 10_m) ^ bdata::xrange(10),
-                     x, y, z, bx, by, bz, index) {
+BOOST_DATA_TEST_CASE(
+    ConstantBField_update,
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 2,
+         bdata::distribution = std::uniform_real_distribution<>(-2_T, 2_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-1_T, 4_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(0_T, 10_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-10_m, 10_m))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-10_m, 10_m))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<>(-10_m, 10_m))) ^
+        bdata::xrange(10),
+    x, y, z, bx, by, bz, index) {
   (void)index;
 
   ConstantBField BField{Vector3{0, 0, 0}};
