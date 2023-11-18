@@ -32,9 +32,9 @@
 namespace Acts {
 namespace detail {
 
-/// Small Helper class that allows to carry a tmporary value until we decide to
+/// Small Helper class that allows to carry a temporary value until we decide to
 /// update the actual value. The temporary value is deliberatly only accessable
-/// with a mutual reference
+/// with a mutable reference
 template <typename T>
 class Updatable {
   T m_tmp{};
