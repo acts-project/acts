@@ -322,6 +322,7 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("- measurement states: " << fwdGsfResult.measurementStates);
 
     std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler;
+    double maxPathXOverX0 = fwdGsfResult.maxPathXOverX0;
 
     //////////////////
     // Backward pass
@@ -408,13 +409,16 @@ struct GaussianSumFitter {
     }
 
     nInvalidBetheHeitler += bwdGsfResult.nInvalidBetheHeitler;
+    maxPathXOverX0 = std::max(maxPathXOverX0, bwdGsfResult.maxPathXOverX0);
 
     if (nInvalidBetheHeitler > 0) {
-      ACTS_WARNING("Encountered "
-                   << nInvalidBetheHeitler
-                   << " cases where the material thickness exceeds the range "
-                      "of the Bethe-Heitler-Approximation. Enable DEBUG output "
-                      "for more information.");
+      ACTS_WARNING("Encountered " << nInvalidBetheHeitler
+                                  << " cases where x/X0 exceeds the range "
+                                     "of the Bethe-Heitler-Approximation. The "
+                                     "maximum x/X0 encountered was "
+                                  << maxPathXOverX0
+                                  << ". Enable DEBUG output "
+                                     "for more information.");
     }
 
     ////////////////////////////////////

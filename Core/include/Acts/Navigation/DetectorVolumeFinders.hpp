@@ -116,7 +116,7 @@ struct IndexedDetectorVolumeExtractor {
 ///
 /// @tparam grid_type is the grid type used for this
 template <typename grid_type>
-using IndexedDetectorVolumeImpl =
+using IndexedDetectorVolumesImpl =
     IndexedUpdatorImpl<grid_type, IndexedDetectorVolumeExtractor,
                        DetectorVolumeFiller>;
 

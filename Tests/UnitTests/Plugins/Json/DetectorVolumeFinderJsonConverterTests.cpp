@@ -34,26 +34,38 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   using GridType = typename AxesGeneratorType::template grid_type<std::size_t>;
   GridType grid(zrAxes());
 
-  grid.at(1u) = 0;
-  grid.at(2u) = 1;
-  grid.at(3u) = 2;
-  grid.at(4u) = 3;
-  grid.at(5u) = 4;
-  grid.at(6u) = 5;
+  using PointType = typename GridType::point_t;
+
+  PointType p11 = {-800., 5.};
+  PointType p12 = {-800., 20.};
+  PointType p13 = {-800., 32.};
+
+  grid.atPosition(p11) = 11u;
+  grid.atPosition(p12) = 12u;
+  grid.atPosition(p13) = 13u;
+
+  PointType p21 = {0., 5.};
+  PointType p22 = {0., 20.};
+  PointType p23 = {0., 32.};
+
+  grid.atPosition(p21) = 21u;
+  grid.atPosition(p22) = 22u;
+  grid.atPosition(p23) = 23u;
 
   auto casts = std::array<Acts::BinningValue, 2u>{Acts::binZ, Acts::binR};
 
-  using IndexedDetectorVolumeImpl = Acts::Experimental::IndexedUpdatorImpl<
+  using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdatorImpl<
       GridType, Acts::Experimental::IndexedDetectorVolumeExtractor,
       Acts::Experimental::DetectorVolumeFiller>;
 
-  auto indexedDetectorVolumeImpl =
-      std::make_unique<const IndexedDetectorVolumeImpl>(std::move(grid), casts);
+  auto indexedDetectorVolumesImpl =
+      std::make_unique<const IndexedDetectorVolumesImpl>(std::move(grid),
+                                                         casts);
 
   // Return the root volume finder
   Acts::Experimental::DetectorVolumeUpdator rootVolumeFinder;
-  rootVolumeFinder.connect<&IndexedDetectorVolumeImpl::update>(
-      std::move(indexedDetectorVolumeImpl));
+  rootVolumeFinder.connect<&IndexedDetectorVolumesImpl::update>(
+      std::move(indexedDetectorVolumesImpl));
 
   nlohmann::json rFinderJson =
       Acts::DetectorVolumeFinderJsonConverter::toJson(rootVolumeFinder);
@@ -61,7 +73,22 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   auto readInRootVolumeFinder =
       Acts::DetectorVolumeFinderJsonConverter::fromJson(rFinderJson);
 
-  BOOST_CHECK(readInRootVolumeFinder.instance() != nullptr);
+  BOOST_REQUIRE(readInRootVolumeFinder.instance() != nullptr);
+
+  auto readInIndexedDetectorVolumesImpl =
+      dynamic_cast<const IndexedDetectorVolumesImpl*>(
+          readInRootVolumeFinder.instance());
+
+  BOOST_REQUIRE(readInIndexedDetectorVolumesImpl != nullptr);
+
+  const auto& gridRead = readInIndexedDetectorVolumesImpl->grid;
+
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p11), 11u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p12), 12u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p13), 13u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p21), 21u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p22), 22u);
+  BOOST_CHECK_EQUAL(gridRead.atPosition(p23), 23u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
