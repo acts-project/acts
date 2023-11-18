@@ -490,6 +490,9 @@ struct GsfActor {
       newCmp.jacToGlobal() =
           surface.boundToFreeJacobian(state.geoContext, pars);
       newCmp.pathAccumulated() = state.stepping.pathAccumulated;
+      newCmp.jacobian() = Acts::BoundMatrix::Identity();
+      newCmp.derivative() = Acts::FreeVector::Zero();
+      newCmp.jacTransport() = Acts::FreeMatrix::Identity();
     }
   }
 
