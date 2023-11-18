@@ -150,7 +150,7 @@ class ScopedGsfInfoPrinterAndChecker {
 };
 
 ActsScalar calculateDeterminant(
-    const double *fullCalibrated, const double *fullCalibratedCovariance,
+    const double *fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      true>::Covariance predictedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
@@ -185,8 +185,6 @@ void computePosteriorWeights(
         // This abuses an incorrectly sized vector / matrix to access the
         // data pointer! This works (don't use the matrix as is!), but be
         // careful!
-        state.template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
-            .data(),
         state
             .template calibratedCovariance<
                 MultiTrajectoryTraits::MeasurementSizeMax>()
@@ -232,6 +230,10 @@ struct MultiTrajectoryProjector {
       case StatesType::eSmoothed:
         return std::make_tuple(weights.at(idx), proxy.smoothed(),
                                proxy.smoothedCovariance());
+      default:
+        throw std::invalid_argument(
+            "Incorrect StatesType, should be ePredicted"
+            ", eFiltered, or eSmoothed.");
     }
   }
 };
