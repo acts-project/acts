@@ -122,16 +122,16 @@ BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
 BOOST_DATA_TEST_CASE(
     RandomSegmentizerTest,
     bdata::random(
-        (bdata::engine = std::mt19937(), bdata::seed = 2,
+        (bdata::engine = std::mt19937(), bdata::seed = 1,
          bdata::distribution = std::uniform_real_distribution<>(0., 1.))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
              bdata::distribution = std::uniform_real_distribution<>(0., 1.))) ^
         bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 2,
+            (bdata::engine = std::mt19937(), bdata::seed = 3,
              bdata::distribution = std::uniform_real_distribution<>(0., 1.))) ^
         bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 2,
+            (bdata::engine = std::mt19937(), bdata::seed = 4,
              bdata::distribution = std::uniform_real_distribution<>(0., 1.))) ^
         bdata::xrange(25),
     startR0, startR1, endR0, endR1, index) {

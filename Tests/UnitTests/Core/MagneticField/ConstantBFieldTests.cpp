@@ -39,21 +39,21 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 BOOST_DATA_TEST_CASE(
     ConstantBField_components,
     bdata::random(
-        (bdata::engine = std::mt19937(), bdata::seed = 2,
+        (bdata::engine = std::mt19937(), bdata::seed = 1,
          bdata::distribution = std::uniform_real_distribution<>(-2_T, 2_T))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-1_T, 4_T))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
                            std::uniform_real_distribution<>(0_T, 10_T))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-10_m, 10_m))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-10_m, 10_m))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-10_m, 10_m))) ^
         bdata::xrange(10),
@@ -82,21 +82,21 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     ConstantBField_update,
     bdata::random(
-        (bdata::engine = std::mt19937(), bdata::seed = 2,
+        (bdata::engine = std::mt19937(), bdata::seed = 1,
          bdata::distribution = std::uniform_real_distribution<>(-2_T, 2_T))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-1_T, 4_T))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
                            std::uniform_real_distribution<>(0_T, 10_T))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-10_m, 10_m))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-10_m, 10_m))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
                        bdata::distribution =
                            std::uniform_real_distribution<>(-10_m, 10_m))) ^
         bdata::xrange(10),
