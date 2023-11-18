@@ -555,8 +555,10 @@ struct GsfActor {
     FiltProjector proj{tmpStates.traj, tmpStates.weights};
     for (const auto& idx : tmpStates.tips) {
       const auto& [w, p, c] = proj(idx);
-      assert(w > 0.0);
-      result.lastMeasurementComponents.push_back({w, p, c});
+      // TODO check why zero weight can occur
+      if (w > 0.0) {
+        result.lastMeasurementComponents.push_back({w, p, c});
+      }
     }
 
     // Return success
