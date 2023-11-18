@@ -104,7 +104,7 @@ struct GsfOptions {
 
   double weightCutoff = 1.e-4;
 
-  double momentumCutoff = 500_MeV;
+  double momentumCutoff = 0;
 
   bool abortOnError = false;
 
