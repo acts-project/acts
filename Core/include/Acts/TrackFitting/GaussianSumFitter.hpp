@@ -396,7 +396,7 @@ struct GaussianSumFitter {
       return return_error_or_abort(bwdResult.error());
     }
 
-    const auto& bwdGsfResult =
+    auto& bwdGsfResult =
         bwdResult->template get<typename GsfActor::result_type>();
 
     if (!bwdGsfResult.result.ok()) {
@@ -408,8 +408,14 @@ struct GaussianSumFitter {
           GsfError::NoMeasurementStatesCreatedBackward);
     }
 
+    // For the backward pass we want the counters at in end (= at the
+    // interaction point) and not at the last measurement surface
+    bwdGsfResult.nInvalidBetheHeitler.update();
+    bwdGsfResult.maxPathXOverX0.update();
+    bwdGsfResult.sumPathXOverX0.update();
     nInvalidBetheHeitler += bwdGsfResult.nInvalidBetheHeitler.val();
-    maxPathXOverX0 = std::max(maxPathXOverX0, bwdGsfResult.maxPathXOverX0.val());
+    maxPathXOverX0 =
+        std::max(maxPathXOverX0, bwdGsfResult.maxPathXOverX0.val());
 
     if (nInvalidBetheHeitler > 0) {
       ACTS_WARNING("Encountered " << nInvalidBetheHeitler
