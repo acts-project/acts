@@ -1035,9 +1035,9 @@ BOOST_DATA_TEST_CASE(
 
   if (debugMode) {
     std::cout << ">>> Run navigation tests with pT = " << pT
-              << "; phi = " << phi << "; charge = " << charge
-              << " time = " << time << "; index = " << index << ";"
-              << std::endl;
+              << "; phi = " << phi << "; theta = " << theta
+              << "; charge = " << charge << "; time = " << time
+              << "; index = " << index << ";" << std::endl;
   }
 
   if (debugMode) {
