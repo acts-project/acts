@@ -982,9 +982,16 @@ using ReferenceStraightLinePropagator =
 EigenStepper estepper(bField);
 StraightLineStepper slstepper;
 
-EigenPropagator epropagator(estepper, Navigator({tGeometry, true, true, true}));
-StraightLinePropagator slpropagator(slstepper,
-                                    Navigator({tGeometry, true, true, true}));
+EigenPropagator epropagator(estepper,
+                            Navigator({tGeometry, true, true, true},
+                                      getDefaultLogger("nav",
+                                                       Logging::VERBOSE)),
+                            getDefaultLogger("prop", Logging::VERBOSE));
+StraightLinePropagator slpropagator(
+    slstepper,
+    Navigator({tGeometry, true, true, true},
+              getDefaultLogger("nav", Logging::VERBOSE)),
+    getDefaultLogger("prop", Logging::VERBOSE));
 ReferenceEigenPropagator refepropagator(estepper,
                                         TryAllNavigator({tGeometry, true, true,
                                                          true}));
