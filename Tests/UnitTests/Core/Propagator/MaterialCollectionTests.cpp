@@ -395,20 +395,22 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 BOOST_DATA_TEST_CASE(
     test_material_collector,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.5_GeV, 10_GeV))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 22,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 24,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
+        bdata::random((
+            bdata::engine = std::mt19937(), bdata::seed = 24,
+            bdata::distribution = std::uniform_int_distribution<int>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   runTest(epropagator, pT, phi, theta, charge, time, index);

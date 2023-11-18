@@ -66,16 +66,18 @@ GeometryContext tgContext = GeometryContext();
 BOOST_DATA_TEST_CASE(
     readout_counter_test,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<>(
+                   bdata::distribution = std::uniform_real_distribution<double>(
                        -halfX + sguardX, halfX - sguardX))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
-                       bdata::distribution = std::uniform_real_distribution<>(
-                           -halfX + sguardX, halfX - sguardX))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 1,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -halfX + sguardX, halfX - sguardX))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-halfY, halfY))) ^
+                           std::uniform_real_distribution<double>(-halfY,
+                                                                  halfY))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
-                       bdata::distribution = std::uniform_int_distribution<>(
+                       bdata::distribution = std::uniform_int_distribution<int>(
                            -static_cast<int>(halfY),
                            static_cast<int>(halfY)))) ^
         bdata::xrange(ntests),
