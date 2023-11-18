@@ -105,11 +105,6 @@ class Extent {
   void addConstrain(const Extent& rhs,
                     const ExtentEnvelope& envelope = zeroEnvelopes);
 
-  /// Register a constrain
-  ///
-  /// @param bValue the binning identification
-  void setConstrain(BinningValue bValue);
-
   /// Set a range for a dedicated binning value
   ///
   /// @param bValue the binning identification
