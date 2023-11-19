@@ -9,18 +9,27 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class RootAthenaNTupleReader : public ActsExamples::IReader {
  public:
@@ -38,7 +47,7 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   };
 
   // clang-format off
-  // name                 | typename                 | interpretation                
+  // name                 | typename                 | interpretation
   // ---------------------+--------------------------+-------------------------------
   // mcChannelNumber      | int32_t                  | AsDtype('>i4')
   // EventNumber          | int32_t                  | AsDtype('>i4')
@@ -209,6 +218,18 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
 
   /// The handle to branches in current event
   BranchPointerWrapper m_branches;
+
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
+
+  WriteDataHandle<std::vector<Acts::Vector4>> m_outputTruthVtxParameters{
+      this, "OutputTruthVertices"};
+
+  WriteDataHandle<std::vector<Acts::Vector4>> m_outputRecoVtxParameters{
+      this, "OutputRecoVertices"};
+
+  WriteDataHandle<Acts::Vertex<Acts::BoundTrackParameters>>
+      m_outputBeamspotConstraint{this, "OutputBeamsspotConstraint"};
 };
 
 }  // namespace ActsExamples

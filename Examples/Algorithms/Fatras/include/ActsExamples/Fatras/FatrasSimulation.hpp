@@ -10,21 +10,35 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+}  // namespace Acts
+
 namespace ActsExamples {
+class RandomNumbers;
+struct AlgorithmContext;
+
 namespace detail {
 struct FatrasSimulation;
 }
 
 /// Fast track simulation using the Acts propagation and navigation.
-class FatrasSimulation final : public BareAlgorithm {
+class FatrasSimulation final : public IAlgorithm {
  public:
   struct Config {
     /// The particles input collection.
@@ -64,12 +78,17 @@ class FatrasSimulation final : public BareAlgorithm {
     /// have associated material.
     bool generateHitsOnPassive = false;
 
+    /// Absolute maximum step size
+    double maxStepSize = 1 * Acts::UnitConstants::m;
+    /// Absolute maximum path length
+    double pathLimit = 30 * Acts::UnitConstants::m;
+
     /// Expected average number of hits generated per particle.
     ///
     /// This is just a performance optimization hint and has no impact on the
     /// algorithm function. It is used to guess the amount of memory to
     /// pre-allocate to avoid allocation during event simulation.
-    size_t averageHitsPerParticle = 16u;
+    std::size_t averageHitsPerParticle = 16u;
   };
 
   /// Construct the algorithm from a config.
@@ -86,6 +105,15 @@ class FatrasSimulation final : public BareAlgorithm {
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+
+  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
+      this, "OutputParticlesInitial"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
+      this, "OutputParticlesFinal"};
 
  private:
   Config m_cfg;

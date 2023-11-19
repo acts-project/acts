@@ -8,13 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/ExtentJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <fstream>
-#include <iostream>
+#include <nlohmann/json.hpp>
 
 using namespace Acts;
 
@@ -28,12 +28,12 @@ BOOST_AUTO_TEST_CASE(ExtentRoundtripTests) {
   nlohmann::json j;
   j["extent"] = e;
 
-  Extent eIn = j["exent"];
+  Extent eIn = j["extent"];
 
-  CHECK_CLOSE_ABS(e.min(binR), 0., 10e-5);
-  CHECK_CLOSE_ABS(e.max(binR), 200., 10e-5);
-  CHECK_CLOSE_ABS(e.min(binZ), -50., 10e-5);
-  CHECK_CLOSE_ABS(e.max(binZ), 50., 10e-5);
+  CHECK_CLOSE_ABS(eIn.min(binR), e.min(binR), 10e-5);
+  CHECK_CLOSE_ABS(eIn.max(binR), e.max(binR), 10e-5);
+  CHECK_CLOSE_ABS(eIn.min(binZ), e.min(binZ), 10e-5);
+  CHECK_CLOSE_ABS(eIn.max(binZ), e.max(binZ), 10e-5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

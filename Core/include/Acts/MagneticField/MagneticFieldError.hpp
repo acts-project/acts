@@ -9,11 +9,13 @@
 #pragma once
 
 #include <system_error>
+#include <type_traits>
 
 namespace Acts {
 
 enum class MagneticFieldError {
   OutOfBounds = 1,
+  NotImplemented = 2,
 };
 
 std::error_code make_error_code(Acts::MagneticFieldError e);

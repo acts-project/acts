@@ -36,7 +36,7 @@ struct ParticleInfo {
 ///
 struct TreeReader {
   // The constructor
-  TreeReader(TTree* tree_) : tree(tree_){};
+  TreeReader(TTree* tree_) : tree(tree_) {}
 
   // Get entry
   void getEntry(unsigned int i) const {
@@ -57,7 +57,7 @@ struct TreeReader {
 };
 
 /// Struct used for reading track states written out by the
-/// RootTrajectoryStatesWriter
+/// RootTrackStatesWriter
 ///
 struct TrackStatesReader : public TreeReader {
   // Delete the default constructor
@@ -286,7 +286,7 @@ struct TrackStatesReader : public TreeReader {
 };
 
 /// Struct used for reading track summary info written out by the
-/// RootTrajectorySummaryWriter
+/// RootTrackSummaryWriter
 ///
 struct TrackSummaryReader : public TreeReader {
   // Delete the default constructor
@@ -441,8 +441,8 @@ struct ParticleReader : public TreeReader {
     std::string eventNumberStr = std::to_string(eventNumber);
     std::string findStartEntry = "event_id<" + eventNumberStr;
     std::string findParticlesSize = "event_id==" + eventNumberStr;
-    size_t startEntry = tree->GetEntries(findStartEntry.c_str());
-    size_t nParticles = tree->GetEntries(findParticlesSize.c_str());
+    std::size_t startEntry = tree->GetEntries(findStartEntry.c_str());
+    std::size_t nParticles = tree->GetEntries(findParticlesSize.c_str());
     if (nParticles == 0) {
       throw std::invalid_argument(
           "No particles found. Please check the input file.");

@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/ParticleData.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Event.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/HepMC3Options.hpp"
-#include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <fstream>
 
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
   std::cout << "Preparing reader " << std::flush;
   HepMC3::ReaderAscii reader("test.hepmc3");
   if (simReader.status(reader)) {
-    std::cout << "succesful" << std::endl;
+    std::cout << "successful" << std::endl;
   } else {
     std::cout << "failed" << std::endl;
   }
@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 
   std::cout << "Reading event " << std::flush;
   if (simReader.readEvent(reader, genevt)) {
-    std::cout << "succesful" << std::endl;
+    std::cout << "successful" << std::endl;
   } else {
     std::cout << "failed" << std::endl;
   }
@@ -80,8 +80,8 @@ int main(int argc, char** argv) {
     std::cout << "none" << std::endl;
   } else {
     for (auto& pbeam : beam) {
-      std::cout << ActsFatras::findName(
-                       static_cast<Acts::PdgParticle>(pbeam.pdg()))
+      std::cout << Acts::findName(static_cast<Acts::PdgParticle>(pbeam.pdg()))
+                       .value_or("invalid")
                 << " ";
     }
     std::cout << std::endl;
@@ -96,14 +96,16 @@ int main(int argc, char** argv) {
     std::cout << std::endl;
     for (auto& vertex : vertices) {
       for (auto& particle : vertex->incoming) {
-        std::cout << ActsFatras::findName(
+        std::cout << Acts::findName(
                          static_cast<Acts::PdgParticle>(particle.pdg()))
+                         .value_or("invalid")
                   << " ";
       }
       std::cout << "-> ";
       for (auto& particle : vertex->outgoing) {
-        std::cout << ActsFatras::findName(
+        std::cout << Acts::findName(
                          static_cast<Acts::PdgParticle>(particle.pdg()))
+                         .value_or("invalid")
                   << " ";
       }
       std::cout << "\t@(" << vertex->time() << ", " << vertex->position()(0)
@@ -117,8 +119,8 @@ int main(int argc, char** argv) {
   std::vector<ActsExamples::SimParticle> particles =
       ActsExamples::HepMC3Event::particles(genevt);
   for (auto& particle : particles) {
-    std::cout << ActsFatras::findName(
-                     static_cast<Acts::PdgParticle>(particle.pdg()))
+    std::cout << Acts::findName(static_cast<Acts::PdgParticle>(particle.pdg()))
+                     .value_or("invalid")
               << "\tID:" << particle.particleId() << ", momentum: ("
               << particle.fourMomentum()(0) << ", "
               << particle.fourMomentum()(1) << ", "
@@ -129,13 +131,14 @@ int main(int argc, char** argv) {
   std::cout << std::endl << "Initial to final state: ";
   std::vector<ActsExamples::SimParticle> fState = finalState(genevt);
   for (auto& pbeam : beam) {
-    std::cout << ActsFatras::findName(
-                     static_cast<Acts::PdgParticle>(pbeam.pdg()))
+    std::cout << Acts::findName(static_cast<Acts::PdgParticle>(pbeam.pdg()))
+                     .value_or("invalid")
               << " ";
   }
   std::cout << "-> ";
   for (auto& fs : fState) {
-    std::cout << ActsFatras::findName(static_cast<Acts::PdgParticle>(fs.pdg()))
+    std::cout << Acts::findName(static_cast<Acts::PdgParticle>(fs.pdg()))
+                     .value_or("invalid")
               << " ";
   }
   std::cout << std::endl;

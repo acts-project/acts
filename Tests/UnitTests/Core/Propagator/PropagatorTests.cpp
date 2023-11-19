@@ -11,18 +11,43 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <random>
+#include <tuple>
+#include <utility>
+
+namespace Acts {
+class Logger;
+}  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -37,7 +62,7 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 /// An observer that measures the perpendicular distance
 struct PerpendicularMeasure {
@@ -50,15 +75,12 @@ struct PerpendicularMeasure {
 
   PerpendicularMeasure() = default;
 
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  const navigator_t& /*navigator*/, result_type& result) const {
     result.distance = perp(stepper.position(state.stepping));
   }
-
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/,
-                  const stepper_t& /*unused*/) const {}
 };
 
 /// An observer that measures the perpendicular distance
@@ -71,7 +93,7 @@ struct SurfaceObserver {
 
   /// Simple result struct to be returned
   struct this_result {
-    size_t surfaces_passed = 0;
+    std::size_t surfaces_passed = 0;
     double surface_passed_r = std::numeric_limits<double>::max();
   };
 
@@ -79,18 +101,23 @@ struct SurfaceObserver {
 
   SurfaceObserver() = default;
 
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& /*logger*/) const {
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& /*logger*/) const {
     if (surface && !result.surfaces_passed) {
       // calculate the distance to the surface
       const double distance =
           surface
               ->intersect(state.geoContext, stepper.position(state.stepping),
-                          stepper.direction(state.stepping), true)
-              .intersection.pathLength;
+                          stepper.direction(state.stepping),
+                          BoundaryCheck(true))
+              .closest()
+              .pathLength();
       // Adjust the step size so that we cannot cross the target surface
-      state.stepping.stepSize.update(distance, ConstrainedStep::actor);
+      state.stepping.stepSize.update(distance * state.options.direction,
+                                     ConstrainedStep::actor);
       // return true if you fall below tolerance
       if (std::abs(distance) <= tolerance) {
         ++result.surfaces_passed;
@@ -100,10 +127,6 @@ struct SurfaceObserver {
       }
     }
   }
-
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                  const Logger& /*logger*/) const {}
 };
 
 // Global definitions
@@ -190,7 +213,9 @@ BOOST_DATA_TEST_CASE(
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
-  CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q);
+  CurvilinearTrackParameters start(makeVector4(pos, time), mom.normalized(),
+                                   q / mom.norm(), std::nullopt,
+                                   ParticleHypothesis::pion());
   // propagate to the cylinder surface
   const auto& result = epropagator.propagate(start, *cSurface, options).value();
   auto& sor = result.get<so_result>();
@@ -242,8 +267,9 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q,
-                                   cov);
+  CurvilinearTrackParameters start(makeVector4(pos, time), mom.normalized(),
+                                   q / mom.norm(), cov,
+                                   ParticleHypothesis::pion());
   // propagate to a path length of 100 with two steps of 50
   const auto& mid_parameters =
       epropagator.propagate(start, options_2s).value().endParameters;
@@ -318,8 +344,9 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q,
-                                   cov);
+  CurvilinearTrackParameters start(makeVector4(pos, time), mom.normalized(),
+                                   q / mom.norm(), cov,
+                                   ParticleHypothesis::pion());
   // propagate to a final surface with one stop in between
   const auto& mid_parameters =
       epropagator.propagate(start, *mSurface, options_2s).value().endParameters;

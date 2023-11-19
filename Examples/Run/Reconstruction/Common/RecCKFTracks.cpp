@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #ifdef ACTS_PLUGIN_ONNX
 #include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
@@ -13,13 +14,13 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/CsvOptionsReader.hpp"
 #include "ActsExamples/Options/CsvOptionsWriter.hpp"
@@ -37,6 +38,7 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 #include <Acts/Definitions/Units.hpp>
 
 #include <filesystem>
@@ -104,7 +106,7 @@ int runRecCKFTracks(
   for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
-  // Setup the magnetic field
+  // Set up the magnetic field
   auto magneticField = Options::readMagneticField(vm);
 
   // Read the sim hits
@@ -171,7 +173,6 @@ int runRecCKFTracks(
           spCfg.outputSpacePoints,
       };
       seedingCfg.outputSeeds = "seeds";
-      seedingCfg.outputProtoTracks = "prototracks";
 
       seedingCfg.gridConfig.rMax = 200._mm;
       seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
@@ -205,7 +206,7 @@ int runRecCKFTracks(
       seedingCfg.gridConfig.minPt = 500._MeV;
       seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
 
-      seedingCfg.gridOptions.bFieldInZ = 1.99724_T;
+      seedingCfg.gridOptions.bFieldInZ = 2_T;
 
       seedingCfg.seedFinderOptions.bFieldInZ = seedingCfg.gridOptions.bFieldInZ;
       seedingCfg.seedFinderOptions.beamPos = {0_mm, 0_mm};
@@ -214,7 +215,14 @@ int runRecCKFTracks(
 
       sequencer.addAlgorithm(
           std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
-      inputProtoTracks = seedingCfg.outputProtoTracks;
+
+      SeedsToPrototracks::Config seedsToPrototrackCfg;
+      seedsToPrototrackCfg.inputSeeds = seedingCfg.outputSeeds;
+      seedsToPrototrackCfg.outputProtoTracks = "prototracks";
+      sequencer.addAlgorithm(
+          std::make_shared<SeedsToPrototracks>(seedsToPrototrackCfg, logLevel));
+
+      inputProtoTracks = seedsToPrototrackCfg.outputProtoTracks;
       inputSeeds = seedingCfg.outputSeeds;
     }
 
@@ -232,24 +240,12 @@ int runRecCKFTracks(
     // Algorithm estimating track parameter from seed
     TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
     paramsEstimationCfg.inputSeeds = inputSeeds;
-    paramsEstimationCfg.inputProtoTracks = inputProtoTracks;
-    paramsEstimationCfg.inputSpacePoints = {
-        spCfg.outputSpacePoints,
-    };
-    paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
     paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-    paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
     paramsEstimationCfg.trackingGeometry = trackingGeometry;
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
-    paramsEstimationCfg.deltaRMax = 100._mm;
-    paramsEstimationCfg.deltaRMin = 10._mm;
-    paramsEstimationCfg.sigmaLoc0 = 25._um;
-    paramsEstimationCfg.sigmaLoc1 = 100._um;
-    paramsEstimationCfg.sigmaPhi = 0.02_degree;
-    paramsEstimationCfg.sigmaTheta = 0.02_degree;
-    paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
-    paramsEstimationCfg.sigmaT0 = 1400._s;
+    paramsEstimationCfg.initialSigmas = {25._um,      100._um,      0.02_degree,
+                                         0.02_degree, 0.1 / 1._GeV, 1400._s};
     paramsEstimationCfg.initialVarInflation =
         vm["ckf-initial-variance-inflation"].template as<Options::Reals<6>>();
 
@@ -259,26 +255,27 @@ int runRecCKFTracks(
     outputTrackParameters = paramsEstimationCfg.outputTrackParameters;
   }
 
-  // Setup the track finding algorithm with CKF
+  // Set up the track finding algorithm with CKF
   // It takes all the source links created from truth hit smearing, seeds from
   // truth particle smearing and source link selection config
   auto trackFindingCfg = Options::readTrackFindingConfig(vm);
   trackFindingCfg.inputMeasurements = digiCfg.outputMeasurements;
   trackFindingCfg.inputSourceLinks = digiCfg.outputSourceLinks;
   trackFindingCfg.inputInitialTrackParameters = outputTrackParameters;
-  trackFindingCfg.outputTrajectories = "trajectories";
+  trackFindingCfg.outputTracks = "tracks";
   trackFindingCfg.computeSharedHits = true;
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
-      trackingGeometry, magneticField);
+      trackingGeometry, magneticField,
+      *Acts::getDefaultLogger("TrackFinder", logLevel));
   sequencer.addAlgorithm(
       std::make_shared<TrackFindingAlgorithm>(trackFindingCfg, logLevel));
 
   // write track states from CKF
-  RootTrajectoryStatesWriter::Config trackStatesWriter;
-  trackStatesWriter.inputTrajectories = trackFindingCfg.outputTrajectories;
+  RootTrackStatesWriter::Config trackStatesWriter;
+  trackStatesWriter.inputTracks = trackFindingCfg.outputTracks;
   // @note The full particles collection is used here to avoid lots of warnings
   // since the unselected CKF track might have a majority particle not in the
-  // filtered particle collection. This could be avoided when a seperate track
+  // filtered particle collection. This could be avoided when a separate track
   // selection algorithm is used.
   trackStatesWriter.inputParticles = particleReader.outputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
@@ -288,33 +285,41 @@ int runRecCKFTracks(
       digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.filePath = outputDir + "/trackstates_ckf.root";
   trackStatesWriter.treeName = "trackstates";
-  sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
-      trackStatesWriter, logLevel));
+  sequencer.addWriter(
+      std::make_shared<RootTrackStatesWriter>(trackStatesWriter, logLevel));
 
   // write track summary from CKF
-  RootTrajectorySummaryWriter::Config trackSummaryWriter;
-  trackSummaryWriter.inputTrajectories = trackFindingCfg.outputTrajectories;
+  RootTrackSummaryWriter::Config trackSummaryWriter;
+  trackSummaryWriter.inputTracks = trackFindingCfg.outputTracks;
   // @note The full particles collection is used here to avoid lots of warnings
   // since the unselected CKF track might have a majority particle not in the
-  // filtered particle collection. This could be avoided when a seperate track
+  // filtered particle collection. This could be avoided when a separate track
   // selection algorithm is used.
   trackSummaryWriter.inputParticles = particleReader.outputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   trackSummaryWriter.filePath = outputDir + "/tracksummary_ckf.root";
   trackSummaryWriter.treeName = "tracksummary";
-  sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
-      trackSummaryWriter, logLevel));
+  sequencer.addWriter(
+      std::make_shared<RootTrackSummaryWriter>(trackSummaryWriter, logLevel));
+
+  if (vm["output-csv"].template as<bool>()) {
+    // Write the CKF track as Csv
+    CsvTrackWriter::Config trackWriterCsvConfig;
+    trackWriterCsvConfig.inputTracks = trackFindingCfg.outputTracks;
+    trackWriterCsvConfig.outputDir = outputDir;
+    trackWriterCsvConfig.inputMeasurementParticlesMap =
+        digiCfg.outputMeasurementParticlesMap;
+    sequencer.addWriter(
+        std::make_shared<CsvTrackWriter>(trackWriterCsvConfig, logLevel));
+  }
 
   // Write CKF performance data
   CKFPerformanceWriter::Config perfWriterCfg;
   perfWriterCfg.inputParticles = inputParticles;
-  perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
+  perfWriterCfg.inputTracks = trackFindingCfg.outputTracks;
   perfWriterCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  // The bottom seed could be the first, second or third hits on the truth track
-  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
-  perfWriterCfg.ptMin = 0.4_GeV;
   perfWriterCfg.filePath = outputDir + "/performance_ckf.root";
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
@@ -334,17 +339,6 @@ int runRecCKFTracks(
 #endif
   sequencer.addWriter(
       std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
-
-  if (vm["output-csv"].template as<bool>()) {
-    // Write the CKF track as Csv
-    CsvMultiTrajectoryWriter::Config trackWriterCsvConfig;
-    trackWriterCsvConfig.inputTrajectories = trackFindingCfg.outputTrajectories;
-    trackWriterCsvConfig.outputDir = outputDir;
-    trackWriterCsvConfig.inputMeasurementParticlesMap =
-        digiCfg.outputMeasurementParticlesMap;
-    sequencer.addWriter(std::make_shared<CsvMultiTrajectoryWriter>(
-        trackWriterCsvConfig, logLevel));
-  }
 
   return sequencer.run();
 }

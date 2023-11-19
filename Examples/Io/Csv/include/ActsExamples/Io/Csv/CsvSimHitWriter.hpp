@@ -8,14 +8,18 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstddef>
 #include <limits>
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out a simhit collection before detector digitization in comma-
 /// separated-value format.
@@ -40,7 +44,7 @@ class CsvSimHitWriter final : public WriterT<SimHitContainer> {
     /// Output filename stem.
     std::string outputStem;
     /// Number of decimal digits for floating point precision in output.
-    size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    std::size_t outputPrecision = std::numeric_limits<float>::max_digits10;
   };
 
   /// Construct the cluster writer.

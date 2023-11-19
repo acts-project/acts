@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -44,7 +43,7 @@ class CsvSpacepointWriter final : public WriterT<SimSpacePointContainer> {
     /// Where to place output files
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
-    size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    std::size_t outputPrecision = std::numeric_limits<float>::max_digits10;
   };
 
   /// Constructor with
@@ -56,7 +55,7 @@ class CsvSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   ~CsvSpacepointWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

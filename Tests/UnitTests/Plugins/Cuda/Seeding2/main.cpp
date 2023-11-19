@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 #include "Acts/Plugins/Cuda/Utilities/MemoryManager.hpp"
 
 // Acts include(s).
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
@@ -82,7 +83,7 @@ int main(int argc, char* argv[]) {
   sfConfig.minPt = 500._MeV;
   sfConfig.impactMax = 10._mm;
   Acts::SeedFinderOptions sfOptions;
-  sfOptions.bFieldInZ = 1.99724_T;
+  sfOptions.bFieldInZ = 2_T;
   sfOptions.beamPos = {-.5_mm, -.5_mm};
 
   // Use a size slightly smaller than what modern GPUs are capable of. This is
@@ -175,15 +176,18 @@ int main(int argc, char* argv[]) {
 
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
-    auto spGroup_itr = spGroup.begin();
     decltype(seedFinder_host)::SeedingState state;
-    for (std::size_t i = 0;
-         spGroup_itr != spGroup_end && i < cmdl.groupsToIterate;
-         ++i, ++spGroup_itr) {
+    for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
+      auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+      if (spGroup_itr == spGroup.end()) {
+        break;
+      }
       auto& group = seeds_host.emplace_back();
-      seedFinder_host.createSeedsForGroup(
-          sfOptions, state, std::back_inserter(group), spGroup_itr.bottom(),
-          spGroup_itr.middle(), spGroup_itr.top(), rMiddleSPRange);
+      auto [bottom, middle, top] = *spGroup_itr;
+
+      seedFinder_host.createSeedsForGroup(sfOptions, state, spGroup.grid(),
+                                          std::back_inserter(group), bottom,
+                                          middle, top, rMiddleSPRange);
     }
   }
 
@@ -205,14 +209,18 @@ int main(int argc, char* argv[]) {
   auto start_device = std::chrono::system_clock::now();
   // Create the result object.
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_device;
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spView.size());
 
   // Perform the seed finding.
-  auto spGroup_itr = spGroup.begin();
-  for (std::size_t i = 0;
-       spGroup_itr != spGroup_end && i < cmdl.groupsToIterate;
-       ++i, ++spGroup_itr) {
+  for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
+    auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+    if (spGroup_itr == spGroup_end) {
+      break;
+    }
+    auto [bottom, middle, top] = *spGroup_itr;
     seeds_device.push_back(seedFinder_device.createSeedsForGroup(
-        spGroup_itr.bottom(), spGroup_itr.middle(), spGroup_itr.top()));
+        spacePointData, spGroup.grid(), bottom, middle, top));
   }
 
   // Record the finish time.
@@ -242,7 +250,7 @@ int main(int argc, char* argv[]) {
   double matchPercentage = 0.0;
   if (!cmdl.onlyGPU) {
     assert(seeds_host.size() == seeds_device.size());
-    for (size_t i = 0; i < seeds_host.size(); i++) {
+    for (std::size_t i = 0; i < seeds_host.size(); i++) {
       // Access the seeds for this region.
       const auto& seeds_in_host_region = seeds_host[i];
       const auto& seeds_in_device_region = seeds_device[i];

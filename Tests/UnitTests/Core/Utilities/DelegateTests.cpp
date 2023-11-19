@@ -9,15 +9,15 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
-#include <numeric>
-#include <optional>
-#include <random>
-#include <tuple>
+#include <string>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 using namespace Acts;
 
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ConnectStruct) {
   BOOST_CHECK_EQUAL(sub(7), 7 - 18);
 }
 
-int addition(const void* /*unused*/, int a, int b) {
+int addition(const void* /*payload*/, int a, int b) {
   return a + b;
 }
 
@@ -124,6 +124,21 @@ BOOST_AUTO_TEST_CASE(ConnectRuntime) {
 
     BOOST_CHECK_EQUAL(add(4, 4), 8);
   }
+}
+
+BOOST_AUTO_TEST_CASE(ConnectConstructFuncPtr) {
+  Delegate<int(int, int)> add{DelegateFuncTag<&sumImpl>{}};
+  BOOST_CHECK(add);
+  BOOST_CHECK(add.connected());
+  BOOST_CHECK_EQUAL(add(4, 4), 8);
+
+  Subtractor s{18};
+  Delegate<int(int)> sub{DelegateFuncTag<&Subtractor::execute>{}, &s};
+
+  BOOST_CHECK(sub);
+  BOOST_CHECK(sub.connected());
+
+  BOOST_CHECK_EQUAL(sub(7), 7 - 18);
 }
 
 void modify(int& v, int a) {
@@ -181,21 +196,21 @@ BOOST_AUTO_TEST_CASE(StatefullLambdas) {
 
   BOOST_CHECK(d);
   BOOST_CHECK(d.connected());
-  BOOST_CHECK(d(2) == 1);
+  BOOST_CHECK_EQUAL(d(2), 1);
 
   d.disconnect();
   d = lambda;
 
   BOOST_CHECK(d);
   BOOST_CHECK(d.connected());
-  BOOST_CHECK(d(2) == 2);
+  BOOST_CHECK_EQUAL(d(2), 2);
 
   d.disconnect();
   d.connect(lambda);
 
   BOOST_CHECK(d);
   BOOST_CHECK(d.connected());
-  BOOST_CHECK(d(2) == 3);
+  BOOST_CHECK_EQUAL(d(2), 3);
 
   // This should not compile because of deleted && overloads
   // d.connect([&](int a){ v.push_back(a); return v.size(); });
@@ -215,7 +230,7 @@ int owningTest() {
   return 8;
 }
 
-int owningTest2(const void* /*unused*/) {
+int owningTest2(const void* /*payload*/) {
   return 8;
 }
 
@@ -223,11 +238,9 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
   {
     auto s = std::make_unique<const SignatureTest>();
     Delegate<void(int&, int)> d;
-    d.connect<&SignatureTest::modify>(std::move(s));
-
-    int v = 0;
-    d(v, 42);
-    BOOST_CHECK_EQUAL(v, 42);
+    (void)d;
+    // This should not compile, as it would be a memory leak
+    // d.connect<&SignatureTest::modify>(std::move(s));
   }
 
   {

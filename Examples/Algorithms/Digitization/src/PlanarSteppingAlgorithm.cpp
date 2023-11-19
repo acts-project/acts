@@ -8,33 +8,42 @@
 
 #include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
+#include <cmath>
+#include <cstddef>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
     ActsExamples::PlanarSteppingAlgorithm::Config config,
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("PlanarSteppingAlgorithm", level),
+    : ActsExamples::IAlgorithm("PlanarSteppingAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing input hits collection");
@@ -60,7 +69,7 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map output collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
   if (!m_cfg.planarModuleStepper) {
@@ -69,6 +78,17 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers tool");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+
+  m_outputClusters.initialize(m_cfg.outputClusters);
+  m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
+  m_outputDigiSourceLinks.initialize(m_cfg.outputDigiSourceLinks);
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementParticlesMap.initialize(
+      m_cfg.outputMeasurementParticlesMap);
+  m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+
   // fill the digitizables map to allow lookup by geometry id only
   m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
     Digitizable dg;
@@ -95,11 +115,8 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  using ClusterContainer =
-      ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
-
   // retrieve input
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& simHits = m_inputSimHits(ctx);
 
   // prepare output containers
   ClusterContainer clusters;
@@ -133,8 +150,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
 
       Acts::Vector2 localIntersect =
           (invTransfrom * simHit.position()).head<2>();
-      Acts::Vector3 localDirection =
-          invTransfrom.linear() * simHit.unitDirection();
+      Acts::Vector3 localDirection = invTransfrom.linear() * simHit.direction();
 
       // compute digitization steps
       const auto thickness = dg.detectorElement->thickness();
@@ -151,7 +167,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
         continue;
       }
 
-      // lets create a cluster - centroid method
+      // Create a cluster - centroid method
       double localX = 0.;
       double localY = 0.;
       double totalPath = 0.;
@@ -177,13 +193,13 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       const Acts::Segmentation& segmentation = dg.digitizer->segmentation();
       auto binUtility = segmentation.binUtility();
       Acts::Vector2 localPosition(localX, localY);
-      // @todo remove unneccesary conversion
-      // size_t bin0 = binUtility.bin(localPosition, 0);
-      // size_t bin1 = binUtility.bin(localPosition, 1);
-      // size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
+      // @todo remove unnecessary conversion
+      // std::size_t bin0 = binUtility.bin(localPosition, 0);
+      // std::size_t bin1 = binUtility.bin(localPosition, 1);
+      // std::size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
 
       // the covariance is currently set to some arbitrary value.
-      Acts::SymMatrix3 cov;
+      Acts::SquareMatrix3 cov;
       cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0.,
           900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
       Acts::Vector3 par(localX, localY, simHit.time());
@@ -222,13 +238,11 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
   ACTS_DEBUG("digitized " << simHits.size() << " hits into " << clusters.size()
                           << " clusters");
 
-  ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
-  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-  ctx.eventStore.add(m_cfg.outputDigiSourceLinks, std::move(digiSourceLinks));
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
-  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
-                     std::move(hitParticlesMap));
-  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
-                     std::move(hitSimHitsMap));
+  m_outputClusters(ctx, std::move(clusters));
+  m_outputSourceLinks(ctx, std::move(sourceLinks));
+  m_outputDigiSourceLinks(ctx, std::move(digiSourceLinks));
+  m_outputMeasurements(ctx, std::move(measurements));
+  m_outputMeasurementParticlesMap(ctx, std::move(hitParticlesMap));
+  m_outputMeasurementSimHitsMap(ctx, std::move(hitSimHitsMap));
   return ActsExamples::ProcessCode::SUCCESS;
 }

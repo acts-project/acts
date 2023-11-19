@@ -9,13 +9,20 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
+#include <vector>
 
 #include "TrackParametersDatasets.hpp"
 
@@ -33,12 +40,12 @@ BOOST_DATA_TEST_CASE(
     surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     surface, l0, l1, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
   const auto qOverP = q / p;
 
   GeometryContext geoCtx;
   Vector2 loc(l0, l1);
-  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
   // transform reference position
   Vector3 pos = surface->localToGlobal(geoCtx, loc, dir);
 
@@ -117,11 +124,11 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
                      ts* phis* thetas* ps* qsNonZero, time, phiInput, theta, p,
                      q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
   const auto qOverP = q / p;
 
   GeometryContext geoCtx;
-  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   // convert w/ direction
   {

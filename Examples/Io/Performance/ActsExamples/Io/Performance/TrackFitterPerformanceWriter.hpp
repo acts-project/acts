@@ -8,18 +8,29 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <mutex>
+#include <string>
 
 class TFile;
 class TTree;
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out the residual and pull of track parameters and efficiency.
 ///
@@ -29,12 +40,13 @@ namespace ActsExamples {
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class TrackFitterPerformanceWriter final
-    : public WriterT<TrajectoriesContainer> {
+class TrackFitterPerformanceWriter final : public WriterT<ConstTrackContainer> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
-    /// Input (fitted) trajectories collection.
-    std::string inputTrajectories;
+    /// Input (fitted) track collection.
+    std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
@@ -55,16 +67,21 @@ class TrackFitterPerformanceWriter final
   ~TrackFitterPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) override;
+                     const ConstTrackContainer& tracks) override;
 
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "inputMeasurementParticlesMap"};
+
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};

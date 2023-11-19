@@ -29,7 +29,7 @@ struct ExaTrkXTime {
   float labeling = 0.0;
   float total = 0.0;
 
-  void summary(LoggerWrapper& logger) const {
+  void summary(const Logger& logger) const {
     ACTS_VERBOSE("1) embedding: " << embedding);
     ACTS_VERBOSE("2) building: " << building);
     ACTS_VERBOSE("3) filtering: " << filtering);
@@ -47,13 +47,13 @@ class ExaTrkXTimer {
   ExaTrkXTimer(bool disabled = false) : m_disabled(disabled) {}
 
   void start() {
-    if (not m_disabled) {
+    if (!m_disabled) {
       m_start = std::chrono::high_resolution_clock::now();
       m_running = true;
     }
   }
   void stop() {
-    if (not m_disabled) {
+    if (!m_disabled) {
       m_end = std::chrono::high_resolution_clock::now();
       m_running = false;
     }
@@ -63,7 +63,7 @@ class ExaTrkXTimer {
     return elapsedSeconds();
   }
   double elapsed() {
-    if (not m_disabled) {
+    if (!m_disabled) {
       std::chrono::time_point<std::chrono::high_resolution_clock> end;
       if (m_running) {
         end = std::chrono::high_resolution_clock::now();

@@ -8,21 +8,27 @@
 
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
+#include <ostream>
 #include <stdexcept>
-#include <vector>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 using namespace ActsExamples;
 
 TruthTrackFinder::TruthTrackFinder(const Config& config,
                                    Acts::Logging::Level level)
-    : BareAlgorithm("TruthTrackFinder", level), m_cfg(config) {
+    : IAlgorithm("TruthTrackFinder", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
@@ -32,16 +38,16 @@ TruthTrackFinder::TruthTrackFinder(const Config& config,
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing output proto tracks collection");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
 
 ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // prepare input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
   // compute particle_id -> {hit_id...} map from the
   // hit_id -> {particle_id...} map on the fly.
   const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
@@ -66,6 +72,6 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
     tracks.emplace_back(std::move(track));
   }
 
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(tracks));
+  m_outputProtoTracks(ctx, std::move(tracks));
   return ProcessCode::SUCCESS;
 }

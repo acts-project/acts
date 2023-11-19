@@ -14,7 +14,13 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
+#include <array>
+#include <cstddef>
+#include <tuple>
+#include <vector>
+
 namespace ActsExamples {
+class IndexSourceLink;
 
 /// Struct to identify digitized parameters
 ///
@@ -38,20 +44,21 @@ struct DigitizedParameters {
 Measurement createMeasurement(const DigitizedParameters& dParams,
                               const IndexSourceLink& isl) noexcept(false);
 
-/// Contruct the constituents of a measurement.
+/// Construct the constituents of a measurement.
 ///
 /// @tparam kMeasDIM the full dimension of the measurement
 ///
 /// @param dParams the struct of arrays of parameters to be created
 ///
 /// @return a tuple of constituents for a measurement
-template <size_t kMeasDIM>
+template <std::size_t kMeasDIM>
 std::tuple<std::array<Acts::BoundIndices, kMeasDIM>, Acts::ActsVector<kMeasDIM>,
-           Acts::ActsSymMatrix<kMeasDIM>>
+           Acts::ActsSquareMatrix<kMeasDIM>>
 measurementConstituents(const DigitizedParameters& dParams) {
   std::array<Acts::BoundIndices, kMeasDIM> indices{};
   Acts::ActsVector<kMeasDIM> par;
-  Acts::ActsSymMatrix<kMeasDIM> cov = Acts::ActsSymMatrix<kMeasDIM>::Identity();
+  Acts::ActsSquareMatrix<kMeasDIM> cov =
+      Acts::ActsSquareMatrix<kMeasDIM>::Identity();
   for (Eigen::Index ei = 0; ei < static_cast<Eigen::Index>(kMeasDIM); ++ei) {
     indices[ei] = dParams.indices[ei];
     par[ei] = dParams.values[ei];

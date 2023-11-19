@@ -10,15 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
-#include <algorithm>
 #include <array>
-#include <iostream>
-#include <limits>
-#include <ostream>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -28,7 +24,7 @@ namespace Acts {
  * Implementation of an Axis Aligned Bounding Box. This type is compatible
  * with 2D and 3D boxes
  */
-template <typename entity_t, typename value_t, size_t DIM>
+template <typename entity_t, typename value_t, std::size_t DIM>
 class AxisAlignedBoundingBox {
  private:
   /**
@@ -92,7 +88,7 @@ class AxisAlignedBoundingBox {
   /**
    * Re-export dimension from template parameter
    */
-  static const size_t dim = DIM;
+  static const std::size_t dim = DIM;
 
   /**
    * Copy constructor from other bounding box.
@@ -140,7 +136,7 @@ class AxisAlignedBoundingBox {
    * Helper function to calculate the size of a bounding box enclosing @p boxes.
    * @param boxes The boxes to wrap (const pointers)
    * @param envelope Optional envelop to add/subtract to dimension.
-   * @return Pair of vertixes: min and max.
+   * @return Pair of vertices: min and max.
    */
   static std::pair<VertexType, VertexType> wrap(
       const std::vector<const self_t*>& boxes,
@@ -151,7 +147,7 @@ class AxisAlignedBoundingBox {
    * Overload which accepts non-const boxes in @p boxes.
    * @param boxes The boxes to wrap (non-const pointers)
    * @param envelope Optional envelop to add/subtract to dimension.
-   * @return Pair of vertixes: min and max.
+   * @return Pair of vertices: min and max.
    */
   static std::pair<VertexType, VertexType> wrap(
       const std::vector<self_t*>& boxes,
@@ -162,7 +158,7 @@ class AxisAlignedBoundingBox {
    * Overload which accepts a vector in @p boxes which owns the instances
    * @param boxes The boxes to wrap (by-value vector)
    * @param envelope Optional envelop to add/subtract to dimension.
-   * @return Pair of vertixes: min and max.
+   * @return Pair of vertices: min and max.
    */
   static std::pair<VertexType, VertexType> wrap(
       const std::vector<self_t>& boxes,
@@ -203,7 +199,7 @@ class AxisAlignedBoundingBox {
    * @param fr The frustum
    * @return Whether the frustum intersects this AABB
    */
-  template <size_t sides>
+  template <std::size_t sides>
   bool intersect(const Frustum<value_type, DIM, sides>& fr) const;
 
   /**
@@ -278,7 +274,7 @@ class AxisAlignedBoundingBox {
   void transform(const transform_type& trf);
 
   /**
-   * Transforms this bounding box using the given transfom. This method returns
+   * Transforms this bounding box using the given transform. This method returns
    * a copy of this box, with the transformation applied, and leaves this
    * instance unchanged.
    * @param trf The transform
@@ -294,7 +290,7 @@ class AxisAlignedBoundingBox {
    * @param color The color to use for drawing
    * @param trf An optional transform to apply first.
    */
-  template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
+  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   void draw(IVisualization3D& helper,
             std::array<int, 3> color = {120, 120, 120},
             const transform_type& trf = transform_type::Identity()) const;
@@ -311,17 +307,17 @@ class AxisAlignedBoundingBox {
    * @param fillcolor Color to fill the box with.
    * @return The outstream given in @p os.
    */
-  template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
+  template <std::size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::ostream& svg(std::ostream& os, value_type w, value_type h,
                     value_type unit = 10, const std::string& label = "",
                     const std::string& fillcolor = "grey") const;
 
  private:
-  template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
+  template <std::size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::pair<VertexType, VertexType> transformVertices(
       const transform_type& trf) const;
 
-  template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
+  template <std::size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   std::pair<VertexType, VertexType> transformVertices(
       const transform_type& trf) const;
 
@@ -351,7 +347,7 @@ class AxisAlignedBoundingBox {
  */
 template <typename box_t>
 box_t* make_octree(std::vector<std::unique_ptr<box_t>>& store,
-                   const std::vector<box_t*>& prims, size_t max_depth = 1,
+                   const std::vector<box_t*>& prims, std::size_t max_depth = 1,
                    typename box_t::value_type envelope1 = 0);
 
 /**
@@ -363,7 +359,7 @@ box_t* make_octree(std::vector<std::unique_ptr<box_t>>& store,
  * @param box The bounding box
  * @return The given output stream.
  */
-template <typename T, typename U, size_t V>
+template <typename T, typename U, std::size_t V>
 std::ostream& operator<<(std::ostream& os,
                          const AxisAlignedBoundingBox<T, U, V>& box);
 

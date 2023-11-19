@@ -17,8 +17,11 @@
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <thread>
+#include <utility>
 
 // clang-format off
 /// @brief macro to use a local Acts::Logger object
@@ -652,7 +655,7 @@ class Logger {
   /// @return the level
   Logging::Level level() const { return m_filterPolicy->level(); }
 
-  /// Return the name of the print policy of thi logger
+  /// Return the name of the print policy of this logger
   /// @return the name
   const std::string& name() const { return m_printPolicy->name(); }
 
@@ -695,44 +698,6 @@ class Logger {
 
   /// policy object for filtering debug messages
   std::unique_ptr<Logging::OutputFilterPolicy> m_filterPolicy;
-};
-
-/// @brief Class that contains (but doesn't own) a logger instance. Is callable
-/// so can be used with the logging macros.
-class LoggerWrapper {
- public:
-  LoggerWrapper() = delete;
-
-  /// @brief Constructor ensuring a logger instance is given
-  ///
-  /// @param logger
-  LoggerWrapper(const Logger& logger);
-
-  /// Directly expose whether the contained logger will print at a level.
-  ///
-  /// @param lvl The level to check
-  /// @return Whether to print at this level or not.
-  bool doPrint(const Logging::Level& lvl) const {
-    assert(m_logger != nullptr);
-    return m_logger->doPrint(lvl);
-  }
-
-  /// Add a logging message at a given level
-  /// @param lvl The level to print at
-  /// @param input text of debug message
-  void log(const Logging::Level& lvl, const std::string& input) const;
-
-  /// Call operator that returns the contained logger instance.
-  /// Enables using the logging macros `ACTS_*` when an instance of this
-  /// class is assigned to a local variable `logger`.
-  /// @return Reference to the logger instance.
-  const Logger& operator()() const {
-    assert(m_logger != nullptr);
-    return *m_logger;
-  }
-
- private:
-  const Logger* m_logger;
 };
 
 /// @brief get default debug output logger

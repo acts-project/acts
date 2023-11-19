@@ -9,9 +9,15 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+
+#include <array>
+#include <stdexcept>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -31,14 +37,16 @@ ActsExamples::CsvSimHitReader::CsvSimHitReader(
   if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits output collection");
   }
+
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
 }
 
 std::string ActsExamples::CsvSimHitReader::CsvSimHitReader::name() const {
   return "CsvSimHitReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::CsvSimHitReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvSimHitReader::availableEvents() const {
   return m_eventsRange;
 }
 
@@ -84,7 +92,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   // write the ordered data to the EventStore (according to geometry_id).
   SimHitContainer simHits;
   simHits.insert(unordered.begin(), unordered.end());
-  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+  m_outputSimHits(ctx, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

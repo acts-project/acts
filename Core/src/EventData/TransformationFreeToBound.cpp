@@ -8,20 +8,21 @@
 
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
 
 Acts::Result<Acts::BoundVector> Acts::detail::transformFreeToBoundParameters(
     const FreeVector& freeParams, const Surface& surface,
-    const GeometryContext& geoCtx) {
+    const GeometryContext& geoCtx, ActsScalar tolerance) {
   // initialize the bound vector
   BoundVector bp = BoundVector::Zero();
   // convert global to local position on the surface
   auto position = freeParams.segment<3>(eFreePos0);
   auto direction = freeParams.segment<3>(eFreeDir0);
-  auto result = surface.globalToLocal(geoCtx, position, direction);
+  auto result = surface.globalToLocal(geoCtx, position, direction, tolerance);
   if (!result.ok()) {
     return Result<Acts::BoundVector>::failure(result.error());
   }
@@ -40,11 +41,12 @@ Acts::Result<Acts::BoundVector> Acts::detail::transformFreeToBoundParameters(
 Acts::Result<Acts::BoundVector> Acts::detail::transformFreeToBoundParameters(
     const Acts::Vector3& position, ActsScalar time,
     const Acts::Vector3& direction, ActsScalar qOverP,
-    const Acts::Surface& surface, const Acts::GeometryContext& geoCtx) {
+    const Acts::Surface& surface, const Acts::GeometryContext& geoCtx,
+    ActsScalar tolerance) {
   // initialize the bound vector
   BoundVector bp = BoundVector::Zero();
   // convert global to local position on the surface
-  auto result = surface.globalToLocal(geoCtx, position, direction);
+  auto result = surface.globalToLocal(geoCtx, position, direction, tolerance);
   if (!result.ok()) {
     return Result<Acts::BoundVector>::failure(result.error());
   }

@@ -8,13 +8,18 @@
 
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+
+#include <cmath>
+#include <cstdlib>
+#include <utility>
 
 Acts::TGeoCylinderDiscSplitter::TGeoCylinderDiscSplitter(
     const TGeoCylinderDiscSplitter::Config& cfg,
@@ -32,9 +37,9 @@ Acts::TGeoCylinderDiscSplitter::split(
   ActsScalar tgThickness = tgde->thickness();
 
   // Disc segments are detected, attempt a split
-  if (m_cfg.discPhiSegments > 0 or m_cfg.discRadialSegments > 0) {
+  if (m_cfg.discPhiSegments > 0 || m_cfg.discRadialSegments > 0) {
     // Splitting for discs detected
-    if (sf.type() == Acts::Surface::Disc and
+    if (sf.type() == Acts::Surface::Disc &&
         sf.bounds().type() == Acts::SurfaceBounds::eDisc) {
       ACTS_DEBUG("- splitting detected for a Disc shaped sensor.");
 
@@ -64,7 +69,7 @@ Acts::TGeoCylinderDiscSplitter::split(
         radialValues = {discMinR, discMaxR};
       }
 
-      for (size_t ir = 1; ir < radialValues.size(); ++ir) {
+      for (std::size_t ir = 1; ir < radialValues.size(); ++ir) {
         ActsScalar minR = radialValues[ir - 1];
         ActsScalar maxR = radialValues[ir];
 
@@ -100,8 +105,8 @@ Acts::TGeoCylinderDiscSplitter::split(
   }
 
   // Cylinder segments are detected, attempt a split
-  if (m_cfg.cylinderPhiSegments > 0 or m_cfg.cylinderLongitudinalSegments > 0) {
-    if (sf.type() == Acts::Surface::Cylinder and
+  if (m_cfg.cylinderPhiSegments > 0 || m_cfg.cylinderLongitudinalSegments > 0) {
+    if (sf.type() == Acts::Surface::Cylinder &&
         sf.bounds().type() == Acts::SurfaceBounds::eCylinder) {
       ACTS_DEBUG("- splitting detected for a Cylinder shaped sensor.");
 
@@ -134,7 +139,7 @@ Acts::TGeoCylinderDiscSplitter::split(
       ActsScalar planeR = cylinderR * cosPhiHalf;
       ActsScalar planeHalfX = cylinderR * sinPhiHalf;
 
-      for (size_t iz = 1; iz < zValues.size(); ++iz) {
+      for (std::size_t iz = 1; iz < zValues.size(); ++iz) {
         ActsScalar minZ = zValues[iz - 1];
         ActsScalar maxZ = zValues[iz];
 

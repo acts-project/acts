@@ -15,16 +15,19 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -56,16 +59,16 @@ class SurfaceArrayCreator {
   struct ProtoAxis {
     BinningType bType = BinningType::equidistant;
     BinningValue bValue = BinningValue::binX;
-    size_t nBins = 0;
+    std::size_t nBins = 0;
     AxisScalar min = 0;
     AxisScalar max = 0;
     std::vector<AxisScalar> binEdges;
 
-    size_t getBin(AxisScalar x) const {
+    std::size_t getBin(AxisScalar x) const {
       if (binEdges.empty()) {
         // equidistant
         AxisScalar w = (max - min) / nBins;
-        return static_cast<size_t>(std::floor((x - min) / w));
+        return static_cast<std::size_t>(std::floor((x - min) / w));
       } else {
         // variable
         const auto it =
@@ -114,7 +117,7 @@ class SurfaceArrayCreator {
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
@@ -123,8 +126,8 @@ class SurfaceArrayCreator {
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-      size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
+      std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
+      std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
@@ -137,10 +140,10 @@ class SurfaceArrayCreator {
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
-  /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
-  /// @param bTypeZ the binning type in z direction (equidistant/aribtrary)
+  /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
+  /// @param bTypeZ the binning type in z direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -160,7 +163,7 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
@@ -169,8 +172,9 @@ class SurfaceArrayCreator {
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-      size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
+      std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
+      std::size_t binsPhi,
+      std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
@@ -183,10 +187,10 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
-  /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
-  /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
+  /// @param bTypeR the binning type in r direction (equidistant/arbitrary)
+  /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -203,7 +207,7 @@ class SurfaceArrayCreator {
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
   ///
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param [in] surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the plane
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -221,12 +225,12 @@ class SurfaceArrayCreator {
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-      size_t bins2, BinningValue bValue,
+      std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
+      std::size_t bins2, BinningValue bValue,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
-  /// Static check funtion for surface equivalent
+  /// Static check function for surface equivalent
   ///
   /// @param [in] gctx the geometry context for this check
   /// @param bValue the binning value for the binning
@@ -286,9 +290,9 @@ class SurfaceArrayCreator {
       const std::vector<const Surface*>& surfaces,
       const std::function<bool(const Surface*, const Surface*)>& equal) const;
 
-  size_t determineBinCount(const GeometryContext& gctx,
-                           const std::vector<const Surface*>& surfaces,
-                           BinningValue bValue) const;
+  std::size_t determineBinCount(const GeometryContext& gctx,
+                                const std::vector<const Surface*>& surfaces,
+                                BinningValue bValue) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with
@@ -344,7 +348,7 @@ class SurfaceArrayCreator {
                                   BinningValue bValue,
                                   const ProtoLayer& protoLayer,
                                   Transform3& transform,
-                                  size_t nBins = 0) const;
+                                  std::size_t nBins = 0) const;
 
   /// SurfaceArrayCreator internal method
   /// @brief Creates a SurfaceGridLookup instance within an any
@@ -436,7 +440,7 @@ class SurfaceArrayCreator {
         "Complete binning by filling closest neighbour surfaces into "
         "empty bins.");
 
-    size_t binCompleted = sl.completeBinning(gctx, surfaces);
+    std::size_t binCompleted = sl.completeBinning(gctx, surfaces);
 
     ACTS_VERBOSE("       filled  : " << binCompleted
                                      << " (includes under/overflow)");

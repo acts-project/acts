@@ -17,7 +17,6 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -58,30 +57,34 @@ struct MeasurementsCreator {
 
   MeasurementResolutionMap resolutions;
   std::default_random_engine* rng = nullptr;
-  size_t sourceId = 0;
+  std::size_t sourceId = 0;
   // how far away from the measurements the outliers should be
   double distanceOutlier = 10 * Acts::UnitConstants::mm;
 
-  /// @brief Operater that is callable by an ActionList. The function
+  /// @brief Operator that is callable by an ActionList. The function
   /// collects the surfaces
   ///
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
-  /// @param [in] state State of the propagator
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [out] result Vector of matching surfaces
-  template <typename propagator_state_t, typename stepper_t>
+  /// @param [in] state State of the propagator
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& logger) const {
+                  const navigator_t& navigator, result_type& result,
+                  const Logger& logger) const {
     using namespace Acts::UnitLiterals;
 
     // only generate measurements on surfaces
-    if (not state.navigation.currentSurface) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
-    const Acts::Surface& surface = *state.navigation.currentSurface;
+    const Acts::Surface& surface = *navigator.currentSurface(state.navigation);
     const Acts::GeometryIdentifier geoId = surface.geometryId();
     // only generate measurements on sensitive surface
-    if (not geoId.sensitive()) {
+    if (!geoId.sensitive()) {
       ACTS_VERBOSE("Create no measurements on non-sensitive surface " << geoId);
       return;
     }
@@ -115,7 +118,7 @@ struct MeasurementsCreator {
     // compute covariance for all components, might contain bogus values
     // depending on the configuration. but those remain unused.
     Vector2 stddev(resolution.stddev[0], resolution.stddev[1]);
-    SymMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
+    SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
 
     if (resolution.type == MeasurementType::eLoc0) {
       double val = loc[0] + stddev[0] * normalDist(*rng);
@@ -153,13 +156,11 @@ Measurements createMeasurements(const propagator_t& propagator,
                                 const track_parameters_t& trackParameters,
                                 const MeasurementResolutionMap& resolutions,
                                 std::default_random_engine& rng,
-                                size_t sourceId = 0u) {
+                                std::size_t sourceId = 0u) {
   using Actions = Acts::ActionList<MeasurementsCreator>;
   using Aborters = Acts::AbortList<Acts::EndOfWorldReached>;
 
   // Set options for propagator
-  auto logger =
-      Acts::getDefaultLogger("MeasurementCreator", Acts::Logging::INFO);
   Acts::PropagatorOptions<Actions, Aborters> options(geoCtx, magCtx);
   auto& creator = options.actionList.get<MeasurementsCreator>();
   creator.resolutions = resolutions;

@@ -23,8 +23,8 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include "PropagationTestHelper.hpp"
 
@@ -39,13 +39,14 @@ namespace Acts {
 
 namespace IntegrationTest {
 
-// Create a mapper from the a text file
+// Create a mapper from a text file
 InterpolatedBFieldMap::FieldMapper<3, 3> readFieldXYZ(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
+    std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
+                              std::array<std::size_t, 3> nBinsXYZ)>
         localToGlobalBin,
     std::string fieldMapFile = "Field.txt", double lengthUnit = 1.,
-    double BFieldUnit = 1., size_t nPoints = 100000, bool firstOctant = false) {
+    double BFieldUnit = 1., std::size_t nPoints = 100000,
+    bool firstOctant = false) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
   std::vector<double> xPos;
@@ -90,7 +91,8 @@ std::shared_ptr<const InterpolatedBFieldMap> atlasBField(
   double BFieldUnit = UnitConstants::T;
   // read the field x,y,z from a text file
   mapper = readFieldXYZ(
-      [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
+      [](std::array<std::size_t, 3> binsXYZ,
+         std::array<std::size_t, 3> nBinsXYZ) {
         return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
                 binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
       },

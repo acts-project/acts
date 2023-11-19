@@ -20,13 +20,13 @@
 namespace Acts::Python {
 
 struct Context {
-  std::unordered_map<std::string, pybind11::module_*> modules;
+  std::unordered_map<std::string, pybind11::module_> modules;
 
-  pybind11::module_& get(const std::string& name) { return *modules.at(name); }
+  pybind11::module_& get(const std::string& name) { return modules.at(name); }
 
   template <typename... Args, typename = std::enable_if_t<sizeof...(Args) >= 2>>
   auto get(Args&&... args) {
-    return std::make_tuple((*modules.at(args))...);
+    return std::make_tuple((modules.at(args))...);
   }
 };
 
@@ -77,22 +77,22 @@ METHOD_TRAIT(write_method_trait_t, write);
 
 /// A macro that uses Boost.Preprocessor to create the python binding for and
 /// algorithm and the additional config struct.
-#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, mod, name, ...)            \
-  do {                                                                      \
-    using Alg = algorithm;                                                  \
-    using Config = Alg::Config;                                             \
-    auto alg =                                                              \
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>( \
-            mod, name)                                                      \
-            .def(py::init<const Config&, Acts::Logging::Level>(),           \
-                 py::arg("config"), py::arg("level"))                       \
-            .def_property_readonly("config", &Alg::config);                 \
-                                                                            \
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());           \
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
-    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                       \
-                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))            \
-    ACTS_PYTHON_STRUCT_END();                                               \
+#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, mod, name, ...)              \
+  do {                                                                        \
+    using Alg = algorithm;                                                    \
+    using Config = Alg::Config;                                               \
+    auto alg =                                                                \
+        py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(mod,  \
+                                                                        name) \
+            .def(py::init<const Config&, Acts::Logging::Level>(),             \
+                 py::arg("config"), py::arg("level"))                         \
+            .def_property_readonly("config", &Alg::config);                   \
+                                                                              \
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());             \
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                      \
+    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                         \
+                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))              \
+    ACTS_PYTHON_STRUCT_END();                                                 \
   } while (0)
 
 /// Similar as above for writers

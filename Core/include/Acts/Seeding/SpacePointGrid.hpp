@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <memory>
 
@@ -46,6 +46,8 @@ struct SpacePointGridConfig {
   // return 1 neighbor on either side of the current phi-bin (and you want to
   // cover the full phi-range of minPT), leave this at 1.
   int phiBinDeflectionCoverage = 1;
+  // maximum number of phi bins
+  int maxPhiBins = 10000;
   // enable non equidistant binning in z
   std::vector<float> zBinEdges;
   bool isInInternalUnits = false;
@@ -86,7 +88,7 @@ struct SpacePointGridOptions {
 };
 
 template <typename external_spacepoint_t>
-using SpacePointGrid = detail::Grid<
+using SpacePointGrid = Grid<
     std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>,
     detail::Axis<detail::AxisType::Equidistant,
                  detail::AxisBoundaryType::Closed>,

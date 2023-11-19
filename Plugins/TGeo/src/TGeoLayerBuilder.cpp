@@ -8,16 +8,26 @@
 
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
+#include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Plugins/TGeo/ITGeoDetectorElementSplitter.hpp"
+#include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
-#include <stdio.h>
+#include <ostream>
+#include <stdexcept>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
+
+namespace Acts {
+class ISurfaceMaterial;
+}  // namespace Acts
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config,
@@ -97,9 +107,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                        const LayerConfig& lCfg,
                        unsigned int pl_id = 0) -> void {
     int nb0 = 0, nt0 = 0;
-    bool is_autobinning = ((lCfg.binning0.size() == 1) and
+    bool is_autobinning = ((lCfg.binning0.size() == 1) &&
                            (std::get<int>(lCfg.binning0.at(0)) <= 0));
-    if (!is_autobinning and std::get<int>(lCfg.binning0.at(pl_id)) <= 0) {
+    if (!is_autobinning && std::get<int>(lCfg.binning0.at(pl_id)) <= 0) {
       throw std::invalid_argument(
           "Incorrect binning configuration found for loc0 protolayer #" +
           std::to_string(pl_id) +
@@ -117,9 +127,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     }
 
     int nb1 = 0, nt1 = 0;
-    is_autobinning = (lCfg.binning1.size() == 1) and
+    is_autobinning = (lCfg.binning1.size() == 1) &&
                      (std::get<int>(lCfg.binning1.at(0)) <= 0);
-    if (!is_autobinning and std::get<int>(lCfg.binning1.at(pl_id)) <= 0) {
+    if (!is_autobinning && std::get<int>(lCfg.binning1.at(pl_id)) <= 0) {
       throw std::invalid_argument(
           "Incorrect binning configuration found for loc1 protolayer #" +
           std::to_string(pl_id) +
@@ -143,7 +153,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      if (nb0 >= 0 and nb1 >= 0) {
+      if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
       } else {
@@ -157,7 +167,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
-      if (nb0 >= 0 and nb1 >= 0) {
+      if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->discLayer(gctx, lSurfaces, nb0, nb1, pl));
       } else {
@@ -173,7 +183,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     for (auto& sensor : layerCfg.sensorNames) {
       ACTS_DEBUG("  - sensor: " << sensor);
     }
-    if (not layerCfg.parseRanges.empty()) {
+    if (!layerCfg.parseRanges.empty()) {
       for (const auto& pRange : layerCfg.parseRanges) {
         ACTS_DEBUG("- layer parsing restricted in "
                    << binningValueNames()[pRange.first] << " to ["
@@ -181,7 +191,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                    << "].");
       }
     }
-    if (not layerCfg.splitConfigs.empty()) {
+    if (!layerCfg.splitConfigs.empty()) {
       for (const auto& sConfig : layerCfg.splitConfigs) {
         ACTS_DEBUG("- layer splitting attempt in "
                    << binningValueNames()[sConfig.first] << " with tolerance "
@@ -246,8 +256,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
       ACTS_DEBUG("- created TGeoDetectorElements : " << layerSurfaces.size());
 
-      if (m_cfg.protoLayerHelper != nullptr and
-          not layerCfg.splitConfigs.empty()) {
+      if (m_cfg.protoLayerHelper != nullptr && !layerCfg.splitConfigs.empty()) {
         auto protoLayers = m_cfg.protoLayerHelper->protoLayers(
             gctx, unpack_shared_vector(layerSurfaces), layerCfg.splitConfigs);
         ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
@@ -257,15 +266,15 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         const bool is_loc0_n_config =
             layerCfg.binning0.size() == protoLayers.size();
         const bool is_loc0_autobinning =
-            (layerCfg.binning0.size() == 1) and
+            (layerCfg.binning0.size() == 1) &&
             (std::get<int>(layerCfg.binning0.at(0)) <= 0);
         const bool is_loc1_n_config =
             layerCfg.binning1.size() == protoLayers.size();
         const bool is_loc1_autobinning =
-            (layerCfg.binning1.size() == 1) and
+            (layerCfg.binning1.size() == 1) &&
             (std::get<int>(layerCfg.binning1.at(0)) <= 0);
-        if ((!is_loc0_n_config and !is_loc0_autobinning) or
-            (!is_loc1_n_config and !is_loc1_autobinning)) {
+        if ((!is_loc0_n_config && !is_loc0_autobinning) ||
+            (!is_loc1_n_config && !is_loc1_autobinning)) {
           throw std::invalid_argument(
               "Incorrect binning configuration found: Number of configurations "
               "does not match number of protolayers in subvolume " +

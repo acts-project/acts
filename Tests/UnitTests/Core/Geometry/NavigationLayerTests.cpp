@@ -10,14 +10,18 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/NavigationLayer.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include "LayerStub.hpp"
+#include <cmath>
+#include <memory>
+#include <utility>
+
+#include "../Surfaces/SurfaceStub.hpp"
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
@@ -61,11 +65,13 @@ BOOST_AUTO_TEST_CASE(NavigationLayerProperties) {
   BOOST_CHECK_EQUAL(rawSurfacePtr,
                     &(pNavigationLayer->surfaceRepresentation()));
   // isOnLayer()
-  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin, true));
+  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin,
+                                          Acts::BoundaryCheck(true)));
   // isOnLayer()
   Vector3 crazyPosition{1000., 10000., std::nan("")};
   // layer stub has hard-coded globalToLocal return value
-  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, crazyPosition, true));
+  BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, crazyPosition,
+                                          BoundaryCheck(true)));
   // resolve()
   BOOST_CHECK(!pNavigationLayer->resolve(true, true, true));
 }

@@ -10,12 +10,15 @@
 
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 
+#include <string>
+
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
 #include "G4RotationMatrix.hh"
 #include "G4ThreeVector.hh"
-#include "G4VPhysicalVolume.hh"
+
+class G4VPhysicalVolume;
 
 BOOST_AUTO_TEST_SUITE(Geant4Plugin)
 

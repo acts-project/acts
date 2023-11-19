@@ -12,20 +12,20 @@
 
 bool Acts::Test::operator==(const TestSourceLink& lhs,
                             const TestSourceLink& rhs) {
-  return (lhs.geometryId() == rhs.geometryId()) and
-         (lhs.sourceId == rhs.sourceId) and (lhs.indices == rhs.indices) and
-         (lhs.parameters == rhs.parameters) and
+  return (lhs.m_geometryId == rhs.m_geometryId) &&
+         (lhs.sourceId == rhs.sourceId) && (lhs.indices == rhs.indices) &&
+         (lhs.parameters == rhs.parameters) &&
          (lhs.covariance == rhs.covariance);
 }
 
 bool Acts::Test::operator!=(const TestSourceLink& lhs,
                             const TestSourceLink& rhs) {
-  return not(lhs == rhs);
+  return !(lhs == rhs);
 }
 
 std::ostream& Acts::Test::operator<<(
     std::ostream& os, const Acts::Test::TestSourceLink& sourceLink) {
-  os << "TestsSourceLink(geometryId=" << sourceLink.geometryId()
+  os << "TestsSourceLink(geometryId=" << sourceLink.m_geometryId
      << ",sourceId=" << sourceLink.sourceId;
   if (sourceLink.indices[0] != eBoundSize) {
     os << ",index0=" << sourceLink.indices[0];

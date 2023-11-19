@@ -13,20 +13,25 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ILayerArrayCreator.hpp"
+#include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
-#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <utility>
 
 std::unique_ptr<const Acts::TrackingGeometry>
 ActsExamples::Telescope::buildDetector(
@@ -35,9 +40,10 @@ ActsExamples::Telescope::buildDetector(
     std::vector<
         std::shared_ptr<ActsExamples::Telescope::TelescopeDetectorElement>>&
         detectorStore,
-    const std::vector<double>& positions, const std::array<double, 2>& offsets,
-    const std::array<double, 2>& bounds, double thickness,
-    ActsExamples::Telescope::TelescopeSurfaceType surfaceType,
+    const std::vector<double>& positions,
+    const std::vector<double>& stereoAngles,
+    const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
+    double thickness, ActsExamples::Telescope::TelescopeSurfaceType surfaceType,
     Acts::BinningValue binValue) {
   using namespace Acts::UnitLiterals;
 
@@ -70,13 +76,19 @@ ActsExamples::Telescope::buildDetector(
   }
 
   // Construct the surfaces and layers
-  size_t nLayers = positions.size();
+  std::size_t nLayers = positions.size();
   std::vector<Acts::LayerPtr> layers(nLayers);
   for (unsigned int i = 0; i < nLayers; ++i) {
     // The translation without rotation yet
     Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
-    // The transform
+    // The entire transformation (the coordinate system, whose center is defined
+    // by trans, will be rotated as well)
     Acts::Transform3 trafo(rotation * trans);
+
+    // rotate around local z axis by stereo angle
+    auto stereo = stereoAngles[i];
+    trafo *= Acts::AngleAxis3(stereo, Acts::Vector3::UnitZ());
+
     // Create the detector element
     std::shared_ptr<TelescopeDetectorElement> detElement = nullptr;
     if (surfaceType == TelescopeSurfaceType::Plane) {

@@ -7,18 +7,28 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
+#include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
+#include <array>
+#include <cstddef>
 #include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace ActsExamples {
+class IAlgorithm;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -38,7 +48,7 @@ void addTruthTracking(Context& ctx) {
     using Alg = ActsExamples::TruthSeedSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TruthSeedSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -80,13 +90,13 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
       outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
       sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPRel,
-      initialVarInflation, randomNumbers);
+      initialSigmas, initialVarInflation, particleHypothesis, randomNumbers);
 
   {
     using Alg = ActsExamples::ParticleSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "ParticleSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -96,6 +106,7 @@ void addTruthTracking(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
+    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(rhoMin);
     ACTS_PYTHON_MEMBER(rhoMax);
@@ -109,10 +120,15 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(etaMax);
     ACTS_PYTHON_MEMBER(absEtaMin);
     ACTS_PYTHON_MEMBER(absEtaMax);
+    ACTS_PYTHON_MEMBER(mMin);
+    ACTS_PYTHON_MEMBER(mMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(measurementsMin);
+    ACTS_PYTHON_MEMBER(measurementsMax);
     ACTS_PYTHON_MEMBER(removeCharged);
     ACTS_PYTHON_MEMBER(removeNeutral);
+    ACTS_PYTHON_MEMBER(removeSecondaries);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
@@ -121,15 +137,18 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "phi", &Config::phiMin, &Config::phiMax);
     pythonRangeProperty(c, "eta", &Config::etaMin, &Config::etaMax);
     pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
+    pythonRangeProperty(c, "m", &Config::mMin, &Config::mMax);
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
+    pythonRangeProperty(c, "measurements", &Config::measurementsMin,
+                        &Config::measurementsMax);
   }
 
   {
-    using Alg = ActsExamples::TrackSelector;
+    using Alg = ActsExamples::TrackParameterSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackSelector")
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "TrackParameterSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Alg::config);
@@ -138,9 +157,7 @@ void addTruthTracking(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputTrackParameters);
-    ACTS_PYTHON_MEMBER(inputTrajectories);
     ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrajectories);
     ACTS_PYTHON_MEMBER(loc0Min);
     ACTS_PYTHON_MEMBER(loc0Max);
     ACTS_PYTHON_MEMBER(loc1Min);
@@ -155,8 +172,6 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(absEtaMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
-    ACTS_PYTHON_MEMBER(removeCharged);
-    ACTS_PYTHON_MEMBER(removeNeutral);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
@@ -172,10 +187,14 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputParticles,
       outputProtoVertices, excludeSecondaries, separateSecondaries);
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackModifier, mex,
+                                "TrackModifier", inputTracks, outputTracks,
+                                dropCovariance, covScale, killTime);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackModifier, mex, "TrackModifier", inputTrajectories,
-      inputTrackParameters, outputTrajectories, outputTrackParameters,
-      dropCovariance, covScale, killTime);
+      ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
+      inputParticles, inputMeasurementParticlesMap, inputSpacePoints,
+      outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
 }
 
 }  // namespace Acts::Python

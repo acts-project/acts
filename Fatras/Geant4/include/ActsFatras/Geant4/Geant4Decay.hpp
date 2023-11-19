@@ -8,11 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
 
 #include <cmath>
+#include <limits>
 #include <random>
 #include <vector>
 
@@ -48,7 +50,7 @@ class Geant4Decay {
   ///
   /// @return Vector containing decay products
   template <typename generator_t>
-  std::vector<Particle> run(generator_t& /*unused*/, Particle& particle) const;
+  std::vector<Particle> run(generator_t& generator, Particle& particle) const;
 
  private:
   /// This function evaluates the decay products of a given particle
@@ -92,7 +94,7 @@ Particle::Scalar Geant4Decay::generateProperTimeLimit(
 }
 
 template <typename generator_t>
-std::vector<Particle> Geant4Decay::run(generator_t& /*unused*/,
+std::vector<Particle> Geant4Decay::run(generator_t& /*generator*/,
                                        Particle& particle) const {
   return decayParticle(particle);
 }

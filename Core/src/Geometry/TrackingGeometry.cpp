@@ -9,9 +9,14 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <vector>
 
 Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
@@ -20,7 +25,7 @@ Acts::TrackingGeometry::TrackingGeometry(
     : m_world(highestVolume),
       m_beam(Surface::makeShared<PerigeeSurface>(Vector3::Zero())) {
   // Close the geometry: assign geometryID and successively the material
-  size_t volumeID = 0;
+  std::size_t volumeID = 0;
   highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID, hook,
                                logger);
   m_volumesById.rehash(0);
@@ -48,7 +53,12 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::lowestTrackingVolume(
 
 const Acts::TrackingVolume* Acts::TrackingGeometry::highestTrackingVolume()
     const {
-  return (m_world.get());
+  return m_world.get();
+}
+
+const std::shared_ptr<const Acts::TrackingVolume>&
+Acts::TrackingGeometry::highestTrackingVolumeShared() const {
+  return m_world;
 }
 
 const Acts::Layer* Acts::TrackingGeometry::associatedLayer(

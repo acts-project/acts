@@ -9,8 +9,13 @@
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
 #include <ios>
+#include <ostream>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -69,7 +74,7 @@ ActsExamples::RootSimHitWriter::~RootSimHitWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();

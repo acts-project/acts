@@ -48,7 +48,13 @@ inline boost::container::flat_multimap<value_t, Index> invertIndexMultimap(
 
   // adopting the unordered sequence will reestablish the correct order
   InverseMultimap inverse;
+#if BOOST_VERSION < 107800
+  for (const auto& i : unordered) {
+    inverse.insert(i);
+  }
+#else
   inverse.insert(unordered.begin(), unordered.end());
+#endif
   return inverse;
 }
 

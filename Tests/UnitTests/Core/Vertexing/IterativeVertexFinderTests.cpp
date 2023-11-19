@@ -11,21 +11,48 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Vertexing/FsmwMode1dFinder.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
+#include "Acts/Vertexing/ZScanVertexFinder.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <random>
+#include <string>
+#include <system_error>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "VertexingDataHelper.hpp"
 
@@ -35,7 +62,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
@@ -140,12 +167,12 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
-                             ipEstimator);
+    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
+                             std::move(sFinder), ipEstimator);
 
     cfg.reassignTracksAfterFirstFit = true;
 
-    VertexFinder finder(cfg);
+    VertexFinder finder(std::move(cfg));
     VertexFinder::State state(*bField, magFieldContext);
 
     // Vector to be filled with all tracks in current event
@@ -181,7 +208,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       std::vector<TrackAtVertex<BoundTrackParameters>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
-      double d0_v = sqrt(x * x + y * y);
+      double d0_v = std::hypot(x, y);
       double z0_v = z;
 
       // Construct random track emerging from vicinity of vertex position
@@ -210,7 +237,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto params =
-            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat));
+            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+                                 ParticleHypothesis::pion());
 
         tracks.push_back(std::make_unique<BoundTrackParameters>(params));
 
@@ -237,10 +265,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // find vertices
     auto res = finder.find(tracksPtr, vertexingOptions, state);
 
-    BOOST_CHECK(res.ok());
-
     if (!res.ok()) {
-      std::cout << res.error().message() << std::endl;
+      BOOST_FAIL(res.error().message());
     }
 
     // Retrieve vertices found by vertex finder
@@ -357,11 +383,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
-                             ipEstimator);
+    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
+                             std::move(sFinder), ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
 
-    VertexFinder finder(cfg, extractParameters);
+    VertexFinder finder(std::move(cfg), extractParameters);
     VertexFinder::State state(*bField, magFieldContext);
 
     // Same for user track type tracks
@@ -397,7 +423,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       std::vector<TrackAtVertex<InputTrack>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
-      double d0_v = sqrt(x * x + y * y);
+      double d0_v = std::hypot(x, y);
       double z0_v = z;
 
       // Construct random track emerging from vicinity of vertex position
@@ -427,7 +453,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto paramsUT = InputTrack(
-            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+                                 ParticleHypothesis::pion()));
 
         tracks.push_back(std::make_unique<InputTrack>(paramsUT));
 
@@ -455,10 +482,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // find vertices
     auto res = finder.find(tracksPtr, vertexingOptionsUT, state);
 
-    BOOST_CHECK(res.ok());
-
     if (!res.ok()) {
-      std::cout << res.error().message() << std::endl;
+      BOOST_FAIL(res.error().message());
     }
 
     // Retrieve vertices found by vertex finder
@@ -567,15 +592,13 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   static_assert(VertexFinderConcept<VertexFinder>,
                 "Vertex finder does not fulfill vertex finder concept.");
 
-  VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
-                           ipEstimator);
-
-  cfg.useBeamConstraint = true;
+  VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
+                           std::move(sFinder), ipEstimator);
   cfg.maxVertices = 200;
   cfg.maximumChi2cutForSeeding = 49;
   cfg.significanceCutSeeding = 12;
 
-  VertexFinder finder(cfg);
+  VertexFinder finder(std::move(cfg));
   VertexFinder::State state(*bField, magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -586,15 +609,19 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
+  Vertex<BoundTrackParameters> beamSpot = std::get<BeamSpotData>(csvData);
+  // Set time covariance
+  SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
+  fullCovariance.topLeftCorner<3, 3>() = beamSpot.covariance();
+  fullCovariance(eTime, eTime) = 100_ns;
+  beamSpot.setFullCovariance(fullCovariance);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, beamSpot);
 
   // find vertices
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
 
-  // BOOST_CHECK(findResult.ok());
+  BOOST_CHECK(findResult.ok());
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;

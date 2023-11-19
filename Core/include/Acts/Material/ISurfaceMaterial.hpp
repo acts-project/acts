@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
@@ -26,7 +27,7 @@ enum MappingType { PreMapping = -1, Default = 0, PostMapping = 1, Sensor = 2 };
 /// Virtual base class of surface based material description
 ///
 /// MaterialSlab that are associated to a surface,
-/// extended by certain special representations (binned, homogenous)
+/// extended by certain special representations (binned, homogeneous)
 ///
 class ISurfaceMaterial {
  public:
@@ -73,13 +74,14 @@ class ISurfaceMaterial {
   ///
   /// @param bin0 is the material bin in dimension 0
   /// @param bin1 is the material bin in dimension 1
-  virtual const MaterialSlab& materialSlab(size_t bin0, size_t bin1) const = 0;
+  virtual const MaterialSlab& materialSlab(std::size_t bin0,
+                                           std::size_t bin1) const = 0;
 
   /// Update pre factor
   ///
-  /// @param pDir is the navigation direction through the surface
+  /// @param pDir is the positive direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
-  double factor(NavigationDirection pDir, MaterialUpdateStage mStage) const;
+  double factor(Direction pDir, MaterialUpdateStage mStage) const;
 
   /// Return the type of surface material mapping
   ///
@@ -89,22 +91,22 @@ class ISurfaceMaterial {
   /// - from local coordinate on the surface
   ///
   /// @param lp is the local position used for the (eventual) lookup
-  /// @param pDir is the navigation direction through the surface
+  /// @param pDir is the positive direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector2& lp, NavigationDirection pDir,
+  MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
                             MaterialUpdateStage mStage) const;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
   ///
   /// @param gp is the global position used for the (eventual) lookup
-  /// @param pDir is the navigation direction through the surface
+  /// @param pDir is the positive direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector3& gp, NavigationDirection pDir,
+  MaterialSlab materialSlab(const Vector3& gp, Direction pDir,
                             MaterialUpdateStage mStage) const;
 
   /// @brief output stream operator
@@ -128,22 +130,19 @@ class ISurfaceMaterial {
       Acts::MappingType::Default};  //!< Use the default mapping type by default
 };
 
-inline double ISurfaceMaterial::factor(NavigationDirection pDir,
+inline double ISurfaceMaterial::factor(Direction pDir,
                                        MaterialUpdateStage mStage) const {
   if (mStage == Acts::MaterialUpdateStage::FullUpdate) {
     return 1.;
   } else if (mStage == Acts::MaterialUpdateStage::PreUpdate) {
-    return pDir == NavigationDirection::Backward ? m_splitFactor
-                                                 : 1 - m_splitFactor;
+    return pDir == Direction::Negative ? m_splitFactor : 1 - m_splitFactor;
   } else /*if (mStage == Acts::MaterialUpdateStage::PostUpdate)*/ {
-    return pDir == NavigationDirection::Forward ? m_splitFactor
-                                                : 1 - m_splitFactor;
+    return pDir == Direction::Positive ? m_splitFactor : 1 - m_splitFactor;
   }
 }
 
 inline MaterialSlab ISurfaceMaterial::materialSlab(
-    const Vector2& lp, NavigationDirection pDir,
-    MaterialUpdateStage mStage) const {
+    const Vector2& lp, Direction pDir, MaterialUpdateStage mStage) const {
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(lp);
   // Scale if you have material to scale
@@ -158,8 +157,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
 }
 
 inline MaterialSlab ISurfaceMaterial::materialSlab(
-    const Vector3& gp, NavigationDirection pDir,
-    MaterialUpdateStage mStage) const {
+    const Vector3& gp, Direction pDir, MaterialUpdateStage mStage) const {
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(gp);
   // Scale if you have material to scale

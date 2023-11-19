@@ -19,8 +19,8 @@
 int main(int argc, char* argv[]) {
   using namespace Acts;
 
-  size_t iterations = 3;
-  size_t runs = 1000;
+  std::size_t iterations = 3;
+  std::size_t runs = 1000;
   if (argc >= 2) {
     iterations = std::stoi(argv[1]);
   }
@@ -58,8 +58,8 @@ int main(int argc, char* argv[]) {
 
   const auto cov_transport_bound_bound = Acts::Test::microBenchmark(
       [&] {
-        BoundSymMatrix boundCovariance =
-            uniform(rng) * BoundSymMatrix::Identity();
+        BoundSquareMatrix boundCovariance =
+            uniform(rng) * BoundSquareMatrix::Identity();
         boundCovariance(eBoundLoc0, eBoundPhi) = 0.076;
         boundCovariance(eBoundPhi, eBoundLoc0) = 0.076;
         boundCovariance(eBoundLoc0, eBoundQOverP) = -0.022;
@@ -78,10 +78,10 @@ int main(int argc, char* argv[]) {
         const auto& variantCovariance = std::get<0>(covJacAtBound);
         const auto& variantJacobian = std::get<1>(covJacAtBound);
 
-        const auto& covariance = std::get<BoundSymMatrix>(variantCovariance);
+        const auto& covariance = std::get<BoundSquareMatrix>(variantCovariance);
         const auto& jacobian = std::get<BoundMatrix>(variantJacobian);
 
-        if (covariance(eBoundLoc0, eBoundLoc0) > 0 and
+        if (covariance(eBoundLoc0, eBoundLoc0) > 0 &&
             jacobian(eBoundLoc0, eBoundLoc1) > 0.) {
           ++sillyCounter;
         }

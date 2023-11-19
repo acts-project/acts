@@ -14,13 +14,16 @@
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <utility>
 
 Acts::CartesianSegmentation::CartesianSegmentation(
-    const std::shared_ptr<const PlanarBounds>& mBounds, size_t numCellsX,
-    size_t numCellsY)
+    const std::shared_ptr<const PlanarBounds>& mBounds, std::size_t numCellsX,
+    std::size_t numCellsY)
     : m_activeBounds(mBounds), m_binUtility(nullptr) {
   auto mutableBinUtility = std::make_shared<BinUtility>(
       numCellsX, -mBounds->boundingBox().halfLengthX(),
@@ -131,16 +134,15 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   // boundarySurfaces
   segmentationSurfacesX.reserve(m_binUtility->bins(0));
   // create and fill them
-  for (size_t ibinx = 0; ibinx <= m_binUtility->bins(0); ++ibinx) {
+  for (std::size_t ibinx = 0; ibinx <= m_binUtility->bins(0); ++ibinx) {
     // the current step x position
     double cPosX =
         -m_activeBounds->boundingBox().halfLengthX() + ibinx * pitchX;
     // (i) this is the low/high boundary --- ( ibin == 0/m_binUtility->bins(0) )
     if ((ibinx == 0u) || ibinx == m_binUtility->bins(0)) {
-      // check if it a straight boundary or not: always straight for no lorentz
-      // angle,
-      // and either the first boundary or the last dependening on lorentz &
-      // readout
+      // check if it is a straight boundary or not: always straight for no
+      // lorentz angle, and either the first boundary or the last depending on
+      // lorentz and readout
       bool boundaryStraight =
           (lorentzAngle == 0. ||
            ((ibinx == 0u) && readoutDirection * lorentzAngle > 0.) ||
@@ -151,7 +153,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
           boundaryStraight
               ? Vector3(cPosX, 0., 0.)
               : Vector3(cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
-      // rotation of the boundary: striaght or lorentz
+      // rotation of the boundary: straight or lorentz
       const RotationMatrix3& boundaryXRotation =
           boundaryStraight ? xBinRotationMatrix : lorentzPlaneRotationMatrix;
       // build the rotation from it
@@ -192,7 +194,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   // reserve, it's always (number of bins-1) as the boundaries are within the
   // boundarySurfaces
   segmentationSurfacesY.reserve(m_binUtility->bins(1));
-  for (size_t ibiny = 0; ibiny <= m_binUtility->bins(1); ++ibiny) {
+  for (std::size_t ibiny = 0; ibiny <= m_binUtility->bins(1); ++ibiny) {
     // the position of the bin surface
     double binPosY =
         -m_activeBounds->boundingBox().halfLengthY() + ibiny * pitchY;
@@ -223,7 +225,7 @@ Acts::Vector2 Acts::CartesianSegmentation::cellPosition(
 }
 
 /** Get the digitization cell from 3D position, it used the projection to the
- * readout surface to estimate the 2D positon */
+ * readout surface to estimate the 2D position */
 Acts::DigitizationStep Acts::CartesianSegmentation::digitizationStep(
     const Vector3& startStep, const Vector3& endStep, double halfThickness,
     int readoutDirection, double lorentzAngle) const {

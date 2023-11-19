@@ -14,6 +14,7 @@
 
 #include <array>
 #include <memory>
+#include <utility>
 #include <vector>
 
 using namespace Acts::UnitLiterals;
@@ -44,6 +45,7 @@ struct TelescopeDetector {
 
   struct Config {
     std::vector<double> positions{{0, 30, 60, 120, 150, 180}};
+    std::vector<double> stereos{{0, 0, 0, 0, 0, 0}};
     std::array<double, 2> offsets{{0, 0}};
     std::array<double, 2> bounds{{25, 100}};
     double thickness{80_um};
@@ -57,7 +59,7 @@ struct TelescopeDetector {
 
   std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
       const Config& cfg,
-      const std::shared_ptr<const Acts::IMaterialDecorator>& /*unused*/);
+      const std::shared_ptr<const Acts::IMaterialDecorator>& mdecorator);
 };
 
 }  // namespace Telescope

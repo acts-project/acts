@@ -86,10 +86,10 @@ KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
 }
 
 ///
-/// @brief Contruct a telescope-like detector
+/// @brief Construct a telescope-like detector
 ///
 struct TelescopeDetector {
-  /// Default constructor for the Cubit tracking geometry
+  /// Default constructor for the Cubic tracking geometry
   ///
   /// @param gctx the geometry context for this geometry at building time
   TelescopeDetector(std::reference_wrapper<const GeometryContext> gctx)
@@ -213,7 +213,7 @@ CurvilinearTrackParameters makeParameters() {
   stddev[eBoundPhi] = 0.5_degree;
   stddev[eBoundTheta] = 0.5_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   auto loc0 = 0. + stddev[eBoundLoc0] * normalDist(rng);
   auto loc1 = 0. + stddev[eBoundLoc1] * normalDist(rng);
@@ -225,7 +225,8 @@ CurvilinearTrackParameters makeParameters() {
   // define a track in the transverse plane along x
   Vector4 mPos4(-1_m, loc0, loc1, t);
 
-  return CurvilinearTrackParameters(mPos4, phi, theta, 1_e / qOverP, 1_e, cov);
+  return CurvilinearTrackParameters(mPos4, phi, theta, qOverP, cov,
+                                    ParticleHypothesis::pion());
 }
 
 // detector resolutions
@@ -246,7 +247,7 @@ struct KalmanFitterInputTrajectory {
 /// Function to create trajectories for kalman fitter
 ///
 std::vector<KalmanFitterInputTrajectory> createTrajectories(
-    std::shared_ptr<const TrackingGeometry> geo, size_t nTrajectories) {
+    std::shared_ptr<const TrackingGeometry> geo, std::size_t nTrajectories) {
   // simulation propagator
   const auto simPropagator = makeStraightPropagator(std::move(geo));
 
@@ -285,30 +286,34 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   auto kfZero = KalmanFitterType(kfZeroPropagator);
 
   // alignment
-  const auto alignLogger = getDefaultLogger("Alignment", Logging::INFO);
-  const auto alignZero = Alignment(std::move(kfZero));
+  auto alignLogger = getDefaultLogger("Alignment", Logging::INFO);
+  const auto alignZero = Alignment(std::move(kfZero), std::move(alignLogger));
 
   // Create 10 trajectories
   const auto& trajectories = createTrajectories(geometry, 10);
 
   // Construct the KalmanFitter options
 
-  KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, getExtensions(),
+  auto extensions = getExtensions();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+  KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, extensions,
                                 PropagatorPlainOptions());
 
-  // Construct an non-updating alignment updater
+  // Construct a non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
-      [](DetectorElementBase* /*unused*/, const GeometryContext& /*unused*/,
-         const Transform3& /*unused*/) { return true; };
+      [](DetectorElementBase* /*element*/, const GeometryContext& /*gctx*/,
+         const Transform3& /*transform*/) { return true; };
 
   // Construct the alignment options
   AlignmentOptions<KalmanFitterOptions<VectorMultiTrajectory>> alignOptions(
-      kfOptions, voidAlignUpdater, LoggerWrapper{*alignLogger});
+      kfOptions, voidAlignUpdater);
   alignOptions.maxIterations = 1;
 
   // Set the surfaces to be aligned (fix the layer 8)
   unsigned int iSurface = 0;
-  std::unordered_map<const Surface*, size_t> idxedAlignSurfaces;
+  std::unordered_map<const Surface*, std::size_t> idxedAlignSurfaces;
   // Loop over the detector elements
   for (auto& det : detector.detectorStore) {
     const auto& surface = det->surface();
@@ -325,7 +330,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   auto evaluateRes = alignZero.evaluateTrackAlignmentState(
       kfOptions.geoContext, inputTraj.sourcelinks, *inputTraj.startParameters,
-      kfOptions, idxedAlignSurfaces, AlignmentMask::All, alignOptions.logger);
+      kfOptions, idxedAlignSurfaces, AlignmentMask::All);
   BOOST_CHECK(evaluateRes.ok());
 
   const auto& alignState = evaluateRes.value();
@@ -339,8 +344,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   BOOST_CHECK_EQUAL(alignState.alignedSurfaces.size(), 5);
   // Check the measurements covariance
   BOOST_CHECK_EQUAL(alignState.measurementCovariance.rows(), 12);
-  const SymMatrix2 measCov = alignState.measurementCovariance.block<2, 2>(2, 2);
-  SymMatrix2 cov2D;
+  const SquareMatrix2 measCov =
+      alignState.measurementCovariance.block<2, 2>(2, 2);
+  SquareMatrix2 cov2D;
   cov2D << 30_um * 30_um, 0, 0, 50_um * 50_um;
   CHECK_CLOSE_ABS(measCov, cov2D, 1e-10);
   // Check the track parameters covariance matrix. Its rows/columns scales

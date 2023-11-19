@@ -8,18 +8,25 @@
 
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 
-#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+
+#include <cmath>
+#include <functional>
+#include <ostream>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     ActsExamples::SeedingOrthogonalAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("SeedingAlgorithm", lvl),
-      m_cfg(std::move(cfg)) {
+    : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
@@ -33,17 +40,25 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
   }
-  for (const auto &i : m_cfg.inputSpacePoints) {
-    if (i.empty()) {
+
+  for (const auto &spName : m_cfg.inputSpacePoints) {
+    if (spName.empty()) {
       throw std::invalid_argument("Invalid space point input collection");
     }
+
+    auto &handle = m_inputSpacePoints.emplace_back(
+        std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
+            this,
+            "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
+    handle->initialize(spName);
   }
-  if (m_cfg.outputProtoTracks.empty()) {
-    throw std::invalid_argument("Missing proto tracks output collection");
-  }
+
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds output collection");
   }
+
+  m_outputSeeds.initialize(m_cfg.outputSeeds);
+
   if (m_cfg.seedFilterConfig.maxSeedsPerSpM !=
       m_cfg.seedFinderConfig.maxSeedsPerSpM) {
     throw std::invalid_argument("Inconsistent config maxSeedsPerSpM");
@@ -61,9 +76,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     const AlgorithmContext &ctx) const {
   std::vector<const SimSpacePoint *> spacePoints;
 
-  for (const auto &isp : m_cfg.inputSpacePoints) {
-    for (const auto &spacePoint :
-         ctx.eventStore.get<SimSpacePointContainer>(isp)) {
+  for (const auto &isp : m_inputSpacePoints) {
+    for (const auto &spacePoint : (*isp)(ctx)) {
       spacePoints.push_back(&spacePoint);
     }
   }
@@ -81,30 +95,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
                                               spacePoints, create_coordinates);
 
-  // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
-  size_t nSeeds = seeds.size();
-  ProtoTrackContainer protoTracks;
-  protoTracks.reserve(nSeeds);
-  for (const auto &seed : seeds) {
-    ProtoTrack protoTrack;
-    protoTrack.reserve(seed.sp().size());
-    for (auto spacePointPtr : seed.sp()) {
-      if (spacePointPtr->sourceLinks().empty()) {
-        ACTS_WARNING("Missing sourcelink in space point");
-        continue;
-      }
-      const IndexSourceLink &slink =
-          spacePointPtr->sourceLinks()[0].get<IndexSourceLink>();
-      protoTrack.push_back(slink.index());
-    }
-    protoTracks.push_back(std::move(protoTrack));
-  }
-
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
 
-  ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
+  m_outputSeeds(ctx, std::move(seeds));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

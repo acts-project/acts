@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <vector>
 
@@ -48,7 +49,7 @@ class TrapezoidBounds;
 ///
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
-  /// @enum BoundValues for acces / streaming
+  /// @enum BoundValues for access / streaming
   enum BoundValues : unsigned int {
     eHalfLengthXnegY = 0,  //!< halflength in x at negative y
     eHalfLengthXposY = 1,  //!< halflength in x at positive y
@@ -75,8 +76,8 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// @param minhalex is the half length in x at minimal y
   /// @param haley is the half length in y
   /// @param halez is the half length in z
-  /// @param alpha is the openeing angle at -x,-y
-  /// @param beta is the openeing angle at +x,-y
+  /// @param alpha is the opening angle at -x,-y
+  /// @param beta is the opening angle at +x,-y
   TrapezoidVolumeBounds(double minhalex, double haley, double halez,
                         double alpha, double beta) noexcept(false);
 
@@ -162,7 +163,7 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// Helper method to create the surface bounds
   void buildSurfaceBounds();
 
-  /// Templated dump methos
+  /// Templated dump methods
   /// @tparam stream_t The type of the stream for dumping
   /// @param dt The stream object
   template <class stream_t>
@@ -188,7 +189,7 @@ inline std::vector<double> TrapezoidVolumeBounds::values() const {
 }
 
 inline void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthXnegY) < 0. or get(eHalfLengthXposY) < 0.) {
+  if (get(eHalfLengthXnegY) < 0. || get(eHalfLengthXposY) < 0.) {
     throw std::invalid_argument(
         "TrapezoidVolumeBounds: invalid trapezoid parameters in x.");
   }

@@ -11,21 +11,46 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/AnnealingUtility.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+#include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
 
+#include <algorithm>
+#include <array>
 #include <chrono>
+#include <cmath>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <system_error>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include "VertexingDataHelper.hpp"
 
@@ -34,7 +59,7 @@ namespace Test {
 
 using namespace Acts::UnitLiterals;
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
@@ -92,13 +117,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
+                              ipEstimator, std::move(linearizer), bField);
 
-  // TODO: test this as well!
-  // finderConfig.useBeamSpotConstraint = false;
-
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -123,10 +145,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
+  // TODO: test without using beam spot constraint
+  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -167,15 +189,19 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
+  double relTol = 1e-2;
+  double small = 1e-3;
   for (int i = 0; i < expNRecoVertices; i++) {
     auto recoVtx = allVertices[i];
     auto expVtx = verticesInfo[i];
-    CHECK_CLOSE_ABS(recoVtx.position(), expVtx.position, 0.001_mm);
-    CHECK_CLOSE_ABS(recoVtx.covariance(), expVtx.covariance, 0.001_mm);
+    CHECK_CLOSE_OR_SMALL(recoVtx.position(), expVtx.position, relTol, small);
+    CHECK_CLOSE_OR_SMALL(recoVtx.covariance(), expVtx.covariance, relTol,
+                         small);
     BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
-    CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight, 0.003);
-    CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility, expVtx.trk1Comp,
-                    0.003);
+    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight,
+                         relTol, small);
+    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].vertexCompatibility,
+                         expVtx.trk1Comp, relTol, small);
   }
 }
 
@@ -248,11 +274,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
+                              ipEstimator, std::move(linearizer), bField);
   Finder::State state;
 
-  Finder finder(finderConfig, extractParameters);
+  Finder finder(std::move(finderConfig), extractParameters);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -283,13 +309,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     userTracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
-
   Vertex<InputTrack> constraintVtx;
   constraintVtx.setPosition(std::get<BeamSpotData>(csvData).position());
   constraintVtx.setCovariance(std::get<BeamSpotData>(csvData).covariance());
 
-  vertexingOptions.vertexConstraint = constraintVtx;
+  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
+                                                constraintVtx);
 
   auto findResult = finder.find(userTracksPtr, vertexingOptions, state);
 
@@ -326,15 +351,19 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
+  double relTol = 1e-2;
+  double small = 1e-3;
   for (int i = 0; i < expNRecoVertices; i++) {
     auto recoVtx = allVertices[i];
     auto expVtx = verticesInfo[i];
-    CHECK_CLOSE_ABS(recoVtx.position(), expVtx.position, 0.001_mm);
-    CHECK_CLOSE_ABS(recoVtx.covariance(), expVtx.covariance, 0.001_mm);
+    CHECK_CLOSE_OR_SMALL(recoVtx.position(), expVtx.position, relTol, small);
+    CHECK_CLOSE_OR_SMALL(recoVtx.covariance(), expVtx.covariance, relTol,
+                         small);
     BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
-    CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight, 0.003);
-    CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility, expVtx.trk1Comp,
-                    0.003);
+    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight,
+                         relTol, small);
+    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].vertexCompatibility,
+                         expVtx.trk1Comp, relTol, small);
   }
 }
 
@@ -389,13 +418,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
-  // TODO: test this as well!
-  // finderConfig.useBeamSpotConstraint = false;
-
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -420,10 +446,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
+  // TODO: test using beam spot constraint
+  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -469,7 +495,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
     double diffZ = 1e5;
     int foundVtxIdx = -1;
     for (int i = 0; i < expNRecoVertices; i++) {
-      if (not vtxFound[i]) {
+      if (!vtxFound[i]) {
         if (std::abs(vtxZ - verticesInfo[i].position[2]) < diffZ) {
           diffZ = std::abs(vtxZ - verticesInfo[i].position[2]);
           foundVtxIdx = i;
@@ -540,10 +566,10 @@ BOOST_AUTO_TEST_CASE(
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -568,10 +594,9 @@ BOOST_AUTO_TEST_CASE(
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
+  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -617,7 +642,7 @@ BOOST_AUTO_TEST_CASE(
     double diffZ = 1e5;
     int foundVtxIdx = -1;
     for (int i = 0; i < expNRecoVertices; i++) {
-      if (not vtxFound[i]) {
+      if (!vtxFound[i]) {
         if (std::abs(vtxZ - verticesInfo[i].position[2]) < diffZ) {
           diffZ = std::abs(vtxZ - verticesInfo[i].position[2]);
           foundVtxIdx = i;

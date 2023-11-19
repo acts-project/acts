@@ -15,7 +15,7 @@ concurrency:
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/format10:v29
+    container: ghcr.io/acts-project/format14:v41
     steps:
       - uses: actions/checkout@v3
       - name: Check
@@ -44,6 +44,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - name: Check
         run: >
           sudo apt-get install -y git
@@ -53,9 +55,38 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - name: Check
         run: >
           CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
+  pragma_once:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check
+        run: >
+          CI/check_pragma_once.sh
+  end_of_line:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Check
+        run: >
+          CI/check_end_of_file.py . --exclude "thirdparty/*" --reject-multiple-newlines --github
+  size_t:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Check
+        run: >
+          CI/check_size_t.py . --exclude "thirdparty/*"
   boost_test_macro:
     runs-on: ubuntu-latest
     steps:
@@ -68,6 +99,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - name: Check
         run: >
           CI/check_smearing_config.py .
@@ -76,6 +109,44 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - name: Check
         run: >
           docs/parse_cmake_options.py CMakeLists.txt --write docs/getting_started.md --verify
+  spelling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install codespell
+        run: >
+          pip install codespell==2.2.5
+      - name: Check
+        run: >
+          CI/check_spelling
+  missing_includes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install clang
+        run: >
+          sudo apt-get install -y clang libeigen3-dev libboost-dev
+      - name: Check
+        run: >
+          CI/missing_include_check.sh
+  fpe_masks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: >
+          pip install -r CI/requirements_fpe_masks.txt
+      - name: Check
+        run: >
+          CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}

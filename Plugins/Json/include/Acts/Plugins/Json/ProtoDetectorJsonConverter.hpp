@@ -8,13 +8,17 @@
 
 #pragma once
 
-#include "Acts/Geometry/ProtoDetector.hpp"
+#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+
+#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 
 namespace Acts {
+struct ProtoDetector;
+struct ProtoVolume;
 
 void to_json(nlohmann::json& j, const ProtoVolume& pv);
 

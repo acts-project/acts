@@ -15,8 +15,7 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
     TruthSeedRanges,
     addCKFTracks,
-    CKFPerformanceConfig,
-    TrackSelectorRanges,
+    TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
     addVertexFitting,
@@ -60,11 +59,17 @@ addFatras(
     s,
     trackingGeometry,
     field,
-    ParticleSelectorConfig(eta=(-4.0, 4.0), pt=(150 * u.MeV, None), removeNeutral=True)
+    rnd=rnd,
+    preSelectParticles=ParticleSelectorConfig(
+        rho=(0.0 * u.mm, 28.0 * u.mm),
+        absZ=(0.0 * u.mm, 1.0 * u.m),
+        eta=(-4.0, 4.0),
+        pt=(150 * u.MeV, None),
+        removeNeutral=True,
+    )
     if ttbar_pu200
     else ParticleSelectorConfig(),
     outputDirRoot=outputDir,
-    rnd=rnd,
 )
 
 addDigitization(
@@ -84,7 +89,9 @@ addSeeding(
     if ttbar_pu200
     else TruthSeedRanges(),
     seedingAlgorithm=SeedingAlgorithm.Default,
-    *acts.examples.itk.itkSeedingAlgConfig("PixelSpacePoints"),
+    *acts.examples.itk.itkSeedingAlgConfig(
+        acts.examples.itk.InputSpacePointsType.PixelSpacePoints
+    ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
@@ -93,15 +100,17 @@ addCKFTracks(
     s,
     trackingGeometry,
     field,
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0), removeNeutral=True),
+    TrackSelectorConfig(
+        pt=(1.0 * u.GeV if ttbar_pu200 else 0.0, None),
+        absEta=(None, 4.0),
+        nMeasurementsMin=6,
+    ),
     outputDirRoot=outputDir,
 )
 
 addAmbiguityResolution(
     s,
     AmbiguityResolutionConfig(maximumSharedHits=3),
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
 

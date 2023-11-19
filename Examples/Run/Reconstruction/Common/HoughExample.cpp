@@ -163,13 +163,8 @@ int runHoughExample(
 
   // Algorithm estimating track parameter from seed
   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-  paramsEstimationCfg.inputProtoTracks = houghCfg.outputProtoTracks;
-  paramsEstimationCfg.inputSpacePoints = {
-      spCfg.outputSpacePoints,
-  };
-  paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  paramsEstimationCfg.inputSeeds = houghCfg.outputSeeds;
   paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-  paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
   paramsEstimationCfg.trackingGeometry = tGeometry;
   paramsEstimationCfg.magneticField = magneticField;
   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
@@ -186,11 +181,11 @@ int runHoughExample(
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
   SeedingPerformanceWriter::Config seedPerfCfg;
-  seedPerfCfg.inputProtoTracks = houghCfg.outputProtoTracks;
+  seedPerfCfg.inputSeeds = houghCfg.outputSeeds;
   seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  seedPerfCfg.filePath = outputDir + "/performance_seeding_hists.root";
+  seedPerfCfg.filePath = outputDir + "/performance_seeding.root";
   sequencer.addWriter(
       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
 
@@ -198,7 +193,7 @@ int runHoughExample(
   RootTrackParameterWriter::Config trackParamsWriterCfg;
   trackParamsWriterCfg.inputTrackParameters =
       paramsEstimationCfg.outputTrackParameters;
-  trackParamsWriterCfg.inputProtoTracks = paramsEstimationCfg.outputProtoTracks;
+  trackParamsWriterCfg.inputProtoTracks = houghCfg.outputProtoTracks;
   trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
   trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   trackParamsWriterCfg.inputMeasurementParticlesMap =

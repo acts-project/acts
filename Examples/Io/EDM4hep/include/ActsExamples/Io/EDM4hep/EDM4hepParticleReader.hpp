@@ -9,14 +9,15 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
 #include <string>
 
-#include "edm4hep/MCParticleCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTReader.h"
+#include <edm4hep/MCParticleCollection.h>
+#include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
 
@@ -45,7 +46,7 @@ class EDM4hepParticleReader final : public IReader {
   std::string name() const final;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final;
+  std::pair<std::size_t, std::size_t> availableEvents() const final;
 
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
@@ -55,13 +56,13 @@ class EDM4hepParticleReader final : public IReader {
 
  private:
   Config m_cfg;
-  std::pair<size_t, size_t> m_eventsRange;
+  std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  podio::ROOTReader m_reader;
-  podio::EventStore m_store;
+  podio::ROOTFrameReader m_reader;
 
-  const edm4hep::MCParticleCollection* m_mcParticleCollection;
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

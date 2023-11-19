@@ -8,8 +8,17 @@
 
 #include "ActsExamples/ContextualDetector/ExternalAlignmentDecorator.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+
+#include <cassert>
+#include <ostream>
+#include <thread>
+#include <utility>
 
 ActsExamples::Contextual::ExternalAlignmentDecorator::
     ExternalAlignmentDecorator(const Config& cfg,
@@ -90,7 +99,7 @@ ActsExamples::Contextual::ExternalAlignmentDecorator::decorate(
 void ActsExamples::Contextual::ExternalAlignmentDecorator::parseGeometry(
     const Acts::TrackingGeometry& tGeometry) {
   // Double-visit - first count
-  size_t nTransforms = 0;
+  std::size_t nTransforms = 0;
   tGeometry.visitSurfaces([&nTransforms](const auto*) { ++nTransforms; });
 
   Acts::GeometryContext nominalCtx{

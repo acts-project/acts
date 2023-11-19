@@ -10,13 +10,16 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace Acts {
 
 class Surface;
-using SurfacePtr = std::shared_ptr<const Surface>;
+
+using SurfacePtr = std::shared_ptr<const RegularSurface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
 
 /// @class DigitizationModule
@@ -113,7 +116,7 @@ class DigitizationModule {
   DigitizationStep digitizationStep(const Vector3& start,
                                     const Vector3& end) const;
 
-  /// Return the bounding surfaces inlcuding top and bottom
+  /// Return the bounding surfaces including top and bottom
   const SurfacePtrVector& boundarySurfaces() const;
 
   /// Return all surfaces in X - excluding the boundaries

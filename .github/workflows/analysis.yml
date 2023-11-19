@@ -28,7 +28,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
       - uses: actions/checkout@v3
 
@@ -63,9 +63,9 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          pip3 install gcovr==5.0
+          pip3 install gcovr==6.0
           && cd build
-          && /usr/bin/python3 ../CI/test_coverage
+          && /usr/bin/python3 ../CI/test_coverage.py
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
@@ -73,7 +73,7 @@ jobs:
 
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v41
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
@@ -91,7 +91,7 @@ jobs:
         run: cmakeperf collect build/compile_commands.json -o perf.csv
       - name: Results
         run: cmakeperf print perf.csv
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: cmakeperf
           path: perf.csv

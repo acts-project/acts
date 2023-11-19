@@ -8,6 +8,16 @@
 
 #include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
+
 ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
     const Particle &particle, Scalar gammaE, Scalar rndPsi, Scalar rndTheta1,
     Scalar rndTheta2, Scalar rndTheta3) const {
@@ -36,7 +46,7 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
     theta *= (rndTheta1 < 0.25) ? u : u / 3.;  // 9./(9.+27) = 0.25
   }
 
-  Vector3 particleDirection = particle.unitDirection();
+  Vector3 particleDirection = particle.direction();
   Vector3 photonDirection = particleDirection;
 
   // construct the combined rotation to the scattered direction
@@ -52,6 +62,7 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
   photon.setProcess(ActsFatras::ProcessType::eBremsstrahlung)
       .setPosition4(particle.fourPosition())
       .setDirection(photonDirection)
-      .setAbsoluteMomentum(gammaE);
+      .setAbsoluteMomentum(gammaE)
+      .setReferenceSurface(particle.referenceSurface());
   return photon;
 }

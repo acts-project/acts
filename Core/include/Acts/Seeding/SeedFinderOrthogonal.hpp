@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
@@ -184,11 +185,12 @@ class SeedFinderOrthogonal {
    * @param options frequently changing configuration (like beam position)
    * @param low The lower spacepoint.
    * @param high The upper spacepoint.
+   * @param isMiddleInverted If middle spacepoint is in the negative z region
    *
    * @return True if the two points form a valid pair, false otherwise.
    */
   bool validTuple(const SeedFinderOptions &options, const internal_sp_t &low,
-                  const internal_sp_t &high) const;
+                  const internal_sp_t &high, bool isMiddleInverted) const;
 
   /**
    * @brief Create a k-d tree from a set of spacepoints.
@@ -210,13 +212,15 @@ class SeedFinderOrthogonal {
    * @param seedFilterState  holds quantities used in seed filter
    * @param candidates_collector The container to write the resulting
    * seed candidates to.
+   * @param spacePointData Auxiliary variables used by the seeding
    */
   void filterCandidates(
       const SeedFinderOptions &options, internal_sp_t &middle,
       std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
       SeedFilterState seedFilterState,
-      CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
-          &candidates_collector) const;
+      CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
+          &candidates_collector,
+      Acts::SpacePointData &spacePointData) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.
@@ -228,11 +232,13 @@ class SeedFinderOrthogonal {
    * @param tree The k-d tree to use for searching.
    * @param out_cont The container write output seeds to.
    * @param middle_p The middle spacepoint to find seeds for.
+   * @param spacePointData Aux data for the spacepoints
    */
   template <typename output_container_t>
   void processFromMiddleSP(const SeedFinderOptions &options, const tree_t &tree,
                            output_container_t &out_cont,
-                           const typename tree_t::pair_t &middle_p) const;
+                           const typename tree_t::pair_t &middle_p,
+                           Acts::SpacePointData &spacePointData) const;
 
   /**
    * @brief The configuration for the seeding algorithm.

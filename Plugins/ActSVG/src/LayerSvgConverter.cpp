@@ -11,7 +11,6 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <set>
 #include <sstream>
@@ -19,22 +18,17 @@
 std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     const GeometryContext& gctx, const Layer& layer,
     const LayerConverter::Options& cOptions) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(getDefaultLogger("LayerSvgConverter", cOptions.logLevel));
-
   // The sheets
   std::vector<actsvg::svg::object> sheets;
 
   // The volume
   Acts::Svg::ProtoVolume volume;
   volume._name = cOptions.name;
-  ACTS_DEBUG("Processing layer: " << cOptions.name);
 
   /// Convert the surface array into proto surfaces and a grid structure
   if (layer.surfaceArray() != nullptr) {
     SurfaceArrayConverter::Options sacOptions;
     sacOptions.surfaceStyles = cOptions.surfaceStyles;
-    sacOptions.logLevel = cOptions.logLevel;
     auto [surfaces, grid, associations] = SurfaceArrayConverter::convert(
         gctx, *(layer.surfaceArray()), sacOptions);
     volume._surfaces = surfaces;
@@ -102,12 +96,12 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
       actsvg::proto::surface<std::vector<Acts::Vector3>> projSurface;
       projSurface._vertices = sf->polyhedronRepresentation(gctx, 1u).vertices;
       // Draw only if they fall into the range restriction - for phi
-      if (phi >= cOptions.phiRange[0] and phi <= cOptions.phiRange[1]) {
+      if (phi >= cOptions.phiRange[0] && phi <= cOptions.phiRange[1]) {
         std::string m_zr_id = std::string("zr_") + std::to_string(m++);
         zr_layer.add_object(Acts::Svg::View::zr(projSurface, m_zr_id));
       }
       // for z
-      if (z >= cOptions.zRange[0] and z <= cOptions.zRange[1]) {
+      if (z >= cOptions.zRange[0] && z <= cOptions.zRange[1]) {
         std::string m_xy_id = std::string("xy_") + std::to_string(m++);
         xy_layer.add_object(Acts::Svg::View::xy(projSurface, m_xy_id));
       }

@@ -19,17 +19,18 @@
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/CsvOptionsReader.hpp"
 #include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
+#include "ActsExamples/Options/ParticleSmearingOptions.hpp"
 #include "ActsExamples/Options/TrackFittingOptions.hpp"
 #include "ActsExamples/Options/TruthSeedSelectorOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
-#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
@@ -66,6 +67,7 @@ int runDetectorAlignment(
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
+  Options::addParticleSmearingOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
   Options::addMagneticFieldOptions(desc);
@@ -86,7 +88,12 @@ int runDetectorAlignment(
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   auto rnd = std::make_shared<const ActsExamples::RandomNumbers>(
       Options::readRandomNumbersConfig(vm));
-  auto dirNav = vm["fit-directed-navigation"].as<bool>();
+
+  if (vm["fit-directed-navigation"].as<bool>()) {
+    throw std::runtime_error(
+        "Directed navigation not supported anymore in the examples binaries."
+        "Please refer to the RefittingAlgorithm in the python bindings.");
+  }
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
@@ -140,17 +147,6 @@ int runDetectorAlignment(
   sequencer.addAlgorithm(
       std::make_shared<TruthTrackFinder>(trackFinderCfg, logLevel));
 
-  SurfaceSortingAlgorithm::Config sorterCfg;
-  // Setup the surface sorter if running direct navigator
-  sorterCfg.inputProtoTracks = trackFinderCfg.outputProtoTracks;
-  sorterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-  sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
-  sorterCfg.outputProtoTracks = "sortedprototracks";
-  if (dirNav) {
-    sequencer.addAlgorithm(
-        std::make_shared<SurfaceSortingAlgorithm>(sorterCfg, logLevel));
-  }
-
   if (vm["reco-with-misalignment-correction"].as<bool>()) {
     // setup the alignment (which will update the aligned transforms of the
     // detector elements)
@@ -183,15 +179,10 @@ int runDetectorAlignment(
   fitter.inputMeasurements = digiCfg.outputMeasurements;
   fitter.inputSourceLinks = digiCfg.outputSourceLinks;
   fitter.inputProtoTracks = trackFinderCfg.outputProtoTracks;
-  if (dirNav) {
-    fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
-  }
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
-  fitter.outputTrajectories = "trajectories";
-  fitter.directNavigation = dirNav;
+  fitter.outputTracks = "tracks";
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
-  fitter.trackingGeometry = trackingGeometry;
   fitter.fit = ActsExamples::makeKalmanFitterFunction(
       trackingGeometry, magneticField,
       vm["fit-multiple-scattering-correction"].as<bool>(),
@@ -200,8 +191,8 @@ int runDetectorAlignment(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
   // write track states from fitting
-  RootTrajectoryStatesWriter::Config trackStatesWriter;
-  trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
+  RootTrackStatesWriter::Config trackStatesWriter;
+  trackStatesWriter.inputTracks = fitter.outputTracks;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurementParticlesMap =
@@ -209,18 +200,18 @@ int runDetectorAlignment(
   trackStatesWriter.inputMeasurementSimHitsMap =
       digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.filePath = outputDir + "/trackstates_fitter.root";
-  sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
-      trackStatesWriter, logLevel));
+  sequencer.addWriter(
+      std::make_shared<RootTrackStatesWriter>(trackStatesWriter, logLevel));
 
   // write track summary from CKF
-  RootTrajectorySummaryWriter::Config trackSummaryWriter;
-  trackSummaryWriter.inputTrajectories = fitter.outputTrajectories;
+  RootTrackSummaryWriter::Config trackSummaryWriter;
+  trackSummaryWriter.inputTracks = fitter.outputTracks;
   trackSummaryWriter.inputParticles = inputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   trackSummaryWriter.filePath = outputDir + "/tracksummary_fitter.root";
-  sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
-      trackSummaryWriter, logLevel));
+  sequencer.addWriter(
+      std::make_shared<RootTrackSummaryWriter>(trackSummaryWriter, logLevel));
 
   // Write CKF performance data
   // write reconstruction performance data
@@ -234,7 +225,7 @@ int runDetectorAlignment(
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
 
   TrackFitterPerformanceWriter::Config perfFitter;
-  perfFitter.inputTrajectories = fitter.outputTrajectories;
+  perfFitter.inputTracks = fitter.outputTracks;
   perfFitter.inputParticles = inputParticles;
   perfFitter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;

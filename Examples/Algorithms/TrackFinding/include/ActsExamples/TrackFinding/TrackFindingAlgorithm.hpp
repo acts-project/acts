@@ -8,38 +8,52 @@
 
 #pragma once
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
+#include "Acts/TrackFinding/TrackSelector.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <atomic>
+#include <cstddef>
 #include <functional>
+#include <limits>
+#include <memory>
+#include <string>
 #include <vector>
 
 #include <tbb/combinable.h>
 
-namespace ActsExamples {
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+}  // namespace Acts
 
-class TrackFindingAlgorithm final : public BareAlgorithm {
+namespace ActsExamples {
+struct AlgorithmContext;
+
+class TrackFindingAlgorithm final : public IAlgorithm {
  public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
                                              Acts::VectorMultiTrajectory>;
-  using TrackContainer =
-      Acts::TrackContainer<Acts::VectorTrackContainer,
-                           Acts::VectorMultiTrajectory, std::shared_ptr>;
   using TrackFinderResult =
       Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 
@@ -57,10 +71,11 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// Create the track finder function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
+  /// contains shared_ptr anyway.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      const Acts::Logger& logger);
 
   struct Config {
     /// Input measurements collection.
@@ -70,13 +85,20 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
     /// Output find trajectories collection.
-    std::string outputTrajectories;
+    std::string outputTracks;
+
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Compute shared hit information
     bool computeSharedHits = false;
+    /// Track selector config
+    std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
+    /// Run backward finding
+    bool backward = false;
+    /// Maximum number of propagation steps
+    unsigned int maxSteps = 100000;
   };
 
   /// Constructor of the track finding algorithm
@@ -104,9 +126,20 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+  std::optional<Acts::TrackSelector> m_trackSelector;
 
-  mutable std::atomic<size_t> m_nTotalSeeds{0};
-  mutable std::atomic<size_t> m_nFailedSeeds{0};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
+
+  ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
+      this, "InputInitialTrackParameters"};
+
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
+
+  mutable std::atomic<std::size_t> m_nTotalSeeds{0};
+  mutable std::atomic<std::size_t> m_nFailedSeeds{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {
@@ -131,12 +164,12 @@ void TrackFindingAlgorithm::computeSharedHits(
       sourceLinks.size(), std::numeric_limits<std::size_t>::max());
 
   for (auto track : tracks) {
-    for (auto state : track.trackStates()) {
-      if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    for (auto state : track.trackStatesReversed()) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         continue;
       }
 
-      std::size_t hitIndex = state.uncalibratedSourceLink()
+      std::size_t hitIndex = state.getUncalibratedSourceLink()
                                  .template get<IndexSourceLink>()
                                  .index();
 
@@ -157,8 +190,7 @@ void TrackFindingAlgorithm::computeSharedHits(
                             .container()
                             .trackStateContainer()
                             .getTrackState(indexFirstState);
-      if (not firstState.typeFlags().test(
-              Acts::TrackStateFlag::SharedHitFlag)) {
+      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
         firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
       }
 

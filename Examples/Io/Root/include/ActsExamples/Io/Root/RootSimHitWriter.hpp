@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <cstdint>
@@ -19,6 +21,7 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out simulated hits as a flat TTree.
 ///
@@ -51,7 +54,7 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
   ~RootSimHitWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

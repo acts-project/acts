@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
   using BField_type = ConstantBField;
   using Stepper_type = EigenStepper<>;
   using Propagator_type = Propagator<Stepper_type>;
-  using Covariance = BoundSymMatrix;
+  using Covariance = BoundSquareMatrix;
 
   auto bField =
       std::make_shared<BField_type>(Vector3{0, 0, BzInT * UnitConstants::T});
@@ -97,10 +97,11 @@ int main(int argc, char* argv[]) {
   if (withCov) {
     covOpt = cov;
   }
-  CurvilinearTrackParameters pars(pos4, dir, ptInGeV, +1, covOpt);
+  CurvilinearTrackParameters pars(pos4, dir, +1 / ptInGeV, covOpt,
+                                  ParticleHypothesis::pion());
 
   double totalPathLength = 0;
-  size_t num_iters = 0;
+  std::size_t num_iters = 0;
   const auto propagation_bench_result = Acts::Test::microBenchmark(
       [&] {
         auto r = propagator.propagate(pars, options).value();

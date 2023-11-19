@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <memory>
 
 namespace ActsExamples {
 
 /// A simple algorithm that just prints hello world.
-class HelloLoggerAlgorithm : public ActsExamples::BareAlgorithm {
+class HelloLoggerAlgorithm : public ActsExamples::IAlgorithm {
  public:
   HelloLoggerAlgorithm(Acts::Logging::Level level);
 

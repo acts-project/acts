@@ -8,13 +8,18 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <cmath>
+#include <cstddef>
 
 namespace {
 
@@ -22,7 +27,7 @@ using namespace Acts;
 using namespace Acts::Test;
 
 using ParametersVector = Acts::BoundVector;
-using CovarianceMatrix = Acts::BoundSymMatrix;
+using CovarianceMatrix = Acts::BoundSquareMatrix;
 using Jacobian = Acts::BoundMatrix;
 
 const Acts::GeometryContext tgContext;
@@ -33,7 +38,7 @@ BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixSmoother)
 
 BOOST_AUTO_TEST_CASE(Smooth) {
   VectorMultiTrajectory traj;
-  size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
+  std::size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(ts_idx);
 
   // Make dummy track parameter

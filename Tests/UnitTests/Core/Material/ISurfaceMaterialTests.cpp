@@ -9,9 +9,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 
-#include <climits>
+#include <cstddef>
+#include <ostream>
 
 namespace Acts {
 
@@ -30,8 +34,8 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
     return m_fullMaterial;
   }
 
-  const MaterialSlab& materialSlab(size_t /*bin0*/,
-                                   size_t /*bin1*/) const override {
+  const MaterialSlab& materialSlab(std::size_t /*bin0*/,
+                                   std::size_t /*bin1*/) const override {
     return m_fullMaterial;
   }
 
@@ -48,29 +52,27 @@ BOOST_AUTO_TEST_CASE(ISurfaceMaterial_factor_test) {
   double splitFactor = 42.0;
   SurfaceMaterialStub stub{splitFactor};
 
-  BOOST_CHECK_EQUAL(stub.factor(NavigationDirection::Forward,
-                                MaterialUpdateStage::FullUpdate),
-                    1.0);
-
-  BOOST_CHECK_EQUAL(stub.factor(NavigationDirection::Backward,
-                                MaterialUpdateStage::FullUpdate),
-                    1.0);
-
-  BOOST_CHECK_EQUAL(stub.factor(NavigationDirection::Forward,
-                                MaterialUpdateStage::PostUpdate),
-                    splitFactor);
-
-  BOOST_CHECK_EQUAL(stub.factor(NavigationDirection::Backward,
-                                MaterialUpdateStage::PreUpdate),
-                    splitFactor);
+  BOOST_CHECK_EQUAL(
+      stub.factor(Direction::Forward, MaterialUpdateStage::FullUpdate), 1.0);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(NavigationDirection::Forward, MaterialUpdateStage::PreUpdate),
+      stub.factor(Direction::Backward, MaterialUpdateStage::FullUpdate), 1.0);
+
+  BOOST_CHECK_EQUAL(
+      stub.factor(Direction::Forward, MaterialUpdateStage::PostUpdate),
+      splitFactor);
+
+  BOOST_CHECK_EQUAL(
+      stub.factor(Direction::Backward, MaterialUpdateStage::PreUpdate),
+      splitFactor);
+
+  BOOST_CHECK_EQUAL(
+      stub.factor(Direction::Forward, MaterialUpdateStage::PreUpdate),
       1 - splitFactor);
 
-  BOOST_CHECK_EQUAL(stub.factor(NavigationDirection::Backward,
-                                MaterialUpdateStage::PostUpdate),
-                    1 - splitFactor);
+  BOOST_CHECK_EQUAL(
+      stub.factor(Direction::Backward, MaterialUpdateStage::PostUpdate),
+      1 - splitFactor);
 }
 
 }  // namespace Test

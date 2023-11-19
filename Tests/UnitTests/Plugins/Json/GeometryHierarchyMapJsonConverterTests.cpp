@@ -8,12 +8,19 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
+#include <algorithm>
 #include <fstream>
-#include <ostream>
+#include <initializer_list>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 namespace {
 
@@ -33,7 +40,7 @@ struct Thing {
   int y = 23;
 
   friend constexpr bool operator==(const Thing& lhs, const Thing& rhs) {
-    return (lhs.x == rhs.x) and (lhs.y == rhs.y);
+    return (lhs.x == rhs.x) && (lhs.y == rhs.y);
   }
 };
 
@@ -135,7 +142,7 @@ BOOST_AUTO_TEST_CASE(FromJson) {
   };
   Container c = Converter("thing").fromJson(j);
 
-  BOOST_CHECK(not c.empty());
+  BOOST_CHECK(!c.empty());
   BOOST_CHECK_EQUAL(c.size(), 2);
   {
     auto it = c.find(makeId(2, 3));
@@ -231,7 +238,7 @@ BOOST_AUTO_TEST_CASE(FromFile) {
   // convert json to container
   Container c = Converter("thing").fromJson(j);
   // check container content
-  BOOST_CHECK(not c.empty());
+  BOOST_CHECK(!c.empty());
   BOOST_CHECK_EQUAL(c.size(), 4);
   BOOST_CHECK_NE(c.find(makeId()), c.end());
   BOOST_CHECK_NE(c.find(makeId(1, 2)), c.end());

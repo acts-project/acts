@@ -10,15 +10,19 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <cmath>
+#include <cstddef>
+#include <vector>
+
 // Helper
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
-
-#include <fstream>
 
 namespace Acts {
 
@@ -32,7 +36,7 @@ BOOST_AUTO_TEST_SUITE(Geometry)
 BOOST_AUTO_TEST_CASE(PolyhedronTest) {
   std::vector<Vector3> tvertices = {Vector3(-1, -1, 0.), Vector3(1., -1, 0.),
                                     Vector3(0., 1., 0.)};
-  std::vector<std::vector<size_t>> tfaces = {{0, 1, 2}};
+  std::vector<std::vector<std::size_t>> tfaces = {{0, 1, 2}};
 
   Polyhedron triangle(tvertices, tfaces, tfaces);
   BOOST_CHECK(tvertices == triangle.vertices);
@@ -47,8 +51,8 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
   std::vector<Vector3> rvertices = {Vector3(-1, -2, 0.), Vector3(1., -2, 0.),
                                     Vector3(1., -1., 0.),
                                     Vector3(-1., -1., 0.)};
-  std::vector<std::vector<size_t>> rfaces = {{0, 1, 2, 3}};
-  std::vector<std::vector<size_t>> rmesh = {{0, 1, 2}, {2, 3, 0}};
+  std::vector<std::vector<std::size_t>> rfaces = {{0, 1, 2, 3}};
+  std::vector<std::vector<std::size_t>> rmesh = {{0, 1, 2}, {2, 3, 0}};
   Polyhedron rectangle(rvertices, rfaces, rmesh);
   BOOST_CHECK(rvertices == rectangle.vertices);
   BOOST_CHECK(rfaces == rectangle.faces);
@@ -78,8 +82,8 @@ BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
                                     Vector3(1., -1., 0.),
                                     Vector3(-1., -1., 0.)};
 
-  std::vector<std::vector<size_t>> rfaces = {{0, 1, 2, 3}};
-  std::vector<std::vector<size_t>> rmesh = {{0, 1, 2}, {2, 3, 0}};
+  std::vector<std::vector<std::size_t>> rfaces = {{0, 1, 2, 3}};
+  std::vector<std::vector<std::size_t>> rmesh = {{0, 1, 2}, {2, 3, 0}};
   Polyhedron rectangle(rvertices, rfaces, rmesh);
 
   auto rExtent = rectangle.extent();

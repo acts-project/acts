@@ -155,7 +155,7 @@ ActsExamples::Options::readParametrisations(const std::string& fileName) {
     auto listOfMomenta = gDirectory->GetListOfKeys();
     auto initialMomentum = listOfMomenta->First();
     while (initialMomentum != nullptr) {
-      // Parameters for a fixed inital momentum
+      // Parameters for a fixed initial momentum
       ActsFatras::detail::NuclearInteractionParameters parameters;
       // Get the initial momentum
       char const* nameMomentum = initialMomentum->GetName();

@@ -1,7 +1,5 @@
 import pytest
 
-import acts
-
 from acts.examples import (
     TutorialVertexFinderAlgorithm,
     AdaptiveMultiVertexFinderAlgorithm,
@@ -19,7 +17,7 @@ from acts.examples import (
     ParticleSelector,
     TruthVertexFinder,
     ParticleSmearing,
-    TrackSelector,
+    TrackSelectorAlgorithm,
     TrackFittingAlgorithm,
     SurfaceSortingAlgorithm,
     ParticlesPrinter,
@@ -53,7 +51,7 @@ from helpers import geant4Enabled, hepmc3Enabled
         ParticleSelector,
         TruthVertexFinder,
         ParticleSmearing,
-        TrackSelector,
+        TrackSelectorAlgorithm,
         TrackFittingAlgorithm,
         SurfaceSortingAlgorithm,
         ParticlesPrinter,

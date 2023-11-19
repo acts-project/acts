@@ -130,8 +130,8 @@ called *particle propagation* or *extrapolation*, is used to predict a
 particle's properties after it has travelled a certain distance. In many cases,
 the projected intersection with various types of surfaces is desired. The
 trajectory of a charged particle is governed by the [magnetic
-field](core/magnetic_field.rst) through which it travels, as well as any
-[material effects](core/material.rst). In case of a homogeneous magnetic field,
+field](#magnetic-field-core) through which it travels, as well as any
+[material effects](#material-core). In case of a homogeneous magnetic field,
 and in the absence of material interaction, the particle follows a helical
 trajectory. Such a helix can be calculated purely analytically, although
 intersections require numerical methods nevertheless.
@@ -450,7 +450,7 @@ are candidates to receive a projection of the surrounding material.
 Additional artificial material layers can also be inserted to receive
 projected material.
 
-The projection procedure (see [](material_core) and [](material_howto_core)) works
+The projection procedure (see [](#material-core) and [](#material_mapping_howto_core)) works
 by extrapolating test particles using the fully detailed simulation geometry.
 During the extrapolation, the material properties of the geometry are sampled
 in small intervals. Subsequently, the same test particle is extrapolated
@@ -617,7 +617,7 @@ space points of a single track will intersect in one common area. Such an
 intersection can be used to identify which space points originate from the same
 track. However, this task grows in complexity as detector activity increases
 and is susceptible to material effects. See [](seeding_core) for a description
-of the seeding implemenation in the core library.
+of the seeding implementation in the core library.
 
 Another group of approaches is the one of seeding and track following. These
 algorithms differ from the global ones in that they evaluate individual
@@ -914,10 +914,6 @@ circular *real* trajectory.
 
 ## Ambiguity resolution
 
-:::{note}
-There is currently no general-purpose ambiguity resolution implemented in ACTS.
-:::
-
 Due to the combinatorial nature of track finding, and to achieve high
 efficiencies, this set of candidates is often large, and contains a
 non-negligible fraction of *fake* candidates. These fake candidates are either
@@ -940,7 +936,7 @@ that share hits with other candidates are penalized. Another quantity is the
 measured particle $p_\mathrm{Y}$, which enters the score, to give preference to
 tracks with large momenta. For tracks containing measurements with a
 substantial local $\chi^2_+$ at the start or end of the trajectory, the
-ambiguity resolution stap can also attempt to remove these hits, and determine
+ambiguity resolution step can also attempt to remove these hits, and determine
 whether a refit without them yields a more favorable global $\chi^2$.
 
 Finally, the output of the ambiguity resolution step is a set of track candidates

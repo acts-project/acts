@@ -10,29 +10,28 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
-#include "Acts/Geometry/PlaneLayer.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <limits>
+#include <stdexcept>
+#include <type_traits>
 
 std::shared_ptr<const Acts::Surface> Acts::CuboidVolumeBuilder::buildSurface(
     const GeometryContext& /*gctx*/,
@@ -170,6 +169,9 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 
     LayerConfig lCfg;
     lCfg.surfaceCfg = {sCfg};
+    lCfg.envelopeX = {0.1 * UnitConstants::mm, 0.1 * UnitConstants::mm};
+    lCfg.envelopeY = {0.1 * UnitConstants::mm, 0.1 * UnitConstants::mm};
+    lCfg.envelopeZ = {0.1 * UnitConstants::mm, 0.1 * UnitConstants::mm};
 
     cfg.layerCfg.push_back(lCfg);
   }
@@ -221,8 +223,8 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 }
 
 Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
-    const GeometryContext& gctx, Acts::TrackingVolumePtr /*unused*/,
-    Acts::VolumeBoundsPtr /*unused*/) const {
+    const GeometryContext& gctx, Acts::TrackingVolumePtr /*gctx*/,
+    Acts::VolumeBoundsPtr /*bounds*/) const {
   // Build volumes
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
   volumes.reserve(m_cfg.volumeCfg.size());
@@ -266,7 +268,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   std::vector<float> binBoundaries;
   binBoundaries.push_back(volumes[0]->center().x() -
                           m_cfg.volumeCfg[0].length.x() * 0.5);
-  for (size_t i = 0; i < volumes.size(); i++) {
+  for (std::size_t i = 0; i < volumes.size(); i++) {
     binBoundaries.push_back(volumes[i]->center().x() +
                             m_cfg.volumeCfg[i].length.x() * 0.5);
   }

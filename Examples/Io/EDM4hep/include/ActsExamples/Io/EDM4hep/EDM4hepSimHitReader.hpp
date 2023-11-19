@@ -10,14 +10,16 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
 #include <string>
 
-#include "edm4hep/MCParticleCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTReader.h"
+#include <edm4hep/MCParticleCollection.h>
+#include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
 
@@ -35,6 +37,8 @@ class EDM4hepSimHitReader final : public IReader {
     std::string inputPath;
     /// Name of the particle collection in EDM4hep.
     std::string inputParticles = "MCParticles";
+    /// Name of the sim tracker hit collection in EDM4hep
+    std::string inputSimTrackerHits = "ActsSimTrackerHits";
     /// Which particle collection to read into.
     std::string outputParticles;
     /// Output simulated (truth) hits collection.
@@ -52,7 +56,7 @@ class EDM4hepSimHitReader final : public IReader {
   std::string name() const final;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final;
+  std::pair<std::size_t, std::size_t> availableEvents() const final;
 
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
@@ -62,17 +66,16 @@ class EDM4hepSimHitReader final : public IReader {
 
  private:
   Config m_cfg;
-  std::pair<size_t, size_t> m_eventsRange;
+  std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  podio::ROOTReader m_reader;
-  podio::EventStore m_store;
-
-  std::vector<std::string> m_collections;
-
-  const edm4hep::MCParticleCollection* m_mcParticleCollection;
+  podio::ROOTFrameReader m_reader;
 
   const Acts::Logger& logger() const { return *m_logger; }
+
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

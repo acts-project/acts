@@ -27,7 +27,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   const Vector2 poly[] = {{0.4, 0.25}, {0.6, 0.25}, {0.8, 0.75}, {0.2, 0.75}};
 
   // Covariance matrix which specifies "soft" boundary check tolerance
-  SymMatrix2 cov;
+  SquareMatrix2 cov;
   cov << 0.2, 0.02, 0.15, 0.02;
 
   // Random tests cover the ((0, 0), (1, 1)) rectangle. 20% of that area is
@@ -102,6 +102,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
       case Mode::SlowOutside:
         num_inside_points = NTESTS;
         num_outside_points = NTESTS_SLOW;
+      default:  // do nothing
+        break;
     };
     run_bench([&] { return check.isInside(center, poly); }, num_inside_points,
               "Center");

@@ -7,36 +7,33 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 template <typename E, typename A>
 Acts::EigenStepper<E, A>::EigenStepper(
-    std::shared_ptr<const MagneticFieldProvider> bField)
-    : m_bField(std::move(bField)) {}
+    std::shared_ptr<const MagneticFieldProvider> bField, double overstepLimit)
+    : m_bField(std::move(bField)), m_overstepLimit(overstepLimit) {}
 
 template <typename E, typename A>
-template <typename charge_t>
 auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
-    const SingleBoundTrackParameters<charge_t>& par, NavigationDirection ndir,
-    double ssize, double stolerance) const -> State {
-  return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
+    const BoundTrackParameters& par, double ssize) const -> State {
+  return State{gctx, m_bField->makeCache(mctx), par, ssize};
 }
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundVector& boundParams,
-                                          const BoundSymMatrix& cov,
+                                          const BoundSquareMatrix& cov,
                                           const Surface& surface,
-                                          const NavigationDirection navDir,
                                           const double stepSize) const {
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                 boundParams),
          boundParams, cov, surface);
-  state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
 
@@ -55,7 +52,7 @@ auto Acts::EigenStepper<E, A>::boundState(
     -> Result<BoundState> {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars,
+      state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated, surface,
       freeToBoundCorrection);
 }
@@ -66,8 +63,8 @@ auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
     -> CurvilinearState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.covTransport && transportCov,
-      state.pathAccumulated);
+      state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.covTransport && transportCov, state.pathAccumulated);
 }
 
 template <typename E, typename A>
@@ -84,12 +81,12 @@ void Acts::EigenStepper<E, A>::update(State& state,
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
-                                      const Vector3& udirection, double up,
+                                      const Vector3& udirection, double qOverP,
                                       double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
-  state.pars[eFreeQOverP] = (state.q != 0. ? state.q / up : 1. / up);
+  state.pars[eFreeQOverP] = qOverP;
 }
 
 template <typename E, typename A>
@@ -111,9 +108,9 @@ void Acts::EigenStepper<E, A>::transportCovarianceToBound(
 }
 
 template <typename E, typename A>
-template <typename propagator_state_t>
+template <typename propagator_state_t, typename navigator_t>
 Acts::Result<double> Acts::EigenStepper<E, A>::step(
-    propagator_state_t& state) const {
+    propagator_state_t& state, const navigator_t& navigator) const {
   using namespace UnitLiterals;
 
   // Runge-Kutta integrator state
@@ -130,8 +127,10 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return fieldRes.error();
   }
   sd.B_first = *fieldRes;
-  if (!state.stepping.extension.validExtensionForStep(state, *this) ||
-      !state.stepping.extension.k1(state, *this, sd.k1, sd.B_first, sd.kQoP)) {
+  if (!state.stepping.extension.validExtensionForStep(state, *this,
+                                                      navigator) ||
+      !state.stepping.extension.k1(state, *this, navigator, sd.k1, sd.B_first,
+                                   sd.kQoP)) {
     return 0.;
   }
 
@@ -139,13 +138,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // size, going up to the point where it can return an estimate of the local
   // integration error. The results are stated in the local variables above,
   // allowing integration to continue once the error is deemed satisfactory
-  const auto tryRungeKuttaStep =
-      [&](const ConstrainedStep& step) -> Result<bool> {
+  const auto tryRungeKuttaStep = [&](const double h) -> Result<bool> {
     // helpers because bool and std::error_code are ambiguous
     constexpr auto success = &Result<bool>::success;
     constexpr auto failure = &Result<bool>::failure;
 
-    const double h = step.value();
     // State the square and half of the step size
     h2 = h * h;
     half_h = h * 0.5;
@@ -158,14 +155,14 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
     sd.B_middle = *field;
 
-    if (!state.stepping.extension.k2(state, *this, sd.k2, sd.B_middle, sd.kQoP,
-                                     half_h, sd.k1)) {
+    if (!state.stepping.extension.k2(state, *this, navigator, sd.k2,
+                                     sd.B_middle, sd.kQoP, half_h, sd.k1)) {
       return success(false);
     }
 
     // Third Runge-Kutta point
-    if (!state.stepping.extension.k3(state, *this, sd.k3, sd.B_middle, sd.kQoP,
-                                     half_h, sd.k2)) {
+    if (!state.stepping.extension.k3(state, *this, navigator, sd.k3,
+                                     sd.B_middle, sd.kQoP, half_h, sd.k2)) {
       return success(false);
     }
 
@@ -176,8 +173,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       return failure(field.error());
     }
     sd.B_last = *field;
-    if (!state.stepping.extension.k4(state, *this, sd.k4, sd.B_last, sd.kQoP, h,
-                                     sd.k3)) {
+    if (!state.stepping.extension.k4(state, *this, navigator, sd.k4, sd.B_last,
+                                     sd.kQoP, h, sd.k3)) {
       return success(false);
     }
 
@@ -187,15 +184,17 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3]));
     error_estimate = std::max(error_estimate, 1e-20);
 
-    return success(error_estimate <= state.options.tolerance);
+    return success(error_estimate <= state.options.stepTolerance);
   };
 
-  double stepSizeScaling = 1.;
-  size_t nStepTrials = 0;
+  const double initialH =
+      state.stepping.stepSize.value() * state.options.direction;
+  double h = initialH;
+  std::size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (true) {
-    auto res = tryRungeKuttaStep(state.stepping.stepSize);
+    auto res = tryRungeKuttaStep(h);
     if (!res.ok()) {
       return res.error();
     }
@@ -203,17 +202,16 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    stepSizeScaling =
+    const double stepSizeScaling =
         std::min(std::max(0.25f, std::sqrt(std::sqrt(static_cast<float>(
-                                     state.options.tolerance /
+                                     state.options.stepTolerance /
                                      std::abs(2. * error_estimate))))),
                  4.0f);
-    state.stepping.stepSize.scale(stepSizeScaling);
+    h *= stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
     // place
-    if (std::abs(state.stepping.stepSize.value()) <
-        std::abs(state.options.stepSizeCutOff)) {
+    if (std::abs(h) < std::abs(state.options.stepSizeCutOff)) {
       // Not moving due to too low momentum needs an aborter
       return EigenStepperError::StepSizeStalled;
     }
@@ -227,14 +225,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     nStepTrials++;
   }
 
-  // use the adjusted step size
-  const double h = state.stepping.stepSize.value();
-
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
     // The step transport matrix in global coordinates
     FreeMatrix D;
-    if (!state.stepping.extension.finalize(state, *this, h, D)) {
+    if (!state.stepping.extension.finalize(state, *this, navigator, h, D)) {
       return EigenStepperError::StepInvalid;
     }
 
@@ -274,7 +269,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       state.stepping.jacTransport = D * state.stepping.jacTransport;
     }
   } else {
-    if (!state.stepping.extension.finalize(state, *this, h)) {
+    if (!state.stepping.extension.finalize(state, *this, navigator, h)) {
       return EigenStepperError::StepInvalid;
     }
   }
@@ -292,16 +287,17 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
-  if (state.stepping.stepSize.currentType() ==
-      ConstrainedStep::Type::accuracy) {
-    stepSizeScaling = std::min(
-        std::max(0.25f,
-                 std::sqrt(std::sqrt(static_cast<float>(
-                     state.options.tolerance / std::abs(error_estimate))))),
-        4.0f);
-    state.stepping.stepSize.scale(stepSizeScaling);
+  const double stepSizeScaling = std::min(
+      std::max(0.25f,
+               std::sqrt(std::sqrt(static_cast<float>(
+                   state.options.stepTolerance / std::abs(error_estimate))))),
+      4.0f);
+  const double nextAccuracy = std::abs(h * stepSizeScaling);
+  const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());
+  const double initialStepLength = std::abs(initialH);
+  if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
+    state.stepping.stepSize.setAccuracy(nextAccuracy);
   }
-
   state.stepping.stepSize.nStepTrials = nStepTrials;
 
   return h;

@@ -16,6 +16,7 @@
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
+#include <tuple>
 #include <type_traits>
 
 #include <boost/hana.hpp>
@@ -31,20 +32,28 @@
 
 namespace hana = boost::hana;
 namespace Acts {
+namespace detail {
+template <bool ascending, bool strict, typename T, T... values>
+struct are_sorted;
+template <typename T, T MIN, T MAX, T... values>
+struct are_within;
+template <typename T, std::size_t index, T... values>
+struct at_index;
+}  // namespace detail
 
 namespace Test {
 
 BOOST_AUTO_TEST_CASE(all_of_test) {
   using detail::all_of_v;
 
-  static_assert(not all_of_v<true, true, false>,
+  static_assert(!all_of_v<true, true, false>,
                 "all_of_v<true, true, false> failed");
-  static_assert(not all_of_v<false, true, true, false>,
+  static_assert(!all_of_v<false, true, true, false>,
                 "all_of_v<false, true, true, false> failed");
   static_assert(all_of_v<true, true, true>,
                 "all_of_v<true, true, true> failed");
   static_assert(all_of_v<true>, "all_of_v<true> failed");
-  static_assert(not all_of_v<false>, "all_of_v<false> failed");
+  static_assert(!all_of_v<false>, "all_of_v<false> failed");
   static_assert(all_of_v<>, "all_of_v<> failed");
 }
 
@@ -132,7 +141,7 @@ BOOST_AUTO_TEST_CASE(type_collector_test) {
   static_assert(detail::has_result_type_v<traits1>, "Did not find result type");
   static_assert(detail::has_result_type_v<traits2<false>>,
                 "Did not find result type");
-  static_assert(not detail::has_result_type_v<traits2<true>>,
+  static_assert(!detail::has_result_type_v<traits2<true>>,
                 "Did find result type");
 
   static_assert(detail::has_action_type_v<traits1>, "Did not find action type");
@@ -150,8 +159,8 @@ BOOST_AUTO_TEST_CASE(type_collector_test) {
                 "Didn't find expected results");
 
   // check unpack
-  using found_results_tuple = decltype(
-      hana::unpack(found_results, hana::template_<tuple_helper>))::type::tuple;
+  using found_results_tuple = decltype(hana::unpack(
+      found_results, hana::template_<tuple_helper>))::type::tuple;
   using expected_results_tuple = std::tuple<int, bool>;
   static_assert(
       std::is_same<found_results_tuple, expected_results_tuple>::value,
@@ -166,8 +175,8 @@ BOOST_AUTO_TEST_CASE(type_collector_test) {
                 "Didn't find expected actions");
 
   // check unpack
-  using found_actions_tuple = decltype(
-      hana::unpack(found_actions, hana::template_<tuple_helper>))::type::tuple;
+  using found_actions_tuple = decltype(hana::unpack(
+      found_actions, hana::template_<tuple_helper>))::type::tuple;
   using expected_actions_tuple = std::tuple<char, float>;
   static_assert(
       std::is_same<found_actions_tuple, expected_actions_tuple>::value,
@@ -184,7 +193,7 @@ BOOST_AUTO_TEST_CASE(has_duplicates_test) {
                 "has_duplicates_v failed");
   static_assert(has_duplicates_v<int, char, char, float>,
                 "has_duplicates_v failed");
-  static_assert(not has_duplicates_v<int, bool, char, float>,
+  static_assert(!has_duplicates_v<int, bool, char, float>,
                 "has_duplicates_v failed");
 }
 
@@ -197,10 +206,10 @@ BOOST_AUTO_TEST_CASE(any_of_test) {
                 "any_of_v<false, true, true, false> failed");
   static_assert(any_of_v<true, true, true>,
                 "any_of_v<true, true, true> failed");
-  static_assert(not any_of_v<false, false>, "any_of_v<false, false> failed");
+  static_assert(!any_of_v<false, false>, "any_of_v<false, false> failed");
   static_assert(any_of_v<true>, "any_of_v<true> failed");
-  static_assert(not any_of_v<false>, "any_of_v<false> failed");
-  static_assert(not any_of_v<>, "any_of_v<> failed");
+  static_assert(!any_of_v<false>, "any_of_v<false> failed");
+  static_assert(!any_of_v<>, "any_of_v<> failed");
 }
 
 /**
@@ -227,19 +236,19 @@ BOOST_AUTO_TEST_CASE(are_sorted_helper_tests) {
   using detail::are_sorted;
   // strictly ascending
   BOOST_CHECK((are_sorted<true, true, int, -1, 3, 4, 12>::value));
-  BOOST_CHECK((not are_sorted<true, true, int, -1, 13, 4>::value));
-  BOOST_CHECK((not are_sorted<true, true, int, -1, 4, 4, 7>::value));
+  BOOST_CHECK((!are_sorted<true, true, int, -1, 13, 4>::value));
+  BOOST_CHECK((!are_sorted<true, true, int, -1, 4, 4, 7>::value));
   // weakly ascending
   BOOST_CHECK((are_sorted<true, false, int, -1, 3, 4, 12>::value));
-  BOOST_CHECK((not are_sorted<true, false, int, -1, 13, 4>::value));
+  BOOST_CHECK((!are_sorted<true, false, int, -1, 13, 4>::value));
   BOOST_CHECK((are_sorted<true, false, int, -1, 4, 4, 7>::value));
   // strictly descending
   BOOST_CHECK((are_sorted<false, true, int, 1, -3, -4, -12>::value));
-  BOOST_CHECK((not are_sorted<false, true, int, 1, -13, -4>::value));
-  BOOST_CHECK((not are_sorted<false, true, int, 1, -4, -4>::value));
+  BOOST_CHECK((!are_sorted<false, true, int, 1, -13, -4>::value));
+  BOOST_CHECK((!are_sorted<false, true, int, 1, -4, -4>::value));
   // weakly descending
   BOOST_CHECK((are_sorted<false, false, int, 1, -3, -4, -12>::value));
-  BOOST_CHECK((not are_sorted<false, false, int, -1, -13, -4>::value));
+  BOOST_CHECK((!are_sorted<false, false, int, -1, -13, -4>::value));
   BOOST_CHECK((are_sorted<false, false, int, -1, -4, -4, -7>::value));
 }
 
@@ -263,12 +272,12 @@ BOOST_AUTO_TEST_CASE(are_within_helper_tests) {
   using detail::are_within;
   BOOST_CHECK((are_within<int, 0, 10, 1, 3, 7, 2>::value));
   BOOST_CHECK((are_within<int, 0, 10, 1, 3, 0, 2>::value));
-  BOOST_CHECK((not are_within<int, 0, 10, -1, 3, 7, 2>::value));
-  BOOST_CHECK((not are_within<int, 0, 10, -1, 3, 7, -2>::value));
-  BOOST_CHECK((not are_within<int, 0, 10, 1, 3, 17, 2>::value));
-  BOOST_CHECK((not are_within<int, 0, 10, 1, 3, 17, 12>::value));
-  BOOST_CHECK((not are_within<int, 0, 10, 1, 10>::value));
-  BOOST_CHECK((not are_within<int, 0, 10, 1, -2, 10, 14>::value));
+  BOOST_CHECK((!are_within<int, 0, 10, -1, 3, 7, 2>::value));
+  BOOST_CHECK((!are_within<int, 0, 10, -1, 3, 7, -2>::value));
+  BOOST_CHECK((!are_within<int, 0, 10, 1, 3, 17, 2>::value));
+  BOOST_CHECK((!are_within<int, 0, 10, 1, 3, 17, 12>::value));
+  BOOST_CHECK((!are_within<int, 0, 10, 1, 10>::value));
+  BOOST_CHECK((!are_within<int, 0, 10, 1, -2, 10, 14>::value));
 }
 
 /**
@@ -276,11 +285,11 @@ BOOST_AUTO_TEST_CASE(are_within_helper_tests) {
  */
 BOOST_AUTO_TEST_CASE(at_index_helper_tests) {
   using detail::at_index;
-  BOOST_CHECK((at_index<int, 0, 10, 1, 3, 7, 2>::value == 10));
-  BOOST_CHECK((at_index<int, 1, 10, 1, 3, 7, 2>::value == 1));
-  BOOST_CHECK((at_index<int, 2, 10, 1, 3, 7, 2>::value == 3));
-  BOOST_CHECK((at_index<int, 3, 10, 1, 3, 7, 2>::value == 7));
-  BOOST_CHECK((at_index<int, 4, 10, 1, 3, 7, 2>::value == 2));
+  BOOST_CHECK_EQUAL((at_index<int, 0, 10, 1, 3, 7, 2>::value), 10);
+  BOOST_CHECK_EQUAL((at_index<int, 1, 10, 1, 3, 7, 2>::value), 1);
+  BOOST_CHECK_EQUAL((at_index<int, 2, 10, 1, 3, 7, 2>::value), 3);
+  BOOST_CHECK_EQUAL((at_index<int, 3, 10, 1, 3, 7, 2>::value), 7);
+  BOOST_CHECK_EQUAL((at_index<int, 4, 10, 1, 3, 7, 2>::value), 2);
 }
 }  // namespace Test
 

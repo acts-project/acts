@@ -10,9 +10,11 @@
 
 #include "Acts/Utilities/Result.hpp"
 
-#include <iostream>
+#include <stdexcept>
 #include <string>
 #include <system_error>
+#include <type_traits>
+#include <utility>
 
 using namespace std::string_literals;
 
@@ -124,7 +126,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     res2 = MyError::SomethingElse;
     BOOST_CHECK(!res2.ok());
     BOOST_CHECK_EQUAL(res2.error(), MyError::SomethingElse);
-    BOOST_CHECK(res2.error() != MyError::Failure);
+    BOOST_CHECK_NE(res2.error(), MyError::Failure);
   }
 
   {
@@ -203,7 +205,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     res2 = MyError::SomethingElse;
     BOOST_CHECK(!res2.ok());
     BOOST_CHECK_EQUAL(res2.error(), MyError::SomethingElse);
-    BOOST_CHECK(res2.error() != MyError::Failure);
+    BOOST_CHECK_NE(res2.error(), MyError::Failure);
   }
 
   {
@@ -223,7 +225,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
     res = MyError::SomethingElse;
     BOOST_CHECK(!res.ok());
     BOOST_CHECK_EQUAL(res.error(), MyError::SomethingElse);
-    BOOST_CHECK(res.error() != MyError::Failure);
+    BOOST_CHECK_NE(res.error(), MyError::Failure);
   }
 
   {
@@ -240,7 +242,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
 }
 
 struct NoCopy {
-  NoCopy(int i) : num(i){};
+  NoCopy(int i) : num(i) {}
   NoCopy(const NoCopy&) = delete;
   NoCopy& operator=(const NoCopy&) = delete;
   NoCopy(NoCopy&&) = default;

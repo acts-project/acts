@@ -12,8 +12,10 @@
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
@@ -22,9 +24,11 @@
 
 namespace ActsExamples {
 
-class AlignmentAlgorithm final : public BareAlgorithm {
+class AlignmentAlgorithm final : public IAlgorithm {
  public:
   using AlignmentResult = Acts::Result<ActsAlignment::AlignmentResult>;
+  using AlignmentParameters =
+      std::unordered_map<Acts::DetectorElementBase*, Acts::Transform3>;
   /// Alignment function that takes sets of input measurements, initial
   /// trackstate and alignment options and returns some alignment-specific
   /// result.
@@ -46,7 +50,7 @@ class AlignmentAlgorithm final : public BareAlgorithm {
   /// Create the alignment function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
+  /// contains shared_ptr anyway.
   static std::shared_ptr<AlignmentFunction> makeAlignmentFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
@@ -64,7 +68,7 @@ class AlignmentAlgorithm final : public BareAlgorithm {
     std::string outputAlignmentParameters;
     /// Type erased fitter function.
     std::shared_ptr<AlignmentFunction> align;
-    /// The alignd transform updater
+    /// The aligned transform updater
     ActsAlignment::AlignedTransformUpdater alignedTransformUpdater;
     /// The surfaces (with detector elements) to be aligned
     std::vector<Acts::DetectorElementBase*> alignedDetElements;
@@ -73,28 +77,39 @@ class AlignmentAlgorithm final : public BareAlgorithm {
     /// Cutoff value for average chi2/ndf
     double chi2ONdfCutOff = 0.10;
     /// Cutoff value for delta of average chi2/ndf within a couple of iterations
-    std::pair<size_t, double> deltaChi2ONdfCutOff = {10, 0.00001};
+    std::pair<std::size_t, double> deltaChi2ONdfCutOff = {10, 0.00001};
     /// Maximum number of iterations
-    size_t maxNumIterations = 100;
+    std::size_t maxNumIterations = 100;
     /// Number of tracks to be used for alignment
     int maxNumTracks = -1;
   };
 
   /// Constructor of the alignment algorithm
   ///
-  /// @param cfg is the config struct to configure the algorihtm
+  /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
   AlignmentAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Framework execute method of the alignment algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
-  /// @return a process code to steer the algporithm flow
+  /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const override;
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
+  ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
+      this, "InputInitialTrackParameters"};
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                         "InputProtoTracks"};
+  WriteDataHandle<AlignmentParameters> m_outputAlignmentParameters{
+      this, "OutputAlignmentParameters"};
 };
 
 }  // namespace ActsExamples

@@ -9,15 +9,22 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <cmath>
+#include <cstdlib>
+#include <memory>
+#include <random>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -28,9 +35,9 @@ namespace Test {
 
 double halfX = 5_mm;
 double halfY = 10_mm;
-size_t ntests = 100;
-size_t nbinsx = 100;
-size_t nbinsy = 200;
+std::size_t ntests = 100;
+std::size_t nbinsx = 100;
+std::size_t nbinsy = 200;
 double hThickness = 75_um;
 double lAngle = 0.1;
 double tanAlpha = tan(lAngle);

@@ -15,12 +15,20 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceBinningMatcher.hpp"
+#include "Acts/Plugins/Identification/Identifier.hpp"
 #include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
+#include <array>
 #include <climits>
+#include <functional>
+#include <memory>
+#include <string>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 class TGeoMatrix;
 class TGeoVolume;
@@ -31,6 +39,10 @@ namespace Acts {
 class TGeoDetectorElement;
 class ITGeoDetectorElementSplitter;
 class Surface;
+class ISurfaceMaterial;
+class ITGeoIdentifierProvider;
+class LayerCreator;
+class ProtoLayerHelper;
 
 /// @class TGeoLayerBuilder
 ///
@@ -95,7 +107,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::string configurationName = "undefined";
     /// Unit conversion
     double unit = 1 * UnitConstants::cm;
-    /// Create an indentifier from TGeoNode
+    /// Create an identifier from TGeoNode
     std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
     /// Split TGeoElement if a splitter is provided
     std::shared_ptr<const ITGeoDetectorElementSplitter>
@@ -205,7 +217,7 @@ inline void TGeoLayerBuilder::registerSplit(
       found = true;
     }
   }
-  if (not found) {
+  if (!found) {
     parameters.push_back(test);
   }
 }

@@ -58,12 +58,12 @@ class AdaptiveMultiVertexFinder {
     /// @param ipEst ImpactPointEstimator
     /// @param lin Track linearizer
     /// @param bIn Input magnetic field
-    Config(vfitter_t fitter, const sfinder_t& sfinder,
-           const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
+    Config(vfitter_t fitter, sfinder_t sfinder,
+           ImpactPointEstimator<InputTrack_t, Propagator_t> ipEst,
            Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
-          seedFinder(sfinder),
-          ipEstimator(ipEst),
+          seedFinder(std::move(sfinder)),
+          ipEstimator(std::move(ipEst)),
           linearizer(std::move(lin)),
           bField{std::move(bIn)} {}
 
@@ -80,10 +80,6 @@ class AdaptiveMultiVertexFinder {
     Linearizer_t linearizer;
 
     std::shared_ptr<const MagneticFieldProvider> bField;
-
-    // Use a beam spot constraint, vertexConstraint in VertexingOptions
-    // has to be set in this case
-    bool useBeamSpotConstraint = true;
 
     // Max z interval used for adding tracks to fit:
     // When adding a new vertex to the multi vertex fit,
@@ -137,7 +133,7 @@ class AdaptiveMultiVertexFinder {
     // Include also single track vertices
     bool addSingleTrackVertices = false;
 
-    // Use 3d information fo evaluating the vertex distance significance
+    // Use 3d information for evaluating the vertex distance significance
     // for vertex merging/splitting
     bool do3dSplitting = false;
 
@@ -173,7 +169,7 @@ class AdaptiveMultiVertexFinder {
   template <
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFinder(Config& cfg,
+  AdaptiveMultiVertexFinder(Config cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFinder",
                                                  Logging::INFO))
@@ -189,7 +185,7 @@ class AdaptiveMultiVertexFinder {
   /// object
   /// @param logger The logging instance
   AdaptiveMultiVertexFinder(
-      Config& cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
@@ -224,7 +220,9 @@ class AdaptiveMultiVertexFinder {
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger& logger() const {
+    return *m_logger;
+  }
 
   /// @brief Calls the seed finder and sets constraints on the found seed
   /// vertex if desired
@@ -247,8 +245,10 @@ class AdaptiveMultiVertexFinder {
   /// @brief Sets constraint vertex after seeding
   ///
   /// @param currentConstraint Vertex constraint
+  /// @param useVertexConstraintInFit Indicates whether constraint is used during vertex fit
   /// @param seedVertex Seed vertex
   void setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
+                                 bool useVertexConstraintInFit,
                                  Vertex<InputTrack_t>& seedVertex) const;
 
   /// @brief Calculates the IP significance of a track to a given vertex
@@ -316,12 +316,13 @@ class AdaptiveMultiVertexFinder {
   /// @param vtx The vertex candidate
   /// @param seedTracks The seed tracks
   /// @param fitterState The vertex fitter state
+  /// @param useVertexConstraintInFit Indicates whether constraint is used in the vertex fit
   ///
   /// @return pair(nCompatibleTracks, isGoodVertex)
   std::pair<int, bool> checkVertexAndCompatibleTracks(
       Vertex<InputTrack_t>& vtx,
       const std::vector<const InputTrack_t*>& seedTracks,
-      FitterState_t& fitterState) const;
+      FitterState_t& fitterState, bool useVertexConstraintInFit) const;
 
   /// @brief Method that removes all tracks that are compatible with
   /// current vertex from seedTracks

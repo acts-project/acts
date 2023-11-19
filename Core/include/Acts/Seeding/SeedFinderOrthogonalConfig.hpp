@@ -64,6 +64,10 @@ struct SeedFinderOrthogonalConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
+  // z of last layers to avoid iterations
+  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                           2700 * Acts::UnitConstants::mm};
+
   // radial range for middle SP
   // variable range based on SP radius
   bool useVariableMiddleSPRange = true;
@@ -91,14 +95,15 @@ struct SeedFinderOrthogonalConfig {
   // parameters for forward seed confirmation
   SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
-  // skip top SPs based on cotTheta sorting when producing triplets
-  bool skipPreviousTopSP = false;
-
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
   // default is 5%
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
+
+  // Parameter which can loosen the tolerance of the track seed to form a
+  // helix. This is useful for e.g. misaligned seeding.
+  float helixCutTolerance = 1.;
 
   // derived values, set on SeedFinder construction
   float highland = 0;
@@ -107,7 +112,7 @@ struct SeedFinderOrthogonalConfig {
   bool isInInternalUnits = false;
 
   SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
-    if (not isInInternalUnits) {
+    if (!isInInternalUnits) {
       throw std::runtime_error(
           "SeedFinderOrthogonalConfig not in ACTS internal units in "
           "calculateDerivedQuantities");

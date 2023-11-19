@@ -10,7 +10,9 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -38,7 +40,7 @@ struct GenericDetector {
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config {
-    size_t buildLevel{3};
+    std::size_t buildLevel{3};
     Acts::Logging::Level surfaceLogLevel{Acts::Logging::INFO};
     Acts::Logging::Level layerLogLevel{Acts::Logging::INFO};
     Acts::Logging::Level volumeLogLevel{Acts::Logging::INFO};

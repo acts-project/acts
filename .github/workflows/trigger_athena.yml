@@ -1,0 +1,16 @@
+name: Trigger Athena build
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  trigger_athena_job:
+    runs-on: ubuntu-latest
+    steps:
+      - run: >
+          curl -X POST --fail
+          -F token=${{ secrets.GITLAB_ATHENA_BUILD_TRIGGER_TOKEN}}
+          -F ref=main
+          --form variables[SOURCE_SHA]="${{ github.sha }}"
+          https://gitlab.cern.ch/api/v4/projects/153873/trigger/pipeline

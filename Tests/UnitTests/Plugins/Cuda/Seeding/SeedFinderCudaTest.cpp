@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -46,7 +46,7 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
       float x, y, z, r, varianceR, varianceZ;
       if (linetype == "lxyz") {
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-        r = std::sqrt(x * x + y * y);
+        r = std::hypot(x, y);
         float f22 = varianceR;
         float wid = varianceZ;
         float cov = wid * wid * .08333;
@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
   config = config.toInternalUnits();
 
   Acts::SeedFinderOptions options;
-  options.bFieldInZ = 1.99724_T;
+  options.bFieldInZ = 2_T;
   options.beamPos = {-.5_mm, -.5_mm};
   options = options.toInternalUnits().calculateDerivedQuantities(config);
 
@@ -262,21 +262,21 @@ int main(int argc, char** argv) {
   auto start_cpu = std::chrono::system_clock::now();
 
   int group_count;
-  auto groupIt = spGroup.begin();
+  auto groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, skip);
 
   //----------- CPU ----------//
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-  groupIt = spGroup.begin();
 
   if (do_cpu) {
     decltype(seedFinder_cpu)::SeedingState state;
-    for (int i_s = 0; i_s < skip; i_s++)
-      ++groupIt;
-    for (; !(groupIt == spGroup.end()); ++groupIt) {
+    state.spacePointData.resize(spVec.size());
+    for (; groupIt != spGroup.end(); ++groupIt) {
+      const auto [bottom, middle, top] = *groupIt;
       seedFinder_cpu.createSeedsForGroup(
-          options, state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
+          options, state, spGroup.grid(),
+          std::back_inserter(seedVector_cpu.emplace_back()), bottom, middle,
+          top, rMiddleSPRange);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)
@@ -298,19 +298,22 @@ int main(int argc, char** argv) {
 
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
-  groupIt = spGroup.begin();
+  groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, skip);
 
-  for (int i_s = 0; i_s < skip; i_s++)
-    ++groupIt;
-  for (; !(groupIt == spGroup.end()); ++groupIt) {
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spVec.size());
+
+  for (; groupIt != spGroup.end(); ++groupIt) {
+    const auto [bottom, middle, top] = *groupIt;
     seedVector_cuda.push_back(seedFinder_cuda.createSeedsForGroup(
-        groupIt.bottom(), groupIt.middle(), groupIt.top()));
+        spacePointData, spGroup.grid(), bottom, middle, top));
     group_count++;
     if (allgroup == false) {
       if (group_count >= nGroupToIterate)
         break;
     }
   }
+
   auto end_cuda = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsec_cuda = end_cuda - start_cuda;
   double cudaTime = elapsec_cuda.count();
@@ -354,14 +357,14 @@ int main(int argc, char** argv) {
 
   int nMatch = 0;
 
-  for (size_t i = 0; i < seedVector_cpu.size(); i++) {
+  for (std::size_t i = 0; i < seedVector_cpu.size(); i++) {
     auto regionVec_cpu = seedVector_cpu[i];
     auto regionVec_cuda = seedVector_cuda[i];
 
     std::vector<std::vector<SpacePoint>> seeds_cpu;
     std::vector<std::vector<SpacePoint>> seeds_cuda;
 
-    // for (size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
+    // for (std::size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
     for (auto sd : regionVec_cpu) {
       std::vector<SpacePoint> seed_cpu;
       seed_cpu.push_back(*(sd.sp()[0]));
@@ -401,7 +404,7 @@ int main(int argc, char** argv) {
       std::cout << "CPU Seed result:" << std::endl;
 
       for (auto& regionVec : seedVector_cpu) {
-        for (size_t i = 0; i < regionVec.size(); i++) {
+        for (std::size_t i = 0; i < regionVec.size(); i++) {
           const Acts::Seed<SpacePoint>* seed = &regionVec[i];
           const SpacePoint* sp = seed->sp()[0];
           std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
@@ -421,7 +424,7 @@ int main(int argc, char** argv) {
     std::cout << "CUDA Seed result:" << std::endl;
 
     for (auto& regionVec : seedVector_cuda) {
-      for (size_t i = 0; i < regionVec.size(); i++) {
+      for (std::size_t i = 0; i < regionVec.size(); i++) {
         const Acts::Seed<SpacePoint>* seed = &regionVec[i];
         const SpacePoint* sp = seed->sp()[0];
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()

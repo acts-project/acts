@@ -10,18 +10,23 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iosfwd>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
 
 /// @class DiamondBounds
 ///
+/// @image html DiamondBounds.svg
 /// Bounds for a double trapezoidal ("diamond"), planar Surface.
 class DiamondBounds : public PlanarBounds {
  public:
@@ -90,7 +95,7 @@ class DiamondBounds : public PlanarBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note the number of segements is ignored for this representation
+  /// @note the number of segments is ignored for this representation
   ///
   /// @return vector for vertices in 2D
   std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
@@ -127,7 +132,7 @@ inline void DiamondBounds::checkConsistency() noexcept(false) {
                   [](auto v) { return v <= 0.; })) {
     throw std::invalid_argument("DiamondBounds: negative half length.");
   }
-  if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) or
+  if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) ||
       get(eHalfLengthXposY) > get(eHalfLengthXzeroY)) {
     throw std::invalid_argument("DiamondBounds: not a diamond shape.");
   }

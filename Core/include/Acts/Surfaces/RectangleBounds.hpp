@@ -9,18 +9,25 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
 #include <cassert>
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
 
 /// @class RectangleBounds
 ///
+/// @image html RectangleBounds.gif
+///
 /// Bounds for a rectangular, planar surface - it can be used to for
-/// rectangles that are symetrically centered around (0./0.) and for
+/// rectangles that are symmetrically centered around (0./0.) and for
 /// generic shifted rectangles
 class RectangleBounds : public PlanarBounds {
  public:
@@ -82,7 +89,7 @@ class RectangleBounds : public PlanarBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note the number of segements is ignored in this representation
+  /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
   std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
@@ -157,7 +164,7 @@ inline double RectangleBounds::get(BoundValues bValue) const {
     case eMaxY:
       return m_max.y();
     default:
-      assert(false and "Invalid BoundValue enum value");
+      assert(false && "Invalid BoundValue enum value");
       return std::numeric_limits<double>::quiet_NaN();
   }
 }

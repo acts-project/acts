@@ -8,13 +8,16 @@
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 
 Acts::AnnulusBounds::AnnulusBounds(
     const std::array<double, eSize>& values) noexcept(false)
@@ -182,7 +185,7 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
       return true;
     }
 
-    // we need to rotated the locpo
+    // we need to rotate the locpo
     Vector2 locpo_rotated = m_rotationStripPC * lposition;
 
     // covariance is given in STRIP SYSTEM in PC
@@ -337,7 +340,7 @@ Acts::Vector2 Acts::AnnulusBounds::stripXYToModulePC(
 
 Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
     const Vector2& a, const Vector2& b, const Vector2& p,
-    const SymMatrix2& weight) const {
+    const SquareMatrix2& weight) const {
   // connecting vector
   auto n = b - a;
   // squared norm of line
@@ -352,7 +355,7 @@ Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
 }
 
 double Acts::AnnulusBounds::squaredNorm(const Vector2& v,
-                                        const SymMatrix2& weight) const {
+                                        const SquareMatrix2& weight) const {
   return (v.transpose() * weight * v).value();
 }
 

@@ -19,8 +19,8 @@ StraightLineStepper::boundState(
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars,
-      state.covTransport and transportCov, state.pathAccumulated, surface,
+      state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.covTransport && transportCov, state.pathAccumulated, surface,
       freeToBoundCorrection);
 }
 
@@ -28,8 +28,8 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.covTransport and transportCov,
-      state.pathAccumulated);
+      state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.covTransport && transportCov, state.pathAccumulated);
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& freeParams,
@@ -43,12 +43,12 @@ void StraightLineStepper::update(State& state, const FreeVector& freeParams,
 }
 
 void StraightLineStepper::update(State& state, const Vector3& uposition,
-                                 const Vector3& udirection, double up,
+                                 const Vector3& udirection, double qop,
                                  double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
-  state.pars[eFreeQOverP] = (state.q != 0. ? state.q / up : 1. / up);
+  state.pars[eFreeQOverP] = qop;
 }
 
 void StraightLineStepper::transportCovarianceToCurvilinear(State& state) const {
@@ -68,16 +68,14 @@ void StraightLineStepper::transportCovarianceToBound(
 
 void StraightLineStepper::resetState(State& state,
                                      const BoundVector& boundParams,
-                                     const BoundSymMatrix& cov,
+                                     const BoundSquareMatrix& cov,
                                      const Surface& surface,
-                                     const NavigationDirection navDir,
                                      const double stepSize) const {
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                 boundParams),
          boundParams, cov, surface);
-  state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
 

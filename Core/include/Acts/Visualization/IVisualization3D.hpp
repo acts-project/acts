@@ -12,6 +12,7 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
+#include <cstddef>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -23,7 +24,7 @@ namespace Acts {
 /// conform to.
 class IVisualization3D {
  public:
-  using FaceType = std::vector<size_t>;
+  using FaceType = std::vector<std::size_t>;
 
   /// Draw a vertex at a given location and a color.
   /// @param vtx The vertex position
@@ -45,7 +46,7 @@ class IVisualization3D {
   /// @note Depending on the helper implementation, out of plane vertices might
   /// be handled differently.
   /// @param vtxs The vertices that make up the faceS
-  /// @param faces The face presectiotions (i.e. connecting vertices)
+  /// @param faces The face presections (i.e. connecting vertices)
   /// @param color The color of the face
   ///
   virtual void faces(const std::vector<Vector3>& vtxs,
@@ -66,7 +67,7 @@ class IVisualization3D {
 
   /// Write the content of the helper to an outstream.
   /// @param path is the file system path for writing the file
-  /// @note wil change to std::filesystem::path once gcc9 is standard
+  /// @note will change to std::filesystem::path once gcc9 is standard
   virtual void write(const std::string& path) const = 0;
 
   /// Remove all contents of this helper

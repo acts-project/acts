@@ -14,19 +14,17 @@ namespace Acts {
 /// @brief pair of ints for definition of a cell
 struct DigitizationCell final {
   // identification and data
-  size_t channel0 = 0;
-  size_t channel1 = 1;
+  std::size_t channel0 = 0;
+  std::size_t channel1 = 1;
   float data = 0.;
 
-  // connstruct them
-  DigitizationCell(size_t ch0, size_t ch1, float d = 0.)
+  // construct them
+  DigitizationCell(std::size_t ch0, std::size_t ch1, float d = 0.)
       : channel0(ch0), channel1(ch1), data(d) {}
-  // copy them
-  DigitizationCell(const DigitizationCell& dc) = default;
 
   /// To merge cells in case they are at the same position
   /// @param dc the cell to be added to the current cell
-  /// @param analogueReadout flag indicating if we have analgue readout
+  /// @param analogueReadout flag indicating if we have analogue readout
   /// @note this function is needed because possible derived classes may
   /// calculate the energy deposit differently. Furthermore this allows to apply
   /// an energy cut, because the energy deposit can also be stored for digital

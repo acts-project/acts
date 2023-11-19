@@ -8,13 +8,11 @@
 
 #pragma once
 
-#pragma once
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "actsvg/core.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/core.hpp>
+#include <actsvg/meta.hpp>
 
 namespace Acts {
 
@@ -31,8 +29,6 @@ struct Options {
   std::string prefix = "";
   /// Write the layer conversion options
   GeometryHierarchyMap<LayerConverter::Options> layerOptions;
-  /// ACTS log level
-  Logging::Level logLevel = Logging::INFO;
 };
 
 /// State object to collect geometry-wise information

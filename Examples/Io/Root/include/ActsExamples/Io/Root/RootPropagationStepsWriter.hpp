@@ -9,14 +9,20 @@
 #pragma once
 
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstddef>
 #include <mutex>
+#include <string>
+#include <vector>
 
 class TFile;
 class TTree;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 using PropagationSteps = std::vector<Acts::detail::Step>;
 
@@ -53,7 +59,7 @@ class RootPropagationStepsWriter
   ~RootPropagationStepsWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -91,7 +97,7 @@ class RootPropagationStepsWriter
   std::vector<float> m_step_act;   ///< actor check
   std::vector<float> m_step_abt;   ///< aborter
   std::vector<float> m_step_usr;   ///< user
-  std::vector<size_t>
+  std::vector<std::size_t>
       m_nStepTrials;  ///< Number of iterations needed by the stepsize
                       ///  finder (e.g. Runge-Kutta) of the stepper.
 };

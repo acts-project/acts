@@ -9,6 +9,7 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Digitization/DigitizationCell.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 
 #include <memory>
 #include <vector>
@@ -18,7 +19,7 @@ namespace Acts {
 class SurfaceBounds;
 class Surface;
 class BinUtility;
-using SurfacePtr = std::shared_ptr<const Surface>;
+using SurfacePtr = std::shared_ptr<const RegularSurface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
 
 /// @brief Segmentation Base class
@@ -57,7 +58,7 @@ class Segmentation {
       SurfacePtrVector& segmentationSurfacesY, double halfThickness,
       int readoutDirection, double lorentzAngle) const = 0;
 
-  /// Get the digitization cell fropm a 3D position
+  /// Get the digitization cell from a 3D position
   /// - ignores the shift, i.e. assumenes in to be in cell frame
   ///
   /// @param position is the position for which the cell is requested
@@ -65,7 +66,7 @@ class Segmentation {
   /// @return is a cell with cell ids
   virtual DigitizationCell cell(const Vector3& position) const = 0;
 
-  /// Get the digitization cell fropm a 2D position
+  /// Get the digitization cell from a 2D position
   /// - ignores the shift, i.e. assumenes in to be in cell frame
   ///
   /// @param position is the position for which the cell is requested

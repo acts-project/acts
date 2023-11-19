@@ -9,11 +9,16 @@
 #include "DetUtils.h"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
-#include "DD4hep/CartesianGridXZ.h"
+#include <cstddef>
+
+#include <DD4hep/CartesianGridXZ.h>
+#include <DD4hep/Segmentations.h>
+#include <XML/XMLTags.h>
 
 namespace det {
 namespace utils {
@@ -33,12 +38,14 @@ std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModuleXZ(
     // the Acts segmentation of the DigitizationModule
     double gridSizeX = cartesianGrid.gridSizeX() * scalor;
     double gridSizeZ = cartesianGrid.gridSizeZ() * scalor;
-    size_t bins0 = (cartesianGrid.gridSizeX() != 0)
-                       ? static_cast<size_t>((2 * halflengthX) / gridSizeX)
-                       : 0;
-    size_t bins1 = (cartesianGrid.gridSizeZ() != 0)
-                       ? static_cast<size_t>((2 * halflengthZ) / gridSizeZ)
-                       : 0;
+    std::size_t bins0 =
+        (cartesianGrid.gridSizeX() != 0)
+            ? static_cast<std::size_t>((2 * halflengthX) / gridSizeX)
+            : 0;
+    std::size_t bins1 =
+        (cartesianGrid.gridSizeZ() != 0)
+            ? static_cast<std::size_t>((2 * halflengthZ) / gridSizeZ)
+            : 0;
 
     std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
         std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,
@@ -62,13 +69,13 @@ std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModuleXZ(
   auto bounds =
       std::make_shared<const Acts::RectangleBounds>(halflengthX, halflengthZ);
   // the Acts segmentation of the DigitizationModule
-  size_t bins0 =
+  std::size_t bins0 =
       (gridSizeX != 0)
-          ? static_cast<size_t>((2 * halflengthX) / (gridSizeX * scalor))
+          ? static_cast<std::size_t>((2 * halflengthX) / (gridSizeX * scalor))
           : 0;
-  size_t bins1 =
+  std::size_t bins1 =
       (gridSizeZ != 0)
-          ? static_cast<size_t>((2 * halflengthZ) / (gridSizeZ * scalor))
+          ? static_cast<std::size_t>((2 * halflengthZ) / (gridSizeZ * scalor))
           : 0;
 
   std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
@@ -98,12 +105,14 @@ std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModuleXZ(
     // the Acts segmentation of the DigitizationModule
     double gridSizeX = cartesianGrid.gridSizeX() * scalor;
     double gridSizeZ = cartesianGrid.gridSizeZ() * scalor;
-    size_t bins0 = (cartesianGrid.gridSizeX() != 0)
-                       ? static_cast<size_t>((2 * maxHalflengthX) / gridSizeX)
-                       : 0;
-    size_t bins1 = (cartesianGrid.gridSizeZ() != 0)
-                       ? static_cast<size_t>((2 * halflengthZ) / gridSizeZ)
-                       : 0;
+    std::size_t bins0 =
+        (cartesianGrid.gridSizeX() != 0)
+            ? static_cast<std::size_t>((2 * maxHalflengthX) / gridSizeX)
+            : 0;
+    std::size_t bins1 =
+        (cartesianGrid.gridSizeZ() != 0)
+            ? static_cast<std::size_t>((2 * halflengthZ) / gridSizeZ)
+            : 0;
 
     std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
         std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,
@@ -130,13 +139,13 @@ std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModuleXZ(
       minHalflengthX, maxHalflengthX, halflengthZ);
 
   // the Acts segmentation of the DigitizationModule
-  size_t bins0 =
-      (gridSizeX != 0)
-          ? static_cast<size_t>((2 * maxHalflengthX) / (gridSizeX * scalor))
-          : 0;
-  size_t bins1 =
+  std::size_t bins0 = (gridSizeX != 0)
+                          ? static_cast<std::size_t>((2 * maxHalflengthX) /
+                                                     (gridSizeX * scalor))
+                          : 0;
+  std::size_t bins1 =
       (gridSizeZ != 0)
-          ? static_cast<size_t>((2 * halflengthZ) / (gridSizeZ * scalor))
+          ? static_cast<std::size_t>((2 * halflengthZ) / (gridSizeZ * scalor))
           : 0;
 
   std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =

@@ -43,19 +43,17 @@ namespace Acts {
 ///
 /// @param spBegin is the begin iterator for the space points
 /// @param spEnd is the end iterator for the space points
+/// @param logger A logger instance
 ///
 /// @return optional bound track parameters with the estimated d0, phi and 1/R
 /// stored with the indices, eBoundLoc0, eBoundPhi and eBoundQOverP,
 /// respectively. The bound parameters with other indices are set to zero.
 template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
-    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
-
+    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
+    const Logger& logger = getDummyLogger()) {
   // Check the number of provided space points
-  size_t numSP = std::distance(spBegin, spEnd);
+  std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP < 3) {
     ACTS_ERROR("At least three space points are required.")
     return std::nullopt;
@@ -149,6 +147,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 /// @param bField is the magnetic field vector
 /// @param bFieldMin is the minimum magnetic field required to trigger the
 /// estimation of q/pt
+/// @param logger A logger instance
 /// @param mass is the estimated particle mass
 ///
 /// @return optional bound parameters
@@ -156,13 +155,10 @@ template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, spacepoint_iterator_t spBegin,
     spacepoint_iterator_t spEnd, const Surface& surface, const Vector3& bField,
-    ActsScalar bFieldMin, ActsScalar mass = 139.57018 * UnitConstants::MeV) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
-
+    ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger(),
+    ActsScalar mass = 139.57018 * UnitConstants::MeV) {
   // Check the number of provided space points
-  size_t numSP = std::distance(spBegin, spEnd);
+  std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP != 3) {
     ACTS_ERROR("There should be exactly three space points provided.")
     return std::nullopt;
@@ -186,7 +182,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
                                               Vector3::Zero()};
   // The first, second and third space point are assumed to be bottom, middle
   // and top space point, respectively
-  for (size_t isp = 0; isp < 3; ++isp) {
+  for (std::size_t isp = 0; isp < 3; ++isp) {
     spacepoint_iterator_t it = std::next(spBegin, isp);
     if (*it == nullptr) {
       ACTS_ERROR("Empty space point found. This should not happen.")
@@ -199,8 +195,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
-  // space point on the tranverse plane will be located at the x axis of the new
-  // frame.
+  // space point on the transverse plane will be located at the x axis of the
+  // new frame.
   Vector3 relVec = spGlobalPositions[1] - spGlobalPositions[0];
   Vector3 newZAxis = bField.normalized();
   Vector3 newYAxis = newZAxis.cross(relVec).normalized();
@@ -240,8 +236,9 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // frame
   ActsScalar rn = local2.x() * local2.x() + local2.y() * local2.y();
   // The (1/tanTheta) of momentum in the new frame,
+  static constexpr ActsScalar G = static_cast<ActsScalar>(1. / 24.);
   ActsScalar invTanTheta =
-      local2.z() * std::sqrt(1. / rn) / (1. + rho * rho * rn);
+      local2.z() * std::sqrt(1. / rn) / (1. + G * rho * rho * rn);
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   Vector3 transDirection(1., A, std::hypot(1, A) * invTanTheta);
@@ -258,7 +255,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Transform the bottom space point to local coordinates of the provided
   // surface
   auto lpResult = surface.globalToLocal(gctx, spGlobalPositions[0], direction);
-  if (not lpResult.ok()) {
+  if (!lpResult.ok()) {
     ACTS_ERROR(
         "Global to local transformation did not succeed. Please make sure the "
         "bottom space point lies on the provided surface.");
@@ -289,7 +286,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   ActsScalar pathz = spGlobalPositions[0].dot(bField) / bField.norm();
   // The estimated time (use path length along magnetic field only if it's not
   // zero)
-  if (pathz != 0) {
+  if (pathz != 0 && vz != 0) {
     params[eBoundTime] = pathz / vz;
   } else {
     params[eBoundTime] = spGlobalPositions[0].norm() / v;

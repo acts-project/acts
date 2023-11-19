@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
@@ -18,12 +18,12 @@
 
 namespace Acts {
 namespace detail_lt {
-template <typename D, size_t M, bool ReadOnly>
+template <typename D, std::size_t M, bool ReadOnly>
 inline TrackStateProxy<D, M, ReadOnly>::TrackStateProxy(
     ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory, IndexType istate)
     : m_traj(&trajectory), m_istate(istate) {}
 
-template <typename D, size_t M, bool ReadOnly>
+template <typename D, std::size_t M, bool ReadOnly>
 TrackStatePropMask TrackStateProxy<D, M, ReadOnly>::getMask() const {
   using PM = TrackStatePropMask;
 
@@ -46,8 +46,9 @@ TrackStatePropMask TrackStateProxy<D, M, ReadOnly>::getMask() const {
   return mask;
 }
 
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
+template <typename D, std::size_t M, bool ReadOnly>
+inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const
+    -> ConstParameters {
   if (hasSmoothed()) {
     return smoothed();
   } else if (hasFiltered()) {
@@ -57,8 +58,9 @@ inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
   }
 }
 
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const -> Covariance {
+template <typename D, std::size_t M, bool ReadOnly>
+inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const
+    -> ConstCovariance {
   if (hasSmoothed()) {
     return smoothedCovariance();
   } else if (hasFiltered()) {
@@ -68,29 +70,18 @@ inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const -> Covariance {
   }
 }
 
-template <typename D, size_t M, bool ReadOnly>
+template <typename D, std::size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
   assert(has<hashString("projector")>());
   return bitsetToMatrix<Projector>(
       component<ProjectorBitset, hashString("projector")>());
 }
 
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::uncalibratedSourceLink() const
-    -> const SourceLink& {
+template <typename D, std::size_t M, bool ReadOnly>
+inline auto TrackStateProxy<D, M, ReadOnly>::getUncalibratedSourceLink() const
+    -> SourceLink {
   assert(has<hashString("uncalibratedSourceLink")>());
-  return component<std::optional<SourceLink>,
-                   hashString("uncalibratedSourceLink")>()
-      .value();
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::calibratedSourceLink() const
-    -> const SourceLink& {
-  assert(has<hashString("calibratedSourceLink")>());
-  return component<std::optional<SourceLink>,
-                   hashString("calibratedSourceLink")>()
-      .value();
+  return m_traj->getUncalibratedSourceLink(m_istate);
 }
 
 }  // namespace detail_lt

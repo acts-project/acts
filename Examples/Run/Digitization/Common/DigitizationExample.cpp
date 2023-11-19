@@ -146,7 +146,6 @@ int runDigitizationExample(
         Options::readCsvMeasurementWriterConfig(vm);
     measWriterCsv.inputMeasurements = digiCfg.outputMeasurements;
     measWriterCsv.inputClusters = digiCfg.outputClusters;
-    measWriterCsv.inputSimHits = simHitReaderCfg.outputSimHits;
     measWriterCsv.inputMeasurementSimHitsMap =
         digiCfg.outputMeasurementSimHitsMap;
     sequencer.addWriter(

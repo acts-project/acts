@@ -14,10 +14,13 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepTrackWriter.hpp"
 
 #include <memory>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -46,8 +49,7 @@ void addEDM4hep(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMeasurementWriter, edm4hep,
                              "EDM4hepMeasurementWriter", inputMeasurements,
-                             inputClusters, inputSimHits,
-                             inputMeasurementSimHitsMap, outputPath);
+                             inputClusters, outputPath);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepParticleReader, edm4hep,
                              "EDM4hepParticleReader", inputPath, inputParticles,
@@ -60,7 +62,14 @@ void addEDM4hep(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMultiTrajectoryWriter,
                              edm4hep, "EDM4hepMultiTrajectoryWriter",
                              inputTrajectories, inputMeasurementParticlesMap,
-                             outputPath);
+                             outputPath, Bz);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepTrackWriter, edm4hep,
+                             "EDM4hepTrackWriter", inputTracks, outputPath, Bz);
+
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepTrackReader, edm4hep,
+                             "EDM4hepTrackReader", inputTracks, outputTracks,
+                             inputPath, Bz);
 }
 
 }  // namespace Acts::Python

@@ -17,13 +17,14 @@
 
 ActsExamples::HelloRandomAlgorithm::HelloRandomAlgorithm(
     const HelloRandomAlgorithm::Config& cfg, Acts::Logging::Level level)
-    : BareAlgorithm("HelloRandom", level), m_cfg(cfg) {
+    : IAlgorithm("HelloRandom", level), m_cfg(cfg) {
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random number service");
   }
   if (m_cfg.output.empty()) {
     throw std::invalid_argument("Missing output collection");
   }
+  m_writeHandle.initialize(m_cfg.output);
 }
 
 ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
@@ -46,7 +47,7 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
 
   // generate collection of random numbers
   HelloDataCollection collection;
-  for (size_t idraw = 0; idraw < m_cfg.drawsPerEvent; ++idraw) {
+  for (std::size_t idraw = 0; idraw < m_cfg.drawsPerEvent; ++idraw) {
     double gauss = gaussDist(rng);
     double uniform = uniformDist(rng);
     double gamma = gammaDist(rng);
@@ -66,7 +67,7 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
   }
 
   // transfer generated data to the event store.
-  ctx.eventStore.add(m_cfg.output, std::move(collection));
+  m_writeHandle(ctx, std::move(collection));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

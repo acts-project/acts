@@ -8,8 +8,13 @@
 
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 #include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
@@ -17,20 +22,30 @@
 #include <Acts/Utilities/BinUtility.hpp>
 #include <Acts/Utilities/BinningType.hpp>
 
+#include <algorithm>
 #include <cstdio>
+#include <functional>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <vector>
 
 #include <TFile.h>
-#include <TH2F.h>
+#include <TH1.h>
+#include <TH2.h>
 #include <TIterator.h>
 #include <TKey.h>
 #include <TList.h>
+#include <TObject.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
+
+namespace Acts {
+class ISurfaceMaterial;
+class IVolumeMaterial;
+}  // namespace Acts
 
 ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     const ActsExamples::RootMaterialDecorator::Config& config,
@@ -49,7 +64,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
   // Setup ROOT I/O
   m_inputFile = TFile::Open(m_cfg.fileName.c_str());
   if (m_inputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.fileName);
+    throw std::ios_base::failure("Could not open '" + m_cfg.fileName + "'");
   }
 
   // Get the list of keys from the file
@@ -167,7 +182,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           // Now reconstruct the bin untilities
           Acts::BinUtility bUtility;
           for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
-            size_t nbins = size_t(n->GetBinContent(ib));
+            std::size_t nbins = std::size_t(n->GetBinContent(ib));
             Acts::BinningValue val = Acts::BinningValue(v->GetBinContent(ib));
             Acts::BinningOption opt = Acts::BinningOption(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);
@@ -188,7 +203,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           double da = A->GetBinContent(1, 1);
           double dz = Z->GetBinContent(1, 1);
           double drho = rho->GetBinContent(1, 1);
-          // Create and set the homogenous surface material
+          // Create and set the homogeneous surface material
           const auto material =
               Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
           sMaterial = std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
@@ -237,20 +252,20 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       TH1F* rho = dynamic_cast<TH1F*>(m_inputFile->Get(rhoName.c_str()));
 
       // Only go on when you have all the material histograms
-      if ((x0 != nullptr) and (l0 != nullptr) and (A != nullptr) and
-          (Z != nullptr) and (rho != nullptr)) {
+      if ((x0 != nullptr) && (l0 != nullptr) && (A != nullptr) &&
+          (Z != nullptr) && (rho != nullptr)) {
         // Get the number of grid points
         int points = x0->GetNbinsX();
         // If the bin information histograms are present the material is
         // either a 2D or a 3D grid
-        if ((n != nullptr) and (v != nullptr) and (o != nullptr) and
-            (min != nullptr) and (max != nullptr)) {
+        if ((n != nullptr) && (v != nullptr) && (o != nullptr) &&
+            (min != nullptr) && (max != nullptr)) {
           // Dimension of the grid
           int dim = n->GetNbinsX();
           // Now reconstruct the bin untilities
           Acts::BinUtility bUtility;
           for (int ib = 1; ib < dim + 1; ++ib) {
-            size_t nbins = size_t(n->GetBinContent(ib));
+            std::size_t nbins = std::size_t(n->GetBinContent(ib));
             Acts::BinningValue val = Acts::BinningValue(v->GetBinContent(ib));
             Acts::BinningOption opt = Acts::BinningOption(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);

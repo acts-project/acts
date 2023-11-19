@@ -24,7 +24,7 @@ void EmptyDetector::addOptions(
 
 auto EmptyDetector::finalize(
     const boost::program_options::variables_map& vm,
-    std::shared_ptr<const Acts::IMaterialDecorator> /*unused*/)
+    std::shared_ptr<const Acts::IMaterialDecorator> /*mdecorator*/)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   using namespace Acts::UnitLiterals;
 
@@ -44,9 +44,9 @@ auto EmptyDetector::finalize(
       std::make_shared<Acts::TrackingGeometry>(std::move(worldVolume), nullptr);
 
   /// Empty decorators
-  ContextDecorators eContextDeocrators = {};
+  ContextDecorators eContextDecorators = {};
 
   // And return the pair with empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(tgGeometry), std::move(eContextDeocrators));
+      std::move(tgGeometry), std::move(eContextDecorators));
 }

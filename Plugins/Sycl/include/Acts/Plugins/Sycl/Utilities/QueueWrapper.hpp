@@ -78,5 +78,8 @@ class QueueWrapper {
   /// The logger object
   std::unique_ptr<const Logger> m_logger;
 
+  /// Logger accessor
+  const Logger& logger() const { return *m_logger; }
+
 };  // class QueueWrapper
 }  // namespace Acts::Sycl

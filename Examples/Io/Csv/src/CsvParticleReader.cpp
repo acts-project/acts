@@ -8,16 +8,20 @@
 
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <fstream>
-#include <ios>
+#include <array>
+#include <cmath>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -36,14 +40,16 @@ ActsExamples::CsvParticleReader::CsvParticleReader(
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output collection");
   }
+
+  m_outputParticles.initialize(m_cfg.outputParticles);
 }
 
 std::string ActsExamples::CsvParticleReader::CsvParticleReader::name() const {
   return "CsvParticleReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::CsvParticleReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvParticleReader::availableEvents() const {
   return m_eventsRange;
 }
 
@@ -76,7 +82,7 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
   // Write ordered particles container to the EventStore
   SimParticleContainer particles;
   particles.insert(unordered.begin(), unordered.end());
-  ctx.eventStore.add(m_cfg.outputParticles, std::move(particles));
+  m_outputParticles(ctx, std::move(particles));
 
   return ProcessCode::SUCCESS;
 }

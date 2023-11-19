@@ -8,15 +8,26 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <memory>
+#include <string>
 
 namespace Acts {
 
 class LineBounds;
+class DetectorElementBase;
+class SurfaceBounds;
 
 ///  @class LineSurface
 ///
@@ -26,11 +37,9 @@ class LineBounds;
 ///
 ///  @note It leaves the type() method virtual, so it can not be instantiated
 ///
-/// @image html figures/LineSurface.png
+/// @image html LineSurface.png
 class LineSurface : public Surface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from Transform3 and bounds
@@ -79,19 +88,10 @@ class LineSurface : public Surface {
   /// @param other is the source surface dor copying
   LineSurface& operator=(const LineSurface& other);
 
-  /// Normal vector return
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lposition is the local position is ignored
-  ///
-  /// @return a Vector3 by value
-  Vector3 normal(const GeometryContext& gctx,
-                 const Vector2& lposition) const final;
+  Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
+                 const Vector3& direction) const override;
 
-  /// Normal vector return without argument
-  using Surface::normal;
-
-  /// The binning position is the position calcualted
+  /// The binning position is the position calculated
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -109,13 +109,13 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
   /// constructed
-  /// @param momentum is the momentum used for the measurement frame
+  /// @param direction is the momentum direction used for the measurement frame
   /// construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
                                  const Vector3& position,
-                                 const Vector3& momentum) const final;
+                                 const Vector3& direction) const final;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
@@ -138,98 +138,112 @@ class LineSurface : public Surface {
       const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Local to global transformation
-  /// for line surfaces the momentum is used in order to interpret the drift
-  /// radius
+  ///
+  /// @note for line surfaces the momentum direction is used in order to interpret the
+  /// drift radius
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param momentum is the global momentum (used to sign the closest approach)
+  /// @param direction is the global momentum direction (used to sign the closest approach)
   ///
   /// @return global position by value
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& momentum) const final;
+                        const Vector3& direction) const final;
 
-  /// Specified for LineSurface: global to local method without dynamic
-  /// memory allocation
+  /// Specified for `LineSurface`: global to local method without dynamic
+  /// memory allocation.
   ///
-  /// This method is the true global->local transformation.<br>
-  /// makes use of globalToLocal and indicates the sign of the Acts::eBoundLoc0
-  /// by the given momentum
+  /// This method is the true global -> local transformation. It makes use of
+  /// @c globalToLocal and indicates the sign of the @c Acts::eBoundLoc0
+  /// by the given momentum direction.
   ///
-  /// The calculation of the sign of the radius (or \f$ d_0 \f$) can be done as
-  /// follows:<br>
-  /// May \f$ \vec d = \vec m - \vec c \f$ denote the difference between the
+  /// The calculation of the sign of the radius (or @f$ d_0 @f$) can be done as
+  /// follows:
+  /// May @f$ \vec d = \vec m - \vec c @f$ denote the difference between the
   /// center of the line and the global position of the measurement/predicted
-  /// state,
-  /// then \f$ \vec d
-  /// \f$
-  /// lies within the so
-  /// called measurement plane.
-  /// The measurement plane is determined by the two orthogonal vectors \f$
-  /// \vec{measY}= \vec{Acts::eBoundLoc1} \f$
-  /// and \f$ \vec{measX} = \vec{measY} \times \frac{\vec{p}}{|\vec{p}|}
-  /// \f$.<br>
+  /// state. Then, @f$ \vec d @f$ lies in the so-called measurement plane.
+  /// The latter is determined by the two orthogonal vectors @f$
+  /// \vec{\texttt{measY}} = \vec{e}_z @f$ and @f$
+  /// \vec{\texttt{measX}} = \vec{\texttt{measY}} \times
+  /// \frac{\vec{p}}{|\vec{p}|} @f$.
   ///
-  /// The sign of the radius (\f$ d_{0} \f$ ) is then defined by the projection
-  /// of
-  /// \f$ \vec{d} \f$
-  /// onto \f$ \vec{measX} \f$:<br>
-  /// \f$ sign = -sign(\vec{d} \cdot \vec{measX}) \f$
+  /// The sign of the radius (or @f$ d_{0} @f$ ) is then defined by the projection
+  /// of @f$ \vec{d} @f$ on @f$ \vec{measX} @f$:<br> @f$ sign = -sign(\vec{d}
+  /// \cdot \vec{measX}) @f$
   ///
-  /// @image html figures/SignOfDriftCircleD0.gif
+  /// @image html SignOfDriftCircleD0.gif
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction (optionally ignored)
   /// @param tolerance (unused)
   ///
-  /// @return a Result<Vector2> which can be !ok() if the operation fails
+  /// @return A `Result<Vector2>`, which is set to `!ok()` if the @p position is not
+  /// the point of closest approach to the line surface.
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
-  /// @brief Straight line intersection schema
+  /// Calculate the straight-line intersection with the line surface.
+  ///
+  /// <b>Mathematical motivation:</b>
+  ///
+  /// Given two lines in parameteric form:<br>
+  ///
+  /// @f$ \vec l_{a}(u) = \vec m_a + u \cdot \vec e_{a} @f$
+  ///
+  /// @f$ \vec l_{b}(\mu) = \vec m_b + \mu \cdot \vec e_{b} @f$
+  ///
+  /// The vector between any two points on the two lines is given by:
+  ///
+  /// @f$ \vec s(u, \mu) = \vec l_{b} - l_{a} = \vec m_{ab} + \mu
+  /// \cdot
+  /// \vec e_{b} - u \cdot \vec e_{a} @f$,
+  ///
+  /// where @f$ \vec m_{ab} = \vec m_{b} - \vec m_{a} @f$.
+  ///
+  /// @f$ \vec s(u_0, \mu_0) @f$ denotes the vector between the two
+  /// closest points
+  ///
+  /// @f$ \vec l_{a,0} = l_{a}(u_0) @f$ and @f$ \vec l_{b,0} =
+  /// l_{b}(\mu_0) @f$
+  ///
+  /// and is perpendicular to both, @f$ \vec e_{a} @f$ and @f$ \vec e_{b} @f$.
+  ///
+  /// This results in a system of two linear equations:
+  ///
+  /// - (i) @f$ 0 = \vec s(u_0, \mu_0) \cdot \vec e_a = \vec m_{ab} \cdot
+  /// \vec e_a + \mu_0 \vec e_a \cdot \vec e_b - u_0 @f$ <br>
+  /// - (ii) @f$ 0 = \vec s(u_0, \mu_0) \cdot \vec e_b = \vec m_{ab} \cdot
+  /// \vec e_b + \mu_0  - u_0 \vec e_b \cdot \vec e_a @f$ <br>
+  ///
+  /// Solving (i) and (ii) for @f$ u @f$ and @f$ \mu_0 @f$ yields:
+  ///
+  /// - @f$ u_0 = \frac{(\vec m_{ab} \cdot \vec e_a)-(\vec m_{ab} \cdot \vec
+  /// e_b)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
+  /// - @f$ \mu_0 = - \frac{(\vec m_{ab} \cdot \vec e_b)-(\vec m_{ab} \cdot \vec
+  /// e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
+  ///
+  /// The function checks if @f$ u_0 \simeq 0@f$ to check if the current @p
+  /// position is at the point of closest approach, i.e. the intersection
+  /// point, in which case it will return an @c onSurace intersection result.
+  /// Otherwise, the path length from @p position to the point of closest
+  /// approach (@f$ u_0 @f$) is returned in a @c reachable intersection.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position as a starting point
   /// @param direction The global direction at the starting point
-  ///        @note exptected to be normalized
+  ///        @note expected to be normalized
   /// @param bcheck The boundary check directive for the estimate
-  ///
-  ///   <b>mathematical motivation:</b>
-  ///   Given two lines in parameteric form:<br>
-  ///   - @f$ \vec l_{a}(\lambda) = \vec m_a + \lambda \cdot \vec e_{a} @f$ <br>
-  ///   - @f$ \vec l_{b}(\mu) = \vec m_b + \mu \cdot \vec e_{b} @f$ <br>
-  ///   the vector between any two points on the two lines is given by:
-  ///   - @f$ \vec s(\lambda, \mu) = \vec l_{b} - l_{a} = \vec m_{ab} + \mu
-  ///   \cdot
-  ///  \vec e_{b} - \lambda \cdot \vec e_{a} @f$, <br>
-  ///   when @f$ \vec m_{ab} = \vec m_{b} - \vec m_{a} @f$.<br>
-  ///   @f$ \vec s(u, \mu_0) @f$  denotes the vector between the two
-  ///  closest points <br>
-  ///   @f$ \vec l_{a,0} = l_{a}(u) @f$ and @f$ \vec l_{b,0} =
-  ///  l_{b}(\mu_0) @f$ <br>
-  ///   and is perpendicular to both, @f$ \vec e_{a} @f$ and @f$ \vec e_{b} @f$.
-  ///
-  ///   This results in a system of two linear equations:<br>
-  ///   - (i) @f$ 0 = \vec s(u, \mu_0) \cdot \vec e_a = \vec m_ab \cdot
-  ///  \vec e_a + \mu_0 \vec e_a \cdot \vec e_b - u @f$ <br>
-  ///   - (ii) @f$ 0 = \vec s(u, \mu_0) \cdot \vec e_b = \vec m_ab \cdot
-  ///  \vec e_b + \mu_0  - u \vec e_b \cdot \vec e_a @f$ <br>
-  ///
-  ///   Solving (i), (ii) for @f$ u @f$ and @f$ \mu_0 @f$ yields:
-  ///   - @f$ u = \frac{(\vec m_ab \cdot \vec e_a)-(\vec m_ab \cdot \vec
-  ///  e_b)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
-  ///   - @f$ \mu_0 = - \frac{(\vec m_ab \cdot \vec e_b)-(\vec m_ab \cdot \vec
-  ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
-  ///
+  /// @param tolerance the tolerance used for the intersection
   /// @return is the intersection object
-  SurfaceIntersection intersect(
+  SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
@@ -237,12 +251,12 @@ class LineSurface : public Surface {
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
-                        const Vector3& momentum) const override;
+                        const Vector3& direction) const override;
 
-  /// This method returns the bounds of the Surface by reference */
+  /// This method returns the bounds of the surface by reference
   const SurfaceBounds& bounds() const final;
 
-  /// Return properly formatted class name for screen output */
+  /// Return properly formatted class name for screen output
   std::string name() const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
@@ -261,12 +275,14 @@ class LineSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
+
+  Vector3 lineDirection(const GeometryContext& gctx) const;
 
  protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
@@ -276,10 +292,10 @@ class LineSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position
-  /// @param momentum is the momentum
+  /// @param direction is the momentum direction
   /// @param lposition is the local position to be filled
   bool globalToLocalPlain(const GeometryContext& gctx, const Vector3& position,
-                          const Vector3& momentum, Vector2& lposition) const;
+                          const Vector3& direction, Vector2& lposition) const;
 };
 
 }  // namespace Acts

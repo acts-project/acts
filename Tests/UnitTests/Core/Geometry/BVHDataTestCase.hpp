@@ -6,6 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+#include "Acts/Surfaces/Surface.hpp"
+
 namespace bdata = boost::unit_test::data;
 using Box = Acts::Volume::BoundingBox;
 using Ray = Acts::Ray<double, 3>;
@@ -55,20 +59,23 @@ BOOST_DATA_TEST_CASE(
     // collect all surfaces that are hit
     for (const auto& bndSrf : bndSurfaces) {
       const auto& srf = bndSrf->surfaceRepresentation();
-      auto sri = srf.intersect(tgContext, ray.origin(), ray.dir(), true);
-      if (sri and sri.intersection.pathLength >= s_onSurfaceTolerance) {
-        // does intersect
-        hits.push_back(std::move(sri));
+      auto srmi = srf.intersect(tgContext, ray.origin(), ray.dir(),
+                                Acts::BoundaryCheck(true));
+      for (const auto& sri : srmi.split()) {
+        if (sri && sri.pathLength() >= s_onSurfaceTolerance) {
+          // does intersect
+          hits.push_back(sri);
+        }
       }
     }
   }
 
   // sort by path length
-  std::sort(hits.begin(), hits.end());
+  std::sort(hits.begin(), hits.end(), SurfaceIntersection::forwardOrder);
   std::vector<const Surface*> expHits;
   expHits.reserve(hits.size());
   for (const auto& hit : hits) {
-    expHits.push_back(hit.object);
+    expHits.push_back(hit.object());
   }
 
   // now do the same through a propagator
@@ -91,7 +98,8 @@ BOOST_DATA_TEST_CASE(
   Acts::Vector4 pos4 = Acts::Vector4::Zero();
   pos4.segment<3>(Acts::ePos0) = ray.origin();
   // momentum value should be irrelevant.
-  Acts::CurvilinearTrackParameters startPar(pos4, ray.dir(), 50_GeV, 1_e);
+  Acts::CurvilinearTrackParameters startPar(
+      pos4, ray.dir(), 1_e / 50_GeV, std::nullopt, ParticleHypothesis::pion());
 
   const auto result = propagator.propagate(startPar, options).value();
 
@@ -111,7 +119,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   BOOST_CHECK_EQUAL(expHits.size(), actHits.size());
-  for (size_t i = 0; i < expHits.size(); i++) {
+  for (std::size_t i = 0; i < expHits.size(); i++) {
     const Surface* exp = expHits[i];
     const Surface* act = actHits[i];
 

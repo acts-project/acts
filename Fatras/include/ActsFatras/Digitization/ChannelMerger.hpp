@@ -10,7 +10,6 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsFatras/Digitization/DigitizationData.hpp"
 
 #include <array>
@@ -27,7 +26,7 @@ namespace ActsFatras {
 /// @param channels The channels from one cluster
 ///
 /// @return A cluster containing the parameter set and cluster size
-template <typename signal_t, size_t kSize>
+template <typename signal_t, std::size_t kSize>
 const std::vector<Channel<signal_t, kSize>> mergeChannels(
     const std::vector<Channel<signal_t, kSize>>& channels) {
   using Channel = Channel<signal_t, kSize>;

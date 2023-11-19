@@ -61,7 +61,7 @@ HepMC3::GenVertexPtr createGenVertex(
 /// @note An Acts vertex does not store a barcode. Therefore the content of
 /// both vertices is compared. The position, time and number of incoming and
 /// outgoing particles will be compared. Since a second vertex could exist in
-/// the record with identical informations (although unlikely), this
+/// the record with identical information (although unlikely), this
 /// comparison could lead to false positive results. On the other hand, a
 /// numerical deviation of the parameters could lead to a false negative.
 /// @param actsVertex Acts vertex

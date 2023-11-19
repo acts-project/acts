@@ -12,17 +12,17 @@ target_link_libraries(
   ActsExampleVertexFinderParticleReader
   PRIVATE ${_common_libraries} ActsExamplesIoCsv ActsExamplesPrinters)
 
-  add_executable(
+add_executable(
   ActsExampleVertexFinderTrackReaderPerformanceWriter
   TrackReaderVertexingPerformanceWriterExample.cpp)
 target_link_libraries(
   ActsExampleVertexFinderTrackReaderPerformanceWriter
-  PRIVATE ${_common_libraries} ActsExamplesIoRoot ActsExamplesPrinters)
+  PRIVATE ${_common_libraries} ActsExamplesIoRoot ActsExamplesIoPerformance ActsExamplesPrinters)
 
 install(
   TARGETS
-    ActsExampleVertexFinderParticleReader
-    ActsExampleVertexFinderTrackReaderPerformanceWriter
+  ActsExampleVertexFinderParticleReader
+  ActsExampleVertexFinderTrackReaderPerformanceWriter
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(Pythia8 ACTS_BUILD_EXAMPLES_PYTHIA8)

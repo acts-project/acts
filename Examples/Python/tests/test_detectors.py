@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 from helpers import dd4hepEnabled
@@ -44,6 +42,7 @@ def test_telescope_geometry():
     detector, geo, contextDecorators = acts.examples.TelescopeDetector.create(
         bounds=[100, 100],
         positions=[10 * i for i in range(n_surfaces)],
+        stereos=[0] * n_surfaces,
         binValue=0,
     )
 
