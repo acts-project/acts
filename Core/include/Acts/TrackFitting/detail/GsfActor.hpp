@@ -268,6 +268,16 @@ struct GsfActor {
         return;
       }
 
+      // TODO streamline this in a way that we only remove low weight components 
+      // once and reweight once. But for now, I don't want to change the hashes...
+      tmpStates.tips.erase(
+        std::remove_if(
+          tmpStates.tips.begin(),
+          tmpStates.tips.end(),
+          [&](auto i){ return tmpStates.weights.at(i) < m_cfg.weightCutoff; }
+        ),
+        tmpStates.tips.end()
+      );
       FiltProjector proj{tmpStates.traj, tmpStates.weights};
       updateStepper(state, stepper, surface, tmpStates.tips, proj);
     }
@@ -494,6 +504,9 @@ struct GsfActor {
       newCmp.derivative() = Acts::FreeVector::Zero();
       newCmp.jacTransport() = Acts::FreeMatrix::Identity();
     }
+
+    // TODO check if we can avoid this reweighting here
+    stepper.reweightComponents(state.stepping);
   }
 
   /// This function performs the kalman update, computes the new posterior
