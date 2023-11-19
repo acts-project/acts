@@ -67,6 +67,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
     std::string fileMode = "RECREATE";
     /// Switch for adding full covariance matrix to output file.
     bool writeCovMat = false;
+    /// Write GSF specific things (for now only some material statistics)
+    bool writeGsfSpecific = false;
   };
 
   /// Constructor

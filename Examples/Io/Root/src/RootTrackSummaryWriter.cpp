@@ -139,8 +139,10 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
     m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
     m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
 
-    m_outputTree->Branch("max_material_fwd", &m_gsf_max_material_fwd);
-    m_outputTree->Branch("sum_material_fwd", &m_gsf_sum_material_fwd);
+    if (m_cfg.writeGsfSpecific) {
+      m_outputTree->Branch("max_material_fwd", &m_gsf_max_material_fwd);
+      m_outputTree->Branch("sum_material_fwd", &m_gsf_sum_material_fwd);
+    }
 
     if (m_cfg.writeCovMat == true) {
       // create one branch for every entry of covariance matrix
@@ -446,19 +448,21 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
 
     m_hasFittedParams.push_back(hasFittedParams);
 
-    using namespace Acts::GsfConstants;
-    if (tracks.hasColumn(Acts::hashString(kFwdMaxMaterialXOverX0))) {
-      m_gsf_max_material_fwd.push_back(
-          track.template component<double>(kFwdMaxMaterialXOverX0));
-    } else {
-      m_gsf_max_material_fwd.push_back(0.0);
-    }
+    if (m_cfg.writeGsfSpecific) {
+      using namespace Acts::GsfConstants;
+      if (tracks.hasColumn(Acts::hashString(kFwdMaxMaterialXOverX0))) {
+        m_gsf_max_material_fwd.push_back(
+            track.template component<double>(kFwdMaxMaterialXOverX0));
+      } else {
+        m_gsf_max_material_fwd.push_back(NaNfloat);
+      }
 
-    if (tracks.hasColumn(Acts::hashString(kFwdSumMaterialXOverX0))) {
-      m_gsf_sum_material_fwd.push_back(
-          track.template component<double>(kFwdSumMaterialXOverX0));
-    } else {
-      m_gsf_sum_material_fwd.push_back(0.0);
+      if (tracks.hasColumn(Acts::hashString(kFwdSumMaterialXOverX0))) {
+        m_gsf_sum_material_fwd.push_back(
+            track.template component<double>(kFwdSumMaterialXOverX0));
+      } else {
+        m_gsf_sum_material_fwd.push_back(NaNfloat);
+      }
     }
 
     if (m_cfg.writeCovMat) {
