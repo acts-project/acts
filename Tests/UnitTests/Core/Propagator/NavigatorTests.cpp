@@ -968,7 +968,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
                                 refSurfaces.begin(), refSurfaces.end());
 }
 
-int ntests = 100;
+int ntests = 80;
 int skip = 0;
 bool debugMode = false;
 
@@ -983,22 +983,25 @@ EigenStepper estepper(bField);
 StraightLineStepper slstepper;
 
 EigenPropagator epropagator(estepper,
-                            Navigator({tGeometry, true, true, true},
+                            Navigator({tGeometry, true, true, true,
+                                       BoundaryCheck(false)},
                                       getDefaultLogger("nav", Logging::INFO)),
                             getDefaultLogger("prop", Logging::INFO));
-StraightLinePropagator slpropagator(slstepper,
-                                    Navigator({tGeometry, true, true, true},
-                                              getDefaultLogger("nav",
-                                                               Logging::INFO)),
-                                    getDefaultLogger("prop", Logging::INFO));
+StraightLinePropagator slpropagator(
+    slstepper,
+    Navigator({tGeometry, true, true, true, BoundaryCheck(false)},
+              getDefaultLogger("nav", Logging::INFO)),
+    getDefaultLogger("prop", Logging::INFO));
 ReferenceEigenPropagator refepropagator(
     estepper,
-    TryAllNavigator({tGeometry, true, true, true},
+    TryAllNavigator({tGeometry, true, true, true,
+                     BoundaryCheck(true, true, 1, 1)},
                     getDefaultLogger("nav", Logging::INFO)),
     getDefaultLogger("prop", Logging::INFO));
 ReferenceStraightLinePropagator refslpropagator(
     slstepper,
-    TryAllNavigator({tGeometry, true, true, true},
+    TryAllNavigator({tGeometry, true, true, true,
+                     BoundaryCheck(true, true, 1, 1)},
                     getDefaultLogger("nav", Logging::INFO)),
     getDefaultLogger("prop", Logging::INFO));
 

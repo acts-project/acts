@@ -101,9 +101,8 @@ class Navigator {
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
 
-    /// Whether to perform boundary checks for layer resolving (improves
-    /// navigation for bended tracks)
-    BoundaryCheck boundaryCheckLayerResolving = BoundaryCheck(true);
+    /// Which boundary checks to perform for surface approach
+    BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
   };
 
   struct NavigationCandidate {
@@ -453,33 +452,36 @@ class Navigator {
     const auto& candidate = state.navigation.candidate();
     const auto& intersection = candidate.intersection;
     const Surface& surface = *intersection.representation();
-    BoundaryCheck boundaryCheck = candidate.boundaryCheck;
 
-    // Check if we are at a surface
-    // If we are on the surface pointed at by the index, we can make
-    // it the current one to pass it to the other actors
-    auto surfaceStatus = stepper.updateSurfaceStatus(
+    Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, surface, intersection.index(), state.options.direction,
-        boundaryCheck, state.options.surfaceTolerance, logger());
+        BoundaryCheck(false), state.options.surfaceTolerance, logger());
 
-    if (surfaceStatus == IntersectionStatus::onSurface) {
-      ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
-      // Set in navigation state, so actors and aborters can access it
-      state.navigation.currentSurface = &surface;
-      if (state.navigation.currentSurface) {
-        ACTS_VERBOSE(volInfo(state) << "Current surface set to surface "
-                                    << surface.geometryId());
-      }
-    }
-
-    if (state.navigation.currentSurface == nullptr) {
+    if (surfaceStatus != IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
       return true;
     }
 
-    ACTS_VERBOSE(volInfo(state) << "Handle surface " << surface.geometryId());
-
     ++state.navigation.candidateIndex;
+
+    // TODO second intersection should not be necessary
+    surfaceStatus = stepper.updateSurfaceStatus(
+        state.stepping, surface, intersection.index(), state.options.direction,
+        BoundaryCheck(true), state.options.surfaceTolerance, logger());
+
+    if (surfaceStatus != IntersectionStatus::onSurface) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Surface successfully hit, but outside bounds.");
+      return true;
+    }
+
+    ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
+    // Set in navigation state, so actors and aborters can access it
+    state.navigation.currentSurface = &surface;
+    if (state.navigation.currentSurface) {
+      ACTS_VERBOSE(volInfo(state) << "Current surface set to surface "
+                                  << surface.geometryId());
+    }
 
     if (intersection.template checkType<SurfaceIntersection>()) {
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
@@ -575,7 +577,6 @@ class Navigator {
       // Create the navigation options
       // - and get the compatible layers, start layer will be excluded
       NavigationOptions<Layer> navOpts;
-      navOpts.boundaryCheck = m_cfg.boundaryCheckLayerResolving;
       navOpts.resolveSensitive = m_cfg.resolveSensitive;
       navOpts.resolveMaterial = m_cfg.resolveMaterial;
       navOpts.resolvePassive = m_cfg.resolvePassive;
@@ -600,8 +601,8 @@ class Navigator {
       }
 
       for (const auto& layer : layers) {
-        state.navigation.candidates.emplace_back(
-            detail::AnyIntersection(layer), m_cfg.boundaryCheckLayerResolving);
+        state.navigation.candidates.emplace_back(detail::AnyIntersection(layer),
+                                                 BoundaryCheck(true));
       }
     }
   }
@@ -657,7 +658,8 @@ class Navigator {
 
       for (const auto& surface : surfaces) {
         state.navigation.candidates.emplace_back(
-            detail::AnyIntersection(surface), BoundaryCheck(true));
+            detail::AnyIntersection(surface),
+            m_cfg.boundaryCheckSurfaceApproach);
       }
     }
   }

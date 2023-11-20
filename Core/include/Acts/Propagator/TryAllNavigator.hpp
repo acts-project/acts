@@ -47,6 +47,9 @@ class TryAllNavigator {
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
+
+    /// Which boundary checks to perform for surface approach
+    BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
   };
 
   struct IntersectionCandidate {
@@ -298,31 +301,39 @@ class TryAllNavigator {
     const auto& candidate = *state.navigation.intersectionCandidate;
     const auto& intersection = candidate.intersection;
     const Surface& surface = *intersection.representation();
-    BoundaryCheck boundaryCheck = candidate.boundaryCheck;
 
     ACTS_VERBOSE(volInfo(state)
                  << "check intersection status with " << surface.geometryId());
 
-    auto surfaceStatus = stepper.updateSurfaceStatus(
+    Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, surface, intersection.index(), state.options.direction,
-        boundaryCheck, state.options.surfaceTolerance, logger());
+        BoundaryCheck(false), state.options.surfaceTolerance, logger());
 
-    if (surfaceStatus == IntersectionStatus::onSurface) {
-      ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
-      // Set in navigation state, so actors and aborters can access it
-      state.navigation.currentSurface = &surface;
-      if (state.navigation.currentSurface) {
-        ACTS_VERBOSE(volInfo(state) << "Current surface set to surface "
-                                    << surface.geometryId());
-      }
-    }
-
-    if (state.navigation.currentSurface == nullptr) {
+    if (surfaceStatus != IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
       return true;
     }
 
     state.navigation.intersectionCandidate.reset();
+
+    // TODO second intersection should not be necessary
+    surfaceStatus = stepper.updateSurfaceStatus(
+        state.stepping, surface, intersection.index(), state.options.direction,
+        BoundaryCheck(true), state.options.surfaceTolerance, logger());
+
+    if (surfaceStatus != IntersectionStatus::onSurface) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Surface successfully hit, but outside bounds.");
+      return true;
+    }
+
+    ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
+    // Set in navigation state, so actors and aborters can access it
+    state.navigation.currentSurface = &surface;
+    if (state.navigation.currentSurface) {
+      ACTS_VERBOSE(volInfo(state) << "Current surface set to surface "
+                                  << surface.geometryId());
+    }
 
     if (intersection.template checkType<SurfaceIntersection>()) {
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
@@ -420,7 +431,8 @@ class TryAllNavigator {
                          << "Found " << surfaces.size() << " surfaces.");
 
             for (const auto& surface : surfaces) {
-              addCandidate(surface, surface, BoundaryCheck(true));
+              addCandidate(surface, surface,
+                           m_cfg.boundaryCheckSurfaceApproach);
             }
           }
         }
