@@ -23,17 +23,13 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
-#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Visualization/ObjVisualization3D.hpp"
 
-#include <fstream>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -57,7 +53,7 @@ const std::vector<std::tuple<std::string, unsigned int>> testModes = {
 const Transform3 transform = Transform3::Identity();
 const double epsAbs = 1e-12;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(PolyhedronSurfaces)
 
 /// Unit tests for Cone Surfaces
 BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
@@ -238,16 +234,6 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
 
   const double phiSector = 0.345;
   const double averagePhi = -1.0;
-
-  const double minPhi = averagePhi - phiSector;
-  const double maxPhi = averagePhi + phiSector;
-
-  const std::pair<Vector3, Vector3> lineA = {
-      Vector3(0., 0., 0.),
-      Vector3(outerR * std::cos(minPhi), outerR * std::sin(minPhi), 0.)};
-  const std::pair<Vector3, Vector3> lineB = {
-      Vector3(0., 0., 0.),
-      Vector3(outerR * std::cos(maxPhi), outerR * std::sin(maxPhi), 0.)};
 
   for (const auto& mode : testModes) {
     ACTS_INFO("\tMode: " << std::get<std::string>(mode));
