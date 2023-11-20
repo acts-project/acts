@@ -49,7 +49,7 @@ class IndexedSurfaceMaterial : public ISurfaceMaterial {
   /// @param grid the index grid steering the access to the material vector
   /// @param gcasts global casts -> casts a grid position from global
   /// @param laccessors local accessors -> accessors to the local grid
-  /// @param transform  tranform from global frame into map frame
+  /// @param transform  transform from global frame into map frame
   IndexedSurfaceMaterial(
       std::vector<typename material_accessor_type::material_type>&& material,
       grid_type&& grid, const std::vector<BinningValue>& gcasts,
