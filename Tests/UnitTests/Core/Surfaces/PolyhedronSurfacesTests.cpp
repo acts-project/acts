@@ -231,9 +231,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
 
   const double innerR = 10_mm;
   const double outerR = 25_mm;
-
   const double phiSector = 0.345;
-  const double averagePhi = -1.0;
 
   for (const auto& mode : testModes) {
     ACTS_INFO("\tMode: " << std::get<std::string>(mode));
