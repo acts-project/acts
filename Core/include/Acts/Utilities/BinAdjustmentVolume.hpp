@@ -215,8 +215,6 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {
 
   throw std::invalid_argument(
       "Bin adjustment not implemented for this volume yet!");
-
-  return BinUtility();
 }
 
 }  // namespace Acts
