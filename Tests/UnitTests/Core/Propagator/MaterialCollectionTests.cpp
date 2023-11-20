@@ -91,16 +91,11 @@ bool debugMode = false;
 /// @param phi the azimuthal angle of the track at creation
 /// @param theta the polar angle of the track at creation
 /// @param charge is the charge of the particle
-/// @param index is the run index from the test
 template <typename propagator_t>
 void runTest(const propagator_t& prop, double pT, double phi, double theta,
-             int charge, int index) {
+             int charge) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
-
-  if (index < skip) {
-    return;
-  }
 
   // define start parameters
   BoundSquareMatrix cov;
@@ -404,8 +399,12 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  runTest(epropagator, pT, phi, theta, charge, index);
-  runTest(slpropagator, pT, phi, theta, charge, index);
+  if (index < skip) {
+    return;
+  }
+
+  runTest(epropagator, pT, phi, theta, charge);
+  runTest(slpropagator, pT, phi, theta, charge);
 }
 
 }  // namespace Test

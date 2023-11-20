@@ -968,7 +968,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
                                 refSurfaces.begin(), refSurfaces.end());
 }
 
-int ntests = 80;
+int ntests = 100;
 int skip = 0;
 bool debugMode = false;
 
