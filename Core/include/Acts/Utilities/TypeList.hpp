@@ -8,16 +8,17 @@
 
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
 
 namespace Acts {
-
-namespace detail {
 
 /// @brief type list implementation
 /// @see https://www.codingwiththomas.com/blog/getting-started-with-typelists
 template <typename... Ts>
 struct TypeList {};
+
+namespace Types {
 
 /// Number of types in the list
 /// @{
@@ -92,5 +93,5 @@ template <typename L, typename N>
 using push_front = typename doPushFront<N, L>::type;
 /// @}
 
-}  // namespace detail
+}  // namespace Types
 }  // namespace Acts

@@ -9,9 +9,12 @@
 #pragma once
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 
 #include <string>
 #include <tuple>
+
+#include <nlohmann/json.hpp>
 
 namespace Acts {
 
@@ -88,6 +91,43 @@ inline static std::tuple<unsigned int, std::vector<ActsScalar>> maskFromBounds(
 /// @param vLink is the volume link to be added
 inline static void addVolumeLink(nlohmann::json& jSurface, int vLink) {
   jSurface["volume_link"] = vLink;
+}
+
+/// Determine the acceleration link from a grid
+///
+///
+///   brute_force = 0u,      // try all
+///   cartesian2_grid = 1u,  // rectangle, trapezoid, (triangle) grids
+///   cuboid3_grid = 2u,     // cuboid grid
+///   polar2_grid = 3u,      // ring/disc, annulus grids
+///   cylinder2_grid = 4u,   // 2D cylinder grid
+///   cylinder3_grid = 5u,   // 3D cylinder grid
+///
+/// @param casts are the grid axes cast types
+///
+/// @return the acceleration link idnetifier
+template <typename binning_values_t>
+inline static std::size_t accelerationLink(const binning_values_t& casts) {
+  // Default is `brute_force`
+  std::size_t accLink = 0u;
+  if (casts.size() == 2u) {
+    if (casts[0u] == binX && casts[1u] == binY) {
+      accLink = 1u;
+    } else if (casts[0u] == binR && casts[1u] == binPhi) {
+      accLink = 3u;
+    } else if (casts[0u] == binZ && casts[1u] == binPhi) {
+      accLink = 4u;
+    } else if (casts[0u] == binZ && casts[1u] == binR) {
+      accLink = 5u;
+    }
+  } else if (casts.size() == 3u) {
+    if (casts[0u] == binX && casts[1u] == binY && casts[2u] == binZ) {
+      accLink = 2u;
+    } else if (casts[0u] == binZ && casts[1u] == binPhi && casts[2u] == binR) {
+      accLink = 5u;
+    }
+  }
+  return accLink;
 }
 
 }  // namespace DetrayJsonHelper

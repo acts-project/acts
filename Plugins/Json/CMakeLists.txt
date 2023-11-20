@@ -7,6 +7,7 @@ add_library(
   src/DetectorVolumeJsonConverter.cpp
   src/ExtentJsonConverter.cpp
   src/GridJsonConverter.cpp
+  src/DetectorVolumeFinderJsonConverter.cpp
   src/IndexedSurfacesJsonConverter.cpp
   src/JsonMaterialDecorator.cpp
   src/MaterialMapJsonConverter.cpp
