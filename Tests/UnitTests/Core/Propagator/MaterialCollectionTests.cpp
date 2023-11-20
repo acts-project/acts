@@ -140,9 +140,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
   // forward material test
   const auto& fwdResult = prop.propagate(start, fwdOptions).value();
-  if (debugMode) {
-    std::cout << ">>> Forward Propagation : end." << std::endl;
-  }
   const auto& fwdMaterial =
       fwdResult.template get<MaterialInteractor::result_type>();
   // check that the collected material is not zero
