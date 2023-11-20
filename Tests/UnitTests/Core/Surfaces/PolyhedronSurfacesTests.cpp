@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(binZ).min(), 0_mm, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).max(), hzPos, epsAbs);
 
-      const std::size_t expectedFaces = segments < 4 ? 4 : segments;
+      const unsigned int expectedFaces = segments < 4 ? 4 : segments;
       BOOST_CHECK_EQUAL(oneConePh.faces.size(), expectedFaces);
       BOOST_CHECK_EQUAL(oneConePh.vertices.size(), expectedFaces + 1);
     }
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(binZ).min(), hzNeg, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).max(), hzPos, epsAbs);
 
-      const std::size_t expectedFaces = segments < 4 ? 8 : 2 * segments;
+      const unsigned int expectedFaces = segments < 4 ? 8 : 2 * segments;
       BOOST_CHECK_EQUAL(twoConesPh.faces.size(), expectedFaces);
       BOOST_CHECK_EQUAL(twoConesPh.vertices.size(), expectedFaces + 1);
     }
@@ -172,9 +172,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
     ACTS_INFO("\tMode: " << std::get<std::string>(mode));
     const unsigned int segments = std::get<unsigned int>(mode);
 
-    std::size_t expectedFaces = segments < 4 ? 4 : segments;
-    std::size_t expectedVertices = segments < 4 ? 8 : 2 * segments;
-
     /// The full cone on one side
     {
       auto cylinder = std::make_shared<CylinderBounds>(r, hZ);
@@ -193,6 +190,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(binZ).min(), -hZ, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).max(), hZ, epsAbs);
 
+      const unsigned int expectedFaces = segments < 4 ? 4 : segments;
+      const unsigned int expectedVertices = segments < 4 ? 8 : 2 * segments;
       BOOST_CHECK_EQUAL(fullCylinderPh.faces.size(), expectedFaces);
       BOOST_CHECK_EQUAL(fullCylinderPh.vertices.size(), expectedVertices);
     }
