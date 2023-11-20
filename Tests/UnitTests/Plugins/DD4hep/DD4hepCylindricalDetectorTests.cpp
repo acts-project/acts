@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
   Acts::Experimental::DD4hepBlueprint bp(
       bpCfg, Acts::getDefaultLogger("DD4hepBlueprint", Acts::Logging::VERBOSE));
-  auto dd4hepBlueprint = bp.create(bpCache, world);
+  auto dd4hepBlueprint = bp.create(bpCache, tContext, world);
 
   // We should have 6 store entries now
   // 1 : beam pipe (empty)
