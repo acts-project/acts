@@ -15,6 +15,7 @@ def file_can_be_removed(searchstring, scope):
 
 
 def main():
+    print("\033[32mINFO\033[0m: Start check_unused_files.py ...")
     exclude_dirs = (
         "Scripts",
         "thirdparty",
@@ -159,8 +160,11 @@ def main():
 
     if len(wrong_extension) != 0:
         print(
-            f"ERROR: The following {len(wrong_extension)} files have an unsupported extension:\n\n"
+            "\033[31mERROR\033[0m:"
+            + f"The following {len(wrong_extension)} files have an unsupported extension:\n\n"
+            + "\033[31m"
             + "\n".join(wrong_extension)
+            + "\033[0m"
             + "\nCheck if you can change the format to one of the following:\n"
             + "\n".join(suffix_allowed)
             + "\nIf you really need that specific extension, add it to the list above.\n"
@@ -170,8 +174,11 @@ def main():
 
     if len(unused_files) != 0:
         print(
-            f"ERROR: The following {len(unused_files)} files seem to be unused:\n"
+            "\033[31mERROR\033[0m:"
+            + f"The following {len(unused_files)} files seem to be unused:\n"
+            + "\033[31m"
             + "\n".join(unused_files)
+            + "\033[0m"
             + "\nYou have 3 options:"
             + "\n\t- Remove them"
             + "\n\t- Use them (check proper include)"
@@ -181,7 +188,7 @@ def main():
         exit += 1
 
     if exit == 0:
-        print("Finished check_unused_files.py without any errors.")
+        print("\033[32mINFO\033[0m: Finished check_unused_files.py without any errors.")
 
     return exit
 
