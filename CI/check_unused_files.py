@@ -160,7 +160,7 @@ def main():
 
     if len(wrong_extension) != 0:
         print(
-            "\033[31mERROR\033[0m"
+            "\033[31mERROR\033[0m "
             + f"The following {len(wrong_extension)} files have an unsupported extension:\n\n"
             + "\033[31m"
             + "\n".join(wrong_extension)
@@ -174,7 +174,7 @@ def main():
 
     if len(unused_files) != 0:
         print(
-            "\033[31mERROR\033[0m"
+            "\033[31mERROR\033[0m "
             + f"The following {len(unused_files)} files seem to be unused:\n"
             + "\033[31m"
             + "\n".join(unused_files)
