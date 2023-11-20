@@ -127,9 +127,9 @@ Acts::SquareMatrix4 makeVertexCovariance() {
 }
 
 // random value between 0 and 1
-std::uniform_real_distribution<> uniformDist(0.0, 1.0);
+std::uniform_real_distribution<double> uniformDist(0.0, 1.0);
 // random sign
-std::uniform_real_distribution<> signDist(-1, 1);
+std::uniform_real_distribution<double> signDist(-1, 1);
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
