@@ -32,23 +32,6 @@
 namespace Acts {
 namespace detail {
 
-/// Small Helper class that allows to carry a temporary value until we decide to
-/// update the actual value. The temporary value is deliberatly only accessable
-/// with a mutable reference
-template <typename T>
-class Updatable {
-  T m_tmp{};
-  T m_val{};
-
- public:
-  Updatable() : m_tmp(0), m_val(0) {}
-
-  T& tmp() { return m_tmp; }
-  void update() { m_val = m_tmp; }
-
-  const T& val() const { return m_val; }
-};
-
 template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
