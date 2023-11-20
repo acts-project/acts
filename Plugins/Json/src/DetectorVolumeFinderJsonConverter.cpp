@@ -38,17 +38,17 @@ struct IndexedVolumesGenerator {
       grid_type&& grid,
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
-    using IndexedDetectorVolumeImpl = Acts::Experimental::IndexedUpdatorImpl<
+    using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdatorImpl<
         grid_type, Acts::Experimental::IndexedDetectorVolumeExtractor,
         Acts::Experimental::DetectorVolumeFiller>;
 
     auto indexedDetectorVolumeImpl =
-        std::make_unique<const IndexedDetectorVolumeImpl>(std::move(grid), bv,
-                                                          transform);
+        std::make_unique<const IndexedDetectorVolumesImpl>(std::move(grid), bv,
+                                                           transform);
 
     // Create the delegate and connect it
     Acts::Experimental::DetectorVolumeUpdator vFinder;
-    vFinder.connect<&IndexedDetectorVolumeImpl::update>(
+    vFinder.connect<&IndexedDetectorVolumesImpl::update>(
         std::move(indexedDetectorVolumeImpl));
     return vFinder;
   }

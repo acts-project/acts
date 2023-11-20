@@ -12,6 +12,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -55,6 +56,10 @@ struct MaterialInteractor {
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
+    if (state.stage == PropagatorStage::postPropagation) {
+      return;
+    }
+
     // In case of Volume material update the result of the previous step
     if (recordInteractions && !result.materialInteractions.empty() &&
         !result.materialInteractions.back().volume.empty() &&
@@ -62,10 +67,6 @@ struct MaterialInteractor {
       updateResult(state, stepper, result);
     }
 
-    // If we are on target, everything should have been done
-    if (navigator.targetReached(state.navigation)) {
-      return;
-    }
     // Do nothing if nothing is what is requested.
     if (!(multipleScattering || energyLoss || recordInteractions)) {
       return;
