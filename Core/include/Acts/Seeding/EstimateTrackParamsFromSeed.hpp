@@ -221,25 +221,24 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // between the mid point between the middle and top sp and tangent to
   // the line connecting them
   Vector2 circleCenter;
-  circleCenter(0, 0) = 0.5 * local1(0, 0);
+  circleCenter(0) = 0.5 * local1(0, 0);
 
-  ActsScalar DeltaX21 = local2(0, 0) - local1(0, 0);
-  ActsScalar SumX21 = local2(0, 0) + local1(0, 0);
+  ActsScalar deltaX21 = local2(0) - local1(0);
+  ActsScalar sumX21 = local2(0) + local1(0);
   // straight line connecting the two points
   // y = a * x + c (we don't care about c right now)
   // we simply need the slope
-  ActsScalar a = local2(1, 0) / DeltaX21;
+  ActsScalar a = local2(1) / deltaX21;
   // Perpendicular line is then y = -1/a *x + b
   // we can evaluate b given we know a already by imposing
   // the line passes through P = (0.5 * (x2 + x1), 0.5 * y2)
-  ActsScalar b = 0.5 * (local2(1, 0) + 1. / a * SumX21);
-  circleCenter(1, 0) = -1. / a * circleCenter(0, 0) + b;
+  ActsScalar b = 0.5 * (local2(1) + 1. / a * sumX21);
+  circleCenter(1) = -1. / a * circleCenter(0) + b;
   // Radius is distance between circleCenter and first sp, which is at (0, 0) in
   // the new frame
   // Sign depends on the slope a (positive vs negative)
   int sign = a > 0 ? -1 : 1;
-  ActsScalar radius = sign * circleCenter.norm();
-  ActsScalar rho = 1. / radius;
+  ActsScalar rho = sign / circleCenter.norm();
 
   // The projection of the top space point on the transverse plane of the new
   // frame
@@ -250,7 +249,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
       local2.z() * std::sqrt(1. / rn) / (1. + G * rho * rho * rn);
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
-  ActsScalar A = -circleCenter(0, 0) / circleCenter(1, 0);
+  ActsScalar A = -circleCenter(0) / circleCenter(1);
   Vector3 transDirection(1., A, std::hypot(1, A) * invTanTheta);
   // Transform it back to the original frame
   Vector3 direction = rotation * transDirection.normalized();
