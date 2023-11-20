@@ -73,31 +73,31 @@ MagneticFieldContext magFieldContext = MagneticFieldContext();
 const std::string toolString = "IVF";
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
 // Track theta distribution
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
-std::uniform_real_distribution<> qDist(-1, 1);
+std::uniform_real_distribution<double> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100_um);
+std::uniform_real_distribution<double> resIPDist(0., 100_um);
 // Track angular distribution
-std::uniform_real_distribution<> resAngDist(0., 0.1);
+std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(-0.01, 0.01);
+std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
 // Number of vertices per test event distribution
-std::uniform_int_distribution<> nVertexDist(1, 6);
+std::uniform_int_distribution<std::uint32_t> nVertexDist(1, 6);
 // Number of tracks per vertex distribution
-std::uniform_int_distribution<> nTracksDist(5, 15);
+std::uniform_int_distribution<std::uint32_t> nTracksDist(5, 15);
 
 // Dummy user-defined InputTrack type
 struct InputTrack {
@@ -184,10 +184,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     std::vector<Vertex<BoundTrackParameters>> trueVertices;
 
     // start creating event with nVertices vertices
-    unsigned int nVertices = nVertexDist(gen);
-    for (unsigned int iVertex = 0; iVertex < nVertices; ++iVertex) {
+    std::uint32_t nVertices = nVertexDist(gen);
+    for (std::uint32_t iVertex = 0; iVertex < nVertices; ++iVertex) {
       // Number of tracks
-      unsigned int nTracks = nTracksDist(gen);
+      std::uint32_t nTracks = nTracksDist(gen);
 
       if (debug) {
         std::cout << "Event " << iEvent << ", Vertex " << iVertex << "/"
@@ -399,10 +399,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     std::vector<Vertex<InputTrack>> trueVertices;
 
     // start creating event with nVertices vertices
-    unsigned int nVertices = nVertexDist(gen);
-    for (unsigned int iVertex = 0; iVertex < nVertices; ++iVertex) {
+    std::uint32_t nVertices = nVertexDist(gen);
+    for (std::uint32_t iVertex = 0; iVertex < nVertices; ++iVertex) {
       // Number of tracks
-      unsigned int nTracks = nTracksDist(gen);
+      std::uint32_t nTracks = nTracksDist(gen);
 
       if (debug) {
         std::cout << "Event " << iEvent << ", Vertex " << iVertex << "/"
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
       // Construct random track emerging from vicinity of vertex position
       // Vector to store track objects used for vertex fit
-      for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
+      for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
         // Construct positive or negative charge randomly
         double q = qDist(gen) < 0 ? -1. : 1.;
 
