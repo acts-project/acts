@@ -20,9 +20,15 @@ BOOST_AUTO_TEST_SUITE(Material)
 BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   std::vector<Acts::MaterialSlab> material;
   material.emplace_back(Acts::Material(), 0.0);  // vacuum
-  material.emplace_back(Acts::Material({1.0, 2.0, 3.0, 4.0, 5.0}), 1.0);
-  material.emplace_back(Acts::Material({11.0, 12.0, 13.0, 14.0, 15.0}), 2.0);
-  material.emplace_back(Acts::Material({21.0, 22.0, 23.0, 24.0, 25.0}), 3.0);
+  material.emplace_back(
+      Acts::Material(Acts::Material::ParametersVector{1.0, 2.0, 3.0, 4.0, 5.0}),
+      1.0);
+  material.emplace_back(Acts::Material(Acts::Material::ParametersVector{
+                            11.0, 12.0, 13.0, 14.0, 15.0}),
+                        2.0);
+  material.emplace_back(Acts::Material(Acts::Material::ParametersVector{
+                            21.0, 22.0, 23.0, 24.0, 25.0}),
+                        3.0);
 
   using EqBound = Acts::Experimental::detail::GridAxisGenerators::EqBound;
   using EqGrid = EqBound::grid_type<std::size_t>;
@@ -103,9 +109,15 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
 BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   std::vector<Acts::MaterialSlab> material;
   material.emplace_back(Acts::Material(), 1.0);  // vacuum
-  material.emplace_back(Acts::Material({1.0, 2.0, 3.0, 4.0, 5.0}), 1.0);
-  material.emplace_back(Acts::Material({11.0, 12.0, 13.0, 14.0, 15.0}), 1.0);
-  material.emplace_back(Acts::Material({21.0, 22.0, 23.0, 24.0, 25.0}), 1.0);
+  material.emplace_back(
+      Acts::Material(Acts::Material::ParametersVector{1.0, 2.0, 3.0, 4.0, 5.0}),
+      1.0);
+  material.emplace_back(Acts::Material(Acts::Material::ParametersVector{
+                            11.0, 12.0, 13.0, 14.0, 15.0}),
+                        1.0);
+  material.emplace_back(Acts::Material(Acts::Material::ParametersVector{
+                            21.0, 22.0, 23.0, 24.0, 25.0}),
+                        1.0);
 
   using EqBoundEqClosed =
       Acts::Experimental::detail::GridAxisGenerators::EqBoundEqClosed;
