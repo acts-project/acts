@@ -36,7 +36,7 @@ MemoryManager& MemoryManager::instance() {
   return mm;
 }
 
-void MemoryManager::setMemorySize(size_t sizeInBytes, int device) {
+void MemoryManager::setMemorySize(std::size_t sizeInBytes, int device) {
   // If the user didn't ask for a specific device, use the one currently used by
   // CUDA.
   if (device == -1) {
@@ -44,7 +44,7 @@ void MemoryManager::setMemorySize(size_t sizeInBytes, int device) {
   }
 
   // Make sure that the internal storage variable is large enough.
-  if (static_cast<size_t>(device) >= m_memory.size()) {
+  if (static_cast<std::size_t>(device) >= m_memory.size()) {
     m_memory.resize(device + 1);
   }
 
@@ -66,7 +66,7 @@ void MemoryManager::setMemorySize(size_t sizeInBytes, int device) {
   return;
 }
 
-size_t MemoryManager::availableMemory(int device) const {
+std::size_t MemoryManager::availableMemory(int device) const {
   // If the user didn't ask for a specific device, use the one currently used by
   // CUDA.
   if (device == -1) {
@@ -74,7 +74,7 @@ size_t MemoryManager::availableMemory(int device) const {
   }
 
   // Make sure that memory was allocated on the requested device.
-  if (m_memory.size() <= static_cast<size_t>(device)) {
+  if (m_memory.size() <= static_cast<std::size_t>(device)) {
     throw std::bad_alloc();
   }
   const DeviceMemory& mem = m_memory[device];
@@ -83,7 +83,7 @@ size_t MemoryManager::availableMemory(int device) const {
   return (mem.m_size - (mem.m_nextAllocation - mem.m_ptr));
 }
 
-void* MemoryManager::allocate(size_t sizeInBytes, int device) {
+void* MemoryManager::allocate(std::size_t sizeInBytes, int device) {
   // If the user didn't ask for a specific device, use the one currently used by
   // CUDA.
   if (device == -1) {
@@ -91,7 +91,7 @@ void* MemoryManager::allocate(size_t sizeInBytes, int device) {
   }
 
   // Make sure that memory was allocated on the requested device.
-  if (m_memory.size() <= static_cast<size_t>(device)) {
+  if (m_memory.size() <= static_cast<std::size_t>(device)) {
     throw std::bad_alloc();
   }
   DeviceMemory& mem = m_memory[device];
@@ -100,9 +100,9 @@ void* MemoryManager::allocate(size_t sizeInBytes, int device) {
   void* result = mem.m_nextAllocation;
 
   // Make sure that all addresses given out are 8-byte aligned.
-  static constexpr size_t ALIGN_SIZE = 8;
-  const size_t misalignment = sizeInBytes % ALIGN_SIZE;
-  const size_t padding =
+  static constexpr std::size_t ALIGN_SIZE = 8;
+  const std::size_t misalignment = sizeInBytes % ALIGN_SIZE;
+  const std::size_t padding =
       ((misalignment != 0) ? (ALIGN_SIZE - misalignment) : 0);
 
   // Increment the internal pointer.
@@ -124,7 +124,7 @@ void MemoryManager::reset(int device) {
   }
 
   // Make sure that memory was allocated on the requested device.
-  if (m_memory.size() <= static_cast<size_t>(device)) {
+  if (m_memory.size() <= static_cast<std::size_t>(device)) {
     throw std::bad_alloc();
   }
   DeviceMemory& mem = m_memory[device];

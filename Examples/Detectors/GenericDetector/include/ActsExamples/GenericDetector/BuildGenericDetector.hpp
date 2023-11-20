@@ -86,7 +86,7 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
 std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
     double z, double ringStagger, std::vector<double> phiStagger,
     std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
-    const std::vector<size_t>& discBinning,
+    const std::vector<std::size_t>& discBinning,
     const std::vector<double>& moduleHalfLength);
 
 /// Global method to build the generic tracking geometry
@@ -113,7 +113,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const typename detector_element_t::ContextType& gctxIn,
     std::vector<std::vector<std::shared_ptr<detector_element_t>>>&
         detectorStore,
-    size_t level,
+    std::size_t level,
     std::shared_ptr<const Acts::IMaterialDecorator> matDecorator = nullptr,
     bool protoMaterial = false,
     Acts::Logging::Level surfaceLLevel = Acts::Logging::INFO,
@@ -285,7 +285,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pplConfig.centralModuleBacksideGap = {};
   // mPositions
   std::vector<std::vector<Acts::Vector3>> pplCentralModulePositions;
-  for (size_t plb = 0; plb < pplConfig.centralLayerRadii.size(); ++plb) {
+  for (std::size_t plb = 0; plb < pplConfig.centralLayerRadii.size(); ++plb) {
     // call the helper function
     pplCentralModulePositions.push_back(
         modulePositionsCylinder(pplConfig.centralLayerRadii[plb],
@@ -311,27 +311,28 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
       1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
       1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
       1. * Acts::UnitConstants::mm};
-  std::vector<double> perHX = {8.4, 8.4};  // half length x
-  std::vector<double> perHY = {36., 36.};  // half length y
-  std::vector<size_t> perBP = {40, 68};    // bins in phi
+  std::vector<double> perHX = {8.4, 8.4};     // half length x
+  std::vector<double> perHY = {36., 36.};     // half length y
+  std::vector<std::size_t> perBP = {40, 68};  // bins in phi
   std::vector<double> perT = {pEndcapModuleT,
-                              pEndcapModuleT};  // module thickness
-  std::vector<size_t> perBX = {336, 336};       // bins in x
-  std::vector<size_t> perBY = {1280, 1280};     // bins in y
-  std::vector<int> perRS = {-1, -1};            // readout side
-  std::vector<double> perLA = {0., 0.};         // lorentz angle
+                              pEndcapModuleT};    // module thickness
+  std::vector<std::size_t> perBX = {336, 336};    // bins in x
+  std::vector<std::size_t> perBY = {1280, 1280};  // bins in y
+  std::vector<int> perRS = {-1, -1};              // readout side
+  std::vector<double> perLA = {0., 0.};           // lorentz angle
   std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> perM = {
       pEndcapModuleMaterial, pEndcapModuleMaterial};  // material
 
   pplConfig.posnegModuleMinHalfX = std::vector<std::vector<double>>(7, perHX);
   pplConfig.posnegModuleMaxHalfX = {};
   pplConfig.posnegModuleHalfY = std::vector<std::vector<double>>(7, perHY);
-  pplConfig.posnegModulePhiBins = std::vector<std::vector<size_t>>(7, perBP);
+  pplConfig.posnegModulePhiBins =
+      std::vector<std::vector<std::size_t>>(7, perBP);
   pplConfig.posnegModuleThickness = std::vector<std::vector<double>>(7, perT);
   pplConfig.posnegModuleReadoutBinsX =
-      std::vector<std::vector<size_t>>(7, perBX);
+      std::vector<std::vector<std::size_t>>(7, perBX);
   pplConfig.posnegModuleReadoutBinsY =
-      std::vector<std::vector<size_t>>(7, perBY);
+      std::vector<std::vector<std::size_t>>(7, perBY);
   pplConfig.posnegModuleReadoutSide = std::vector<std::vector<int>>(7, perRS);
   pplConfig.posnegModuleLorentzAngle =
       std::vector<std::vector<double>>(7, perLA);
@@ -345,7 +346,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pplConfig.posnegModuleBacksideGap = {};
   // mPositions
   std::vector<std::vector<std::vector<Acts::Vector3>>> pplPosnegModulePositions;
-  for (size_t id = 0; id < pplConfig.posnegLayerPositionsZ.size(); ++id) {
+  for (std::size_t id = 0; id < pplConfig.posnegLayerPositionsZ.size(); ++id) {
     pplPosnegModulePositions.push_back(modulePositionsDisc(
         pplConfig.posnegLayerPositionsZ[id], 0.0, {4.0, 4.0}, {0.5, 0.}, 30.,
         176., pplConfig.posnegModulePhiBins[id],
@@ -506,7 +507,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     ssplConfig.centralModuleBacksideGap = {};
     // mPositions
     std::vector<std::vector<Acts::Vector3>> ssplCentralModulePositions;
-    for (size_t sslb = 0; sslb < ssplConfig.centralLayerRadii.size(); ++sslb) {
+    for (std::size_t sslb = 0; sslb < ssplConfig.centralLayerRadii.size();
+         ++sslb) {
       // call the helper function
       ssplCentralModulePositions.push_back(
           modulePositionsCylinder(ssplConfig.centralLayerRadii[sslb],
@@ -523,12 +525,13 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     std::vector<double> mrHy = {78., 78., 78.};
 
     // simplified strixels readout
-    std::vector<size_t> mrReadoutBinsX = {605, 805, 1000};  // 80 um pitch
-    std::vector<size_t> mrReadoutBinsY = {130, 130, 130};   // 1.2 mm strixels
+    std::vector<std::size_t> mrReadoutBinsX = {605, 805, 1000};  // 80 um pitch
+    std::vector<std::size_t> mrReadoutBinsY = {130, 130,
+                                               130};  // 1.2 mm strixels
     std::vector<int> mrReadoutSide = {1, 1, 1};
     std::vector<double> mrLorentzAngle = {0., 0., 0.};
 
-    std::vector<size_t> mPhiBins = {54, 56, 60};
+    std::vector<std::size_t> mPhiBins = {54, 56, 60};
     std::vector<double> mThickness = {ssEndcapModuleT, ssEndcapModuleT,
                                       ssEndcapModuleT};
     std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> mMaterial = {
@@ -538,7 +541,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
     ssplConfig.posnegLayerPositionsZ = {1220., 1500., 1800.,
                                         2150., 2550., 2950.};
-    size_t nposnegs = ssplConfig.posnegLayerPositionsZ.size();
+    std::size_t nposnegs = ssplConfig.posnegLayerPositionsZ.size();
     ssplConfig.posnegLayerEnvelopeR = std::vector<double>(nposnegs, 5.);
 
     ssplConfig.posnegModuleMinHalfX =
@@ -548,14 +551,14 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     ssplConfig.posnegModuleHalfY =
         std::vector<std::vector<double>>(nposnegs, mrHy);
     ssplConfig.posnegModulePhiBins =
-        std::vector<std::vector<size_t>>(nposnegs, mPhiBins);
+        std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
     ssplConfig.posnegModuleThickness =
         std::vector<std::vector<double>>(nposnegs, mThickness);
 
     ssplConfig.posnegModuleReadoutBinsX =
-        std::vector<std::vector<size_t>>(nposnegs, mrReadoutBinsX);
+        std::vector<std::vector<std::size_t>>(nposnegs, mrReadoutBinsX);
     ssplConfig.posnegModuleReadoutBinsY =
-        std::vector<std::vector<size_t>>(nposnegs, mrReadoutBinsY);
+        std::vector<std::vector<std::size_t>>(nposnegs, mrReadoutBinsY);
     ssplConfig.posnegModuleReadoutSide =
         std::vector<std::vector<int>>(nposnegs, mrReadoutSide);
     ssplConfig.posnegModuleLorentzAngle =
@@ -572,7 +575,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     // mPositions
     std::vector<std::vector<std::vector<Acts::Vector3>>>
         ssplPosnegModulePositions;
-    for (size_t id = 0; id < ssplConfig.posnegLayerPositionsZ.size(); ++id) {
+    for (std::size_t id = 0; id < ssplConfig.posnegLayerPositionsZ.size();
+         ++id) {
       ssplPosnegModulePositions.push_back(modulePositionsDisc(
           ssplConfig.posnegLayerPositionsZ[id], 6.0, {3., 3., 3.}, {0., 0., 0.},
           240., 700., ssplConfig.posnegModulePhiBins[id],
@@ -697,7 +701,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     lsplConfig.centralModuleBacksideGap = {};
     // mPositions
     std::vector<std::vector<Acts::Vector3>> lslbCentralModulePositions;
-    for (size_t lslb = 0; lslb < lsplConfig.centralLayerRadii.size(); ++lslb) {
+    for (std::size_t lslb = 0; lslb < lsplConfig.centralLayerRadii.size();
+         ++lslb) {
       // call the helper function
       lslbCentralModulePositions.push_back(
           modulePositionsCylinder(lsplConfig.centralLayerRadii[lslb],
@@ -735,14 +740,14 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     lsplConfig.posnegModuleHalfY =
         std::vector<std::vector<double>>(nposnegs, mrHy);
     lsplConfig.posnegModulePhiBins =
-        std::vector<std::vector<size_t>>(nposnegs, mPhiBins);
+        std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
     lsplConfig.posnegModuleThickness =
         std::vector<std::vector<double>>(nposnegs, mThickness);
 
     lsplConfig.posnegModuleReadoutBinsX =
-        std::vector<std::vector<size_t>>(nposnegs, mrReadoutBinsX);
+        std::vector<std::vector<std::size_t>>(nposnegs, mrReadoutBinsX);
     lsplConfig.posnegModuleReadoutBinsY =
-        std::vector<std::vector<size_t>>(nposnegs, mrReadoutBinsY);
+        std::vector<std::vector<std::size_t>>(nposnegs, mrReadoutBinsY);
     lsplConfig.posnegModuleReadoutSide =
         std::vector<std::vector<int>>(nposnegs, mrReadoutSide);
     lsplConfig.posnegModuleLorentzAngle =
@@ -758,7 +763,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     // mPositions
     std::vector<std::vector<std::vector<Acts::Vector3>>>
         lssbPosnegModulePositions;
-    for (size_t id = 0; id < lsplConfig.posnegLayerPositionsZ.size(); ++id) {
+    for (std::size_t id = 0; id < lsplConfig.posnegLayerPositionsZ.size();
+         ++id) {
       lssbPosnegModulePositions.push_back(modulePositionsDisc(
           lsplConfig.posnegLayerPositionsZ[id],
           8.0,  // staggering of rings, we put the disk structure in between

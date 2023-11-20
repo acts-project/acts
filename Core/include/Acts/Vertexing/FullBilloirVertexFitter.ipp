@@ -298,6 +298,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     }
 
     if (!std::isnormal(newChi2)) {
+      ACTS_ERROR("Encountered non-normal chi2 value during the fit.");
       return VertexingError::NumericFailure;
     }
 

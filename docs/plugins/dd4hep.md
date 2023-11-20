@@ -267,3 +267,12 @@ To receive the {class}`Acts::TrackingGeometry` the global function
 `DetElement` needs to be handed over. For a valid translation, that all
 prerequisites described above are met and that the right `VariantParameters`
 are added during the DD4hep construction.
+
+
+## DD4hep field adapter
+
+The DD4hep plugins ships with an adapter class that connects a DD4hep-defined
+field to the {class}`Acts::MagneticFieldProvider` interface:
+
+:::{doxygenclass} Acts::DD4hepFieldAdapter
+:::

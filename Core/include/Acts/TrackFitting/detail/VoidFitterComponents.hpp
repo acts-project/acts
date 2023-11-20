@@ -62,6 +62,12 @@ bool voidReverseFilteringLogic(
 
 inline const Surface* voidSurfaceAccessor(const SourceLink& /*sourceLink*/) {
   throw std::runtime_error{"voidSurfaceAccessor should not ever execute"};
-  return nullptr;
 }
+
+template <typename component_t>
+void voidComponentReducer(std::vector<component_t>& /*components*/,
+                          std::size_t /*n*/, const Surface& /*surface*/) {
+  throw std::runtime_error{"voidComponentReducer should not ever execute"};
+}
+
 }  // namespace Acts::detail

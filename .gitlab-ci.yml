@@ -7,6 +7,8 @@ variables:
 clang_tidy:
   stage: build
   image: ghcr.io/acts-project/ubuntu2004:v41
+  tags:
+    - large
   artifacts:
     paths:
       - src/clang-tidy/
@@ -440,18 +442,9 @@ lcg_104:
 
   parallel:
     matrix:
-      - OS: [centos7]
-        COMPILER: 
-          - gcc11
-          - gcc12
-
       - OS: [alma9]
         COMPILER: 
-          - gcc11
-          - gcc12
           - gcc13
           - clang16
 
-      - OS: [centos8]
-        COMPILER: [gcc11]
 

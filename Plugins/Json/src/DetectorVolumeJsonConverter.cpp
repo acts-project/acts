@@ -124,7 +124,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
   nlohmann::json jSurfaces;
   for (const auto& s : volume.surfaces()) {
     auto jSurface =
-        SurfaceJsonConverter::toJson(gctx, *s, options.surfaceOptions);
+        SurfaceJsonConverter::toJsonDetray(gctx, *s, options.surfaceOptions);
     DetrayJsonHelper::addVolumeLink(jSurface["mask"], vIndex);
     jSurfaces.push_back(jSurface);
   }

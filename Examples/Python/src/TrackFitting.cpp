@@ -109,7 +109,8 @@ void addTrackFitting(Context& ctx) {
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles",
                     &ActsExamples::BetheHeitlerApprox::loadFromFiles,
-                    py::arg("lowParametersPath"), py::arg("lowParametersPath"))
+                    py::arg("lowParametersPath"), py::arg("highParametersPath"),
+                    py::arg("lowLimit") = 0.1, py::arg("highLimit") = 0.2)
         .def_static("makeDefault",
                     []() { return Acts::makeDefaultBetheHeitlerApprox(); });
     mex.def(

@@ -345,11 +345,12 @@ class CombinatorialKalmanFilter {
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<traj_t>;
 
-    /// The filter target surface
-    const Surface* filterTargetSurface = nullptr;
+    /// The filter target surface aborter
+    SurfaceReached filterTargetReached{std::numeric_limits<double>::lowest()};
 
-    /// The smoothing target surface
-    const Surface* smoothingTargetSurface = nullptr;
+    /// The smoothing target surface aborter
+    SurfaceReached smoothingTargetReached{
+        std::numeric_limits<double>::lowest()};
 
     /// Strategy to propagate to reference surface
     CombinatorialKalmanFilterTargetSurfaceStrategy
@@ -391,9 +392,8 @@ class CombinatorialKalmanFilter {
 
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
-      if (!result.filtered && filterTargetSurface != nullptr &&
-          targetReached(state, stepper, navigator, *filterTargetSurface,
-                        logger())) {
+      if (!result.filtered &&
+          filterTargetReached(state, stepper, navigator, logger())) {
         navigator.navigationBreak(state.navigation, true);
         stepper.releaseStepSize(state.stepping);
       }
@@ -552,9 +552,7 @@ class CombinatorialKalmanFilter {
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
             bool isTargetReached =
-                (smoothingTargetSurface == nullptr) ||
-                targetReached(state, stepper, navigator,
-                              *smoothingTargetSurface, logger());
+                smoothingTargetReached(state, stepper, navigator, logger());
             bool isPathLimitReached =
                 result.pathLimitReached(state, stepper, navigator, logger());
             if (result.smoothed && (isTargetReached || isPathLimitReached)) {
@@ -562,10 +560,10 @@ class CombinatorialKalmanFilter {
                   "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
 
-              if (smoothingTargetSurface != nullptr) {
+              if (smoothingTargetReached.surface != nullptr) {
                 // Transport & bind the parameter to the final surface
-                auto res =
-                    stepper.boundState(state.stepping, *smoothingTargetSurface);
+                auto res = stepper.boundState(state.stepping,
+                                              *smoothingTargetReached.surface);
                 if (!res.ok()) {
                   if (isPathLimitReached) {
                     ACTS_ERROR("Target surface not reached due to path limit: "
@@ -1224,7 +1222,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Return in case no target surface
-      if (smoothingTargetSurface == nullptr) {
+      if (smoothingTargetReached.surface == nullptr) {
         return Result<void>::success();
       }
 
@@ -1236,7 +1234,7 @@ class CombinatorialKalmanFilter {
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
-        return smoothingTargetSurface
+        return smoothingTargetReached.surface
             ->intersect(
                 state.geoContext, freeVector.segment<3>(eFreePos0),
                 state.options.direction * freeVector.segment<3>(eFreeDir0),
@@ -1328,9 +1326,6 @@ class CombinatorialKalmanFilter {
     /// The source link accessor
     source_link_accessor_t m_sourcelinkAccessor;
 
-    /// The Surface being targeted
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
-
     /// End of world aborter
     EndOfWorldReached endOfWorldReached;
 
@@ -1417,8 +1412,9 @@ class CombinatorialKalmanFilter {
     // Catch the actor
     auto& combKalmanActor =
         propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
-    combKalmanActor.filterTargetSurface = tfOptions.filterTargetSurface;
-    combKalmanActor.smoothingTargetSurface = tfOptions.smoothingTargetSurface;
+    combKalmanActor.filterTargetReached.surface = tfOptions.filterTargetSurface;
+    combKalmanActor.smoothingTargetReached.surface =
+        tfOptions.smoothingTargetSurface;
     combKalmanActor.smoothingTargetSurfaceStrategy =
         tfOptions.smoothingTargetSurfaceStrategy;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;

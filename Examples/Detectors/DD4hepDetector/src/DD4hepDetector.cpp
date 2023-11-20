@@ -9,10 +9,15 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
+#include <cstddef>
+#include <memory>
 #include <stdexcept>
 
+#include <DD4hep/Fields.h>
 #include <boost/program_options.hpp>
 
 namespace ActsExamples {
@@ -44,6 +49,12 @@ auto DD4hepDetector::finalize(
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
       std::move(dd4tGeometry), std::move(dd4ContextDecorators));
+}
+
+std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
+  const auto& detector = geometryService->detector();
+
+  return std::make_shared<Acts::DD4hepFieldAdapter>(detector.field());
 }
 
 }  // namespace DD4hep

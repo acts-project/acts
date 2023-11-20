@@ -30,10 +30,10 @@ template <typename T>
 class ObjSpacePointWriter : public WriterT<GeometryIdMultimap<T>> {
  public:
   struct Config {
-    std::string collection;      ///< which collection to write
-    std::string outputDir;       ///< where to place output files
-    double outputScalor = 1.0;   ///< scale output values
-    size_t outputPrecision = 6;  ///< floating point precision
+    std::string collection;           ///< which collection to write
+    std::string outputDir;            ///< where to place output files
+    double outputScalor = 1.0;        ///< scale output values
+    std::size_t outputPrecision = 6;  ///< floating point precision
   };
 
   ObjSpacePointWriter(const Config& cfg,
@@ -75,7 +75,7 @@ inline ActsExamples::ProcessCode ActsExamples::ObjSpacePointWriter<T>::writeT(
 
   os << std::setprecision(m_cfg.outputPrecision);
   // count the vertex
-  size_t vertex = 0;
+  std::size_t vertex = 0;
   // loop and fill the space point data
   for (auto& volumeData : spacePoints) {
     for (auto& layerData : volumeData.second) {
