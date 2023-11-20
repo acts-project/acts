@@ -21,7 +21,7 @@ void Acts::KalmanVertexUpdater::updateVertexWithTrack(
 template <typename input_track_t>
 void Acts::KalmanVertexUpdater::detail::update(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
-  const double& trackWeight = trk.trackWeight;
+  double trackWeight = trk.trackWeight;
 
   // Set up cache where entire content is set to 0
   Cache cache;
