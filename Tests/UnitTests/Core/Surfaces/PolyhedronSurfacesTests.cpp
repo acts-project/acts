@@ -10,39 +10,27 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-// Helper
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-
-// The class to test
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-
-// Cone surface
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
-
-// Cylinder surface
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-
-// Disc Surface
-#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
-
-// Plane Surface
-#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
-#include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
-
-// Straw Surface
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <fstream>
@@ -53,6 +41,8 @@
 namespace Acts {
 
 using namespace UnitLiterals;
+
+Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 
 using IdentifiedPolyhedron = std::tuple<std::string, bool, Polyhedron>;
 
@@ -71,6 +61,10 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit tests for Cone Surfaces
 BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_INFO("Test: ConeSurfacePolyhedrons");
+
   const double hzPos = 35_mm;
   const double hzNeg = -20_mm;
   const double alpha = 0.234;
@@ -78,8 +72,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
   const double rMax = hzPos * std::tan(alpha);
 
   for (const auto& mode : testModes) {
+    ACTS_INFO("\tMode: " << std::get<std::string>(mode));
     const unsigned int segments = std::get<unsigned int>(mode);
-    std::cout << "Mode: " << std::get<std::string>(mode) << std::endl;
 
     /// The full cone on one side
     {
@@ -157,7 +151,10 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
           sectoralCones->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = sectoralConesPh.extent();
+      CHECK_CLOSE_ABS(extent.range(binX).min(), 0, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binX).max(), rMax, epsAbs);
+      //      CHECK_CLOSE_ABS(extent.range(binY).min(), ???, epsAbs);
+      //      CHECK_CLOSE_ABS(extent.range(binY).max(), ???, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binR).min(), 0_mm, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binR).max(), rMax, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).min(), hzNeg, epsAbs);
@@ -168,80 +165,74 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
 
 /// Unit tests for Cylinder Surfaces
 BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_INFO("Test: CylinderSurfacePolyhedrons");
+
   const double r = 25_mm;
   const double hZ = 35_mm;
 
-  const double phiSector = 0.458;
-  const double averagePhi = -1.345;
-
   for (const auto& mode : testModes) {
+    ACTS_INFO("\tMode: " << std::get<std::string>(mode));
     const unsigned int segments = std::get<unsigned int>(mode);
-    std::cout << "Mode: " << std::get<std::string>(mode) << std::endl;
 
     std::size_t expectedFaces = segments < 4 ? 4 : segments;
     std::size_t expectedVertices = segments < 4 ? 8 : 2 * segments;
 
     /// The full cone on one side
-    auto cylinder = std::make_shared<CylinderBounds>(r, hZ);
-    auto fullCylinder =
-        Surface::makeShared<CylinderSurface>(transform, cylinder);
-    auto fullCylinderPh =
-        fullCylinder->polyhedronRepresentation(tgContext, segments);
+    {
+      auto cylinder = std::make_shared<CylinderBounds>(r, hZ);
+      auto fullCylinder =
+          Surface::makeShared<CylinderSurface>(transform, cylinder);
+      auto fullCylinderPh =
+          fullCylinder->polyhedronRepresentation(tgContext, segments);
 
-    BOOST_CHECK_EQUAL(fullCylinderPh.faces.size(), expectedFaces);
-    BOOST_CHECK_EQUAL(fullCylinderPh.vertices.size(), expectedVertices);
-    // Check the extent in space
-    auto extent = fullCylinderPh.extent();
-    CHECK_CLOSE_ABS(extent.range(binX).min(), -r, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binX).max(), r, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binY).min(), -r, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binY).max(), r, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binR).min(), r, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binR).max(), r, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binZ).min(), -hZ, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binZ).max(), hZ, epsAbs);
+      const auto extent = fullCylinderPh.extent();
+      CHECK_CLOSE_ABS(extent.range(binX).min(), -r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binX).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).min(), -r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).min(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binZ).min(), -hZ, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binZ).max(), hZ, epsAbs);
 
-    /// The full cone on one side
-    //    auto sectorCentered = std::make_shared<CylinderBounds>(r, phiSector,
-    //    hZ); // TODO this one makes problems auto centerSectoredCylinder =
-    //        Surface::makeShared<CylinderSurface>(transform, sectorCentered);
-    //    auto centerSectoredCylinderPh =
-    //        centerSectoredCylinder->polyhedronRepresentation(tgContext,
-    //        segments);
-    //
-    //    // Check the extent in space
-    //    extent = centerSectoredCylinderPh.extent();
-    //    CHECK_CLOSE_ABS((extent.range(binX).min() r * std::cos(phiSector),
-    //    epsAbs); CHECK_CLOSE_ABS((extent.range(binX).max() r, epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binY).min() -r * std::sin(phiSector),
-    //    epsAbs); CHECK_CLOSE_ABS((extent.range(binY).max() r *
-    //    std::sin(phiSector), epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binR).min() r, epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binR).max() r, epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binZ).min() -hZ, epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binZ).max() hZ, epsAbs);
+      BOOST_CHECK_EQUAL(fullCylinderPh.faces.size(), expectedFaces);
+      BOOST_CHECK_EQUAL(fullCylinderPh.vertices.size(), expectedVertices);
+    }
 
     /// The full cone on one side
-    //    auto sectorShifted =
-    //        std::make_shared<CylinderBounds>(r, averagePhi, phiSector, hZ); //
-    //        TODO this one makes problems
-    //    auto shiftedSectoredCylinder =
-    //        Surface::makeShared<CylinderSurface>(transform, sectorShifted);
-    //    auto shiftedSectoredCylinderPh =
-    //        shiftedSectoredCylinder->polyhedronRepresentation(tgContext,
-    //        segments);
-    //
-    //    // Check the extent in space
-    //    extent = shiftedSectoredCylinderPh.extent();
-    //    CHECK_CLOSE_ABS((extent.range(binR).min() r, epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binR).max() r, epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binZ).min() -hZ, epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binZ).max() hZ, epsAbs);
+    {
+      const double phiSector = 0.458;
+
+      auto sectorCentered = std::make_shared<CylinderBounds>(r, hZ, phiSector);
+      auto centerSectoredCylinder =
+          Surface::makeShared<CylinderSurface>(transform, sectorCentered);
+      auto centerSectoredCylinderPh =
+          centerSectoredCylinder->polyhedronRepresentation(tgContext, segments);
+
+      const auto extent = centerSectoredCylinderPh.extent();
+      CHECK_CLOSE_ABS(extent.range(binX).min(), r * std::cos(phiSector),
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binX).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).min(), -r * std::sin(phiSector),
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).max(), r * std::sin(phiSector),
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).min(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binZ).min(), -hZ, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binZ).max(), hZ, epsAbs);
+    }
   }
 }
 
 /// Unit tests for Disc Surfaces
 BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_INFO("Test: DiscSurfacePolyhedrons");
+
   const double innerR = 10_mm;
   const double outerR = 25_mm;
 
@@ -259,21 +250,14 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       Vector3(outerR * std::cos(maxPhi), outerR * std::sin(maxPhi), 0.)};
 
   for (const auto& mode : testModes) {
+    ACTS_INFO("\tMode: " << std::get<std::string>(mode));
     const unsigned int segments = std::get<unsigned int>(mode);
-    std::cout << "Mode: " << std::get<std::string>(mode) << std::endl;
 
     /// Full disc
     {
       auto disc = std::make_shared<RadialBounds>(0_mm, outerR);
       auto fullDisc = Surface::makeShared<DiscSurface>(transform, disc);
       auto fullDiscPh = fullDisc->polyhedronRepresentation(tgContext, segments);
-
-      const unsigned int expectedVertices = segments > 4 ? segments : 4;
-      const unsigned int expectedFaces = 1;
-
-      BOOST_CHECK_EQUAL(fullDiscPh.faces.size(), expectedFaces);
-      //    BOOST_CHECK_EQUAL(fullDiscPh.vertices.size(), expectedVertices); //
-      //    TODO fails
 
       const auto extent = fullDiscPh.extent();
       CHECK_CLOSE_ABS(extent.range(binX).min(), -outerR, epsAbs);
@@ -284,6 +268,11 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(binR).max(), outerR, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+
+      const unsigned int expectedFaces = 1;
+      const unsigned int expectedVertices = segments > 4 ? segments + 1 : 4 + 1;
+      BOOST_CHECK_EQUAL(fullDiscPh.faces.size(), expectedFaces);
+      BOOST_CHECK_EQUAL(fullDiscPh.vertices.size(), expectedVertices);
     }
 
     /// Ring disc
@@ -291,6 +280,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       auto radial = std::make_shared<RadialBounds>(innerR, outerR);
       auto radialDisc = Surface::makeShared<DiscSurface>(transform, radial);
       auto radialPh = radialDisc->polyhedronRepresentation(tgContext, segments);
+
       const auto extent = radialPh.extent();
       CHECK_CLOSE_ABS(extent.range(binX).min(), -outerR, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binX).max(), outerR, epsAbs);
@@ -307,6 +297,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       auto sector = std::make_shared<RadialBounds>(0., outerR, phiSector);
       auto sectorDisc = Surface::makeShared<DiscSurface>(transform, sector);
       auto sectorPh = sectorDisc->polyhedronRepresentation(tgContext, segments);
+
       const auto extent = sectorPh.extent();
       CHECK_CLOSE_ABS(extent.range(binX).min(), 0., epsAbs);
       CHECK_CLOSE_ABS(extent.range(binX).max(), outerR, epsAbs);
@@ -328,6 +319,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
           Surface::makeShared<DiscSurface>(transform, sectorRing);
       auto sectorRingDiscPh =
           sectorRingDisc->polyhedronRepresentation(tgContext, segments);
+
       const auto extent = sectorRingDiscPh.extent();
       CHECK_CLOSE_ABS(extent.range(binX).min(), innerR * std::cos(phiSector),
                       epsAbs);
@@ -342,69 +334,54 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
     }
 
-    // Sectoral disc - shifted
-    //    auto sectorRingShifted =
-    //        std::make_shared<RadialBounds>(innerR, outerR, averagePhi,
-    //        phiSector); // TODO this one makes problems
-    //    auto sectorRingDiscShifted =
-    //        Surface::makeShared<DiscSurface>(transform, sectorRingShifted);
-    //    auto sectorRingDiscShiftedPh =
-    //        sectorRingDiscShifted->polyhedronRepresentation(tgContext,
-    //        segments);
-    //    const auto extent = sectorRingDiscShiftedPh.extent();
-    //    CHECK_CLOSE_ABS((extent.range(binR).min() innerR, epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binR).max() outerR, epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., epsAbs);
-    //    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., epsAbs);
-
     /// Trapezoid for a disc
     {
       const double halfXmin = 10_mm;
       const double halfXmax = 20_mm;
+
       auto trapezoidDisc = std::make_shared<DiscTrapezoidBounds>(
           halfXmin, halfXmax, innerR, outerR, 0.);
       auto trapezoidDiscSf =
           Surface::makeShared<DiscSurface>(transform, trapezoidDisc);
       auto trapezoidDiscSfPh =
           trapezoidDiscSf->polyhedronRepresentation(tgContext, segments);
-      auto extent = trapezoidDiscSfPh.extent();
-      //    CHECK_CLOSE_ABS(extent.range(binR).min(), innerR, epsAbs); // TODO
-      //    fails CHECK_CLOSE_ABS(extent.range(binR).max(), outerR, epsAbs); //
-      //    TODO fails
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      const auto extent = trapezoidDiscSfPh.extent();
 
-      auto trapezoidDiscShifted = std::make_shared<DiscTrapezoidBounds>(
-          halfXmin, halfXmax, innerR, outerR, averagePhi);
-      auto trapezoidDiscShiftedSf =
-          Surface::makeShared<DiscSurface>(transform, trapezoidDiscShifted);
-      auto trapezoidDiscShiftedSfPh =
-          trapezoidDiscShiftedSf->polyhedronRepresentation(tgContext, segments);
-      extent = trapezoidDiscShiftedSfPh.extent();
-      //    CHECK_CLOSE_ABS(extent.range(binR).min(), innerR, epsAbs); // TODO
-      //    fails CHECK_CLOSE_ABS(extent.range(binR).max(), outerR, epsAbs); //
-      //    TODO fails
+      CHECK_CLOSE_ABS(extent.range(binX).min(), -std::abs(outerR - innerR) / 2.,
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binX).max(), std::abs(outerR - innerR) / 2.,
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).min(), -halfXmax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).max(), halfXmax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).max(),
+                      std::hypot(std::abs(outerR - innerR) / 2., halfXmax),
+                      epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
     }
 
+    /// AnnulusBounds for a disc
     {
       const double minRadius = 7.;
       const double maxRadius = 12.;
       const double minPhiA = 0.75;
       const double maxPhiA = 1.4;
-
-      const Vector2 offset(-2., 2.);
+      const Vector2 offset(0., 0.);
 
       auto annulus = std::make_shared<AnnulusBounds>(minRadius, maxRadius,
                                                      minPhiA, maxPhiA, offset);
       auto annulusDisc = Surface::makeShared<DiscSurface>(transform, annulus);
       auto annulusDiscPh =
           annulusDisc->polyhedronRepresentation(tgContext, segments);
+
       const auto extent = annulusDiscPh.extent();
-      //    CHECK_CLOSE_ABS(extent.range(binR).min(), innerR, epsAbs); // TODO
-      //    fails CHECK_CLOSE_ABS(extent.range(binR).max(), outerR, epsAbs); //
-      //    TODO fails
+      //      CHECK_CLOSE_ABS(extent.range(binX).min(), ???, epsAbs);
+      //      CHECK_CLOSE_ABS(extent.range(binX).max(), ???, epsAbs);
+      //      CHECK_CLOSE_ABS(extent.range(binY).min(), ???, epsAbs);
+      //      CHECK_CLOSE_ABS(extent.range(binY).max(), ???, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).min(), minRadius, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).max(), maxRadius, epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
     }
@@ -413,9 +390,13 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
 
 /// Unit tests for Plane Surfaces
 BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_INFO("Test: PlaneSurfacePolyhedrons");
+
   for (const auto& mode : testModes) {
+    ACTS_INFO("\tMode: " << std::get<std::string>(mode));
     const unsigned int segments = std::get<unsigned int>(mode);
-    std::cout << "Mode: " << std::get<std::string>(mode) << std::endl;
 
     /// Rectangular Plane
     {
@@ -522,7 +503,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
       CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
     }
 
-    /// ConvextPolygonBounds test
+    /// ConvexPolygonBounds test
     {
       std::vector<Vector2> vtxs = {
           Vector2(-40_mm, -10_mm), Vector2(-10_mm, -30_mm),
@@ -533,17 +514,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
       auto hexagonPlane = Surface::makeShared<PlaneSurface>(transform, hexagon);
       auto hexagonPlanePh =
           hexagonPlane->polyhedronRepresentation(tgContext, segments);
-      // TODO ConvextPolygonBounds tests missing
 
       const auto extent = hexagonPlanePh.extent();
-      //      CHECK_CLOSE_ABS(extent.range(binX).min(), -hMedX, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binX).max(), hMedX, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binY).min(), -hMinY, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binY).max(), hMaxY, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binR).min(), 0., epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binR).max(), std::hypot(hMaxX,
-      //      hMaxY),
-      //                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binX).min(), -40, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binX).max(), 30, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).min(), -30, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).max(), 50, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).min(), 0, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).max(), std::sqrt(2900), epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
       CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
     }
@@ -580,47 +558,50 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
 }
 
 /// Unit tests shifted plane
-BOOST_AUTO_TEST_CASE(ShiftedPlaneSurfacePolyhedrons) {
+BOOST_AUTO_TEST_CASE(ShiftedSurfacePolyhedrons) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_INFO("Test: ShiftedSurfacePolyhedrons");
+
   const double shiftY = 50_mm;
   Vector3 shift(0., shiftY, 0.);
   Transform3 shiftedTransform = Transform3::Identity();
   shiftedTransform.pretranslate(shift);
 
   for (const auto& mode : testModes) {
+    ACTS_INFO("\tMode: " << std::get<std::string>(mode));
     const unsigned int segments = std::get<unsigned int>(mode);
-    std::cout << "Mode: " << std::get<std::string>(mode) << std::endl;
 
     /// Rectangular Plane
-    const double rhX = 10_mm;
-    const double rhY = 25_mm;
+    {
+      const double rhX = 10_mm;
+      const double rhY = 25_mm;
 
-    auto rectangular = std::make_shared<RectangleBounds>(rhX, rhY);
-    auto rectangularPlane =
-        Surface::makeShared<PlaneSurface>(shiftedTransform, rectangular);
-    auto rectangularPh =
-        rectangularPlane->polyhedronRepresentation(tgContext, segments);
+      auto rectangular = std::make_shared<RectangleBounds>(rhX, rhY);
+      auto rectangularPlane =
+          Surface::makeShared<PlaneSurface>(shiftedTransform, rectangular);
+      auto rectangularPh =
+          rectangularPlane->polyhedronRepresentation(tgContext, segments);
 
-    const auto extent = rectangularPh.extent();
-    CHECK_CLOSE_ABS(extent.range(binX).min(), -rhX, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binX).max(), rhX, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binY).min(), -rhY + shiftY, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binY).max(), rhY + shiftY, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binR).min(), 25, epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binR).max(), std::hypot(rhX, rhY + shiftY),
-                    epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-    CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      const auto extent = rectangularPh.extent();
+      CHECK_CLOSE_ABS(extent.range(binX).min(), -rhX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binX).max(), rhX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).min(), -rhY + shiftY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binY).max(), rhY + shiftY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).min(), 25, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binR).max(), std::hypot(rhX, rhY + shiftY),
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
 
-    BOOST_CHECK_EQUAL(rectangularPh.vertices.size(), 4);
-    BOOST_CHECK_EQUAL(rectangularPh.faces.size(), 1);
+      BOOST_CHECK_EQUAL(rectangularPh.vertices.size(), 4);
+      BOOST_CHECK_EQUAL(rectangularPh.faces.size(), 1);
 
-    const std::vector<std::size_t> expectedRect = {0, 1, 2, 3};
-    BOOST_CHECK(rectangularPh.faces[0] == expectedRect);
+      const std::vector<std::size_t> expectedRect = {0, 1, 2, 3};
+      BOOST_CHECK(rectangularPh.faces[0] == expectedRect);
+    }
   }
 }
-
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts
