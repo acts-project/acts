@@ -114,10 +114,10 @@ struct SeedFinderOrthogonalConfig {
   float maxPtScattering = 10 * Acts::UnitConstants::GeV;
   /// Maximum value of impact parameter estimation of the seed candidates
   float impactMax = 20. * Acts::UnitConstants::mm;
-  /// Parameter which can loosen the tolerance of the track seed to form to a
-  /// helix, useful for (e.g.) misaligned seeding
-  /// float helixCut = 1.; TODO: indluce this
-
+  /// Parameter which can loosen the tolerance of the track seed to form a
+  /// helix. This is useful for e.g. misaligned seeding.
+  float helixCutTolerance = 1.;
+  
   /// Seeding parameters used for quality seed confirmation
 
   /// Enable quality seed confirmation, this is different than default seeding

@@ -135,9 +135,9 @@ struct SeedFinderConfig {
   float maxPtScattering = 10 * Acts::UnitConstants::GeV;
   /// Maximum value of impact parameter estimation of the seed candidates
   float impactMax = 20. * Acts::UnitConstants::mm;
-  /// Parameter which can loosen the tolerance of the track seed to form to a
-  /// helix, useful for (e.g.) misaligned seeding
-  float helixCut = 1.;
+  /// Parameter which can loosen the tolerance of the track seed to form a
+  /// helix. This is useful for e.g. misaligned seeding.
+  float helixCutTolerance = 1.;
 
   /// Seeding parameters used for quality seed confirmation
 
@@ -310,7 +310,8 @@ struct SeedFinderOptions {
     // TODO: change using ACTS units
     options.pTPerHelixRadius = 1_T * 1e6 * options.bFieldInZ;
     options.minHelixDiameter2 =
-        std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2);
+        std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2) *
+        config.helixCutTolerance;
     options.pT2perRadius =
         std::pow(config.highland / options.pTPerHelixRadius, 2);
     options.sigmapT2perRadius =

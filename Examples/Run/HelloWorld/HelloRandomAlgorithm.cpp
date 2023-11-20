@@ -47,7 +47,7 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
 
   // generate collection of random numbers
   HelloDataCollection collection;
-  for (size_t idraw = 0; idraw < m_cfg.drawsPerEvent; ++idraw) {
+  for (std::size_t idraw = 0; idraw < m_cfg.drawsPerEvent; ++idraw) {
     double gauss = gaussDist(rng);
     double uniform = uniformDist(rng);
     double gamma = gammaDist(rng);

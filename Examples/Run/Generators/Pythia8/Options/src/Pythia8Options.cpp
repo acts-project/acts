@@ -24,7 +24,7 @@ void ActsExamples::Options::addPythia8Options(Description& desc) {
   using boost::program_options::value;
 
   auto opt = desc.add_options();
-  opt("gen-nhard", value<size_t>()->default_value(1u),
+  opt("gen-nhard", value<std::size_t>()->default_value(1u),
       "Number of hard interactions, zero to disable");
   opt("gen-npileup", value<double>()->default_value(200.0),
       "Mean number of pile-up interactions, zero to disable");
@@ -58,7 +58,7 @@ ActsExamples::EventGenerator::Config ActsExamples::Options::readPythia8Options(
     const Variables& vars, Acts::Logging::Level lvl) {
   using namespace Acts::UnitLiterals;
 
-  const auto nhard = vars["gen-nhard"].as<size_t>();
+  const auto nhard = vars["gen-nhard"].as<std::size_t>();
   const auto npileup = vars["gen-npileup"].as<double>();
   const auto pdgBeam0 = static_cast<Acts::PdgParticle>(
       vars["gen-pdg-beam0"].template as<int32_t>());

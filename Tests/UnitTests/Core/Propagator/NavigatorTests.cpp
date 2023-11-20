@@ -234,8 +234,8 @@ struct PropagatorState {
     bool debug = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
-    size_t debugPfxWidth = 30;
-    size_t debugMsgWidth = 50;
+    std::size_t debugPfxWidth = 30;
+    std::size_t debugMsgWidth = 50;
 
     Direction direction = Direction::Forward;
 
@@ -284,8 +284,9 @@ void step(stepper_state_t& sstate) {
 /// @param [in] navLay Number of navigation layers
 /// @param [in] navBound Number of navigation boundaries
 /// @param [in] extSurf Number of external surfaces
-bool testNavigatorStateVectors(Navigator::State& state, size_t navSurf,
-                               size_t navLay, size_t navBound, size_t extSurf) {
+bool testNavigatorStateVectors(Navigator::State& state, std::size_t navSurf,
+                               std::size_t navLay, std::size_t navBound,
+                               std::size_t extSurf) {
   return ((state.navSurfaces.size() == navSurf) &&
           (state.navLayers.size() == navLay) &&
           (state.navBoundaries.size() == navBound) &&
@@ -576,7 +577,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on first layer
-  for (size_t isf = 0; isf < 5; ++isf) {
+  for (std::size_t isf = 0; isf < 5; ++isf) {
     step(state.stepping);
     // (5-9) re-entering navigator:
     // POST STEP
@@ -608,7 +609,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on second layer
-  for (size_t isf = 0; isf < 5; ++isf) {
+  for (std::size_t isf = 0; isf < 5; ++isf) {
     step(state.stepping);
     // (11-15) re-entering navigator:
     // POST STEP
@@ -640,7 +641,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on third layer
-  for (size_t isf = 0; isf < 3; ++isf) {
+  for (std::size_t isf = 0; isf < 3; ++isf) {
     step(state.stepping);
     // (17-19) re-entering navigator:
     // POST STEP
@@ -672,7 +673,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on second layer
-  for (size_t isf = 0; isf < 3; ++isf) {
+  for (std::size_t isf = 0; isf < 3; ++isf) {
     step(state.stepping);
     // (21-23) re-entering navigator:
     // POST STEP
