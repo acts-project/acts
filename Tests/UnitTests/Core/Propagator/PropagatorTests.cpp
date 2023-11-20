@@ -178,12 +178,13 @@ BOOST_DATA_TEST_CASE(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
              bdata::distribution =
                  std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::random((
-            bdata::engine = std::mt19937(), bdata::seed = 4,
-            bdata::distribution = std::uniform_int_distribution<int>(0, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_ns,
+                                                                  1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
@@ -239,12 +240,13 @@ BOOST_DATA_TEST_CASE(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
              bdata::distribution =
                  std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::random((
-            bdata::engine = std::mt19937(), bdata::seed = 4,
-            bdata::distribution = std::uniform_int_distribution<int>(0, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_ns,
+                                                                  1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
@@ -318,12 +320,13 @@ BOOST_DATA_TEST_CASE(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
              bdata::distribution =
                  std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::random((
-            bdata::engine = std::mt19937(), bdata::seed = 4,
-            bdata::distribution = std::uniform_int_distribution<int>(0, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_ns,
+                                                                  1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;

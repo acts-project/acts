@@ -96,7 +96,7 @@ double oversteppingMaxStepSize = 1_mm;
 /// @param index is the run index from the test
 template <typename rpropagator_t, typename dpropagator_t>
 void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
-             double phi, double theta, int charge, double time, int index) {
+             double phi, double theta, int charge, int index) {
   double dcharge = -1 + 2 * charge;
 
   if (index < skip) {
@@ -105,9 +105,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
   // Define start parameters from ranom input
   double p = pT / sin(theta);
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta,
-                                   dcharge / p, std::nullopt,
-                                   ParticleHypothesis::pion());
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, dcharge / p,
+                                   std::nullopt, ParticleHypothesis::pion());
 
   using EndOfWorld = EndOfWorldReached;
 
@@ -194,16 +193,13 @@ BOOST_DATA_TEST_CASE(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
              bdata::distribution =
                  std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::random((
-            bdata::engine = std::mt19937(), bdata::seed = 24,
-            bdata::distribution = std::uniform_int_distribution<int>(0, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, index) {
   // Run the test
-  runTest(rpropagator, dpropagator, pT, phi, theta, charge, time, index);
+  runTest(rpropagator, dpropagator, pT, phi, theta, charge, index);
 }
 
 }  // namespace Test

@@ -95,9 +95,9 @@ std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
 std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
 // Number of vertices per test event distribution
-std::uniform_int_distribution<int> nVertexDist(1, 6);
+std::uniform_int_distribution<std::uint32_t> nVertexDist(1, 6);
 // Number of tracks per vertex distribution
-std::uniform_int_distribution<int> nTracksDist(5, 15);
+std::uniform_int_distribution<std::uint32_t> nTracksDist(5, 15);
 
 // Dummy user-defined InputTrack type
 struct InputTrack {
@@ -184,10 +184,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     std::vector<Vertex<BoundTrackParameters>> trueVertices;
 
     // start creating event with nVertices vertices
-    unsigned int nVertices = nVertexDist(gen);
-    for (unsigned int iVertex = 0; iVertex < nVertices; ++iVertex) {
+    std::uint32_t nVertices = nVertexDist(gen);
+    for (std::uint32_t iVertex = 0; iVertex < nVertices; ++iVertex) {
       // Number of tracks
-      unsigned int nTracks = nTracksDist(gen);
+      std::uint32_t nTracks = nTracksDist(gen);
 
       if (debug) {
         std::cout << "Event " << iEvent << ", Vertex " << iVertex << "/"
@@ -399,10 +399,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     std::vector<Vertex<InputTrack>> trueVertices;
 
     // start creating event with nVertices vertices
-    unsigned int nVertices = nVertexDist(gen);
-    for (unsigned int iVertex = 0; iVertex < nVertices; ++iVertex) {
+    std::uint32_t nVertices = nVertexDist(gen);
+    for (std::uint32_t iVertex = 0; iVertex < nVertices; ++iVertex) {
       // Number of tracks
-      unsigned int nTracks = nTracksDist(gen);
+      std::uint32_t nTracks = nTracksDist(gen);
 
       if (debug) {
         std::cout << "Event " << iEvent << ", Vertex " << iVertex << "/"
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
       // Construct random track emerging from vicinity of vertex position
       // Vector to store track objects used for vertex fit
-      for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
+      for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
         // Construct positive or negative charge randomly
         double q = qDist(gen) < 0 ? -1. : 1.;
 

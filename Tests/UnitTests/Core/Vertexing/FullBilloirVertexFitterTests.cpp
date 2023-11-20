@@ -92,7 +92,7 @@ std::uniform_real_distribution<double> resQoPDist(-0.1, 0.1);
 std::uniform_real_distribution<double> resTDist(0.1_ns, 0.2_ns);
 
 // Number of tracks distritbution
-std::uniform_int_distribution<int> nTracksDist(3, 10);
+std::uniform_int_distribution<std::uint32_t> nTracksDist(3, 10);
 
 // Dummy user-defined InputTrack type
 struct InputTrack {
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   const int nEvents = 100;
   for (int eventIdx = 0; eventIdx < nEvents; ++eventIdx) {
     // Number of tracks
-    unsigned int nTracks = nTracksDist(gen);
+    std::uint32_t nTracks = nTracksDist(gen);
 
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     std::vector<InputTrack> customTracks;
 
     // Calculate random track emerging from vicinity of vertex position
-    for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
+    for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
       // Charge
       double q = qDist(gen) < 0 ? -1. : 1.;
 

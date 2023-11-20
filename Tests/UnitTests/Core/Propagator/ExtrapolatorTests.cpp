@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
@@ -100,14 +101,11 @@ BOOST_DATA_TEST_CASE(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
              bdata::distribution =
                  std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::random((
-            bdata::engine = std::mt19937(), bdata::seed = 4,
-            bdata::distribution = std::uniform_int_distribution<int>(0, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, index) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
   (void)index;
@@ -119,8 +117,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   cov, ParticleHypothesis::pion());
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
+                                   ParticleHypothesis::pion());
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = 10_cm;
@@ -145,14 +143,11 @@ BOOST_DATA_TEST_CASE(
             (bdata::engine = std::mt19937(), bdata::seed = 12,
              bdata::distribution =
                  std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 13,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::random((
-            bdata::engine = std::mt19937(), bdata::seed = 14,
-            bdata::distribution = std::uniform_int_distribution<int>(0, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 13,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, index) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
   (void)index;
@@ -164,8 +159,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   cov, ParticleHypothesis::pion());
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
+                                   ParticleHypothesis::pion());
 
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
@@ -213,14 +208,11 @@ BOOST_DATA_TEST_CASE(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
              bdata::distribution =
                  std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::random((
-            bdata::engine = std::mt19937(), bdata::seed = 24,
-            bdata::distribution = std::uniform_int_distribution<int>(0, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, index) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
   (void)index;
@@ -232,8 +224,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   cov, ParticleHypothesis::pion());
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
+                                   ParticleHypothesis::pion());
 
   PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
                                                             mfContext);
@@ -263,14 +255,11 @@ BOOST_DATA_TEST_CASE(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
              bdata::distribution =
                  std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::random((
-            bdata::engine = std::mt19937(), bdata::seed = 24,
-            bdata::distribution = std::uniform_int_distribution<int>(0, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, index) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
   (void)index;
@@ -282,8 +271,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   cov, ParticleHypothesis::pion());
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
+                                   ParticleHypothesis::pion());
 
   // Action list and abort list
   PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,

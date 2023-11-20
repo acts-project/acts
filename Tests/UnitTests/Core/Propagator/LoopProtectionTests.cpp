@@ -180,9 +180,9 @@ BOOST_DATA_TEST_CASE(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
              bdata::distribution =
                  std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
   if (index < skip) {

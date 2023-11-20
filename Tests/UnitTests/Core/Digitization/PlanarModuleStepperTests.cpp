@@ -77,9 +77,9 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-halfY,
                                                                   halfY))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
-                       bdata::distribution = std::uniform_int_distribution<int>(
-                           -static_cast<int>(halfY),
-                           static_cast<int>(halfY)))) ^
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-halfY,
+                                                                  halfY))) ^
         bdata::xrange(ntests),
     entryX, entryY, exitX, exitY, index) {
   // avoid warning with void

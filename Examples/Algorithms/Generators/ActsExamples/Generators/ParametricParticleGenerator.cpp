@@ -14,6 +14,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstdint>
 #include <limits>
 #include <random>
 #include <utility>
@@ -37,7 +38,7 @@ ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
 
 ActsExamples::SimParticleContainer
 ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
-  using UniformIndex = std::uniform_int_distribution<unsigned int>;
+  using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
   using UniformReal = std::uniform_real_distribution<double>;
 
   // choose between particle/anti-particle if requested

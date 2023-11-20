@@ -88,8 +88,6 @@ std::uniform_real_distribution<double> resIPDist(0., 100._um);
 std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
 std::uniform_real_distribution<double> resQoPDist(-0.1, 0.1);
-// Number of tracks distritbution
-std::uniform_int_distribution<int> nTracksDist(3, 10);
 
 /// @brief Unit test for AdaptiveMultiVertexFitter
 ///
