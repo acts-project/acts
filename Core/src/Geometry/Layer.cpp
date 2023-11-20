@@ -162,9 +162,6 @@ Acts::Layer::compatibleSurfaces(
       if (sfi &&
           detail::checkIntersection(sfi.intersection(), nearLimit, farLimit)) {
         sIntersections.push_back(sfi);
-        // we are only interested in the first valid intersection as cylinders
-        // are a problem for the new navigation otherwise
-        break;
       }
     }
   };

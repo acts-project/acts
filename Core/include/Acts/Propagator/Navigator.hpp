@@ -319,7 +319,7 @@ class Navigator {
     }
 
     // Initialize navigation candidates for the start volume
-    reinitializeCandidates(state, stepper, false);
+    reinitializeCandidates(state, stepper);
   }
 
   /// @brief Navigator pre step call
@@ -389,15 +389,9 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state) << "Surface unreachable, skip.");
         ++state.navigation.candidateIndex;
 
-        if (state.navigation.candidateIndex ==
-            state.navigation.candidates.size()) {
-          ACTS_VERBOSE(
-              volInfo(state)
-              << "Last surface in layer reached. Reinitialize navigation");
-
-          reinitializeCandidates(state, stepper, true);
-          reinitialized = true;
-        }
+        assert(state.navigation.candidateIndex !=
+                   state.navigation.candidates.size() &&
+               "No more candidates.");
       } else {
         // Renavigate otherwise
         ACTS_VERBOSE(volInfo(state)
@@ -409,7 +403,7 @@ class Navigator {
           stepper.releaseStepSize(state.stepping);
           break;
         }
-        reinitializeCandidates(state, stepper, true);
+        reinitializeCandidates(state, stepper);
         reinitialized = true;
       }
     }
@@ -490,14 +484,9 @@ class Navigator {
     if (intersection.template checkType<SurfaceIntersection>()) {
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
 
-      if (state.navigation.candidateIndex ==
-          state.navigation.candidates.size()) {
-        ACTS_VERBOSE(
-            volInfo(state)
-            << "Last surface in layer reached. Reinitialize navigation");
-
-        reinitializeCandidates(state, stepper, true);
-      }
+      assert(state.navigation.candidateIndex !=
+                 state.navigation.candidates.size() &&
+             "No more candidates.");
     } else if (intersection.template checkType<LayerIntersection>()) {
       ACTS_VERBOSE(volInfo(state)
                    << "This is a layer. Reinitialize navigation");
@@ -505,7 +494,7 @@ class Navigator {
       state.navigation.currentLayer =
           intersection.template object<LayerIntersection>();
 
-      reinitializeCandidates(state, stepper, false);
+      reinitializeCandidates(state, stepper);
     } else if (intersection.template checkType<BoundaryIntersection>()) {
       ACTS_VERBOSE(volInfo(state)
                    << "This is a boundary. Reinitialize navigation");
@@ -513,15 +502,14 @@ class Navigator {
       const auto* boundary =
           intersection.template object<BoundaryIntersection>();
 
-      assert(state.navigation.currentLayer == nullptr &&
-             "Current layer must be reset.");
+      state.navigation.currentLayer = nullptr;
       state.navigation.currentVolume = boundary->attachedVolume(
           state.geoContext, stepper.position(state.stepping),
           state.options.direction * stepper.direction(state.stepping));
 
       ACTS_VERBOSE(volInfo(state) << "Switched volume");
 
-      reinitializeCandidates(state, stepper, false);
+      reinitializeCandidates(state, stepper);
     } else {
       ACTS_ERROR(volInfo(state) << "Unknown intersection type");
     }
@@ -676,31 +664,19 @@ class Navigator {
 
   template <typename propagator_state_t, typename stepper_t>
   void reinitializeCandidates(propagator_state_t& state,
-                              const stepper_t& stepper,
-                              bool releaseLayer) const {
+                              const stepper_t& stepper) const {
     state.navigation.candidates.clear();
     state.navigation.candidateIndex = 0;
 
-    if (state.navigation.currentLayer != nullptr && !releaseLayer) {
+    if (state.navigation.currentLayer != nullptr) {
       initializeLayerCandidates(state, stepper);
-
-      if (state.navigation.candidates.empty()) {
-        ACTS_VERBOSE(volInfo(state) << "Layer is empty.");
-        state.navigation.currentLayer = nullptr;
-      }
     }
 
-    if (state.navigation.currentLayer == nullptr || releaseLayer) {
-      initializeVolumeCandidates(state, stepper);
-    }
+    initializeVolumeCandidates(state, stepper);
 
     std::sort(state.navigation.candidates.begin(),
               state.navigation.candidates.end(),
               NavigationCandidate::forwardOrder);
-
-    if (releaseLayer) {
-      state.navigation.currentLayer = nullptr;
-    }
   }
 
   /// Inactive
