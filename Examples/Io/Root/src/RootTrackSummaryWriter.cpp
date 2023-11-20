@@ -137,7 +137,7 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
     m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
     m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
     m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
-    if (m_cfg.writeCovMat) {
+    if (m_cfg.writeCovMat == true) {
       // create one branch for every entry of covariance matrix
       // one block for every row of the matrix, every entry gets own branch
       m_outputTree->Branch("cov_eLOC0_eLOC0", &m_cov_eLOC0_eLOC0);
