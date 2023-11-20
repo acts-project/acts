@@ -51,7 +51,15 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
         vtxInfo.relinearize = true;
         // Recalculate the track impact parameters at the current vertex
         // position
-        prepareVertexForFit(state, vtx, vertexingOptions);
+        auto prepareVertexResult =
+            prepareVertexForFit(state, vtx, vertexingOptions);
+        if (!prepareVertexResult.ok()) {
+          // Print vertices and associated tracks if logger is in debug mode
+          if (logger().doPrint(Logging::DEBUG)) {
+            logDebugData(state, vertexingOptions.geoContext);
+          }
+          return prepareVertexResult.error();
+        }
       }
 
       // Check if we use the constraint during the vertex fit
@@ -68,11 +76,27 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at the current vertex
-      setAllVertexCompatibilities(state, vtx, vertexingOptions);
+      auto setCompatibilitiesResult =
+          setAllVertexCompatibilities(state, vtx, vertexingOptions);
+      if (!setCompatibilitiesResult.ok()) {
+        // Print vertices and associated tracks if logger is in debug mode
+        if (logger().doPrint(Logging::DEBUG)) {
+          logDebugData(state, vertexingOptions.geoContext);
+        }
+        return setCompatibilitiesResult.error();
+      }
     }  // End loop over vertex collection
 
     // Recalculate all track weights and update vertices
-    setWeightsAndUpdate(state, linearizer, vertexingOptions);
+    auto setWeightsResult =
+        setWeightsAndUpdate(state, linearizer, vertexingOptions);
+    if (!setWeightsResult.ok()) {
+      // Print vertices and associated tracks if logger is in debug mode
+      if (logger().doPrint(Logging::DEBUG)) {
+        logDebugData(state, vertexingOptions.geoContext);
+      }
+      return setWeightsResult.error();
+    }
 
     // Cool the system down, i.e., reduce the temperature parameter. At lower
     // temperatures, outlying tracks are downweighted more.
@@ -100,16 +124,13 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
     const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
+    ACTS_ERROR(
+        "newVertex does not have any associated tracks (i.e., its trackLinks "
+        "are empty).")
     return VertexingError::EmptyInput;
   }
 
   std::vector<Vertex<input_track_t>*> verticesToFit = {&newVertex};
-
-  // Save the 3D impact parameters of all tracks associated with newVertex.
-  auto res = prepareVertexForFit(state, &newVertex, vertexingOptions);
-  if (!res.ok()) {
-    return res.error();
-  }
 
   // List of vertices added in last iteration
   std::vector<Vertex<input_track_t>*> lastIterAddedVertices = {&newVertex};
@@ -152,6 +173,16 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
   }  // End while loop
 
   state.vertexCollection = verticesToFit;
+
+  // Save the 3D impact parameters of all tracks associated with newVertex.
+  auto res = prepareVertexForFit(state, &newVertex, vertexingOptions);
+  if (!res.ok()) {
+    // Print vertices and associated tracks if logger is in debug mode
+    if (logger().doPrint(Logging::DEBUG)) {
+      logDebugData(state, vertexingOptions.geoContext);
+    }
+    return res.error();
+  }
 
   // Perform fit on all added vertices
   auto fitRes = fit(state, linearizer, vertexingOptions);
@@ -340,6 +371,33 @@ void Acts::AdaptiveMultiVertexFitter<
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         KalmanVertexTrackUpdater::update<input_track_t>(trkAtVtx, *vtx);
       }
+    }
+  }
+}
+
+template <typename input_track_t, typename linearizer_t>
+void Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::logDebugData(
+    const State& state, const Acts::GeometryContext& geoContext) const {
+  ACTS_DEBUG("Encountered an error when fitting the following "
+             << state.vertexCollection.size() << " vertices:");
+  for (std::size_t vtxInd = 0; vtxInd < state.vertexCollection.size();
+       ++vtxInd) {
+    auto vtx = state.vertexCollection[vtxInd];
+    ACTS_DEBUG("Position of " << vtxInd << ". vertex seed:\n"
+                              << state.vtxInfoMap.at(vtx).seedPosition);
+    ACTS_DEBUG("Position of said vertex after the last fitting step:\n"
+               << state.vtxInfoMap.at(vtx).oldPosition);
+    ACTS_DEBUG("Associated tracks:");
+    const auto& trks = state.vtxInfoMap.at(vtx).trackLinks;
+    for (std::size_t trkInd = 0; trkInd < trks.size(); ++trkInd) {
+      const auto& trkAtVtx =
+          state.tracksAtVerticesMap.at(std::make_pair(trks[trkInd], vtx));
+      const auto& trkParams = m_extractParameters(*(trkAtVtx.originalParams));
+      ACTS_DEBUG(trkInd << ". track parameters:\n" << trkParams.parameters());
+      ACTS_DEBUG(trkInd << ". track covariance matrix:\n"
+                        << trkParams.covariance().value());
+      ACTS_DEBUG("Origin of corresponding reference surface:\n"
+                 << trkParams.referenceSurface().center(geoContext));
     }
   }
 }

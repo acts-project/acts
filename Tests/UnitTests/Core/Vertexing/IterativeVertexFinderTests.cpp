@@ -167,8 +167,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
-                             ipEstimator);
+    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
+                             std::move(sFinder), ipEstimator);
 
     cfg.reassignTracksAfterFirstFit = true;
 
@@ -383,8 +383,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
-                             ipEstimator);
+    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
+                             std::move(sFinder), ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(std::move(cfg), extractParameters);
@@ -592,8 +592,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   static_assert(VertexFinderConcept<VertexFinder>,
                 "Vertex finder does not fulfill vertex finder concept.");
 
-  VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
-                           ipEstimator);
+  VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
+                           std::move(sFinder), ipEstimator);
   cfg.maxVertices = 200;
   cfg.maximumChi2cutForSeeding = 49;
   cfg.significanceCutSeeding = 12;
@@ -610,13 +610,18 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   }
 
   Vertex<BoundTrackParameters> beamSpot = std::get<BeamSpotData>(csvData);
+  // Set time covariance
+  SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
+  fullCovariance.topLeftCorner<3, 3>() = beamSpot.covariance();
+  fullCovariance(eTime, eTime) = 100_ns;
+  beamSpot.setFullCovariance(fullCovariance);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, beamSpot);
 
   // find vertices
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
 
-  // BOOST_CHECK(findResult.ok());
+  BOOST_CHECK(findResult.ok());
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;

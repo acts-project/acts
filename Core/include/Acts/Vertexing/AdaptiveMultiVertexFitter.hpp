@@ -119,7 +119,7 @@ class AdaptiveMultiVertexFitter {
     /// @brief Config constructor
     ///
     /// @param est ImpactPointEstimator
-    Config(const IPEstimator& est) : ipEst(est) {}
+    Config(IPEstimator est) : ipEst(std::move(est)) {}
 
     // ImpactPointEstimator
     IPEstimator ipEst;
@@ -297,6 +297,13 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @param state Fitter state
   void doVertexSmoothing(State& state) const;
+
+  /// @brief Logs vertices in state.vertexCollection and associated tracks
+  ///
+  /// @param state Fitter state
+  /// @param geoContext Geometry context
+  void logDebugData(const State& state,
+                    const GeometryContext& geoContext) const;
 };
 
 }  // namespace Acts
