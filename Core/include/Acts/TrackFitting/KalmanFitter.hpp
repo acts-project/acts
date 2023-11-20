@@ -305,8 +305,8 @@ class KalmanFitter {
     /// Broadcast the result_type
     using result_type = KalmanFitterResult<traj_t>;
 
-    /// The target surface
-    const Surface* targetSurface = nullptr;
+    /// The target surface aboter
+    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
 
     /// Strategy to propagate to target surface
     KalmanFitterTargetSurfaceStrategy targetSurfaceStrategy =
@@ -341,9 +341,6 @@ class KalmanFitter {
     const Logger& logger() const { return *actorLogger; }
 
     KalmanFitterExtensions<traj_t> extensions;
-
-    /// The Surface being
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
 
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
@@ -468,7 +465,7 @@ class KalmanFitter {
                              MaterialUpdateStage::FullUpdate);
         }
 
-        if (targetSurface == nullptr) {
+        if (targetReached.surface == nullptr) {
           // If no target surface provided:
           // -> Return an error when using reversed filtering mode
           // -> Fitting is finished here
@@ -485,12 +482,11 @@ class KalmanFitter {
             // Remember the track fitting is done
             result.finished = true;
           }
-        } else if (targetReached(state, stepper, navigator, *targetSurface,
-                                 logger())) {
+        } else if (targetReached(state, stepper, navigator, logger())) {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
-          auto res = stepper.boundState(state.stepping, *targetSurface, true,
-                                        freeToBoundCorrection);
+          auto res = stepper.boundState(state.stepping, *targetReached.surface,
+                                        true, freeToBoundCorrection);
           if (!res.ok()) {
             ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
@@ -964,7 +960,7 @@ class KalmanFitter {
       }
 
       // Return in case no target surface
-      if (targetSurface == nullptr) {
+      if (targetReached.surface == nullptr) {
         return Result<void>::success();
       }
 
@@ -976,7 +972,7 @@ class KalmanFitter {
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
-        return targetSurface
+        return targetReached.surface
             ->intersect(
                 state.geoContext, freeVector.segment<3>(eFreePos0),
                 state.options.direction * freeVector.segment<3>(eFreeDir0),
@@ -1142,7 +1138,8 @@ class KalmanFitter {
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
-    kalmanActor.targetSurface = kfOptions.referenceSurface;
+    kalmanActor.targetReached.surface = kfOptions.referenceSurface;
+    kalmanActor.targetSurfaceStrategy = kfOptions.referenceSurfaceStrategy;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
@@ -1276,7 +1273,7 @@ class KalmanFitter {
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
-    kalmanActor.targetSurface = kfOptions.referenceSurface;
+    kalmanActor.targetReached.surface = kfOptions.referenceSurface;
     kalmanActor.targetSurfaceStrategy = kfOptions.referenceSurfaceStrategy;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
