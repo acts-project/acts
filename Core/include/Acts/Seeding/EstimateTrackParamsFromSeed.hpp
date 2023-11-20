@@ -218,10 +218,10 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // sp in along the x axis. As such, the x-coordinate of the circle is
   // at: x-middle / 2.
   // The y coordinate can be found by using the straight line passing
-  // between the mid point between the middle and top sp and tangent to
+  // between the mid point between the middle and top sp and perpendicular to
   // the line connecting them
   Vector2 circleCenter;
-  circleCenter(0) = 0.5 * local1(0, 0);
+  circleCenter(0) = 0.5 * local1(0);
 
   ActsScalar deltaX21 = local2(0) - local1(0);
   ActsScalar sumX21 = local2(0) + local1(0);
