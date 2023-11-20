@@ -236,7 +236,9 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   circleCenter(1, 0) = -1. / a * circleCenter(0, 0) + b;
   // Radius is distance between circleCenter and first sp, which is at (0, 0) in
   // the new frame
-  ActsScalar radius = circleCenter.norm();
+  // Sign depends on the slope a (positive vs negative)
+  int sign = a > 0 ? -1 : 1;
+  ActsScalar radius = sign * circleCenter.norm();
   ActsScalar rho = 1. / radius;
 
   // The projection of the top space point on the transverse plane of the new
