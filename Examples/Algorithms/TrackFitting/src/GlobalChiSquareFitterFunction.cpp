@@ -65,12 +65,12 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
   Fitter fitter;
   DirectFitter directFitter;
 
-  bool multipleScattering;
-  bool energyLoss;
+  bool multipleScattering = false;
+  bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
-  std::size_t nUpdateMax;
-  bool zeroField;
-  double relChi2changeCutOff;
+  std::size_t nUpdateMax = 5;
+  bool zeroField = false;
+  double relChi2changeCutOff = 1e-7;
 
   IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
