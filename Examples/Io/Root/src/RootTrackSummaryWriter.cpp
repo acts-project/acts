@@ -137,7 +137,7 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
     m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
     m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
     m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
-    if (m_cfg.writeCovMat == true) {
+    if (m_cfg.writeCovMat) {
       // create one branch for every entry of covariance matrix
       // one block for every row of the matrix, every entry gets own branch
       m_outputTree->Branch("cov_eLOC0_eLOC0", &m_cov_eLOC0_eLOC0);
@@ -183,7 +183,9 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
       m_outputTree->Branch("cov_eT_eT", &m_cov_eT_eT);
     }
 
-    m_outputTree->Branch("nUpdatesGx2f", &m_nUpdatesGx2f);
+    if (m_cfg.writeGx2fSpecific) {
+      m_outputTree->Branch("nUpdatesGx2f", &m_nUpdatesGx2f);
+    }
   }
 }
 
@@ -488,13 +490,15 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
       m_cov_eT_eT.push_back(getCov(5, 5));
     }
 
-    if (tracks.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
-      int nUpdate = static_cast<int>(
-          track.template component<std::size_t,
-                                   Acts::hashString("Gx2fnUpdateColumn")>());
-      m_nUpdatesGx2f.push_back(nUpdate);
-    } else {
-      m_nUpdatesGx2f.push_back(-1);
+    if (m_cfg.writeGx2fSpecific) {
+      if (tracks.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
+        int nUpdate = static_cast<int>(
+            track.template component<std::size_t,
+                                     Acts::hashString("Gx2fnUpdateColumn")>());
+        m_nUpdatesGx2f.push_back(nUpdate);
+      } else {
+        m_nUpdatesGx2f.push_back(-1);
+      }
     }
   }
 
