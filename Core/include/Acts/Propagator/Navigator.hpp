@@ -278,12 +278,8 @@ class Navigator {
           state.navigation.startVolume = boundary->attachedVolume(
               state.geoContext, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping));
-          assert(state.navigation.startVolume != nullptr &&
-                 "Start volume not resolved.");
           ACTS_VERBOSE("We are starting from a boundary surface "
-                       << state.navigation.startSurface->geometryId()
-                       << ". Attached volume is "
-                       << state.navigation.startVolume->geometryId());
+                       << state.navigation.startSurface->geometryId());
           break;
         }
       }
@@ -295,7 +291,7 @@ class Navigator {
       if (state.navigation.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
       } else {
-        ACTS_ERROR("Start volume not resolved.");
+        ACTS_VERBOSE("Start volume not resolved.");
       }
 
       state.navigation.currentLayer = state.navigation.startLayer;

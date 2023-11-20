@@ -27,10 +27,12 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/TryAllNavigator.hpp"
+#include "Acts/Propagator/TryAllOverstepNavigator.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -700,8 +702,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // forward surface test
   Options fwdOptions(tgContext, mfContext);
-  fwdOptions.maxStepSize = 25_cm;
   fwdOptions.pathLimit = 25_cm;
+  fwdOptions.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& fwdSurfaceCollector =
@@ -714,9 +716,6 @@ void runSelfConsistencyTest(const propagator_t& prop,
     std::cout << ">>> Forward Propagation : start." << std::endl;
   }
   auto fwdResult = prop.propagate(start, fwdOptions).value();
-  if (debugMode) {
-    std::cout << ">>> Forward Propagation : end." << std::endl;
-  }
   auto fwdSurfaceHits =
       fwdResult.template get<SurfaceCollector::result_type>().collected;
   auto fwdSurfaces =
@@ -729,12 +728,13 @@ void runSelfConsistencyTest(const propagator_t& prop,
     for (const auto& fwdSteps : fwdSurfaces) {
       std::cout << "--> Surface with " << fwdSteps << std::endl;
     }
+    std::cout << ">>> Forward Propagation : end." << std::endl;
   }
 
   // backward surface test
   Options bwdOptions(tgContext, mfContext);
-  bwdOptions.maxStepSize = 25_cm;
-  bwdOptions.pathLimit = -25_cm;
+  bwdOptions.pathLimit = 25_cm;
+  bwdOptions.maxStepSize = 1_cm;
   bwdOptions.direction = Direction::Backward;
 
   // get the surface collector and configure it
@@ -752,9 +752,6 @@ void runSelfConsistencyTest(const propagator_t& prop,
   auto bwdResult =
       prop.propagate(*fwdResult.endParameters, startSurface, bwdOptions)
           .value();
-  if (debugMode) {
-    std::cout << ">>> Backward Propagation : end." << std::endl;
-  }
   auto bwdSurfaceHits =
       bwdResult.template get<SurfaceCollector::result_type>().collected;
   auto bwdSurfaces =
@@ -767,6 +764,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
     for (auto& bwdSteps : bwdSurfaces) {
       std::cout << "--> Surface with " << bwdSteps << std::endl;
     }
+    std::cout << ">>> Backward Propagation : end." << std::endl;
   }
 
   // forward-backward compatibility test
@@ -782,8 +780,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // stepping from one surface to the next
   // now go from surface to surface and check
   Options fwdStepOptions(tgContext, mfContext);
-  fwdStepOptions.maxStepSize = 25_cm;
-  fwdStepOptions.pathLimit = 25_cm;
+  fwdStepOptions.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& fwdStepSurfaceCollector =
@@ -806,8 +803,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
     // make a forward step
     auto fwdStep =
-        prop.propagate(sParameters, (*fwdSteps.surface), fwdStepOptions)
-            .value();
+        prop.propagate(sParameters, *fwdSteps.surface, fwdStepOptions).value();
 
     auto fwdStepSurfacesTmp =
         collectGeoIds(fwdStep.template get<SurfaceCollector::result_type>());
@@ -839,8 +835,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext);
-  bwdStepOptions.maxStepSize = 25_cm;
-  bwdStepOptions.pathLimit = -25_cm;
+  bwdStepOptions.maxStepSize = 1_cm;
   bwdStepOptions.direction = Direction::Backward;
 
   // get the surface collector and configure it
@@ -863,8 +858,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
     // make a forward step
     auto bwdStep =
-        prop.propagate(sParameters, (*bwdSteps.surface), bwdStepOptions)
-            .value();
+        prop.propagate(sParameters, *bwdSteps.surface, bwdStepOptions).value();
 
     auto bwdStepSurfacesTmp =
         collectGeoIds(bwdStep.template get<SurfaceCollector::result_type>());
@@ -921,8 +915,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
   auto run = [&](const auto& prop) {
     // forward surface test
     Options fwdOptions(tgContext, mfContext);
-    fwdOptions.maxStepSize = 25_cm;
-    fwdOptions.pathLimit = 25_cm;
+    fwdOptions.maxStepSize = 1_cm;
 
     // get the surface collector and configure it
     auto& fwdSurfaceCollector =
@@ -975,9 +968,13 @@ bool debugMode = false;
 using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
-using ReferenceEigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
-using ReferenceStraightLinePropagator =
+using Reference1EigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
+using Reference1StraightLinePropagator =
     Propagator<StraightLineStepper, TryAllNavigator>;
+using Reference2EigenPropagator =
+    Propagator<EigenStepper, TryAllOverstepNavigator>;
+using Reference2StraightLinePropagator =
+    Propagator<StraightLineStepper, TryAllOverstepNavigator>;
 
 EigenStepper estepper(bField);
 StraightLineStepper slstepper;
@@ -992,17 +989,31 @@ StraightLinePropagator slpropagator(
     Navigator({tGeometry, true, true, true, BoundaryCheck(false)},
               getDefaultLogger("nav", Logging::INFO)),
     getDefaultLogger("prop", Logging::INFO));
-ReferenceEigenPropagator refepropagator(
+
+Reference1EigenPropagator refepropagator1(
     estepper,
     TryAllNavigator({tGeometry, true, true, true,
                      BoundaryCheck(true, true, 1, 1)},
                     getDefaultLogger("nav", Logging::INFO)),
     getDefaultLogger("prop", Logging::INFO));
-ReferenceStraightLinePropagator refslpropagator(
+Reference1StraightLinePropagator refslpropagator1(
     slstepper,
     TryAllNavigator({tGeometry, true, true, true,
                      BoundaryCheck(true, true, 1, 1)},
                     getDefaultLogger("nav", Logging::INFO)),
+    getDefaultLogger("prop", Logging::INFO));
+
+Reference2EigenPropagator refepropagator2(
+    estepper,
+    TryAllOverstepNavigator({tGeometry, true, true, true,
+                             BoundaryCheck(true, true, 1, 1)},
+                            getDefaultLogger("nav", Logging::INFO)),
+    getDefaultLogger("prop", Logging::INFO));
+Reference2StraightLinePropagator refslpropagator2(
+    slstepper,
+    TryAllOverstepNavigator({tGeometry, true, true, true,
+                             BoundaryCheck(true, true, 1, 1)},
+                            getDefaultLogger("nav", Logging::INFO)),
     getDefaultLogger("prop", Logging::INFO));
 
 BOOST_DATA_TEST_CASE(
@@ -1049,13 +1060,22 @@ BOOST_DATA_TEST_CASE(
   runSelfConsistencyTest(slpropagator, start, debugMode);
 
   if (debugMode) {
-    std::cout << ">>> Test consistency epropagator" << std::endl;
+    std::cout << ">>> Test reference 1 consistency epropagator" << std::endl;
   }
-  runConsistencyTest(epropagator, refepropagator, start, debugMode);
+  runConsistencyTest(epropagator, refepropagator1, start, debugMode);
   if (debugMode) {
-    std::cout << ">>> Test consistency slpropagator" << std::endl;
+    std::cout << ">>> Test reference 1 consistency slpropagator" << std::endl;
   }
-  runConsistencyTest(slpropagator, refslpropagator, start, debugMode);
+  runConsistencyTest(slpropagator, refslpropagator1, start, debugMode);
+
+  if (debugMode) {
+    std::cout << ">>> Test reference 2 consistency epropagator" << std::endl;
+  }
+  runConsistencyTest(epropagator, refepropagator2, start, debugMode);
+  if (debugMode) {
+    std::cout << ">>> Test reference 2 consistency slpropagator" << std::endl;
+  }
+  runConsistencyTest(slpropagator, refslpropagator2, start, debugMode);
 }
 
 }  // namespace Test

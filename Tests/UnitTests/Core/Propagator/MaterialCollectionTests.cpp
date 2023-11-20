@@ -87,31 +87,10 @@ bool debugMode = false;
 /// @tparam propagator_t is the actual propagator type
 ///
 /// @param prop is the propagator instance
-/// @param pT the transverse momentum
-/// @param phi the azimuthal angle of the track at creation
-/// @param theta the polar angle of the track at creation
-/// @param charge is the charge of the particle
+/// @param start the start parameters
 template <typename propagator_t>
-void runTest(const propagator_t& prop, double pT, double phi, double theta,
-             int charge) {
-  double p = pT / sin(theta);
-  double q = -1 + 2 * charge;
-
-  // define start parameters
-  BoundSquareMatrix cov;
-  // take some major correlations (off-diagonals)
-  // clang-format off
-    cov <<
-     10_mm, 0, 0.123, 0, 0.5, 0,
-     0, 10_mm, 0, 0.162, 0, 0,
-     0.123, 0, 0.1, 0, 0, 0,
-     0, 0.162, 0, 0.1, 0, 0,
-     0.5, 0, 0, 0, 1_e / 10_GeV, 0,
-     0, 0, 0, 0, 0, 1_us;
-  // clang-format on
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
-                                   ParticleHypothesis::pion());
-
+void runTest(const propagator_t& prop,
+             const CurvilinearTrackParameters& start) {
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor>;
   using AbortListType = AbortList<>;
@@ -375,7 +354,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   const auto& covfwdResult = prop.propagate(start, fwdOptions).value();
 
   BOOST_CHECK_LE(
-      cov.determinant(),
+      start.covariance()->determinant(),
       covfwdResult.endParameters->covariance().value().determinant());
 }
 
@@ -403,8 +382,26 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  runTest(epropagator, pT, phi, theta, charge);
-  runTest(slpropagator, pT, phi, theta, charge);
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
+
+  // define start parameters
+  BoundSquareMatrix cov;
+  // take some major correlations (off-diagonals)
+  // clang-format off
+    cov <<
+     10_mm, 0, 0.123, 0, 0.5, 0,
+     0, 10_mm, 0, 0.162, 0, 0,
+     0.123, 0, 0.1, 0, 0, 0,
+     0, 0.162, 0, 0.1, 0, 0,
+     0.5, 0, 0, 0, 1_e / 10_GeV, 0,
+     0, 0, 0, 0, 0, 1_us;
+  // clang-format on
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
+                                   ParticleHypothesis::pion());
+
+  runTest(epropagator, start);
+  runTest(slpropagator, start);
 }
 
 }  // namespace Test

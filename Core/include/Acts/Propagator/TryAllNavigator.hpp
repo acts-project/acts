@@ -78,8 +78,8 @@ class TryAllNavigator {
     const Surface* currentSurface = nullptr;
     const TrackingVolume* currentVolume = nullptr;
 
-    std::vector<detail::NavigationCandidate> candidates;
-    std::optional<IntersectionCandidate> intersectionCandidate;
+    std::vector<detail::NavigationCandidate> navigationCandidates;
+    std::vector<IntersectionCandidate> intersectionCandidates;
 
     bool targetReached = false;
     bool navigationBreak = false;
@@ -207,9 +207,9 @@ class TryAllNavigator {
     double farLimit = std::numeric_limits<double>::max();
 
     // handle overstepping
-    if (state.navigation.intersectionCandidate.has_value()) {
+    if (!state.navigation.intersectionCandidates.empty()) {
       const IntersectionCandidate& previousIntersection =
-          state.navigation.intersectionCandidate.value();
+          state.navigation.intersectionCandidates.front();
 
       const Surface& surface =
           *previousIntersection.intersection.representation();
@@ -220,13 +220,16 @@ class TryAllNavigator {
           state.geoContext, position, direction, boundaryCheck,
           state.options.surfaceTolerance)[index];
 
-      nearLimit = intersection.pathLength();
+      nearLimit = std::min(nearLimit, intersection.pathLength() -
+                                          state.options.surfaceTolerance);
+
+      state.navigation.intersectionCandidates.clear();
     }
 
     std::vector<IntersectionCandidate> intersectionCandidates;
 
     // Find intersections with all candidates
-    for (const auto& candidate : state.navigation.candidates) {
+    for (const auto& candidate : state.navigation.navigationCandidates) {
       auto intersections =
           candidate.intersect(state.geoContext, position, direction,
                               state.options.surfaceTolerance);
@@ -252,8 +255,7 @@ class TryAllNavigator {
     ACTS_VERBOSE(volInfo(state) << "found " << intersectionCandidates.size()
                                 << " intersections");
 
-    for (const auto& intersectionCandidate : intersectionCandidates) {
-      const auto& candidate = intersectionCandidate;
+    for (const auto& candidate : intersectionCandidates) {
       const auto& intersection = candidate.intersection;
       const Surface& surface = *intersection.representation();
       BoundaryCheck boundaryCheck = candidate.boundaryCheck;
@@ -269,21 +271,21 @@ class TryAllNavigator {
         continue;
       }
 
-      state.navigation.intersectionCandidate = candidate;
-
       ACTS_VERBOSE(volInfo(state) << "aiming at surface "
                                   << surface.geometryId() << ". step size is "
                                   << stepper.outputStepSize(state.stepping));
       break;
     }
 
-    if (!state.navigation.intersectionCandidate.has_value()) {
+    if (intersectionCandidates.empty()) {
       stepper.releaseStepSize(state.stepping);
 
       ACTS_VERBOSE(volInfo(state) << "no intersections found. advance without "
                                      "constraints. step size is "
                                   << stepper.outputStepSize(state.stepping));
     }
+
+    state.navigation.intersectionCandidates = std::move(intersectionCandidates);
   }
 
   template <typename propagator_state_t, typename stepper_t>
@@ -293,39 +295,75 @@ class TryAllNavigator {
     assert(state.navigation.currentSurface == nullptr &&
            "Current surface must be reset.");
 
-    if (!state.navigation.intersectionCandidate.has_value()) {
-      ACTS_VERBOSE(volInfo(state) << "no active intersection");
+    if (state.navigation.intersectionCandidates.empty()) {
+      ACTS_VERBOSE(volInfo(state) << "no intersections.");
       return true;
     }
 
-    const auto& candidate = *state.navigation.intersectionCandidate;
-    const auto& intersection = candidate.intersection;
-    const Surface& surface = *intersection.representation();
+    std::vector<IntersectionCandidate> hitCandidates;
 
-    ACTS_VERBOSE(volInfo(state)
-                 << "check intersection status with " << surface.geometryId());
+    for (const auto& candidate : state.navigation.intersectionCandidates) {
+      const auto& intersection = candidate.intersection;
+      const Surface& surface = *intersection.representation();
 
-    Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, surface, intersection.index(), state.options.direction,
-        BoundaryCheck(false), state.options.surfaceTolerance, logger());
+      Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, surface, intersection.index(),
+          state.options.direction, BoundaryCheck(false),
+          state.options.surfaceTolerance, logger());
 
-    if (surfaceStatus != IntersectionStatus::onSurface) {
+      if (surfaceStatus != IntersectionStatus::onSurface) {
+        break;
+      }
+
+      hitCandidates.emplace_back(candidate);
+    }
+
+    if (hitCandidates.empty()) {
       ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
       return true;
     }
 
-    state.navigation.intersectionCandidate.reset();
+    ACTS_VERBOSE(volInfo(state)
+                 << "Found " << hitCandidates.size()
+                 << " intersections on surface without bounds check.");
 
-    // TODO second intersection should not be necessary
-    surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, surface, intersection.index(), state.options.direction,
-        BoundaryCheck(true), state.options.surfaceTolerance, logger());
+    std::vector<IntersectionCandidate> trueHitCandidates;
 
-    if (surfaceStatus != IntersectionStatus::onSurface) {
+    for (const auto& candidate : hitCandidates) {
+      const auto& intersection = candidate.intersection;
+      const Surface& surface = *intersection.representation();
+
+      Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, surface, intersection.index(),
+          state.options.direction, BoundaryCheck(true),
+          state.options.surfaceTolerance, logger());
+
+      if (surfaceStatus != IntersectionStatus::onSurface) {
+        continue;
+      }
+
+      trueHitCandidates.emplace_back(candidate);
+    }
+
+    state.navigation.intersectionCandidates.clear();
+
+    ACTS_VERBOSE(volInfo(state)
+                 << "Found " << trueHitCandidates.size()
+                 << " intersections on surface with bounds check.");
+
+    if (trueHitCandidates.empty()) {
       ACTS_VERBOSE(volInfo(state)
                    << "Surface successfully hit, but outside bounds.");
       return true;
     }
+
+    if (trueHitCandidates.size() > 1) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Only using first intersection within bounds.");
+    }
+
+    const auto& intersection = trueHitCandidates.front().intersection;
+    const Surface& surface = *intersection.representation();
 
     ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
     // Set in navigation state, so actors and aborters can access it
@@ -375,8 +413,8 @@ class TryAllNavigator {
     auto addCandidate = [&](detail::NavigationCandidate::AnyObject object,
                             const Surface* representation,
                             BoundaryCheck boundaryCheck) {
-      state.navigation.candidates.emplace_back(object, representation,
-                                               boundaryCheck);
+      state.navigation.navigationCandidates.emplace_back(object, representation,
+                                                         boundaryCheck);
     };
 
     // Find boundary candidates
@@ -442,8 +480,8 @@ class TryAllNavigator {
 
   template <typename propagator_state_t>
   void reinitializeCandidates(propagator_state_t& state) const {
-    state.navigation.candidates.clear();
-    state.navigation.intersectionCandidate.reset();
+    state.navigation.navigationCandidates.clear();
+    state.navigation.intersectionCandidates.clear();
 
     initializeVolumeCandidates(state);
   }

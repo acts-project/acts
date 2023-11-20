@@ -189,7 +189,7 @@ class TryAllOverstepNavigator {
                      << "Current surface set to start surface "
                      << state.navigation.currentSurface->geometryId());
 
-        state.navigation.lastIntersection = AnyIntersection(
+        state.navigation.lastIntersection = detail::AnyIntersection(
             state.navigation.currentSurface
                 ->intersect(
                     state.geoContext, stepper.position(state.stepping),
