@@ -49,7 +49,7 @@ struct GenericReadWriteTool {
   val_tuple_t tuple;
   str_tuple_t strings;
 
-  constexpr static size_t kSize = std::tuple_size_v<val_tuple_t>;
+  constexpr static std::size_t kSize = std::tuple_size_v<val_tuple_t>;
   static_assert(kSize == std::tuple_size_v<str_tuple_t>);
 
   template <typename T>
@@ -65,24 +65,24 @@ struct GenericReadWriteTool {
   }
 
   template <typename writer_t>
-  auto write(writer_t &writer, size_t eventId = 0) {
+  auto write(writer_t &writer, std::size_t eventId = 0) {
     ActsExamples::WhiteBoard board;
     ActsExamples::AlgorithmContext ctx(0, eventId, board);
 
     auto add = [&](auto &self, auto N) {
       if constexpr (N() < kSize) {
         addToWhiteBoard(std::get<N()>(strings), std::get<N()>(tuple), board);
-        self(self, std::integral_constant<size_t, N() + 1>{});
+        self(self, std::integral_constant<std::size_t, N() + 1>{});
       }
     };
 
-    add(add, std::integral_constant<size_t, 0>{});
+    add(add, std::integral_constant<std::size_t, 0>{});
 
     writer.internalExecute(ctx);
   }
 
   template <typename reader_t>
-  auto read(reader_t &reader, size_t eventId = 0) {
+  auto read(reader_t &reader, std::size_t eventId = 0) {
     ActsExamples::WhiteBoard board;
     ActsExamples::AlgorithmContext ctx(0, eventId, board);
 
@@ -93,13 +93,13 @@ struct GenericReadWriteTool {
         using T = std::tuple_element_t<N(), val_tuple_t>;
         auto val = getFromWhiteBoard<T>(std::get<N()>(strings), board);
         return self(self, std::tuple_cat(res, std::make_tuple(val)),
-                    std::integral_constant<size_t, N() + 1>{});
+                    std::integral_constant<std::size_t, N() + 1>{});
       } else {
         return res;
       }
     };
 
-    return get(get, std::tuple<>{}, std::integral_constant<size_t, 0>{});
+    return get(get, std::tuple<>{}, std::integral_constant<std::size_t, 0>{});
   }
 };
 }  // namespace Acts::Test

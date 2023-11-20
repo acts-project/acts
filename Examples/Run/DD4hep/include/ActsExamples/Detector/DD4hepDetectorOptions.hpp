@@ -43,7 +43,7 @@ void addDD4hepOptions(aopt_t& opt) {
       "the layer thickness will be set to this value.")(
       "dd4hep-buildFCChh", po::value<bool>()->default_value(true),
       "If you are not building the FCChh detector please set this flag to "
-      "false.")("dd4hep-loglevel", po::value<size_t>()->default_value(2),
+      "false.")("dd4hep-loglevel", po::value<std::size_t>()->default_value(2),
                 "The output log level of the geometry building. Please set the "
                 "wished "
                 "number (0 = VERBOSE, 1 = "
@@ -57,7 +57,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::Config readDD4hepConfig(
   using namespace Acts::UnitLiterals;
   ActsExamples::DD4hep::DD4hepGeometryService::Config gsConfig;
   gsConfig.logLevel =
-      Acts::Logging::Level(vm["dd4hep-loglevel"].template as<size_t>());
+      Acts::Logging::Level(vm["dd4hep-loglevel"].template as<std::size_t>());
   gsConfig.xmlFileNames =
       vm["dd4hep-input"].template as<std::vector<std::string>>();
   gsConfig.bTypePhi = Acts::equidistant;

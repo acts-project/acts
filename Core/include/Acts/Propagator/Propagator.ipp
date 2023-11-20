@@ -230,6 +230,7 @@ auto Acts::Propagator<S, N>::propagate(
 
   // Type of provided options
   target_aborter_t targetAborter;
+  targetAborter.surface = &target;
   path_aborter_t pathAborter;
   pathAborter.internalLimit = options.pathLimit;
   auto abortList = options.abortList.append(targetAborter, pathAborter);

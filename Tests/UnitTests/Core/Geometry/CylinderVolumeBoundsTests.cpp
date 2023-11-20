@@ -151,12 +151,30 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsAccess) {
 }
 
 /// Unit test for testing the orientedSurfaces() function
-BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
-                     bdata::random(-M_PI, M_PI) ^ bdata::random(-M_PI, M_PI) ^
-                         bdata::random(-M_PI, M_PI) ^ bdata::random(-10., 10.) ^
-                         bdata::random(-10., 10.) ^ bdata::random(-10., 10.) ^
-                         bdata::xrange(100),
-                     alpha, beta, gamma, posX, posY, posZ, index) {
+BOOST_DATA_TEST_CASE(
+    CylinderVolumeBoundsOrientedSurfaces,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::xrange(100),
+    alpha, beta, gamma, posX, posY, posZ, index) {
   (void)index;
 
   // Create a test context
