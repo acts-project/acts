@@ -75,7 +75,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
   const float max_z0 = roi.zedPlus();   
   const float cut_zMinU = min_z0 + m_config.maxOuterRadius * roi.dzdrMinus();   
   const float cut_zMaxU = max_z0 + m_config.maxOuterRadius * roi.dzdrPlus();
-  float m_minR_squ =  m_config.m_tripletPtMin*m_config.m_tripletPtMin/std::pow(m_config.ptCoeff,2);; //from athena //checked 
+  float m_minR_squ =  m_config.m_tripletPtMin*m_config.m_tripletPtMin/std::pow(m_config.ptCoeff,2); //from athena //checked 
   float m_maxCurv = m_config.ptCoeff/m_config.m_tripletPtMin ; //checked 
   const float maxKappa_high_eta = 0.8 / m_minR_squ;//checked 
   const float maxKappa_low_eta = 0.6 / m_minR_squ;//checked 
