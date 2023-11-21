@@ -278,7 +278,7 @@ class TryAllNavigator {
     }
 
     if (intersectionCandidates.empty()) {
-      stepper.releaseStepSize(state.stepping);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
 
       ACTS_VERBOSE(volInfo(state) << "no intersections found. advance without "
                                      "constraints. step size is "

@@ -395,7 +395,7 @@ class Navigator {
           ACTS_ERROR(volInfo(state) << "Renavigation failed. Good luck.");
           // Set navigation break and release the navigation step size
           state.navigation.navigationBreak = true;
-          stepper.releaseStepSize(state.stepping);
+          stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
           break;
         }
         reinitializeCandidates(state, stepper);
@@ -407,7 +407,7 @@ class Navigator {
       ACTS_ERROR(volInfo(state) << "Exhausted navigation candidates.");
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
     }
 
     // Navigator preStep always resets the current surface

@@ -264,7 +264,7 @@ class TryAllOverstepNavigator {
         state.navigation.activeCandidates.size()) {
       state.navigation.lastPosition = stepper.position(state.stepping);
 
-      stepper.releaseStepSize(state.stepping);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
 
       ACTS_VERBOSE(volInfo(state)
                    << "blindly step forwards. step size updated to "
