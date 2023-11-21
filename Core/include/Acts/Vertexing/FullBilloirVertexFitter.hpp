@@ -68,6 +68,7 @@ class FullBilloirVertexFitter {
   /// @brief Constructor used if input_track_t type == BoundTrackParameters
   ///
   /// @param cfg Configuration object
+  /// @param logger Logging instance
   template <
       typename T = input_track_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
@@ -85,6 +86,7 @@ class FullBilloirVertexFitter {
   /// @param cfg Configuration object
   /// @param func Function extracting BoundTrackParameters from input_track_t
   /// object
+  /// @param logger Logging instance
   FullBilloirVertexFitter(
       const Config& cfg,
       std::function<BoundTrackParameters(input_track_t)> func,
