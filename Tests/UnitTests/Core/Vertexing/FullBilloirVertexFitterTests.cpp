@@ -59,40 +59,40 @@ MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // 4D vertex distributions
 // x-/y-position
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
 // z-position
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
 // time
-std::uniform_real_distribution<> vTDist(-1_ns, 1_ns);
+std::uniform_real_distribution<double> vTDist(-1_ns, 1_ns);
 
 // Track parameter distributions
 // d0
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
 // z0
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // pT
-std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
 // phi
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
 // theta
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
 // charge helper
-std::uniform_real_distribution<> qDist(-1, 1);
+std::uniform_real_distribution<double> qDist(-1, 1);
 // time
-std::uniform_real_distribution<> tDist(-0.002_ns, 0.002_ns);
+std::uniform_real_distribution<double> tDist(-0.002_ns, 0.002_ns);
 
 // Track parameter resolution distributions
 // impact parameters
-std::uniform_real_distribution<> resIPDist(0., 100_um);
+std::uniform_real_distribution<double> resIPDist(0., 100_um);
 // angles
-std::uniform_real_distribution<> resAngDist(0., 0.1);
+std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // q/p
-std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
+std::uniform_real_distribution<double> resQoPDist(-0.1, 0.1);
 // Track time resolution distribution
-std::uniform_real_distribution<> resTDist(0.1_ns, 0.2_ns);
+std::uniform_real_distribution<double> resTDist(0.1_ns, 0.2_ns);
 
 // Number of tracks distritbution
-std::uniform_int_distribution<> nTracksDist(3, 10);
+std::uniform_int_distribution<std::uint32_t> nTracksDist(3, 10);
 
 // Dummy user-defined InputTrack type
 struct InputTrack {
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   const int nEvents = 100;
   for (int eventIdx = 0; eventIdx < nEvents; ++eventIdx) {
     // Number of tracks
-    unsigned int nTracks = nTracksDist(gen);
+    std::uint32_t nTracks = nTracksDist(gen);
 
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     std::vector<InputTrack> customTracks;
 
     // Calculate random track emerging from vicinity of vertex position
-    for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
+    for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
       // Charge
       double q = qDist(gen) < 0 ? -1. : 1.;
 

@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
   // set grid values
-  for (size_t i = 1; i <= g.numLocalBins().at(0) + 1; ++i) {
-    for (size_t j = 1; j <= g.numLocalBins().at(1) + 1; ++j) {
+  for (std::size_t i = 1; i <= g.numLocalBins().at(0) + 1; ++i) {
+    for (std::size_t j = 1; j <= g.numLocalBins().at(1) + 1; ++j) {
       Grid_t::index_t indices = {{i, j}};
       const auto& llCorner = g.lowerLeftBinEdge(indices);
       g.atLocalBins(indices) = BField::value(llCorner);
