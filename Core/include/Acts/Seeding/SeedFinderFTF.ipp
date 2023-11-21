@@ -57,7 +57,6 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(
     m_storage->addSpacePoint(FTF_sp, (m_config.m_useClusterWidth > 0));
   }
 
-  // m_config.m_nMaxPhiSlice = 53; //set in athena 
   m_config.m_phiSliceWidth = 2 * M_PI / m_config.m_nMaxPhiSlice;
 
   m_storage->sortByPhi();
@@ -75,10 +74,10 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
   const float max_z0 = roi.zedPlus();   
   const float cut_zMinU = min_z0 + m_config.maxOuterRadius * roi.dzdrMinus();   
   const float cut_zMaxU = max_z0 + m_config.maxOuterRadius * roi.dzdrPlus();
-  float m_minR_squ =  m_config.m_tripletPtMin*m_config.m_tripletPtMin/std::pow(m_config.ptCoeff,2); //from athena //checked 
-  float m_maxCurv = m_config.ptCoeff/m_config.m_tripletPtMin ; //checked 
-  const float maxKappa_high_eta = 0.8 / m_minR_squ;//checked 
-  const float maxKappa_low_eta = 0.6 / m_minR_squ;//checked 
+  float m_minR_squ =  m_config.m_tripletPtMin*m_config.m_tripletPtMin/std::pow(m_config.ptCoeff,2); //from athena 
+  float m_maxCurv = m_config.ptCoeff/m_config.m_tripletPtMin ; 
+  const float maxKappa_high_eta = 0.8 / m_minR_squ;
+  const float maxKappa_low_eta = 0.6 / m_minR_squ;
 
   // 1. loop over stages
 
@@ -255,9 +254,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                   }
 
                   float zouter = z0 + m_config.maxOuterRadius * tau;
-                  // std::cout << "zouter: " << zouter << std::endl ; 
-                  // std::cout << "tau: " << tau << std::endl ; 
-
 
                   if (zouter < cut_zMinU || zouter > cut_zMaxU) {
 
@@ -291,7 +287,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                 // match edge candidate against edges incoming to n2
 
                 float exp_eta = std::sqrt(1 + tau * tau) - tau;
-                // std::cout << "exp eta : " << exp_eta << std::endl ; 
 
                 bool isGood =
                     n2->m_in.size() <=
@@ -299,13 +294,10 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                 if (!isGood) {
                   float uat_1 = 1.0f / exp_eta;
-                  // std::cout << "uat : " << uat_1 << std::endl ; 
 
                   for (const auto& n2_in_idx : n2->m_in) {
                     float tau2 = edgeStorage.at(n2_in_idx).m_p[0];
                     float tau_ratio = tau2 * uat_1 - 1.0f;
-                    // std::cout << "tau ratio : " << tau_ratio << std::endl ; 
-
 
                     if (std::fabs(tau_ratio) > m_config.cut_tau_ratio_max) {  // bad
                                                                      // match
@@ -725,10 +717,6 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
     }
   }
   vTracks.clear();
-  
-  //fill output_container_t& *out_cont will be of type std::vector<seed_t>
-  //push back objects seed_t = Seed<external_spacepoint_t>
-  //seed constructor 
 
   for(auto&triplet : m_triplets) {
     const external_spacepoint_t* S1 = triplet.s1().SP ;//triplet-> FTF_SP-> simspacepoint 
@@ -777,10 +765,6 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
     float Quality = triplet.Q() ; 
     //make a new seed, add to vector of seeds 
     out_cont.emplace_back(*S1,*S2,*S3,Vertex,Quality) ; 
-    
-
-
-
 
   }
 }

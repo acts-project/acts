@@ -17,7 +17,6 @@
 #include <iostream>
 #include <list>
 #include <vector>
-#include <typeinfo> //temp for debugging 
 
 template <typename external_spacepoint_t>
 struct TrigFTF_GNN_EdgeState {
@@ -221,6 +220,7 @@ class TrigFTF_GNN_TrackingFilter {
               TrigFTF_GNN_EdgeState<external_spacepoint_t>& ts) {
     const float sigma_t = 0.0003;
     const float sigma_w = 0.00009;
+
     const float sigmaMS = 0.016;
 
     const float sigma_x = 0.25;  // was 0.22
@@ -231,7 +231,6 @@ class TrigFTF_GNN_TrackingFilter {
 
     const float maxDChi2_x = 60.0;  // 35.0;
     const float maxDChi2_y = 60.0;  // 31.0;
-
 
     const float add_hit = 14.0;
 
@@ -289,27 +288,21 @@ class TrigFTF_GNN_TrackingFilter {
     Cx[0][0] = ts.m_Cx[0][0] + 2 * ts.m_Cx[0][1] * A + 2 * ts.m_Cx[0][2] * B + 
                           A * A * ts.m_Cx[1][1] + 2 * A * B * ts.m_Cx[1][2] + 
                           B * B * ts.m_Cx[2][2];
-
     Cx[0][1] = Cx[1][0] = ts.m_Cx[0][1] + ts.m_Cx[1][1] * A +
                           ts.m_Cx[1][2] * B + ts.m_Cx[0][2] * A +
                           A * A * ts.m_Cx[1][2] + A * B * ts.m_Cx[2][2];
-
     Cx[0][2] = Cx[2][0] = ts.m_Cx[0][2] + ts.m_Cx[1][2] * A + ts.m_Cx[2][2] * B;
 
     Cx[1][1] = ts.m_Cx[1][1] + 2 * A * ts.m_Cx[1][2] + A * A * ts.m_Cx[2][2];
-
     Cx[1][2] = Cx[2][1] = ts.m_Cx[1][2] + ts.m_Cx[2][2] * A;
 
     Cx[2][2] = ts.m_Cx[2][2];
 
     Y[0] = ts.m_Y[0] + ts.m_Y[1] * dr;
-    
     Y[1] = ts.m_Y[1];
 
     Cy[0][0] = ts.m_Cy[0][0] + 2 * ts.m_Cy[0][1] * dr + dr * dr * ts.m_Cy[1][1];
-
     Cy[0][1] = Cy[1][0] = ts.m_Cy[0][1] + dr * ts.m_Cy[1][1];
-    
     Cy[1][1] = ts.m_Cy[1][1];
 
     // chi2 test
@@ -339,7 +332,6 @@ class TrigFTF_GNN_TrackingFilter {
     float Dy = 1.0 / (Cy[0][0] + sigma_rz);
 
     float dchi2_x = resid_x * resid_x * Dx; 
-
     float dchi2_y = resid_y * resid_y * Dy;
 
     if (dchi2_x > maxDChi2_x || dchi2_y > maxDChi2_y) {
@@ -373,7 +365,6 @@ class TrigFTF_GNN_TrackingFilter {
 
     ts.m_refX = refX;
     ts.m_refY = refY;
-
     return true;
   }
 
