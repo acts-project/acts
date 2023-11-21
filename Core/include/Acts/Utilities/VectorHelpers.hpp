@@ -171,7 +171,7 @@ inline double cast(const Vector3& position, BinningValue bval) {
     case binMag:
       return position.norm();
     default:
-      assert(false and "Invalid BinningValue enum value");
+      assert(false && "Invalid BinningValue enum value");
       return std::numeric_limits<double>::quiet_NaN();
   }
 }

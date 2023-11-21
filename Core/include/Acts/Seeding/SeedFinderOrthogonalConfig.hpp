@@ -102,6 +102,10 @@ struct SeedFinderOrthogonalConfig {
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
 
+  // Parameter which can loosen the tolerance of the track seed to form a
+  // helix. This is useful for e.g. misaligned seeding.
+  float helixCutTolerance = 1.;
+
   // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
@@ -117,7 +121,7 @@ struct SeedFinderOrthogonalConfig {
   bool isInInternalUnits = false;
 
   SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
-    if (not isInInternalUnits) {
+    if (!isInInternalUnits) {
       throw std::runtime_error(
           "SeedFinderOrthogonalConfig not in ACTS internal units in "
           "calculateDerivedQuantities");

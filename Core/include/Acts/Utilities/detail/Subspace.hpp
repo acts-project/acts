@@ -36,10 +36,10 @@ namespace detail {
 /// axes at compile time. This was tried previously and resulted in sizable
 /// resource consumption at compile time without runtime benefits.
 ///
-/// All types are intentionally using `size_t` as their template values, instead
-/// of the more specific index enums, to reduce the number of templates. This is
-/// fully compatible as the index enums are required to be convertible to
-/// `size_t`.
+/// All types are intentionally using `std::size_t` as their template values,
+/// instead of the more specific index enums, to reduce the number of templates.
+/// This is fully compatible as the index enums are required to be convertible
+/// to `std::size_t`.
 ///
 /// All types intentionally only define the subspace but not how vectors
 /// and matrices are stored to avoid unnecessary coupling between components,
@@ -60,9 +60,9 @@ namespace detail {
 ///
 /// @tparam kFullSize Size of the full vector space
 /// @tparam kSize Size of the subspace
-template <size_t kFullSize, size_t kSize>
+template <std::size_t kFullSize, std::size_t kSize>
 class FixedSizeSubspace {
-  static_assert(kFullSize <= static_cast<size_t>(UINT8_MAX),
+  static_assert(kFullSize <= static_cast<std::size_t>(UINT8_MAX),
                 "Full vector space size is larger than the supported range");
   static_assert(1u <= kSize, "Subspace size must be at least 1");
   static_assert(kSize <= kFullSize,
@@ -94,15 +94,15 @@ class FixedSizeSubspace {
   /// @param indices Unique, ordered indices
   template <typename index_t>
   constexpr FixedSizeSubspace(const std::array<index_t, kSize>& indices) {
-    for (size_t i = 0u; i < kSize; ++i) {
-      assert((indices[i] < kFullSize) and
+    for (std::size_t i = 0u; i < kSize; ++i) {
+      assert((indices[i] < kFullSize) &&
              "Axis indices must be within the full space");
       if (0u < i) {
-        assert((indices[i - 1u] < indices[i]) and
+        assert((indices[i - 1u] < indices[i]) &&
                "Axis indices must be unique and ordered");
       }
     }
-    for (size_t i = 0; i < kSize; ++i) {
+    for (std::size_t i = 0; i < kSize; ++i) {
       m_axes[i] = static_cast<uint8_t>(indices[i]);
     }
   }
@@ -114,24 +114,24 @@ class FixedSizeSubspace {
   FixedSizeSubspace& operator=(FixedSizeSubspace&&) = default;
 
   /// Size of the subspace.
-  static constexpr size_t size() { return kSize; }
+  static constexpr std::size_t size() { return kSize; }
   /// Size of the full vector space.
-  static constexpr size_t fullSize() { return kFullSize; }
+  static constexpr std::size_t fullSize() { return kFullSize; }
 
   /// Axis indices that comprise the subspace.
   ///
   /// The specific container and index type should be considered an
   /// implementation detail. Users should treat the return type as a generic
-  /// container whose elements are convertible to `size_t`.
+  /// container whose elements are convertible to `std::size_t`.
   constexpr const std::array<uint8_t, kSize>& indices() const { return m_axes; }
 
   /// Check if the given axis index in the full space is part of the subspace.
-  constexpr bool contains(size_t index) const {
+  constexpr bool contains(std::size_t index) const {
     bool isContained = false;
     // always iterate over all elements to avoid branching and hope the compiler
     // can optimise this for us.
     for (auto a : m_axes) {
-      isContained = (isContained or (a == index));
+      isContained = (isContained || (a == index));
     }
     return isContained;
   }

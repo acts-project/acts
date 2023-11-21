@@ -6,7 +6,7 @@ All guidelines have a short identifier label, e.g. N.1, for easier reference in 
 
 For cases and constructs not explicitly mentioned here, code should fall back to the [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
 
-## Acts-specific
+## ACTS-specific
 
 ### A.indices: Always use enum values to access vector/matrix components
 

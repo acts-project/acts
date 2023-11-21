@@ -81,14 +81,14 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
       portalGenerator, tContext, "FullCylinderVolume", nominal,
       std::move(fullCylinderBounds), tryAllPortals());
 
-  BOOST_CHECK(fullCylinderVolume ==
-              unpackToShared<DetectorVolume>(*fullCylinderVolume));
-  BOOST_CHECK(fullCylinderVolume ==
-              unpackToShared<const DetectorVolume>(*fullCylinderVolume));
+  BOOST_CHECK_EQUAL(fullCylinderVolume,
+                    unpackToShared<DetectorVolume>(*fullCylinderVolume));
+  BOOST_CHECK_EQUAL(fullCylinderVolume,
+                    unpackToShared<const DetectorVolume>(*fullCylinderVolume));
 
   BOOST_CHECK(fullCylinderVolume->surfaces().empty());
   BOOST_CHECK(fullCylinderVolume->volumes().empty());
-  BOOST_CHECK(fullCylinderVolume->portals().size() == 3u);
+  BOOST_CHECK_EQUAL(fullCylinderVolume->portals().size(), 3u);
 
   // A tube cylinder
   auto tubeCylinderBounds =
@@ -100,13 +100,13 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   BOOST_CHECK(tubeCylinderVolume->surfaces().empty());
   BOOST_CHECK(tubeCylinderVolume->volumes().empty());
-  BOOST_CHECK(tubeCylinderVolume->portals().size() == 4u);
+  BOOST_CHECK_EQUAL(tubeCylinderVolume->portals().size(), 4u);
 
   // Let's test the resizing, first inside test: OK
   BOOST_CHECK(tubeCylinderVolume->inside(tContext, Acts::Vector3(50., 0., 0.)));
   // Outside
   BOOST_CHECK(
-      not tubeCylinderVolume->inside(tContext, Acts::Vector3(150., 0., 0.)));
+      !tubeCylinderVolume->inside(tContext, Acts::Vector3(150., 0., 0.)));
 
   // Check the extent
   auto volumeExtent = tubeCylinderVolume->extent(tContext, 1);
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
 
   fullCylinderVolume->updatePortal(cylinderPortal, 2u);
 
-  BOOST_CHECK(fullCylinderVolume->portals()[2u] == cylinderPortal.get());
+  BOOST_CHECK_EQUAL(fullCylinderVolume->portals()[2u], cylinderPortal.get());
 }
 
 BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   outerBox->updateNavigationState(tContext, nState);
 
   // We should have 12 candidates, 6 inner, 6 outer portals
-  BOOST_CHECK(nState.surfaceCandidates.size() == 12u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 12u);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
@@ -219,15 +219,15 @@ BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
 
   // This extracts all portals as candidates
   auto eportals = allPortals.extract(tContext, nState);
-  BOOST_CHECK(eportals.size() == 4u);
+  BOOST_CHECK_EQUAL(eportals.size(), 4u);
 
   auto esurfaces = allSurfaces.extract(tContext, nState);
-  BOOST_CHECK(esurfaces.size() == 6u);
+  BOOST_CHECK_EQUAL(esurfaces.size(), 6u);
 
   esurfaces = indexedSurfaces.extract(tContext, nState, {2u, 4u});
-  BOOST_CHECK(esurfaces.size() == 2u);
-  BOOST_CHECK(esurfaces[0u] == surfaces[2u].get());
-  BOOST_CHECK(esurfaces[1u] == surfaces[4u].get());
+  BOOST_CHECK_EQUAL(esurfaces.size(), 2u);
+  BOOST_CHECK_EQUAL(esurfaces[0u], surfaces[2u].get());
+  BOOST_CHECK_EQUAL(esurfaces[1u], surfaces[4u].get());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

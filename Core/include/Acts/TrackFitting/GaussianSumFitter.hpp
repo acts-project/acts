@@ -76,6 +76,20 @@ struct GaussianSumFitter {
   /// The actor type
   using GsfActor = detail::GsfActor<bethe_heitler_approx_t, traj_t>;
 
+  /// This allows to break the propagation by setting the navigationBreak
+  /// TODO refactor once we can do this more elegantly
+  struct NavigationBreakAborter {
+    NavigationBreakAborter() = default;
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
+                    const navigator_t& navigator,
+                    const Logger& /*logger*/) const {
+      return navigator.navigationBreak(state.navigation);
+    }
+  };
+
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t,
             typename track_container_t, template <typename> class holder_t>
@@ -92,7 +106,7 @@ struct GaussianSumFitter {
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
       using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
-      using Aborters = AbortList<>;
+      using Aborters = AbortList<NavigationBreakAborter>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
                                                       opts.magFieldContext);
@@ -147,7 +161,7 @@ struct GaussianSumFitter {
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
-      using Aborters = AbortList<EndOfWorldReached>;
+      using Aborters = AbortList<EndOfWorldReached, NavigationBreakAborter>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
                                                       opts.magFieldContext);
@@ -211,14 +225,13 @@ struct GaussianSumFitter {
         sParameters.referenceSurface()
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
-                       sParameters.direction(), true)
+                       sParameters.direction(), BoundaryCheck(true))
             .closest()
             .status();
 
     if (intersectionStatusStartSurface != Intersection3D::Status::onSurface) {
-      ACTS_ERROR(
-          "Surface intersection of start parameters with bound-check failed");
-      return GsfError::StartParametersNotOnStartSurface;
+      ACTS_DEBUG(
+          "Surface intersection of start parameters WITH bound-check failed");
     }
 
     // To be able to find measurements later, we put them into a map
@@ -274,7 +287,7 @@ struct GaussianSumFitter {
 
       // This allows the initialization with single- and multicomponent start
       // parameters
-      if constexpr (not IsMultiParameters::value) {
+      if constexpr (!IsMultiParameters::value) {
         MultiComponentBoundTrackParameters params(
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), *sParameters.covariance(),
@@ -309,6 +322,7 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("- measurement states: " << fwdGsfResult.measurementStates);
 
     std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler;
+    double maxPathXOverX0 = fwdGsfResult.maxPathXOverX0;
 
     //////////////////
     // Backward pass
@@ -395,13 +409,16 @@ struct GaussianSumFitter {
     }
 
     nInvalidBetheHeitler += bwdGsfResult.nInvalidBetheHeitler;
+    maxPathXOverX0 = std::max(maxPathXOverX0, bwdGsfResult.maxPathXOverX0);
 
     if (nInvalidBetheHeitler > 0) {
-      ACTS_WARNING("Encountered "
-                   << nInvalidBetheHeitler
-                   << " cases where the material thickness exceeds the range "
-                      "of the Bethe-Heitler-Approximation. Enable DEBUG output "
-                      "for more information.");
+      ACTS_WARNING("Encountered " << nInvalidBetheHeitler
+                                  << " cases where x/X0 exceeds the range "
+                                     "of the Bethe-Heitler-Approximation. The "
+                                     "maximum x/X0 encountered was "
+                                  << maxPathXOverX0
+                                  << ". Enable DEBUG output "
+                                     "for more information.");
     }
 
     ////////////////////////////////////
@@ -429,7 +446,7 @@ struct GaussianSumFitter {
              fwdGsfResult.currentTip)) {
       const bool found = std::find(foundBwd.begin(), foundBwd.end(),
                                    &state.referenceSurface()) != foundBwd.end();
-      if (not found && state.typeFlags().test(MeasurementFlag)) {
+      if (!found && state.typeFlags().test(MeasurementFlag)) {
         state.typeFlags().set(OutlierFlag);
         state.typeFlags().reset(MeasurementFlag);
         state.unset(TrackStatePropMask::Smoothed);
@@ -449,9 +466,9 @@ struct GaussianSumFitter {
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
 
-      const auto [finalPars, finalCov] = Acts::reduceGaussianMixture(
+      const auto [finalPars, finalCov] = detail::mergeGaussianMixture(
           params.components(), params.referenceSurface(),
-          options.stateReductionMethod, [](auto& t) {
+          options.componentMergeMethod, [](auto& t) {
             return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
           });
 

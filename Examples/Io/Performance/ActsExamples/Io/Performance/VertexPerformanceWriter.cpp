@@ -86,7 +86,7 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + path);
+    throw std::ios_base::failure("Could not open '" + path + "'");
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
@@ -320,7 +320,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                                       particleHitCounts);
         ActsFatras::Barcode majorityParticleId =
             particleHitCounts.front().particleId;
-        size_t nMajorityHits = particleHitCounts.front().hitCount;
+        std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
         if (nMajorityHits * 1. / track.nMeasurements() <
             m_cfg.truthMatchProbMin) {
@@ -597,14 +597,14 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             auto intersection =
                 perigeeSurface
                     ->intersect(ctx.geoContext, params.position(ctx.geoContext),
-                                params.direction(), false)
+                                params.direction(), Acts::BoundaryCheck(false))
                     .closest();
             pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
                 intersection.pathLength());
 
             auto result =
                 propagator->propagate(params, *perigeeSurface, pOptions);
-            if (not result.ok()) {
+            if (!result.ok()) {
               ACTS_ERROR("Propagation to true vertex position failed.");
               return std::nullopt;
             }

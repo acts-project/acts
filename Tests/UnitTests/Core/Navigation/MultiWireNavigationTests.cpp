@@ -20,8 +20,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <fstream>
 #include <memory>
@@ -37,8 +37,8 @@ GeometryContext tContext;
 BOOST_AUTO_TEST_SUITE(Experimental)
 
 BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
-  using GlobalBin = size_t;
-  using LocalBin = std::array<size_t, 2u>;
+  using GlobalBin = std::size_t;
+  using LocalBin = std::array<std::size_t, 2u>;
 
   std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   nState.currentVolume->updateNavigationState(tContext, nState);
 
   // check the surface candidates after update (12 surfaces + 6 portals)
-  BOOST_CHECK(nState.surfaceCandidates.size() == 18u);
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 18u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

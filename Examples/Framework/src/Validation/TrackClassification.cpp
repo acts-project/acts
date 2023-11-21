@@ -66,17 +66,17 @@ void ActsExamples::identifyContributingParticles(
 
 void ActsExamples::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-    const Trajectories& trajectories, size_t tip,
+    const Trajectories& trajectories, std::size_t tip,
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
 
-  if (not trajectories.hasTrajectory(tip)) {
+  if (!trajectories.hasTrajectory(tip)) {
     return;
   }
 
   trajectories.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
     // no truth info with non-measurement state
-    if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       return true;
     }
     // register all particles that generated this hit
@@ -99,7 +99,7 @@ void ActsExamples::identifyContributingParticles(
 
   for (const auto& state : track.trackStatesReversed()) {
     // no truth info with non-measurement state
-    if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       continue;
     }
     // register all particles that generated this hit

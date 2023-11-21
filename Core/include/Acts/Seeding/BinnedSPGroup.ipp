@@ -42,33 +42,33 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator++() {
 template <typename external_spacepoint_t>
 inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator==(
     const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
-  return m_group.ptr == other.m_group.ptr and
+  return m_group.ptr == other.m_group.ptr &&
          m_current_localBins[INDEX::PHI] ==
-             other.m_current_localBins[INDEX::PHI] and
+             other.m_current_localBins[INDEX::PHI] &&
          m_current_localBins[INDEX::Z] == other.m_current_localBins[INDEX::Z];
 }
 
 template <typename external_spacepoint_t>
 inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator!=(
     const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
-  return not(*this == other);
+  return !(*this == other);
 }
 
 template <typename external_spacepoint_t>
-std::tuple<boost::container::small_vector<size_t, 9>, std::size_t,
-           boost::container::small_vector<size_t, 9>>
+std::tuple<boost::container::small_vector<std::size_t, 9>, std::size_t,
+           boost::container::small_vector<std::size_t, 9>>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
   // Global Index
   std::size_t global_index = m_group->m_grid->globalBinFromLocalBins(
       {m_current_localBins[INDEX::PHI],
        m_group->m_bins[m_current_localBins[INDEX::Z]]});
 
-  boost::container::small_vector<size_t, 9> bottoms =
+  boost::container::small_vector<std::size_t, 9> bottoms =
       m_group->m_bottomBinFinder->findBins(
           m_current_localBins[INDEX::PHI],
           m_group->m_bins[m_current_localBins[INDEX::Z]],
           m_group->m_grid.get());
-  boost::container::small_vector<size_t, 9> tops =
+  boost::container::small_vector<std::size_t, 9> tops =
       m_group->m_topBinFinder->findBins(
           m_current_localBins[INDEX::PHI],
           m_group->m_bins[m_current_localBins[INDEX::Z]],
@@ -134,11 +134,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     Acts::Extent& rRangeSPExtent,
     const SeedFinderConfig<external_spacepoint_t>& config,
     const SeedFinderOptions& options) {
-  if (not config.isInInternalUnits) {
+  if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
   }
-  if (not options.isInInternalUnits) {
+  if (!options.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
@@ -159,11 +159,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
   // binSizeR allows to increase or reduce numRBins if needed
-  size_t numRBins = static_cast<size_t>((config.rMax + options.beamPos.norm()) /
-                                        config.binSizeR);
+  std::size_t numRBins = static_cast<std::size_t>(
+      (config.rMax + options.beamPos.norm()) / config.binSizeR);
 
   // keep track of changed bins while sorting
-  boost::container::flat_set<size_t> rBinsIndex;
+  boost::container::flat_set<std::size_t> rBinsIndex;
 
   std::size_t counter = 0;
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
@@ -194,7 +194,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
         counter, sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);
+    std::size_t rIndex =
+        static_cast<std::size_t>(isp->radius() / config.binSizeR);
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;
@@ -241,7 +242,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 }
 
 template <typename external_spacepoint_t>
-inline size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
+inline std::size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
   return m_grid->size();
 }
 

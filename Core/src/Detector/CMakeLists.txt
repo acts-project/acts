@@ -2,6 +2,7 @@ target_sources(
   ActsCore
   PRIVATE
     detail/BlueprintHelper.cpp
+    detail/BlueprintDrawer.cpp
     detail/CylindricalDetectorHelper.cpp
     detail/PortalHelper.cpp
     detail/SupportHelper.cpp
@@ -19,6 +20,4 @@ target_sources(
     GeometryIdGenerator.cpp
     VolumeStructureBuilder.cpp
     MultiWireStructureBuilder.cpp
-
-    
 )

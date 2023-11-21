@@ -18,6 +18,7 @@
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <functional>
@@ -98,13 +99,27 @@ class AdaptiveMultiVertexFitter {
         }
       }
     }
+
+    Result<void> removeVertexFromCollection(Vertex<InputTrack_t>& vtxToRemove,
+                                            const Logger& logger) {
+      auto it = std::find(vertexCollection.begin(), vertexCollection.end(),
+                          &vtxToRemove);
+      // Check if the value was found before erasing
+      if (it == vertexCollection.end()) {
+        ACTS_ERROR("vtxToRemove is not part of vertexCollection.");
+        return VertexingError::ElementNotFound;
+      }
+      // Erase the element if found
+      vertexCollection.erase(it);
+      return {};
+    }
   };
 
   struct Config {
     /// @brief Config constructor
     ///
     /// @param est ImpactPointEstimator
-    Config(const IPEstimator& est) : ipEst(est) {}
+    Config(IPEstimator est) : ipEst(std::move(est)) {}
 
     // ImpactPointEstimator
     IPEstimator ipEst;
@@ -147,7 +162,7 @@ class AdaptiveMultiVertexFitter {
   template <
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFitter(Config& cfg,
+  AdaptiveMultiVertexFitter(Config cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFitter",
                                                  Logging::INFO))
@@ -163,26 +178,12 @@ class AdaptiveMultiVertexFitter {
   /// object
   /// @param logger The logging instance
   AdaptiveMultiVertexFitter(
-      Config& cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFitter", Logging::INFO))
       : m_cfg(std::move(cfg)),
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
-
-  /// @brief Performs a simultaneous fit of all vertices in `verticesToFit`
-  /// by invoking `fitImpl`.
-  ///
-  /// @param state Fitter state
-  /// @param verticesToFit Vector containing all vertices to be fitted
-  /// @param linearizer Track linearizer
-  /// @param vertexingOptions Vertexing options
-  ///
-  /// @return Result<void> object
-  Result<void> fit(
-      State& state, const std::vector<Vertex<InputTrack_t>*>& verticesToFit,
-      const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
@@ -204,6 +205,18 @@ class AdaptiveMultiVertexFitter {
       const Linearizer_t& linearizer,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
+  /// @brief Performs a simultaneous fit of all vertices in
+  /// state.vertexCollection
+  ///
+  /// @param state Fitter state
+  /// @param linearizer Track linearizer
+  /// @param vertexingOptions Vertexing options
+  ///
+  /// @return Result<void> object
+  Result<void> fit(
+      State& state, const Linearizer_t& linearizer,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+
  private:
   /// Configuration object
   const Config m_cfg;
@@ -219,18 +232,6 @@ class AdaptiveMultiVertexFitter {
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
 
-  /// @brief Performs a simultaneous fit of all vertices in
-  /// state.vertexCollection
-  ///
-  /// @param state Fitter state
-  /// @param linearizer Track linearizer
-  /// @param vertexingOptions Vertexing options
-  ///
-  /// @return Result<void> object
-  Result<void> fitImpl(
-      State& state, const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
-
   /// @brief Tests if vertex is already in list of vertices or not
   ///
   /// @param vtx Vertex to test
@@ -241,14 +242,15 @@ class AdaptiveMultiVertexFitter {
       Vertex<InputTrack_t>* vtx,
       const std::vector<Vertex<InputTrack_t>*>& verticesVec) const;
 
-  /// @brief Checks whether the impact parameters of the associated
-  /// tracks were calculated wrt the vertex position. Updates them
-  /// if needed.
+  /// @brief 1) Calls ImpactPointEstimator::estimate3DImpactParameters
+  /// for all tracks that are associated with vtx (i.e., all elements
+  /// of the trackLinks vector in the VertexInfo of vtx).
+  /// 2) Saves the 3D impact parameters in the VertexInfo of vtx.
   ///
   /// @param state Vertex fitter state
   /// @param vtx Vertex object
   /// @param vertexingOptions Vertexing options
-  Result<void> updateImpactParams3D(
+  Result<void> prepareVertexForFit(
       State& state, Vertex<InputTrack_t>* vtx,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
@@ -295,6 +297,13 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @param state Fitter state
   void doVertexSmoothing(State& state) const;
+
+  /// @brief Logs vertices in state.vertexCollection and associated tracks
+  ///
+  /// @param state Fitter state
+  /// @param geoContext Geometry context
+  void logDebugData(const State& state,
+                    const GeometryContext& geoContext) const;
 };
 
 }  // namespace Acts

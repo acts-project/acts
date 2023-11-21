@@ -69,7 +69,7 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + path);
+    throw std::ios_base::failure("Could not open '" + path + "'");
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
@@ -262,7 +262,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     }
 
     // Initialize the truth particle info
-    ActsFatras::Barcode majorityParticleId(std::numeric_limits<size_t>::max());
+    ActsFatras::Barcode majorityParticleId(
+        std::numeric_limits<std::size_t>::max());
     unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
     int t_charge = std::numeric_limits<int>::max();
     float t_time = NaNfloat;
@@ -289,7 +290,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     bool foundMajorityParticle = false;
     // Get the truth particle info
-    if (not particleHitCounts.empty()) {
+    if (!particleHitCounts.empty()) {
       // Get the barcode of the majority truth particle
       majorityParticleId = particleHitCounts.front().particleId;
       nMajorityHits = particleHitCounts.front().hitCount;
@@ -323,7 +324,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
           auto intersection =
               pSurface
                   ->intersect(ctx.geoContext, particle.position(),
-                              particle.direction(), false)
+                              particle.direction(), Acts::BoundaryCheck(false))
                   .closest();
           auto position = intersection.position();
 
@@ -343,7 +344,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
                    << " not found in the input collection!");
       }
     }
-    if (not foundMajorityParticle) {
+    if (!foundMajorityParticle) {
       ACTS_DEBUG("Truth particle for track " << track.tipIndex()
                                              << " not found!");
     }

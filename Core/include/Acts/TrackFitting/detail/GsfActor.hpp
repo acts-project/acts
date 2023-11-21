@@ -20,6 +20,7 @@
 #include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -55,7 +56,9 @@ struct GsfResult {
   std::vector<const Acts::Surface*> visitedSurfaces;
   std::vector<const Acts::Surface*> surfacesVisitedBwdAgain;
 
+  /// Statistics about encounterings of invalid bethe heitler approximations
   std::size_t nInvalidBetheHeitler = 0;
+  double maxPathXOverX0 = 0.0;
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
@@ -114,7 +117,7 @@ struct GsfActor {
     bool inReversePass = false;
 
     /// How to reduce the states that are stored in the multi trajectory
-    MixtureReductionMethod reductionMethod = MixtureReductionMethod::eMaxWeight;
+    ComponentMergeMethod mergeMethod = ComponentMergeMethod::eMaxWeight;
 
     const Logger* logger{nullptr};
 
@@ -148,7 +151,7 @@ struct GsfActor {
     assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
-    if (not result.result.ok()) {
+    if (!result.result.ok()) {
       ACTS_WARNING("result.result not ok, return!")
       return;
     }
@@ -168,7 +171,7 @@ struct GsfActor {
                                                          navigator, logger());
 
     // We only need to do something if we are on a surface
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
 
@@ -220,7 +223,7 @@ struct GsfActor {
     ////////////////////////
 
     // Early return if nothing happens
-    if (not haveMaterial && not haveMeasurement) {
+    if (!haveMaterial && !haveMeasurement) {
       // No hole before first measurement
       if (result.processedStates > 0 && surface.associatedDetectorElement()) {
         TemporaryStates tmpStates;
@@ -248,13 +251,13 @@ struct GsfActor {
     // We do not need the component cache here, we can just update our stepper
     // state with the filtered components.
     // NOTE because of early return before we know that we have a measurement
-    if (not haveMaterial) {
+    if (!haveMaterial) {
       TemporaryStates tmpStates;
 
       auto res = kalmanUpdate(state, stepper, navigator, result, tmpStates,
                               found_source_link->second);
 
-      if (not res.ok()) {
+      if (!res.ok()) {
         setErrorOrAbort(res.error());
         return;
       }
@@ -276,7 +279,7 @@ struct GsfActor {
                                   false);
       }
 
-      if (not res.ok()) {
+      if (!res.ok()) {
         setErrorOrAbort(res.error());
         return;
       }
@@ -286,7 +289,7 @@ struct GsfActor {
       componentCache.clear();
 
       convoluteComponents(state, stepper, navigator, tmpStates, componentCache,
-                          result.nInvalidBetheHeitler);
+                          result);
 
       if (componentCache.empty()) {
         ACTS_WARNING(
@@ -316,7 +319,8 @@ struct GsfActor {
     // Break the navigation if we found all measurements
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
-      navigator.targetReached(state.navigation, true);
+      ACTS_VERBOSE("Stop navigation because all measurements are found");
+      navigator.navigationBreak(state.navigation, true);
     }
   }
 
@@ -326,7 +330,7 @@ struct GsfActor {
                            const navigator_t& navigator,
                            const TemporaryStates& tmpStates,
                            std::vector<ComponentCache>& componentCache,
-                           std::size_t& nInvalidBetheHeitler) const {
+                           result_type& result) const {
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       auto proxy = tmpStates.traj.getTrackState(idx);
@@ -336,7 +340,7 @@ struct GsfActor {
                                  stepper.particleHypothesis(state.stepping));
 
       applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
-                        componentCache, nInvalidBetheHeitler);
+                        componentCache, result);
     }
   }
 
@@ -346,7 +350,7 @@ struct GsfActor {
                          const BoundTrackParameters& old_bound,
                          const double old_weight,
                          std::vector<ComponentCache>& componentCaches,
-                         std::size_t& nInvalidBetheHeitler) const {
+                         result_type& result) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
 
@@ -355,22 +359,24 @@ struct GsfActor {
         old_bound.position(state.stepping.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
-    auto pathCorrection = surface.pathCorrection(
+    const auto pathCorrection = surface.pathCorrection(
         state.stepping.geoContext,
         old_bound.position(state.stepping.geoContext), old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
+    const double pathXOverX0 = slab.thicknessInX0();
+
     // Emit a warning if the approximation is not valid for this x/x0
-    if (not m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
-      ++nInvalidBetheHeitler;
+    if (!m_cfg.bethe_heitler_approx->validXOverX0(pathXOverX0)) {
+      ++result.nInvalidBetheHeitler;
+      result.maxPathXOverX0 = std::max(result.maxPathXOverX0, pathXOverX0);
       ACTS_DEBUG(
           "Bethe-Heitler approximation encountered invalid value for x/x0="
-          << slab.thicknessInX0() << " at surface " << surface.geometryId());
+          << pathXOverX0 << " at surface " << surface.geometryId());
     }
 
     // Get the mixture
-    const auto mixture =
-        m_cfg.bethe_heitler_approx->mixture(slab.thicknessInX0());
+    const auto mixture = m_cfg.bethe_heitler_approx->mixture(pathXOverX0);
 
     // Create all possible new components
     for (const auto& gaussian : mixture) {
@@ -627,7 +633,7 @@ struct GsfActor {
 
       const auto& trackStateProxy = *trackStateProxyRes;
 
-      if (not trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+      if (!trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
         is_hole = false;
       }
 
@@ -695,7 +701,7 @@ struct GsfActor {
     using FltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
-    if (not m_cfg.inReversePass) {
+    if (!m_cfg.inReversePass) {
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
       const auto isMeasurement =
@@ -714,15 +720,15 @@ struct GsfActor {
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
 
-      auto [prtMean, prtCov] = reduceGaussianMixture(
-          tmpStates.tips, surface, m_cfg.reductionMethod,
-          PrtProjector{tmpStates.traj, tmpStates.weights});
+      auto [prtMean, prtCov] =
+          mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
+                               PrtProjector{tmpStates.traj, tmpStates.weights});
       proxy.predicted() = prtMean;
       proxy.predictedCovariance() = prtCov;
 
       if (isMeasurement) {
-        auto [fltMean, fltCov] = reduceGaussianMixture(
-            tmpStates.tips, surface, m_cfg.reductionMethod,
+        auto [fltMean, fltCov] = mergeGaussianMixture(
+            tmpStates.tips, surface, m_cfg.mergeMethod,
             FltProjector{tmpStates.traj, tmpStates.weights});
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
@@ -744,8 +750,8 @@ struct GsfActor {
               result.surfacesVisitedBwdAgain.push_back(&surface);
 
               if (trackState.hasSmoothed()) {
-                const auto [smtMean, smtCov] = reduceGaussianMixture(
-                    tmpStates.tips, surface, m_cfg.reductionMethod,
+                const auto [smtMean, smtCov] = mergeGaussianMixture(
+                    tmpStates.tips, surface, m_cfg.mergeMethod,
                     FltProjector{tmpStates.traj, tmpStates.weights});
 
                 trackState.smoothed() = smtMean;
@@ -766,7 +772,7 @@ struct GsfActor {
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
-    m_cfg.reductionMethod = options.stateReductionMethod;
+    m_cfg.mergeMethod = options.componentMergeMethod;
     m_cfg.calibrationContext = &options.calibrationContext.get();
   }
 };

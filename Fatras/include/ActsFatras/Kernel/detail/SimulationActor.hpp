@@ -55,7 +55,7 @@ struct SimulationActor {
                               const result_type &result,
                               const Acts::Logger & /*logger*/) const {
       // must return true if the propagation should abort
-      return not result.isAlive;
+      return !result.isAlive;
     }
   };
 
@@ -90,7 +90,7 @@ struct SimulationActor {
     assert(generator and "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
-    if (not result.isAlive) {
+    if (!result.isAlive) {
       return;
     }
 
@@ -148,12 +148,12 @@ struct SimulationActor {
       const auto stepSize = properTimeDiff *
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
-      stepper.setStepSize(state.stepping, stepSize,
-                          Acts::ConstrainedStep::user);
+      stepper.updateStepSize(state.stepping, stepSize,
+                             Acts::ConstrainedStep::user);
     }
 
     // arm the point-like interaction limits in the first step
-    if (std::isnan(result.x0Limit) or std::isnan(result.l0Limit)) {
+    if (std::isnan(result.x0Limit) || std::isnan(result.l0Limit)) {
       armPointLikeInteractions(initialParticle, result);
     }
 
@@ -162,7 +162,7 @@ struct SimulationActor {
       return;
     }
     // If we are not on a surface, there is nothing further for us to do
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
     const Acts::Surface &surface = *navigator.currentSurface(state.navigation);
@@ -185,7 +185,8 @@ struct SimulationActor {
         // again: interact only if there is valid material to interact with
         if (slab) {
           // adapt material for non-zero incidence
-          auto normal = surface.normal(state.geoContext, local);
+          auto normal = surface.normal(state.geoContext, before.position(),
+                                       before.direction());
           // dot-product(unit normal, direction) = cos(incidence angle)
           // particle direction is normalized, not sure about surface normal
           auto cosIncidenceInv = normal.norm() / normal.dot(before.direction());
@@ -325,7 +326,7 @@ struct SimulationActor {
     // do not run if there is no point-like interaction
     if (frac < 1.0f) {
       // select which process to simulate
-      const size_t process =
+      const std::size_t process =
           (fracX0 < fracL0) ? result.x0Process : result.l0Process;
       // simulate the selected point-like process
       if (interactions.runPointLike(*generator, process, result.particle,

@@ -36,7 +36,8 @@ std::string EDM4hepSimHitReader::EDM4hepSimHitReader::name() const {
   return "EDM4hepSimHitReader";
 }
 
-std::pair<size_t, size_t> EDM4hepSimHitReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> EDM4hepSimHitReader::availableEvents()
+    const {
   return m_eventsRange;
 }
 

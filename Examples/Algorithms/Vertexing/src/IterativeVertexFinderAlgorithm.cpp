@@ -71,24 +71,27 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Set up propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(
-      stepper, Acts::detail::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
+  auto propagator =
+      std::make_shared<Propagator>(stepper, Acts::detail::VoidNavigator{},
+                                   logger().cloneWithSuffix("Propagator"));
   // Setup the vertex fitter
   Fitter::Config vertexFitterCfg;
-  Fitter vertexFitter(vertexFitterCfg);
+  Fitter vertexFitter(vertexFitterCfg,
+                      logger().cloneWithSuffix("FullBilloirVertexFitter"));
   // Setup the track linearizer
   Linearizer::Config linearizerCfg(m_cfg.bField, propagator);
-  Linearizer linearizer(linearizerCfg, logger().cloneWithSuffix("HelLin"));
+  Linearizer linearizer(linearizerCfg,
+                        logger().cloneWithSuffix("HelicalTrackLinearizer"));
   // Setup the seed finder
   IPEstimator::Config ipEstCfg(m_cfg.bField, propagator);
-  IPEstimator ipEst(ipEstCfg);
+  IPEstimator ipEst(ipEstCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
   Seeder seeder;
   // Set up the actual vertex finder
-  Finder::Config finderCfg(vertexFitter, std::move(linearizer),
+  Finder::Config finderCfg(std::move(vertexFitter), std::move(linearizer),
                            std::move(seeder), ipEst);
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = false;
-  Finder finder(finderCfg, logger().cloneWithSuffix("Finder"));
+  Finder finder(std::move(finderCfg), logger().clone());
   Finder::State state(*m_cfg.bField, ctx.magFieldContext);
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);
 
