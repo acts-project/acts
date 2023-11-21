@@ -185,9 +185,9 @@ class TrigFTF_GNN_DataStorage {
         //   InDet::PixelCluster*>(osp->clusterList().first);
         //   float cluster_width = pCL->width().widthPhiRZ().y();
         float cluster_width = 1;  // temporary while cluster width not available
-        min_tau = 6.7 * (cluster_width - 0.2);
-        max_tau =
-            1.6 + 0.15 / (cluster_width + 0.2) + 6.1 * (cluster_width - 0.2);
+        // min_tau = 6.7 * (cluster_width - 0.2);
+        // max_tau =
+        //     1.6 + 0.15 / (cluster_width + 0.2) + 6.1 * (cluster_width - 0.2);
       }
 
       m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node<space_point_t>(

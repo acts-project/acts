@@ -70,27 +70,15 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
     std::vector<GNN_TrigTracklet<external_spacepoint_t>>& vTracks,
     const Acts::RoiDescriptor& roi,
     const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo) {
-  // long term move these to ftf finder config, then m_config. to access them
-  const int MaxEdges = 2000000;
 
-  const float cut_dphi_max = 0.012;
-  const float cut_dcurv_max = 0.001;
-  const float cut_tau_ratio_max = 0.007;
-  const float min_z0 = -2800;  // roiDescriptor->zedMinus(); //blank for now,
-                               // get from config eventually
-  const float max_z0 = 2800;   // roiDescriptor->zedPlus();
-
-  const float maxOuterRadius = 550.0;
-  const float cut_zMinU =
-      min_z0 +
-      maxOuterRadius * roi.dzdrMinus();  // dzdr can only find =0 in athena
-  const float cut_zMaxU = max_z0 + maxOuterRadius * roi.dzdrPlus();
-
-  float m_minR_squ = 1;  // set earlier
-  float m_maxCurv = 1;
-
-  const float maxKappa_high_eta = 0.8 / m_minR_squ;
-  const float maxKappa_low_eta = 0.6 / m_minR_squ;
+  const float min_z0 = roi.zedMinus();  
+  const float max_z0 = roi.zedPlus();   
+  const float cut_zMinU = min_z0 + m_config.maxOuterRadius * roi.dzdrMinus();   
+  const float cut_zMaxU = max_z0 + m_config.maxOuterRadius * roi.dzdrPlus();
+  float m_minR_squ =  m_config.m_tripletPtMin*m_config.m_tripletPtMin/std::pow(m_config.ptCoeff,2);; //from athena //checked 
+  float m_maxCurv = m_config.ptCoeff/m_config.m_tripletPtMin ; //checked 
+  const float maxKappa_high_eta = 0.8 / m_minR_squ;//checked 
+  const float maxKappa_low_eta = 0.6 / m_minR_squ;//checked 
 
   // 1. loop over stages
 
@@ -100,7 +88,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
   std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>> edgeStorage;
 
-  edgeStorage.reserve(MaxEdges);
+  edgeStorage.reserve(m_config.MaxEdges);
 
   int nEdges = 0;
 
@@ -116,6 +104,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
           gnngeo.getTrigFTF_GNN_LayerByKey(dst);
 
       if (pL1 == nullptr) {
+
         continue;
       }
 
@@ -128,6 +117,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
             gnngeo.getTrigFTF_GNN_LayerByKey(src);
 
         if (pL2 == nullptr) {
+
           continue;
         }
         int nDstBins = pL1->m_bins.size();
@@ -139,6 +129,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
               m_storage->getEtaBin(pL1->m_bins.at(b1));
 
           if (B1.empty()) {
+
             continue;
           }
 
@@ -150,6 +141,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
             if (m_config.m_useEtaBinning && (nSrcBins + nDstBins > 2)) {
               if (conn->m_binTable[b1 + b2 * nDstBins] != 1) {
+
                 continue;  // using precomputed LUT
               }
             }
@@ -158,6 +150,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                 m_storage->getEtaBin(pL2->m_bins.at(b2));
 
             if (B2.empty()) {
+
               continue;
             }
 
@@ -183,6 +176,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
               TrigFTF_GNN_Node<external_spacepoint_t>* n1 = (*n1It);
 
               if (n1->m_in.size() >= MAX_SEG_PER_NODE) {
+
                 continue;
               }
 
@@ -203,6 +197,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                 if (phi2 < minPhi) {
                   first_it = n2PhiIdx;
+
                   continue;
                 }
                 if (phi2 > maxPhi) {
@@ -213,9 +208,11 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                     B2.m_vn.at(B2.m_vPhiNodes.at(n2PhiIdx).second);
 
                 if (n2->m_out.size() >= MAX_SEG_PER_NODE) {
+
                   continue;
                 }
                 if (n2->isFull()) {
+
                   continue;
                 }
 
@@ -223,7 +220,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                 float dr = r2 - r1;
 
-                if (dr < m_config.m_minDeltaRadius) {
+                if (dr < m_config.m_minDeltaRadius) { 
                   continue;
                 }
 
@@ -232,7 +229,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                 float dz = z2 - z1;
                 float tau = dz / dr;
                 float ftau = std::fabs(tau);
-                if (ftau > 36.0) {
+                if (ftau > 36.0) { 
                   continue;
                 }
 
@@ -253,12 +250,17 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                   float z0 = z1 - r1 * tau;
 
                   if (z0 < min_z0 || z0 > max_z0) {
+
                     continue;
                   }
 
-                  float zouter = z0 + maxOuterRadius * tau;
+                  float zouter = z0 + m_config.maxOuterRadius * tau;
+                  // std::cout << "zouter: " << zouter << std::endl ; 
+                  // std::cout << "tau: " << tau << std::endl ; 
+
 
                   if (zouter < cut_zMinU || zouter > cut_zMaxU) {
+
                     continue;
                   }
                 }
@@ -276,6 +278,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                 if (ftau < 4.0) {  // eta = 2.1
                   if (kappa > maxKappa_low_eta) {
+
                     continue;
                   }
 
@@ -288,6 +291,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                 // match edge candidate against edges incoming to n2
 
                 float exp_eta = std::sqrt(1 + tau * tau) - tau;
+                // std::cout << "exp eta : " << exp_eta << std::endl ; 
 
                 bool isGood =
                     n2->m_in.size() <=
@@ -295,13 +299,17 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                 if (!isGood) {
                   float uat_1 = 1.0f / exp_eta;
+                  // std::cout << "uat : " << uat_1 << std::endl ; 
 
                   for (const auto& n2_in_idx : n2->m_in) {
                     float tau2 = edgeStorage.at(n2_in_idx).m_p[0];
                     float tau_ratio = tau2 * uat_1 - 1.0f;
+                    // std::cout << "tau ratio : " << tau_ratio << std::endl ; 
 
-                    if (std::fabs(tau_ratio) > cut_tau_ratio_max) {  // bad
+
+                    if (std::fabs(tau_ratio) > m_config.cut_tau_ratio_max) {  // bad
                                                                      // match
+                      
                       continue;
                     }
                     isGood = true;  // good match found
@@ -309,6 +317,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                   }
                 }
                 if (!isGood) {
+
                   continue;  // no moatch found, skip creating [n1 <- n2] edge
                 }
 
@@ -316,7 +325,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                 float dPhi2 = std::asin(curv * r2);
                 float dPhi1 = std::asin(curv * r1);
 
-                if (nEdges < MaxEdges) {
+                if (nEdges < m_config.MaxEdges) {
                   edgeStorage.emplace_back(n1, n2, exp_eta, curv, phi1 + dPhi1,
                                            phi2 + dPhi2);
 
@@ -395,11 +404,12 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
         float tau2 = pNS->m_p[0];
         float tau_ratio = tau2 * uat_1 - 1.0f;
 
-        if (tau_ratio < -cut_tau_ratio_max) {
+        if (tau_ratio < -m_config.cut_tau_ratio_max) {
           last_out = out_idx;
+
           continue;
         }
-        if (tau_ratio > cut_tau_ratio_max) {
+        if (tau_ratio > m_config.cut_tau_ratio_max) {
           break;
         }
 
@@ -411,14 +421,16 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
           dPhi -= 2 * M_PI;
         }
 
-        if (dPhi < -cut_dphi_max || dPhi > cut_dphi_max) {
+        if (dPhi < -m_config.cut_dphi_max || dPhi > m_config.cut_dphi_max) {
+
           continue;
         }
 
         float curv2 = pNS->m_p[1];
         float dcurv = curv2 - curv1;
 
-        if (dcurv < -cut_dcurv_max || dcurv > cut_dcurv_max) {
+        if (dcurv < -m_config.cut_dcurv_max || dcurv > m_config.cut_dcurv_max) {
+
           continue;
         }
 
@@ -442,6 +454,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
     Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS =
         &(edgeStorage.at(edgeIndex));
     if (pS->m_nNei == 0) {
+
       continue;
     }
     v_old.push_back(pS);  // TO-DO: increment level for segments as they already
@@ -497,13 +510,14 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
   std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>*> vSeeds;
 
-  vSeeds.reserve(MaxEdges / 2);
+  vSeeds.reserve(m_config.MaxEdges / 2);
 
   for (int edgeIndex = 0; edgeIndex < nEdges; edgeIndex++) {
     Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS =
         &(edgeStorage.at(edgeIndex));
 
     if (pS->m_level < minLevel) {
+
       continue;
     }
 
@@ -527,6 +541,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
   for (auto pS : vSeeds) {
     if (pS->m_level == -1) {
+
       continue;
     }
 
@@ -535,10 +550,12 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
     tFilter.followTrack(pS, rs);
 
     if (!rs.m_initialized) {
+
       continue;
     }
 
     if (static_cast<int>(rs.m_vs.size()) < minLevel) {
+
       continue;
     }
 
@@ -556,6 +573,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
     }
 
     if (vSP.size() < 3) {
+
       continue;
     }
 
@@ -716,10 +734,54 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
     const external_spacepoint_t* S1 = triplet.s1().SP ;//triplet-> FTF_SP-> simspacepoint 
     const external_spacepoint_t* S2 = triplet.s2().SP ;
     const external_spacepoint_t* S3 = triplet.s3().SP ;
+
+    // //trying to calculate vertex, s2 and 3 for now 
+    // float xM = S2->x() ; 
+    // float yM = S2->y() ; 
+    // float zM = S2->z() ; 
+    // float rM = S2->r() ; 
+    // // float vrM = S2->varianceR() ; 
+    // // float vzM = S2->varianceZ() ; 
+
+    // float xB = S3->x() ; 
+    // float yB = S3->y() ; 
+    // float zB = S3->z() ; 
+    // float rB = S3->r() ; 
+    // // float vrB = S3->varianceR() ; 
+    // // float vzB = S3->varianceZ() ; 
+  
+    // float cosPhiM = xM / rM;
+    // float sinPhiM = yM / rM;
+
+    // float deltaX = xB - xM;
+    // float deltaY = yB - yM;
+    // float deltaZ = zB - zM;
+    
+    // float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+    // float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+
+    // float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
+    // float iDeltaR2 = 1. / deltaR2;
+    // float iDeltaR = std::sqrt(iDeltaR2);
+    // float bottomFactor = -1 ; //conditional always set to true in ortho int bottomFactor = bottom ? -1 : 1;
+
+    // float cotTheta = deltaZ * iDeltaR * bottomFactor ;
+    // float Vertex = zM - rM * cotTheta ; 
+    // std::cout << "chekcing vertex " << Vertex << std::endl ; 
+    // std::fstream fout;
+    // fout.open("seeds.csv", std::ios::out | std::ios::app);  
+    // fout << (zM+zB)/2 << ", " << (rM+rB)/2  << "\n";
+ 
+    //input to seed 
     float Vertex = 0 ; 
     float Quality = triplet.Q() ; 
     //make a new seed, add to vector of seeds 
     out_cont.emplace_back(*S1,*S2,*S3,Vertex,Quality) ; 
+    
+
+
+
+
   }
 }
 

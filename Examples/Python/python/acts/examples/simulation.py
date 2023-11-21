@@ -774,7 +774,7 @@ def addDigitization(
     rnd = rnd or acts.examples.RandomNumbers()
 
     # Digitization
-    print(type(str(digiConfigFile)))
+    # print(type(str(digiConfigFile)))
     digiCfg = acts.examples.DigitizationConfig(
         acts.examples.readDigiConfigFromJson(
             str(digiConfigFile),

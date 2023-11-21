@@ -98,14 +98,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
 
   //cluster width 
-  const ClusterContainer* clusters = &m_inputClusters(ctx) ;
+  // const ClusterContainer* clusters = &m_inputClusters(ctx) ;
 
-  for (const auto& sp : FTF_spacePoints){
-    const auto& sl = sp.SP->sourceLinks().front().get<IndexSourceLink>() ; 
-    const auto& cluster = clusters->at(sl.index()) ; 
-    std::cout << "testing 0: " << cluster.sizeLoc0 << " 1: " << cluster.sizeLoc1 << std::endl ; 
+  // for (const auto& sp : FTF_spacePoints){
+  //   const auto& sl = sp.SP->sourceLinks().front().get<IndexSourceLink>() ; 
+  //   const auto& cluster = clusters->at(sl.index()) ; 
+  //   std::cout << "testing 0: " << cluster.sizeLoc0 << " 1: " << cluster.sizeLoc1 << std::endl ; 
 
-  }
+  // }
 
 
   for (auto sp : FTF_spacePoints) {
@@ -135,9 +135,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
   finder.loadSpacePoints(FTF_spacePoints);
 
+  //trigFTF file : 
   Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0,
                                   150.0);
-
+  //ROI file: 
+  // Acts::RoiDescriptor internalRoi(0, -5, 5, 0, -M_PI, M_PI, 0, -225.0,
+  //                                 225.0);
 
   //new version returns seeds 
   SimSeedContainer seeds = finder.createSeeds(internalRoi, *mGNNgeo);

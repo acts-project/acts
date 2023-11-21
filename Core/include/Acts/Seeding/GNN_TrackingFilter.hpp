@@ -163,7 +163,7 @@ class TrigFTF_GNN_TrackingFilter {
     new_ts.clone(ts);
 
     new_ts.m_vs.push_back(pS);
-    // std::cout << "before calling update " << std::endl ; 
+
     bool accepted = update(pS, new_ts);  // update using n1 of the segment
 
     if (!accepted) {
@@ -221,7 +221,6 @@ class TrigFTF_GNN_TrackingFilter {
               TrigFTF_GNN_EdgeState<external_spacepoint_t>& ts) {
     const float sigma_t = 0.0003;
     const float sigma_w = 0.00009;
-
     const float sigmaMS = 0.016;
 
     const float sigma_x = 0.25;  // was 0.22
@@ -232,6 +231,7 @@ class TrigFTF_GNN_TrackingFilter {
 
     const float maxDChi2_x = 60.0;  // 35.0;
     const float maxDChi2_y = 60.0;  // 31.0;
+
 
     const float add_hit = 14.0;
 
@@ -249,8 +249,6 @@ class TrigFTF_GNN_TrackingFilter {
     ts.m_Cx[1][1] += sigma_t * sigma_t;
 
     int type1 = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
-    // int type1 = 0;
-
 
     float t2 = type1 == 0 ? 1.0 + ts.m_Y[1] * ts.m_Y[1]
                           : 1.0 + 1.0 / (ts.m_Y[1] * ts.m_Y[1]);
@@ -288,7 +286,6 @@ class TrigFTF_GNN_TrackingFilter {
     X[1] = ts.m_X[1] + ts.m_X[2] * A;
     X[2] = ts.m_X[2];
 
-
     Cx[0][0] = ts.m_Cx[0][0] + 2 * ts.m_Cx[0][1] * A + 2 * ts.m_Cx[0][2] * B + 
                           A * A * ts.m_Cx[1][1] + 2 * A * B * ts.m_Cx[1][2] + 
                           B * B * ts.m_Cx[2][2];
@@ -305,7 +302,6 @@ class TrigFTF_GNN_TrackingFilter {
 
     Cx[2][2] = ts.m_Cx[2][2];
 
-
     Y[0] = ts.m_Y[0] + ts.m_Y[1] * dr;
     
     Y[1] = ts.m_Y[1];
@@ -317,9 +313,12 @@ class TrigFTF_GNN_TrackingFilter {
     Cy[1][1] = ts.m_Cy[1][1];
 
     // chi2 test
-
     float resid_x = mx - X[0];
     float resid_y = my - Y[0];
+    //this helps not have FPES 
+    if (isnan(resid_x) || isinf(resid_x) ){
+      std::cout << " resid_x inf issue" << std::endl  ;
+    }
 
     float CHx[3] = {Cx[0][0], Cx[0][1], Cx[0][2]};
     float CHy[2] = {Cy[0][0], Cy[0][1]};
@@ -327,35 +326,18 @@ class TrigFTF_GNN_TrackingFilter {
     float sigma_rz = 0.0;
     
     int type = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
-    // int type = 0;
-
-    // std::cout << "checking type of type: " << type << typeid(type).name() << std::endl ; 
 
     if (type == 0) {  // barrel TO-DO:c split into barrel Pixel and barrel SCT
       sigma_rz = sigma_y * sigma_y;
     } else {
       sigma_rz = sigma_y * ts.m_Y[1];
       sigma_rz = sigma_rz * sigma_rz;
-    }
-
+    }    
 
     float Dx = 1.0 / (Cx[0][0] + sigma_x * sigma_x);
-    // float Dx = 1.0 / (Cx[0][0] + 0.0625);
-    // std::cout << "checking type of Dx: " << Dx << typeid(Dx).name() << std::endl ; 
-    // std::cout << "checking  Dx: " << Dx_old  << std::endl ; 
-
 
     float Dy = 1.0 / (Cy[0][0] + sigma_rz);
-    // std::cout << "checking  Dy: " << Dy  << std::endl ; 
-        
-    // float dchi2_x = 0.0;
-    // if (isnan(resid_x * resid_x * Dx) || isinf(resid_x * resid_x * Dx) ){
-    //   std::cout << "inf issue" << std::endl  ;
-    //   // std::cout << "input res: " << resid_x << " input d: " << Dx << std::endl  ;
-    //   return false ; 
-    // } else {
-    //   dchi2_x = resid_x * resid_x * Dx; 
-    // }  
+
     float dchi2_x = resid_x * resid_x * Dx; 
 
     float dchi2_y = resid_y * resid_y * Dy;
@@ -385,15 +367,12 @@ class TrigFTF_GNN_TrackingFilter {
 
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 2; j++) {
-        // std::cout << "checking type of Cy in loop: " <<  Cy[i][j] << "ky" << Ky[i] << "CH" << CHy[j]<< std::endl ; // numbers look fine 
         ts.m_Cy[i][j] = Cy[i][j] - Ky[i] * CHy[j];
-        // std::cout << "checking type of mCy in loop: " <<  ts.m_Cy[i][j]  << std::endl ; 
       }
     }
 
     ts.m_refX = refX;
     ts.m_refY = refY;
-
 
     return true;
   }
