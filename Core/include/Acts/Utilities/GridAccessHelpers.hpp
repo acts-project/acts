@@ -41,7 +41,6 @@ void fillCasts(const Vector3& position, const cast_container& globalCasts,
 /// @tparam Array is the array type to be filled
 ///
 /// @param position is the position of the update call
-/// @param transform is the transform from global to local frame
 /// @param globalCasts is the cast value vector from global to grid position
 ///
 /// @return a grid point in an appropriate format
