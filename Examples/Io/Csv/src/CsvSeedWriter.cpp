@@ -138,7 +138,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
       }
     }
     // Store the global position of the space points
-    std::vector<Acts::Vector3> globalPosition;
+    boost::container::small_vector<Acts::Vector3, 3> globalPosition;
     for (auto spacePointPtr : seed.sp()) {
       Acts::Vector3 pos(spacePointPtr->x(), spacePointPtr->y(),
                         spacePointPtr->z());

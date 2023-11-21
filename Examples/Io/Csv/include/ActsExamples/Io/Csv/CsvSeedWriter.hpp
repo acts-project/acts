@@ -97,7 +97,7 @@ class CsvSeedWriter : public WriterT<TrackParametersContainer> {
     float seedEta = 0;
     float vertexZ = 0;
     float quality = -1;
-    std::vector<Acts::Vector3> globalPosition;
+    boost::container::small_vector<Acts::Vector3, 3> globalPosition;
     float truthDistance = -1;
     std::string seedType = "unknown";
     ProtoTrack measurementsID;
