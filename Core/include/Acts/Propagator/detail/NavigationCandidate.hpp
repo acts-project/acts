@@ -99,8 +99,11 @@ void emplaceAllVolumeCandidates(
         continue;
       }
 
-      addCandidate(layer.get(), &layer->surfaceRepresentation(),
-                   BoundaryCheck(true));
+      if (!resolveSensitive ||
+          layer->surfaceRepresentation().surfaceMaterial() != nullptr) {
+        addCandidate(layer.get(), &layer->surfaceRepresentation(),
+                     BoundaryCheck(true));
+      }
 
       if (layer->approachDescriptor() != nullptr) {
         const auto& approaches =

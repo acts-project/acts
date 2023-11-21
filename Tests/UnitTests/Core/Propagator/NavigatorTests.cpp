@@ -674,10 +674,15 @@ BOOST_AUTO_TEST_CASE(Navigator_postStep) {
 
 using SurfaceCollector = SurfaceCollector<SurfaceSelector>;
 
-std::vector<GeometryIdentifier> collectGeoIds(
+std::vector<GeometryIdentifier> collectRelevantGeoIds(
     const SurfaceCollector::result_type& surfaceHits) {
   std::vector<GeometryIdentifier> geoIds;
   for (const auto& surfaceHit : surfaceHits.collected) {
+    auto geoId = surfaceHit.surface->geometryId();
+    auto material = surfaceHit.surface->surfaceMaterial();
+    if (geoId.sensitive() == 0 && material == nullptr) {
+      continue;
+    }
     geoIds.push_back(surfaceHit.surface->geometryId());
   }
   return geoIds;
@@ -718,8 +723,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
   auto fwdResult = prop.propagate(start, fwdOptions).value();
   auto fwdSurfaceHits =
       fwdResult.template get<SurfaceCollector::result_type>().collected;
-  auto fwdSurfaces =
-      collectGeoIds(fwdResult.template get<SurfaceCollector::result_type>());
+  auto fwdSurfaces = collectRelevantGeoIds(
+      fwdResult.template get<SurfaceCollector::result_type>());
 
   // get the forward output to the screen
   if (debugMode) {
@@ -754,8 +759,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
           .value();
   auto bwdSurfaceHits =
       bwdResult.template get<SurfaceCollector::result_type>().collected;
-  auto bwdSurfaces =
-      collectGeoIds(bwdResult.template get<SurfaceCollector::result_type>());
+  auto bwdSurfaces = collectRelevantGeoIds(
+      bwdResult.template get<SurfaceCollector::result_type>());
 
   // get the backward output to the screen
   if (debugMode) {
@@ -769,12 +774,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // forward-backward compatibility test
   {
-    // remove the undefined surface and reverse to make comparable
-    auto fwdTmp = std::vector(fwdSurfaces.begin() + 1, fwdSurfaces.end());
-    auto bwdTmp = std::vector(bwdSurfaces.begin() + 1, bwdSurfaces.end());
-    std::reverse(bwdTmp.begin(), bwdTmp.end());
-    BOOST_CHECK_EQUAL_COLLECTIONS(bwdTmp.begin(), bwdTmp.end(), fwdTmp.begin(),
-                                  fwdTmp.end());
+    std::reverse(bwdSurfaces.begin(), bwdSurfaces.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(bwdSurfaces.begin(), bwdSurfaces.end(),
+                                  fwdSurfaces.begin(), fwdSurfaces.end());
   }
 
   // stepping from one surface to the next
@@ -805,8 +807,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
     auto fwdStep =
         prop.propagate(sParameters, *fwdSteps.surface, fwdStepOptions).value();
 
-    auto fwdStepSurfacesTmp =
-        collectGeoIds(fwdStep.template get<SurfaceCollector::result_type>());
+    auto fwdStepSurfacesTmp = collectRelevantGeoIds(
+        fwdStep.template get<SurfaceCollector::result_type>());
     fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
                            fwdStepSurfacesTmp.end());
 
@@ -825,8 +827,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
   }
   auto fwdStepFinal =
       prop.propagate(sParameters, dSurface, fwdStepOptions).value();
-  auto fwdStepSurfacesTmp =
-      collectGeoIds(fwdStepFinal.template get<SurfaceCollector::result_type>());
+  auto fwdStepSurfacesTmp = collectRelevantGeoIds(
+      fwdStepFinal.template get<SurfaceCollector::result_type>());
   fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
                          fwdStepSurfacesTmp.end());
 
@@ -860,8 +862,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
     auto bwdStep =
         prop.propagate(sParameters, *bwdSteps.surface, bwdStepOptions).value();
 
-    auto bwdStepSurfacesTmp =
-        collectGeoIds(bwdStep.template get<SurfaceCollector::result_type>());
+    auto bwdStepSurfacesTmp = collectRelevantGeoIds(
+        bwdStep.template get<SurfaceCollector::result_type>());
     bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
                            bwdStepSurfacesTmp.end());
 
@@ -880,8 +882,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
   }
   auto bwdStepFinal =
       prop.propagate(sParameters, dbSurface, bwdStepOptions).value();
-  auto bwdStepSurfacesTmp =
-      collectGeoIds(bwdStepFinal.template get<SurfaceCollector::result_type>());
+  auto bwdStepSurfacesTmp = collectRelevantGeoIds(
+      bwdStepFinal.template get<SurfaceCollector::result_type>());
   bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
                          bwdStepSurfacesTmp.end());
 
@@ -926,8 +928,8 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
     fwdSurfaceCollector.selector.selectPassive = true;
 
     auto fwdResult = prop.propagate(start, fwdOptions).value();
-    auto fwdSurfaces =
-        collectGeoIds(fwdResult.template get<SurfaceCollector::result_type>());
+    auto fwdSurfaces = collectRelevantGeoIds(
+        fwdResult.template get<SurfaceCollector::result_type>());
 
     // get the forward output to the screen
     if (debugMode) {
@@ -962,7 +964,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
                                 refSurfaces.begin(), refSurfaces.end());
 }
 
-int ntests = 80;
+int ntests = 500;
 int skip = 0;
 bool debugMode = false;
 
@@ -983,39 +985,35 @@ StraightLineStepper slstepper;
 EigenPropagator epropagator(estepper,
                             Navigator({tGeometry, true, true, true,
                                        BoundaryCheck(false)},
-                                      getDefaultLogger("nav", Logging::INFO)),
-                            getDefaultLogger("prop", Logging::INFO));
+                                      getDefaultLogger("e_nav", Logging::INFO)),
+                            getDefaultLogger("e_prop", Logging::INFO));
 StraightLinePropagator slpropagator(
     slstepper,
     Navigator({tGeometry, true, true, true, BoundaryCheck(false)},
-              getDefaultLogger("nav", Logging::INFO)),
-    getDefaultLogger("prop", Logging::INFO));
+              getDefaultLogger("sl_nav", Logging::INFO)),
+    getDefaultLogger("sl_prop", Logging::INFO));
 
 Reference1EigenPropagator refepropagator1(
     estepper,
-    TryAllNavigator({tGeometry, true, true, true,
-                     BoundaryCheck(true, true, 1, 1)},
-                    getDefaultLogger("nav", Logging::INFO)),
-    getDefaultLogger("prop", Logging::INFO));
+    TryAllNavigator({tGeometry, true, true, true, BoundaryCheck(false)},
+                    getDefaultLogger("refe1_nav", Logging::INFO)),
+    getDefaultLogger("refe1_prop", Logging::INFO));
 Reference1StraightLinePropagator refslpropagator1(
     slstepper,
-    TryAllNavigator({tGeometry, true, true, true,
-                     BoundaryCheck(true, true, 1, 1)},
-                    getDefaultLogger("nav", Logging::INFO)),
-    getDefaultLogger("prop", Logging::INFO));
+    TryAllNavigator({tGeometry, true, true, true, BoundaryCheck(false)},
+                    getDefaultLogger("refsl1_nav", Logging::INFO)),
+    getDefaultLogger("refsl1_prop", Logging::INFO));
 
 Reference2EigenPropagator refepropagator2(
     estepper,
-    TryAllOverstepNavigator({tGeometry, true, true, true,
-                             BoundaryCheck(true, true, 1, 1)},
-                            getDefaultLogger("nav", Logging::INFO)),
-    getDefaultLogger("prop", Logging::INFO));
+    TryAllOverstepNavigator({tGeometry, true, true, true, BoundaryCheck(false)},
+                            getDefaultLogger("refe2_nav", Logging::INFO)),
+    getDefaultLogger("refe2_prop", Logging::INFO));
 Reference2StraightLinePropagator refslpropagator2(
     slstepper,
-    TryAllOverstepNavigator({tGeometry, true, true, true,
-                             BoundaryCheck(true, true, 1, 1)},
-                            getDefaultLogger("nav", Logging::INFO)),
-    getDefaultLogger("prop", Logging::INFO));
+    TryAllOverstepNavigator({tGeometry, true, true, true, BoundaryCheck(false)},
+                            getDefaultLogger("refsl2_nav", Logging::INFO)),
+    getDefaultLogger("refsl2_prop", Logging::INFO));
 
 BOOST_DATA_TEST_CASE(
     Navigator_random,

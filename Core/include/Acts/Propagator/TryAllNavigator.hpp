@@ -220,10 +220,13 @@ class TryAllNavigator {
           state.geoContext, position, direction, boundaryCheck,
           state.options.surfaceTolerance)[index];
 
-      nearLimit = std::min(nearLimit, intersection.pathLength() -
-                                          state.options.surfaceTolerance);
+      if (intersection.pathLength() < 0) {
+        ACTS_VERBOSE(volInfo(state) << "handle overstepping");
 
-      state.navigation.intersectionCandidates.clear();
+        nearLimit = std::min(nearLimit, intersection.pathLength() -
+                                            state.options.surfaceTolerance);
+        farLimit = -state.options.surfaceTolerance;
+      }
     }
 
     std::vector<IntersectionCandidate> intersectionCandidates;
@@ -266,8 +269,10 @@ class TryAllNavigator {
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
-        ACTS_ERROR(volInfo(state) << "We are on surface before trying to reach "
-                                     "it. This should not happen. Good luck.");
+        ACTS_ERROR(volInfo(state)
+                   << "We are on surface " << surface.geometryId()
+                   << " before trying to reach "
+                      "it. This should not happen. Good luck.");
         continue;
       }
 
@@ -323,6 +328,8 @@ class TryAllNavigator {
       return true;
     }
 
+    state.navigation.intersectionCandidates.clear();
+
     ACTS_VERBOSE(volInfo(state)
                  << "Found " << hitCandidates.size()
                  << " intersections on surface without bounds check.");
@@ -344,8 +351,6 @@ class TryAllNavigator {
 
       trueHitCandidates.emplace_back(candidate);
     }
-
-    state.navigation.intersectionCandidates.clear();
 
     ACTS_VERBOSE(volInfo(state)
                  << "Found " << trueHitCandidates.size()

@@ -243,8 +243,10 @@ class TryAllOverstepNavigator {
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
-        ACTS_ERROR(volInfo(state) << "We are on surface before trying to reach "
-                                     "it. This should not happen. Good luck.");
+        ACTS_ERROR(volInfo(state)
+                   << "We are on surface " << surface.geometryId()
+                   << " before trying to reach "
+                      "it. This should not happen. Good luck.");
         ++state.navigation.activeCandidateIndex;
         continue;
       }
