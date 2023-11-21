@@ -57,6 +57,7 @@ inline BinningValue stringToBinningValue(const std::string &binningString) {
 /// e.g. "r,z" -> {binR, binZ}
 ///
 /// @param binningString
+/// @param del the delimiter for the splitting
 ///
 /// @return a vector of binninng values
 inline std::vector<BinningValue> stringToBinningValues(
