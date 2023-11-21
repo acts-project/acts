@@ -170,6 +170,7 @@ addSeeding(
     else TruthSeedRanges(),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
+    # outputDirCsv=outputDir,
 )
 if seedFilter_ML:
     addSeedFilterML(
