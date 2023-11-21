@@ -86,7 +86,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
     std::vector<ProtoBinning> binnings = {};
-    /// Minimum number os surfaces to build an internal structure
+    /// Minimum number of surfaces to build an internal structure
     /// - otherwise the tryAll options is used
     unsigned int nMinimalSurfaces = 4u;
     /// Polyhedron approximations
