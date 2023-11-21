@@ -143,9 +143,13 @@ class AdaptiveMultiVertexFinder {
     // Use seed vertex as a constraint for the fit
     bool useSeedConstraint = true;
 
-    // Diagonal constraint covariance entries in case
-    // no beamspot constraint is provided
-    double looseConstrValue = 1e+8;
+    // Initial variance of the vertex position in case no beamspot constraint is
+    // provided
+    double initialSpatialVariance = 1e+8;
+
+    // Initial variance of the vertex time in case no beamspot constraint is
+    // provided
+    double initialTemporalVariance = 1e+8;
 
     // Default fitQuality for constraint vertex in case no beamspot
     // constraint is provided

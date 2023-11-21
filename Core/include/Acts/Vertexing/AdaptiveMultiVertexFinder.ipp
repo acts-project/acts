@@ -185,8 +185,12 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     }
   } else {
     currentConstraint.setFullPosition(seedVertex.fullPosition());
-    currentConstraint.setFullCovariance(SquareMatrix4::Identity() *
-                                        m_cfg.looseConstrValue);
+    // Default initial variances (i.e., diagonal elements of the covariance
+    // matrix)
+    Vector4 variances(
+        m_cfg.initialSpatialVariance, m_cfg.initialSpatialVariance,
+        m_cfg.initialSpatialVariance, m_cfg.initialTemporalVariance);
+    currentConstraint.setFullCovariance(variances.asDiagonal());
     currentConstraint.setFitQuality(m_cfg.defaultConstrFitQuality);
   }
 }
