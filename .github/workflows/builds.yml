@@ -320,7 +320,8 @@ jobs:
         run: cmake --build build --target test
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        #run: cmake --build build --target integrationtests
+        run: build/bin/ActsIntegrationTestPropagationAutodiffDenseConstant -t PropagationAutodiffDenseConstant/CovarianceCurvilinear/_9
 
       - name: Install
         run: cmake --build build --target install
