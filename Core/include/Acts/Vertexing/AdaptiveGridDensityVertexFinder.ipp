@@ -1,15 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <int trkGridSize, typename vfitter_t>
-auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
-    const std::vector<const InputTrack_t*>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
+template <int spatialTrkGridSize, int temporalTrkGridSize, typename vfitter_t>
+auto Acts::AdaptiveGridDensityVertexFinder<
+    spatialTrkGridSize, temporalTrkGridSize,
+    vfitter_t>::find(const std::vector<const InputTrack_t*>& trackVector,
+                     const VertexingOptions<InputTrack_t>& vertexingOptions,
+                     State& state) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
@@ -102,9 +104,11 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
   return seedVec;
 }
 
-template <int trkGridSize, typename vfitter_t>
-auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::
-    doesPassTrackSelection(const BoundTrackParameters& trk) const -> bool {
+template <int spatialTrkGridSize, int temporalTrkGridSize, typename vfitter_t>
+auto Acts::AdaptiveGridDensityVertexFinder<
+    spatialTrkGridSize, temporalTrkGridSize,
+    vfitter_t>::doesPassTrackSelection(const BoundTrackParameters& trk) const
+    -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
