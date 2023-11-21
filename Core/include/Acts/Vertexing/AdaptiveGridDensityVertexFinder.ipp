@@ -84,12 +84,9 @@ auto Acts::AdaptiveGridDensityVertexFinder<
     }
   }
 
-  // Construct output vertex
-  Vector4 seedPos = vertexingOptions.constraint.fullPosition();
-  seedPos(eZ) = z;
-  if constexpr (temporalTrkGridSize > 1) {
-    seedPos(eTime) = t;
-  }
+  // Construct output vertex, t will be 0 if temporalTrkGridSize == 1
+  Vector4 seedPos =
+      vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, t);
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
