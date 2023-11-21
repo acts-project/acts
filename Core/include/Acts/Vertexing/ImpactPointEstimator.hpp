@@ -87,6 +87,7 @@ class ImpactPointEstimator {
   /// @brief Constructor
   ///
   /// @param cfg Configuration object
+  /// @param logger Logging instance
   ImpactPointEstimator(const Config& cfg,
                        std::unique_ptr<const Logger> logger = getDefaultLogger(
                            "ImpactPointEstimator", Logging::INFO))
