@@ -219,8 +219,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
     if (m_cfg.binnings.empty()) {
       ACTS_DEBUG(
           "No surface binning provided, navigation will be 'tryAll' "
-          "(potentially "
-          "slow).");
+          "(potentially slow).");
     } else if (m_cfg.binnings.size() == 1u) {
       ACTS_DEBUG("- 1-dimensional surface binning detected.");
       // Capture the binning
