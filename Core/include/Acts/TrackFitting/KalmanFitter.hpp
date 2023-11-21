@@ -1150,63 +1150,9 @@ class KalmanFitter {
     kalmanActor.extensions = kfOptions.extensions;
     kalmanActor.actorLogger = m_actorLogger.get();
 
-    typename propagator_t::template action_list_t_result_t<
-        CurvilinearTrackParameters, Actors>
-        inputResult;
-
-    auto& r = inputResult.template get<KalmanFitterResult<traj_t>>();
-
-    r.fittedStates = &trackContainer.trackStateContainer();
-
-    // Run the fitter
-    auto result = m_propagator.template propagate(
-        sParameters, kalmanOptions, false, std::move(inputResult));
-
-    if (!result.ok()) {
-      ACTS_ERROR("Propagation failed: " << result.error());
-      return result.error();
-    }
-
-    auto& propRes = *result;
-
-    /// Get the result of the fit
-    auto kalmanResult = std::move(propRes.template get<KalmanResult>());
-
-    /// It could happen that the fit ends in zero measurement states.
-    /// The result gets meaningless so such case is regarded as fit failure.
-    if (kalmanResult.result.ok() && !kalmanResult.measurementStates) {
-      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
-    }
-
-    if (!kalmanResult.result.ok()) {
-      ACTS_ERROR("KalmanFilter failed: "
-                 << kalmanResult.result.error() << ", "
-                 << kalmanResult.result.error().message());
-      return kalmanResult.result.error();
-    }
-
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
-    track.tipIndex() = kalmanResult.lastMeasurementIndex;
-    if (kalmanResult.fittedParameters) {
-      const auto& params = kalmanResult.fittedParameters.value();
-      track.parameters() = params.parameters();
-      track.covariance() = params.covariance().value();
-      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
-    }
-
-    calculateTrackQuantities(track);
-
-    if (trackContainer.hasColumn(hashString("smoothed"))) {
-      track.template component<bool, hashString("smoothed")>() =
-          kalmanResult.smoothed;
-    }
-    if (trackContainer.hasColumn(hashString("reversed"))) {
-      track.template component<bool, hashString("reversed")>() =
-          kalmanResult.reversed;
-    }
-
-    // Return the converted Track
-    return track;
+    return fit_impl<start_parameters_t, Actors, Aborters, KalmanResult,
+                    track_container_t, holder_t>(sParameters, kalmanOptions,
+                                                 trackContainer);
   }
 
   /// Fit implementation of the forward filter, calls the
@@ -1252,7 +1198,7 @@ class KalmanFitter {
       const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
       // @TODO: This can probably change over to surface pointers as keys
       auto geoId = surface->geometryId();
-      inputMeasurements.emplace(geoId, sl);
+      inputMeasurements.emplace(geoId, std::move(sl));
     }
 
     // Create the ActionList and AbortList
@@ -1288,8 +1234,37 @@ class KalmanFitter {
         kalmanOptions.actionList.template get<DirectNavigator::Initializer>();
     dInitializer.navSurfaces = sSequence;
 
+    return fit_impl<start_parameters_t, Actors, Aborters, KalmanResult,
+                    track_container_t, holder_t>(sParameters, kalmanOptions,
+                                                 trackContainer);
+  }
+
+ private:
+  /// Common fit implementation
+  ///
+  /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam actor_list_t Type of the actor list
+  /// @tparam aborter_list_t Type of the abort list
+  /// @tparam kalman_result_t Type of the KF result
+  /// @tparam track_container_t Type of the track container backend
+  /// @tparam holder_t Type defining track container backend ownership
+  ///
+  /// @param sParameters The initial track parameters
+  /// @param kalmanOptions The Kalman Options
+  /// @param trackContainer Input track container storage to append into
+  ///
+  /// @return the output as an output track
+  template <typename start_parameters_t, typename actor_list_t,
+            typename aborter_list_t, typename kalman_result_t,
+            typename track_container_t, template <typename> class holder_t>
+  auto fit_impl(
+      const start_parameters_t& sParameters,
+      const PropagatorOptions<actor_list_t, aborter_list_t>& kalmanOptions,
+      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
+      -> Result<typename TrackContainer<track_container_t, traj_t,
+                                        holder_t>::TrackProxy> {
     typename propagator_t::template action_list_t_result_t<
-        CurvilinearTrackParameters, Actors>
+        CurvilinearTrackParameters, actor_list_t>
         inputResult;
 
     auto& r = inputResult.template get<KalmanFitterResult<traj_t>>();
@@ -1308,7 +1283,7 @@ class KalmanFitter {
     const auto& propRes = *result;
 
     /// Get the result of the fit
-    auto kalmanResult = propRes.template get<KalmanResult>();
+    auto kalmanResult = propRes.template get<kalman_result_t>();
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
@@ -1338,6 +1313,7 @@ class KalmanFitter {
       track.template component<bool, hashString("smoothed")>() =
           kalmanResult.smoothed;
     }
+
     if (trackContainer.hasColumn(hashString("reversed"))) {
       track.template component<bool, hashString("reversed")>() =
           kalmanResult.reversed;
