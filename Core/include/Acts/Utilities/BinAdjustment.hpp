@@ -266,8 +266,6 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface,
 
   throw std::invalid_argument(
       "Bin adjustment not implemented for this surface yet!");
-
-  return BinUtility();
 }
 
 }  // namespace Acts

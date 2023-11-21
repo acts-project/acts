@@ -67,29 +67,27 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(1._GeV, 30._GeV);
+std::uniform_real_distribution<double> pTDist(1._GeV, 30._GeV);
 // Track phi distribution
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
 // Track theta distribution
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
-std::uniform_real_distribution<> qDist(-1, 1);
+std::uniform_real_distribution<double> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100._um);
+std::uniform_real_distribution<double> resIPDist(0., 100._um);
 // Track angular distribution
-std::uniform_real_distribution<> resAngDist(0., 0.1);
+std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
-// Number of tracks distritbution
-std::uniform_int_distribution<> nTracksDist(3, 10);
+std::uniform_real_distribution<double> resQoPDist(-0.1, 0.1);
 
 /// @brief Unit test for AdaptiveMultiVertexFitter
 ///
@@ -442,7 +440,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
                                    covMat2, ParticleHypothesis::pion())
           .value(),
   };
-  std::vector<Vertex<BoundTrackParameters>*> vtxList;
 
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
       *bField, magFieldContext);
@@ -457,7 +454,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Vertex<BoundTrackParameters> vtx1(vtxPos1);
 
   // Add to vertex list
-  vtxList.push_back(&vtx1);
+  state.vertexCollection.push_back(&vtx1);
 
   // The constraint vtx for vtx1
   Vertex<BoundTrackParameters> vtx1Constr(vtxPos1);
@@ -484,7 +481,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Vertex<BoundTrackParameters> vtx2(vtxPos2);
 
   // Add to vertex list
-  vtxList.push_back(&vtx2);
+  state.vertexCollection.push_back(&vtx2);
 
   // The constraint vtx for vtx2
   Vertex<BoundTrackParameters> vtx2Constr(vtxPos2);
@@ -513,7 +510,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   state.addVertexToMultiMap(vtx2);
 
   // Fit vertices
-  fitter.fit(state, vtxList, linearizer, vertexingOptions);
+  fitter.fit(state, linearizer, vertexingOptions);
 
   auto vtx1Fitted = state.vertexCollection.at(0);
   auto vtx1PosFitted = vtx1Fitted->position();
