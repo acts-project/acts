@@ -255,7 +255,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
                           Acts::detail::AxisBoundaryType::Closed>(
                 gctx, internalSurfaces, assignToAll, binning0, binning1);
       } else {
-        ACTS_VERBOSE("-- closed/closed binning option.");
+        ACTS_VERBOSE("-- bound/bound binning option.");
         internalCandidatesUpdator =
             createUpdator<Acts::detail::AxisBoundaryType::Bound,
                           Acts::detail::AxisBoundaryType::Bound>(
