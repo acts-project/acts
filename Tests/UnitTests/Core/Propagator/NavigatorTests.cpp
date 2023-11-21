@@ -915,6 +915,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
   auto run = [&](const auto& prop) {
     // forward surface test
     Options fwdOptions(tgContext, mfContext);
+    fwdOptions.pathLimit = 25_cm;
     fwdOptions.maxStepSize = 1_cm;
 
     // get the surface collector and configure it

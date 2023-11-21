@@ -347,35 +347,72 @@ class TryAllOverstepNavigator {
         state.navigation.activeCandidates.size()) {
       ACTS_VERBOSE(volInfo(state) << "handle active candidates");
 
-      const auto& candidate = state.navigation.activeCandidate();
-      const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.representation();
+      std::vector<IntersectionCandidate> hitCandidates;
 
-      Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, surface, intersection.index(),
-          state.options.direction, BoundaryCheck(false),
-          state.options.surfaceTolerance, logger());
+      while (state.navigation.activeCandidateIndex !=
+             state.navigation.activeCandidates.size()) {
+        const auto& candidate = state.navigation.activeCandidate();
+        const auto& intersection = candidate.intersection;
+        const Surface& surface = *intersection.representation();
 
-      if (surfaceStatus != IntersectionStatus::onSurface) {
+        Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
+            state.stepping, surface, intersection.index(),
+            state.options.direction, BoundaryCheck(false),
+            state.options.surfaceTolerance, logger());
+
+        if (surfaceStatus != IntersectionStatus::onSurface) {
+          break;
+        }
+
+        hitCandidates.emplace_back(candidate);
+
+        ++state.navigation.activeCandidateIndex;
+      }
+
+      if (hitCandidates.empty()) {
         ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
         return result;
       }
 
-      ++state.navigation.activeCandidateIndex;
+      result = true;
+      state.navigation.lastIntersection.reset();
 
-      // TODO second intersection should not be necessary
-      surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, surface, intersection.index(),
-          state.options.direction, BoundaryCheck(true),
-          state.options.surfaceTolerance, logger());
+      std::vector<IntersectionCandidate> trueHitCandidates;
 
-      if (surfaceStatus != IntersectionStatus::onSurface) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Surface successfully hit, but outside bounds.");
-        return result;
+      for (const auto& candidate : hitCandidates) {
+        const auto& intersection = candidate.intersection;
+        const Surface& surface = *intersection.representation();
+
+        Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
+            state.stepping, surface, intersection.index(),
+            state.options.direction, BoundaryCheck(true),
+            state.options.surfaceTolerance, logger());
+
+        if (surfaceStatus != IntersectionStatus::onSurface) {
+          continue;
+        }
+
+        trueHitCandidates.emplace_back(candidate);
       }
 
-      result = true;
+      ACTS_VERBOSE(volInfo(state)
+                   << "Found " << trueHitCandidates.size()
+                   << " intersections on surface with bounds check.");
+
+      if (trueHitCandidates.empty()) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Surface successfully hit, but outside bounds.");
+        return true;
+      }
+
+      if (trueHitCandidates.size() > 1) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Only using first intersection within bounds.");
+      }
+
+      const auto& intersection = trueHitCandidates.front().intersection;
+      const Surface& surface = *intersection.representation();
+
       state.navigation.lastIntersection = intersection;
 
       ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
