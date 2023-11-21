@@ -66,10 +66,9 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
     double phi = params[i].parameters()[Acts::eBoundPhi];
 
     // Fill and weight the clustering inputs
-    clusteringParams.push_back({phi / m_cfg.clusteringWeighPhi, 
-                                eta / m_cfg.clusteringWeighEta, 
-                                seeds[i].z() / m_cfg.clusteringWeighZ,
-                                pT / m_cfg.clusteringWeighPt});
+    clusteringParams.push_back(
+        {phi / m_cfg.clusteringWeighPhi, eta / m_cfg.clusteringWeighEta,
+         seeds[i].z() / m_cfg.clusteringWeighZ, pT / m_cfg.clusteringWeighPt});
     // Fill the NN input
     networkInput.row(NNindex) << pT, eta, phi, seeds[i].sp()[0]->x(),
         seeds[i].sp()[0]->y(), seeds[i].sp()[0]->z(), seeds[i].sp()[1]->x(),

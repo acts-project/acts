@@ -40,7 +40,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   auto cluster = Acts::detail::clusterDuplicateTracks(trackMap);
   // Select the ID of the track we want to keep
   std::vector<int> goodTracks =
-      m_duplicateClassifier.solveAmbuguity(cluster, tracks);
+      m_duplicateClassifier.solveAmbiguity(cluster, tracks);
   // Prepare the output track collection from the IDs
   auto outputTracks = prepareOutputTrack(tracks, goodTracks);
   m_outputTracks(ctx, std::move(outputTracks));
