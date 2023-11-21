@@ -117,7 +117,7 @@ struct SeedFinderOrthogonalConfig {
   /// Parameter which can loosen the tolerance of the track seed to form a
   /// helix. This is useful for e.g. misaligned seeding.
   float helixCutTolerance = 1.;
-  
+
   /// Seeding parameters used for quality seed confirmation
 
   /// Enable quality seed confirmation, this is different than default seeding
