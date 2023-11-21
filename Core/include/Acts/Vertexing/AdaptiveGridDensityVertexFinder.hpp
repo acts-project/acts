@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -33,22 +33,31 @@ namespace Acts {
 /// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
 /// a single track is modelled as a (trkGridSize x trkGridSize) grid
 /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-template <int trkGridSize = 15, typename vfitter_t = DummyVertexFitter<>>
+template <int spatialTrkGridSize = 15, int temporalTrkGridSize = 1,
+          typename vfitter_t = DummyVertexFitter<>>
 class AdaptiveGridDensityVertexFinder {
-  // Assert odd trkGridSize
-  static_assert(trkGridSize % 2);
+  // Assert odd grid sizes
+  static_assert(spatialTrkGridSize % 2);
+  static_assert(temporalTrkGridSize % 2);
 
   using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
+  using GridDensity =
+      AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>;
 
  public:
   using DensityMap = typename GridDensity::DensityMap;
 
   /// @brief The Config struct
   struct Config {
-    ///@param binSize Bin size of grid in mm
-    Config(float binSize = 0.1)
-        : gridDensity(typename GridDensity::Config(binSize)) {}
+    /// @param spatialBinExtent_ The spatial extent of a bin in mm
+    Config(float spatialBinExtent = 0.1)
+        : gridDensity(typename GridDensity::Config(spatialBinExtent)) {}
+    /// @param spatialBinExtent_ The spatial extent of a bin in mm
+    /// @param temporalBinExtent_ The temporal extent of a bin in mm
+    /// @note The speed of light is set to 1, hence the unit.
+    Config(float spatialBinExtent, float temporalBinExtent)
+        : gridDensity(typename GridDensity::Config(spatialBinExtent,
+                                                   temporalBinExtent)) {}
     ///@param gDensity The grid density
     Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
 
