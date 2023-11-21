@@ -18,7 +18,9 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
@@ -328,4 +330,7 @@ class DiscSurface : public RegularSurface {
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, DiscSurface);
+
 }  // end of namespace Acts

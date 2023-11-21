@@ -56,7 +56,9 @@ struct GsfResult {
   std::vector<const Acts::Surface*> visitedSurfaces;
   std::vector<const Acts::Surface*> surfacesVisitedBwdAgain;
 
+  /// Statistics about encounterings of invalid bethe heitler approximations
   std::size_t nInvalidBetheHeitler = 0;
+  double maxPathXOverX0 = 0.0;
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
@@ -287,7 +289,7 @@ struct GsfActor {
       componentCache.clear();
 
       convoluteComponents(state, stepper, navigator, tmpStates, componentCache,
-                          result.nInvalidBetheHeitler);
+                          result);
 
       if (componentCache.empty()) {
         ACTS_WARNING(
@@ -328,7 +330,7 @@ struct GsfActor {
                            const navigator_t& navigator,
                            const TemporaryStates& tmpStates,
                            std::vector<ComponentCache>& componentCache,
-                           std::size_t& nInvalidBetheHeitler) const {
+                           result_type& result) const {
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       auto proxy = tmpStates.traj.getTrackState(idx);
@@ -338,7 +340,7 @@ struct GsfActor {
                                  stepper.particleHypothesis(state.stepping));
 
       applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
-                        componentCache, nInvalidBetheHeitler);
+                        componentCache, result);
     }
   }
 
@@ -348,7 +350,7 @@ struct GsfActor {
                          const BoundTrackParameters& old_bound,
                          const double old_weight,
                          std::vector<ComponentCache>& componentCaches,
-                         std::size_t& nInvalidBetheHeitler) const {
+                         result_type& result) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
 
@@ -357,22 +359,24 @@ struct GsfActor {
         old_bound.position(state.stepping.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
-    auto pathCorrection = surface.pathCorrection(
+    const auto pathCorrection = surface.pathCorrection(
         state.stepping.geoContext,
         old_bound.position(state.stepping.geoContext), old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
+    const double pathXOverX0 = slab.thicknessInX0();
+
     // Emit a warning if the approximation is not valid for this x/x0
-    if (!m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
-      ++nInvalidBetheHeitler;
+    if (!m_cfg.bethe_heitler_approx->validXOverX0(pathXOverX0)) {
+      ++result.nInvalidBetheHeitler;
+      result.maxPathXOverX0 = std::max(result.maxPathXOverX0, pathXOverX0);
       ACTS_DEBUG(
           "Bethe-Heitler approximation encountered invalid value for x/x0="
-          << slab.thicknessInX0() << " at surface " << surface.geometryId());
+          << pathXOverX0 << " at surface " << surface.geometryId());
     }
 
     // Get the mixture
-    const auto mixture =
-        m_cfg.bethe_heitler_approx->mixture(slab.thicknessInX0());
+    const auto mixture = m_cfg.bethe_heitler_approx->mixture(pathXOverX0);
 
     // Create all possible new components
     for (const auto& gaussian : mixture) {

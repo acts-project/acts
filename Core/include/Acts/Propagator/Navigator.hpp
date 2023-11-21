@@ -420,7 +420,7 @@ class Navigator {
                    << "No further navigation action, proceed to target.");
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
     }
 
     // Navigator target always resets the current surface
@@ -536,7 +536,6 @@ class Navigator {
               << "No more volume to progress to, stopping navigation.");
           // Navigation break & release navigation stepping
           state.navigation.navigationBreak = true;
-          stepper.releaseStepSize(state.stepping);
           return;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
@@ -562,7 +561,6 @@ class Navigator {
       }
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping);
     } else {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
@@ -649,7 +647,7 @@ class Navigator {
                      << "Start is target layer, nothing left to do.");
         // set the navigation break
         state.navigation.navigationBreak = true;
-        stepper.releaseStepSize(state.stepping);
+        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       }
       return startResolved;
     }
@@ -934,7 +932,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "No sufficient information to resolve boundary, "
                       "stopping navigation.");
-      stepper.releaseStepSize(state.stepping);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       return false;
     } else if (state.navigation.currentVolume ==
                state.navigation.targetVolume) {
@@ -942,7 +940,7 @@ class Navigator {
                    << "In target volume: no need to resolve boundary, "
                       "stopping navigation.");
       state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       return true;
     }
 
@@ -1275,7 +1273,7 @@ class Navigator {
     // Screen output - no layer candidates found
     ACTS_VERBOSE(volInfo(state) << "No compatible layer candidates found.");
     // Release the step size
-    stepper.releaseStepSize(state.stepping);
+    stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
     return false;
   }
 
