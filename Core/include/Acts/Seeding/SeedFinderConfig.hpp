@@ -172,12 +172,8 @@ struct SeedFinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
   // Delegate to apply experiment specific cuts
-  Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts =
-      []() {
-        Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> delegate;
-        delegate.connect<&noopExperimentCuts>();
-        return delegate;
-      }();
+  Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
+      DelegateTypeTag<&noopExperimentCuts>{}};
 
   bool isInInternalUnits = false;
 
