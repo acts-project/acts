@@ -48,7 +48,7 @@ class DuplicateClassifier(nn.Module):
         z = F.relu(self.linear1(z))
         z = F.relu(self.linear2(z))
         z = F.relu(self.linear3(z))
-        z = F.relu(self.linear4(z))        
+        z = F.relu(self.linear4(z))
         z = F.relu(self.linear5(z))
         return self.sigmoid(self.output(z))
 

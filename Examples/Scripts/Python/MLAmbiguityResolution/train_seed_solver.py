@@ -123,7 +123,7 @@ def computeLoss(
                 len(score_duplicate) + len(score_fake) + 1
             )
     batch_loss += margin_fake / (len(score_duplicate) + len(score_fake) + 1)
-    
+
     return batch_loss
 
 
@@ -295,7 +295,9 @@ def train(
 # ==================================================================
 
 # ttbar events used as the training input, here we assume 160 events are availables
-CKF_files = sorted(glob.glob("odd_output" + "/event000000[0-9][0-9][0-9]-seed_cleaned.csv"))
+CKF_files = sorted(
+    glob.glob("odd_output" + "/event000000[0-9][0-9][0-9]-seed_cleaned.csv")
+)
 data = readDataSet(CKF_files)
 # Prepare the data
 x_train, y_train = prepareTrainingData(data)
@@ -335,7 +337,9 @@ del duplicateClassifier
 # ==================================================================
 
 # ttbar events for the test, here we assume 40 events are availables
-CKF_files_test = sorted(glob.glob("odd_output" + "/event000001[0-0][0-9][0-9]-seed_cleaned.csv"))
+CKF_files_test = sorted(
+    glob.glob("odd_output" + "/event000001[0-0][0-9][0-9]-seed_cleaned.csv")
+)
 
 test = readDataSet(CKF_files_test)
 

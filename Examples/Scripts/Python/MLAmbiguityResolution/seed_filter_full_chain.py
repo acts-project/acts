@@ -336,12 +336,18 @@ plt.hist(
     label="good",
 )
 weightsDuplicate = np.ones_like(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "duplicate"]["score"]
+    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "duplicate"][
+        "score"
+    ]
 ) / len(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "duplicate"]["score"]
+    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "duplicate"][
+        "score"
+    ]
 )
 plt.hist(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "duplicate"]["score"],
+    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "duplicate"][
+        "score"
+    ],
     bins=100,
     weights=weightsDuplicate,
     alpha=0.65,
