@@ -96,7 +96,7 @@ class IndexedSurfaceMaterial : public ISurfaceMaterial {
                                    std::size_t bin1) const final {
     // Access via bin0 and bin1
     Acts::Vector2 lposition =
-        GridAccessHelpers::toLocal(m_grid, bin0, bin1, m_localAccessors);
+        GridAccessHelpers::toLocal(m_grid, bin0, bin1, m_localAccessors[0u]);
     return materialSlab(lposition);
   }
 

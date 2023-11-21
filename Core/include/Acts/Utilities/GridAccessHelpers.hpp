@@ -83,7 +83,7 @@ typename grid_type::point_t accessLocal(
   if constexpr (grid_type::DIM > 2u) {
     throw std::invalid_argument(
         "GridAccessHelper: only 1-D and 2-D grids are possible for local "
-        "ccess.");
+        "access.");
   }
   // Fill the grid point from local according to the accessors
   typename grid_type::point_t accessed{};
@@ -104,7 +104,7 @@ typename grid_type::point_t accessLocal(
 /// @param grid is the grid, we need the axes
 /// @param bin0 is the first bin
 /// @param bin1 is the second bin
-/// @param laccess the local accessors
+/// @param laccess the local accessors for 1D grid case
 ///
 /// @note this method is not very fast, it shall not be used for performance
 ///      critical code
@@ -112,26 +112,39 @@ typename grid_type::point_t accessLocal(
 /// @return a local position that can be looked up via accessLocal(...)
 template <typename grid_type>
 Vector2 toLocal(const grid_type& grid, std::size_t bin0, std::size_t bin1,
-                const std::vector<std::size_t>& laccess) {
+                std::size_t laccess = 0u) {
   Vector2 lposition{};
   auto gridAxes = grid.axes();
   // One-dimensional case, needs decision which one is assigned
   if constexpr (grid_type::DIM == 1u) {
-    // Get axes
-    std::size_t bin = laccess[0u] == 0u ? bin0 : bin1;
-    const auto& edges = gridAxes[laccess[0u]]->getBinEdges();
+    if (laccess > 1u) {
+      throw std::invalid_argument(
+          "GridAccessHelper: only 0u/1u are allowed for local access.");
+    }
+
+    // Get axis for bin edges
+    std::size_t bin = laccess == 0u ? bin0 : bin1;
+    const auto& edges = gridAxes[laccess]->getBinEdges();
     ActsScalar pval = 0.5 * (edges[bin] + edges[bin + 1]);
-    lposition[laccess[0u]] = pval;
+    lposition[laccess] = pval;
   }
   // Two-dimensional case, relatively straight forward
   if constexpr (grid_type::DIM == 2u) {
-    // Get axes
+    // Get axis for the bin edge
     const auto& edges0 = gridAxes[0u]->getBinEdges();
     const auto& edges1 = gridAxes[1u]->getBinEdges();
     ActsScalar pval0 = 0.5 * (edges0[bin0] + edges0[bin0 + 1u]);
     ActsScalar pval1 = 0.5 * (edges1[bin1] + edges1[bin1 + 1u]);
     lposition = {pval0, pval1};
   }
+
+  // Error for DIM > 2
+  if constexpr (grid_type::DIM > 2u) {
+    throw std::invalid_argument(
+        "GridAccessHelper: only 1-D and 2-D grids are possible for binned "
+        "access.");
+  }
+
   // Return the suitable local position
   return lposition;
 }
