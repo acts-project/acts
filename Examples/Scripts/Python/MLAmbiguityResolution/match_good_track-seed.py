@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 
-def matchGood(Seed_files: list[str], CKF_files: list[str]) -> pd.DataFrame:
+def matchGood(seed_files: list[str], ckf_files: list[str]) -> pd.DataFrame:
     """Read the dataset from the tracks and seeds files, then modify the seed dataset so that good seed correspond to the ones that lead to good tracks. Seed with truth id that do not lead to good tracks are considered as fake. Also create a new dataset with only truth particle associated to a good seeds."""
     """
     @param[in] Seed_files: List of files containing seeds data (1 file per events usually)
@@ -16,7 +16,7 @@ def matchGood(Seed_files: list[str], CKF_files: list[str]) -> pd.DataFrame:
     goodSeed = pd.DataFrame()
     data = pd.DataFrame()
     # Loop over the different track files and collect the list of seed ID associated to the good tracks
-    for f_ckf, f_seed in zip(CKF_files, Seed_files):
+    for f_ckf, f_seed in zip(ckf_files, seed_files):
         print("reading file: ", f_ckf, f_seed)
         data_track = pd.read_csv(f_ckf)
         data_track = data_track.loc[data_track["good/duplicate/fake"] == "good"]
@@ -67,5 +67,5 @@ def matchGood(Seed_files: list[str], CKF_files: list[str]) -> pd.DataFrame:
 # Read the seed and track files and match them
 # This will allow us to determine which seeds leads to the best possible tracks
 seed_files = sorted(glob.glob("odd_output" + "/event*-seed.csv"))
-CKF_files = sorted(glob.glob("odd_output" + "/event*-tracks_ckf.csv"))
-data = matchGood(seed_files, CKF_files)
+ckf_files = sorted(glob.glob("odd_output" + "/event*-tracks_ckf.csv"))
+data = matchGood(seed_files, ckf_files)

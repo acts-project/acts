@@ -82,7 +82,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     throw std::ios_base::failure("Could not open '" + path + "' to write");
   }
 
-  std::unordered_map<std::size_t, seedInfo> infoMap;
+  std::unordered_map<std::size_t, SeedInfo> infoMap;
   std::unordered_map<ActsFatras::Barcode, std::pair<std::size_t, float>>
       goodSeed;
 
@@ -146,7 +146,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     }
 
     // track info
-    seedInfo toAdd;
+    SeedInfo toAdd;
     toAdd.seedId = iparams;
     toAdd.particleId = majorityParticleId;
     toAdd.seedPt = std::abs(1.0 / params[Acts::eBoundQOverP]) *
