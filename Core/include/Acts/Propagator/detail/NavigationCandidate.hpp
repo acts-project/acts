@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Propagator/detail/AnyIntersection.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 
 #include <variant>
 
@@ -59,6 +60,74 @@ struct NavigationCandidate {
     throw std::runtime_error("unknown type");
   }
 };
+
+void emplaceAllVolumeCandidates(
+    std::vector<detail::NavigationCandidate>& candidates,
+    const TrackingVolume& volume, bool resolveSensitive, bool resolveMaterial,
+    bool resolvePassive, BoundaryCheck boundaryCheckSurfaceApproach,
+    const Logger& logger) {
+  auto addCandidate = [&](detail::NavigationCandidate::AnyObject object,
+                          const Surface* representation,
+                          BoundaryCheck boundaryCheck) {
+    candidates.emplace_back(object, representation, boundaryCheck);
+  };
+
+  // Find boundary candidates
+  {
+    ACTS_VERBOSE("Searching for boundaries.");
+
+    const auto& boundaries = volume.boundarySurfaces();
+
+    ACTS_VERBOSE("Found " << boundaries.size() << " boundaries.");
+
+    for (const auto& boundary : boundaries) {
+      addCandidate(boundary.get(), &boundary->surfaceRepresentation(),
+                   BoundaryCheck(true));
+    }
+  }
+
+  // Find layer candidates
+  {
+    ACTS_VERBOSE("Searching for layers.");
+
+    const auto& layers = volume.confinedLayers()->arrayObjects();
+
+    ACTS_VERBOSE("Found " << layers.size() << " layers.");
+
+    for (const auto& layer : layers) {
+      if (!layer->resolve(resolveSensitive, resolveMaterial, resolvePassive)) {
+        continue;
+      }
+
+      addCandidate(layer.get(), &layer->surfaceRepresentation(),
+                   BoundaryCheck(true));
+
+      if (layer->approachDescriptor() != nullptr) {
+        const auto& approaches =
+            layer->approachDescriptor()->containedSurfaces();
+
+        for (const auto& approach : approaches) {
+          addCandidate(layer.get(), approach, BoundaryCheck(true));
+        }
+      }
+
+      // Find surface candidates
+      {
+        ACTS_VERBOSE("Searching for surfaces.");
+
+        if (layer->surfaceArray() != nullptr) {
+          const auto& surfaces = layer->surfaceArray()->surfaces();
+
+          ACTS_VERBOSE("Found " << surfaces.size() << " surfaces.");
+
+          for (const auto& surface : surfaces) {
+            addCandidate(surface, surface, boundaryCheckSurfaceApproach);
+          }
+        }
+      }
+    }
+  }
+}
 
 }  // namespace detail
 }  // namespace Acts

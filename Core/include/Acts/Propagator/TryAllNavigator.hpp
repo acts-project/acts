@@ -410,72 +410,10 @@ class TryAllNavigator {
       return;
     }
 
-    auto addCandidate = [&](detail::NavigationCandidate::AnyObject object,
-                            const Surface* representation,
-                            BoundaryCheck boundaryCheck) {
-      state.navigation.navigationCandidates.emplace_back(object, representation,
-                                                         boundaryCheck);
-    };
-
-    // Find boundary candidates
-    {
-      ACTS_VERBOSE(volInfo(state) << "Searching for boundaries.");
-
-      const auto& boundaries = volume->boundarySurfaces();
-
-      ACTS_VERBOSE(volInfo(state)
-                   << "Found " << boundaries.size() << " boundaries.");
-
-      for (const auto& boundary : boundaries) {
-        addCandidate(boundary.get(), &boundary->surfaceRepresentation(),
-                     BoundaryCheck(true));
-      }
-    }
-
-    // Find layer candidates
-    {
-      ACTS_VERBOSE(volInfo(state) << "Searching for layers.");
-
-      const auto& layers = volume->confinedLayers()->arrayObjects();
-
-      ACTS_VERBOSE(volInfo(state) << "Found " << layers.size() << " layers.");
-
-      for (const auto& layer : layers) {
-        if (!layer->resolve(m_cfg.resolveSensitive, m_cfg.resolveMaterial,
-                            m_cfg.resolvePassive)) {
-          continue;
-        }
-
-        addCandidate(layer.get(), &layer->surfaceRepresentation(),
-                     BoundaryCheck(true));
-
-        if (layer->approachDescriptor() != nullptr) {
-          const auto& approaches =
-              layer->approachDescriptor()->containedSurfaces();
-
-          for (const auto& approach : approaches) {
-            addCandidate(layer.get(), approach, BoundaryCheck(true));
-          }
-        }
-
-        // Find surface candidates
-        {
-          ACTS_VERBOSE(volInfo(state) << "Searching for surfaces.");
-
-          if (layer->surfaceArray() != nullptr) {
-            const auto& surfaces = layer->surfaceArray()->surfaces();
-
-            ACTS_VERBOSE(volInfo(state)
-                         << "Found " << surfaces.size() << " surfaces.");
-
-            for (const auto& surface : surfaces) {
-              addCandidate(surface, surface,
-                           m_cfg.boundaryCheckSurfaceApproach);
-            }
-          }
-        }
-      }
-    }
+    emplaceAllVolumeCandidates(state.navigation.navigationCandidates, *volume,
+                               m_cfg.resolveSensitive, m_cfg.resolveMaterial,
+                               m_cfg.resolvePassive,
+                               m_cfg.boundaryCheckSurfaceApproach, logger());
   }
 
   template <typename propagator_state_t>
