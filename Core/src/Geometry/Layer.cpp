@@ -200,10 +200,8 @@ Acts::Layer::compatibleSurfaces(
   // (C) representing surface section
   //
   // the layer surface itself is a testSurface
-  if (!options.resolveSensitive) {
-    const Surface* layerSurface = &surfaceRepresentation();
-    processSurface(*layerSurface);
-  }
+  const Surface* layerSurface = &surfaceRepresentation();
+  processSurface(*layerSurface);
 
   // Sort by object address
   std::sort(
@@ -252,20 +250,16 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   };
 
   // Approach descriptor present and resolving is necessary
-  if ((m_approachDescriptor != nullptr) && (resolvePS || resolveMS)) {
+  if (m_approachDescriptor && (resolvePS || resolveMS)) {
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
         gctx, position, direction, options.boundaryCheck, options.nearLimit,
         options.farLimit);
     return aSurface;
   }
 
-  if (m_approachDescriptor == nullptr) {
-    // Intersect and check the representing surface
-    const Surface& rSurface = surfaceRepresentation();
-    auto sIntersection =
-        rSurface.intersect(gctx, position, direction, options.boundaryCheck);
-    return findValidIntersection(sIntersection);
-  }
-
-  return SurfaceIntersection::invalid();
+  // Intersect and check the representing surface
+  const Surface& rSurface = surfaceRepresentation();
+  auto sIntersection =
+      rSurface.intersect(gctx, position, direction, options.boundaryCheck);
+  return findValidIntersection(sIntersection);
 }
