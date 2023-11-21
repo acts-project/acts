@@ -27,10 +27,9 @@ namespace Acts {
 ///
 /// Bounds for a trapezoidal, planar Surface.
 ///
-/// @image html figures/TrapezoidBounds.gif
+/// @image html TrapezoidBounds.gif
 ///
 /// @todo can be speed optimized by calculating kappa/delta and caching it
-
 class TrapezoidBounds : public PlanarBounds {
  public:
   enum BoundValues {

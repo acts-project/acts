@@ -17,9 +17,9 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Range1D.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
@@ -162,7 +162,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
     // check if zBinsCustomLooping contains numbers from 1 to the total number
     // of bin in zBinEdges
-    for (size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
+    for (std::size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
       if (std::find(m_cfg.seedFinderConfig.zBinsCustomLooping.begin(),
                     m_cfg.seedFinderConfig.zBinsCustomLooping.end(),
                     i) == m_cfg.seedFinderConfig.zBinsCustomLooping.end()) {
@@ -220,7 +220,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
-  size_t nSpacePoints = 0;
+  std::size_t nSpacePoints = 0;
   for (const auto& isp : m_inputSpacePoints) {
     nSpacePoints += (*isp)(ctx).size();
   }

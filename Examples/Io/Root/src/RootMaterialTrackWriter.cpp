@@ -50,7 +50,7 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   // Setup ROOT I/O
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath + "'");
   }
 
   m_outputFile->cd();
@@ -127,7 +127,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     const AlgorithmContext& ctx,
-    const std::unordered_map<size_t, Acts::RecordedMaterialTrack>&
+    const std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>&
         materialTracks) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -202,7 +202,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     }
 
     // Reserve the vector then
-    size_t mints = materialInteractions.size();
+    std::size_t mints = materialInteractions.size();
     m_step_sx.reserve(mints);
     m_step_sy.reserve(mints);
     m_step_sz.reserve(mints);
@@ -288,10 +288,11 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
           m_sur_y.push_back(mint.intersection.y());
           m_sur_z.push_back(mint.intersection.z());
         } else if (surface != nullptr) {
-          auto sfIntersection = surface
-                                    ->intersect(ctx.geoContext, mint.position,
-                                                mint.direction, true)
-                                    .closest();
+          auto sfIntersection =
+              surface
+                  ->intersect(ctx.geoContext, mint.position, mint.direction,
+                              Acts::BoundaryCheck(true))
+                  .closest();
           m_sur_id.push_back(surface->geometryId().value());
           m_sur_pathCorrection.push_back(1.0);
           m_sur_x.push_back(sfIntersection.position().x());

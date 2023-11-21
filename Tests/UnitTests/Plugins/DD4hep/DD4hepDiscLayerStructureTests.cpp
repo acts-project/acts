@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
   std::vector<std::array<unsigned int, 4u>> rphiBinning = {
       {1u, 1u, 0u, 0u}, {2u, 22u, 1u, 1u}, {1u, 44u, 0u, 0u}};
 
-  size_t itest = 0;
+  std::size_t itest = 0;
   for (auto [nr, nphi, er, ephi] : rphiBinning) {
     // Create an XML from it
     std::ofstream cxml;
@@ -155,15 +155,15 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
     lsOptions.name = "DiscLayer";
     lsOptions.logLevel = Acts::Logging::VERBOSE;
 
-    auto discInternalsBuilder =
-        discStructure.builder(dd4hepStore, world, lsOptions);
+    auto [discInternalsBuilder, discExt] =
+        discStructure.builder(dd4hepStore, tContext, world, lsOptions);
 
     // Build the internal volume structure
     auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
         discInternalsBuilder->construct(tContext);
 
     // All surfaces are filled
-    BOOST_CHECK(surfaces.size() == 44u + passiveAddon);
+    BOOST_CHECK_EQUAL(surfaces.size(), 44u + passiveAddon);
     // No volumes are added
     BOOST_CHECK(volumes.empty());
     // The surface updator is connected

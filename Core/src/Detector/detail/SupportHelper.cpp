@@ -124,7 +124,7 @@ Acts::Experimental::detail::SupportHelper::discSupport(
 
 void Acts::Experimental::detail::SupportHelper::addSupport(
     std::vector<std::shared_ptr<Surface>>& layerSurfaces,
-    std::vector<size_t>& assignToAll, const Extent& layerExtent,
+    std::vector<std::size_t>& assignToAll, const Extent& layerExtent,
     Surface::SurfaceType layerRepresentation,
     const std::array<ActsScalar, 5u>& layerSupportValues,
     std::optional<Transform3> layerTransform, unsigned int supportSplits) {
@@ -175,15 +175,13 @@ void Acts::Experimental::detail::SupportHelper::addSupport(
       ActsScalar layerR = doff < 0 ? minR + doff : maxR + doff;
       minZ -= std::abs(demin);
       maxZ += std::abs(demax);
-      ActsScalar midZ = 0.5 * (minZ + maxZ);
       ActsScalar halfZ = 0.5 * (maxZ - minZ);
-      // midZ / halfZ are overwritten if the cylinder
-      // is chosen to be concentric
+      // halfZ is overwritten if the cylinder is chosen to be concentric
       Transform3 sTransform = Transform3::Identity();
       if (concentric) {
-        midZ = 0.;
         halfZ = std::max(std::abs(minZ), std::abs(maxZ));
       } else {
+        ActsScalar midZ = 0.5 * (minZ + maxZ);
         sTransform.pretranslate(Vector3(0., 0., midZ));
       }
       auto cSupport = SupportHelper::cylindricalSupport(

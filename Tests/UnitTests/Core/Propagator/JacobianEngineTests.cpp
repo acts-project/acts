@@ -55,13 +55,6 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_helper) {
   direction = Vector3(1., 1., 999.).normalized();
   f2cJacobian = detail::freeToCurvilinearJacobian(direction);
 
-  phi = VectorHelpers::phi(direction);
-  theta = VectorHelpers::theta(direction);
-  sinPhi = std::sin(phi);
-  cosPhi = std::cos(phi);
-  sinTheta = std::sin(theta);
-  cosTheta = std::cos(theta);
-
   const ActsScalar c = std::hypot(direction.y(), direction.z());
   const ActsScalar invC = 1. / c;
   CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos1), -direction.z() * invC,

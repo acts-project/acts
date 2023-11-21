@@ -101,8 +101,8 @@ ActsExamples::RootSimHitReader::RootSimHitReader(
                              << availableEvents().second);
 }
 
-std::pair<size_t, size_t> ActsExamples::RootSimHitReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::RootSimHitReader::availableEvents() const {
   return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
 }
 

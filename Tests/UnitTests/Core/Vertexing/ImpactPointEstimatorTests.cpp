@@ -127,9 +127,9 @@ Acts::SquareMatrix4 makeVertexCovariance() {
 }
 
 // random value between 0 and 1
-std::uniform_real_distribution<> uniformDist(0.0, 1.0);
+std::uniform_real_distribution<double> uniformDist(0.0, 1.0);
 // random sign
-std::uniform_real_distribution<> signDist(-1, 1);
+std::uniform_real_distribution<double> signDist(-1, 1);
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
@@ -260,7 +260,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   PropagatorOptions pOptions(geoContext, magFieldContext);
   auto intersection = refPerigeeSurface
                           ->intersect(geoContext, params.position(geoContext),
-                                      params.direction(), false)
+                                      params.direction(), BoundaryCheck(false))
                           .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
@@ -405,9 +405,9 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
 
   // The track who is closer in time must have a better (i.e., smaller)
   // compatibility
-  BOOST_CHECK(compatibilityClose < compatibilityFar);
+  BOOST_CHECK_LT(compatibilityClose, compatibilityFar);
   // The track with the larger covariance must be the most compatible
-  BOOST_CHECK(compatibilityCloseLargerCov < compatibilityClose);
+  BOOST_CHECK_LT(compatibilityCloseLargerCov, compatibilityClose);
 }
 
 // Compare calculations w/ known good values from Athena.
@@ -482,10 +482,10 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
   BOOST_CHECK(lifetimes_signs.ok());
 
   // Check that d0 sign is positive
-  BOOST_CHECK((*lifetimes_signs).first > 0.);
+  BOOST_CHECK_GT((*lifetimes_signs).first, 0.);
 
   // Check that z0 sign is negative
-  BOOST_CHECK((*lifetimes_signs).second < 0.);
+  BOOST_CHECK_LT((*lifetimes_signs).second, 0.);
 
   // Check the 3d sign
 
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
   BOOST_CHECK(sign3d.ok());
 
   // Check 3D sign (should be positive)
-  BOOST_CHECK((*sign3d) > 0.);
+  BOOST_CHECK_GT((*sign3d), 0.);
 }
 
 // Check `.getImpactParameters`.

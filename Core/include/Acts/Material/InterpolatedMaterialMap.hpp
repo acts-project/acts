@@ -28,7 +28,7 @@ template <typename G>
 struct MaterialMapper {
  public:
   using Grid_t = G;
-  static constexpr size_t DIM_POS = Grid_t::DIM;
+  static constexpr std::size_t DIM_POS = Grid_t::DIM;
 
   /// @brief Struct representing smallest grid unit in material grid
   ///
@@ -147,18 +147,18 @@ struct MaterialMapper {
   /// map.
   MaterialCell getMaterialCell(const Vector3& position) const {
     const auto& gridPosition = m_transformPos(position);
-    size_t bin = m_grid.globalBinFromPosition(gridPosition);
+    std::size_t bin = m_grid.globalBinFromPosition(gridPosition);
     const auto& indices = m_grid.localBinsFromPosition(bin);
     const auto& lowerLeft = m_grid.lowerLeftBinEdge(indices);
     const auto& upperRight = m_grid.upperRightBinEdge(indices);
 
     // Loop through all corner points
-    constexpr size_t nCorners = 1 << DIM_POS;
+    constexpr std::size_t nCorners = 1 << DIM_POS;
     std::array<Material::ParametersVector, nCorners> neighbors;
     const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
 
-    size_t i = 0;
-    for (size_t index : cornerIndices) {
+    std::size_t i = 0;
+    for (std::size_t index : cornerIndices) {
       neighbors.at(i++) = m_grid.at(index);
     }
 
@@ -169,9 +169,9 @@ struct MaterialMapper {
   /// @brief Get the number of bins for all axes of the map
   ///
   /// @return Vector returning number of bins for all map axes
-  std::vector<size_t> getNBins() const {
+  std::vector<std::size_t> getNBins() const {
     auto nBinsArray = m_grid.numLocalBins();
-    return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
+    return std::vector<std::size_t>(nBinsArray.begin(), nBinsArray.end());
   }
 
   /// @brief Get the minimum value of all axes of the map

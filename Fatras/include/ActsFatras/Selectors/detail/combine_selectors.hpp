@@ -38,7 +38,7 @@ class CombineSelectors {
   }
 
   /// Access a specific selector by index.
-  template <size_t I>
+  template <std::size_t I>
   std::tuple_element_t<I, std::tuple<Selectors...>> &get() {
     return std::get<I>(m_selectors);
   }

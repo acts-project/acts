@@ -34,7 +34,7 @@ void testTruthTestGraph(std::vector<int64_t> &truthGraph,
   const auto str = ss.str();
 
   auto begin = str.begin() + str.find("Efficiency");
-  BOOST_CHECK(std::string(begin, str.end() - 1) == resStr);
+  BOOST_CHECK_EQUAL(std::string(begin, str.end() - 1), resStr);
 }
 
 BOOST_AUTO_TEST_CASE(same_graph) {

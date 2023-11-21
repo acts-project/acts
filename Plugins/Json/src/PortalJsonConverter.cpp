@@ -19,11 +19,13 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <vector>
 
 namespace {
@@ -74,7 +76,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
     const Options& option) {
   // The overall return object
   std::vector<nlohmann::json> jPortals = {};
-  const Surface& surface = portal.surface();
+  const RegularSurface& surface = portal.surface();
   const auto& volumeLinks = portal.detectorVolumeUpdators();
 
   // First assumption for outside link (along direction)
@@ -86,7 +88,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
     // Get the two volume center
     const auto volumeCenter = volume.transform(gctx).translation();
     const auto surfaceCenter = surface.center(gctx);
-    const auto surfaceNormal = surface.normal(gctx);
+    const auto surfaceNormal = surface.normal(gctx, surfaceCenter);
     // Get the direction from the volume to the surface, correct link
     const auto volumeToSurface = surfaceCenter - volumeCenter;
     if (volumeToSurface.dot(surfaceNormal) < 0) {
@@ -298,7 +300,12 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
         detectorVolumes) {
   // The surface re-creation is trivial
   auto surface = SurfaceJsonConverter::fromJson(jPortal["surface"]);
-  auto portal = Experimental::Portal::makeShared(surface);
+  auto regSurface = std::dynamic_pointer_cast<RegularSurface>(surface);
+  if (!regSurface) {
+    throw std::runtime_error(
+        "PortalJsonConverter: surface is not a regular surface.");
+  }
+  auto portal = Experimental::Portal::makeShared(regSurface);
 
   std::array<Acts::Direction, 2> normalDirs = {Direction::Backward,
                                                Direction::Forward};

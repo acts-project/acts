@@ -39,7 +39,8 @@ std::string EDM4hepParticleReader::name() const {
   return "EDM4hepParticleReader";
 }
 
-std::pair<size_t, size_t> EDM4hepParticleReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> EDM4hepParticleReader::availableEvents()
+    const {
   return m_eventsRange;
 }
 

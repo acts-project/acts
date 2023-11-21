@@ -15,8 +15,8 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <stdexcept>
 
@@ -102,7 +102,7 @@ struct IndexedDetectorVolumeExtractor {
   /// @return a raw DetectorVolume pointer
   inline static const DetectorVolume* extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, size_t index) noexcept(false) {
+      const NavigationState& nState, std::size_t index) noexcept(false) {
     if (nState.currentDetector == nullptr) {
       throw std::runtime_error("IndexedVolumeExtractor: no detector given.");
     }
@@ -116,7 +116,7 @@ struct IndexedDetectorVolumeExtractor {
 ///
 /// @tparam grid_type is the grid type used for this
 template <typename grid_type>
-using IndexedDetectorVolumeImpl =
+using IndexedDetectorVolumesImpl =
     IndexedUpdatorImpl<grid_type, IndexedDetectorVolumeExtractor,
                        DetectorVolumeFiller>;
 

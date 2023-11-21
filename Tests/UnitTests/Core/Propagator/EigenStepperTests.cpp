@@ -49,6 +49,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -98,7 +99,7 @@ struct PropState {
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
   struct {
-    double tolerance = 1e-4;
+    double stepTolerance = 1e-4;
     double stepSizeCutOff = 0.;
     unsigned int maxRungeKuttaStepTrials = 10000;
     Direction direction = Direction::Forward;
@@ -135,7 +136,7 @@ struct EndOfWorld {
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/,
                   const Logger& /*logger*/) const {
-    const double tolerance = state.options.targetTolerance;
+    const double tolerance = state.options.surfaceTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
         std::abs(stepper.position(state.stepping).z()) >= 0.5_m) {
@@ -458,25 +459,28 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the intersection in the context of a surface
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
-  es.updateSurfaceStatus(esState, *targetSurface, navDir, BoundaryCheck(false));
+  es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
+                         BoundaryCheck(false));
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   eps);
 
   // Test the step size modification in the context of a surface
-  es.updateStepSize(esState,
-                    targetSurface
-                        ->intersect(esState.geoContext, es.position(esState),
-                                    navDir * es.direction(esState), false)
-                        .closest(),
-                    navDir, false);
+  es.updateStepSize(
+      esState,
+      targetSurface
+          ->intersect(esState.geoContext, es.position(esState),
+                      navDir * es.direction(esState), BoundaryCheck(false))
+          .closest(),
+      navDir, false);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setUser(navDir * stepSize);
-  es.updateStepSize(esState,
-                    targetSurface
-                        ->intersect(esState.geoContext, es.position(esState),
-                                    navDir * es.direction(esState), false)
-                        .closest(),
-                    navDir, true);
+  es.updateStepSize(
+      esState,
+      targetSurface
+          ->intersect(esState.geoContext, es.position(esState),
+                      navDir * es.direction(esState), BoundaryCheck(false))
+          .closest(),
+      navDir, true);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction
@@ -516,7 +520,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
-  ps.options.tolerance = 2. * 4.4258e+09;
+  ps.options.stepTolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
   es.step(ps, mockNavigator);
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
@@ -528,7 +532,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                                  stepSize);
   PropState nps(navDir, copyState(*nBfield, nesState));
   // Test that we can reach the minimum step size
-  nps.options.tolerance = 1e-21;
+  nps.options.stepTolerance = 1e-21;
   nps.options.stepSizeCutOff = 1e20;
   auto res = nes.step(nps, mockNavigator);
   BOOST_CHECK(!res.ok());
@@ -682,7 +686,9 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviMat({material, true, true, true});
+  Navigator naviMat(
+      {material, true, true, true},
+      Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
@@ -714,7 +720,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      prop(es, naviMat);
+      prop(es, naviMat,
+           Acts::getDefaultLogger("Propagator", Acts::Logging::VERBOSE));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
