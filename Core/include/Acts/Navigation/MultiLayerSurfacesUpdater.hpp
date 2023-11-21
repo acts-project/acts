@@ -12,6 +12,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
@@ -58,7 +59,8 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
     std::vector<const Acts::Surface*> surfCandidates = {};
 
     for (const auto& p : path) {
-      const auto& entry = grid.atPosition(castPosition(p));
+      const auto& entry = grid.atPosition(
+          GridAccessHelpers::castPosition<grid_t>(transform * p, casts));
       const auto extracted =
           IndexedSurfacesExtractor::extract(gctx, nState, entry);
       surfCandidates.insert(surfCandidates.end(), extracted.begin(),
@@ -69,20 +71,6 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
     SurfacesFiller::fill(nState, surfCandidates);
 
     updateCandidates(gctx, nState);
-  }
-
-  /// Cast into a lookup position
-  ///
-  /// @param position is the position of the update call
-  std::array<ActsScalar, grid_type::DIM> castPosition(
-      const Vector3& position) const {
-    // Transform into local 3D frame
-    Vector3 tposition = transform * position;
-
-    std::array<ActsScalar, grid_type::DIM> casted{};
-    fillCasts(tposition, casted,
-              std::make_integer_sequence<std::size_t, grid_type::DIM>{});
-    return casted;
   }
 
   /// Resolve duplicate on surface candidates
@@ -106,16 +94,6 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
     // Remove the duplicates
     surfaces.erase(std::unique(surfaces.begin(), surfaces.end()),
                    surfaces.end());
-  }
-
- private:
-  /// Unroll the cast loop
-  /// @param position is the position of the update call
-  /// @param a is the array to be filled
-  template <typename Array, std::size_t... idx>
-  void fillCasts(const Vector3& position, Array& a,
-                 std::index_sequence<idx...> /*indices*/) const {
-    ((a[idx] = VectorHelpers::cast(position, casts[idx])), ...);
   }
 };
 

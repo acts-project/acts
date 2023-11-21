@@ -9,8 +9,11 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+<<<<<<< HEAD
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
+=======
+>>>>>>> d47ca3f62 (sharing code, improving tests)
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Detector/detail/SupportHelper.hpp"
@@ -22,6 +25,7 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <cmath>
@@ -108,13 +112,12 @@ Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
           {binning.expansion}};
   if (binning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant
-    Acts::Experimental::detail::GridAxisGenerators::Eq<aType> aGenerator{
+    Acts::GridAxisGenerators::Eq<aType> aGenerator{
         {binning.edges.front(), binning.edges.back()}, binning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else {
     // Variable
-    Acts::Experimental::detail::GridAxisGenerators::Var<aType> aGenerator{
-        binning.edges};
+    Acts::GridAxisGenerators::Var<aType> aGenerator{binning.edges};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   }
   return sfCandidates;
@@ -154,30 +157,30 @@ Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
   if (aBinning.axisType == Acts::detail::AxisType::Equidistant &&
       bBinning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant-Equidistant
-    Acts::Experimental::detail::GridAxisGenerators::EqEq<aType, bType>
-        aGenerator{{aBinning.edges.front(), aBinning.edges.back()},
-                   aBinning.bins(),
-                   {bBinning.edges.front(), bBinning.edges.back()},
-                   bBinning.bins()};
+    Acts::GridAxisGenerators::EqEq<aType, bType> aGenerator{
+        {aBinning.edges.front(), aBinning.edges.back()},
+        aBinning.bins(),
+        {bBinning.edges.front(), bBinning.edges.back()},
+        bBinning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else if (bBinning.axisType == Acts::detail::AxisType::Equidistant) {
     // Variable-Equidistant
-    Acts::Experimental::detail::GridAxisGenerators::VarEq<aType, bType>
-        aGenerator{aBinning.edges,
-                   {bBinning.edges.front(), bBinning.edges.back()},
-                   bBinning.bins()};
+    Acts::GridAxisGenerators::VarEq<aType, bType> aGenerator{
+        aBinning.edges,
+        {bBinning.edges.front(), bBinning.edges.back()},
+        bBinning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else if (aBinning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant-Variable
-    Acts::Experimental::detail::GridAxisGenerators::EqVar<aType, bType>
-        aGenerator{{aBinning.edges.front(), aBinning.edges.back()},
-                   aBinning.bins(),
-                   bBinning.edges};
+    Acts::GridAxisGenerators::EqVar<aType, bType> aGenerator{
+        {aBinning.edges.front(), aBinning.edges.back()},
+        aBinning.bins(),
+        bBinning.edges};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else {
     // Variable-Variable
-    Acts::Experimental::detail::GridAxisGenerators::VarVar<aType, bType>
-        aGenerator{aBinning.edges, bBinning.edges};
+    Acts::GridAxisGenerators::VarVar<aType, bType> aGenerator{aBinning.edges,
+                                                              bBinning.edges};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   }
   // Return the candidates

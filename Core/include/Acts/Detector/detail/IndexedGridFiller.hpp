@@ -16,6 +16,7 @@
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -203,7 +204,9 @@ struct IndexedGridFiller {
       gridQueries.reserve(refs.size());
       for (const auto& ref : refs) {
         // Cast the transform according to the grid binning
-        gridQueries.push_back(iGrid.castPosition(ref));
+        gridQueries.push_back(
+            GridAccessHelpers::castPosition<decltype(iGrid.grid)>(
+                iGrid.transform * ref, iGrid.casts));
       }
       ACTS_DEBUG(gridQueries.size() << " reference points generated.");
       auto lIndices = localIndices<decltype(iGrid.grid)>(

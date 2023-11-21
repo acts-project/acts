@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Material/IndexedSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <vector>
 
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   material.emplace_back(
       Acts::Material::fromMolarDensity(21.0, 22.0, 23.0, 24.0, 25.0), 3.0);
 
-  using EqBound = Acts::Experimental::detail::GridAxisGenerators::EqBound;
+  using EqBound = Acts::GridAxisGenerators::EqBound;
   using EqGrid = EqBound::grid_type<std::size_t>;
   using Point = EqGrid::point_t;
 
@@ -113,8 +113,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   material.emplace_back(
       Acts::Material::fromMolarDensity(21.0, 22.0, 23.0, 24.0, 25.0), 1.0);
 
-  using EqBoundEqClosed =
-      Acts::Experimental::detail::GridAxisGenerators::EqBoundEqClosed;
+  using EqBoundEqClosed = Acts::GridAxisGenerators::EqBoundEqClosed;
   using EqEqGrid = EqBoundEqClosed::grid_type<std::size_t>;
   using Point = EqEqGrid::point_t;
 

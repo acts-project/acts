@@ -13,7 +13,6 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
@@ -21,7 +20,12 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+<<<<<<< HEAD
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+=======
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
+>>>>>>> d47ca3f62 (sharing code, improving tests)
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -74,7 +78,7 @@ class MultiWireInternalStructureBuilder
             {m_cfg.binning[0u].binValue, m_cfg.binning[1u].binValue},
             {m_cfg.binning[0u].expansion, m_cfg.binning[1u].expansion}};
     Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
-    Acts::Experimental::detail::GridAxisGenerators::EqBoundEqBound aGenerator{
+    Acts::GridAxisGenerators::EqBoundEqBound aGenerator{
         {m_cfg.binning[0u].edges.front(), m_cfg.binning[0u].edges.back()},
         m_cfg.binning[0u].edges.size() - 1,
         {m_cfg.binning[1u].edges.front(), m_cfg.binning[1u].edges.back()},
