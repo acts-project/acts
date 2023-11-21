@@ -109,7 +109,7 @@ class AmbiguityTrackClassifier {
   /// @return a vector of trackID corresponding tho the good tracks
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
-  std::vector<int> solveAmbuguity(
+  std::vector<int> solveAmbiguity(
       std::unordered_map<int, std::vector<int>>& clusters,
       const Acts::TrackContainer<track_container_t, traj_t, holder_t>& tracks)
       const {

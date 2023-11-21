@@ -46,8 +46,8 @@ class SeedClassifier {
   /// @return a vector of seedID corresponding tho the good seeds
   std::vector<int> seedSelection(
       std::vector<std::vector<int>>& clusters,
-      std::vector<std::vector<float>>& outputTensor
-      float minSeedScore = 0.0) const {
+      std::vector<std::vector<float>>& outputTensor float minSeedScore =
+          0.0) const {
     std::vector<int> goodSeeds;
     int iOut = 0;
     // Loop over all the cluster and only keep the seed with the highest score
@@ -62,7 +62,7 @@ class SeedClassifier {
         }
         iOut++;
       }
-      if(bestSeedScore >= minSeedScore){
+      if (bestSeedScore >= minSeedScore) {
         goodSeeds.push_back(bestSeedID);
       }
     }
@@ -79,7 +79,8 @@ class SeedClassifier {
                                   Acts::NetworkBatchInput& networkInput,
                                   float minSeedScore = 0.0) const {
     std::vector<std::vector<float>> outputTensor = inferScores(networkInput);
-    std::vector<int> goodSeeds = seedSelection(clusters, outputTensor, minSeedScore);
+    std::vector<int> goodSeeds =
+        seedSelection(clusters, outputTensor, minSeedScore);
     return goodSeeds;
   }
 
