@@ -87,7 +87,8 @@ void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
   // p_k
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
   // G_k
-  const ActsSquareMatrix<5> trkParamWeight = linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
+  const ActsSquareMatrix<5> trkParamWeight =
+      linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   // Set up cache where entire content is set to 0
   Cache cache;
@@ -147,8 +148,8 @@ void Acts::KalmanVertexUpdater::updateTrack(TrackAtVertex<input_track_t>& track,
 template <typename input_track_t>
 void Acts::KalmanVertexUpdater::calculateUpdate(
     const Acts::Vertex<input_track_t>& vtx,
-    const Acts::LinearizedTrack& linTrack, const double trackWeight, const int sign,
-    Cache& cache) {
+    const Acts::LinearizedTrack& linTrack, const double trackWeight,
+    const int sign, Cache& cache) {
   // Retrieve variables from the track linearization. The comments indicate the
   // corresponding symbol used in Ref. (1).
   // A_k
@@ -166,7 +167,8 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
   // with the track weight from the AMVF formalism. Here, we choose to
   // consider these two multiplicative factors directly in the updates of
   // newVertexWeight and newVertexPos.
-  const ActsSquareMatrix<5> trkParamWeight = linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
+  const ActsSquareMatrix<5> trkParamWeight =
+      linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   // Retrieve current position of the vertex and its current weight matrix
   const Vector3& oldVtxPos = vtx.position();
@@ -234,7 +236,8 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
     const LinearizedTrack& linTrack, const Cache& cache) {
   // Track properties
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
-  const ActsSquareMatrix<5> trkParamWeight = linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
+  const ActsSquareMatrix<5> trkParamWeight =
+      linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   // Parameter difference
   ActsVector<5> paramDiff = trkParams - cache.linearizedTrackParameters;
@@ -279,8 +282,7 @@ Acts::KalmanVertexUpdater::detail::calculateTrackCovariance(
   // Covariance matrix of the bound track parameters, i.e., d0, z0 phi, theta,
   // q/p
   BoundMatrix boundTrkCov(BoundMatrix::Identity());
-  boundTrkCov.block<5, 5>(0, 0) =
-      (trkJac * (freeTrkCov * trkJac.transpose()));
+  boundTrkCov.block<5, 5>(0, 0) = (trkJac * (freeTrkCov * trkJac.transpose()));
 
   return boundTrkCov;
 }

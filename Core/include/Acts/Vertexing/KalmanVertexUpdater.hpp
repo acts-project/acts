@@ -21,15 +21,15 @@ namespace KalmanVertexUpdater {
 /// Based on
 /// Ref. (1):
 /// R. Frühwirth et al.
-/// Vertex reconstruction and track bundling at the lep collider using robust 
-/// algorithms 
+/// Vertex reconstruction and track bundling at the lep collider using robust
+/// algorithms
 /// Computer Physics Comm.: 96 (1996) 189
 /// Chapter 2.1
 ///
 /// For remarks on the weighted formalism, which we use here, see
 /// Ref. (2):
 /// Giacinto Piacquadio
-/// Identification of b-jets and investigation of the discovery potential of a 
+/// Identification of b-jets and investigation of the discovery potential of a
 /// Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment
 /// CERN-THESIS-2010-027
 /// Section 5.3.5
