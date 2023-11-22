@@ -196,16 +196,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
     const InputTrack_t* track, const Vertex<InputTrack_t>& vtx,
     const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<double> {
-  // TODO: In original implementation the covariance of the given vertex is set
-  // to zero. I did the same here now, but consider removing this and just
-  // passing the vtx object to the estimator without changing its covariance.
-  // After all, the vertex seed does have a non-zero convariance in general and
-  // it probably should be used.
-  Vertex<InputTrack_t> newVtx = vtx;
-  if (!m_cfg.useVertexCovForIPEstimation) {
-    newVtx.setFullCovariance(SquareMatrix4::Zero());
-  }
-
   auto estRes = m_cfg.ipEstimator.getImpactParameters(
       m_extractParameters(*track), newVtx, vertexingOptions.geoContext,
       vertexingOptions.magFieldContext);

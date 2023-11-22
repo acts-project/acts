@@ -150,13 +150,6 @@ class AdaptiveMultiVertexFinder {
     // Default fitQuality for constraint vertex in case no beamspot
     // constraint is provided
     std::pair<double, double> defaultConstrFitQuality{0., -3.};
-
-    // Use the full available vertex covariance information after
-    // seeding for the IP estimation. In original implementation
-    // this is not (!) done, however, this is probably not correct.
-    // So definitely consider setting this to true.
-    bool useVertexCovForIPEstimation = false;
-
   };  // Config struct
 
   /// State struct for fulfilling interface
