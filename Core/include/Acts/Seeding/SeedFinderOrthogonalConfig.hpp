@@ -112,7 +112,7 @@ struct SeedFinderOrthogonalConfig {
 
   // Delegate to apply experiment specific cuts
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
-      DelegateTypeTag<&noopExperimentCuts>{}};
+      DelegateFuncTag<&noopExperimentCuts>{}};
 
   bool isInInternalUnits = false;
 
