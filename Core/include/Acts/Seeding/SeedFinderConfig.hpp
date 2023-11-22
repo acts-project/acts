@@ -13,7 +13,9 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <limits>
 #include <memory>
+#include <vector>
 
 namespace Acts {
 

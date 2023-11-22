@@ -395,7 +395,7 @@ class CombinatorialKalmanFilter {
       if (!result.filtered &&
           filterTargetReached(state, stepper, navigator, logger())) {
         navigator.navigationBreak(state.navigation, true);
-        stepper.releaseStepSize(state.stepping);
+        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       }
 
       // Update:
