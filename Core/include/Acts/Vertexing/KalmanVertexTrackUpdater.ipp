@@ -19,8 +19,10 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
     throw std::invalid_argument("TrackAtVertex object must be linearized.");
   }
 
-  // Extract current vertex position and covariance
+  // Extract vertex position and covariance
+  // \tilde{x_n}
   const Vector3& vtxPos = vtx.position();
+  // C_n
   const SquareMatrix3& vtxCov = vtx.covariance();
 
   // Get the linearized track
@@ -40,17 +42,20 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   // c_k
   const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
 
+  // Cache object filled with zeros
   KalmanVertexUpdater::Cache cache;
 
-  // Now determine the smoothed chi2 of the track in the following
+  // Calculate the update of the vertex position when the track is removed. This
+  // might be unintuitive, but it is needed to compute a symmetric chi2.
   KalmanVertexUpdater::calculateUpdate<input_track_t>(
       vtx, linTrack, track.trackWeight, -1, cache);
 
-  // Refit track momentum
+  // Refit track momentum with the final vertex position
   Vector3 newTrkMomentum = cache.wMat * momJac.transpose() * trkParamWeight *
                            (trkParams - constTerm - posJac * vtxPos);
 
-  // Refit track parameters
+  // Track parameters, impact parameters are set to 0 and momentum corresponds
+  // to newTrkMomentum. TODO: Make transition fitterParams -> fittedMomentum.
   BoundVector newTrkParams(BoundVector::Zero());
 
   // Get phi and theta and correct for possible periodicity changes
@@ -60,12 +65,12 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   newTrkParams(BoundIndices::eBoundTheta) = correctedPhiTheta.second;  // theta
   newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
 
-  // E_k
+  // E_k^n
   const SquareMatrix3 crossCovVP =
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * cache.wMat;
 
-  // Difference in positions
-  Vector3 posDiff = vtx.position() - cache.newVertexPos;
+  // Difference in positions. cache.newVertexPos corresponds to \tilde{x_k^{n*}} in Ref. (1).
+  Vector3 posDiff = vtxPos - cache.newVertexPos;
 
   // r_k^n
   ActsVector<5> paramDiff =
@@ -80,7 +85,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(vtx.position());
+      Surface::makeShared<PerigeeSurface>(vtxPos);
 
   BoundTrackParameters refittedPerigee = BoundTrackParameters(
       perigeeSurface, newTrkParams, std::move(fullPerTrackCov),
@@ -98,7 +103,7 @@ inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
     const SquareMatrix3& wMat, const SquareMatrix3& crossCovVP,
     const SquareMatrix3& vtxCov, const BoundVector& newTrkParams) {
-  // D_k
+  // D_k^n
   ActsSquareMatrix<3> momCov =
       wMat + crossCovVP.transpose() * vtxCov.inverse() * crossCovVP;
 
