@@ -64,7 +64,8 @@ struct NavigationOptions {
   double farLimit = std::numeric_limits<double>::max();
 };
 
-/// Navigator class
+/// @brief Steers the propagation through the geometry by adjusting the step
+///        size and providing the next surface to be targeted.
 ///
 /// The Navigator is part of the propagation and responsible for steering
 /// the step size in order to encounter all the relevant surfaces which are
@@ -124,7 +125,7 @@ class Navigator {
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
 
-  /// Nested State struct
+  /// @brief Nested State struct
   ///
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.

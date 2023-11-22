@@ -34,6 +34,15 @@
 
 namespace Acts {
 
+/// @brief Alternative @c Navigator which tries all possible intersections
+///
+/// See @c Navigator for more general information about the Navigator concept.
+///
+/// This Navigator tries all possible intersections with all surfaces in the
+/// current volume. It does not use any information about the geometry to
+/// optimize the search. It is therefore very slow, but can be used as a
+/// reference implementation.
+///
 class TryAllNavigator {
  public:
   /// @brief Configuration for this Navigator
@@ -52,6 +61,8 @@ class TryAllNavigator {
     BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
   };
 
+  /// Composes an intersection and a bounds check into a navigation candidate.
+  /// This is used to consistently update intersections after creation.
   struct IntersectionCandidate {
     detail::AnyIntersection intersection;
     BoundaryCheck boundaryCheck;
@@ -69,22 +80,42 @@ class TryAllNavigator {
     }
   };
 
+  /// @brief Nested State struct
+  ///
+  /// It acts as an internal state which is created for every propagation and
+  /// meant to keep thread-local navigation information.
   struct State {
+    // Starting geometry information of the navigation which should only be set
+    // while initialization. NOTE: This information is mostly used by actors to
+    // check if we are on the starting surface (e.g. MaterialInteraction).
     const Surface* startSurface = nullptr;
     const TrackingVolume* startVolume = nullptr;
 
+    // Target geometry information of the navigation which should only be set
+    // while initialization. NOTE: This information is mostly used by actors to
+    // check if we are on the target surface (e.g. MaterialInteraction).
     const Surface* targetSurface = nullptr;
 
+    // Current geometry information of the navigation which is set during
+    // initialization and potentially updated after each step.
     const Surface* currentSurface = nullptr;
     const TrackingVolume* currentVolume = nullptr;
 
+    /// The vector of navigation candidates to work through
     std::vector<detail::NavigationCandidate> navigationCandidates;
+    /// The vector of intersection candidates to work through
     std::vector<IntersectionCandidate> intersectionCandidates;
 
+    /// Indicator if the target is reached
     bool targetReached = false;
+    /// If a break has been detected
     bool navigationBreak = false;
   };
 
+  /// Constructor with configuration object
+  ///
+  /// @param cfg The navigator configuration
+  /// @param _logger a logger instance
   TryAllNavigator(Config cfg,
                   std::unique_ptr<const Logger> _logger =
                       getDefaultLogger("TryAllNavigator", Logging::INFO))
@@ -143,6 +174,13 @@ class TryAllNavigator {
     state.navigationBreak = navigationBreak;
   }
 
+  /// @brief Initialize call - start of navigation
+  ///
+  /// @tparam propagator_state_t The state type of the propagator
+  /// @tparam stepper_t The type of stepper used for the propagation
+  ///
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE("initialize");
@@ -190,6 +228,16 @@ class TryAllNavigator {
     reinitializeCandidates(state);
   }
 
+  /// @brief Navigator pre step call
+  ///
+  /// This determines the next surface to be targeted and sets the step length
+  /// accordingly.
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t is the used type of the Stepper by the Propagator
+  ///
+  /// @param [in,out] state is the mutable propagator state object
+  /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void preStep(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state) << "pre step");
@@ -293,6 +341,20 @@ class TryAllNavigator {
     state.navigation.intersectionCandidates = std::move(intersectionCandidates);
   }
 
+  /// @brief Navigator post step call
+  ///
+  /// This determines if we hit the next navigation candidate and deals with it
+  /// accordingly. It sets the current surface, enters layers and changes
+  /// volumes.
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t is the used type of the Stepper by the Propagator
+  ///
+  /// @param [in,out] state is the mutable propagator state object
+  /// @param [in] stepper Stepper in use
+  ///
+  /// @return Boolean to indicate if we continue with the actors and
+  ///         aborters or if we should target again.
   template <typename propagator_state_t, typename stepper_t>
   bool postStep(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state) << "post step");
@@ -404,6 +466,7 @@ class TryAllNavigator {
   }
 
  private:
+  /// Helper method to initialize navigation candidates for the current volume.
   template <typename propagator_state_t>
   void initializeVolumeCandidates(propagator_state_t& state) const {
     const TrackingVolume* volume = state.navigation.currentVolume;
@@ -421,6 +484,7 @@ class TryAllNavigator {
                                m_cfg.boundaryCheckSurfaceApproach, logger());
   }
 
+  /// Helper method to reset and reinitialize the navigation candidates.
   template <typename propagator_state_t>
   void reinitializeCandidates(propagator_state_t& state) const {
     state.navigation.navigationCandidates.clear();
