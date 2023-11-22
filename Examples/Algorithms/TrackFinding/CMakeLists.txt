@@ -8,6 +8,7 @@ add_library(
   src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp
   src/SeedingFTFAlgorithm.cpp
+  src/MyTrackFindingAlgorithm.cpp
 )
 
 target_include_directories(
