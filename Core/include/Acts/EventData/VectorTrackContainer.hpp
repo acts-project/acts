@@ -76,8 +76,6 @@ class VectorTrackContainerBase {
         return &instance.m_tipIndex[itrack];
       case "stemIndex"_hash:
         return &instance.m_stemIndex[itrack];
-      case "particleHypothesis"_hash:
-        return &instance.m_particleHypothesis[itrack];
       case "params"_hash:
         return &instance.m_params[itrack];
       case "cov"_hash:
@@ -156,6 +154,10 @@ class VectorTrackContainerBase {
 
   const Surface* referenceSurface_impl(IndexType itrack) const {
     return m_referenceSurfaces[itrack].get();
+  }
+
+  ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
+    return m_particleHypothesis[itrack];
   }
 
   std::size_t size_impl() const {

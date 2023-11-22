@@ -9,10 +9,12 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
+#include "ActsPodioEdm/ParticleHypothesis.h"
 #include "ActsPodioEdm/Track.h"
 #include "ActsPodioEdm/TrackCollection.h"
 #include "ActsPodioEdm/TrackInfo.h"
@@ -97,9 +99,6 @@ class PodioTrackContainerBase {
         return &data.nOutliers;
       case "nSharedHits"_hash:
         return &data.nSharedHits;
-      case "particleHypothesis"_hash:
-        // @TODO: Implement particle hypothesis for PODIO backend
-        return nullptr;
       default:
         auto it = instance.m_dynamic.find(key);
         if (it == instance.m_dynamic.end()) {
@@ -123,6 +122,15 @@ class PodioTrackContainerBase {
       result.push_back(key);
     }
     return result;
+  }
+
+  template <typename T>
+  static ParticleHypothesis particleHypothesis_impl(T& instance,
+                                                    IndexType itrack) {
+    auto track = instance.m_collection->at(itrack);
+    const auto& src = track.getParticleHypothesis();
+    return ParticleHypothesis{static_cast<PdgParticle>(src.absPdg), src.mass,
+                              src.absQ};
   }
 
   static void populateSurfaceBuffer(
@@ -184,6 +192,10 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
 
   const Surface* referenceSurface_impl(IndexType itrack) const {
     return m_surfaces.at(itrack).get();
+  }
+
+  ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
+    return PodioTrackContainerBase::particleHypothesis_impl(*this, itrack);
   }
 
   void setReferenceSurface_impl(IndexType itrack,
@@ -268,8 +280,12 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
   void setParticleHypothesis_impl(
-      IndexType /*itrack*/, const ParticleHypothesis& /*particleHypothesis*/) {
-    // @TODO: Implement particle hypothesis in podio
+      IndexType itrack, const ParticleHypothesis& particleHypothesis) {
+    ActsPodioEdm::ParticleHypothesis pHypo;
+    pHypo.absPdg = particleHypothesis.absolutePdg();
+    pHypo.mass = particleHypothesis.mass();
+    pHypo.absQ = particleHypothesis.absoluteCharge();
+    m_collection->at(itrack).setParticleHypothesis(pHypo);
   }
 
   // END INTERFACE
@@ -375,6 +391,10 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
   const Surface* referenceSurface_impl(IndexType itrack) const {
     return m_surfaces.at(itrack).get();
+  }
+
+  ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
+    return PodioTrackContainerBase::particleHypothesis_impl(*this, itrack);
   }
 
   ConstParameters parameters(IndexType itrack) const {

@@ -15,6 +15,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -138,6 +139,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
 
   podio::Frame frame;
 
+  ParticleHypothesis pHypo = ParticleHypothesis::pion();
+
   {
     Acts::MutablePodioTrackStateContainer tsc{helper};
     Acts::MutablePodioTrackContainer ptc{helper};
@@ -156,6 +159,9 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
 
     auto t = tc.getTrack(tc.addTrack());
     BOOST_CHECK_EQUAL(t.tipIndex(), MultiTrajectoryTraits::kInvalid);
+
+    t.setParticleHypothesis(pHypo);
+    BOOST_CHECK_EQUAL(t.particleHypothesis(), pHypo);
 
     BOOST_CHECK_EQUAL(tsc.size(), 0);
     auto ts1 = t.appendTrackState();
@@ -264,6 +270,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     const auto& freeRecreated = t.referenceSurface();
     // Not the exact same surface, it's recreated from values
     BOOST_CHECK_NE(free.get(), &freeRecreated);
+
+    BOOST_CHECK_EQUAL(t.particleHypothesis(), pHypo);
 
     BOOST_CHECK_EQUAL(t.nMeasurements(), 17);
 

@@ -75,6 +75,12 @@ components:
       Members:
         - std::array<double, 36> values
 
+    ActsPodioEdm::ParticleHypothesis:
+      Members:
+        - uint32_t absPdg
+        - float mass
+        - float absQ
+
 datatypes:
   ActsPodioEdm::Track:
     Description: "Reconstructed track"
@@ -83,6 +89,8 @@ datatypes:
       - ActsPodioEdm::TrackInfo data // local parameters and covariance
 
       - ActsPodioEdm::Surface referenceSurface // reference surface
+
+      - ActsPodioEdm::ParticleHypothesis particleHypothesis // particle hypothesis
 
   ActsPodioEdm::TrackState:
     Description: "Local state on a track"

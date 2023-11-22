@@ -411,7 +411,7 @@ class TrackProxy {
   /// Get the particle hypothesis
   /// @return the particle hypothesis
   ParticleHypothesis particleHypothesis() const {
-    return component<ParticleHypothesis, hashString("particleHypothesis")>();
+    return m_container->container().particleHypothesis_impl(m_index);
   }
 
   /// Set a new particle hypothesis for this track
