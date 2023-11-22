@@ -138,17 +138,17 @@ void addTrackFitting(Context& ctx) {
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            bool multipleScattering, bool energyLoss,
            Acts::FreeToBoundCorrection freeToBoundCorrection,
+           std::size_t nUpdateMax, bool zeroField, double relChi2changeCutOff,
            Logging::Level level) {
           return ActsExamples::makeGlobalChiSquareFitterFunction(
               trackingGeometry, magneticField, multipleScattering, energyLoss,
-              freeToBoundCorrection, *Acts::getDefaultLogger("Gx2f", level));
+              freeToBoundCorrection, nUpdateMax, zeroField, relChi2changeCutOff,
+              *Acts::getDefaultLogger("Gx2f", level));
         },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("multipleScattering"), py::arg("energyLoss"),
-        py::arg("freeToBoundCorrection"), py::arg("level"));
-
-    // TODO add other important parameters like nUpdates
-    // TODO add also in trackfitterfunction
+        py::arg("freeToBoundCorrection"), py::arg("nUpdateMax"),
+        py::arg("zeroField"), py::arg("relChi2changeCutOff"), py::arg("level"));
   }
 
   {
