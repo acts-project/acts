@@ -245,8 +245,8 @@ class TryAllOverstepNavigator {
       if (surfaceStatus == IntersectionStatus::onSurface) {
         ACTS_ERROR(volInfo(state)
                    << "We are on surface " << surface.geometryId()
-                   << " before trying to reach "
-                      "it. This should not happen. Good luck.");
+                   << " before trying to reach it. This should not happen. "
+                      "Good luck.");
         ++state.navigation.activeCandidateIndex;
         continue;
       }

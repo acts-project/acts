@@ -36,7 +36,6 @@ namespace Acts {
 /// @brief struct for the Navigation options that are forwarded to
 ///        the geometry
 ///
-/// @tparam propagator_state_t Type of the object for navigation state
 /// @tparam object_t Type of the object for navigation to check against
 template <typename object_t>
 struct NavigationOptions {
@@ -67,25 +66,19 @@ struct NavigationOptions {
 
 /// Navigator class
 ///
-/// This is an Actor to be added to the ActorList in order to navigate
-/// through the static tracking geometry setup.
+/// The Navigator is part of the propagation and responsible for steering
+/// the step size in order to encounter all the relevant surfaces which are
+/// intersected by the trajectory.
 ///
 /// The current navigation stage is cached in the state struct and updated
-/// when necessary. If any surface in the extrapolation  flow is hit, it is
-/// set to the propagation satate, such that other actors can deal with it.
-/// This navigation actor thus always needs to run first!
-/// It does two things: it figures out the order of volumes, layers and
-/// surfaces.
+/// when necessary. If any surface in the extrapolation flow is hit, it is
+/// set to the navigation state, such that other actors can deal with it.
 ///
-/// The current target surface is the surface pointed to by of the index
-/// for the surfaces, layers or volume boundaries.
-/// If a surface is found, the state.navigation.currentSurface
-/// pointer is set. This  enables subsequent actors to react. Secondly, this
-/// actor uses the ordered indices to figure out which surface, layer or
-/// volume boundary is _supposed_ to be hit next. It then sets the maximum
-/// step size to the path length found out by straight line intersection. If
-/// the state is not on surface, it also  re-computes the step size, to make
-/// sure we end up at the desired surface.
+/// The current target surface is referenced by an index which points into
+/// the navigation candidates. The navigation candidates are ordered by the
+/// path length to the surface. If a surface is hit, the
+/// `state.navigation.currentSurface` pointer is set. This actors to observe
+/// that we are on a surface.
 ///
 class Navigator {
  public:
@@ -99,12 +92,16 @@ class Navigator {
     /// stop at every material surface (whether it is passive or not)
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
+    /// @note that this includes representative surfaces which might
+    ///       overlap with other surfaces
     bool resolvePassive = false;
 
     /// Which boundary checks to perform for surface approach
     BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
   };
 
+  /// Composes an intersection and a bounds check into a navigation candidate.
+  /// This is used to consistently update intersections after creation.
   struct NavigationCandidate {
     detail::AnyIntersection intersection;
     BoundaryCheck boundaryCheck;
@@ -129,30 +126,36 @@ class Navigator {
 
   /// Nested State struct
   ///
-  /// It acts as an internal state which is
-  /// created for every propagation/extrapolation step
-  /// and keep thread-local navigation information
+  /// It acts as an internal state which is created for every propagation and
+  /// meant to keep thread-local navigation information.
   struct State {
-    /// the vector of navigation surfaces to work through
+    /// The vector of navigation candidates to work through
     NavigationCandidates candidates = {};
-    /// the current surface index of the navigation state
+    /// The current candidate index of the navigation state
     std::size_t candidateIndex = 0;
 
+    /// Provides easy access to the active navigation candidate
     const NavigationCandidate& candidate() const {
       return candidates.at(candidateIndex);
     }
 
-    /// Externally provided surfaces - these are tried to be hit
+    /// Externally provided surfaces which are tried to be hit
     ExternalSurfaces externalSurfaces = {};
 
+    // Starting geometry information of the navigation which should only be set
+    // while initialization. NOTE: This information is mostly used by actors to
+    // check if we are on the starting surface (e.g. MaterialInteraction).
     const TrackingVolume* startVolume = nullptr;
     const Layer* startLayer = nullptr;
     const Surface* startSurface = nullptr;
 
-    const TrackingVolume* targetVolume = nullptr;
-    const Layer* targetLayer = nullptr;
+    // Target geometry information of the navigation which should only be set
+    // while initialization. NOTE: This information is mostly used by actors to
+    // check if we are on the target surface (e.g. MaterialInteraction).
     const Surface* targetSurface = nullptr;
 
+    // Current geometry information of the navigation which is set during
+    // initialization and potentially updated after each step.
     const Surface* currentSurface = nullptr;
     const Layer* currentLayer = nullptr;
     const TrackingVolume* currentVolume = nullptr;
@@ -230,21 +233,22 @@ class Navigator {
         std::pair<uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
   }
 
-  /// @brief Initialize call - start of propagation
+  /// @brief Initialize call - start of navigation
   ///
   /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
   /// @param [in] stepper Stepper in use
-  ///
-  /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE("Initialization.");
 
+    // Depending on the start information set there are different modes for
+    // finding the start layer and volume.
     if (state.navigation.startSurface != nullptr &&
         state.navigation.startSurface->associatedLayer() != nullptr) {
+      // Everything was given by the user
       ACTS_VERBOSE(
           "Fast start initialization through association from Surface.");
       state.navigation.startLayer =
@@ -252,12 +256,14 @@ class Navigator {
       state.navigation.startVolume =
           state.navigation.startLayer->trackingVolume();
     } else if (state.navigation.startVolume != nullptr) {
+      // Only the layer has to be determined
       ACTS_VERBOSE(
           "Fast start initialization through association from Volume.");
       state.navigation.startLayer =
           state.navigation.startVolume->associatedLayer(
               state.geoContext, stepper.position(state.stepping));
     } else {
+      // Otherwise we only rely on the position and direction
       ACTS_VERBOSE("Slow start initialization through search.");
       ACTS_VERBOSE("Starting from position "
                    << toString(stepper.position(state.stepping))
@@ -319,10 +325,8 @@ class Navigator {
 
   /// @brief Navigator pre step call
   ///
-  /// Call options
-  /// (a) there are still surfaces to be resolved: handle those
-  /// (b) there no surfaces but still layers to be resolved, handle those
-  /// (c) there are no surfaces nor layers to be resolved, handle boundary
+  /// This determines the next surface to be targeted and sets the step length
+  /// accordingly.
   ///
   /// @tparam propagator_state_t is the type of Propagatgor state
   /// @tparam stepper_t is the used type of the Stepper by the Propagator
@@ -342,7 +346,6 @@ class Navigator {
     // Check next navigation candidate
     while (state.navigation.candidateIndex !=
            state.navigation.candidates.size()) {
-      // Screen output how much is left to try
       ACTS_VERBOSE(volInfo(state)
                    << (state.navigation.candidates.size() -
                        state.navigation.candidateIndex)
@@ -354,21 +357,21 @@ class Navigator {
       const Surface& surface = *intersection.representation();
       BoundaryCheck boundaryCheck = candidate.boundaryCheck;
 
-      // Screen output which surface you are on
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface.geometryId());
 
-      // Estimate the surface status
+      // Determine the surface status and set the step length accordingly
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
           state.options.direction, boundaryCheck,
           state.options.surfaceTolerance, logger());
 
+      // We should never be on surface before we actually targeted a surface
       if (surfaceStatus == IntersectionStatus::onSurface) {
         ACTS_ERROR(volInfo(state)
                    << "We are on surface " << surface.geometryId()
-                   << " before trying to reach "
-                      "it. This should not happen. Good luck.");
+                   << " before trying to reach it. This should not happen. "
+                      "Good luck.");
         ++state.navigation.candidateIndex;
         continue;
       }
@@ -380,9 +383,11 @@ class Navigator {
         break;
       }
 
-      // Handle unreachable
+      // Handle an unreachable candidates. This can happen for sensitive
+      // surfaces as we may not encounter them. If this happens for layers or
+      // boundaries we have to reinitialize the navigation.
       if (intersection.template checkType<SurfaceIntersection>()) {
-        // Skip if this is a surface
+        // Skip if this is an ordinary surface
         ACTS_VERBOSE(volInfo(state) << "Surface unreachable, skip.");
         ++state.navigation.candidateIndex;
 
@@ -390,9 +395,10 @@ class Navigator {
                    state.navigation.candidates.size() &&
                "No more candidates.");
       } else {
-        // Renavigate otherwise
+        // Renavigate as this is a sign of an invalidated navigation stream
         ACTS_VERBOSE(volInfo(state)
                      << "Layer/Boundary unreachable, renavigate.");
+        // If we tried to reinitialize already we break the look and error
         if (reinitialized) {
           ACTS_ERROR(volInfo(state) << "Renavigation failed. Good luck.");
           // Set navigation break and release the navigation step size
@@ -405,6 +411,8 @@ class Navigator {
       }
     }
 
+    // There should always be an active candidate we are trying to navigate to.
+    // Otherwise we are in trouble.
     if (state.navigation.candidateIndex == state.navigation.candidates.size()) {
       ACTS_ERROR(volInfo(state) << "Exhausted navigation candidates.");
       // Set navigation break and release the navigation step size
@@ -416,25 +424,20 @@ class Navigator {
     state.navigation.currentSurface = nullptr;
   }
 
-  /// @brief Navigator post step call, will be called in two modes
+  /// @brief Navigator post step call
   ///
-  /// (a) It initializes the Navigation stream if start volume is
-  ///     not yet defined:
-  ///  - initialize the volume
-  ///  - establish the start layer and start volume
-  ///  - set the current surface to the start surface
-  ///
-  /// (b) It establishes the currentSurface status during
-  ///     the propagation flow, currentSurface can be
-  ///  - surfaces still to be handled within a layer
-  ///  - layers still to be handled within a volume
-  ///  - boundaries still to be handled to exit a volume
+  /// This determines if we hit the next navigation candidate and deals with it
+  /// accordingly. It sets the current surface, enters layers and changes
+  /// volumes.
   ///
   /// @tparam propagator_state_t is the type of Propagatgor state
   /// @tparam stepper_t is the used type of the Stepper by the Propagator
   ///
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
+  ///
+  /// @return Boolean to indicate if we continue with the actors and
+  ///         aborters or if we should target again.
   template <typename propagator_state_t, typename stepper_t>
   bool postStep(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state) << "Entering navigator::postStep.");
@@ -451,22 +454,29 @@ class Navigator {
     const auto& intersection = candidate.intersection;
     const Surface& surface = *intersection.representation();
 
+    // Determine the surface status without boundary check.
+    // TODO This will also update the step length which is unecessary
     Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, surface, intersection.index(), state.options.direction,
         BoundaryCheck(false), state.options.surfaceTolerance, logger());
 
+    // Check if we are on surface otherwise wait for the next step.
     if (surfaceStatus != IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
       return true;
     }
 
+    // We are on surface and switch already to the next candidate which is
+    // necessary for the next `preStep` call.
     ++state.navigation.candidateIndex;
 
+    // Determine the surface status with boundary check.
     // TODO second intersection should not be necessary
     surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, surface, intersection.index(), state.options.direction,
         BoundaryCheck(true), state.options.surfaceTolerance, logger());
 
+    // Check if we are still on surface, otherwise we are out of bounds.
     if (surfaceStatus != IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Surface successfully hit, but outside bounds.");
@@ -474,20 +484,28 @@ class Navigator {
     }
 
     ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
-    // Set in navigation state, so actors and aborters can access it
+    // Update navigation state, so actors and aborters can access it
     state.navigation.currentSurface = &surface;
-    if (state.navigation.currentSurface) {
-      ACTS_VERBOSE(volInfo(state) << "Current surface set to surface "
-                                  << surface.geometryId());
+
+    if (state.navigation.currentSurface != nullptr) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current surface set to " << surface.geometryId());
     }
 
+    // Depending on what kind of surface we intersected we need to update the
+    // navigation state further.
     if (intersection.template checkType<SurfaceIntersection>()) {
+      // In case of a surface we are done already
+
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
 
       assert(state.navigation.candidateIndex !=
                  state.navigation.candidates.size() &&
              "No more candidates.");
     } else if (intersection.template checkType<LayerIntersection>()) {
+      // In case of a layer we need to update our navigation candidates with the
+      // surfaces we might hit in the layer
+
       ACTS_VERBOSE(volInfo(state)
                    << "This is a layer. Reinitialize navigation");
 
@@ -496,6 +514,8 @@ class Navigator {
 
       reinitializeCandidates(state, stepper);
     } else if (intersection.template checkType<BoundaryIntersection>()) {
+      // In case of a boundary we need to switch volume and reinitialize
+
       ACTS_VERBOSE(volInfo(state)
                    << "This is a boundary. Reinitialize navigation");
 
@@ -518,6 +538,7 @@ class Navigator {
   }
 
  private:
+  /// Helper method to initialize navigation candidates for the current volume.
   template <typename propagator_state_t, typename stepper_t>
   void initializeVolumeCandidates(propagator_state_t& state,
                                   const stepper_t& stepper) const {
@@ -605,6 +626,7 @@ class Navigator {
     }
   }
 
+  /// Helper method to initialize navigation candidates for the current layer.
   template <typename propagator_state_t, typename stepper_t>
   void initializeLayerCandidates(propagator_state_t& state,
                                  const stepper_t& stepper) const {
@@ -662,6 +684,7 @@ class Navigator {
     }
   }
 
+  /// Helper method to reset and reinitialize the navigation candidates.
   template <typename propagator_state_t, typename stepper_t>
   void reinitializeCandidates(propagator_state_t& state,
                               const stepper_t& stepper) const {
@@ -679,10 +702,8 @@ class Navigator {
               NavigationCandidate::forwardOrder);
   }
 
-  /// Inactive
-  ///
-  /// This checks if a navigation break had been triggered or navigator
-  /// is misconfigured
+  /// Checks if a navigation break had been triggered or navigator is
+  /// misconfigured.
   ///
   /// @tparam propagator_state_t The state type of the propagator
   ///
