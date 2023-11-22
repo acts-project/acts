@@ -34,7 +34,6 @@
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestSpacePoint.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -105,7 +104,6 @@ GeometryContext tgContext = GeometryContext();
 
 const GeometryContext geoCtx;
 const MagneticFieldContext magCtx;
-const CalibrationContext calCtx;
 
 // detector geometry
 CubicTrackingGeometry geometryStore(geoCtx);
