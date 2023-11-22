@@ -115,31 +115,6 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
       cache.newVertexCov * (cache.oldVertexWeight * oldVtxPos +
                             sign * trackWeight * posJac.transpose() * gBMat *
                                 (trkParams - constTerm));
-
-  // The following computations are independent of whether we add/remove the
-  // track. While it does not make much sense to compute an updated track
-  // momentum in the case where the track is removed, the computation is useful
-  // when we do the smoothing (i.e., when we update the track with the final
-  // estimation of the vertex position). Note that, for the moment, this is the
-  // only case where we remove tracks.
-  // A_k * \tilde{x_k}
-  const ActsVector<5> posJacVtxPos = posJac * cache.newVertexPos;
-
-  // \tilde{q_k}
-  Vector3 newTrkMom = cache.wMat * momJac.transpose() * trkParamWeight *
-                      (trkParams - constTerm - posJacVtxPos);
-
-  // Correct phi and theta for possible periodicity changes
-  const auto correctedPhiTheta =
-      Acts::detail::normalizePhiTheta(newTrkMom(0), newTrkMom(1));
-  newTrkMom(0) = correctedPhiTheta.first;   // phi
-  newTrkMom(1) = correctedPhiTheta.second;  // theta
-
-  cache.newTrackMomentum = newTrkMom;
-
-  // Updated linearizedq track parameters \tilde{p_k}
-  cache.linearizedTrackParameters =
-      constTerm + posJacVtxPos + momJac * cache.newTrackMomentum;
 }
 
 template <typename input_track_t>
@@ -154,13 +129,37 @@ double Acts::KalmanVertexUpdater::detail::vertexPositionChi2Update(
 template <typename input_track_t>
 double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
     const LinearizedTrack& linTrack, const Cache& cache) {
-  // Track properties
+  // A_k
+  const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
+  // B_k
+  const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
+  // p_k
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
+  // c_k
+  const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
+  // G_k
   const ActsSquareMatrix<5> trkParamWeight =
       linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
-  // Parameter difference
-  ActsVector<5> paramDiff = trkParams - cache.linearizedTrackParameters;
+  // A_k * \tilde{x_k}
+  const ActsVector<5> posJacVtxPos = posJac * cache.newVertexPos;
+
+  // \tilde{q_k}
+  Vector3 newTrkMom = cache.wMat * momJac.transpose() * trkParamWeight *
+                      (trkParams - constTerm - posJacVtxPos);
+
+  // Correct phi and theta for possible periodicity changes
+  const auto correctedPhiTheta =
+      Acts::detail::normalizePhiTheta(newTrkMom(0), newTrkMom(1));
+  newTrkMom(0) = correctedPhiTheta.first;   // phi
+  newTrkMom(1) = correctedPhiTheta.second;  // theta
+
+  // \tilde{p_k}
+  ActsVector<5> linearizedTrackParameters =
+      constTerm + posJacVtxPos + momJac * newTrkMom;
+
+  // r_k
+  ActsVector<5> paramDiff = trkParams - linearizedTrackParameters;
 
   // Return chi2
   return paramDiff.transpose() * (trkParamWeight * paramDiff);

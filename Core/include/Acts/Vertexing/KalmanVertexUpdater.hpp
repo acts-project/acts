@@ -44,10 +44,6 @@ struct Cache {
   SquareMatrix3 newVertexWeight = SquareMatrix3::Zero();
   // C_{k-1}^-1
   SquareMatrix3 oldVertexWeight = SquareMatrix3::Zero();
-  // \tilde{q_k}
-  Vector3 newTrackMomentum = Vector3::Zero();
-  // \tilde{p_k}
-  ActsVector<5> linearizedTrackParameters = ActsVector<5>::Zero();
   // W_k
   SquareMatrix3 wMat = SquareMatrix3::Zero();
 };
