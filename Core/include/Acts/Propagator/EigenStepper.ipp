@@ -250,12 +250,10 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     // Furthermore, we're constructing K in place of J, and since
     // K₁₁ = I₈ = J₁₁ and K₂₁ = 0₈ = D₂₁, we don't actually need to touch those
     // sub-matrices at all!
-    if ((D.topLeftCorner<4, 4>().isIdentity(1e-8)) &&
-        (D.bottomLeftCorner<4, 4>().isZero(1e-8)) &&
-        (state.stepping.jacTransport.template topLeftCorner<4, 4>().isIdentity(
-            1e-8)) &&
-        (state.stepping.jacTransport.template bottomLeftCorner<4, 4>().isZero(
-            1e-8))) {
+    if ((D.topLeftCorner<4, 4>().isIdentity()) &&
+        (D.bottomLeftCorner<4, 4>().isZero()) &&
+        (state.stepping.jacTransport.template topLeftCorner<4, 4>().isIdentity()) &&
+        (state.stepping.jacTransport.template bottomLeftCorner<4, 4>().isZero())) {
       state.stepping.jacTransport.template topRightCorner<4, 4>() +=
           D.topRightCorner<4, 4>() *
           state.stepping.jacTransport.template bottomRightCorner<4, 4>();
