@@ -197,7 +197,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
     const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<double> {
   auto estRes = m_cfg.ipEstimator.getImpactParameters(
-      m_extractParameters(*track), newVtx, vertexingOptions.geoContext,
+      m_extractParameters(*track), vtx, vertexingOptions.geoContext,
       vertexingOptions.magFieldContext);
   if (!estRes.ok()) {
     return estRes.error();
