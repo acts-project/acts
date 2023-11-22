@@ -63,6 +63,8 @@ concept CommonMultiTrajectoryBackend = requires(const T& cv, HashedString key,
   { cv.component_impl(key, istate) } -> std::same_as<std::any>;
 
   { cv.hasColumn_impl(key) } -> std::same_as<bool>;
+
+  { cv.dynamicKeys_impl() } -> std::same_as<std::vector<Acts::HashedString>>;
 };
 
 template <typename T>
@@ -125,7 +127,7 @@ concept MutableMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
 
   {v.setReferenceSurface_impl(istate, surface)};
 
-  // @TODO: Add copyDynamicFrom + ensureDynamicColumns for MTJ like in TrackContainer
+  {v.copyDynamicFrom_impl(istate, key, std::declval<const std::any&>())};
 };
 
 }  // namespace Acts

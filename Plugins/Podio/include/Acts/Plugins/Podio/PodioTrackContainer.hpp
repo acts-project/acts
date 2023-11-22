@@ -79,6 +79,8 @@ class PodioTrackContainerBase {
     switch (key) {
       case "tipIndex"_hash:
         return &data.tipIndex;
+      case "stemIndex"_hash:
+        return &data.stemIndex;
       case "params"_hash:
         return data.parameters.data();
       case "cov"_hash:
@@ -95,6 +97,9 @@ class PodioTrackContainerBase {
         return &data.nOutliers;
       case "nSharedHits"_hash:
         return &data.nSharedHits;
+      case "particleHypothesis"_hash:
+        // @TODO: Implement particle hypothesis for PODIO backend
+        return nullptr;
       default:
         auto it = instance.m_dynamic.find(key);
         if (it == instance.m_dynamic.end()) {
@@ -108,6 +113,16 @@ class PodioTrackContainerBase {
         assert(col && "Dynamic column is null");
         return col->get(itrack);
     }
+  }
+
+  template <typename T>
+  static std::vector<Acts::HashedString> dynamicKeys_impl(T& instance) {
+    std::vector<Acts::HashedString> result;
+    result.reserve(instance.m_dynamic.size());
+    for (const auto& [key, value] : instance.m_dynamic) {
+      result.push_back(key);
+    }
+    return result;
   }
 
   static void populateSurfaceBuffer(
@@ -218,10 +233,16 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
         m_collection->at(itrack).getData().covariance.data()};
   }
 
-  // @TODO What's the equivalent of this?
-  void copyDynamicFrom_impl(IndexType dstIdx,
-                            const MutablePodioTrackContainer& src,
-                            IndexType srcIdx);
+  void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
+                            const std::any& srcPtr) {
+    auto it = m_dynamic.find(key);
+    if (it == m_dynamic.end()) {
+      throw std::invalid_argument{
+          "Destination container does not have matching dynamic column"};
+    }
+
+    it->second->copyFrom(dstIdx, srcPtr);
+  }
 
   void ensureDynamicColumns_impl(const MutablePodioTrackContainer& other);
 
@@ -240,6 +261,15 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     for (const auto& [key, col] : m_dynamic) {
       col->releaseInto(frame, "tracks" + s + "_extra__");
     }
+  }
+
+  std::vector<Acts::HashedString> dynamicKeys_impl() const {
+    return PodioTrackContainerBase::dynamicKeys_impl(*this);
+  }
+
+  void setParticleHypothesis_impl(
+      IndexType /*itrack*/, const ParticleHypothesis& /*particleHypothesis*/) {
+    // @TODO: Implement particle hypothesis in podio
   }
 
   // END INTERFACE
@@ -359,6 +389,10 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
   const ActsPodioEdm::TrackCollection& trackCollection() {
     return *m_collection;
+  }
+
+  std::vector<Acts::HashedString> dynamicKeys_impl() const {
+    return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
  private:

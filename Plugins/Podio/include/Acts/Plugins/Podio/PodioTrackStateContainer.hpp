@@ -77,6 +77,7 @@ class PodioTrackStateContainerBase {
       case "uncalibratedSourceLink"_hash:
         return data.uncalibratedIdentifier != PodioUtil::kNoIdentifier;
       case "previous"_hash:
+      case "next"_hash:
       case "measdim"_hash:
       case "referenceSurface"_hash:
       case "chi2"_hash:
@@ -111,6 +112,8 @@ class PodioTrackStateContainerBase {
     switch (key) {
       case "previous"_hash:
         return &data.previous;
+      case "next"_hash:
+        return &data.next;
       case "predicted"_hash:
         return &data.ipredicted;
       case "filtered"_hash:
@@ -151,6 +154,7 @@ class PodioTrackStateContainerBase {
       case "jacobian"_hash:
       case "projector"_hash:
       case "previous"_hash:
+      case "next"_hash:
       case "uncalibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
@@ -172,6 +176,16 @@ class PodioTrackStateContainerBase {
       surfaces.push_back(PodioUtil::convertSurfaceFromPodio(
           helper, trackState.getReferenceSurface()));
     }
+  }
+
+  template <typename T>
+  static std::vector<Acts::HashedString> dynamicKeys_impl(T& instance) {
+    std::vector<Acts::HashedString> result;
+    result.reserve(instance.m_dynamic.size());
+    for (const auto& [key, value] : instance.m_dynamic) {
+      result.push_back(key);
+    }
+    return result;
   }
 };
 
@@ -282,6 +296,10 @@ class ConstPodioTrackStateContainer final
 
       m_dynamic.insert({hashString(dynName), std::move(up)});
     }
+  }
+
+  std::vector<Acts::HashedString> dynamicKeys_impl() const {
+    return PodioTrackStateContainerBase::dynamicKeys_impl(*this);
   }
 
  private:
@@ -649,6 +667,21 @@ class MutablePodioTrackStateContainer final
     for (const auto& [key, col] : m_dynamic) {
       col->releaseInto(frame, "trackStates" + s + "_extra__");
     }
+  }
+
+  std::vector<Acts::HashedString> dynamicKeys_impl() const {
+    return PodioTrackStateContainerBase::dynamicKeys_impl(*this);
+  }
+
+  void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
+                            const std::any& srcPtr) {
+    auto it = m_dynamic.find(key);
+    if (it == m_dynamic.end()) {
+      throw std::invalid_argument{
+          "Destination container does not have matching dynamic column"};
+    }
+
+    it->second->copyFrom(dstIdx, srcPtr);
   }
 
  private:

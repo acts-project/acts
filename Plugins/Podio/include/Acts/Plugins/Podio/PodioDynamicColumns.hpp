@@ -40,6 +40,7 @@ struct DynamicColumnBase : public ConstDynamicColumnBase {
   virtual void erase(std::size_t i) = 0;
   virtual void copyFrom(std::size_t dstIdx, const DynamicColumnBase& src,
                         std::size_t srcIdx) = 0;
+  virtual void copyFrom(std::size_t dstIdx, const std::any& srcPtr) = 0;
 
   virtual std::unique_ptr<DynamicColumnBase> clone(
       bool empty = false) const = 0;
@@ -84,6 +85,13 @@ struct DynamicColumn : public DynamicColumnBase {
     assert(other != nullptr &&
            "Source column is not of same type as destination");
     m_collection.vec().at(dstIdx) = other->m_collection.vec().at(srcIdx);
+  }
+
+  void copyFrom(std::size_t dstIdx, const std::any& srcPtr) override {
+    const auto* other = std::any_cast<const T*>(srcPtr);
+    assert(other != nullptr &&
+           "Source column is not of same type as destination");
+    m_collection.vec().at(dstIdx) = *other;
   }
 
   void releaseInto(podio::Frame& frame, const std::string& prefix) override {

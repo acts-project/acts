@@ -43,6 +43,8 @@ concept ConstTrackContainerBackend = requires(const T& cv, HashedString key,
   { cv.hasColumn_impl(key) } -> std::same_as<bool>;
 
   { cv.referenceSurface_impl(itrack) } -> std::same_as<const Surface*>;
+
+  { cv.dynamicKeys_impl() } -> std::same_as<std::vector<Acts::HashedString>>;
 };
 
 template <typename T>
@@ -57,8 +59,8 @@ concept MutableTrackContainerBackend = ConstTrackContainerBackend<T> &&
 
   {v.removeTrack_impl(itrack)};
 
-  // As far as I know there's no good way to assert that there's a generic
-  // template function
+  // As far as I know there's no good way to assert that there's a
+  // generic template function
   {v.template addColumn_impl<uint32_t>(col)};
   {v.template addColumn_impl<uint64_t>(col)};
   {v.template addColumn_impl<int32_t>(col)};
@@ -66,13 +68,16 @@ concept MutableTrackContainerBackend = ConstTrackContainerBackend<T> &&
   {v.template addColumn_impl<float>(col)};
   {v.template addColumn_impl<double>(col)};
 
-  {v.copyDynamicFrom_impl(itrack, other, itrack)};
+  {v.copyDynamicFrom_impl(itrack, key, std::declval<const std::any&>())};
 
   {v.ensureDynamicColumns_impl(other)};
 
   {v.reserve(itrack)};
 
   {v.setReferenceSurface_impl(itrack, sharedSurface)};
+
+  {v.setParticleHypothesis_impl(itrack,
+                                std::declval<const ParticleHypothesis&>())};
 };
 
 template <typename T>
@@ -81,7 +86,6 @@ struct IsReadOnlyTrackContainer;
 template <typename T>
 concept TrackContainerBackend = ConstTrackContainerBackend<T> &&
     (IsReadOnlyTrackContainer<T>::value || MutableTrackContainerBackend<T>);
-
 }  // namespace Acts
 
 #endif
