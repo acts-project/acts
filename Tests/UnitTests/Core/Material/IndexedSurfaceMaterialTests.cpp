@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Material/IndexedSurfaceMaterial.hpp"
+#include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
@@ -41,7 +41,8 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   eqGrid.atPosition(Point{4.5}) = 3u;  // material 3
 
   Acts::IndexedSurfaceMaterial<EqGrid> ism(
-      std::move(material), std::move(eqGrid), {Acts::binX}, {0u});
+      std::move(eqGrid), Acts::IndexedMaterialAccessor{std::move(material)},
+      {Acts::binX}, {0u});
 
   // Global access test
   Acts::Vector3 g0(0.5, 0., 0.);
@@ -132,8 +133,9 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
 
   // Let's shift it by 10
   Acts::IndexedSurfaceMaterial<EqEqGrid> ism(
-      std::move(material), std::move(eqeqGrid), {Acts::binZ, Acts::binPhi},
-      {0u, 1u}, Acts::Transform3::Identity() * Acts::Translation3(0., 0., 10.));
+      std::move(eqeqGrid), Acts::IndexedMaterialAccessor{std::move(material)},
+      {Acts::binZ, Acts::binPhi}, {0u, 1u},
+      Acts::Transform3::Identity() * Acts::Translation3(0., 0., 10.));
 
   // Global access test, both should give material 1
   Acts::Vector3 g0(-0.5, -0.5, -10.5);

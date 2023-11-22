@@ -457,6 +457,12 @@ class Grid final {
     return detail::grid_helper::getAxes(m_axes);
   }
 
+  /// Const-access to the value store
+  const std::vector<T>& values() const { return m_values; }
+
+  /// Non-const access to the value store
+  std::vector<T>& values() { return m_values; }
+
  private:
   /// set of axis defining the multi-dimensional grid
   std::tuple<Axes...> m_axes;
