@@ -189,6 +189,10 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
       m_outputTree->Branch("cov_eT_eQOP", &m_cov_eT_eQOP);
       m_outputTree->Branch("cov_eT_eT", &m_cov_eT_eT);
     }
+
+    if (m_cfg.writeGx2fSpecific) {
+      m_outputTree->Branch("nUpdatesGx2f", &m_nUpdatesGx2f);
+    }
   }
 }
 
@@ -510,6 +514,17 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
       m_cov_eT_eQOP.push_back(getCov(5, 4));
       m_cov_eT_eT.push_back(getCov(5, 5));
     }
+
+    if (m_cfg.writeGx2fSpecific) {
+      if (tracks.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
+        int nUpdate = static_cast<int>(
+            track.template component<std::size_t,
+                                     Acts::hashString("Gx2fnUpdateColumn")>());
+        m_nUpdatesGx2f.push_back(nUpdate);
+      } else {
+        m_nUpdatesGx2f.push_back(-1);
+      }
+    }
   }
 
   // fill the variables
@@ -620,6 +635,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     m_cov_eT_eQOP.clear();
     m_cov_eT_eT.clear();
   }
+
+  m_nUpdatesGx2f.clear();
 
   return ProcessCode::SUCCESS;
 }

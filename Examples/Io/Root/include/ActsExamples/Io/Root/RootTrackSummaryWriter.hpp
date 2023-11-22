@@ -69,6 +69,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
     bool writeCovMat = false;
     /// Write GSF specific things (for now only some material statistics)
     bool writeGsfSpecific = false;
+    /// Write GX2F specific things
+    bool writeGx2fSpecific = false;
   };
 
   /// Constructor
@@ -231,6 +233,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
 
   std::vector<float> m_gsf_max_material_fwd;
   std::vector<float> m_gsf_sum_material_fwd;
+
+  std::vector<int> m_nUpdatesGx2f;  ///< The number of updates (gx2f)
 };
 
 }  // namespace ActsExamples
