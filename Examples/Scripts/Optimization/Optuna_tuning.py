@@ -116,7 +116,7 @@ class Objective:
             effContName = "particles"
             contName = "tracks"
         else:
-            outFileName = "Output_Seeding"
+            outDirName = "Output_Seeding"
             outputfile = srcDir / outFileName / "performance_seeding.root"
             effContName = "seeds"
             contName = "seeds"
