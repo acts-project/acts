@@ -28,7 +28,7 @@
 #include <memory>
 #include <string>
 
-//using boost::test_tools::output_test_stream;
+// using boost::test_tools::output_test_stream;
 
 namespace Acts {
 namespace Test {
