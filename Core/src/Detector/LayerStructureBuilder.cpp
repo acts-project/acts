@@ -219,8 +219,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
     if (m_cfg.binnings.empty()) {
       ACTS_DEBUG(
           "No surface binning provided, navigation will be 'tryAll' "
-          "(potentially "
-          "slow).");
+          "(potentially slow).");
     } else if (m_cfg.binnings.size() == 1u) {
       ACTS_DEBUG("- 1-dimensional surface binning detected.");
       // Capture the binning
@@ -231,7 +230,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
             createUpdator<Acts::detail::AxisBoundaryType::Closed>(
                 gctx, internalSurfaces, assignToAll, binning);
       } else {
-        ACTS_VERBOSE("-- closed binning option.");
+        ACTS_VERBOSE("-- bound binning option.");
         internalCandidatesUpdator =
             createUpdator<Acts::detail::AxisBoundaryType::Bound>(
                 gctx, internalSurfaces, assignToAll, binning);
@@ -256,7 +255,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
                           Acts::detail::AxisBoundaryType::Closed>(
                 gctx, internalSurfaces, assignToAll, binning0, binning1);
       } else {
-        ACTS_VERBOSE("-- closed/closed binning option.");
+        ACTS_VERBOSE("-- bound/bound binning option.");
         internalCandidatesUpdator =
             createUpdator<Acts::detail::AxisBoundaryType::Bound,
                           Acts::detail::AxisBoundaryType::Bound>(
