@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/HashedString.hpp"
@@ -76,8 +77,8 @@ concept MutableTrackContainerBackend = ConstTrackContainerBackend<T> &&
 
   {v.setReferenceSurface_impl(itrack, sharedSurface)};
 
-  {v.setParticleHypothesis_impl(itrack,
-                                std::declval<const ParticleHypothesis&>())};
+  {v.setParticleHypothesis_impl(
+      itrack, std::declval<const Acts::ParticleHypothesis&>())};
 };
 
 template <typename T>
