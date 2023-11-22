@@ -122,21 +122,6 @@ const MeasurementResolutionMap resolutions = {
     {GeometryIdentifier().setVolume(3).setLayer(8), resStrip},
 };
 
-// Construct a straight-line propagator.
-static StraightPropagator makeStraightPropagator(
-    std::shared_ptr<const TrackingGeometry> geo) {
-  Navigator::Config cfg{std::move(geo)};
-  cfg.resolvePassive = false;
-  cfg.resolveMaterial = true;
-  cfg.resolveSensitive = true;
-  Navigator navigator{cfg};
-  StraightLineStepper stepper;
-  return StraightPropagator(stepper, std::move(navigator));
-}
-
-// simulation propagator
-const auto measPropagator = makeStraightPropagator(geometry);
-
 std::default_random_engine rng(42);
 
 BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {

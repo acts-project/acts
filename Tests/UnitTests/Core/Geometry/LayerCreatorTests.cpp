@@ -51,12 +51,6 @@ namespace Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-#define CHECK_ROTATION_ANGLE(t, a, tolerance)               \
-  {                                                         \
-    Vector3 v = (*t) * Vector3(1, 0, 0);                    \
-    CHECK_CLOSE_ABS(VectorHelpers::phi(v), (a), tolerance); \
-  }
-
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
 void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {

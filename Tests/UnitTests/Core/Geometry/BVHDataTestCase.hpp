@@ -11,7 +11,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace bdata = boost::unit_test::data;
-using Box = Acts::Volume::BoundingBox;
 using Ray = Acts::Ray<double, 3>;
 
 GeometryContext tgContext = GeometryContext();

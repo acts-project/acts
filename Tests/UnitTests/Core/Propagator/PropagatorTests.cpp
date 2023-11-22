@@ -129,9 +129,6 @@ struct SurfaceObserver {
 };
 
 // Global definitions
-// The path limit abort
-using path_limit = PathLimitReached;
-
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
