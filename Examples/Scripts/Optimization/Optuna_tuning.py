@@ -112,16 +112,16 @@ class Objective:
 
         if ckf_perf:
             outDirName = "Output_CKF"
-            outputfile = srcDir / outFileName / "performance_ckf.root"
+            outputfile = srcDir / outDirName / "performance_ckf.root"
             effContName = "particles"
             contName = "tracks"
         else:
             outDirName = "Output_Seeding"
-            outputfile = srcDir / outFileName / "performance_seeding.root"
+            outputfile = srcDir / outDirName / "performance_seeding.root"
             effContName = "seeds"
             contName = "seeds"
 
-        outputDir = Path(srcDir / outFileName)
+        outputDir = Path(srcDir / outDirName)
         outputDir.mkdir(exist_ok=True)
         run_ckf(params, keys, outputDir)
         rootFile = uproot.open(outputfile)
@@ -133,7 +133,7 @@ class Objective:
             rootFile["duplicaterate_" + contName].member("fElements")[0]
         )
 
-        timingfile = srcDir / outFileName / "timing.tsv"
+        timingfile = srcDir / outDirName / "timing.tsv"
         timing = pd.read_csv(timingfile, sep="\t")
 
         if ckf_perf:
