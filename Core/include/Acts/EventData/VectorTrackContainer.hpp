@@ -162,6 +162,19 @@ class VectorTrackContainerBase {
     assert(checkConsistency());
     return m_tipIndex.size();
   }
+
+  // @TODO: Reconsider return type, by-value -> expensive
+  // Could be generic iterator pair, possibly driven by iterator adapter that
+  // unpacks from unordered_map dynamically
+  std::vector<Acts::HashedString> dynamicKeys_impl() const {
+    std::vector<Acts::HashedString> result;
+    result.reserve(m_dynamic.size());
+    for (const auto& [key, value] : m_dynamic) {
+      result.push_back(key);
+    }
+    return result;
+  }
+
   // END INTERFACE HELPER
 
   std::vector<IndexType> m_tipIndex;
@@ -237,9 +250,8 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
     return ConstCovariance{m_cov[itrack].data()};
   }
 
-  void copyDynamicFrom_impl(IndexType dstIdx,
-                            const VectorTrackContainerBase& src,
-                            IndexType srcIdx);
+  void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
+                            const std::any& srcPtr);
 
   void ensureDynamicColumns_impl(
       const detail_vtc::VectorTrackContainerBase& other);

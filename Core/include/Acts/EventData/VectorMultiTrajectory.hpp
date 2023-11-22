@@ -288,6 +288,19 @@ class VectorMultiTrajectoryBase {
     }
   }
 
+ public:
+  // @TODO: Reconsider return type, by-value -> expensive
+  // Could be generic iterator pair, possibly driven by iterator adapter that
+  // unpacks from unordered_map dynamically
+  std::vector<Acts::HashedString> dynamicKeys_impl() const {
+    std::vector<Acts::HashedString> result;
+    result.reserve(m_dynamic.size());
+    for (const auto& [key, value] : m_dynamic) {
+      result.push_back(key);
+    }
+    return result;
+  }
+
   // END INTERFACE HELPER
 
  public:
@@ -481,6 +494,9 @@ class VectorMultiTrajectory final
                                 std::shared_ptr<const Surface> surface) {
     m_referenceSurfaces[istate] = std::move(surface);
   }
+
+  void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
+                            const std::any& srcPtr);
 
   // END INTERFACE
 };
