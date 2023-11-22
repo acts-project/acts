@@ -189,9 +189,15 @@ class Navigator {
   }
 
   const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
+    std::cout << "currentVolumeMaterial: state.currentVolume "
+              << state.currentVolume << std::endl;
     if (state.currentVolume == nullptr) {
       return nullptr;
     }
+    std::cout << "currentVolumeMaterial: state.currentVolume->geometryId() "
+              << state.currentVolume->geometryId() << std::endl;
+    std::cout << "currentVolumeMaterial: state.currentVolume->volumeMaterial() "
+              << state.currentVolume->volumeMaterial() << std::endl;
     return state.currentVolume->volumeMaterial();
   }
 

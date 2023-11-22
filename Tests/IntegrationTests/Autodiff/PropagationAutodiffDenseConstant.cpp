@@ -22,7 +22,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
 
@@ -83,16 +82,16 @@ inline Propagator makePropagator(double bz) {
 
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return Propagator(std::move(stepper),
-                    Acts::Navigator({makeDetector()},
-                                    getDefaultLogger("nav", Logging::VERBOSE)),
-                    getDefaultLogger("prop", Logging::VERBOSE));
+  return Propagator(std::move(stepper), Acts::Navigator({makeDetector()}));
 }
 
 inline RiddersPropagator makeRiddersPropagator(double bz) {
   using namespace Acts;
 
-  return RiddersPropagator(makePropagator(bz));
+  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
+  Stepper stepper(std::move(magField));
+  return RiddersPropagator(std::move(stepper),
+                           Acts::Navigator({makeDetector()}));
 }
 
 }  // namespace
