@@ -50,11 +50,7 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -742,5 +738,4 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
-
 }  // namespace Acts

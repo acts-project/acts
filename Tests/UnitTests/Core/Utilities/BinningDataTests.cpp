@@ -22,8 +22,6 @@
 namespace Acts {
 namespace Test {
 
-namespace tt = boost::test_tools;
-
 // the test positions in 3D
 Vector3 xyzPosition(0.5, 1.5, 2.5);
 Vector3 xyzPositionOutside(30., -30., 200.);

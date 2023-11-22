@@ -28,7 +28,6 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 
 namespace Acts {
 namespace IntegrationTest {

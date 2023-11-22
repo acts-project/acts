@@ -30,12 +30,9 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 
 namespace Acts {
-
 namespace Test {
-
 BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
@@ -329,7 +326,5 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

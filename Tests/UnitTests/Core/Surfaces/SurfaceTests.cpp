@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -25,26 +24,7 @@
 
 #include "SurfaceStub.hpp"
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
 namespace Acts {
-/// Mock track object with minimal methods implemented for compilation
-class MockTrack {
- public:
-  MockTrack(const Vector3& mom, const Vector3& pos) : m_mom(mom), m_pos(pos) {
-    // nop
-  }
-
-  Vector3 momentum() const { return m_mom; }
-
-  Vector3 position() const { return m_pos; }
-
- private:
-  Vector3 m_mom;
-  Vector3 m_pos;
-};
-
 namespace Test {
 
 // Create a test context
@@ -179,7 +159,5 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   BOOST_CHECK(*surfacePtr == *sharedSurfacePtr);
 }
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

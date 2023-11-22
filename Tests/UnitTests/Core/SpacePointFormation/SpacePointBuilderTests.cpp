@@ -47,7 +47,6 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 
 namespace Acts {
 namespace Test {
@@ -56,7 +55,6 @@ using namespace UnitLiterals;
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
 
-using TestMeasurement = BoundVariantMeasurement;
 using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 // Construct initial track parameters.
