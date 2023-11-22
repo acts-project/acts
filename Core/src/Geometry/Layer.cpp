@@ -173,11 +173,14 @@ Acts::Layer::compatibleSurfaces(
   // - the surfaces are only collected if needed
   if (m_approachDescriptor &&
       (options.resolveMaterial || options.resolvePassive)) {
-    // the approach surface
-    auto approachSurface = m_approachDescriptor->approachSurface(
-        gctx, position, direction, options.boundaryCheck, nearLimit, farLimit);
-    if (approachSurface) {
-      processSurface(*approachSurface.object());
+    // the approach surfaces
+    const std::vector<const Surface*>& approachSurfaces =
+        m_approachDescriptor->containedSurfaces();
+    // we loop through and veto
+    // - if the approach surface is the parameter surface
+    // - if the surface is not compatible with the collect
+    for (auto& aSurface : approachSurfaces) {
+      processSurface(*aSurface);
     }
   }
 

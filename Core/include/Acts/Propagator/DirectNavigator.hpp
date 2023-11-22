@@ -347,9 +347,6 @@ class DirectNavigator {
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;
-
-  /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = -100 * UnitConstants::um;
 };
 
 }  // namespace Acts

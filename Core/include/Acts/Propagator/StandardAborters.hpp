@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -115,18 +115,14 @@ struct SurfaceReached {
         boundaryCheck, tolerance);
     const auto closest = sIntersection.closest();
 
-    bool reached = false;
-
     if (closest.status() == Intersection3D::Status::onSurface) {
       const double distance = closest.pathLength();
       ACTS_VERBOSE(
           "SurfaceReached aborter | "
           "Target surface reached at distance (tolerance) "
           << distance << " (" << tolerance << ")");
-      reached = true;
+      return true;
     }
-
-    bool intersectionFound = false;
 
     for (const auto& intersection : sIntersection.split()) {
       if (intersection &&
@@ -138,17 +134,14 @@ struct SurfaceReached {
             "SurfaceReached aborter | "
             "Target stepSize (surface) updated to "
             << stepper.outputStepSize(state.stepping));
-        intersectionFound = true;
-        break;
+        return false;
       }
     }
 
-    if (!intersectionFound) {
-      ACTS_VERBOSE(
-          "SurfaceReached aborter | "
-          "Target intersection not found. Maybe next time?");
-    }
-    return reached;
+    ACTS_VERBOSE(
+        "SurfaceReached aborter | "
+        "Target intersection not found. Maybe next time?");
+    return false;
   }
 };
 
