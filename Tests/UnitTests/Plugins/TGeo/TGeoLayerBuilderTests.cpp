@@ -38,6 +38,16 @@ namespace Acts {
 
 namespace Test {
 
+/// @brief struct to load the global geometry
+struct RootGeometry {
+  RootGeometry() {
+    auto path = Acts::Test::getDataPath("panda.root");
+    TGeoManager::Import(path.c_str());
+  }
+};
+
+RootGeometry rGeometry = RootGeometry();
+
 GeometryContext tgContext = GeometryContext();
 
 /// @brief Unit test checking the match probability

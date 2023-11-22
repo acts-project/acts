@@ -28,7 +28,17 @@ namespace Acts {
 
 namespace Test {
 
+/// @brief struct to load the global geometry
+struct RootGeometry {
+  RootGeometry() {
+    auto path = Acts::Test::getDataPath("panda.root");
+    TGeoManager::Import(path.c_str());
+  }
+};
+
 GeometryContext tgContext = GeometryContext();
+
+RootGeometry rGeometry = RootGeometry();
 
 /// @brief Unit test Parsing a TGeo geometry
 BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
