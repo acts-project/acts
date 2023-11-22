@@ -983,35 +983,37 @@ EigenStepper estepper(bField);
 StraightLineStepper slstepper;
 
 EigenPropagator epropagator(estepper,
-                            Navigator({tGeometry, true, true, true,
+                            Navigator({tGeometry, true, true, false,
                                        BoundaryCheck(false)},
                                       getDefaultLogger("e_nav", Logging::INFO)),
                             getDefaultLogger("e_prop", Logging::INFO));
 StraightLinePropagator slpropagator(
     slstepper,
-    Navigator({tGeometry, true, true, true, BoundaryCheck(false)},
+    Navigator({tGeometry, true, true, false, BoundaryCheck(false)},
               getDefaultLogger("sl_nav", Logging::INFO)),
     getDefaultLogger("sl_prop", Logging::INFO));
 
 Reference1EigenPropagator refepropagator1(
     estepper,
-    TryAllNavigator({tGeometry, true, true, true, BoundaryCheck(false)},
+    TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
                     getDefaultLogger("refe1_nav", Logging::INFO)),
     getDefaultLogger("refe1_prop", Logging::INFO));
 Reference1StraightLinePropagator refslpropagator1(
     slstepper,
-    TryAllNavigator({tGeometry, true, true, true, BoundaryCheck(false)},
+    TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
                     getDefaultLogger("refsl1_nav", Logging::INFO)),
     getDefaultLogger("refsl1_prop", Logging::INFO));
 
 Reference2EigenPropagator refepropagator2(
     estepper,
-    TryAllOverstepNavigator({tGeometry, true, true, true, BoundaryCheck(false)},
+    TryAllOverstepNavigator({tGeometry, true, true, false,
+                             BoundaryCheck(false)},
                             getDefaultLogger("refe2_nav", Logging::INFO)),
     getDefaultLogger("refe2_prop", Logging::INFO));
 Reference2StraightLinePropagator refslpropagator2(
     slstepper,
-    TryAllOverstepNavigator({tGeometry, true, true, true, BoundaryCheck(false)},
+    TryAllOverstepNavigator({tGeometry, true, true, false,
+                             BoundaryCheck(false)},
                             getDefaultLogger("refsl2_nav", Logging::INFO)),
     getDefaultLogger("refsl2_prop", Logging::INFO));
 
