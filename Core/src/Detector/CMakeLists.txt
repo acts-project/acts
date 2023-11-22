@@ -20,6 +20,4 @@ target_sources(
     GeometryIdGenerator.cpp
     VolumeStructureBuilder.cpp
     MultiWireStructureBuilder.cpp
-
-    
 )

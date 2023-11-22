@@ -148,7 +148,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
                                   sameBounds);
       // New reference bounds and new reference object
       if (tBounds != templateBounds.end()) {
-        size_t tObject = std::distance(templateBounds.begin(), tBounds);
+        std::size_t tObject = std::distance(templateBounds.begin(), tBounds);
         cSurface._template_object = templateObjects[tObject];
       }
     }
@@ -190,7 +190,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
       }
       // Get all the bin entries and members
       auto bSurfaces = surfaceArray.neighbors(bCenter);
-      std::vector<size_t> binnAssoc;
+      std::vector<std::size_t> binnAssoc;
       for (const auto& bs : bSurfaces) {
         auto candidate = std::find(surfaces.begin(), surfaces.end(), bs);
         if (candidate != surfaces.end()) {

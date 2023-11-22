@@ -49,7 +49,8 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
 
   DD4hepBlueprint dd4hepBlueprintDrawer(
       bpdCfg, getDefaultLogger("DD4hepBlueprint", options.logLevel));
-  auto dd4hepBlueprint = dd4hepBlueprintDrawer.create(bpdCache, dd4hepElement);
+  auto dd4hepBlueprint =
+      dd4hepBlueprintDrawer.create(bpdCache, gctx, dd4hepElement);
   detectorStore = bpdCache.dd4hepStore;
 
   // Draw the raw graph
@@ -85,7 +86,9 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
     dCfg.name = "Cylindrical detector from DD4hep blueprint";
     dCfg.builder = detectorBuilder;
     dCfg.geoIdGenerator = dd4hepBlueprint->geoIdGenerator;
-    detector = DetectorBuilder(dCfg).construct(gctx);
+    detector = DetectorBuilder(dCfg, getDefaultLogger("DD4hepDetectorBuilder",
+                                                      options.logLevel))
+                   .construct(gctx);
   } else {
     throw std::invalid_argument(
         "DD4hepDetectorStructure: Only cylindrical detectors are (currently) "

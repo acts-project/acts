@@ -8,16 +8,17 @@
 
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
 
 namespace Acts {
-
-namespace detail {
 
 /// @brief type list implementation
 /// @see https://www.codingwiththomas.com/blog/getting-started-with-typelists
 template <typename... Ts>
 struct TypeList {};
+
+namespace Types {
 
 /// Number of types in the list
 /// @{
@@ -26,10 +27,10 @@ struct getSize {};
 
 template <typename... Ts>
 struct getSize<TypeList<Ts...>>
-    : std::integral_constant<size_t, sizeof...(Ts)> {};
+    : std::integral_constant<std::size_t, sizeof...(Ts)> {};
 
 template <typename L>
-constexpr inline size_t size{getSize<L>()};
+constexpr inline std::size_t size{getSize<L>()};
 /// @}
 
 /// Access the first type
@@ -92,5 +93,5 @@ template <typename L, typename N>
 using push_front = typename doPushFront<N, L>::type;
 /// @}
 
-}  // namespace detail
+}  // namespace Types
 }  // namespace Acts

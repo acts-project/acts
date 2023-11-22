@@ -109,7 +109,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
         "Bound types with too many parameters. Should never happen.");
   }
 
-  for (size_t ipar = 0; ipar < boundValues.size(); ++ipar) {
+  for (std::size_t ipar = 0; ipar < boundValues.size(); ++ipar) {
     (*dataBoundParameters[ipar]) = boundValues[ipar];
   }
 
