@@ -15,7 +15,6 @@
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
 #include <cmath>
@@ -24,8 +23,6 @@
 #include <random>
 
 using namespace Acts::UnitLiterals;
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
 
 namespace bdata = boost::unit_test::data;
 
