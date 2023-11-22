@@ -214,52 +214,62 @@ Acts::Experimental::LayerStructureBuilder::construct(
           support.values, support.transform, support.splits);
     }
   }
-  if (m_cfg.binnings.empty()) {
-    ACTS_DEBUG(
-        "No surface binning provided, navigation will be 'tryAll' (potentially "
-        "slow).");
-  } else if (m_cfg.binnings.size() == 1u) {
-    ACTS_DEBUG("- 1-dimensional surface binning detected.");
-    // Capture the binning
-    auto binning = m_cfg.binnings[0u];
-    if (binning.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
-      ACTS_VERBOSE("-- closed binning option.");
-      internalCandidatesUpdator =
-          createUpdator<Acts::detail::AxisBoundaryType::Closed>(
-              gctx, internalSurfaces, assignToAll, binning);
-    } else {
-      ACTS_VERBOSE("-- closed binning option.");
-      internalCandidatesUpdator =
-          createUpdator<Acts::detail::AxisBoundaryType::Bound>(
-              gctx, internalSurfaces, assignToAll, binning);
-    }
-  } else if (m_cfg.binnings.size() == 2u) {
-    ACTS_DEBUG("- 2-dimensional surface binning detected.");
-    // Capture the binnings
-    const auto& binning0 = m_cfg.binnings[0u];
-    const auto& binning1 = m_cfg.binnings[1u];
 
-    if (binning0.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
-      ACTS_VERBOSE("-- closed/bound binning option.");
-      internalCandidatesUpdator =
-          createUpdator<Acts::detail::AxisBoundaryType::Closed,
-                        Acts::detail::AxisBoundaryType::Bound>(
-              gctx, internalSurfaces, assignToAll, binning0, binning1);
-    } else if (binning1.boundaryType ==
-               Acts::detail::AxisBoundaryType::Closed) {
-      ACTS_VERBOSE("-- bound/closed binning option.");
-      internalCandidatesUpdator =
-          createUpdator<Acts::detail::AxisBoundaryType::Bound,
-                        Acts::detail::AxisBoundaryType::Closed>(
-              gctx, internalSurfaces, assignToAll, binning0, binning1);
-    } else {
-      ACTS_VERBOSE("-- closed/closed binning option.");
-      internalCandidatesUpdator =
-          createUpdator<Acts::detail::AxisBoundaryType::Bound,
-                        Acts::detail::AxisBoundaryType::Bound>(
-              gctx, internalSurfaces, assignToAll, binning0, binning1);
+  if (internalSurfaces.size() >= m_cfg.nMinimalSurfaces) {
+    if (m_cfg.binnings.empty()) {
+      ACTS_DEBUG(
+          "No surface binning provided, navigation will be 'tryAll' "
+          "(potentially slow).");
+    } else if (m_cfg.binnings.size() == 1u) {
+      ACTS_DEBUG("- 1-dimensional surface binning detected.");
+      // Capture the binning
+      auto binning = m_cfg.binnings[0u];
+      if (binning.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
+        ACTS_VERBOSE("-- closed binning option.");
+        internalCandidatesUpdator =
+            createUpdator<Acts::detail::AxisBoundaryType::Closed>(
+                gctx, internalSurfaces, assignToAll, binning);
+      } else {
+        ACTS_VERBOSE("-- bound binning option.");
+        internalCandidatesUpdator =
+            createUpdator<Acts::detail::AxisBoundaryType::Bound>(
+                gctx, internalSurfaces, assignToAll, binning);
+      }
+    } else if (m_cfg.binnings.size() == 2u) {
+      ACTS_DEBUG("- 2-dimensional surface binning detected.");
+      // Capture the binnings
+      const auto& binning0 = m_cfg.binnings[0u];
+      const auto& binning1 = m_cfg.binnings[1u];
+
+      if (binning0.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
+        ACTS_VERBOSE("-- closed/bound binning option.");
+        internalCandidatesUpdator =
+            createUpdator<Acts::detail::AxisBoundaryType::Closed,
+                          Acts::detail::AxisBoundaryType::Bound>(
+                gctx, internalSurfaces, assignToAll, binning0, binning1);
+      } else if (binning1.boundaryType ==
+                 Acts::detail::AxisBoundaryType::Closed) {
+        ACTS_VERBOSE("-- bound/closed binning option.");
+        internalCandidatesUpdator =
+            createUpdator<Acts::detail::AxisBoundaryType::Bound,
+                          Acts::detail::AxisBoundaryType::Closed>(
+                gctx, internalSurfaces, assignToAll, binning0, binning1);
+      } else {
+        ACTS_VERBOSE("-- bound/bound binning option.");
+        internalCandidatesUpdator =
+            createUpdator<Acts::detail::AxisBoundaryType::Bound,
+                          Acts::detail::AxisBoundaryType::Bound>(
+                gctx, internalSurfaces, assignToAll, binning0, binning1);
+      }
     }
+  } else {
+    ACTS_DEBUG("Only " << internalSurfaces.size() << " surfaces provided, "
+                       << "navigation will be 'tryAll'");
+    ACTS_DEBUG("Per configuration " << m_cfg.nMinimalSurfaces
+                                    << " surfaces are "
+                                    << "required to use the surface binning.");
   }
+
   // Check if everything went ok
   if (!internalCandidatesUpdator.connected()) {
     throw std::runtime_error(
