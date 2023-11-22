@@ -208,7 +208,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       invCovV += vertexingOptions.constraint.fullCovariance().inverse();
     }
 
-    // Covariance matrix of the 4D vertex position
+    // Covariance matrix of the 4D vertex position, see Ref. (3)
     SquareMatrix4 covV = invCovV.inverse();
     // Update of the vertex position
     Vector4 deltaV = covV * deltaVFac;
@@ -261,11 +261,11 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       transMat(5, 3) = 1.;
 
       // cov(V,P)
-      // TODO: This is incorrect (see Ref. (2)), but it will not be needed
+      // TODO: This is incorrect (see Ref. (3)), but it will not be needed
       // anyway once we replace fittedParams with fittedMomentum
       ActsMatrix<4, 3> covVP = billoirTrack.B;
 
-      // cov(P,P), 3x3 matrix
+      // cov(P,P), 3x3 matrix, see Ref. (3)
       ActsSquareMatrix<3> covP =
           billoirTrack.Cinv +
           billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
