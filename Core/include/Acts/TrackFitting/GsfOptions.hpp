@@ -39,6 +39,10 @@ constexpr std::string_view kFinalMultiComponentStateColumn =
     "gsf-final-multi-component-state";
 using FinalMultiComponentState =
     std::optional<Acts::MultiComponentBoundTrackParameters>;
+constexpr std::string_view kFwdSumMaterialXOverX0 =
+    "gsf-fwd-sum-material-x-over-x0";
+constexpr std::string_view kFwdMaxMaterialXOverX0 =
+    "gsf-fwd-max-material-x-over-x0";
 }  // namespace GsfConstants
 
 /// The extensions needed for the GSF

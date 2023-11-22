@@ -71,6 +71,7 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   }
 
   std::vector<ActsScalar> vBounds = {0.5 * nSurfacesX * 2 * radius,
+                                     0.5 * nSurfacesX * 2 * radius,
                                      0.5 * nSurfacesY * 2 * radius, halfZ};
 
   MultiWireStructureBuilder::Config mlCfg;
@@ -89,7 +90,7 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
 
   Acts::Experimental::NavigationState nState;
   nState.position = Acts::Vector3(0., -60., 0.);
-  nState.direction = Acts::Vector3(-1., 1., 0.);
+  nState.direction = Acts::Vector3(0., 1., 0.);
 
   nState.currentVolume = volumes.front().get();
   nState.currentVolume->updateNavigationState(tContext, nState);
