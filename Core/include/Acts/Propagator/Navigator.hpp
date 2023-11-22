@@ -456,7 +456,7 @@ class Navigator {
     const Surface& surface = *intersection.representation();
 
     // Determine the surface status without boundary check.
-    // TODO This will also update the step length which is unecessary
+    // TODO This will also update the step length which is unnecessary
     Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, surface, intersection.index(), state.options.direction,
         BoundaryCheck(false), state.options.surfaceTolerance, logger());

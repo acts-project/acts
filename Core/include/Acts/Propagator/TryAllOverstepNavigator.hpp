@@ -41,7 +41,7 @@ namespace Acts {
 /// optimize the search. It is therefore very slow, but can be used as a
 /// reference implementation.
 ///
-/// Differnt to @c TryAllNavigator, this Navigator discovers intersections by
+/// Different to @c TryAllNavigator, this Navigator discovers intersections by
 /// stepping forward blindly and then checking for intersections with all
 /// surfaces in the current volume. This is slower, but more robust against
 /// bent tracks.
