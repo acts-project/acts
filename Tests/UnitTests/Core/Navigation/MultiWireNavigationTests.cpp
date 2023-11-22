@@ -37,15 +37,15 @@ GeometryContext tContext;
 BOOST_AUTO_TEST_SUITE(Experimental)
 
 BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
-  using GlobalBin = size_t;
-  using LocalBin = std::array<size_t, 2u>;
+  using GlobalBin = std::size_t;
+  using LocalBin = std::array<std::size_t, 2u>;
 
   std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
 
   // Set the number of surfaces along each dimension of the multi wire structure
   // aligned along z axis
-  size_t nSurfacesY = 4;
-  size_t nSurfacesX = 15;
+  std::size_t nSurfacesY = 4;
+  std::size_t nSurfacesX = 15;
 
   double radius = 15.;
   double halfZ = 250.;
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   Vector3 pos = ipos;
 
   // Generate the surfaces
-  for (size_t i = 0; i < nSurfacesY; i++) {
-    for (size_t j = 0; j < nSurfacesX; j++) {
+  for (std::size_t i = 0; i < nSurfacesY; i++) {
+    for (std::size_t j = 0; j < nSurfacesX; j++) {
       pos.x() = ipos.x() + 2 * j * radius;
 
       auto surface = Surface::makeShared<StrawSurface>(

@@ -85,7 +85,7 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
 
   std::mutex m_iovMutex;
 
-  size_t m_eventsSeen{0};
+  std::size_t m_eventsSeen{0};
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

@@ -83,6 +83,7 @@ struct Gx2FitterExtensions {
     calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
     updater.template connect<&detail::voidFitterUpdater<traj_t>>();
     outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
+    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
   }
 };
 
@@ -104,6 +105,7 @@ struct Gx2FitterOptions {
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   /// @param nUpdateMax_ Max number of iterations for updating the parameters
   /// @param zeroField_ Disables the QoP fit in case of missing B-field
+  /// @param relChi2changeCutOff_ Check for convergence (abort condition). Set to 0 to skip.
   Gx2FitterOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
                    std::reference_wrapper<const CalibrationContext> cctx,
@@ -645,7 +647,7 @@ class Gx2Fitter {
     // Iterate the fit and improve result. Abort after n steps or after
     // convergence
     // nUpdate is initialized outside to save its state for the track
-    size_t nUpdate = 0;
+    std::size_t nUpdate = 0;
     for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       ACTS_VERBOSE("nUpdate = " << nUpdate + 1 << "/"
                                 << gx2fOptions.nUpdateMax);
@@ -757,7 +759,7 @@ class Gx2Fitter {
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
     bool aMatrixIsInvertible = false;
     if (gx2fOptions.zeroField) {
-      constexpr size_t reducedMatrixSize = 4;
+      constexpr std::size_t reducedMatrixSize = 4;
 
       auto safeReducedCovariance = safeInverse(
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
@@ -768,7 +770,7 @@ class Gx2Fitter {
             *safeReducedCovariance;
       }
     } else {
-      constexpr size_t reducedMatrixSize = 5;
+      constexpr std::size_t reducedMatrixSize = 5;
 
       auto safeReducedCovariance = safeInverse(
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
@@ -788,7 +790,7 @@ class Gx2Fitter {
     ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
 
     if (!trackContainer.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
-      trackContainer.template addColumn<size_t>("Gx2fnUpdateColumn");
+      trackContainer.template addColumn<std::size_t>("Gx2fnUpdateColumn");
     }
 
     // Prepare track for return

@@ -114,9 +114,23 @@ void writeMeasurement(const Measurement& from,
 /// - relation to the particles
 void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
                      const Trajectories& from, edm4hep::MutableTrack to,
-                     size_t fromIndex,
+                     std::size_t fromIndex,
                      const Acts::ParticleHypothesis& particleHypothesis,
                      const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap);
+
+/// Helper function to either return an id as is, or unpack an index from it
+/// if it is a podio::ObjectID.
+/// @tparam T The type of the id.
+/// @param o The id to convert.
+/// @return The id as an unsigned integer.
+template <typename T>
+uint64_t podioObjectIDToInteger(T&& o) {
+  if constexpr (!std::is_same_v<T, podio::ObjectID>) {
+    return o;
+  } else {
+    return o.index;
+  }
+}
 
 }  // namespace EDM4hepUtil
 }  // namespace ActsExamples

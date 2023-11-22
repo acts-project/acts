@@ -23,7 +23,7 @@ struct Trajectories;
 /// Associate a particle to its hit count within a proto track.
 struct ParticleHitCount {
   ActsFatras::Barcode particleId;
-  size_t hitCount;
+  std::size_t hitCount;
 };
 
 /// Identify all particles that contribute to the proto track.
@@ -54,7 +54,7 @@ void identifyContributingParticles(
 /// information.
 void identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-    const Trajectories& trajectories, size_t trajectoryTip,
+    const Trajectories& trajectories, std::size_t trajectoryTip,
     std::vector<ParticleHitCount>& particleHitCounts);
 
 void identifyContributingParticles(

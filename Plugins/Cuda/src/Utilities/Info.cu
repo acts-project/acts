@@ -53,8 +53,8 @@ std::ostream& operator<<(std::ostream& out, const Info::Device& device) {
       << std::string(
              (39 > device.name.length() ? 39 - device.name.length() : 0), ' ')
       << "|" << std::endl;
-  const size_t threadDigits =
-      static_cast<size_t>(std::log10(device.maxThreadsPerBlock)) + 1;
+  const std::size_t threadDigits =
+      static_cast<std::size_t>(std::log10(device.maxThreadsPerBlock)) + 1;
   out << " | Max. threads per block: " << device.maxThreadsPerBlock
       << std::string((21 > threadDigits ? 21 - threadDigits : 0), ' ') << "|"
       << std::endl;
@@ -63,7 +63,8 @@ std::ostream& operator<<(std::ostream& out, const Info::Device& device) {
       << "|" << std::endl;
   static constexpr double MEGABYTES = 1.0 / (1024 * 1024);
   const double totalMem = device.totalMemory * MEGABYTES;
-  const size_t memDigits = static_cast<size_t>(std::log10(totalMem)) + 1;
+  const std::size_t memDigits =
+      static_cast<std::size_t>(std::log10(totalMem)) + 1;
   out << " | Total memory: " << totalMem << " MB"
       << std::string((25 > memDigits ? 25 - memDigits : 0), ' ') << "|"
       << std::endl;

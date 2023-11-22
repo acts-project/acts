@@ -59,16 +59,16 @@ class Sequencer {
  public:
   struct FpeMask {
     std::string file;
-    std::pair<size_t, size_t> lines;
+    std::pair<std::size_t, std::size_t> lines;
     Acts::FpeType type;
-    size_t count;
+    std::size_t count;
   };
 
   struct Config {
     /// number of events to skip at the beginning
-    size_t skip = 0;
+    std::size_t skip = 0;
     /// number of events to process, SIZE_MAX to process all available events
-    std::optional<size_t> events = std::nullopt;
+    std::optional<std::size_t> events = std::nullopt;
     /// logging level
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
     /// number of parallel threads to run, negative for automatic
@@ -88,7 +88,7 @@ class Sequencer {
     bool trackFpes = true;
     std::vector<FpeMask> fpeMasks{};
     bool failOnFirstFpe = false;
-    size_t fpeStackTraceLength = 8;
+    std::size_t fpeStackTraceLength = 8;
   };
 
   Sequencer(const Config &cfg);
@@ -159,9 +159,9 @@ class Sequencer {
   /// List of all configured algorithm names.
   std::vector<std::string> listAlgorithmNames() const;
   /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
-  std::pair<size_t, size_t> determineEventsRange() const;
+  std::pair<std::size_t, std::size_t> determineEventsRange() const;
 
-  std::pair<std::string, size_t> fpeMaskCount(
+  std::pair<std::string, std::size_t> fpeMaskCount(
       const boost::stacktrace::stacktrace &st, Acts::FpeType type) const;
 
   void fpeReport() const;
@@ -182,7 +182,7 @@ class Sequencer {
 
   std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
 
-  std::atomic<size_t> m_nUnmaskedFpe = 0;
+  std::atomic<std::size_t> m_nUnmaskedFpe = 0;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };
