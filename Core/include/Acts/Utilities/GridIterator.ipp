@@ -93,7 +93,7 @@ namespace Acts {
   
   template <typename T, class ... Axes>
   typename GridGlobalIterator<T, Axes ...>::difference_type
-  GridGlobalIterator<T, Axes ...>::operator-(const GridIterator<T, Axes ...>& other) const {
+  GridGlobalIterator<T, Axes ...>::operator-(const GridGlobalIterator<T, Axes ...>& other) const {
     assert(other > *this);
     return other.m_idx - m_idx;
   }
@@ -134,7 +134,8 @@ namespace Acts {
   {
     for (std::size_t i(0); i<DIM; ++i) {
       m_navigationIndex[i].resize(m_numLocalBins[i]);
-      std::iota(m_navigationIndex[i].begin(), m_navigationIndex[i].end(), 1);
+      std::iota(m_navigationIndex[i].begin(), m_navigationIndex[i].end(), 1ul);
+      m_localPosition[i] = 1ul;
     }
   }
 
@@ -152,6 +153,7 @@ namespace Acts {
       if (m_navigationIndex[i].size() != m_numLocalBins[i]) {
 	throw std::invalid_argument("Invalid navigation sequence in local grid iterator.");
       }
+      m_localPosition[i] = m_navigationIndex[i][m_currentIndex[i]];
     }
   }
   
@@ -160,7 +162,8 @@ namespace Acts {
   : m_grid( std::exchange(other.m_grid.ptr, nullptr) ),
     m_numLocalBins( std::move(other.m_numLocalBins) ),
     m_currentIndex( std::move(other.m_currentIndex) ),
-    m_navigationIndex( std::move(other.m_navigationIndex) )
+    m_navigationIndex( std::move(other.m_navigationIndex) ),
+    m_localPosition( std::move(other.m_localPosition) )
   {}
   
   template <typename T, class... Axes>
@@ -171,6 +174,7 @@ namespace Acts {
     m_numLocalBins = std::move(other.m_numLocalBins);
     m_currentIndex = std::move(other.m_currentIndex);
     m_navigationIndex = std::move(other.m_navigationIndex);
+    m_localPosition = std::move(other.m_localPosition);
     return *this;
   }
   
@@ -255,5 +259,16 @@ namespace Acts {
     }
   }
 
+  template <typename T, class... Axes>
+  std::array<std::size_t, GridLocalIterator<T, Axes ...>::DIM>
+  GridLocalIterator<T, Axes ...>::localPosition() const
+  {
+    std::array<std::size_t, DIM> output;
+    for (std::size_t i(0); i<DIM; ++i) {
+      output[i] = m_navigationIndex[i][m_currentIndex[i]];
+    }
+    return output;
+  }
+  
 } // namespace Acts
 

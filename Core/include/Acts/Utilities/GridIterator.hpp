@@ -53,7 +53,7 @@ namespace Acts {
     GridGlobalIterator<T, Axes ...> operator+(const std::size_t offset) const;
     GridGlobalIterator<T, Axes ...> operator-(const std::size_t offset) const;
 
-    difference_type operator-(const GridIterator<T, Axes ...>& other) const;
+    difference_type operator-(const GridGlobalIterator<T, Axes ...>& other) const;
     const value_type& operator*() const;
 
     GridGlobalIterator<T, Axes ...>& operator++();
@@ -111,6 +111,8 @@ namespace Acts {
 
     GridLocalIterator<T, Axes ...>& operator++();
     GridLocalIterator<T, Axes ...> operator++(int);
+
+    std::array<std::size_t, DIM> localPosition() const;
     
   private:    
     template <std::size_t N>
@@ -120,6 +122,7 @@ namespace Acts {
     Acts::detail::RefHolder<const Acts::Grid<T, Axes ...>> m_grid {nullptr};
     std::array<std::size_t, DIM> m_numLocalBins {};
     std::array<std::size_t, DIM> m_currentIndex {};
+    std::array<std::size_t, DIM> m_localPosition {};
     std::array<std::vector<std::size_t>, DIM> m_navigationIndex {};
   };
 
