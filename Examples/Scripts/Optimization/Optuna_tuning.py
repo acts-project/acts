@@ -111,7 +111,7 @@ class Objective:
         ]
 
         if ckf_perf:
-            outFileName = "Output_CKF"
+            outDirName = "Output_CKF"
             outputfile = srcDir / outFileName / "performance_ckf.root"
             effContName = "particles"
             contName = "tracks"
