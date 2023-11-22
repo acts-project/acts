@@ -80,6 +80,7 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
   // c_k
   const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
+  // TODO we could use `linTrack.weightAtPCA` but only if we would use time
   // G_k
   // Note that, when removing a track, G_k -> - G_k, see Ref. (1).
   // Further note that, as we use the weighted formalism, the track weight
@@ -137,6 +138,7 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
   // c_k
   const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
+  // TODO we could use `linTrack.weightAtPCA` but only if we would use time
   // G_k
   const ActsSquareMatrix<5> trkParamWeight =
       linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
