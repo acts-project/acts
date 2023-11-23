@@ -144,10 +144,10 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             )
         )
 
-        # Choosing a seeder only has an effect on VertexFinder.AMVF. For 
+        # Choosing a seeder only has an effect on VertexFinder.AMVF. For
         # VertexFinder.IVF we always use acts.VertexSeedFinder.GaussianSeeder
         # (Python binding is not implemented).
-        # Setting useTime also only has an effect on VertexFinder.AMVF due to 
+        # Setting useTime also only has an effect on VertexFinder.AMVF due to
         # the same reason.
         addVertexFitting(
             s,
@@ -166,13 +166,13 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             outputProtoVertices="amvf_protovertices",
             outputVertices="amvf_fittedVertices",
             seeder=acts.VertexSeedFinder.GaussianSeeder,
-            useTime=False, #Time seeding not implemented for the Gaussian seeder
+            useTime=False,  # Time seeding not implemented for the Gaussian seeder
             vertexFinder=VertexFinder.AMVF,
             outputDirRoot=tp / "amvf",
         )
 
         # Use the adaptive grid vertex seeder in combination with the AMVF
-        # To avoid having too many physmon cases, we only do this for the label 
+        # To avoid having too many physmon cases, we only do this for the label
         # "seeded"
         if label == "seeded":
             addVertexFitting(
