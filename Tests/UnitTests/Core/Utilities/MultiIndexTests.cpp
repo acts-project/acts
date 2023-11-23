@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(index32_set_overflow) {
       (1u << 8u) - 1u,
   };
   // check that values above max are truncated
-  size_t lvl = 0;
+  std::size_t lvl = 0;
   for (auto maxValue : maxValues) {
     BOOST_CHECK_EQUAL(Index32::Zeros().set(lvl, maxValue + 1),
                       Index32::Zeros().set(lvl, 0u));
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(index64_set_overflow) {
       (1u << 13u) - 1u,
   };
   // check that values above max are truncated
-  size_t lvl = 0;
+  std::size_t lvl = 0;
   for (auto maxValue : maxValues) {
     BOOST_CHECK_EQUAL(Index64::Zeros().set(lvl, maxValue + 1),
                       Index64::Zeros().set(lvl, 0u));

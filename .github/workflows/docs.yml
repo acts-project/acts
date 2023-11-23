@@ -49,6 +49,7 @@ jobs:
           -W
           --keep-going
           -t run_doxygen
+          -t lazy_autodoc
           -b linkcheck
           . _build/html/
 

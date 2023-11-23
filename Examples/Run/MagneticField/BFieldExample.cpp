@@ -50,13 +50,13 @@ int main(int argc, char* argv[]) {
       "[mm].In case no value is handed over for 'bf-rRange' and 'bf-zRange the "
       "whole map will be written out. "
       "Please hand over by simply separating the values by space")(
-      "bf-rBins", value<size_t>()->default_value(200),
+      "bf-rBins", value<std::size_t>()->default_value(200),
       "[optional] The number of bins in r. This parameter only needs to be "
       "specified if 'bf-rRange' and 'bf-zRange' are given.")(
-      "bf-ZBins", value<size_t>()->default_value(300),
+      "bf-ZBins", value<std::size_t>()->default_value(300),
       "[optional] The number of bins in z. This parameter only needs to be "
       "specified if 'bf-rRange' and 'bf-zRange' are given.")(
-      "bf-PhiBins", value<size_t>()->default_value(100),
+      "bf-PhiBins", value<std::size_t>()->default_value(100),
       "[optional] The number of bins in phi. This parameter only needs to be "
       "specified if 'bf-rRange' and 'bf-zRange' are given and 'bf-out-rz' is "
       "turned on.");
@@ -103,9 +103,9 @@ int main(int argc, char* argv[]) {
     writerConfig.rBounds = rBounds;
     writerConfig.zBounds = zBounds;
   }
-  writerConfig.rBins = vm["bf-rBins"].template as<size_t>();
-  writerConfig.zBins = vm["bf-ZBins"].template as<size_t>();
-  writerConfig.phiBins = vm["bf-PhiBins"].template as<size_t>();
+  writerConfig.rBins = vm["bf-rBins"].template as<std::size_t>();
+  writerConfig.zBins = vm["bf-ZBins"].template as<std::size_t>();
+  writerConfig.phiBins = vm["bf-PhiBins"].template as<std::size_t>();
 
   ActsExamples::RootBFieldWriter::run(writerConfig);
 }

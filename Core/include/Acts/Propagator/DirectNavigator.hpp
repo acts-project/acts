@@ -331,7 +331,6 @@ class DirectNavigator {
             state.navigation.navSurfaces.end()) {
           ACTS_VERBOSE("Next surface candidate is  "
                        << (*state.navigation.navSurfaceIter)->geometryId());
-          stepper.releaseStepSize(state.stepping);
         }
       } else if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE("Next surface reachable at distance  "

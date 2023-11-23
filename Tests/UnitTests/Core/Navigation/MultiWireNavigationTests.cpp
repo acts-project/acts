@@ -37,15 +37,15 @@ GeometryContext tContext;
 BOOST_AUTO_TEST_SUITE(Experimental)
 
 BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
-  using GlobalBin = size_t;
-  using LocalBin = std::array<size_t, 2u>;
+  using GlobalBin = std::size_t;
+  using LocalBin = std::array<std::size_t, 2u>;
 
   std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
 
   // Set the number of surfaces along each dimension of the multi wire structure
   // aligned along z axis
-  size_t nSurfacesY = 4;
-  size_t nSurfacesX = 15;
+  std::size_t nSurfacesY = 4;
+  std::size_t nSurfacesX = 15;
 
   double radius = 15.;
   double halfZ = 250.;
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   Vector3 pos = ipos;
 
   // Generate the surfaces
-  for (size_t i = 0; i < nSurfacesY; i++) {
-    for (size_t j = 0; j < nSurfacesX; j++) {
+  for (std::size_t i = 0; i < nSurfacesY; i++) {
+    for (std::size_t j = 0; j < nSurfacesX; j++) {
       pos.x() = ipos.x() + 2 * j * radius;
 
       auto surface = Surface::makeShared<StrawSurface>(
@@ -71,6 +71,7 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   }
 
   std::vector<ActsScalar> vBounds = {0.5 * nSurfacesX * 2 * radius,
+                                     0.5 * nSurfacesX * 2 * radius,
                                      0.5 * nSurfacesY * 2 * radius, halfZ};
 
   MultiWireStructureBuilder::Config mlCfg;
@@ -89,7 +90,7 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
 
   Acts::Experimental::NavigationState nState;
   nState.position = Acts::Vector3(0., -60., 0.);
-  nState.direction = Acts::Vector3(-1., 1., 0.);
+  nState.direction = Acts::Vector3(0., 1., 0.);
 
   nState.currentVolume = volumes.front().get();
   nState.currentVolume->updateNavigationState(tContext, nState);

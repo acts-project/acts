@@ -152,7 +152,8 @@ Measurement EDM4hepUtil::readMeasurement(
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  IndexSourceLink sourceLink{geometryId, from.id()};
+  IndexSourceLink sourceLink{
+      geometryId, static_cast<Index>(podioObjectIDToInteger(from.id()))};
 
   auto pos = from.getPosition();
   auto cov = from.getCovMatrix();
@@ -252,7 +253,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
 
 void EDM4hepUtil::writeTrajectory(
     const Acts::GeometryContext& gctx, double Bz, const Trajectories& from,
-    edm4hep::MutableTrack to, size_t fromIndex,
+    edm4hep::MutableTrack to, std::size_t fromIndex,
     const Acts::ParticleHypothesis& particleHypothesis,
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap) {
   const auto& multiTrajectory = from.multiTrajectory();

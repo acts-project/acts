@@ -10,7 +10,9 @@ add_library(
   src/DD4hepDetectorSurfaceFactory.cpp
   src/DD4hepLayerBuilder.cpp
   src/DD4hepLayerStructure.cpp
-  src/DD4hepVolumeBuilder.cpp)
+  src/DD4hepVolumeBuilder.cpp
+  src/DD4hepFieldAdapter.cpp)
+
 target_include_directories(
   ActsPluginDD4hep
   PUBLIC

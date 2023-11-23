@@ -95,12 +95,13 @@ def runTruthTrackingGx2f(
         s,
         trackingGeometry,
         field,
-        # directNavigation,
+        nUpdateMax=17,
+        relChi2changeCutOff=1e-7,
     )
 
     # Output
     s.addWriter(
-        acts.examples.RootTrajectoryStatesWriter(
+        acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
@@ -112,12 +113,13 @@ def runTruthTrackingGx2f(
     )
 
     s.addWriter(
-        acts.examples.RootTrajectorySummaryWriter(
+        acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_fitter.root"),
+            writeGx2fSpecific=True,
         )
     )
 
