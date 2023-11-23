@@ -323,6 +323,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
     ACTS_PYTHON_MEMBER(outputTracks);
+    ACTS_PYTHON_MEMBER(trackingGeometry);
+    ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_MEMBER(trackSelectorCfg);

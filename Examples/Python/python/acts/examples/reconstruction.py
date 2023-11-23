@@ -1085,6 +1085,8 @@ def addCKFTracks(
             trackingGeometry, field, customLogLevel()
         ),
         **acts.examples.defaultKWArgs(
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
             maxSteps=ckfConfig.maxSteps,
         ),
     )

@@ -170,8 +170,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
-      kfSmoother(ctx.geoContext, *trackStateContainerTemp, track.tipIndex(),
-                 logger());
+      auto smoothingResult = kfSmoother(
+          ctx.geoContext, *trackStateContainerTemp, track.tipIndex(), logger());
+
+      if (!smoothingResult.ok()) {
+        ACTS_WARNING("Smoothing for seed "
+                     << iseed << " and track " << track.index()
+                     << " failed with error " << smoothingResult.error());
+        continue;
+      }
 
       std::size_t firstStateIndex = track.tipIndex();
       for (auto st : track.trackStatesReversed()) {
@@ -188,16 +195,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
       auto firstState = trackStateContainerTemp->getTrackState(firstStateIndex);
       auto parameters = Acts::BoundTrackParameters(
-          firstState.referenceSurface().getSharedPtr(), firstState.parameters(),
-          firstState.covariance(), track.particleHypothesis());
+          firstState.referenceSurface().getSharedPtr(), firstState.smoothed(),
+          firstState.smoothedCovariance(), track.particleHypothesis());
 
-      auto extrapolationResult =
-          extrapolator.propagate(parameters, *pSurface, pExtrapolationOptions);
+      auto extrapolationResult = extrapolator.propagate<
+          Acts::BoundTrackParameters, decltype(pExtrapolationOptions),
+          Acts::ForcedSurfaceReached, Acts::PathLimitReached>(
+          parameters, *pSurface, pExtrapolationOptions);
 
-      if (!result.ok()) {
+      if (!extrapolationResult.ok()) {
         ACTS_WARNING("Extrapolation for seed "
                      << iseed << " and track " << track.index()
-                     << " failed with error" << result.error());
+                     << " failed with error " << extrapolationResult.error());
         continue;
       }
 
