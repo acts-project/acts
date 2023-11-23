@@ -13,14 +13,14 @@
 
 template <typename external_spacepoint_t>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
-									  Acts::BinnedSPGroup<external_spacepoint_t>& group,
-									  std::array<std::size_t, 2> index,
-									  std::array<std::vector<std::size_t>, 2> navigation)
+    Acts::BinnedSPGroup<external_spacepoint_t>& group,
+    std::array<std::size_t, 2> index,
+    std::array<std::vector<std::size_t>, 2> navigation)
     : m_group(group),
       m_gridItr(*group.m_grid.get(), std::move(index), navigation),
-      m_gridItrEnd(*group.m_grid.get(), group.m_grid->numLocalBins(), std::move(navigation))
-{
-  findNotEmptyBin(); 
+      m_gridItrEnd(*group.m_grid.get(), group.m_grid->numLocalBins(),
+                   std::move(navigation)) {
+  findNotEmptyBin();
 }
 
 template <typename external_spacepoint_t>
@@ -33,13 +33,13 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator++() {
 
 template <typename external_spacepoint_t>
 inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator==(
-									   const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
+    const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
   return m_group.ptr == other.m_group.ptr && m_gridItr == other.m_gridItr;
 }
 
 template <typename external_spacepoint_t>
 inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator!=(
-										   const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
+    const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
   return !(*this == other);
 }
 
@@ -49,18 +49,17 @@ std::tuple<boost::container::small_vector<std::size_t, 9>, std::size_t,
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
   // Global Index
   std::array<std::size_t, 2> localPosition = m_gridItr.localPosition();
-  std::size_t global_index = m_group->m_grid->globalBinFromLocalBins(localPosition);
-  
+  std::size_t global_index =
+      m_group->m_grid->globalBinFromLocalBins(localPosition);
+
   boost::container::small_vector<std::size_t, 9> bottoms =
-      m_group->m_bottomBinFinder->findBins(
-	  localPosition[INDEX::PHI],
-	  localPosition[INDEX::Z],
-          m_group->m_grid.get());
+      m_group->m_bottomBinFinder->findBins(localPosition[INDEX::PHI],
+                                           localPosition[INDEX::Z],
+                                           m_group->m_grid.get());
   boost::container::small_vector<std::size_t, 9> tops =
-      m_group->m_topBinFinder->findBins(
-          localPosition[INDEX::PHI],
-          localPosition[INDEX::Z],
-          m_group->m_grid.get());
+      m_group->m_topBinFinder->findBins(localPosition[INDEX::PHI],
+                                        localPosition[INDEX::Z],
+                                        m_group->m_grid.get());
 
   // GCC12+ in Release throws an overread warning here due to the move.
   // This is from inside boost code, so best we can do is to suppress it.
@@ -77,7 +76,8 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
 template <typename external_spacepoint_t>
 inline void
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
-  if (m_gridItr == m_gridItrEnd) return;
+  if (m_gridItr == m_gridItrEnd)
+    return;
   // Iterate on the grid till we find a not-empty bin
   // We start from the current bin configuration and move forward
   std::size_t dimCollection = (*m_gridItr).size();
