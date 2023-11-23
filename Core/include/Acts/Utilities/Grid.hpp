@@ -21,12 +21,12 @@
 #include <vector>
 
 namespace Acts {
-  template <typename T, class ... Axes>
-  class GridGlobalIterator;
+template <typename T, class... Axes>
+class GridGlobalIterator;
 
-  template <typename T, class ... Axes>
-  class GridLocalIterator;
-}
+template <typename T, class... Axes>
+class GridLocalIterator;
+}  // namespace Acts
 
 namespace Acts {
 
@@ -57,10 +57,10 @@ class Grid final {
   /// index type using local bin indices along each axis
   using index_t = std::array<std::size_t, DIM>;
   /// global iterator type
-  using global_iterator_t = Acts::GridGlobalIterator<T, Axes ...>;
+  using global_iterator_t = Acts::GridGlobalIterator<T, Axes...>;
   /// local iterator type
-  using local_iterator_t = Acts::GridLocalIterator<T, Axes ...>;
-  
+  using local_iterator_t = Acts::GridLocalIterator<T, Axes...>;
+
   /// @brief default constructor
   ///
   /// @param [in] axes actual axis objects spanning the grid
@@ -469,27 +469,24 @@ class Grid final {
     return detail::grid_helper::getAxes(m_axes);
   }
 
-  
-  global_iterator_t begin() const {
-    return global_iterator_t(*this, 0);
-  }
+  global_iterator_t begin() const { return global_iterator_t(*this, 0); }
 
-  global_iterator_t end() const {
-    return global_iterator_t(*this, size());
-  }
+  global_iterator_t end() const { return global_iterator_t(*this, size()); }
 
-  local_iterator_t begin(const std::array<std::vector<std::size_t>, DIM>& navigator) const {
+  local_iterator_t begin(
+      const std::array<std::vector<std::size_t>, DIM>& navigator) const {
     std::array<std::size_t, DIM> localBin;
-    for (std::size_t i(0); i<DIM; ++i) {
+    for (std::size_t i(0); i < DIM; ++i) {
       localBin[i] = 0ul;
     }
     return local_iterator_t(*this, std::move(localBin), navigator);
   }
 
-  local_iterator_t end(const std::array<std::vector<std::size_t>, DIM>& navigator) const {
+  local_iterator_t end(
+      const std::array<std::vector<std::size_t>, DIM>& navigator) const {
     return local_iterator_t(*this, numLocalBins(), navigator);
   }
-  
+
  private:
   /// set of axis defining the multi-dimensional grid
   std::tuple<Axes...> m_axes;
