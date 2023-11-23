@@ -63,6 +63,7 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   }
 
   std::vector<ActsScalar> vBounds = {0.5 * nSurfacesX * 2 * radius,
+                                     0.5 * nSurfacesX * 2 * radius,
                                      0.5 * nSurfacesY * 2 * radius, halfZ};
 
   MultiWireStructureBuilder::Config mlCfg;
