@@ -700,43 +700,6 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
     const external_spacepoint_t* S1 = triplet.s1().SP ;//triplet-> FTF_SP-> simspacepoint 
     const external_spacepoint_t* S2 = triplet.s2().SP ;
     const external_spacepoint_t* S3 = triplet.s3().SP ;
-
-    // //trying to calculate vertex, s2 and 3 for now 
-    // float xM = S2->x() ; 
-    // float yM = S2->y() ; 
-    // float zM = S2->z() ; 
-    // float rM = S2->r() ; 
-    // // float vrM = S2->varianceR() ; 
-    // // float vzM = S2->varianceZ() ; 
-
-    // float xB = S3->x() ; 
-    // float yB = S3->y() ; 
-    // float zB = S3->z() ; 
-    // float rB = S3->r() ; 
-    // // float vrB = S3->varianceR() ; 
-    // // float vzB = S3->varianceZ() ; 
-  
-    // float cosPhiM = xM / rM;
-    // float sinPhiM = yM / rM;
-
-    // float deltaX = xB - xM;
-    // float deltaY = yB - yM;
-    // float deltaZ = zB - zM;
-    
-    // float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
-    // float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
-
-    // float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
-    // float iDeltaR2 = 1. / deltaR2;
-    // float iDeltaR = std::sqrt(iDeltaR2);
-    // float bottomFactor = -1 ; //conditional always set to true in ortho int bottomFactor = bottom ? -1 : 1;
-
-    // float cotTheta = deltaZ * iDeltaR * bottomFactor ;
-    // float Vertex = zM - rM * cotTheta ; 
-    // std::cout << "chekcing vertex " << Vertex << std::endl ; 
-    // std::fstream fout;
-    // fout.open("seeds.csv", std::ios::out | std::ios::app);  
-    // fout << (zM+zB)/2 << ", " << (rM+rB)/2  << "\n";
  
     //input to seed 
     float Vertex = 0 ; 

@@ -113,18 +113,6 @@ addCKFTracks(
     #  outputDirRoot=outputDir,
  )
 
-# addAmbiguityResolution(
-#     s,
-#     AmbiguityResolutionConfig(maximumSharedHits=3),
-#     outputDirRoot=outputDir,
-# )
-
-# addVertexFitting(
-#     s,
-#     field,
-#     vertexFinder=VertexFinder.Iterative,
-#     outputDirRoot=outputDir,
-# )
 
 s.run()
 
