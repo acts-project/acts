@@ -37,14 +37,15 @@ class BinnedSPGroupIterator {
  private:
   enum INDEX : int { PHI = 0, Z = 1 };
 
-public:
+ public:
   // Never take ownerships
   BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>&& group,
                         std::array<std::size_t, 2> index,
-			std::array<std::vector<std::size_t>, 2> navigation) = delete;
+                        std::array<std::vector<std::size_t>, 2> navigation) =
+      delete;
   BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>& group,
                         std::array<std::size_t, 2> index,
-			std::array<std::vector<std::size_t>, 2> navigation);
+                        std::array<std::vector<std::size_t>, 2> navigation);
 
   BinnedSPGroupIterator(const BinnedSPGroupIterator&) = delete;
   BinnedSPGroupIterator& operator=(const BinnedSPGroupIterator&) = delete;
@@ -70,9 +71,11 @@ public:
   // The group, it contains the grid and the bin finders
   Acts::detail::RefHolder<BinnedSPGroup<external_spacepoint_t>> m_group;
   // Current grid iterator
-  typename Acts::SpacePointGrid<external_spacepoint_t>::local_iterator_t m_gridItr;
+  typename Acts::SpacePointGrid<external_spacepoint_t>::local_iterator_t
+      m_gridItr;
   // End iterator
-  typename Acts::SpacePointGrid<external_spacepoint_t>::local_iterator_t m_gridItrEnd;
+  typename Acts::SpacePointGrid<external_spacepoint_t>::local_iterator_t
+      m_gridItrEnd;
 };
 
 /// @c BinnedSPGroup Provides access to begin and end BinnedSPGroupIterator
@@ -85,7 +88,7 @@ class BinnedSPGroup {
 #endif
 
   enum INDEX : int { PHI = 0, Z = 1 };
-  
+
  public:
   BinnedSPGroup() = delete;
 
@@ -114,27 +117,25 @@ class BinnedSPGroup {
   BinnedSPGroupIterator<external_spacepoint_t> begin();
   BinnedSPGroupIterator<external_spacepoint_t> end();
 
-  Acts::SpacePointGrid<external_spacepoint_t>& grid() {
-    return *m_grid.get();
-  }
+  Acts::SpacePointGrid<external_spacepoint_t>& grid() { return *m_grid.get(); }
 
-  std::size_t skipZMiddleBin() {
-    return m_skipZMiddleBin;
-  }
+  std::size_t skipZMiddleBin() { return m_skipZMiddleBin; }
 
  private:
   // grid with ownership of all InternalSpacePoint
-  std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_grid {nullptr};
+  std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_grid{nullptr};
 
   // BinFinder must return std::vector<Acts::Seeding::Bin> with content of
   // each bin sorted in r (ascending)
-  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_topBinFinder {nullptr};
-  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_bottomBinFinder {nullptr};
+  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_topBinFinder{
+      nullptr};
+  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_bottomBinFinder{
+      nullptr};
 
   // Order of z bins to loop over when searching for SPs
-  std::array<std::vector<std::size_t>, 2> m_bins {};
+  std::array<std::vector<std::size_t>, 2> m_bins{};
   // Number of Z bins to skip the search for middle SP
-  std::size_t m_skipZMiddleBin {0ul};
+  std::size_t m_skipZMiddleBin{0ul};
 };
 
 }  // namespace Acts
