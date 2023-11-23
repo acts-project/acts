@@ -69,13 +69,13 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
     std::vector<GNN_TrigTracklet<external_spacepoint_t>>& vTracks,
     const Acts::RoiDescriptor& roi,
     const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo) {
-
-  const float min_z0 = roi.zedMinus();  
-  const float max_z0 = roi.zedPlus();   
-  const float cut_zMinU = min_z0 + m_config.maxOuterRadius * roi.dzdrMinus();   
+  const float min_z0 = roi.zedMinus();
+  const float max_z0 = roi.zedPlus();
+  const float cut_zMinU = min_z0 + m_config.maxOuterRadius * roi.dzdrMinus();
   const float cut_zMaxU = max_z0 + m_config.maxOuterRadius * roi.dzdrPlus();
-  float m_minR_squ =  m_config.m_tripletPtMin*m_config.m_tripletPtMin/std::pow(m_config.ptCoeff,2); //from athena 
-  float m_maxCurv = m_config.ptCoeff/m_config.m_tripletPtMin ; 
+  float m_minR_squ = m_config.m_tripletPtMin * m_config.m_tripletPtMin /
+                     std::pow(m_config.ptCoeff, 2);  // from athena
+  float m_maxCurv = m_config.ptCoeff / m_config.m_tripletPtMin;
   const float maxKappa_high_eta = 0.8 / m_minR_squ;
   const float maxKappa_low_eta = 0.6 / m_minR_squ;
 
@@ -200,7 +200,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                     B2.m_vn.at(B2.m_vPhiNodes.at(n2PhiIdx).second);
 
                 if (n2->m_out.size() >= MAX_SEG_PER_NODE) {
-
                   continue;
                 }
                 if (n2->isFull()) {
@@ -288,8 +287,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                     float tau2 = edgeStorage.at(n2_in_idx).m_p[0];
                     float tau_ratio = tau2 * uat_1 - 1.0f;
 
-                    if (std::fabs(tau_ratio) > m_config.cut_tau_ratio_max) {  // bad
-                                                                     // match
+                    if (std::fabs(tau_ratio) >
+                        m_config.cut_tau_ratio_max) {  // bad
+                                                       // match
                       continue;
                     }
                     isGood = true;  // good match found
@@ -650,7 +650,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 }
 
 template <typename external_spacepoint_t>
-template <typename output_container_t> 
+template <typename output_container_t>
 void SeedFinderFTF<external_spacepoint_t>::createSeeds(
     const Acts::RoiDescriptor& roi,
     const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>& gnngeo,
@@ -696,21 +696,21 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
   }
   vTracks.clear();
 
-  for(auto&triplet : m_triplets) {
-    const external_spacepoint_t* S1 = triplet.s1().SP ;//triplet-> FTF_SP-> simspacepoint 
-    const external_spacepoint_t* S2 = triplet.s2().SP ;
-    const external_spacepoint_t* S3 = triplet.s3().SP ;
- 
-    //input to seed 
-    float Vertex = 0 ; 
-    float Quality = triplet.Q() ; 
-    //make a new seed, add to vector of seeds 
-    out_cont.emplace_back(*S1,*S2,*S3,Vertex,Quality) ; 
+  for (auto& triplet : m_triplets) {
+    const external_spacepoint_t* S1 =
+        triplet.s1().SP;  // triplet-> FTF_SP-> simspacepoint
+    const external_spacepoint_t* S2 = triplet.s2().SP;
+    const external_spacepoint_t* S3 = triplet.s3().SP;
 
+    // input to seed
+    float Vertex = 0;
+    float Quality = triplet.Q();
+    // make a new seed, add to vector of seeds
+    out_cont.emplace_back(*S1, *S2, *S3, Vertex, Quality);
   }
 }
 
-//outer called in alg 
+// outer called in alg
 template <typename external_spacepoint_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinderFTF<external_spacepoint_t>::createSeeds(

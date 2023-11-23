@@ -91,7 +91,7 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
       this, "InputSourceLinks"};
-    
+
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 

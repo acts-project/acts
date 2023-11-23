@@ -63,15 +63,15 @@ class SeedFinderFTF {
   void loadSpacePoints(
       const std::vector<FTF_SP<external_spacepoint_t>> &FTF_SP_vect);
 
-  //inner 
+  // inner
   template <typename output_container_t>
   void createSeeds(const Acts::RoiDescriptor &,
                    const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t> &,
-                   output_container_t &) ;
-  //outer 
-  std::vector<seed_t> createSeeds(const Acts::RoiDescriptor &,
-                   const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t> &);
-
+                   output_container_t &);
+  // outer
+  std::vector<seed_t> createSeeds(
+      const Acts::RoiDescriptor &,
+      const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t> &);
 
  private:
   enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };

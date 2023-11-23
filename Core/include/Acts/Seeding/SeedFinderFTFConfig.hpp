@@ -43,7 +43,7 @@ struct SeedFinderFTFConfig {
   unsigned int maxSeedsPerSpM = 5;
 
   float m_phiSliceWidth{};
-  float m_nMaxPhiSlice = 53; //set in athena TrigCombinatorialsettings   
+  float m_nMaxPhiSlice = 53;  // set in athena TrigCombinatorialsettings
   bool m_useClusterWidth = false;
   std::string fastrack_input_file;
   std::vector<TrigInDetSiLayer> m_layerGeometry;
@@ -53,21 +53,23 @@ struct SeedFinderFTFConfig {
   bool m_LRTmode = true;  // eventually want to set from full chain
   bool m_useEtaBinning = true;
   bool m_doubletFilterRZ = true;
-  float m_minDeltaRadius = 2.0;  // athena itk 2.0  
-  float m_tripletD0Max = 4.0;  // m_settings  
-  unsigned int m_maxTripletBufferLength = 3;  
+  float m_minDeltaRadius = 2.0;  // athena itk 2.0
+  float m_tripletD0Max = 4.0;    // m_settings
+  unsigned int m_maxTripletBufferLength = 3;
 
-  //from Run function //used to be const but cant as FTF config needs to be changable 
-  int MaxEdges = 2000000; 
-  float cut_dphi_max = 0.012; 
-  float cut_dcurv_max = 0.001; 
-  float cut_tau_ratio_max = 0.007; 
-  float maxOuterRadius = 550.0; 
-  float m_PtMin = 1000.0 ; 
-  float m_tripletPtMinFrac = 0.3 ; 
-  float m_tripletPtMin = m_PtMin * m_tripletPtMinFrac ; //used to be 2500, changing this helps low pt a lot 
-  double ptCoeff = 0.29997*1.9972/2.0; //from athena  
-
+  // from Run function //used to be const but cant as FTF config needs to be
+  // changable
+  int MaxEdges = 2000000;
+  float cut_dphi_max = 0.012;
+  float cut_dcurv_max = 0.001;
+  float cut_tau_ratio_max = 0.007;
+  float maxOuterRadius = 550.0;
+  float m_PtMin = 1000.0;
+  float m_tripletPtMinFrac = 0.3;
+  float m_tripletPtMin =
+      m_PtMin *
+      m_tripletPtMinFrac;  // used to be 2500, changing this helps low pt a lot
+  double ptCoeff = 0.29997 * 1.9972 / 2.0;  // from athena
 
   // ROI:
   bool containsPhi() {

@@ -96,17 +96,16 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   std::vector<Acts::FTF_SP<SimSpacePoint>> FTF_spacePoints =
       Make_FTF_spacePoints(ctx, m_cfg.ACTS_FTF_Map);
 
-
-  //cluster width 
-  // const ClusterContainer* clusters = &m_inputClusters(ctx) ;
+  // cluster width
+  //  const ClusterContainer* clusters = &m_inputClusters(ctx) ;
 
   // for (const auto& sp : FTF_spacePoints){
-  //   const auto& sl = sp.SP->sourceLinks().front().get<IndexSourceLink>() ; 
-  //   const auto& cluster = clusters->at(sl.index()) ; 
-  //   std::cout << "testing 0: " << cluster.sizeLoc0 << " 1: " << cluster.sizeLoc1 << std::endl ; 
+  //   const auto& sl = sp.SP->sourceLinks().front().get<IndexSourceLink>() ;
+  //   const auto& cluster = clusters->at(sl.index()) ;
+  //   std::cout << "testing 0: " << cluster.sizeLoc0 << " 1: " <<
+  //   cluster.sizeLoc1 << std::endl ;
 
   // }
-
 
   for (auto sp : FTF_spacePoints) {
     ACTS_DEBUG("FTF space points: "
@@ -135,14 +134,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
   finder.loadSpacePoints(FTF_spacePoints);
 
-  //trigFTF file : 
+  // trigFTF file :
   Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0,
                                   150.0);
-  //ROI file: 
-  // Acts::RoiDescriptor internalRoi(0, -5, 5, 0, -M_PI, M_PI, 0, -225.0,
-  //                                 225.0);
+  // ROI file:
+  //  Acts::RoiDescriptor internalRoi(0, -5, 5, 0, -M_PI, M_PI, 0, -225.0,
+  //                                  225.0);
 
-  //new version returns seeds 
+  // new version returns seeds
   SimSeedContainer seeds = finder.createSeeds(internalRoi, *mGNNgeo);
 
   m_outputSeeds(ctx, std::move(seeds));
@@ -303,7 +302,7 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
         std::make_pair(ACTS_joint_id,
                        0);  // here the key needs to be pair of(vol*100+lay, 0)
     auto Find = m_cfg.ACTS_FTF_Map.find(key);
-    int FTF_id = 0 ; //initialise first to avoid FLTUND later 
+    int FTF_id = 0;               // initialise first to avoid FLTUND later
     FTF_id = Find->second.first;  // new map, item is pair want first
     if (Find ==
         m_cfg.ACTS_FTF_Map
