@@ -208,17 +208,25 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
 
   auto estRes = m_cfg.ipEstimator.getImpactParameters(
       m_extractParameters(*track), newVtx, vertexingOptions.geoContext,
-      vertexingOptions.magFieldContext);
+      vertexingOptions.magFieldContext, m_cfg.useTime);
   if (!estRes.ok()) {
     return estRes.error();
   }
 
   ImpactParametersAndSigma ipas = *estRes;
 
+  // TODO: throw error when encountering negative standard deviations
+  double chi2Time = 0;
+  if (m_cfg.useTime) {
+    if (ipas.sigmaDeltaT.value() > 0) {
+      chi2Time = std::pow(ipas.deltaT.value() / ipas.sigmaDeltaT.value(), 2);
+    }
+  }
+
   double significance = 0.;
   if (ipas.sigmaD0 > 0 && ipas.sigmaZ0 > 0) {
     significance = std::sqrt(std::pow(ipas.d0 / ipas.sigmaD0, 2) +
-                             std::pow(ipas.z0 / ipas.sigmaZ0, 2));
+                             std::pow(ipas.z0 / ipas.sigmaZ0, 2) + chi2Time);
   }
 
   return significance;
