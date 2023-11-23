@@ -115,14 +115,18 @@ struct SurfaceReached {
         boundaryCheck, tolerance);
     const auto closest = sIntersection.closest();
 
+    bool reached = false;
+
     if (closest.status() == Intersection3D::Status::onSurface) {
       const double distance = closest.pathLength();
       ACTS_VERBOSE(
           "SurfaceReached aborter | "
           "Target surface reached at distance (tolerance) "
           << distance << " (" << tolerance << ")");
-      return true;
+      reached = true;
     }
+
+    bool intersectionFound = false;
 
     for (const auto& intersection : sIntersection.split()) {
       if (intersection &&
@@ -134,14 +138,17 @@ struct SurfaceReached {
             "SurfaceReached aborter | "
             "Target stepSize (surface) updated to "
             << stepper.outputStepSize(state.stepping));
-        return false;
+        intersectionFound = true;
+        break;
       }
     }
 
-    ACTS_VERBOSE(
-        "SurfaceReached aborter | "
-        "Target intersection not found. Maybe next time?");
-    return false;
+    if (!intersectionFound) {
+      ACTS_VERBOSE(
+          "SurfaceReached aborter | "
+          "Target intersection not found. Maybe next time?");
+    }
+    return reached;
   }
 };
 
