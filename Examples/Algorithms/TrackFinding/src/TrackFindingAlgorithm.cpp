@@ -169,18 +169,19 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       continue;
     }
 
-    auto& tracksForSeed = result.value();
-    for (auto& track : tracksForSeed) {
+    auto& firstTracksForSeed = firstResult.value();
+    for (auto& firstTrack : firstTracksForSeed) {
       // Set the seed number, this number decrease by 1 since the seed number
       // has already been updated
-      seedNumber(track) = nSeed - 1;
-      if (!m_trackSelector.has_value() ||
-          m_trackSelector->isValidTrack(firstTrack)) {
-        auto destProxy = tracks.getTrack(tracks.addTrack());
-        destProxy.copyFrom(firstTrack, true);
-      }
+      seedNumber(firstTrack) = nSeed - 1;
 
-      if (m_cfg.twoWay) {
+      if (!m_cfg.twoWay) {
+        if (!m_trackSelector.has_value() ||
+            m_trackSelector->isValidTrack(firstTrack)) {
+          auto destProxy = tracks.getTrack(tracks.addTrack());
+          destProxy.copyFrom(firstTrack, true);
+        }
+      } else {
         std::optional<Acts::VectorMultiTrajectory::TrackStateProxy> firstState;
         for (auto st : firstTrack.trackStatesReversed()) {
           bool isMeasurement =
@@ -216,6 +217,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
         auto& secondTracksForSeed = secondResult.value();
         for (auto& secondTrack : secondTracksForSeed) {
           if (secondTrack.nTrackStates() < 2) {
+            if (!m_trackSelector.has_value() ||
+                m_trackSelector->isValidTrack(firstTrack)) {
+              auto destProxy = tracks.getTrack(tracks.addTrack());
+              destProxy.copyFrom(firstTrack, true);
+            }
+
             continue;
           }
 
