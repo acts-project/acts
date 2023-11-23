@@ -13,6 +13,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -28,6 +29,9 @@
 #include <TFile.h>
 #include <TVectorFfwd.h>
 #include <TVectorT.h>
+
+using Acts::VectorHelpers::eta;
+using Acts::VectorHelpers::phi;
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -282,8 +286,24 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       }
       isReconstructed = true;
     }
+    // Loop over all the other truth particle and find the distance to the
+    // closest one
+    double minDeltaR = -1;
+    for (const auto& closeParticle : particles) {
+      if (closeParticle.particleId() == particleId) {
+        continue;
+      }
+      double p_phi = phi(particle.direction());
+      double p_eta = eta(particle.direction());
+      double c_phi = phi(closeParticle.direction());
+      double c_eta = eta(closeParticle.direction());
+      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
+      if (minDeltaR == -1 || distance < minDeltaR) {
+        minDeltaR = distance;
+      }
+    }
     // Fill efficiency plots
-    m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
+    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
     // Fill number of duplicated tracks for this particle
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedTracks - 1);

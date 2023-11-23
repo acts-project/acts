@@ -119,6 +119,7 @@ def runTruthTrackingGx2f(
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_fitter.root"),
+            writeGx2fSpecific=True,
         )
     )
 

@@ -24,8 +24,9 @@ namespace Acts {
 /// @brief Vertex fitter class implementing the Billoir vertex fitter
 ///
 /// This class implements the Billoir vertex fitter from Ref. (1). It is also
-/// useful to have a look at Ref. (2). Note that the Billoir vertex fitter
-/// outputs one 4D vertex position and nTrack momenta at this very point.
+/// useful to have a look at Ref. (2). The cross-covariance matrices are derived
+/// in Ref. (3). Note that the Billoir vertex fitter outputs one 4D vertex
+/// position and nTrack momenta at this very point.
 ///
 /// Ref. (1):
 /// Fast vertex fitting with a local parametrization of tracks.
@@ -37,6 +38,11 @@ namespace Acts {
 /// Pattern Recognition, Tracking and Vertex Reconstruction in Particle
 /// Detectors.
 /// Author(s) Fruehwirth, R ; Strandli, A
+///
+/// Ref. (3):
+/// ACTS White Paper: Cross-Covariance Matrices in the Billoir Vertex Fit
+/// https://acts.readthedocs.io/en/latest/white_papers/billoir-covariances.html
+/// Author(s) Russo, F
 ///
 /// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
