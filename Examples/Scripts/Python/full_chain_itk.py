@@ -22,17 +22,17 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
-ttbar_pu200 = False 
+ttbar_pu200 = False
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
-outputDir = pathlib.Path.cwd() / "itk_output/default"
+outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
 detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=1000, numThreads=1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
@@ -52,7 +52,7 @@ else:
             mean=acts.Vector4(0, 0, 0, 0),
         ),
         rnd=rnd,
-        # outputDirRoot=outputDir,
+        outputDirRoot=outputDir,
     )
 
 addFatras(
@@ -69,7 +69,7 @@ addFatras(
     )
     if ttbar_pu200
     else ParticleSelectorConfig(),
-    # outputDirRoot=outputDir,
+    outputDirRoot=outputDir,
 )
 
 addDigitization(
@@ -77,7 +77,7 @@ addDigitization(
     trackingGeometry,
     field,
     digiConfigFile=geo_dir  / "itk-hgtd/itk-smearing-config.json",  
-    # outputDirRoot=outputDir,
+    outputDirRoot=outputDir,
     rnd=rnd,
 )
 
@@ -105,20 +105,20 @@ addCKFTracks(
          absEta=(None, 4.0),
          nMeasurementsMin=6,
      ),
-    #  outputDirRoot=outputDir,
+     outputDirRoot=outputDir,
  )
 
-# addAmbiguityResolution(
-#     s,
-#     AmbiguityResolutionConfig(maximumSharedHits=3),
-#     outputDirRoot=outputDir,
-# )
+addAmbiguityResolution(
+    s,
+    AmbiguityResolutionConfig(maximumSharedHits=3),
+    outputDirRoot=outputDir,
+)
 
-# addVertexFitting(
-#     s,
-#     field,
-#     vertexFinder=VertexFinder.Iterative,
-#     outputDirRoot=outputDir,
-# )
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
+)
 
 s.run()

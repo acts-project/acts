@@ -862,21 +862,18 @@ def addFTFSeeding(
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
-        layerMappingFile=layerMappingFile, 
-        geometrySelection = acts.examples.readJsonGeometryList(
+        layerMappingFile=layerMappingFile,
+        geometrySelection=acts.examples.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
         inputSourceLinks = "sourcelinks" , 
         trackingGeometry = trackingGeometry, 
         fill_module_csv = False, 
         inputClusters= "clusters" ,
-
-        
     )
 
     sequence.addAlgorithm(seedingAlg) 
     return seedingAlg.config.outputSeeds 
-
 
 
 def addSeedPerformanceWriters(
