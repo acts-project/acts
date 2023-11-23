@@ -207,7 +207,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const float uIP2, const float cosPhiM, const float sinPhiM) const {
   float impactMax = m_config.impactMax;
 
-  static constexpr bool isBottomCandidate =
+  constexpr bool isBottomCandidate =
       candidateType == Acts::SpacePointCandidateType::eBottom;
 
   if constexpr (isBottomCandidate) {
