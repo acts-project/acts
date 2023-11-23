@@ -14,6 +14,7 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
 #include <memory>
