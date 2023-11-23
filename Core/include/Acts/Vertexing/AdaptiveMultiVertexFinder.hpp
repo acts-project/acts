@@ -157,6 +157,10 @@ class AdaptiveMultiVertexFinder {
     // So definitely consider setting this to true.
     bool useVertexCovForIPEstimation = false;
 
+    // Use time information when assigning tracks to vertices. If this is set to
+    // true, useTime of the vertex fitter configuration should also be set to
+    // true, and time seeding should be enabled.
+    bool useTime = false;
   };  // Config struct
 
   /// State struct for fulfilling interface
