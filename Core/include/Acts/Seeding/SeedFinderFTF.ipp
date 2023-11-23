@@ -103,7 +103,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
           gnngeo.getTrigFTF_GNN_LayerByKey(dst);
 
       if (pL1 == nullptr) {
-
         continue;
       }
 
@@ -116,7 +115,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
             gnngeo.getTrigFTF_GNN_LayerByKey(src);
 
         if (pL2 == nullptr) {
-
           continue;
         }
         int nDstBins = pL1->m_bins.size();
@@ -128,7 +126,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
               m_storage->getEtaBin(pL1->m_bins.at(b1));
 
           if (B1.empty()) {
-
             continue;
           }
 
@@ -140,7 +137,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
             if (m_config.m_useEtaBinning && (nSrcBins + nDstBins > 2)) {
               if (conn->m_binTable[b1 + b2 * nDstBins] != 1) {
-
                 continue;  // using precomputed LUT
               }
             }
@@ -149,7 +145,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                 m_storage->getEtaBin(pL2->m_bins.at(b2));
 
             if (B2.empty()) {
-
               continue;
             }
 
@@ -175,7 +170,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
               TrigFTF_GNN_Node<external_spacepoint_t>* n1 = (*n1It);
 
               if (n1->m_in.size() >= MAX_SEG_PER_NODE) {
-
                 continue;
               }
 
@@ -196,7 +190,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                 if (phi2 < minPhi) {
                   first_it = n2PhiIdx;
-
                   continue;
                 }
                 if (phi2 > maxPhi) {
@@ -211,7 +204,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                   continue;
                 }
                 if (n2->isFull()) {
-
                   continue;
                 }
 
@@ -219,7 +211,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                 float dr = r2 - r1;
 
-                if (dr < m_config.m_minDeltaRadius) { 
+                if (dr < m_config.m_minDeltaRadius) {
                   continue;
                 }
 
@@ -228,7 +220,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                 float dz = z2 - z1;
                 float tau = dz / dr;
                 float ftau = std::fabs(tau);
-                if (ftau > 36.0) { 
+                if (ftau > 36.0) {
                   continue;
                 }
 
@@ -249,14 +241,12 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                   float z0 = z1 - r1 * tau;
 
                   if (z0 < min_z0 || z0 > max_z0) {
-
                     continue;
                   }
 
                   float zouter = z0 + m_config.maxOuterRadius * tau;
 
                   if (zouter < cut_zMinU || zouter > cut_zMaxU) {
-
                     continue;
                   }
                 }
@@ -274,7 +264,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                 if (ftau < 4.0) {  // eta = 2.1
                   if (kappa > maxKappa_low_eta) {
-
                     continue;
                   }
 
@@ -301,7 +290,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
                     if (std::fabs(tau_ratio) > m_config.cut_tau_ratio_max) {  // bad
                                                                      // match
-                      
                       continue;
                     }
                     isGood = true;  // good match found
@@ -309,7 +297,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
                   }
                 }
                 if (!isGood) {
-
                   continue;  // no moatch found, skip creating [n1 <- n2] edge
                 }
 
@@ -398,7 +385,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
         if (tau_ratio < -m_config.cut_tau_ratio_max) {
           last_out = out_idx;
-
           continue;
         }
         if (tau_ratio > m_config.cut_tau_ratio_max) {
@@ -414,7 +400,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
         }
 
         if (dPhi < -m_config.cut_dphi_max || dPhi > m_config.cut_dphi_max) {
-
           continue;
         }
 
@@ -422,7 +407,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
         float dcurv = curv2 - curv1;
 
         if (dcurv < -m_config.cut_dcurv_max || dcurv > m_config.cut_dcurv_max) {
-
           continue;
         }
 
@@ -446,7 +430,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
     Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS =
         &(edgeStorage.at(edgeIndex));
     if (pS->m_nNei == 0) {
-
       continue;
     }
     v_old.push_back(pS);  // TO-DO: increment level for segments as they already
@@ -509,7 +492,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
         &(edgeStorage.at(edgeIndex));
 
     if (pS->m_level < minLevel) {
-
       continue;
     }
 
@@ -533,7 +515,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
 
   for (auto pS : vSeeds) {
     if (pS->m_level == -1) {
-
       continue;
     }
 
@@ -542,12 +523,10 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
     tFilter.followTrack(pS, rs);
 
     if (!rs.m_initialized) {
-
       continue;
     }
 
     if (static_cast<int>(rs.m_vs.size()) < minLevel) {
-
       continue;
     }
 
@@ -565,7 +544,6 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(
     }
 
     if (vSP.size() < 3) {
-
       continue;
     }
 
@@ -779,6 +757,5 @@ SeedFinderFTF<external_spacepoint_t>::createSeeds(
   createSeeds(roi, gnngeo, r);
   return r;
 }
-
 
 }  // namespace Acts

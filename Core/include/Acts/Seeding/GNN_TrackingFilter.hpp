@@ -229,8 +229,8 @@ class TrigFTF_GNN_TrackingFilter {
     const float weight_x = 0.5;
     const float weight_y = 0.5;
 
-    const float maxDChi2_x = 60.0;  // 35.0;
-    const float maxDChi2_y = 60.0;  // 31.0;
+    const float maxDChi2_x = 60.0;  // was 35.0;
+    const float maxDChi2_y = 60.0;  // was31.0;
 
     const float add_hit = 14.0;
 
@@ -308,10 +308,6 @@ class TrigFTF_GNN_TrackingFilter {
     // chi2 test
     float resid_x = mx - X[0];
     float resid_y = my - Y[0];
-    //this helps not have FPES 
-    if (isnan(resid_x) || isinf(resid_x) ){
-      std::cout << " resid_x inf issue" << std::endl  ;
-    }
 
     float CHx[3] = {Cx[0][0], Cx[0][1], Cx[0][2]};
     float CHy[2] = {Cy[0][0], Cy[0][1]};

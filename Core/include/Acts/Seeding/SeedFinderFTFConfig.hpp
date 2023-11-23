@@ -63,7 +63,9 @@ struct SeedFinderFTFConfig {
   float cut_dcurv_max = 0.001; 
   float cut_tau_ratio_max = 0.007; 
   float maxOuterRadius = 550.0; 
-  float m_tripletPtMin = 1000.0 ; //used to be 2500, changing this helps low pt a lot 
+  float m_PtMin = 1000.0 ; 
+  float m_tripletPtMinFrac = 0.3 ; 
+  float m_tripletPtMin = m_PtMin * m_tripletPtMinFrac ; //used to be 2500, changing this helps low pt a lot 
   double ptCoeff = 0.29997*1.9972/2.0; //from athena  
 
 

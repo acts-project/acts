@@ -303,7 +303,8 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
         std::make_pair(ACTS_joint_id,
                        0);  // here the key needs to be pair of(vol*100+lay, 0)
     auto Find = m_cfg.ACTS_FTF_Map.find(key);
-    int FTF_id = Find->second.first;  // new map, item is pair want first
+    int FTF_id = 0 ; //initialise first to avoid FLTUND later 
+    FTF_id = Find->second.first;  // new map, item is pair want first
     if (Find ==
         m_cfg.ACTS_FTF_Map
             .end()) {  // if end then make new key of (vol*100+lay, modid)
