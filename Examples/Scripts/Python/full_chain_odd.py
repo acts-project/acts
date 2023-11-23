@@ -246,55 +246,6 @@ if seedFilter_ML:
         # outputDirCsv=outputDir,
     )
 
-s.addAlgorithm(
-    acts.examples.MyTrackFindingAlgorithm(
-        level=acts.logging.INFO,
-
-        magneticField=field,
-        trackingGeometry=trackingGeometry,
-
-        inputMeasurements="measurements",
-        inputSourceLinks="sourcelinks",
-        inputInitialTrackParameters="estimatedparameters",
-        outputTracks="mytracks",
-
-        measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [
-                (
-                    acts.GeometryIdentifier(),
-                    (
-                        [],
-                        [30],
-                        [10],
-                    ),
-                )
-            ]
-        ),
-    )
-)
-
-trackStatesWriter = acts.examples.RootTrackStatesWriter(
-    level=acts.logging.INFO,
-    inputTracks="mytracks",
-    inputParticles="particles_selected",
-    inputSimHits="simhits",
-    inputMeasurementParticlesMap="measurement_particles_map",
-    inputMeasurementSimHitsMap="measurement_simhits_map",
-    filePath=str(outputDir / f"trackstates_hi.root"),
-    treeName="trackstates",
-)
-s.addWriter(trackStatesWriter)
-
-trackSummaryWriter = acts.examples.RootTrackSummaryWriter(
-    level=acts.logging.INFO,
-    inputTracks="mytracks",
-    inputParticles="particles_selected",
-    inputMeasurementParticlesMap="measurement_particles_map",
-    filePath=str(outputDir / f"tracksummary_hi.root"),
-    treeName="tracksummary",
-)
-s.addWriter(trackSummaryWriter)
-
 addCKFTracks(
     s,
     trackingGeometry,
@@ -308,6 +259,35 @@ addCKFTracks(
     outputDirRoot=outputDir,
     writeCovMat=True,
     # outputDirCsv=outputDir,
+)
+
+if ambiguity_MLSolver:
+    addAmbiguityResolutionML(
+        s,
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+        ),
+        outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/duplicateClassifier.onnx",
+    )
+else:
+    addAmbiguityResolution(
+        s,
+        AmbiguityResolutionConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+        ),
+        outputDirRoot=outputDir,
+        writeCovMat=True,
+        # outputDirCsv=outputDir,
+    )
+
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
 )
 
 s.run()

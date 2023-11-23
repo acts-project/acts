@@ -83,11 +83,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = m_cfg.maxSteps;
-  pOptions.direction =
-      m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
-
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
@@ -114,12 +109,29 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
+  Acts::PropagatorPlainOptions firstPropOptions;
+  firstPropOptions.maxSteps = m_cfg.maxSteps;
+  firstPropOptions.direction = Acts::Direction::Forward;
+
+  Acts::PropagatorPlainOptions secondPropOptions;
+  secondPropOptions.maxSteps = m_cfg.maxSteps;
+  secondPropOptions.direction = firstPropOptions.direction.invert();
+
   // Set the CombinatorialKalmanFilter options
-  ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
+  ActsExamples::TrackFindingAlgorithm::TrackFinderOptions firstOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions, pSurface.get());
-  options.smoothingTargetSurfaceStrategy =
+      extensions, firstPropOptions, pSurface.get());
+  firstOptions.smoothing = true;
+  firstOptions.smoothingTargetSurfaceStrategy =
       Acts::CombinatorialKalmanFilterTargetSurfaceStrategy::first;
+
+  ActsExamples::TrackFindingAlgorithm::TrackFinderOptions secondOptions(
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
+      extensions, firstPropOptions, pSurface.get());
+  secondOptions.filterTargetSurface = pSurface.get();
+  secondOptions.smoothing = true;
+  secondOptions.smoothingTargetSurfaceStrategy =
+      Acts::CombinatorialKalmanFilterTargetSurfaceStrategy::last;
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -145,15 +157,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     // Clear trackContainerTemp and trackStateContainerTemp
     tracksTemp.clear();
 
-    auto result =
-        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracksTemp);
+    auto firstResult = (*m_cfg.findTracks)(initialParameters.at(iseed),
+                                           firstOptions, tracksTemp);
     m_nTotalSeeds++;
     nSeed++;
 
-    if (!result.ok()) {
+    if (!firstResult.ok()) {
       m_nFailedSeeds++;
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
-                                                    << result.error());
+                                                    << firstResult.error());
       continue;
     }
 
@@ -163,9 +175,46 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       // has already been updated
       seedNumber(track) = nSeed - 1;
       if (!m_trackSelector.has_value() ||
-          m_trackSelector->isValidTrack(track)) {
+          m_trackSelector->isValidTrack(firstTrack)) {
         auto destProxy = tracks.getTrack(tracks.addTrack());
-        destProxy.copyFrom(track, true);  // make sure we copy track states!
+        destProxy.copyFrom(firstTrack, true);
+      }
+
+      if (m_cfg.twoWay) {
+        auto secondResult = (*m_cfg.findTracks)(initialParameters.at(iseed),
+                                                secondOptions, tracksTemp);
+
+        if (!secondResult.ok()) {
+          ACTS_WARNING("Second track finding failed for seed "
+                       << iseed << " with error" << secondResult.error());
+          continue;
+        }
+
+        auto firstFirstState =
+            std::next(firstTrack.trackStatesReversed().begin(),
+                      firstTrack.nTrackStates() - 1);
+
+        auto& secondTracksForSeed = secondResult.value();
+        for (auto& secondTrack : secondTracksForSeed) {
+          if (secondTrack.nTrackStates() < 2) {
+            continue;
+          }
+
+          secondTrack.reverseTrackStates(true);
+          seedNumber(secondTrack) = nSeed;
+
+          (*firstFirstState).previous() =
+              (*std::next(secondTrack.trackStatesReversed().begin())).index();
+          secondTrack.tipIndex() = firstTrack.tipIndex();
+
+          Acts::calculateTrackQuantities(secondTrack);
+
+          if (!m_trackSelector.has_value() ||
+              m_trackSelector->isValidTrack(secondTrack)) {
+            auto destProxy = tracks.getTrack(tracks.addTrack());
+            destProxy.copyFrom(secondTrack, true);
+          }
+        }
       }
     }
   }

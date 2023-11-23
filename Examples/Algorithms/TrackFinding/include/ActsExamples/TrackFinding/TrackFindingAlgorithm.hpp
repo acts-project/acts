@@ -93,16 +93,19 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
-    /// Compute shared hit information
-    bool computeSharedHits = false;
     /// Track selector config
     std::optional<std::variant<Acts::TrackSelector::Config,
                                Acts::TrackSelector::EtaBinnedConfig>>
         trackSelectorCfg = std::nullopt;
-    /// Run backward finding
-    bool backward = false;
+
+    /// Run finding in two directions
+    bool twoWay = true;
+
     /// Maximum number of propagation steps
     unsigned int maxSteps = 100000;
+
+    /// Compute shared hit information
+    bool computeSharedHits = false;
   };
 
   /// Constructor of the track finding algorithm
