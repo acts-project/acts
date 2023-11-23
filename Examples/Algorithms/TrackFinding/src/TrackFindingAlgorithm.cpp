@@ -12,9 +12,14 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
@@ -81,11 +86,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = m_cfg.maxSteps;
-  pOptions.direction =
-      m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
-
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
@@ -99,9 +99,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.smoother.connect<
-      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-      &kfSmoother);
   extensions.measurementSelector
       .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
           &measSel);
@@ -112,12 +109,28 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
+  Acts::PropagatorPlainOptions pOptions;
+  pOptions.maxSteps = m_cfg.maxSteps;
+  pOptions.direction =
+      m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
+
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions, pSurface.get());
-  options.smoothingTargetSurfaceStrategy =
-      Acts::CombinatorialKalmanFilterTargetSurfaceStrategy::first;
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext);
+  options.sourcelinkAccessor = slAccessorDelegate;
+  options.extensions = extensions;
+  options.propagatorPlainOptions = pOptions;
+
+  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
+                          Acts::AbortList<Acts::EndOfWorldReached>>
+      pExtrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+  pExtrapolationOptions.direction = pOptions.direction.invert();
+
+  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
+      Acts::EigenStepper<>(m_cfg.magneticField),
+      Acts::Navigator({m_cfg.trackingGeometry},
+                      logger().cloneWithSuffix("Navigator")),
+      logger().cloneWithSuffix("Propagator"));
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -157,7 +170,45 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
+      kfSmoother(ctx.geoContext, *trackStateContainerTemp, track.tipIndex(),
+                 logger());
+
+      std::size_t firstStateIndex = track.tipIndex();
+      for (auto st : track.trackStatesReversed()) {
+        bool isMeasurement =
+            st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag);
+        bool isOutlier = st.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+        // We are excluding non measurement states and outlier here. Those can
+        // decrease resolution because only the smoothing corrected the very
+        // first prediction as filtering is not possible.
+        if (isMeasurement && !isOutlier) {
+          firstStateIndex = st.index();
+        }
+      }
+
+      auto firstState = trackStateContainerTemp->getTrackState(firstStateIndex);
+      auto parameters = Acts::BoundTrackParameters(
+          firstState.referenceSurface().getSharedPtr(), firstState.parameters(),
+          firstState.covariance(), track.particleHypothesis());
+
+      auto extrapolationResult =
+          extrapolator.propagate(parameters, *pSurface, pExtrapolationOptions);
+
+      if (!result.ok()) {
+        ACTS_WARNING("Extrapolation for seed "
+                     << iseed << " and track " << track.index()
+                     << " failed with error" << result.error());
+        continue;
+      }
+
+      auto endParameters = extrapolationResult->endParameters.value();
+
+      track.parameters() = endParameters.parameters();
+      track.covariance() = endParameters.covariance().value();
+      track.setReferenceSurface(
+          endParameters.referenceSurface().getSharedPtr());
       seedNumber(track) = nSeed;
+
       if (!m_trackSelector.has_value() ||
           m_trackSelector->isValidTrack(track)) {
         auto destProxy = tracks.getTrack(tracks.addTrack());

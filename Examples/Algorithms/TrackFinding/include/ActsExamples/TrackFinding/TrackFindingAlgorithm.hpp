@@ -87,6 +87,11 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Output find trajectories collection.
     std::string outputTracks;
 
+    /// The tracking geometry that should be used.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// The magnetic field that should be used.
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config

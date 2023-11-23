@@ -200,8 +200,6 @@ struct Fixture {
         .template connect<&testSourceLinkCalibrator<Trajectory>>();
     extensions.updater.template connect<&KalmanUpdater::operator()<Trajectory>>(
         &kfUpdater);
-    extensions.smoother
-        .template connect<&KalmanSmoother::operator()<Trajectory>>(&kfSmoother);
     extensions.measurementSelector
         .template connect<&Acts::MeasurementSelector::select<Trajectory>>(
             &measSel);
@@ -284,13 +282,13 @@ struct Fixture {
   }
 
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
-    return CombinatorialKalmanFilterOptions(
-        geoCtx, magCtx, calCtx,
-        Acts::SourceLinkAccessorDelegate<
-            TestSourceLinkAccessor::Iterator>{},  // leave the accessor empty,
-                                                  // this will have to be set
-                                                  // before running the CKF
-        getExtensions(), Acts::PropagatorPlainOptions());
+    CombinatorialKalmanFilterOptions options(geoCtx, magCtx, calCtx);
+    options.sourcelinkAccessor = Acts::SourceLinkAccessorDelegate<
+        TestSourceLinkAccessor::Iterator>{};  // leave the accessor empty,
+                                              // this will have to be set
+                                              // before running the CKF
+    options.extensions = getExtensions();
+    return options;
   }
 };
 
@@ -307,8 +305,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
-  // Set the target surface
-  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
@@ -366,8 +362,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
-  // Set the target surface
-  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
