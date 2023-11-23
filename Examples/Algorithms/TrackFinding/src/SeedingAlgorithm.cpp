@@ -13,7 +13,6 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/FutureBinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -22,8 +21,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Range1D.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "Acts/Utilities/GridIterator.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 
 #include <cmath>
 #include <csignal>
@@ -32,7 +29,6 @@
 #include <limits>
 #include <ostream>
 #include <stdexcept>
-#include <chrono>
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -256,19 +252,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
       m_cfg.gridConfig, m_cfg.gridOptions);
 
-  auto futureGrid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
-      m_cfg.gridConfig, m_cfg.gridOptions);
-
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       m_bottomBinFinder, m_topBinFinder, std::move(grid), rRangeSPExtent,
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
 
-  auto futureSpacePointsGrouping = Acts::future::BinnedSPGroup<SimSpacePoint>(
-      spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
-      m_bottomBinFinder, m_topBinFinder, std::move(futureGrid), rRangeSPExtent,
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
-  
   // safely clamp double to float
   float up = Acts::clampValue<float>(
       std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
@@ -315,56 +303,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
-  std::size_t counter = 0ul;
-
-  auto start_nominal = std::chrono::high_resolution_clock::now();
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
-    // m_seedFinder.createSeedsForGroup(
-    //     m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
-    //     std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
-    //    std::cout << (counter++) << " : bottom.size, middle, top.size: " << bottom.size() << " " << middle << " " << top.size() << std::endl;
+    m_seedFinder.createSeedsForGroup(
+        m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
+        std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
   }
-  auto stop_nominal = std::chrono::high_resolution_clock::now();
-  
-  counter = 0ul;
-  auto start_modified = std::chrono::high_resolution_clock::now();
-  for (const auto [bottom, middle, top] : futureSpacePointsGrouping) {    
-    //    std::cout << (counter++) << " : bottom.size, middle, top.size: " << bottom.size() << " " << middle << " " << top.size() << std::endl;
-  }
-  auto stop_modified = std::chrono::high_resolution_clock::now();
 
-
-  auto duration_nominal = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_nominal - start_nominal).count();
-  auto duration_modified = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_modified - start_modified).count();
-  std::cout << "Nominal: " << duration_nominal << std::endl;
-  std::cout << "Modified: " << duration_modified << std::endl;
-  
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
-
-
-
-
-  // * -----------------------
-  /*
-  std::cout << "Making iterator for grid" << std::endl;
-  std::array<std::vector<std::size_t>, 2> navigation;
-  navigation[0].resize(spacePointsGrouping.grid().numLocalBins()[0]);
-  for (std::size_t i(0); i<spacePointsGrouping.grid().numLocalBins()[0]; ++i)
-    navigation[0][i] = spacePointsGrouping.grid().numLocalBins()[0] - i;
-  navigation[1] = {1, 2, 3, 4, 11, 10, 9, 8, 6, 5, 7};
-
-  auto endItrGlobal = spacePointsGrouping.grid().end();
-  for (auto itr = spacePointsGrouping.grid().begin(); itr != endItrGlobal; ++itr) {
-    const auto& obj = *itr;
-  }
-
-  auto endItrLocal = spacePointsGrouping.grid().end(navigation);
-  for (auto itr = spacePointsGrouping.grid().begin(navigation); itr != endItrLocal; ++itr) {
-    const auto& obj = *itr;
-  }
-  */
-  std::cout << "DONE Making iterator for grid" << std::endl;
 
   m_outputSeeds(ctx, SimSeedContainer{seeds});
   return ActsExamples::ProcessCode::SUCCESS;
