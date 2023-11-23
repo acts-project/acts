@@ -1164,6 +1164,7 @@ def addCKFTracks(
         Union[TrackSelectorConfig, List[TrackSelectorConfig]]
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
+    twoWay: bool = True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -1265,6 +1266,7 @@ def addCKFTracks(
         **acts.examples.defaultKWArgs(
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
+            twoWay=twoWay,
         ),
     )
     s.addAlgorithm(trackFinder)

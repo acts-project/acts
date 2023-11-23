@@ -127,7 +127,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions secondOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, firstPropOptions, pSurface.get());
+      extensions, secondPropOptions, pSurface.get());
   secondOptions.filterTargetSurface = pSurface.get();
   secondOptions.smoothing = true;
   secondOptions.smoothingTargetSurfaceStrategy =
@@ -181,7 +181,26 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       }
 
       if (m_cfg.twoWay) {
-        auto secondResult = (*m_cfg.findTracks)(initialParameters.at(iseed),
+        std::optional<Acts::VectorMultiTrajectory::TrackStateProxy> firstState;
+        for (auto st : firstTrack.trackStatesReversed()) {
+          bool isMeasurement =
+              st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag);
+          bool isOutlier =
+              st.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+          // We are excluding non measurement states and outlier here. Those can
+          // decrease resolution because only the smoothing corrected the very
+          // first prediction as filtering is not possible.
+          if (isMeasurement && !isOutlier) {
+            firstState = st;
+          }
+        }
+
+        Acts::BoundTrackParameters secondInitialParameters(
+            firstState->referenceSurface().getSharedPtr(),
+            firstState->parameters(), firstState->covariance(),
+            initialParameters.at(iseed).particleHypothesis());
+
+        auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
                                                 secondOptions, tracksTemp);
 
         if (!secondResult.ok()) {
