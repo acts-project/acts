@@ -93,24 +93,18 @@ struct CombinatorialKalmanFilterExtensions {
   /// The Calibrator is a dedicated calibration algorithm that allows to
   /// calibrate measurements using track information, this could be e.g. sagging
   /// for wires, module deformations, etc.
-  Calibrator calibrator;
+  Calibrator calibrator =
+      DelegateFuncTag<detail::voidFitterCalibrator<traj_t>>{};
 
   /// The updater incorporates measurement information into the track parameters
-  Updater updater;
+  Updater updater = DelegateFuncTag<detail::voidFitterUpdater<traj_t>>{};
 
   /// The measurement selector is called during the filtering by the Actor.
-  MeasurementSelector measurementSelector;
+  MeasurementSelector measurementSelector =
+      DelegateFuncTag<voidMeasurementSelector>{};
 
   /// The branch stopper is called during the filtering by the Actor.
-  BranchStopper branchStopper;
-
-  /// Default constructor which connects the default components
-  CombinatorialKalmanFilterExtensions() {
-    calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
-    updater.template connect<&detail::voidFitterUpdater<traj_t>>();
-    measurementSelector.template connect<&voidMeasurementSelector>();
-    branchStopper.connect<&voidBranchStopper>();
-  }
+  BranchStopper branchStopper = DelegateFuncTag<voidBranchStopper>{};
 
  private:
   /// Default measurement selector which will return all measurements
