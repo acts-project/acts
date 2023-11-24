@@ -194,8 +194,16 @@ struct Fixture {
 
   Acts::MeasurementSelector measSel{measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions<Trajectory> getExtensions() const {
-    Acts::CombinatorialKalmanFilterExtensions<Trajectory> extensions;
+  Acts::CombinatorialKalmanFilterExtensions<TestSourceLinkAccessor::Iterator,
+                                            Trajectory>
+  getExtensions() const {
+    Acts::CombinatorialKalmanFilterExtensions<TestSourceLinkAccessor::Iterator,
+                                              Trajectory>
+        extensions;
+    extensions.sourcelinkAccessor = Acts::SourceLinkAccessorDelegate<
+        TestSourceLinkAccessor::Iterator>{};  // leave the accessor empty,
+                                              // this will have to be set
+                                              // before running the CKF
     extensions.calibrator
         .template connect<&testSourceLinkCalibrator<Trajectory>>();
     extensions.updater.template connect<&KalmanUpdater::operator()<Trajectory>>(
@@ -283,10 +291,6 @@ struct Fixture {
 
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     CombinatorialKalmanFilterOptions options(geoCtx, magCtx, calCtx);
-    options.sourcelinkAccessor = Acts::SourceLinkAccessorDelegate<
-        TestSourceLinkAccessor::Iterator>{};  // leave the accessor empty,
-                                              // this will have to be set
-                                              // before running the CKF
     options.extensions = getExtensions();
     return options;
   }
@@ -308,8 +312,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
-  options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
-      &slAccessor);
+  options.extensions.sourcelinkAccessor
+      .connect<&Fixture::TestSourceLinkAccessor::range>(&slAccessor);
 
   Acts::TrackContainer tc{Acts::VectorTrackContainer{},
                           Acts::VectorMultiTrajectory{}};
@@ -365,8 +369,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
-  options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
-      &slAccessor);
+  options.extensions.sourcelinkAccessor
+      .connect<&Fixture::TestSourceLinkAccessor::range>(&slAccessor);
 
   Acts::TrackContainer tc{Acts::VectorTrackContainer{},
                           Acts::VectorMultiTrajectory{}};

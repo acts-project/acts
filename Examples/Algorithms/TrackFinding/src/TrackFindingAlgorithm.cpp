@@ -27,6 +27,7 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -86,14 +87,21 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
+  IndexSourceLinkAccessor slAccessor;
+  slAccessor.container = &sourceLinks;
+  Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
+      slAccessorDelegate;
+  slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
+  Acts::CombinatorialKalmanFilterExtensions<IndexSourceLinkAccessor::Iterator,
+                                            Acts::VectorMultiTrajectory>
       extensions;
+  extensions.sourcelinkAccessor = slAccessorDelegate;
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
   extensions.updater.connect<
@@ -103,12 +111,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
           &measSel);
 
-  IndexSourceLinkAccessor slAccessor;
-  slAccessor.container = &sourceLinks;
-  Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
-      slAccessorDelegate;
-  slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
-
   Acts::PropagatorPlainOptions pOptions;
   pOptions.maxSteps = m_cfg.maxSteps;
   pOptions.direction = Acts::Direction::Forward;
@@ -116,7 +118,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext);
-  options.sourcelinkAccessor = slAccessorDelegate;
   options.extensions = extensions;
   options.propagatorPlainOptions = pOptions;
 
