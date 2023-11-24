@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -38,8 +37,6 @@
 #include "G4Trd.hh"
 #include "G4Tubs.hh"
 #include "G4VPhysicalVolume.hh"
-
-Acts::GeometryContext tContext;
 
 Acts::ActsScalar rho = 1.2345;
 G4Material* g4Material = new G4Material("Material", 6., 12., rho);

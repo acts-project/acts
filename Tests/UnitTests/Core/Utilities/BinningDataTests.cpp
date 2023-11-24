@@ -22,8 +22,6 @@
 namespace Acts {
 namespace Test {
 
-namespace tt = boost::test_tools;
-
 // the test positions in 3D
 Vector3 xyzPosition(0.5, 1.5, 2.5);
 Vector3 xyzPositionOutside(30., -30., 200.);
@@ -49,11 +47,11 @@ BinningData rData_eq(open, binR, 10, 0., 10.);
 // bin boundaries
 // > -M_PI | -3/5 M_PI | -1/5 M_PI | 1/5 M_PI | 3/5 M_PI | M_PI <
 BinningData phiData_eq(closed, binPhi, 5, -M_PI, M_PI);
-BinningData rPhiData_eq(closed, binRPhi, 5, -M_PI, M_PI);
+// BinningData rPhiData_eq(closed, binRPhi, 5, -M_PI, M_PI);
 // h/etaData
 // bin boundaries
 // | 0 | 2 | 4 | 6 | 8 | 10 |
-BinningData hData_eq(open, binH, 5, 0., 10.);
+// BinningData hData_eq(open, binH, 5, 0., 10.);
 // | -2.5 | -1.5 | -0.5 | 0.5 | 1.5 | 2.5 |
 BinningData etaData_eq(open, binEta, 5, -2.5, 2.5);
 

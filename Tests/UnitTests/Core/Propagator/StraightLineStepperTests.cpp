@@ -36,14 +36,12 @@
 #include <tuple>
 #include <utility>
 
-namespace tt = boost::test_tools;
 using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace Test {
 
 using Covariance = BoundSquareMatrix;
-using Jacobian = BoundMatrix;
 
 /// @brief Simplified propagator state
 struct PropState {
