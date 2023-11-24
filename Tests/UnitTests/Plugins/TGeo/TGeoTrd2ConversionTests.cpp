@@ -37,11 +37,7 @@
 #include "TGeoVolume.h"
 #include "TView.h"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 GeometryContext tgContext = GeometryContext();
@@ -185,5 +181,4 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
 }
 
 }  // namespace Test
-
 }  // namespace Acts
