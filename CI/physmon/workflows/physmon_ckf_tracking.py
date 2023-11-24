@@ -40,7 +40,7 @@ setup = makeSetup()
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=1,
+            events=500,
             numThreads=-1,
             logLevel=acts.logging.INFO,
         )
@@ -144,6 +144,33 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             )
         )
 
+        # Choosing a seeder only has an effect on VertexFinder.AMVF. For
+        # VertexFinder.IVF we always use acts.VertexSeedFinder.GaussianSeeder
+        # (Python binding is not implemented).
+        # Setting useTime also only has an effect on VertexFinder.AMVF due to
+        # the same reason.
+        addVertexFitting(
+            s,
+            setup.field,
+            trackParameters="trackParameters",
+            outputProtoVertices="ivf_protovertices",
+            outputVertices="ivf_fittedVertices",
+            vertexFinder=VertexFinder.Iterative,
+            outputDirRoot=tp / "ivf",
+        )
+
+        addVertexFitting(
+            s,
+            setup.field,
+            trackParameters="trackParameters",
+            outputProtoVertices="amvf_protovertices",
+            outputVertices="amvf_fittedVertices",
+            seeder=acts.VertexSeedFinder.GaussianSeeder,
+            useTime=False,  # Time seeding not implemented for the Gaussian seeder
+            vertexFinder=VertexFinder.AMVF,
+            outputDirRoot=tp / "amvf",
+        )
+
         # Use the adaptive grid vertex seeder in combination with the AMVF
         # To avoid having too many physmon cases, we only do this for the label
         # "seeded"
@@ -163,6 +190,12 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         s.run()
         del s
 
+        for vertexing in ["ivf", "amvf"]:
+            shutil.move(
+                tp / f"{vertexing}/performance_vertexing.root",
+                tp / f"performance_{vertexing}.root",
+            )
+
         if label == "seeded":
             vertexing = "amvf_gridseeder"
             shutil.move(
@@ -174,6 +207,8 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             [
                 "performance_ckf",
                 "tracksummary_ckf",
+                "performance_ivf",
+                "performance_amvf",
             ]
             + (["performance_amvf_gridseeder"] if label == "seeded" else [])
             + (
@@ -190,6 +225,9 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
 
 for truthSmearedSeeded, truthEstimatedSeeded, label in [
+    (True, False, "truth_smeared"),  # if first is true, second is ignored
+    (False, True, "truth_estimated"),
     (False, False, "seeded"),
+    (False, False, "orthogonal"),
 ]:
     run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
