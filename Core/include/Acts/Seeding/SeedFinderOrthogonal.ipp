@@ -462,7 +462,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
 
     // continue if number of top SPs is smaller than minimum required for filter
-    if (top.size() < minCompatibleTopSPs) {
+    if (top_valid.size() < minCompatibleTopSPs) {
       continue;
     }
 
