@@ -100,8 +100,6 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool computeSharedHits = false;
     /// Track selector config
     std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
-    /// Run backward finding
-    bool backward = false;
     /// Maximum number of propagation steps
     unsigned int maxSteps = 100000;
   };

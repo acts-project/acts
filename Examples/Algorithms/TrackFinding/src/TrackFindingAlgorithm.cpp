@@ -111,8 +111,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   Acts::PropagatorPlainOptions pOptions;
   pOptions.maxSteps = m_cfg.maxSteps;
-  pOptions.direction =
-      m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
+  pOptions.direction = Acts::Direction::Forward;
 
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
@@ -124,7 +123,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
                           Acts::AbortList<Acts::EndOfWorldReached>>
       pExtrapolationOptions(ctx.geoContext, ctx.magFieldContext);
-  pExtrapolationOptions.direction = pOptions.direction.invert();
+  pExtrapolationOptions.direction = Acts::Direction::Backward;
 
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
