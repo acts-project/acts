@@ -795,6 +795,7 @@ def addHoughTransformSeeding(
     # configuration option (outputSeeds) exists
     return ht.config.outputSeeds
 
+
 def addFTFSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
@@ -806,21 +807,19 @@ def addFTFSeeding(
     layerMappingConfigFile: Union[Path, str] = None,
     geoSelectionConfigFile: Union[Path, str] = None,
     fastrack_inputConfigFile: Union[Path, str] = None,
-    
-):  
-    """FTF seeding
-    """
+):
+    """FTF seeding"""
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
-    layerMappingFile=str(layerMappingConfigFile) #turn path into string 
+    layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     fastrack_inputFile = str(fastrack_inputConfigFile)
     seedFinderConfig = acts.SeedFinderFTFConfig(
         **acts.examples.defaultKWArgs(
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             minPt=seedFinderConfigArg.minPt,
-            fastrack_input_file = fastrack_inputFile, 
-            m_useClusterWidth = False, 
+            fastrack_input_file=fastrack_inputFile,
+            m_useClusterWidth=False,
         ),
     )
     seedFinderOptions = acts.SeedFinderOptions(
@@ -832,8 +831,8 @@ def addFTFSeeding(
             ),
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
-    ) 
-    seedFilterConfig =  acts.SeedFilterConfig(
+    )
+    seedFilterConfig = acts.SeedFilterConfig(
         **acts.examples.defaultKWArgs(
             maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
             deltaRMin=(
@@ -848,7 +847,7 @@ def addFTFSeeding(
             numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
             seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
             seedConfirmation=seedFilterConfigArg.seedConfirmation,
-            #curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
+            # curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
             maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
@@ -866,14 +865,14 @@ def addFTFSeeding(
         geometrySelection=acts.examples.readJsonGeometryList(
             str(geoSelectionConfigFile)
         ),
-        inputSourceLinks = "sourcelinks" , 
-        trackingGeometry = trackingGeometry, 
-        fill_module_csv = False, 
-        inputClusters= "clusters" ,
+        inputSourceLinks="sourcelinks",
+        trackingGeometry=trackingGeometry,
+        fill_module_csv=False,
+        inputClusters="clusters",
     )
 
-    sequence.addAlgorithm(seedingAlg) 
-    return seedingAlg.config.outputSeeds 
+    sequence.addAlgorithm(seedingAlg)
+    return seedingAlg.config.outputSeeds
 
 
 def addSeedPerformanceWriters(
@@ -1765,7 +1764,6 @@ def addVertexFitting(
         )
 
     return s
-
 
 
 def addSingleSeedVertexFinding(
