@@ -7,14 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -29,16 +27,8 @@
 #include <utility>
 #include <vector>
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
 namespace Acts {
-
 namespace Test {
-
-// Create a test context
-GeometryContext tgContext = GeometryContext();
-
 namespace Layers {
 BOOST_AUTO_TEST_SUITE(Layers)
 
@@ -102,5 +92,4 @@ BOOST_AUTO_TEST_CASE(CylinderLayerProperties) {
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Layers
 }  // namespace Test
-
 }  // namespace Acts
