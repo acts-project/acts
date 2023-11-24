@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
 
@@ -108,6 +109,10 @@ struct SeedFinderOrthogonalConfig {
   // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
+
+  // Delegate to apply experiment specific cuts
+  Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
+      DelegateFuncTag<&noopExperimentCuts>{}};
 
   bool isInInternalUnits = false;
 

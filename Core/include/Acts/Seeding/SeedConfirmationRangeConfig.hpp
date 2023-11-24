@@ -15,6 +15,11 @@
 
 namespace Acts {
 
+// defaults experimental cuts to no operation in both seeding algorithms
+inline bool noopExperimentCuts(float /*bottomRadius*/, float /*cotTheta*/) {
+  return true;
+}
+
 /// @brief contains parameters for  seed confirmation
 struct SeedConfirmationRangeConfig {
   // z minimum and maximum of middle component of the seed used to define the
