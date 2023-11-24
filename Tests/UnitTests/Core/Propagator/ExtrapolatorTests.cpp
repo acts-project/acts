@@ -44,7 +44,6 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -55,11 +54,6 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Global definitions
-// The path limit abort
-using path_limit = PathLimitReached;
-
-std::vector<std::unique_ptr<const Surface>> stepState;
-
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
