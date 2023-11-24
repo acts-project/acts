@@ -57,8 +57,8 @@ struct SeedFinderFTFConfig {
   float m_tripletD0Max = 4.0;    // m_settings
   unsigned int m_maxTripletBufferLength = 3;
 
-  // from Run function //used to be const but cant as FTF config needs to be
-  // changable
+  // from Run function //used to be const but can't as FTF config needs to be
+  // changeable
   int MaxEdges = 2000000;
   float cut_dphi_max = 0.012;
   float cut_dcurv_max = 0.001;
