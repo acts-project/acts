@@ -180,8 +180,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     mos << info.seedId << ",";
     mos << info.particleId << ",";
     mos << info.seedPt << ",";
-    mos << info.seedPhi << ",";
     mos << info.seedEta << ",";
+    mos << info.seedPhi << ",";
     for (auto& point : info.globalPosition) {
       mos << point.x() << ",";
       mos << point.y() << ",";
