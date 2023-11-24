@@ -21,8 +21,6 @@
 namespace Acts {
 namespace Test {
 
-namespace tt = boost::test_tools;
-
 // OPEN - equidistant binning tests
 BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
   Vector3 xyzPosition(1.5, 2.5, 3.5);

@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -19,9 +18,6 @@
 
 #include <memory>
 #include <vector>
-
-// A test context
-Acts::GeometryContext tContext;
 
 namespace Acts {
 namespace Experimental {
