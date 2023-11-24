@@ -61,8 +61,6 @@ class Layer;
 struct FreeToBoundCorrection;
 }  // namespace Acts
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
