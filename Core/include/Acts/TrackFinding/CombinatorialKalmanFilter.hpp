@@ -81,6 +81,8 @@ template <typename traj_t>
 struct CombinatorialKalmanFilterExtensions {
   using candidate_container_t =
       typename std::vector<typename traj_t::TrackStateProxy>;
+  using Calibrator = typename KalmanFitterExtensions<traj_t>::Calibrator;
+  using Updater = typename KalmanFitterExtensions<traj_t>::Updater;
   using MeasurementSelector =
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
@@ -88,25 +90,26 @@ struct CombinatorialKalmanFilterExtensions {
   using BranchStopper =
       Delegate<bool(const CombinatorialKalmanFilterTipState&)>;
 
-  /// The Calibrator is a dedicated calibration algorithm that allows
-  /// to calibrate measurements using track information, this could be
-  /// e.g. sagging for wires, module deformations, etc.
-  typename KalmanFitterExtensions<traj_t>::Calibrator calibrator;
+  /// The Calibrator is a dedicated calibration algorithm that allows to
+  /// calibrate measurements using track information, this could be e.g. sagging
+  /// for wires, module deformations, etc.
+  Calibrator calibrator;
 
   /// The updater incorporates measurement information into the track parameters
-  typename KalmanFitterExtensions<traj_t>::Updater updater;
+  Updater updater;
 
   /// The measurement selector is called during the filtering by the Actor.
   MeasurementSelector measurementSelector;
 
+  /// The branch stopper is called during the filtering by the Actor.
   BranchStopper branchStopper;
 
-  /// Default constructor which connects the default void components
+  /// Default constructor which connects the default components
   CombinatorialKalmanFilterExtensions() {
     calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
     updater.template connect<&detail::voidFitterUpdater<traj_t>>();
-    branchStopper.connect<voidBranchStopper>();
-    measurementSelector.template connect<voidMeasurementSelector>();
+    measurementSelector.template connect<&voidMeasurementSelector>();
+    branchStopper.connect<&voidBranchStopper>();
   }
 
  private:
@@ -171,6 +174,7 @@ struct CombinatorialKalmanFilterOptions {
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
+  // TODO move `sourcelinkAccessor` to extensions
   /// The source link accessor
   SourceLinkAccessor sourcelinkAccessor;
 
