@@ -37,9 +37,6 @@ GeometryContext tContext;
 BOOST_AUTO_TEST_SUITE(Experimental)
 
 BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
-  using GlobalBin = std::size_t;
-  using LocalBin = std::array<std::size_t, 2u>;
-
   std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
 
   // Set the number of surfaces along each dimension of the multi wire structure
