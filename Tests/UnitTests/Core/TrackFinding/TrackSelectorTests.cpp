@@ -23,7 +23,8 @@ struct MockTrack {
   double m_loc0;
   double m_loc1;
   double m_time;
-  double m_nMeasurements;
+  std::size_t m_nMeasurements;
+  std::size_t m_nHoles;
 
   bool hasReferenceSurface() const { return true; }
   double theta() const { return m_theta; }
@@ -32,7 +33,8 @@ struct MockTrack {
   double loc0() const { return m_loc0; }
   double loc1() const { return m_loc1; }
   double time() const { return m_time; }
-  double nMeasurements() const { return m_nMeasurements; }
+  std::size_t nMeasurements() const { return m_nMeasurements; }
+  std::size_t nHoles() const { return m_nHoles; }
 };
 
 double thetaFromEta(double eta) {
@@ -55,7 +57,8 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
   baseTrack.m_loc0 = 0.5;
   baseTrack.m_loc1 = 0.5;
   baseTrack.m_time = 0.5;
-  baseTrack.m_nMeasurements = 0.5;
+  baseTrack.m_nMeasurements = 1;
+  baseTrack.m_nHoles = 0;
 
   {
     TrackSelector selector{cfgBase};
@@ -257,6 +260,20 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
     track.m_nMeasurements = {0};
     BOOST_CHECK(!selector.isValidTrack(track));
   }
+
+  {
+    BOOST_TEST_INFO_SCOPE("nHoles max");
+    auto cfg = cfgBase;
+    cfg.cutSets.at(0).maxHoles = {3};
+    TrackSelector selector{cfg};
+    MockTrack track = baseTrack;
+    track.m_nHoles = {2};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_nHoles = {3};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_nHoles = {4};
+    BOOST_CHECK(!selector.isValidTrack(track));
+  }
 }
 
 BOOST_AUTO_TEST_CASE(TestSingleBinEtaCutByBinEdge) {
@@ -291,7 +308,8 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
   baseTrack.m_loc0 = 0.5;
   baseTrack.m_loc1 = 0.5;
   baseTrack.m_time = 0.5;
-  baseTrack.m_nMeasurements = 0.5;
+  baseTrack.m_nMeasurements = 1;
+  baseTrack.m_nHoles = 0;
 
   using Config = TrackSelector::Config;
 
