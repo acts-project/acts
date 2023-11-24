@@ -254,8 +254,8 @@ template <std::size_t N>
 void GridLocalIterator<T, Axes...>::increment() {
   if (++m_currentIndex[N] < m_numLocalBins[N])
     return;
-  m_currentIndex[N] = 0;
   if constexpr (N != 0) {
+    m_currentIndex[N] = 0;
     increment<N - 1>();
   } else {
     m_currentIndex = m_numLocalBins;
