@@ -230,7 +230,7 @@ class TrigFTF_GNN_TrackingFilter {
     const float weight_y = 0.5;
 
     const float maxDChi2_x = 60.0;  // was 35.0;
-    const float maxDChi2_y = 60.0;  // was31.0;
+    const float maxDChi2_y = 60.0;  // was 31.0;
 
     const float add_hit = 14.0;
 
