@@ -82,13 +82,11 @@ def renameCluster(clusterarray: np.ndarray) -> np.ndarray:
     @param[in] clusterarray: numpy array containing the hits IDs and the cluster ID
     @return: numpy array with updated cluster IDs
     """
-    last_id = -1
-    new_id = -1
+    new_id = len(set(clustering.labels_)) - (1 if -1 in clustering.labels_ else 0))
     for i, cluster in enumerate(clusterarray):
-        if cluster != last_id or cluster == -1:
-            last_id = cluster
+        if cluster == -1:
+            clusterarray[i] = new_id
             new_id = new_id + 1
-        clusterarray[i] = new_id
     return clusterarray
 
 
@@ -225,15 +223,19 @@ for clusteredEvent in clusteredData:
 
     clusteredEvent["score"] = output_predict
     # Keep only the track in cluster of more than 1 track or with a score above 0.5
-    idx = (clusteredEvent["score"] > 0.0) | (
-        clusteredEvent.groupby(["cluster"])["cluster"].transform("size") > 3
-    )
+    idx = clusteredEvent["score"] > 0.1
     cleanedEvent = clusteredEvent[idx]
 
-    # For each cluster only keep the track with the highest score
+    # For each cluster only keep the seed with the highest score
     idx = (
         cleanedEvent.groupby(["cluster"])["score"].transform(max)
         == cleanedEvent["score"]
+    )
+    cleanedEvent = cleanedEvent[idx]
+    # For cluster with more than 1 seed, keep the one with the smallest nb_seed
+    idx = (
+        cleanedEvent.groupby(["cluster"])["nb_seed"].transform(min)
+        == cleanedEvent["nb_seed"]
     )
     cleanedEvent = cleanedEvent[idx]
     cleanedData.append(cleanedEvent)

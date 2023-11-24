@@ -33,7 +33,7 @@ CKF_files_resolved = sorted(
     glob.glob("odd_output" + "/event0000000[0-9][0-9]-tracks_ambi.csv")
 )
 ML_files_resolved = sorted(
-    glob.glob("odd_output_seedML" + "/event0000000[0-9][0-9]-tracks_ambi.csv")
+    glob.glob("odd_output" + "/event0000000[0-9][0-9]-tracks_ambiML.csv")
 )
 
 data_track = readDataSet(CKF_files_track)

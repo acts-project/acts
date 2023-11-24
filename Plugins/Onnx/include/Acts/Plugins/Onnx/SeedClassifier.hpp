@@ -47,7 +47,7 @@ class SeedClassifier {
   std::vector<int> seedSelection(
       std::vector<std::vector<int>>& clusters,
       std::vector<std::vector<float>>& outputTensor float minSeedScore =
-          0.0) const {
+          0.1) const {
     std::vector<int> goodSeeds;
     int iOut = 0;
     // Loop over all the cluster and only keep the seed with the highest score
@@ -77,7 +77,7 @@ class SeedClassifier {
   /// @return a vector of seedID corresponding the the good seeds
   std::vector<int> solveAmbiguity(std::vector<std::vector<int>>& clusters,
                                   Acts::NetworkBatchInput& networkInput,
-                                  float minSeedScore = 0.0) const {
+                                  float minSeedScore = 0.1) const {
     std::vector<std::vector<float>> outputTensor = inferScores(networkInput);
     std::vector<int> goodSeeds =
         seedSelection(clusters, outputTensor, minSeedScore);

@@ -196,7 +196,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
                 score_duplicate.append(pred)
             else:
                 score_fake.append(pred)
-            # Prepare efficiency computtion
+            # Prepare efficiency computation
             if pred > max_score:
                 max_score = pred
                 max_match = truth
@@ -294,7 +294,7 @@ def train(
 
 # ==================================================================
 
-# ttbar events used as the training input, here we assume 160 events are availables
+# ttbar events used as the training input, here we assume 1000 events are available
 CKF_files = sorted(
     glob.glob("odd_output" + "/event000000[0-9][0-9][0-9]-seed_cleaned.csv")
 )
@@ -307,7 +307,7 @@ avg_sdv = [x / events for x in avg_sdv]
 
 # Create our model and chose the layers sizes
 input_dim = np.shape(x_train)[1]
-layers_dim = [80, 100, 80]
+layers_dim = [80, 80, 100, 80, 80]
 
 duplicateClassifier = nn.Sequential(
     Normalise(avg_mean, avg_sdv), DuplicateClassifier(input_dim, layers_dim)
@@ -322,7 +322,7 @@ input_test = torch.tensor(x_train, dtype=torch.float32)
 torch.save(duplicateClassifier, "seedduplicateClassifier.pt")
 torch.onnx.export(
     duplicateClassifier,
-    input_test,
+    input_test[0],
     "seedduplicateClassifier.onnx",
     input_names=["x"],
     output_names=["y"],
@@ -373,20 +373,18 @@ max_score = 0
 # Compute the efficiency
 for index, pred, truth in zip(test.index, output_predict, y_test):
     if index != pid:
+        nb_part += 1
         if max_match == 0 or max_match == 2:
             nb_good_match += 1
         if max_match == 2:
             nb_best_match += 1
+        pid = index
+        max_match = 1
+        max_score = 0
 
-nb_part += 1
-if max_match == 0 or max_match == 2:
-    nb_good_match += 1
-if max_score == 2:
-    nb_best_match += 1
-
-# Check if the good/best match was in the first n seeds
-good_match_bucket = 0
-best_match_bucket = 0
+    if pred > max_score:
+        max_score = pred
+        max_match = truth
 
 print("nb particles : ", nb_part)
 print("nb good match : ", nb_good_match)

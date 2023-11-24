@@ -42,7 +42,7 @@ class SeedFilterMLAlgorithm : public IAlgorithm {
     /// Minimum number of tracks to create a cluster in the DBScan
     int minPointsDBScan = 2;
     /// Minimum score a seed need to be selected
-    int minSeedScore = 0.0;
+    int minSeedScore = 0.1;
     /// Clustering parameters weight for phi used before the DBSCAN
     double clusteringWeighPhi = 1.0;
     /// Clustering parameters weight for eta used before the DBSCAN
