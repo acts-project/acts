@@ -324,10 +324,10 @@ void addOutput(Context& ctx) {
       inputTracks, inputParticles, inputSimHits, inputMeasurementParticlesMap,
       inputMeasurementSimHitsMap, filePath, treeName, fileMode);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootTrackSummaryWriter, mex,
-                             "RootTrackSummaryWriter", inputTracks,
-                             inputParticles, inputMeasurementParticlesMap,
-                             filePath, treeName, fileMode, writeCovMat);
+  ACTS_PYTHON_DECLARE_WRITER(
+      ActsExamples::RootTrackSummaryWriter, mex, "RootTrackSummaryWriter",
+      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
+      treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
