@@ -59,7 +59,7 @@ class MultiWireInternalStructureBuilder
 
   Acts::Experimental::InternalStructure construct(
       const Acts::GeometryContext& gctx) const final {
-    if (not m_cfg.auxiliary.empty()) {
+    if (!m_cfg.auxiliary.empty()) {
       ACTS_DEBUG(m_cfg.auxiliary);
     }
 
@@ -116,14 +116,15 @@ Acts::Experimental::MultiWireStructureBuilder::MultiWireStructureBuilder(
 Acts::Experimental::DetectorComponent
 Acts::Experimental::MultiWireStructureBuilder::construct(
     const Acts::GeometryContext& gctx) {
-  if (mCfg.mlBounds.size() != 3u) {
+  if (mCfg.mlBounds.size() != 4u) {
     throw std::invalid_argument(
-        "MultiWireStructureBuilder: Invalid dimension for bounds.");
+        "MultiWireStructureBuilder: Invalid dimension for bounds. Trapezoid "
+        "Volume Bounds are supported.");
   }
 
   // Configure the external structure builder for the internal structure
   Acts::Experimental::VolumeStructureBuilder::Config vsConfig;
-  vsConfig.boundsType = Acts::VolumeBounds::eCuboid;
+  vsConfig.boundsType = Acts::VolumeBounds::eTrapezoid;
   vsConfig.transform = mCfg.transform;
   vsConfig.boundValues = mCfg.mlBounds;
   vsConfig.auxiliary = "Construct External Structure";

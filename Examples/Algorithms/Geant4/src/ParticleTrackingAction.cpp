@@ -39,7 +39,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
   // nicer to investigate, if we can handle all particle stop conditions in the
   // SensitiveSteppingAction... This seems to happen O(1) times in a ttbar
   // event, so seems not to be too problematic
-  if (not eventStore().hitBuffer.empty()) {
+  if (!eventStore().hitBuffer.empty()) {
     eventStore().hitBuffer.clear();
     ACTS_WARNING("Hit buffer not empty after track");
   }
@@ -48,7 +48,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
 
   // There is already a warning printed in the makeParticleId function if this
   // indicates a failure
-  if (not barcode) {
+  if (!barcode) {
     return;
   }
 
@@ -81,10 +81,10 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   const auto barcode = eventStore().trackIdMapping.at(aTrack->GetTrackID());
 
   auto hasHits = eventStore().particleHitCount.find(barcode) !=
-                     eventStore().particleHitCount.end() and
+                     eventStore().particleHitCount.end() &&
                  eventStore().particleHitCount.at(barcode) > 0;
 
-  if (not m_cfg.keepParticlesWithoutHits and not hasHits) {
+  if (!m_cfg.keepParticlesWithoutHits && !hasHits) {
     [[maybe_unused]] auto n = eventStore().particlesInitial.erase(
         ActsExamples::SimParticle{barcode, Acts::PdgParticle::eInvalid});
     assert(n == 1);
@@ -94,7 +94,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   auto particle = convert(*aTrack, barcode);
   auto [it, success] = eventStore().particlesFinal.insert(particle);
 
-  if (not success) {
+  if (!success) {
     eventStore().particleIdCollisionsFinal++;
     ACTS_WARNING("Particle ID collision with "
                  << particle.particleId()

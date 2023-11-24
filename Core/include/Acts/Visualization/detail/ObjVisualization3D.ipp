@@ -61,7 +61,7 @@ void ObjVisualization3D<T>::faces(const std::vector<Vector3>& vtxs,
       } else {
         FaceType rawFace = face;
         std::transform(rawFace.begin(), rawFace.end(), rawFace.begin(),
-                       [&](size_t& iv) { return (iv + vtxoffs); });
+                       [&](std::size_t& iv) { return (iv + vtxoffs); });
         m_faces.push_back(rawFace);
       }
     }
@@ -72,7 +72,7 @@ template <typename T>
 void ObjVisualization3D<T>::write(const std::string& path) const {
   std::ofstream os;
   std::string objectpath = path;
-  if (not IVisualization3D::hasExtension(objectpath)) {
+  if (!IVisualization3D::hasExtension(objectpath)) {
     objectpath += std::string(".obj");
   }
   os.open(objectpath);
@@ -117,7 +117,7 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
     return std::string("usemtl ") + materialName;
   };
 
-  size_t iv = 0;
+  std::size_t iv = 0;
   ColorRGB lastVertexColor = {0, 0, 0};
   for (const VertexType& vtx : m_vertices) {
     if (m_vertexColors.find(iv) != m_vertexColors.end()) {
@@ -133,7 +133,7 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
        << m_outputScalor * vtx.z() << "\n";
     ++iv;
   }
-  size_t il = 0;
+  std::size_t il = 0;
   ColorRGB lastLineColor = {0, 0, 0};
   for (const LineType& ln : m_lines) {
     if (m_lineColors.find(il) != m_lineColors.end()) {
@@ -146,7 +146,7 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
     os << "l " << ln.first + 1 << " " << ln.second + 1 << "\n";
     ++il;
   }
-  size_t is = 0;
+  std::size_t is = 0;
   ColorRGB lastFaceColor = {0, 0, 0};
   for (const FaceType& fc : m_faces) {
     if (m_faceColors.find(is) != m_faceColors.end()) {
@@ -157,7 +157,7 @@ void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
       }
     }
     os << "f";
-    for (size_t i = 0; i < fc.size(); i++) {
+    for (std::size_t i = 0; i < fc.size(); i++) {
       os << " " << fc[i] + 1;
     }
     os << "\n";

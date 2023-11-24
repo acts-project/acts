@@ -13,7 +13,9 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <limits>
 #include <memory>
+#include <vector>
 
 namespace Acts {
 
@@ -101,9 +103,9 @@ struct SeedFinderConfig {
   // xyz
   float toleranceParam = 1.1 * Acts::UnitConstants::mm;
 
-  // Parameter which can loosen the tolerance of the track seed to form to a
-  // helix, useful for (e.g.) misaligned seeding
-  float helixCut = 1.;
+  // Parameter which can loosen the tolerance of the track seed to form a
+  // helix. This is useful for e.g. misaligned seeding.
+  float helixCutTolerance = 1.;
 
   // Geometry Settings
   // Detector ROI
@@ -121,7 +123,7 @@ struct SeedFinderConfig {
   float rMin = 33 * Acts::UnitConstants::mm;
 
   // Order of z bins to loop over when searching for SPs
-  std::vector<size_t> zBinsCustomLooping = {};
+  std::vector<std::size_t> zBinsCustomLooping = {};
   // Number of Z bins to skip the search for middle SPs
   std::size_t skipZMiddleBinSearch = 0;
 
@@ -130,6 +132,7 @@ struct SeedFinderConfig {
   // default is 5%
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
+
   // alignment uncertainties, used for uncertainties in the
   // non-measurement-plane of the modules
   // which otherwise would be 0
@@ -170,6 +173,10 @@ struct SeedFinderConfig {
   // Returns position of the center of the top strip.
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
+  // Delegate to apply experiment specific cuts
+  Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
+      DelegateFuncTag<&noopExperimentCuts>{}};
+
   bool isInInternalUnits = false;
 
   SeedFinderConfig toInternalUnits() const {
@@ -179,12 +186,12 @@ struct SeedFinderConfig {
     }
     // Make sure the shared ptr to the seed filter is not a nullptr
     // And make sure the seed filter config is in internal units as well
-    if (not seedFilter) {
+    if (!seedFilter) {
       throw std::runtime_error(
           "Invalid values for the seed filter inside the seed filter config: "
           "nullptr");
     }
-    if (not seedFilter->getSeedFilterConfig().isInInternalUnits) {
+    if (!seedFilter->getSeedFilterConfig().isInInternalUnits) {
       throw std::runtime_error(
           "The internal Seed Filter configuration, contained in the seed "
           "finder config, is not in internal units.");
@@ -279,7 +286,8 @@ struct SeedFinderOptions {
     // TODO: change using ACTS units
     options.pTPerHelixRadius = 1_T * 1e6 * options.bFieldInZ;
     options.minHelixDiameter2 =
-        std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2);
+        std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2) *
+        config.helixCutTolerance;
     options.pT2perRadius =
         std::pow(config.highland / options.pTPerHelixRadius, 2);
     options.sigmapT2perRadius =

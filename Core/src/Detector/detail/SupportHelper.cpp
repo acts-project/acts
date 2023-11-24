@@ -124,15 +124,15 @@ Acts::Experimental::detail::SupportHelper::discSupport(
 
 void Acts::Experimental::detail::SupportHelper::addSupport(
     std::vector<std::shared_ptr<Surface>>& layerSurfaces,
-    std::vector<size_t>& assignToAll, const Extent& layerExtent,
+    std::vector<std::size_t>& assignToAll, const Extent& layerExtent,
     Surface::SurfaceType layerRepresentation,
     const std::array<ActsScalar, 5u>& layerSupportValues,
     std::optional<Transform3> layerTransform, unsigned int supportSplits) {
   // Cylinder and Disc section
-  if (layerRepresentation == Surface::SurfaceType::Cylinder or
+  if (layerRepresentation == Surface::SurfaceType::Cylinder ||
       layerRepresentation == Surface::SurfaceType::Disc) {
     // Bail out if you have no measure of R, Z
-    if (not layerExtent.constrains(binZ) or not layerExtent.constrains(binR)) {
+    if (!layerExtent.constrains(binZ) || !layerExtent.constrains(binR)) {
       throw std::runtime_error(
           "SupportHelper::addSupport(...) - z or phi are not constrained.");
     }
@@ -146,7 +146,7 @@ void Acts::Experimental::detail::SupportHelper::addSupport(
     bool sectoral = false;
     bool concentric = false;
     // Check if concentric
-    if (layerTransform.has_value() and
+    if (layerTransform.has_value() &&
         layerTransform.value().isApprox(Transform3::Identity())) {
       concentric = true;
     }
@@ -175,22 +175,20 @@ void Acts::Experimental::detail::SupportHelper::addSupport(
       ActsScalar layerR = doff < 0 ? minR + doff : maxR + doff;
       minZ -= std::abs(demin);
       maxZ += std::abs(demax);
-      ActsScalar midZ = 0.5 * (minZ + maxZ);
       ActsScalar halfZ = 0.5 * (maxZ - minZ);
-      // midZ / halfZ are overwritten if the cylinder
-      // is chosen to be concentric
+      // halfZ is overwritten if the cylinder is chosen to be concentric
       Transform3 sTransform = Transform3::Identity();
       if (concentric) {
-        midZ = 0.;
         halfZ = std::max(std::abs(minZ), std::abs(maxZ));
       } else {
+        ActsScalar midZ = 0.5 * (minZ + maxZ);
         sTransform.pretranslate(Vector3(0., 0., midZ));
       }
       auto cSupport = SupportHelper::cylindricalSupport(
           sTransform, {layerR, halfZ, halfPhi, avgPhi, 0., 0.}, supportSplits);
       // Remember the surfaces to be assigned to all bins, once the
       // support surfaces are split they enter the standard bin assignment
-      if (supportSplits == 1u and cSupport.size() == 1u) {
+      if (supportSplits == 1u && cSupport.size() == 1u) {
         assignToAll.push_back(layerSurfaces.size());
       }
       // Add those to the layer surfaces
@@ -208,7 +206,7 @@ void Acts::Experimental::detail::SupportHelper::addSupport(
           sTransform, {minR, maxR, halfPhi, avgPhi}, supportSplits);
       // Remember the surfaces to be assigned to all bins, once the
       // support surfaces are split they enter the standard bin assignment
-      if (supportSplits == 1u and dSupport.size() == 1u) {
+      if (supportSplits == 1u && dSupport.size() == 1u) {
         assignToAll.push_back(layerSurfaces.size());
       }
       // Add those to the layer surfaces

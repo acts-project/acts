@@ -94,7 +94,8 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   /// @param ib1 indicates the second bin
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(size_t ib0, size_t ib1) const final;
+  const MaterialSlab& materialSlab(std::size_t ib0,
+                                   std::size_t ib1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream& toStream(std::ostream& sl) const final;
@@ -121,7 +122,7 @@ inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
 }
 
 inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
-    size_t /*ib0*/, size_t /*ib1*/) const {
+    std::size_t /*ib0*/, std::size_t /*ib1*/) const {
   return (m_materialSlab);
 }
 

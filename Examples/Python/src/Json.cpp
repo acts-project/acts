@@ -169,11 +169,12 @@ void addJson(Context& ctx) {
   {
     mex.def("writeDetectorToJson",
             [](const Acts::GeometryContext& gctx,
-               const Acts::Experimental::Detector& detector) -> void {
+               const Acts::Experimental::Detector& detector,
+               const std::string& name) -> void {
               auto jDetector =
                   Acts::DetectorJsonConverter::toJson(gctx, detector);
               std::ofstream out;
-              out.open(detector.name() + ".json");
+              out.open(name + ".json");
               out << jDetector.dump(4);
               out.close();
             });
@@ -182,7 +183,8 @@ void addJson(Context& ctx) {
   {
     mex.def("writeDetectorToJsonDetray",
             [](const Acts::GeometryContext& gctx,
-               const Acts::Experimental::Detector& detector) -> void {
+               const Acts::Experimental::Detector& detector,
+               const std::string& name) -> void {
               // Detray format test - manipulate for detray
               Acts::DetectorVolumeJsonConverter::Options detrayOptions;
               detrayOptions.transformOptions.writeIdentity = true;
@@ -195,9 +197,23 @@ void addJson(Context& ctx) {
               auto jDetector = Acts::DetectorJsonConverter::toJsonDetray(
                   gctx, detector,
                   Acts::DetectorJsonConverter::Options{detrayOptions});
+
+              // Write out the geometry, surface_grid, material
+              auto jGeometry = jDetector["geometry"];
+              auto jSurfaceGrids = jDetector["surface_grids"];
+              auto jMaterial = jDetector["material"];
+
               std::ofstream out;
-              out.open(detector.name() + "_detray.json");
-              out << jDetector.dump(4);
+              out.open(name + "_geometry_detray.json");
+              out << jGeometry.dump(4);
+              out.close();
+
+              out.open(name + "_surface_grids_detray.json");
+              out << jSurfaceGrids.dump(4);
+              out.close();
+
+              out.open(name + "_material_detray.json");
+              out << jMaterial.dump(4);
               out.close();
             });
   }

@@ -28,7 +28,7 @@ Acts::Experimental::Detector::Detector(
   if (m_rootVolumes.internal.empty()) {
     throw std::invalid_argument("Detector: no volume were given.");
   }
-  if (not m_detectorVolumeUpdator.connected()) {
+  if (!m_detectorVolumeUpdator.connected()) {
     throw std::invalid_argument(
         "Detector: volume finder delegate is not connected.");
   }
@@ -74,7 +74,8 @@ Acts::Experimental::Detector::Detector(
         ss << sgeoID;
         throw std::invalid_argument(
             "Detector: duplicate sensitive surface geometry id '" + ss.str() +
-            "' detected. Make sure a GeometryIdGenerator is used.");
+            "' detected in volume '" + v->name() +
+            "'. Make sure a GeometryIdGenerator is used.");
       }
       surfaceGeoIdMap.emplace(sgeoID, s);
     }

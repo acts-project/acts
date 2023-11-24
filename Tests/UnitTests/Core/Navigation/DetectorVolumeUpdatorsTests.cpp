@@ -43,29 +43,29 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 //
 BOOST_AUTO_TEST_CASE(UnconnectedUpdate) {
   Acts::Experimental::DetectorVolumeUpdator ucUpdator;
-  BOOST_CHECK(not ucUpdator.connected());
+  BOOST_CHECK(!ucUpdator.connected());
 }
 
 // The end of world is reached
 BOOST_AUTO_TEST_CASE(EndOfWorldUpdate) {
   nState.currentVolume = volumeA.get();
-  BOOST_CHECK(nState.currentVolume == volumeA.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, volumeA.get());
 
   Acts::Experimental::EndOfWorldImpl eow;
   eow.update(tContext, nState);
 
-  BOOST_CHECK(nState.currentVolume == nullptr);
+  BOOST_CHECK_EQUAL(nState.currentVolume, nullptr);
 }
 
 // A single link exists and this is set
 BOOST_AUTO_TEST_CASE(SingleVolumeUpdate) {
   nState.currentVolume = volumeA.get();
-  BOOST_CHECK(nState.currentVolume == volumeA.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, volumeA.get());
 
   Acts::Experimental::SingleDetectorVolumeImpl svu(volumeB.get());
   svu.update(tContext, nState);
 
-  BOOST_CHECK(nState.currentVolume == volumeB.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, volumeB.get());
 
   BOOST_CHECK_THROW(Acts::Experimental::SingleDetectorVolumeImpl(nullptr),
                     std::invalid_argument);
@@ -84,11 +84,11 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
   // Check the volume retrieval
   nState.position = Acts::Vector3(0., 0., -150.);
   bvg.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == volumeA.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, volumeA.get());
 
   nState.position = Acts::Vector3(0., 0., 600.);
   bvg.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == volumeD.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, volumeD.get());
 
   // Check a shifted one
   Acts::Transform3 shift300 = Acts::Transform3::Identity();
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
   // 150 (-300) -> transforms to -150, hence it yields A
   nState.position = Acts::Vector3(0., 0., 150.);
   bvgs.update(tContext, nState);
-  BOOST_CHECK(nState.currentVolume == volumeA.get());
+  BOOST_CHECK_EQUAL(nState.currentVolume, volumeA.get());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

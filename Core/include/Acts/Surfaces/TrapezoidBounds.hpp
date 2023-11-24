@@ -27,10 +27,9 @@ namespace Acts {
 ///
 /// Bounds for a trapezoidal, planar Surface.
 ///
-/// @image html figures/TrapezoidBounds.gif
+/// @image html TrapezoidBounds.gif
 ///
 /// @todo can be speed optimized by calculating kappa/delta and caching it
-
 class TrapezoidBounds : public PlanarBounds {
  public:
   enum BoundValues {
@@ -153,7 +152,7 @@ inline std::vector<double> TrapezoidBounds::values() const {
 }
 
 inline void TrapezoidBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthXnegY) <= 0. or get(eHalfLengthXposY) <= 0.) {
+  if (get(eHalfLengthXnegY) <= 0. || get(eHalfLengthXposY) <= 0.) {
     throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
   }
   if (get(eHalfLengthY) <= 0.) {

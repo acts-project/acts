@@ -18,8 +18,8 @@
 
 namespace Acts {
 
-constexpr size_t MAX_SEG_PER_NODE = 1000;  // was 30
-constexpr size_t N_SEG_CONNS = 6;          // was 6
+constexpr std::size_t MAX_SEG_PER_NODE = 1000;  // was 30
+constexpr std::size_t N_SEG_CONNS = 6;          // was 6
 
 // new sp struct
 template <typename space_point_t>

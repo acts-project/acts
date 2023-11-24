@@ -10,7 +10,7 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 
-#if defined(ACTS_CONCEPTS_SUPPORTED)
+#if defined(__cpp_concepts)
 #include <concepts>
 
 namespace Acts {

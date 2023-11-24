@@ -36,8 +36,6 @@
 #include <type_traits>
 #include <utility>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -121,9 +119,9 @@ Transform3 createPlanarTransform(const Vector3& nposition,
 BoundToFreeMatrix convertToMatrix(const std::array<double, 60> P) {
   // initialize to zero
   BoundToFreeMatrix jMatrix = BoundToFreeMatrix::Zero();
-  for (size_t j = 0; j < eBoundSize; ++j) {
-    for (size_t i = 0; i < eFreeSize; ++i) {
-      size_t ijc = eFreeSize + j * eFreeSize + i;
+  for (std::size_t j = 0; j < eBoundSize; ++j) {
+    for (std::size_t i = 0; i < eFreeSize; ++i) {
+      std::size_t ijc = eFreeSize + j * eFreeSize + i;
       jMatrix(i, j) = P[ijc];
     }
   }

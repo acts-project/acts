@@ -83,11 +83,11 @@ BOOST_AUTO_TEST_CASE(SingleEmptyVolume) {
   auto volumeIn =
       Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
-  BOOST_CHECK(volumeIn->name() == volume->name());
+  BOOST_CHECK_EQUAL(volumeIn->name(), volume->name());
   BOOST_CHECK(
       volumeIn->transform(tContext).isApprox(volume->transform(tContext)));
-  BOOST_CHECK(volumeIn->surfaces().size() == volume->surfaces().size());
-  BOOST_CHECK(volumeIn->volumes().size() == volume->volumes().size());
+  BOOST_CHECK_EQUAL(volumeIn->surfaces().size(), volume->surfaces().size());
+  BOOST_CHECK_EQUAL(volumeIn->volumes().size(), volume->volumes().size());
 
   // Detray format test - manipulate for detray
   Acts::DetectorVolumeJsonConverter::Options detrayOptions;
@@ -141,11 +141,11 @@ BOOST_AUTO_TEST_CASE(SingleSurfaceVolume) {
   auto volumeIn =
       Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
-  BOOST_CHECK(volumeIn->name() == volume->name());
+  BOOST_CHECK_EQUAL(volumeIn->name(), volume->name());
   BOOST_CHECK(
       volumeIn->transform(tContext).isApprox(volume->transform(tContext)));
-  BOOST_CHECK(volumeIn->surfaces().size() == volume->surfaces().size());
-  BOOST_CHECK(volumeIn->volumes().size() == volume->volumes().size());
+  BOOST_CHECK_EQUAL(volumeIn->surfaces().size(), volume->surfaces().size());
+  BOOST_CHECK_EQUAL(volumeIn->volumes().size(), volume->volumes().size());
 }
 
 BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
@@ -212,11 +212,11 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
   auto volumeIn =
       Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
-  BOOST_CHECK(volumeIn->name() == volume->name());
+  BOOST_CHECK_EQUAL(volumeIn->name(), volume->name());
   BOOST_CHECK(
       volumeIn->transform(tContext).isApprox(volume->transform(tContext)));
-  BOOST_CHECK(volumeIn->surfaces().size() == volume->surfaces().size());
-  BOOST_CHECK(volumeIn->volumes().size() == volume->volumes().size());
+  BOOST_CHECK_EQUAL(volumeIn->surfaces().size(), volume->surfaces().size());
+  BOOST_CHECK_EQUAL(volumeIn->volumes().size(), volume->volumes().size());
 
   // Cross-check writing
   jVolume = Acts::DetectorVolumeJsonConverter::toJson(tContext, *volumeIn,
@@ -292,11 +292,11 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
   auto volumeIn =
       Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
-  BOOST_CHECK(volumeIn->name() == volume->name());
+  BOOST_CHECK_EQUAL(volumeIn->name(), volume->name());
   BOOST_CHECK(
       volumeIn->transform(tContext).isApprox(volume->transform(tContext)));
-  BOOST_CHECK(volumeIn->surfaces().size() == volume->surfaces().size());
-  BOOST_CHECK(volumeIn->volumes().size() == volume->volumes().size());
+  BOOST_CHECK_EQUAL(volumeIn->surfaces().size(), volume->surfaces().size());
+  BOOST_CHECK_EQUAL(volumeIn->volumes().size(), volume->volumes().size());
 
   // Cross-check writing
   jVolume = Acts::DetectorVolumeJsonConverter::toJson(tContext, *volumeIn,

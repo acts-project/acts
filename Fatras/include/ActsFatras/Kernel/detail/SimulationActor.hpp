@@ -10,6 +10,7 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -17,6 +18,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <limits>
 
 namespace ActsFatras {
@@ -53,7 +55,7 @@ struct SimulationActor {
                               const result_type &result,
                               const Acts::Logger & /*logger*/) const {
       // must return true if the propagation should abort
-      return not result.isAlive;
+      return !result.isAlive;
     }
   };
 
@@ -84,11 +86,16 @@ struct SimulationActor {
             typename navigator_t>
   void operator()(propagator_state_t &state, stepper_t &stepper,
                   navigator_t &navigator, result_type &result,
-                  const Acts::Logger & /*logger*/) const {
+                  const Acts::Logger &logger) const {
     assert(generator and "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
-    if (not result.isAlive) {
+    if (!result.isAlive) {
+      return;
+    }
+
+    if (Acts::EndOfWorldReached{}(state, stepper, navigator, logger)) {
+      result.isAlive = false;
       return;
     }
 
@@ -116,8 +123,9 @@ struct SimulationActor {
     }
 
     // decay check. needs to happen at every step, not just on surfaces.
-    if (result.properTimeLimit - result.particle.properTime() <
-        result.properTimeLimit * properTimeRelativeTolerance) {
+    if (std::isfinite(result.properTimeLimit) &&
+        (result.properTimeLimit - result.particle.properTime() <
+         result.properTimeLimit * properTimeRelativeTolerance)) {
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
         result.generatedParticles.emplace_back(std::move(descendant));
@@ -128,6 +136,7 @@ struct SimulationActor {
 
     // Regulate the step size
     if (std::isfinite(result.properTimeLimit)) {
+      assert(result.particle.mass() > 0.0 && "Particle must have mass");
       //    beta² = p²/E²
       //    gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m = E / m
       //     time = proper-time * gamma
@@ -139,12 +148,12 @@ struct SimulationActor {
       const auto stepSize = properTimeDiff *
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
-      stepper.setStepSize(state.stepping, stepSize,
-                          Acts::ConstrainedStep::user);
+      stepper.updateStepSize(state.stepping, stepSize,
+                             Acts::ConstrainedStep::user);
     }
 
     // arm the point-like interaction limits in the first step
-    if (std::isnan(result.x0Limit) or std::isnan(result.l0Limit)) {
+    if (std::isnan(result.x0Limit) || std::isnan(result.l0Limit)) {
       armPointLikeInteractions(initialParticle, result);
     }
 
@@ -153,7 +162,7 @@ struct SimulationActor {
       return;
     }
     // If we are not on a surface, there is nothing further for us to do
-    if (not navigator.currentSurface(state.navigation)) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
     const Acts::Surface &surface = *navigator.currentSurface(state.navigation);
@@ -176,7 +185,8 @@ struct SimulationActor {
         // again: interact only if there is valid material to interact with
         if (slab) {
           // adapt material for non-zero incidence
-          auto normal = surface.normal(state.geoContext, local);
+          auto normal = surface.normal(state.geoContext, before.position(),
+                                       before.direction());
           // dot-product(unit normal, direction) = cos(incidence angle)
           // particle direction is normalized, not sure about surface normal
           auto cosIncidenceInv = normal.norm() / normal.dot(before.direction());
@@ -316,7 +326,7 @@ struct SimulationActor {
     // do not run if there is no point-like interaction
     if (frac < 1.0f) {
       // select which process to simulate
-      const size_t process =
+      const std::size_t process =
           (fracX0 < fracL0) ? result.x0Process : result.l0Process;
       // simulate the selected point-like process
       if (interactions.runPointLike(*generator, process, result.particle,

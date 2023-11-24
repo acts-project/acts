@@ -12,8 +12,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cstddef>
@@ -44,7 +44,7 @@ class Material;
 ///
 /// In this case the function would look like:
 /// @code
-/// [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
+/// [](std::array<std::size_t, 2> binsRZ, std::array<std::size_t, 2> nBinsRZ) {
 ///    return (binsRZ.at(0) * nBinsRZ.at(1) + binsRZ.at(1));
 /// }
 /// @endcode
@@ -59,14 +59,15 @@ class Material;
 /// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
-MaterialMapper<detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
-                            detail::EquidistantAxis>>
-materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                            std::array<size_t, 2> nBinsRZ)>&
-                     materialVectorToGridMapper,
-                 std::vector<double> rPos, std::vector<double> zPos,
-                 const std::vector<Acts::Material>& material,
-                 double lengthUnit = UnitConstants::mm);
+MaterialMapper<Grid<Material::ParametersVector, detail::EquidistantAxis,
+                    detail::EquidistantAxis>>
+materialMapperRZ(
+    const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
+                                    std::array<std::size_t, 2> nBinsRZ)>&
+        materialVectorToGridMapper,
+    std::vector<double> rPos, std::vector<double> zPos,
+    const std::vector<Acts::Material>& material,
+    double lengthUnit = UnitConstants::mm);
 
 /// Method to setup the MaterialMapper
 /// @param [in] materialVectorToGridMapper Function mapping the vector of
@@ -89,7 +90,8 @@ materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 ///
 /// In this case the function would look like:
 /// @code
-/// [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
+/// [](std::array<std::size_t, 3> binsXYZ, std::array<std::size_t, 3> nBinsXYZ)
+/// {
 ///   return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2))
 ///        + binsXYZ.at(1) * nBinsXYZ.at(2)
 ///        + binsXYZ.at(2));
@@ -109,14 +111,14 @@ materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 /// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
-MaterialMapper<detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
-                            detail::EquidistantAxis, detail::EquidistantAxis>>
-materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                                             std::array<size_t, 3> nBinsXYZ)>&
-                      materialVectorToGridMapper,
-                  std::vector<double> xPos, std::vector<double> yPos,
-                  std::vector<double> zPos,
-                  const std::vector<Material>& material,
-                  double lengthUnit = UnitConstants::mm);
+MaterialMapper<Grid<Material::ParametersVector, detail::EquidistantAxis,
+                    detail::EquidistantAxis, detail::EquidistantAxis>>
+materialMapperXYZ(
+    const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
+                                    std::array<std::size_t, 3> nBinsXYZ)>&
+        materialVectorToGridMapper,
+    std::vector<double> xPos, std::vector<double> yPos,
+    std::vector<double> zPos, const std::vector<Material>& material,
+    double lengthUnit = UnitConstants::mm);
 
 }  // namespace Acts
