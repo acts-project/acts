@@ -226,6 +226,15 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     return false;
   }
 
+  /*
+   * Cut: Ensure that inner-middle dublet is in a certain (r, eta) region of the
+   * detector according to detector specific cuts.
+   */
+  const float rInner = (isMiddleInverted) ? rH : rL;
+  if (!m_config.experimentCuts(rInner, cotTheta)) {
+    return false;
+  }
+
   return true;
 }
 
