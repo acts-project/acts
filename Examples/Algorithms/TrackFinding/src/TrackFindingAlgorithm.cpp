@@ -216,7 +216,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       track.covariance() = endParameters.covariance().value();
       track.setReferenceSurface(
           endParameters.referenceSurface().getSharedPtr());
-      seedNumber(track) = nSeed;
+      seedNumber(track) = nSeed - 1;
 
       if (!m_trackSelector.has_value() ||
           m_trackSelector->isValidTrack(track)) {
