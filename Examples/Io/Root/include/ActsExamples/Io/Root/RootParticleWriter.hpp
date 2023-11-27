@@ -38,10 +38,10 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   struct Config {
     /// Input particle collection to write.
     std::string inputParticles;
-    /// Optional. Input sim hit collection to write.
-    std::string inputSimHits;
     /// Optional. Input final particle collection to write.
     std::string inputFinalParticles;
+    /// Optional. Input sim hit collection to write.
+    std::string inputSimHits;
     /// Path to the output file.
     std::string filePath;
     /// Output file access mode.
@@ -76,9 +76,9 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<SimParticleContainer> m_inputFinalParticles{
       this, "InputFinalParticles"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
 
   std::mutex m_writeMutex;
 
@@ -126,12 +126,12 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   // Optional information depending on input collections.
   /// Total energy loss in GeV.
   std::vector<float> m_eLoss;
-  /// Number of hits.
-  std::vector<std::int32_t> m_numberOfHits;
   /// Accumulated material
   std::vector<float> m_pathInX0;
   /// Accumulated material
   std::vector<float> m_pathInL0;
+  /// Number of hits.
+  std::vector<std::int32_t> m_numberOfHits;
 };
 
 }  // namespace ActsExamples

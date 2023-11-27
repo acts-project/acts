@@ -75,10 +75,15 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("particle", &m_particle);
   m_outputTree->Branch("generation", &m_generation);
   m_outputTree->Branch("sub_particle", &m_subParticle);
-  m_outputTree->Branch("e_loss", &m_eLoss);
-  m_outputTree->Branch("number_of_hits", &m_numberOfHits);
-  m_outputTree->Branch("total_x0", &m_pathInX0);
-  m_outputTree->Branch("total_l0", &m_pathInL0);
+
+  if (m_inputFinalParticles.isInitialized()) {
+    m_outputTree->Branch("e_loss", &m_eLoss);
+    m_outputTree->Branch("total_x0", &m_pathInX0);
+    m_outputTree->Branch("total_l0", &m_pathInL0);
+  }
+  if (m_inputSimHits.isInitialized()) {
+    m_outputTree->Branch("number_of_hits", &m_numberOfHits);
+  }
 }
 
 ActsExamples::RootParticleWriter::~RootParticleWriter() {
