@@ -44,7 +44,6 @@ class Surface;
 }  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -76,7 +75,6 @@ DirectPropagator dpropagator(std::move(dstepper), std::move(dnavigator));
 
 const int ntests = 1000;
 const int skip = 0;
-bool debugMode = false;
 bool referenceTiming = false;
 bool oversteppingTest = false;
 double oversteppingMaxStepSize = 1_mm;
