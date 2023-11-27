@@ -47,7 +47,7 @@ histograms:
   e_loss:
     nbins: 20
     min: 0.0
-    max: 0.15
+    max: 200.0
 
   total_x0:
     nbins: 20
