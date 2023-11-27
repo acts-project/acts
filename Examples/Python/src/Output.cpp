@@ -374,12 +374,12 @@ void addOutput(Context& ctx) {
       trackingGeometry, outputDir, outputPrecision, writeSensitive,
       writeBoundary, writeSurfaceGrid, writeLayerVolume, writePerEvent);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CKFPerformanceWriter, mex,
-                             "CKFPerformanceWriter", inputTracks,
-                             inputParticles, inputMeasurementParticlesMap,
-                             filePath, fileMode, effPlotToolConfig,
-                             fakeRatePlotToolConfig, duplicationPlotToolConfig,
-                             trackSummaryPlotToolConfig, duplicatedPredictor, truthMatchProbMin, doubleMatching);
+  ACTS_PYTHON_DECLARE_WRITER(
+      ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
+      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
+      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
+      duplicationPlotToolConfig, trackSummaryPlotToolConfig,
+      duplicatedPredictor, truthMatchProbMin, doubleMatching);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,

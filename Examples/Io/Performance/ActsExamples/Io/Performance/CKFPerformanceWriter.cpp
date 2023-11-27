@@ -27,9 +27,9 @@
 #include <utility>
 
 #include <TFile.h>
+#include <TTree.h>
 #include <TVectorFfwd.h>
 #include <TVectorT.h>
-#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
