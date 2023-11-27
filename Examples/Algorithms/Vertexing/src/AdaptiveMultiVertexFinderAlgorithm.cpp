@@ -116,6 +116,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;
+  // When using time, we have an extra contribution to the chi2 by the time
+  // coordinate. We thus need to increase tracksMaxSignificance (i.e., the
+  // maximum chi2 that a track can have to be associated with a vertex).
+  if (m_cfg.useTime) {
+    finderConfig.tracksMaxSignificance = 7.5;
+  }
 
   // Instantiate the finder
   Finder finder(std::move(finderConfig), logger().clone());

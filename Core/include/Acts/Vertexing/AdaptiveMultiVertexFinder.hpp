@@ -94,8 +94,10 @@ class AdaptiveMultiVertexFinder {
     // consider a lot of tracks which just slow down the fit.
     double tracksMaxZinterval = 3. * Acts::UnitConstants::mm;
 
-    // Maximum allowed significance of track position to vertex seed
-    // to consider track as compatible track for vertex fit
+    // Maximum allowed significance of track position to vertex seed to consider
+    // track as compatible to vertex. If useTime is set to true, the time
+    // coordinate also contributes to the significance and tracksMaxSignificance
+    // needs to be increased.
     double tracksMaxSignificance = 5.;
 
     // Max chi2 value for which tracks are considered compatible with
