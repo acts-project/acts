@@ -31,12 +31,9 @@
 #include <utility>
 #include <vector>
 
-namespace tt = boost::test_tools;
-
 using Acts::VectorHelpers::perp;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -175,5 +172,4 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   BOOST_CHECK(!c.isInside(transformPos((pos << 5, 2, 14.).finished())));
 }
 }  // namespace Test
-
 }  // namespace Acts

@@ -24,8 +24,6 @@
 #include <tuple>
 #include <utility>
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
 namespace Test {
 

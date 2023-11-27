@@ -169,7 +169,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& firstTracksForSeed = firstResult.value();
     for (auto& firstTrack : firstTracksForSeed) {
-      seedNumber(firstTrack) = nSeed;
+      seedNumber(firstTrack) = nSeed - 1;
 
       if (!m_cfg.twoWay) {
         if (!m_trackSelector.has_value() ||
