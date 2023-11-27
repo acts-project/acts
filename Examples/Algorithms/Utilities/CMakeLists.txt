@@ -5,7 +5,6 @@ add_library(
   src/TrajectoriesToPrototracks.cpp
   src/TrackSelectorAlgorithm.cpp
   src/TracksToTrajectories.cpp
-  src/HitSelector.cpp
   src/TracksToParameters.cpp)
 target_include_directories(
   ActsExamplesUtilities

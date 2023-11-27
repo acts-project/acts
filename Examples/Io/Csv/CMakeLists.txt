@@ -18,7 +18,6 @@ add_library(
   src/CsvTrackWriter.cpp 
   src/CsvProtoTrackWriter.cpp
   src/CsvSpacePointWriter.cpp
-  src/CsvExaTrkXGraphWriter.cpp
   src/CsvBFieldWriter.cpp)
 target_include_directories(
   ActsExamplesIoCsv

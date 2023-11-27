@@ -31,9 +31,8 @@ struct ExaTrkXTiming {
 
 class ExaTrkXHook {
  public:
-  virtual ~ExaTrkXHook(){};
-  virtual void operator()(const std::any &, const std::any &,
-                          const std::any &) const {};
+  virtual ~ExaTrkXHook() {}
+  virtual void operator()(const std::any &, const std::any &) const {};
 };
 
 class ExaTrkXPipeline {
