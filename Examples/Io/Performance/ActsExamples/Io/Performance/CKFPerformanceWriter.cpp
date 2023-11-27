@@ -70,6 +70,10 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
 
   if (m_cfg.writeMatchingDetails) {
     m_matchingTree = new TTree("matchingdetails", "matchingdetails");
+
+    m_matchingTree->Branch("event_nr", &m_treeEventNr);
+    m_matchingTree->Branch("particleId", &m_treeParticleId);
+    m_matchingTree->Branch("matched", &m_treeIsMatched);
   }
 
   // initialize the plot tools
@@ -336,18 +340,10 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
 
   // Write additional stuff to TTree
   if (m_cfg.writeMatchingDetails && m_matchingTree != nullptr) {
-    uint32_t eventNr{};
-    uint64_t particleId{};
-    bool isMatched{};
-
-    m_matchingTree->Branch("event_nr", &eventNr);
-    m_matchingTree->Branch("particleId", &particleId);
-    m_matchingTree->Branch("matched", &isMatched);
-
     for (const auto& p : particles) {
-      eventNr = ctx.eventNumber;
-      particleId = p.particleId().value();
-      isMatched = (matched.find(p.particleId()) != matched.end());
+      m_treeEventNr = ctx.eventNumber;
+      m_treeParticleId = p.particleId().value();
+      m_treeIsMatched = (matched.find(p.particleId()) != matched.end());
 
       m_matchingTree->Fill();
     }
