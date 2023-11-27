@@ -42,7 +42,7 @@ void Acts::KalmanVertexUpdater::detail::update(
   ndf += sign * trackWeight * 2.;
 
   // Updating the vertex
-  vtx.setPosition(matrixCache.newVertexPos);
+  vtx.setPosition(matrixCache.newVertexPos, vtx.time());
   vtx.setCovariance(matrixCache.newVertexCov);
   vtx.setFitQuality(chi2, ndf);
 
