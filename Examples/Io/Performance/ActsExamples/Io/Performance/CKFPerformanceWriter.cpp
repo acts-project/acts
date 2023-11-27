@@ -72,7 +72,7 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
     m_matchingTree = new TTree("matchingdetails", "matchingdetails");
 
     m_matchingTree->Branch("event_nr", &m_treeEventNr);
-    m_matchingTree->Branch("particleId", &m_treeParticleId);
+    m_matchingTree->Branch("particle_id", &m_treeParticleId);
     m_matchingTree->Branch("matched", &m_treeIsMatched);
   }
 
