@@ -44,8 +44,6 @@
 #include <tuple>
 #include <vector>
 
-namespace utf = boost::unit_test;
-
 namespace Acts {
 class AssertionFailureException;
 
@@ -53,8 +51,6 @@ namespace Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
-
-// using boost::test_tools::output_test_stream;
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -362,7 +358,5 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

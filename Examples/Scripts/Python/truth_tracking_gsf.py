@@ -139,6 +139,7 @@ def runTruthTrackingGsf(
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_gsf.root"),
+            writeGsfSpecific=True,
         )
     )
 

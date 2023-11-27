@@ -15,7 +15,6 @@
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
 #include <cmath>
@@ -24,11 +23,8 @@
 #include <random>
 
 using namespace Acts::UnitLiterals;
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 
 namespace Acts {
 namespace IntegrationTest {
@@ -98,15 +94,17 @@ StreamWrapper valid(std::ofstream("magfield_lookup.csv"));
 const int ntests = 10000;
 BOOST_DATA_TEST_CASE(
     solenoid_interpolated_bfield_comparison,
-    bdata::random((bdata::seed = 1, bdata::engine = std::mt19937(),
-                   bdata::distribution = std::uniform_real_distribution<>(
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
+                   bdata::distribution = std::uniform_real_distribution<double>(
                        1.5 * (-L / 2.), 1.5 * L / 2.))) ^
-        bdata::random((bdata::seed = 2, bdata::engine = std::mt19937(),
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(0, R * 1.5))) ^
-        bdata::random((bdata::seed = 3, bdata::engine = std::mt19937(),
+                           std::uniform_real_distribution<double>(0,
+                                                                  R * 1.5))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
         bdata::xrange(ntests),
     z, r, phi, index) {
   (void)index;

@@ -239,5 +239,22 @@ struct MultiTrajectoryProjector {
   }
 };
 
+/// Small Helper class that allows to carry a temporary value until we decide to
+/// update the actual value. The temporary value is deliberately only accessible
+/// with a mutable reference
+template <typename T>
+class Updatable {
+  T m_tmp{};
+  T m_val{};
+
+ public:
+  Updatable() : m_tmp(0), m_val(0) {}
+
+  T &tmp() { return m_tmp; }
+  void update() { m_val = m_tmp; }
+
+  const T &val() const { return m_val; }
+};
+
 }  // namespace detail
 }  // namespace Acts
