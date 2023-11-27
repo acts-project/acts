@@ -68,6 +68,10 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
     throw std::invalid_argument("Could not open '" + m_cfg.filePath + "'");
   }
 
+  if (m_cfg.writeMatchingDetails) {
+    m_matchingTree = new TTree("matchingdetails", "matchingdetails");
+  }
+
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
   m_fakeRatePlotTool.book(m_fakeRatePlotCache);
@@ -133,6 +137,11 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
     write_float(eff_particle, "eff_particles");
     write_float(fakeRate_particle, "fakerate_particles");
     write_float(duplicationRate_particle, "duplicaterate_particles");
+
+    if (m_matchingTree != nullptr) {
+      m_matchingTree->Write();
+    }
+
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
   return ProcessCode::SUCCESS;
