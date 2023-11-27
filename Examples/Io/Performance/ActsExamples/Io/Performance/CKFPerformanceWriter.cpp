@@ -29,6 +29,7 @@
 #include <TFile.h>
 #include <TVectorFfwd.h>
 #include <TVectorT.h>
+#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
@@ -323,6 +324,25 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
                             nFakeTracks);
     m_nTotalParticles += 1;
   }  // end all truth particles
+
+  // Write additional stuff to TTree
+  if (m_cfg.writeMatchingDetails && m_matchingTree != nullptr) {
+    uint32_t eventNr{};
+    uint64_t particleId{};
+    bool isMatched{};
+
+    m_matchingTree->Branch("event_nr", &eventNr);
+    m_matchingTree->Branch("particleId", &particleId);
+    m_matchingTree->Branch("matched", &isMatched);
+
+    for (const auto& p : particles) {
+      eventNr = ctx.eventNumber;
+      particleId = p.particleId().value();
+      isMatched = (matched.find(p.particleId()) != matched.end());
+
+      m_matchingTree->Fill();
+    }
+  }
 
   return ProcessCode::SUCCESS;
 }
