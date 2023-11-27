@@ -16,10 +16,12 @@
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <ios>
 #include <limits>
 #include <ostream>
 #include <stdexcept>
+#include <unordered_map>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -103,6 +105,13 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
   auto nan = std::numeric_limits<float>::quiet_NaN();
 
+  std::unordered_map<ActsFatras::Barcode, std::uint32_t> hitsPerParticle;
+  if (m_inputSimHits.isInitialized()) {
+    for (const auto& simHit : m_inputSimHits(ctx)) {
+      ++hitsPerParticle[simHit.particleId()];
+    }
+  }
+
   m_eventId = ctx.eventNumber;
   for (const auto& particle : particles) {
     m_particleId.push_back(particle.particleId().value());
@@ -169,15 +178,14 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     }
 
     if (m_inputSimHits.isInitialized()) {
-      const auto& simHits = m_inputSimHits(ctx);
       // get the sim hits
-      auto [first, last] = simHits.equal_range(particle);
-      if (first == last) {
+      auto it = hitsPerParticle.find(particle.particleId());
+      if (it == hitsPerParticle.end()) {
         ACTS_INFO("Could not find sim hits for "
                   << particle.particleId() << " in event " << ctx.eventNumber);
       } else {
         // get the number of hits
-        m_numberOfHits.push_back(std::distance(first, last));
+        m_numberOfHits.push_back(it->second);
       }
     } else {
       m_numberOfHits.push_back(-1);
