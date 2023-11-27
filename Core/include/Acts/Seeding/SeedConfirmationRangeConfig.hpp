@@ -19,7 +19,7 @@ namespace Acts {
 inline bool noopExperimentCuts(float /*bottomRadius*/, float /*cotTheta*/) {
   return true;
 }
-  
+
 /// @brief Contains parameters for quality seed confirmation
 /// @note Requirements on the number of compatible space-points and impact parameters can be defined
 /// for different (r, z) regions of the detector (e.g. forward or central
