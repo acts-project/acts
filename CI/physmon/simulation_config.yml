@@ -44,6 +44,26 @@ histograms:
     min: 0.0
     max: 0.15
 
+  e_loss:
+    nbins: 20
+    min: 0.0
+    max: 0.15
+
+  total_x0:
+    nbins: 20
+    min: 0.0
+    max: 3.0
+
+  total_l0:
+    nbins: 20
+    min: 0.0
+    max: 3.0
+
+  number_of_hits:
+    nbins: 26
+    min: 0
+    max: 25
+
 exclude:
   - event_id
   - particle_id
