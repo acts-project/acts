@@ -7,11 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "Acts/Detector/Detector.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 
 #include <array>
 #include <memory>
@@ -62,11 +65,20 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
+    py::class_<Acts::DD4hepDetectorElement, std::shared_ptr<Acts::DD4hepDetectorElement>>(m,"DD4hepDetectorElement");
+  }
+
+  {
     py::class_<DD4hep::DD4hepDetector, std::shared_ptr<DD4hep::DD4hepDetector>>(
         m, "DD4hepDetector")
         .def(py::init<>())
         .def("finalize",
              py::overload_cast<DD4hep::DD4hepGeometryService::Config,
+                               std::shared_ptr<const Acts::IMaterialDecorator>>(
+                 &DD4hep::DD4hepDetector::finalize))
+        .def("finalize",
+             py::overload_cast<const Acts::GeometryContext&,
+                               const std::vector<std::string>&,
                                std::shared_ptr<const Acts::IMaterialDecorator>>(
                  &DD4hep::DD4hepDetector::finalize))
         .def_property_readonly("field", &DD4hep::DD4hepDetector::field);

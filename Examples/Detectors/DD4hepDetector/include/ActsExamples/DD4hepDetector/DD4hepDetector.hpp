@@ -11,6 +11,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
 #include <memory>
@@ -63,6 +64,19 @@ struct DD4hepDetector {
       DD4hepGeometryService::Config config,
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 
+  /// @brief Create an Acts::Detector from a DD4hep::Detector
+  ///
+  /// @param gctx The geometry context
+  /// @param compactFiles The compact files
+  /// @param mdecorator The material decorator
+  ///
+  /// @return a tuple of a Detector, a DetectorStore and a vector of context
+  std::tuple<DetectorPtr, DetectorStore, ContextDecorators> finalize(
+      const Acts::GeometryContext& gctx, const std::vector<std::string>& compactFiles,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+
+  /// @brief  Get the field from the geometry service
+  /// @return   The field
   std::shared_ptr<Acts::DD4hepFieldAdapter> field() const;
 };
 
