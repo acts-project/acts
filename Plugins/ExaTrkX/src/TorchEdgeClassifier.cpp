@@ -60,7 +60,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
 
   torch::Tensor output;
 
-  // Scope this to keep inference objects seperate
+  // Scope this to keep inference objects separate
   {
     auto edgeListTmp = m_cfg.undirected
                            ? torch::cat({edgeList, edgeList.flip(0)}, 1)
