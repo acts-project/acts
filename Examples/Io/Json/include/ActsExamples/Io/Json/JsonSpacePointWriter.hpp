@@ -33,9 +33,9 @@ template <class T>
 class JsonSpacePointWriter : public WriterT<GeometryIdMultimap<T>> {
  public:
   struct Config {
-    std::string collection;      ///< which collection to write
-    std::string outputDir;       ///< where to place output files
-    size_t outputPrecision = 6;  ///< floating point precision
+    std::string collection;           ///< which collection to write
+    std::string outputDir;            ///< where to place output files
+    std::size_t outputPrecision = 6;  ///< floating point precision
   };
 
   JsonSpacePointWriter(const Config& cfg,

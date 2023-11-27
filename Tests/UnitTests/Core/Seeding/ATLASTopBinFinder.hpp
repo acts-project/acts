@@ -31,8 +31,8 @@ class ATLASTopBinFinder : public IBinFinder<SpacePoint> {
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  std::set<size_t> findBins(size_t phiBin, size_t zBin,
-                            const SpacePointGrid<SpacePoint>* binnedSP);
+  std::set<std::size_t> findBins(std::size_t phiBin, std::size_t zBin,
+                                 const SpacePointGrid<SpacePoint>* binnedSP);
 };
 }  // namespace Acts
 

@@ -18,6 +18,7 @@
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
@@ -323,10 +324,10 @@ void addOutput(Context& ctx) {
       inputTracks, inputParticles, inputSimHits, inputMeasurementParticlesMap,
       inputMeasurementSimHitsMap, filePath, treeName, fileMode);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootTrackSummaryWriter, mex,
-                             "RootTrackSummaryWriter", inputTracks,
-                             inputParticles, inputMeasurementParticlesMap,
-                             filePath, treeName, fileMode, writeCovMat);
+  ACTS_PYTHON_DECLARE_WRITER(
+      ActsExamples::RootTrackSummaryWriter, mex, "RootTrackSummaryWriter",
+      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
+      treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
@@ -362,6 +363,11 @@ void addOutput(Context& ctx) {
                              "CsvTrackWriter", inputTracks, outputDir, fileName,
                              inputMeasurementParticlesMap, outputPrecision,
                              nMeasurementsMin, truthMatchProbMin, ptMin);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSeedWriter, mex, "CsvSeedWriter",
+                             inputTrackParameters, inputSimSeeds, inputSimHits,
+                             inputMeasurementParticlesMap,
+                             inputMeasurementSimHitsMap, fileName, outputDir);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CsvTrackingGeometryWriter, mex, "CsvTrackingGeometryWriter",

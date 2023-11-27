@@ -36,7 +36,7 @@ namespace Details {
 /// @return An object holding all the summary statistics necessary for the
 ///         subsequent steps of GPU execution
 ///
-DubletCounts countDublets(size_t maxBlockSize, size_t nMiddleSP,
+DubletCounts countDublets(std::size_t maxBlockSize, std::size_t nMiddleSP,
                           const device_array<unsigned int>& middleBottomCounts,
                           const device_array<unsigned int>& middleTopCounts);
 

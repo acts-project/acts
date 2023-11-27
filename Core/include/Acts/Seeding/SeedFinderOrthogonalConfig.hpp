@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
 
@@ -101,9 +102,17 @@ struct SeedFinderOrthogonalConfig {
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
 
+  // Parameter which can loosen the tolerance of the track seed to form a
+  // helix. This is useful for e.g. misaligned seeding.
+  float helixCutTolerance = 1.;
+
   // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
+
+  // Delegate to apply experiment specific cuts
+  Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
+      DelegateFuncTag<&noopExperimentCuts>{}};
 
   bool isInInternalUnits = false;
 

@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -86,7 +87,18 @@ class ImpactPointEstimator {
   /// @brief Constructor
   ///
   /// @param cfg Configuration object
-  ImpactPointEstimator(const Config& cfg) : m_cfg(cfg) {}
+  /// @param logger Logging instance
+  ImpactPointEstimator(const Config& cfg,
+                       std::unique_ptr<const Logger> logger = getDefaultLogger(
+                           "ImpactPointEstimator", Logging::INFO))
+      : m_cfg(cfg), m_logger(std::move(logger)) {}
+
+  /// @brief Copy constructor to clone logger (class owns a unique pointer to it,
+  /// which can't be copied)
+  ///
+  /// @param other Impact point estimator to be cloned
+  ImpactPointEstimator(const ImpactPointEstimator& other)
+      : m_cfg(other.m_cfg), m_logger(other.logger().clone()) {}
 
   /// @brief Calculates 3D distance between a track and a vertex
   ///
@@ -208,6 +220,12 @@ class ImpactPointEstimator {
  private:
   /// Configuration object
   const Config m_cfg;
+
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger;
+
+  /// Private access to logging instance
+  const Logger& logger() const { return *m_logger; }
 
   /// @brief Performs a Newton approximation to retrieve a point
   /// of closest approach in 3D to a reference position

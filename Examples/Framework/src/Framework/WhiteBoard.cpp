@@ -25,19 +25,19 @@ inline int levenshteinDistance(const std::string_view &a,
 
   // source prefixes can be transformed into empty string by
   // dropping all characters
-  for (size_t i = 1; i < a.size() + 1; ++i) {
+  for (std::size_t i = 1; i < a.size() + 1; ++i) {
     d(i, 0) = i;
   }
 
   // target prefixes can be reached from empty source prefix
   // by inserting every character
-  for (size_t j = 1; j < b.size() + 1; ++j) {
+  for (std::size_t j = 1; j < b.size() + 1; ++j) {
     d(0, j) = j;
   }
 
   // Fill matrix
-  for (size_t j = 1; j < b.size() + 1; ++j) {
-    for (size_t i = 1; i < a.size() + 1; ++i) {
+  for (std::size_t j = 1; j < b.size() + 1; ++j) {
+    for (std::size_t i = 1; i < a.size() + 1; ++i) {
       const auto substitutionCost = a[i] == b[j] ? 0 : 1;
 
       std::array<int, 3> possibilities = {{
@@ -58,7 +58,8 @@ inline int levenshteinDistance(const std::string_view &a,
 }  // namespace
 
 std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
-    const std::string_view &name, int distThreshold, size_t maxNumber) const {
+    const std::string_view &name, int distThreshold,
+    std::size_t maxNumber) const {
   std::vector<std::pair<int, std::string_view>> names;
   for (const auto &[n, h] : m_store) {
     if (const auto d = levenshteinDistance(n, name); d < distThreshold) {
@@ -70,7 +71,7 @@ std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
             [&](const auto &a, const auto &b) { return a.first < b.first; });
 
   std::vector<std::string_view> selected_names;
-  for (size_t i = 0; i < std::min(names.size(), maxNumber); ++i) {
+  for (std::size_t i = 0; i < std::min(names.size(), maxNumber); ++i) {
     selected_names.push_back(names[i].second);
   }
 

@@ -50,8 +50,6 @@ class Layer;
 struct FreeToBoundCorrection;
 }  // namespace Acts
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
@@ -159,9 +157,9 @@ struct PropagatorState {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
-    void setStepSize(State& state, double stepSize,
-                     ConstrainedStep::Type stype = ConstrainedStep::actor,
-                     bool release = true) const {
+    void updateStepSize(State& state, double stepSize,
+                        ConstrainedStep::Type stype,
+                        bool release = true) const {
       state.previousStepSize = state.stepSize.value();
       state.stepSize.update(stepSize, stype, release);
     }
@@ -170,8 +168,8 @@ struct PropagatorState {
       return state.stepSize.value(stype);
     }
 
-    void releaseStepSize(State& state) const {
-      state.stepSize.release(ConstrainedStep::actor);
+    void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
+      state.stepSize.release(stype);
     }
 
     std::string outputStepSize(const State& state) const {
@@ -234,8 +232,8 @@ struct PropagatorState {
     bool debug = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
-    size_t debugPfxWidth = 30;
-    size_t debugMsgWidth = 50;
+    std::size_t debugPfxWidth = 30;
+    std::size_t debugMsgWidth = 50;
 
     Direction direction = Direction::Forward;
 
@@ -284,8 +282,9 @@ void step(stepper_state_t& sstate) {
 /// @param [in] navLay Number of navigation layers
 /// @param [in] navBound Number of navigation boundaries
 /// @param [in] extSurf Number of external surfaces
-bool testNavigatorStateVectors(Navigator::State& state, size_t navSurf,
-                               size_t navLay, size_t navBound, size_t extSurf) {
+bool testNavigatorStateVectors(Navigator::State& state, std::size_t navSurf,
+                               std::size_t navLay, std::size_t navBound,
+                               std::size_t extSurf) {
   return ((state.navSurfaces.size() == navSurf) &&
           (state.navLayers.size() == navLay) &&
           (state.navBoundaries.size() == navBound) &&
@@ -576,7 +575,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on first layer
-  for (size_t isf = 0; isf < 5; ++isf) {
+  for (std::size_t isf = 0; isf < 5; ++isf) {
     step(state.stepping);
     // (5-9) re-entering navigator:
     // POST STEP
@@ -608,7 +607,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on second layer
-  for (size_t isf = 0; isf < 5; ++isf) {
+  for (std::size_t isf = 0; isf < 5; ++isf) {
     step(state.stepping);
     // (11-15) re-entering navigator:
     // POST STEP
@@ -640,7 +639,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on third layer
-  for (size_t isf = 0; isf < 3; ++isf) {
+  for (std::size_t isf = 0; isf < 3; ++isf) {
     step(state.stepping);
     // (17-19) re-entering navigator:
     // POST STEP
@@ -672,7 +671,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on second layer
-  for (size_t isf = 0; isf < 3; ++isf) {
+  for (std::size_t isf = 0; isf < 3; ++isf) {
     step(state.stepping);
     // (21-23) re-entering navigator:
     // POST STEP
