@@ -224,14 +224,12 @@ class DirectNavigator {
       // Establish & update the surface status
       // TODO we do not know the intersection index - passing the closer one
       const auto& surface = **state.navigation.navSurfaceIter;
-      const double nearLimit =
-          m_overstepLimit;  // TODO this should not be necessary
       const double farLimit = std::numeric_limits<double>::max();
       const auto index =
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              BoundaryCheck(false), nearLimit, farLimit,
+              BoundaryCheck(false), m_nearLimit, farLimit,
               state.options.surfaceTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
@@ -283,14 +281,12 @@ class DirectNavigator {
       // Establish the surface status
       // TODO we do not know the intersection index - passing the closer one
       const auto& surface = **state.navigation.navSurfaceIter;
-      const double nearLimit =
-          m_overstepLimit;  // TODO this should not be necessary
       const double farLimit = std::numeric_limits<double>::max();
       const auto index =
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              BoundaryCheck(false), nearLimit, farLimit,
+              BoundaryCheck(false), m_nearLimit, farLimit,
               state.options.surfaceTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
@@ -352,7 +348,7 @@ class DirectNavigator {
   /// Distance limit to discard intersections "behind us"
   /// @note this is only necessary because some surfaces have more than one
   ///       intersection
-  double m_overstepLimit = -100 * UnitConstants::um;
+  double m_nearLimit = -100 * UnitConstants::um;
 };
 
 }  // namespace Acts
