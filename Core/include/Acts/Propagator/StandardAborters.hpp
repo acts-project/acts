@@ -67,15 +67,20 @@ struct PathLimitReached {
   }
 };
 
-/// This is the condition that the Surface has been reached
-/// it then triggers an propagation abort of the propagation
+/// This is the condition that the Surface has been reached it then triggers an
+/// propagation abort
 struct SurfaceReached {
   const Surface* surface = nullptr;
   BoundaryCheck boundaryCheck = BoundaryCheck(true);
-  double overstepLimit = -100 * UnitConstants::um;
+
+  // TODO https://github.com/acts-project/acts/issues/2738
+  /// Distance limit to discard intersections "behind us"
+  /// @note this is only necessary because some surfaces have more than one
+  ///       intersection
+  double nearLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
-  SurfaceReached(double oLimit) : overstepLimit(oLimit) {}
+  SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -105,7 +110,6 @@ struct SurfaceReached {
     // for perigee surfaces
     // note: the near limit is necessary for surfaces with more than one
     // intersections in order to discard the ones which are behind us
-    const double nearLimit = overstepLimit;
     const double farLimit = std::numeric_limits<double>::max();
     const double tolerance = state.options.surfaceTolerance;
 

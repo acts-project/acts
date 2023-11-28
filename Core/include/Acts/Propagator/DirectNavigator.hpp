@@ -348,7 +348,10 @@ class DirectNavigator {
 
   std::unique_ptr<const Logger> m_logger;
 
-  // TODO remove
+  // TODO https://github.com/acts-project/acts/issues/2738
+  /// Distance limit to discard intersections "behind us"
+  /// @note this is only necessary because some surfaces have more than one
+  ///       intersection
   double m_overstepLimit = -100 * UnitConstants::um;
 };
 

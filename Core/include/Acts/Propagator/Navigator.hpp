@@ -649,7 +649,6 @@ class Navigator {
       navOpts.nearLimit = state.options.surfaceTolerance;
       navOpts.farLimit = std::numeric_limits<double>::max();
 
-      std::vector<GeometryIdentifier> externalSurfaces;
       if (!state.navigation.externalSurfaces.empty()) {
         auto layerID = layer->geometryId().layer();
         auto externalSurfaceRange =
