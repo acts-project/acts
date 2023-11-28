@@ -69,7 +69,7 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
     if constexpr (decltype(multiLink.indexedUpdator)::grid_type::DIM == 1u) {
       // Get the binning value
       Acts::BinningValue bValue = casts[0u];
-      // Get the boundaries - take care, they are in local coorindates
+      // Get the boundaries - take care, they are in local coordinates
       const auto& boundaries =
           multiLink.indexedUpdator.grid.axes()[0u]->getBinEdges();
 
