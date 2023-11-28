@@ -63,12 +63,11 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
       }
 
       // Check if we use the constraint during the vertex fit
-      if (vertexingOptions.useConstraintInFit) {
-        const Acts::Vertex<input_track_t>& constraint =
-            state.vtxInfoMap[vtx].constraint;
-        vtx->setFullPosition(constraint.fullPosition());
-        vtx->setFitQuality(constraint.fitQuality());
-        vtx->setFullCovariance(constraint.fullCovariance());
+      if (m_cfg.startFitFromSeed) {
+        const Acts::Vertex<input_track_t>& seed = state.vtxInfoMap[vtx].seed;
+        vtx->setFullPosition(seed.fullPosition());
+        vtx->setFitQuality(seed.fitQuality());
+        vtx->setFullCovariance(seed.fullCovariance());
       } else if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
         return VertexingError::NoCovariance;
       }
@@ -207,7 +206,7 @@ Acts::Result<void> Acts::
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
   // Vertex seed position
-  const Vector3& seedPos = vtxInfo.seedPosition.template head<3>();
+  const Vector3& seedPos = vtxInfo.seed.position();
 
   // Loop over all tracks at the vertex
   for (const auto& trk : vtxInfo.trackLinks) {
@@ -383,7 +382,7 @@ void Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::logDebugData(
        ++vtxInd) {
     auto vtx = state.vertexCollection[vtxInd];
     ACTS_DEBUG("Position of " << vtxInd << ". vertex seed:\n"
-                              << state.vtxInfoMap.at(vtx).seedPosition);
+                              << state.vtxInfoMap.at(vtx).seed.fullPosition());
     ACTS_DEBUG("Position of said vertex after the last fitting step:\n"
                << state.vtxInfoMap.at(vtx).oldPosition);
     ACTS_DEBUG("Associated tracks:");

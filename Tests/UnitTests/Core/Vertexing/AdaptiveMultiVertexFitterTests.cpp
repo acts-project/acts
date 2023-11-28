@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtxConstraint1.setFullPosition(vtx1Pos);
 
   // Prepare vtx info for fitter
-  VertexInfo<BoundTrackParameters> vtxInfo1(vtxConstraint1, vtx1Pos);
+  VertexInfo<BoundTrackParameters> vtxInfo1(vtxConstraint1);
 
   for (const auto& trk : params1) {
     vtxInfo1.trackLinks.push_back(&trk);
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtxConstraint2.setFullPosition(vtx2Pos);
 
   // Prepare vtx info for fitter
-  VertexInfo<BoundTrackParameters> vtxInfo2(vtxConstraint2, vtx2Pos);
+  VertexInfo<BoundTrackParameters> vtxInfo2(vtxConstraint2);
 
   for (const auto& trk : params2) {
     vtxInfo2.trackLinks.push_back(&trk);

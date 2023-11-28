@@ -228,7 +228,6 @@ class AdaptiveMultiVertexFinder {
   /// vertex if desired
   ///
   /// @param trackVector All tracks to be used for seeding
-  /// @param currentConstraint Vertex constraint
   /// @param vertexingOptions Vertexing options
   /// @param seedFinderState The seed finder state
   /// @param removedSeedTracks Seed track that have been removed
@@ -237,19 +236,17 @@ class AdaptiveMultiVertexFinder {
   /// @return The seed vertex
   Result<Vertex<InputTrack_t>> doSeeding(
       const std::vector<const InputTrack_t*>& trackVector,
-      Vertex<InputTrack_t>& currentConstraint,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       SeedFinderState_t& seedFinderState,
       const std::vector<const InputTrack_t*>& removedSeedTracks) const;
 
-  /// @brief Sets constraint vertex after seeding
+  /// @brief Sets the covariance matrix of the vertex seed
   ///
-  /// @param currentConstraint Vertex constraint
-  /// @param useVertexConstraintInFit Indicates whether constraint is used during vertex fit
-  /// @param seedVertex Seed vertex
-  void setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
-                                 bool useVertexConstraintInFit,
-                                 Vertex<InputTrack_t>& seedVertex) const;
+  /// @param seedVertex Seed vertex whose covariance matrix we set
+  /// @param vertexingOptions Vertexing options
+  void setSeedCovariance(
+      Vertex<InputTrack_t>& seedVertex,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Calculates the IP significance of a track to a given vertex
   ///
@@ -280,7 +277,6 @@ class AdaptiveMultiVertexFinder {
   /// seedTracks)
   /// @param seedTracks The seed tracks
   /// @param[out] vtx The vertex candidate
-  /// @param currentConstraint Vertex constraint
   /// @param[out] fitterState The vertex fitter state
   /// @param vertexingOptions Vertexing options
   ///
@@ -288,8 +284,7 @@ class AdaptiveMultiVertexFinder {
   Result<bool> canRecoverFromNoCompatibleTracks(
       const std::vector<const InputTrack_t*>& allTracks,
       const std::vector<const InputTrack_t*>& seedTracks,
-      Vertex<InputTrack_t>& vtx, const Vertex<InputTrack_t>& currentConstraint,
-      FitterState_t& fitterState,
+      Vertex<InputTrack_t>& vtx, FitterState_t& fitterState,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Method that tries to prepare the vertex for the fit
@@ -298,7 +293,6 @@ class AdaptiveMultiVertexFinder {
   /// seedTracks)
   /// @param seedTracks The seed tracks
   /// @param[out] vtx The vertex candidate
-  /// @param currentConstraint Vertex constraint
   /// @param[out] fitterState The vertex fitter state
   /// @param vertexingOptions Vertexing options
   ///
@@ -306,8 +300,7 @@ class AdaptiveMultiVertexFinder {
   Result<bool> canPrepareVertexForFit(
       const std::vector<const InputTrack_t*>& allTracks,
       const std::vector<const InputTrack_t*>& seedTracks,
-      Vertex<InputTrack_t>& vtx, const Vertex<InputTrack_t>& currentConstraint,
-      FitterState_t& fitterState,
+      Vertex<InputTrack_t>& vtx, FitterState_t& fitterState,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Method that checks if vertex is a good vertex and if

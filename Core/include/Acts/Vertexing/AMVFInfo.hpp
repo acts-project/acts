@@ -21,25 +21,21 @@ template <typename input_track_t>
 struct VertexInfo {
   VertexInfo() = default;
 
-  VertexInfo(const Acts::Vertex<input_track_t>& constr,
-             const Acts::Vector4& pos)
-      : constraint(constr),
-        linPoint(pos),
-        oldPosition(pos),
-        seedPosition(pos) {}
+  VertexInfo(const Acts::Vertex<input_track_t>& vtxSeed)
+      : seed(vtxSeed),
+        linPoint(vtxSeed.fullPosition()),
+        oldPosition(vtxSeed.fullPosition()) {}
 
-  // Vertex constraint
-  Acts::Vertex<input_track_t> constraint;
+  // The seed position (i.e., the first estimate for the vertex position as
+  // obtained by the vertex seed finder). Its covariance matrix comes either
+  // from the vertex seeding or from a user-provided constraint.
+  Acts::Vertex<input_track_t> seed;
 
   // Point where all associated tracks are linearized
   Acts::Vector4 linPoint{Acts::Vector4::Zero()};
 
   // Vertex position from the last iteration of the fit
   Acts::Vector4 oldPosition{Acts::Vector4::Zero()};
-
-  // The seed position (i.e., the first estimate for the vertex position as
-  // obtained by the vertex seed finder)
-  Acts::Vector4 seedPosition{Acts::Vector4::Zero()};
 
   // If set to true, the associated tracks need to be relinearized at a more
   // recent vertex position

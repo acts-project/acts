@@ -151,6 +151,11 @@ class AdaptiveMultiVertexFitter {
     // Do smoothing after multivertex fit
     bool doSmoothing{false};
 
+    // If set to true, the vertices are set back to their seed positions before
+    // each fit iteration. This is how it's done in athena; not sure why we
+    // would do this.
+    bool startFitFromSeed{true};
+
     // Use time information when calculating the vertex compatibility
     bool useTime{false};
   };
