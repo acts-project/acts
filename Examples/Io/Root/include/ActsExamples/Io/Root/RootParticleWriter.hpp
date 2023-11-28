@@ -38,9 +38,9 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   struct Config {
     /// Input particle collection to write.
     std::string inputParticles;
-    /// Optional. Input final particle collection to write.
+    /// Optional. If given, the the energy loss and traversed material is computed and written.
     std::string inputFinalParticles;
-    /// Optional. Input sim hit collection to write.
+    /// Optional. If given, the number of measurements is computed and written.
     std::string inputSimHits;
     /// Path to the output file.
     std::string filePath;
