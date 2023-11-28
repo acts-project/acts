@@ -187,6 +187,7 @@ def addSeeding(
     ] = acts.ParticleHypothesis.pion,
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> None:
@@ -367,6 +368,24 @@ def addSeeding(
                 parEstimateAlg.config.outputTrackParameters,
                 logLevel,
             )
+
+        if outputDirCsv is not None:
+            outputDirCsv = Path(outputDirCsv)
+
+            if not outputDirCsv.exists():
+                outputDirCsv.mkdir()
+
+            CsvSeedWriter = acts.examples.CsvSeedWriter(
+                level=logLevel,
+                inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
+                inputSimSeeds=seeds,
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                outputDir=str(outputDirCsv),
+                fileName=str(f"seed.csv"),
+            )
+            s.addWriter(CsvSeedWriter)
 
     return s
 

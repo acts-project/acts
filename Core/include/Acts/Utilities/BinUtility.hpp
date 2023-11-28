@@ -228,21 +228,6 @@ class BinUtility {
     return true;
   }
 
-  /// Check if bin is inside from Vector2 - no optional transform applied
-  ///
-  /// @param lposition is the local position to be evaluated
-  /// @return is a boolean check
-  bool inside(const Vector2& lposition) const {
-    return true;
-    std::vector<BinningData>::const_iterator bdIter = m_binningData.begin();
-    for (; bdIter != m_binningData.end(); ++bdIter) {
-      if (!(*bdIter).inside(lposition)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   /// First bin maximal value
   /// @return the dimension of the binning data
   std::size_t dimensions() const { return m_binningData.size(); }
