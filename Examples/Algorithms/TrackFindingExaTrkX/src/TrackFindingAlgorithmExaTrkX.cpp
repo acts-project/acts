@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -31,6 +32,7 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_truthGraphHook;
   std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_targetGraphHook;
+  std::unique_ptr<Acts::TorchGraphStoreHook> m_graphStoreHook;
 
   const Acts::Logger& logger() const { return *m_logger; }
 
@@ -98,17 +100,22 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
         truthGraph, logger.clone());
     m_targetGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
         targetGraph, logger.clone());
+    m_graphStoreHook = std::make_unique<Acts::TorchGraphStoreHook>();
   }
 
   ~ExamplesEdmHook() {}
 
-  void operator()(const std::any& nodes, const std::any& edges) const override {
+  auto storedGraph() const { return m_graphStoreHook->storedGraph(); }
+
+  void operator()(const std::any& nodes, const std::any& edges,
+                  const std::any& weights) const override {
     ACTS_INFO("Metrics for total graph:");
-    (*m_truthGraphHook)(nodes, edges);
+    (*m_truthGraphHook)(nodes, edges, weights);
     ACTS_INFO("Metrics for target graph (pT > "
               << m_targetPT / Acts::UnitConstants::GeV
               << " GeV, nHits >= " << m_targetSize << "):");
-    (*m_targetGraphHook)(nodes, edges);
+    (*m_targetGraphHook)(nodes, edges, weights);
+    (*m_graphStoreHook)(nodes, edges, weights);
   }
 };
 
@@ -152,6 +159,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementSimhitsMap);
+
+  m_outputGraph.maybeInitialize(m_cfg.outputGraph);
 
   // reserve space for timing
   m_timing.classifierTimes.resize(
@@ -267,14 +276,34 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Make the prototracks
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
+
+  int nShortTracks = 0;
+
   for (auto& x : trackCandidates) {
+    if (m_cfg.filterShortTracks && x.size() < 3) {
+      nShortTracks++;
+      continue;
+    }
+
     ProtoTrack onetrack;
+    onetrack.reserve(x.size());
+
     std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
     protoTracks.push_back(std::move(onetrack));
   }
 
+  ACTS_INFO("Removed " << nShortTracks << " with less then 3 hits");
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
   m_outputProtoTracks(ctx, std::move(protoTracks));
+
+  if (auto dhook = dynamic_cast<ExamplesEdmHook*>(&*hook);
+      dhook && m_outputGraph.isInitialized()) {
+    auto graph = dhook->storedGraph();
+    std::transform(
+        graph.first.begin(), graph.first.end(), graph.first.begin(),
+        [&](const auto& a) -> int64_t { return spacepointIDs.at(a); });
+    m_outputGraph(ctx, std::move(graph));
+  }
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -18,11 +18,7 @@
 #include <memory>
 #include <string>
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -94,7 +90,5 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts
