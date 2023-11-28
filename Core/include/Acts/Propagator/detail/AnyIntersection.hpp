@@ -16,6 +16,9 @@
 namespace Acts {
 namespace detail {
 
+/// @brief Type erased intersection
+///
+/// TODO this would be obsolete if the intersection could carry a `std::any`
 class AnyIntersection {
  public:
   using Any = std::variant<SurfaceIntersection, LayerIntersection,
@@ -98,6 +101,9 @@ class AnyIntersection {
   Any m_intersection;
 };
 
+/// @brief Type erased any intersection
+///
+/// TODO this would be obsolete if the intersection could carry a `std::any`
 class AnyMultiIntersection {
  public:
   using Any = std::variant<SurfaceMultiIntersection, LayerMultiIntersection,

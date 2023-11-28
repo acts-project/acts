@@ -126,10 +126,7 @@ void addPropagation(Context& ctx) {
 
   {
     auto stepper = py::class_<Acts::EigenStepper<>>(m, "EigenStepper");
-    stepper.def(
-        py::init([](std::shared_ptr<const Acts::MagneticFieldProvider> bField)
-                     -> Acts::EigenStepper<> { return {std::move(bField)}; }),
-        py::arg("bField"));
+    stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
 
     addPropagator<Acts::EigenStepper<>, Acts::Navigator>(prop, "Eigen");
   }

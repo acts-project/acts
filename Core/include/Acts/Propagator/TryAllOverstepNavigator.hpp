@@ -16,7 +16,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/AnyIntersection.hpp"
-#include "Acts/Propagator/detail/NavigationCandidate.hpp"
+#include "Acts/Propagator/detail/NavigationObjectCandidate.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -105,7 +105,7 @@ class TryAllOverstepNavigator {
     const TrackingVolume* currentVolume = nullptr;
 
     /// The vector of navigation candidates to work through
-    std::vector<detail::NavigationCandidate> navigationCandidates;
+    std::vector<detail::NavigationObjectCandidate> navigationCandidates;
     /// The vector of active intersection candidates to work through
     std::vector<IntersectionCandidate> activeCandidates;
     /// The current active candidate index of the navigation state

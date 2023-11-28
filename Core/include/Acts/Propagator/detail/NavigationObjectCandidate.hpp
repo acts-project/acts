@@ -16,7 +16,11 @@
 namespace Acts {
 namespace detail {
 
-struct NavigationCandidate {
+/// @brief A candidate object for navigation
+///
+/// TODO if the intersection would carry a `std::any` we would not need this
+/// class
+struct NavigationObjectCandidate {
   using SurfaceObject = const Surface*;
   using LayerObject = const Layer*;
   using BoundaryObject = const BoundarySurfaceT<TrackingVolume>*;
@@ -26,8 +30,8 @@ struct NavigationCandidate {
   const Surface* representation = nullptr;
   BoundaryCheck boundaryCheck;
 
-  NavigationCandidate(AnyObject _object, const Surface* _representation,
-                      BoundaryCheck _boundaryCheck)
+  NavigationObjectCandidate(AnyObject _object, const Surface* _representation,
+                            BoundaryCheck _boundaryCheck)
       : object(_object),
         representation(_representation),
         boundaryCheck(std::move(_boundaryCheck)) {}
@@ -52,8 +56,8 @@ struct NavigationCandidate {
     }
     if (std::holds_alternative<BoundaryObject>(object)) {
       const auto& boundary = std::get<BoundaryObject>(object);
-      auto intersection = boundary->surfaceRepresentation().intersect(
-          gctx, position, direction, boundaryCheck, tolerance);
+      auto intersection = representation->intersect(gctx, position, direction,
+                                                    boundaryCheck, tolerance);
       return AnyMultiIntersection(BoundaryMultiIntersection(
           intersection.intersections(), boundary, representation));
     }
@@ -61,18 +65,19 @@ struct NavigationCandidate {
   }
 };
 
+/// @brief Emplace all navigation candidates for a given volume
 void emplaceAllVolumeCandidates(
-    std::vector<detail::NavigationCandidate>& candidates,
+    std::vector<detail::NavigationObjectCandidate>& candidates,
     const TrackingVolume& volume, bool resolveSensitive, bool resolveMaterial,
     bool resolvePassive, BoundaryCheck boundaryCheckSurfaceApproach,
     const Logger& logger) {
-  auto addCandidate = [&](detail::NavigationCandidate::AnyObject object,
+  auto addCandidate = [&](detail::NavigationObjectCandidate::AnyObject object,
                           const Surface* representation,
                           BoundaryCheck boundaryCheck) {
     candidates.emplace_back(object, representation, boundaryCheck);
   };
 
-  // Find boundary candidates
+  // Get all boundary candidates
   {
     ACTS_VERBOSE("Searching for boundaries.");
 
@@ -86,7 +91,7 @@ void emplaceAllVolumeCandidates(
     }
   }
 
-  // Find layer candidates
+  // Get all layer candidates
   {
     ACTS_VERBOSE("Searching for layers.");
 
@@ -114,7 +119,7 @@ void emplaceAllVolumeCandidates(
         }
       }
 
-      // Find surface candidates
+      // Get all surface candidates from layers
       {
         ACTS_VERBOSE("Searching for surfaces.");
 

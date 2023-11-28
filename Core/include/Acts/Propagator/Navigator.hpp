@@ -29,8 +29,6 @@
 #include <sstream>
 #include <string>
 
-#include <boost/container/small_vector.hpp>
-
 namespace Acts {
 
 /// @brief struct for the Navigation options that are forwarded to
@@ -120,8 +118,7 @@ class Navigator {
     }
   };
 
-  using NavigationCandidates =
-      boost::container::small_vector<NavigationCandidate, 24>;
+  using NavigationCandidates = std::vector<NavigationCandidate>;
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
 
@@ -414,6 +411,7 @@ class Navigator {
 
     // There should always be an active candidate we are trying to navigate to.
     // Otherwise we are in trouble.
+    // Final boundary or target surface not found.
     if (state.navigation.candidateIndex == state.navigation.candidates.size()) {
       ACTS_ERROR(volInfo(state) << "Exhausted navigation candidates.");
       // Set navigation break and release the navigation step size
@@ -574,7 +572,7 @@ class Navigator {
           logger());
 
       // Screen output where they are
-      {
+      if (logger().doPrint(Logging::VERBOSE)) {
         std::ostringstream oss;
         oss << boundaries.size();
         oss << " boundary candidates found at path(s): ";
@@ -610,7 +608,7 @@ class Navigator {
           state.options.direction * stepper.direction(state.stepping), navOpts);
 
       // Screen output where they are
-      {
+      if (logger().doPrint(Logging::VERBOSE)) {
         std::ostringstream oss;
         oss << layers.size();
         oss << " layer candidates found at path(s): ";
@@ -691,6 +689,8 @@ class Navigator {
     state.navigation.candidates.clear();
     state.navigation.candidateIndex = 0;
 
+    // TODO for layers it might be sufficient to only resolve 1-2 as we will
+    // resolve the rest later on anyways
     if (state.navigation.currentLayer != nullptr) {
       initializeLayerCandidates(state, stepper);
     }
