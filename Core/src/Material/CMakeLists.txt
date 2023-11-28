@@ -13,7 +13,6 @@ target_sources(
     MaterialGridHelper.cpp
     MaterialMapUtils.cpp
     MaterialSlab.cpp
-    ProtoSurfaceMaterial.cpp
     ProtoVolumeMaterial.cpp
     SurfaceMaterialMapper.cpp
     VolumeMaterialMapper.cpp

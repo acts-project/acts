@@ -10,11 +10,13 @@
 
 #include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -54,6 +56,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
         nullptr;
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
+    /// Material binning to be assigned
+    std::map<unsigned int, std::vector<ProtoBinning>> materialBinning = {};
     /// An eventual reverse geometry id generation
     bool geoIdReverseGen = false;
     /// Auxiliary information, mainly for screen output

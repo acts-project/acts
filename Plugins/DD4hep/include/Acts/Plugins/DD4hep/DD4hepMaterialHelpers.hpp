@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -23,7 +24,6 @@
 
 namespace Acts {
 
-class ProtoSurfaceMaterial;
 class Layer;
 
 /// Helper method to translate DD4hep material to Acts::ISurfaceMaterial

@@ -14,6 +14,7 @@
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
 #include <algorithm>
@@ -227,6 +228,34 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
         m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
         ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       });
+    }
+  }
+
+  using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<BinningDescription>;
+
+  // Material assignment from configuration
+  for (auto [ip, binning] : m_cfg.materialBinning) {
+    if (rContainer.find(ip) != rContainer.end()) {
+      ACTS_VERBOSE("-> Material binning configured for index " << ip);
+      auto& surface = rContainer.at(ip)->surface();
+      // The binning description
+      BinningDescription bDescription;
+      // Measure the surface
+      Extent sExtent = surface.polyhedronRepresentation(gctx, 1).extent();
+      for (const auto& b : binning) {
+        ProtoBinning fBinning = b;
+        // Check if the binning needs to be fixed
+        if (fBinning.edges.front() == fBinning.edges.back()) {
+          auto range = sExtent.range(b.binValue);
+          fBinning = ProtoBinning(b.binValue, b.boundaryType, range.min(),
+                                  range.max(), b.bins(), b.expansion);
+        }
+        bDescription.binning.push_back(fBinning);
+      }
+      ACTS_VERBOSE("-> Binning description: " << bDescription.toString());
+      auto protoGridMaterial =
+          std::make_shared<ProtoGridSurfaceMaterial>(bDescription);
+      surface.assignSurfaceMaterial(protoGridMaterial);
     }
   }
 

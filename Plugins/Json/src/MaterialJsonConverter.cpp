@@ -95,7 +95,7 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     // by default the protoMaterial is not used for mapping
     jMaterial[Acts::jsonKey().mapkey] = false;
     // write the bin utility
-    bUtility = &(psMaterial->binUtility());
+    bUtility = &(psMaterial->binning());
     // Check in the number of bin is different from 1
     auto& binningData = bUtility->binningData();
     for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {
@@ -210,7 +210,6 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
     jMaterial[Acts::jsonKey().typekey] = "proto";
     // By default the protoMaterial is not used for mapping
     jMaterial[Acts::jsonKey().mapkey] = false;
-    bUtility = &(pvMaterial->binUtility());
     // Check in the number of bin is different from 1
     auto& binningData = bUtility->binningData();
     for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {

@@ -46,7 +46,6 @@ class TrackingGeometry;
 class HomogeneousSurfaceMaterial;
 class IMaterialDecorator;
 class ISurfaceMaterial;
-class ProtoSurfaceMaterial;
 }  // namespace Acts
 
 namespace ActsExamples {
