@@ -14,19 +14,21 @@
 
 namespace Acts {
 
-class TorchTruthGraphMetricsHook : public ExaTrkXHook {
-  std::unique_ptr<const Logger> m_logger;
-  std::vector<detail::CantorEdge<int64_t>> m_truthGraphCantor;
+class TorchGraphStoreHook : public ExaTrkXHook {
+ public:
+  using Graph = std::pair<std::vector<int64_t>, std::vector<float>>;
 
-  const Logger &logger() const { return *m_logger; }
+ private:
+  std::unique_ptr<Graph> m_storedGraph;
 
  public:
-  TorchTruthGraphMetricsHook(const std::vector<int64_t> &truthGraph,
-                             std::unique_ptr<const Acts::Logger> l);
-  ~TorchTruthGraphMetricsHook() override {}
+  TorchGraphStoreHook();
+  ~TorchGraphStoreHook() override {}
 
   void operator()(const std::any &, const std::any &edges,
-                  const std::any &) const override;
+                  const std::any &weights) const override;
+
+  const Graph &storedGraph() const { return *m_storedGraph; }
 };
 
 }  // namespace Acts
