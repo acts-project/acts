@@ -202,8 +202,8 @@ struct Gx2FitterResult {
   // between the first and last measurements.
   std::size_t measurementHoles = 0;
 
-  // Counter for handled states
-  std::size_t processedStates = 0;
+  // Counter for handled measurements
+  std::size_t processedMeasurements = 0;
 
   // Indicator if track fitting has been done
   bool finished = false;
@@ -394,26 +394,13 @@ class Gx2Fitter {
         return;
       }
 
-      // Add the measurement surface as external surface to navigator.
-      // We will try to hit those surface by ignoring boundary checks.
-      if constexpr (!isDirectNavigator) {
-        if (result.processedStates == 0) {
-          for (auto measurementIt = inputMeasurements->begin();
-               measurementIt != inputMeasurements->end(); measurementIt++) {
-            navigator.insertExternalSurface(state.navigation,
-                                            measurementIt->first);
-          }
-        }
-      }
-
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
       //      std::string direction = state.stepping.navDir.toString();
       if (surface != nullptr) {
         ++result.surfaceCount;
-        ACTS_VERBOSE("Measurement surface " << surface->geometryId()
-                                            << " detected.");
+        ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
 
         // check if measurement surface
         auto sourcelink_it = inputMeasurements->find(surface->geometryId());
@@ -441,38 +428,12 @@ class Gx2Fitter {
           TrackStatePropMask mask =
               ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered);
 
-          // Checks if an existing surface is found during the gx2f-iteration.
-          // If not, a new index will be generated afterwards.
-          // During the first iteration, we will always create a new index.
-          std::size_t currentTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
-          if (nUpdate == 0) {
-            ACTS_VERBOSE("   processSurface: nUpdate == 0 decision");
+          ACTS_VERBOSE("\tprocessSurface: addTrackState");
 
-            // Add a <mask> TrackState entry multi trajectory. This allocates
-            // storage for all components, which we will set later.
-            currentTrackIndex =
-                fittedStates.addTrackState(mask, result.lastTrackIndex);
-          } else {
-            ACTS_VERBOSE("   processSurface: nUpdate > 0 decision");
-
-            if (result.lastTrackIndex ==
-                Acts::MultiTrajectoryTraits::kInvalid) {
-              currentTrackIndex = 0;
-              ACTS_VERBOSE("   processSurface: currentTrackIndex (kInv->0) = "
-                           << currentTrackIndex);
-            } else if (result.lastTrackIndex < fittedStates.size() - 1) {
-              currentTrackIndex = result.lastTrackIndex + 1;
-              ACTS_VERBOSE("   processSurface: currentTrackIndex (n+1) = "
-                           << currentTrackIndex);
-            } else {
-              // Add a <mask> TrackState entry multi trajectory. This allocates
-              // storage for all components, which we will set later.
-              currentTrackIndex =
-                  fittedStates.addTrackState(mask, result.lastTrackIndex);
-              ACTS_VERBOSE("   processSurface: currentTrackIndex (ADD NEW)= "
-                           << currentTrackIndex);
-            }
-          }
+          // Add a <mask> TrackState entry multi trajectory. This allocates
+          // storage for all components, which we will set later.
+          std::size_t currentTrackIndex =
+              fittedStates.addTrackState(mask, result.lastTrackIndex);
 
           // now get track state proxy back
           typename traj_t::TrackStateProxy trackStateProxy =
@@ -532,8 +493,8 @@ class Gx2Fitter {
 
           // Set the measurement type flag
           typeFlags.set(TrackStateFlag::MeasurementFlag);
-          // We count the processed state
-          ++result.processedStates;
+          // We count the processed measurement
+          ++result.processedMeasurements;
           ACTS_VERBOSE("Actor - indices after processing, before over writing:"
                        << "\n\t"
                        << "result.lastMeasurementIndex: "
@@ -548,6 +509,13 @@ class Gx2Fitter {
         } else {
           ACTS_INFO("Actor: This case is not implemented yet")
         }
+      }
+      ACTS_DEBUG("result.processedMeasurements: "
+                 << result.processedMeasurements << "\n"
+                 << "inputMeasurements.size()" << inputMeasurements->size())
+      if (result.processedMeasurements == inputMeasurements->size()) {
+        ACTS_INFO("Actor: finish: all measurements found.");
+        result.finished = true;
       }
 
       if (result.surfaceCount > 900) {
@@ -678,6 +646,9 @@ class Gx2Fitter {
 
       auto& r = inputResult.template get<Gx2FitterResult<traj_t>>();
 
+      // Clear the track container. It could be more performant to update the
+      // existing states, but this needs some more thinking.
+      trackContainer.clear();
       r.fittedStates = &trackContainer.trackStateContainer();
       // propagate with params and return jacobians and residuals
       auto result = m_propagator.template propagate(
@@ -751,6 +722,11 @@ class Gx2Fitter {
                      << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
                      << " iterations.");
         break;
+      }
+
+      // TODO investigate further
+      if (chi2sum > oldChi2sum + 1e-5) {
+        ACTS_DEBUG("chi2 not converging monotonically");
       }
 
       oldChi2sum = chi2sum;
