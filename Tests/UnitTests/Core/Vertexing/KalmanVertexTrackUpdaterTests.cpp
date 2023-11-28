@@ -168,6 +168,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
+    trkAtVtx.isLinearized = true;
 
     // Copy parameters for later comparison of old and new version
     auto fittedParamsCopy = trkAtVtx.fittedParams;
