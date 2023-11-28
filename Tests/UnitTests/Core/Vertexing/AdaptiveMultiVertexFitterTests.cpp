@@ -465,16 +465,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtxConstraint1.setFullPosition(vtx1Pos);
 
   // Prepare vtx info for fitter
-<<<<<<< HEAD
   VertexInfo<BoundTrackParameters> vtxInfo1(vtxConstraint1, vtx1Pos);
-=======
-  VertexInfo<BoundTrackParameters> vtxInfo1;
-  vtxInfo1.linPoint.setZero();
-  vtxInfo1.linPoint.head<3>() = vtxPos1;
-  vtxInfo1.constraint = vtx1Constr;
-  vtxInfo1.oldPosition = vtxInfo1.linPoint;
-  vtxInfo1.seedPosition = vtxInfo1.linPoint;
->>>>>>> b4be75f217bcc57ceba6ecc5b03adac554a06d94
 
   for (const auto& trk : params1) {
     vtxInfo1.trackLinks.push_back(&trk);
@@ -495,16 +486,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtxConstraint2.setFullPosition(vtx2Pos);
 
   // Prepare vtx info for fitter
-<<<<<<< HEAD
   VertexInfo<BoundTrackParameters> vtxInfo2(vtxConstraint2, vtx2Pos);
-=======
-  VertexInfo<BoundTrackParameters> vtxInfo2;
-  vtxInfo2.linPoint.setZero();
-  vtxInfo2.linPoint.head<3>() = vtxPos2;
-  vtxInfo2.constraint = vtx2Constr;
-  vtxInfo2.oldPosition = vtxInfo2.linPoint;
-  vtxInfo2.seedPosition = vtxInfo2.linPoint;
->>>>>>> b4be75f217bcc57ceba6ecc5b03adac554a06d94
 
   for (const auto& trk : params2) {
     vtxInfo2.trackLinks.push_back(&trk);
@@ -522,36 +504,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Fit vertices
   fitter.fit(state, linearizer, vertexingOptions);
 
-<<<<<<< HEAD
-  auto vtx1PosFitted = state.vertexCollection.at(0)->position();
-  auto vtx1CovFitted = state.vertexCollection.at(0)->covariance();
-  // auto vtx1Trks = state.vertexCollection.at(0)->tracks();
-  auto vtx1FQ = state.vertexCollection.at(0)->fitQuality();
-
-  auto vtx2PosFitted = state.vertexCollection.at(1)->position();
-  auto vtx2CovFitted = state.vertexCollection.at(1)->covariance();
-  // auto vtx2Trks = state.vertexCollection.at(1)->tracks();
-  auto vtx2FQ = state.vertexCollection.at(1)->fitQuality();
-
-  if (debugMode) {
-    // Vertex 1
-    std::cout << "Vertex 1, position: " << vtx1PosFitted << std::endl;
-    std::cout << "Vertex 1, covariance: " << vtx1CovFitted << std::endl;
-    // for (auto t : vtx1Trks) {
-    //   std::cout << "\tTrackWeight:" << t.trackWeight << std::endl;
-    // }
-    std::cout << "Vertex 1, chi2: " << vtx1FQ.first << std::endl;
-    std::cout << "Vertex 1, ndf: " << vtx1FQ.second << std::endl;
-
-    // Vertex 2
-    std::cout << "Vertex 2, position: " << vtx2PosFitted << std::endl;
-    std::cout << "Vertex 2, covariance: " << vtx2CovFitted << std::endl;
-    // for (auto t : vtx2Trks) {
-    //   std::cout << "\tTrackWeight:" << t.trackWeight << std::endl;
-    // }
-    std::cout << "Vertex 2, chi2: " << vtx2FQ.first << std::endl;
-    std::cout << "Vertex 2, ndf: " << vtx2FQ.second << std::endl;
-=======
   auto vtx1Fitted = state.vertexCollection.at(0);
   auto vtx1PosFitted = vtx1Fitted->position();
   auto vtx1CovFitted = vtx1Fitted->covariance();
@@ -571,7 +523,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     auto& trkAtVtx =
         state.tracksAtVerticesMap.at(std::make_pair(trk, vtx1Fitted));
     ACTS_DEBUG("\tTrack weight:" << trkAtVtx.trackWeight);
->>>>>>> 85a0fea8bf5c4c56a4d0692426e99ef11a132e0c
   }
   ACTS_DEBUG("Vertex 1, chi2: " << vtx1FQ.first);
   ACTS_DEBUG("Vertex 1, ndf: " << vtx1FQ.second);
@@ -614,17 +565,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Vertex 1
   CHECK_CLOSE_ABS(vtx1PosFitted, expVtx1Pos, 0.001_mm);
   CHECK_CLOSE_ABS(vtx1CovFitted, expVtx1Cov, 0.001_mm);
-<<<<<<< HEAD
-  for (int i = 0; i < expVtx1TrkWeights.size(); i++) {
-    // CHECK_CLOSE_ABS(vtx1Trks[i].trackWeight, expVtx1TrkWeights[i], 0.001);
-=======
   int trkCount = 0;
   for (const auto& trk : trks1) {
     auto& trkAtVtx =
         state.tracksAtVerticesMap.at(std::make_pair(trk, vtx1Fitted));
     CHECK_CLOSE_ABS(trkAtVtx.trackWeight, expVtx1TrkWeights[trkCount], 0.001);
     trkCount++;
->>>>>>> 85a0fea8bf5c4c56a4d0692426e99ef11a132e0c
   }
   CHECK_CLOSE_ABS(vtx1FQ.first, expVtx1Chi2, 0.001);
   CHECK_CLOSE_ABS(vtx1FQ.second, expVtx1Ndf, 0.001);
@@ -632,17 +578,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Vertex 2
   CHECK_CLOSE_ABS(vtx2PosFitted, expVtx2Pos, 0.001_mm);
   CHECK_CLOSE_ABS(vtx2CovFitted, expVtx2Cov, 0.001_mm);
-<<<<<<< HEAD
-  for (int i = 0; i < expVtx2TrkWeights.size(); i++) {
-    // CHECK_CLOSE_ABS(vtx2Trks[i].trackWeight, expVtx2TrkWeights[i], 0.001);
-=======
   trkCount = 0;
   for (const auto& trk : trks2) {
     auto& trkAtVtx =
         state.tracksAtVerticesMap.at(std::make_pair(trk, vtx2Fitted));
     CHECK_CLOSE_ABS(trkAtVtx.trackWeight, expVtx2TrkWeights[trkCount], 0.001);
     trkCount++;
->>>>>>> 85a0fea8bf5c4c56a4d0692426e99ef11a132e0c
   }
   CHECK_CLOSE_ABS(vtx2FQ.first, expVtx2Chi2, 0.001);
   CHECK_CLOSE_ABS(vtx2FQ.second, expVtx2Ndf, 0.001);
