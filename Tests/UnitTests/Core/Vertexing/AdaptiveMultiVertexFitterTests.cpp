@@ -123,17 +123,18 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   // Test smoothing
   fitterCfg.doSmoothing = true;
+  fitterCfg.startFitFromSeed = false;
 
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(
       std::move(fitterCfg));
 
   // Create positions of three vertices, two of which (1 and 2) are
   // close to one another and will share a common track later
-  Vector3 vtx1Pos(-0.15_mm, -0.1_mm, -1.5_mm);
-  Vector3 vtx2Pos(-0.1_mm, -0.15_mm, -3._mm);
-  Vector3 vtx3Pos(0.2_mm, 0.2_mm, 10._mm);
+  Vector3 vtxPos1(-0.15_mm, -0.1_mm, -1.5_mm);
+  Vector3 vtxPos2(-0.1_mm, -0.15_mm, -3._mm);
+  Vector3 vtxPos3(0.2_mm, 0.2_mm, 10._mm);
 
-  std::vector<Vector3> vtxPosVec{vtx1Pos, vtx2Pos, vtx3Pos};
+  std::vector<Vector3> vtxPosVec{vtxPos1, vtxPos2, vtxPos3};
 
   // Resolutions, use the same for all tracks
   double resD0 = resIPDist(gen);
@@ -328,6 +329,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
+  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
+                                                          magFieldContext);
+
   // IP 3D Estimator
   using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
 
@@ -441,31 +445,29 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
       *bField, magFieldContext);
 
-  // Constraint vertex position covariance
+  // The constraint vertex position covariance
   SquareMatrix4 covConstr(SquareMatrix4::Identity());
   covConstr = covConstr * 1e+8;
   covConstr(3, 3) = 0.;
-  // Constraint
-  Vertex<BoundTrackParameters> vtxConstraint;
-  vtxConstraint.setFullCovariance(covConstr);
-  vtxConstraint.setFitQuality(0, -3);
-
-  VertexingOptions<BoundTrackParameters> vertexingOptions(
-      geoContext, magFieldContext, vtxConstraint);
 
   // Prepare first vertex
-  Vector4 vtx1Pos(0.15_mm, 0.15_mm, 2.9_mm, 0.);
-  Vertex<BoundTrackParameters> vtx1(vtx1Pos);
+  Vector3 vtxPos1(0.15_mm, 0.15_mm, 2.9_mm);
+  Vertex<BoundTrackParameters> vtx1(vtxPos1);
 
   // Add to vertex list
   state.vertexCollection.push_back(&vtx1);
 
-  // Update position of the vertex constraint for the first vertex
-  Vertex<BoundTrackParameters> vtxConstraint1 = vertexingOptions.constraint;
-  vtxConstraint1.setFullPosition(vtx1Pos);
+  // The constraint vtx for vtx1
+  Vertex<BoundTrackParameters> vtx1Seed(vtxPos1);
+  vtx1Seed.setFullCovariance(covConstr);
+  vtx1Seed.setFitQuality(0, -3);
 
   // Prepare vtx info for fitter
-  VertexInfo<BoundTrackParameters> vtxInfo1(vtxConstraint1);
+  VertexInfo<BoundTrackParameters> vtxInfo1;
+  vtxInfo1.linPoint.setZero();
+  vtxInfo1.linPoint.head<3>() = vtxPos1;
+  vtxInfo1.seed = vtx1Seed;
+  vtxInfo1.oldPosition = vtxInfo1.linPoint;
 
   for (const auto& trk : params1) {
     vtxInfo1.trackLinks.push_back(&trk);
@@ -475,18 +477,23 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   }
 
   // Prepare second vertex
-  Vector4 vtx2Pos(0.3_mm, -0.2_mm, -4.8_mm, 0.);
-  Vertex<BoundTrackParameters> vtx2(vtx2Pos);
+  Vector3 vtxPos2(0.3_mm, -0.2_mm, -4.8_mm);
+  Vertex<BoundTrackParameters> vtx2(vtxPos2);
 
   // Add to vertex list
   state.vertexCollection.push_back(&vtx2);
 
-  // Update position of the vertex constraint for the second vertex
-  Vertex<BoundTrackParameters> vtxConstraint2 = vertexingOptions.constraint;
-  vtxConstraint2.setFullPosition(vtx2Pos);
+  // The constraint vtx for vtx2
+  Vertex<BoundTrackParameters> vtx2Seed(vtxPos2);
+  vtx2Seed.setFullCovariance(covConstr);
+  vtx2Seed.setFitQuality(0, -3);
 
   // Prepare vtx info for fitter
-  VertexInfo<BoundTrackParameters> vtxInfo2(vtxConstraint2);
+  VertexInfo<BoundTrackParameters> vtxInfo2;
+  vtxInfo2.linPoint.setZero();
+  vtxInfo2.linPoint.head<3>() = vtxPos2;
+  vtxInfo2.seed = vtx2Seed;
+  vtxInfo2.oldPosition = vtxInfo2.linPoint;
 
   for (const auto& trk : params2) {
     vtxInfo2.trackLinks.push_back(&trk);
@@ -548,8 +555,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   ActsVector<6> expVtx1TrkWeights;
   expVtx1TrkWeights << 0.8128, 0.7994, 0.8164, 0.8165, 0.8165, 0.8119;
-  const double expVtx1Chi2 = 0.9812;
-  const double expVtx1Ndf = 6.7474;
+  const double expVtx1chi2 = 0.9812;
+  const double expVtx1ndf = 6.7474;
 
   // Vertex 2
   const Vector3 expVtx2Pos(-0.443_mm, -0.044_mm, -4.829_mm);
@@ -558,8 +565,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   expVtx2Cov << 1.088, 0.028, -0.066, 0.028, 0.643, 0.073, -0.066, 0.073, 0.435;
 
   const Vector3 expVtx2TrkWeights(0.8172, 0.8150, 0.8137);
-  const double expVtx2Chi2 = 0.2114;
-  const double expVtx2Ndf = 1.8920;
+  const double expVtx2chi2 = 0.2114;
+  const double expVtx2ndf = 1.8920;
 
   // Compare the results
   // Vertex 1
@@ -572,8 +579,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     CHECK_CLOSE_ABS(trkAtVtx.trackWeight, expVtx1TrkWeights[trkCount], 0.001);
     trkCount++;
   }
-  CHECK_CLOSE_ABS(vtx1FQ.first, expVtx1Chi2, 0.001);
-  CHECK_CLOSE_ABS(vtx1FQ.second, expVtx1Ndf, 0.001);
+  CHECK_CLOSE_ABS(vtx1FQ.first, expVtx1chi2, 0.001);
+  CHECK_CLOSE_ABS(vtx1FQ.second, expVtx1ndf, 0.001);
 
   // Vertex 2
   CHECK_CLOSE_ABS(vtx2PosFitted, expVtx2Pos, 0.001_mm);
@@ -585,8 +592,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     CHECK_CLOSE_ABS(trkAtVtx.trackWeight, expVtx2TrkWeights[trkCount], 0.001);
     trkCount++;
   }
-  CHECK_CLOSE_ABS(vtx2FQ.first, expVtx2Chi2, 0.001);
-  CHECK_CLOSE_ABS(vtx2FQ.second, expVtx2Ndf, 0.001);
+  CHECK_CLOSE_ABS(vtx2FQ.first, expVtx2chi2, 0.001);
+  CHECK_CLOSE_ABS(vtx2FQ.second, expVtx2ndf, 0.001);
 }
 
 }  // namespace Test
