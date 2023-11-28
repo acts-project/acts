@@ -1290,7 +1290,8 @@ class KalmanFitter {
     auto propagatorState =
         m_propagator.template makeState(sParameters, kalmanOptions);
 
-    auto& kalmanResult = propagatorState.template get<KalmanFitterResult<traj_t>>();
+    auto& kalmanResult =
+        propagatorState.template get<KalmanFitterResult<traj_t>>();
     kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
