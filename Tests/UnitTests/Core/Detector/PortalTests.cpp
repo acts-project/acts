@@ -230,6 +230,7 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
 
   // Portal B fuses with A
   // - A has material and keeps it, portal B gets it from A, A becomes B
+  BOOST_REQUIRE_NE(portalA, portalB)
   portalB->fuse(portalA);
   BOOST_CHECK_EQUAL(portalB->surface().surfaceMaterial(), materialA.get());
   BOOST_CHECK_EQUAL(portalB, portalA);
