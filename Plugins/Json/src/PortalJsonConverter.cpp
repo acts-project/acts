@@ -22,6 +22,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -134,11 +135,11 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
       const auto& cast = multiLink1D->indexedUpdater.casts[0u];
       const auto& transform = multiLink1D->indexedUpdater.transform;
       const auto& volumes = multiLink1D->indexedUpdater.extractor.dVolumes;
-      if (!transform.isApprox(Transform3::Identity())) {
-        std::runtime_error(
-            "PortalJsonConverter: transformed boundary link implementation not "
-            "(yet) supported");
-      }
+
+      // Apply the correction from local to global boundaries
+      ActsScalar gCorr = VectorHelpers::cast(transform.translation(), cast);
+      std::for_each(boundaries.begin(), boundaries.end(),
+                    [&gCorr](ActsScalar& b) { b -= gCorr; });
 
       // Get the volume indices
       auto surfaceType = surfaceAdjusted->type();
