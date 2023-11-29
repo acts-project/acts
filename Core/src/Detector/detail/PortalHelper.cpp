@@ -9,7 +9,7 @@
 #include "Acts/Detector/detail/PortalHelper.hpp"
 
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -18,22 +18,22 @@
 #include <stdexcept>
 #include <utility>
 
-void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
+void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
     Portal& portal, const std::shared_ptr<DetectorVolume>& volume,
     const Direction& direction) {
   // Create a shared link instance & delegate
   auto volumeLinkImpl =
       std::make_unique<const Acts::Experimental::SingleDetectorVolumeImpl>(
           volume.get());
-  Acts::Experimental::DetectorVolumeUpdator volumeLink;
+  Acts::Experimental::DetectorVolumeUpdater volumeLink;
   volumeLink.connect<&Acts::Experimental::SingleDetectorVolumeImpl::update>(
       std::move(volumeLinkImpl));
   // Update the volume link and the store
-  portal.assignDetectorVolumeUpdator(direction, std::move(volumeLink),
+  portal.assignDetectorVolumeUpdater(direction, std::move(volumeLink),
                                      {volume});
 }
 
-void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdator(
+void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
     const GeometryContext& gctx, Portal& portal,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     const Direction& direction, const std::vector<ActsScalar>& boundaries,
@@ -44,13 +44,13 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdator(
   auto volumes1D = std::make_unique<const BoundVolumesGrid1Impl>(
       boundaries, binning, unpack_shared_const_vector(volumes),
       pTransform.inverse());
-  DetectorVolumeUpdator dVolumeUpdator;
-  dVolumeUpdator.connect<&BoundVolumesGrid1Impl::update>(std::move(volumes1D));
-  portal.assignDetectorVolumeUpdator(direction, std::move(dVolumeUpdator),
+  DetectorVolumeUpdater dVolumeUpdater;
+  dVolumeUpdater.connect<&BoundVolumesGrid1Impl::update>(std::move(volumes1D));
+  portal.assignDetectorVolumeUpdater(direction, std::move(dVolumeUpdater),
                                      volumes);
 }
 
-void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
+void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdaters(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     std::vector<PortalReplacement>& pReplacements) {
@@ -64,10 +64,10 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
     // Creating a link to the mother
     auto volumes1D = std::make_unique<const BoundVolumesGrid1Impl>(
         boundaries, binning, cVolumes, pTransform.inverse());
-    DetectorVolumeUpdator dVolumeUpdator;
-    dVolumeUpdator.connect<&BoundVolumesGrid1Impl::update>(
+    DetectorVolumeUpdater dVolumeUpdater;
+    dVolumeUpdater.connect<&BoundVolumesGrid1Impl::update>(
         std::move(volumes1D));
-    p->assignDetectorVolumeUpdator(dir, std::move(dVolumeUpdator), volumes);
+    p->assignDetectorVolumeUpdater(dir, std::move(dVolumeUpdater), volumes);
   }
 }
 
