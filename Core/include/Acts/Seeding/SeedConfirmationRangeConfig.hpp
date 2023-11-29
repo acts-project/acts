@@ -52,7 +52,7 @@ struct SeedConfirmationRangeConfig {
   /// confirmation if inner space-points radius is smaller than rMaxSeedConf
   std::size_t nTopForSmallR = 0;
 
-  /// Minimum radius for inner seed component required in quality in seed
+  /// Minimum radius for inner seed component required in quality seed
   /// confirmation
   float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
   /// Maximum longitudinal impact parameter of seed required in quality seed
