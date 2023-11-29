@@ -73,9 +73,9 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
   auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
   BOOST_CHECK_NE(portal, nullptr);
   // Attaching the portals
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
+  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
       *portal, forwardVolume, Acts::Direction::Forward);
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
+  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
       *portal, backwardVolume, Acts::Direction::Backward);
 
   std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes = {
@@ -119,10 +119,10 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
   BOOST_CHECK_NE(portal, nullptr);
 
   // Attaching the portals
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
+  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
       *portal, backwardVolume, Acts::Direction::Backward);
 
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdator(
+  Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
       tContext, *portal, {forwardVolumeA, forwardVolumeB, forwardVolumeC},
       Acts::Direction::Forward, {-100, 10, 20, 200}, Acts::binX);
 
