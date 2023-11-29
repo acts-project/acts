@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   portalA->updateDetectorVolume(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, volumeB.get());
 
-  // Portal A retains identical posotion to B
+  // Portal A retains identical position to B
   BOOST_CHECK_EQUAL(portalA->surface().center(gctx),
                     portalB->surface().center(gctx));
 
