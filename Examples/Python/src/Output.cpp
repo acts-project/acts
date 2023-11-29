@@ -14,6 +14,7 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
@@ -375,12 +376,13 @@ void addOutput(Context& ctx) {
       trackingGeometry, outputDir, outputPrecision, writeSensitive,
       writeBoundary, writeSurfaceGrid, writeLayerVolume, writePerEvent);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CKFPerformanceWriter, mex,
-                             "CKFPerformanceWriter", inputTracks,
-                             inputParticles, inputMeasurementParticlesMap,
-                             filePath, fileMode, effPlotToolConfig,
-                             fakeRatePlotToolConfig, duplicationPlotToolConfig,
-                             trackSummaryPlotToolConfig, duplicatedPredictor);
+  ACTS_PYTHON_DECLARE_WRITER(
+      ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
+      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
+      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
+      duplicationPlotToolConfig, trackSummaryPlotToolConfig,
+      duplicatedPredictor, truthMatchProbMin, doubleMatching,
+      writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,
@@ -412,5 +414,9 @@ void addOutput(Context& ctx) {
     register_csv_bfield_writer_binding<Writer::CoordinateType::RZ, true>(w);
     register_csv_bfield_writer_binding<Writer::CoordinateType::RZ, false>(w);
   }
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvExaTrkXGraphWriter, mex,
+                             "CsvExaTrkXGraphWriter", inputGraph, outputDir,
+                             outputStem);
 }
 }  // namespace Acts::Python
