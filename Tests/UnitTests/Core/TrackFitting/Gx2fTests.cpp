@@ -45,32 +45,32 @@ namespace Acts {
 namespace Test {
 
 //// Construct initial track parameters.
-CurvilinearTrackParameters makeParameters(
+Acts::CurvilinearTrackParameters makeParameters(
     const ActsScalar x = 0.0_m, const ActsScalar y = 0.0_m,
     const ActsScalar z = 0.0_m, const ActsScalar w = 42_ns,
     const ActsScalar phi = 0_degree, const ActsScalar theta = 90_degree,
     const ActsScalar p = 2_GeV, const ActsScalar q = 1_e) {
   // create covariance matrix from reasonable standard deviations
-  BoundVector stddev;
-  stddev[eBoundLoc0] = 100_um;
-  stddev[eBoundLoc1] = 100_um;
-  stddev[eBoundTime] = 25_ns;
-  stddev[eBoundPhi] = 2_degree;
-  stddev[eBoundTheta] = 2_degree;
-  stddev[eBoundQOverP] = 1 / 100_GeV;
-  const BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  Acts::BoundVector stddev;
+  stddev[Acts::eBoundLoc0] = 100_um;
+  stddev[Acts::eBoundLoc1] = 100_um;
+  stddev[Acts::eBoundTime] = 25_ns;
+  stddev[Acts::eBoundPhi] = 2_degree;
+  stddev[Acts::eBoundTheta] = 2_degree;
+  stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
+  const Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
-  const Vector4 mPos4(x, y, z, w);
-  return CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
-                                    ParticleHypothesis::pion());
+  const Acts::Vector4 mPos4(x, y, z, w);
+  return Acts::CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
+                                          Acts::ParticleHypothesis::pion());
 }
 
-static std::vector<SourceLink> prepareSourceLinks(
+static std::vector<Acts::SourceLink> prepareSourceLinks(
     const std::vector<TestSourceLink>& sourceLinks) {
-  std::vector<SourceLink> result;
+  std::vector<Acts::SourceLink> result;
   std::transform(sourceLinks.begin(), sourceLinks.end(),
                  std::back_inserter(result),
-                 [](const auto& sl) { return SourceLink{sl}; });
+                 [](const auto& sl) { return Acts::SourceLink{sl}; });
   return result;
 }
 
@@ -181,13 +181,13 @@ BOOST_AUTO_TEST_SUITE(Gx2fTest)
 // This test checks if the call to the fitter works and no errors occur in the
 // framework, without fitting and updating any parameters
 BOOST_AUTO_TEST_CASE(NoFit) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("Gx2fTests", logLevel));
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: NoFit -- Start");
 
   // Context objects
-  const GeometryContext geoCtx;
-  const MagneticFieldContext magCtx;
-  const CalibrationContext calCtx;
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   Detector detector;
@@ -201,10 +201,11 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   const MeasurementResolution resPixel = {MeasurementType::eLoc01,
                                           {25_um, 50_um}};
   const MeasurementResolutionMap resolutions = {
-      {GeometryIdentifier().setVolume(0), resPixel}};
+      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   // propagator
-  using SimPropagator = Propagator<StraightLineStepper, Navigator>;
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
   SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
   auto measurements = createMeasurements(
       simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
@@ -228,7 +229,8 @@ BOOST_AUTO_TEST_CASE(NoFit) {
       geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
       false, false, FreeToBoundCorrection(false), 0, true, 0);
 
-  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
 
   // Fit the track
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
@@ -237,7 +239,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   BOOST_REQUIRE(res.ok());
 
   const auto& track = *res;
-  BOOST_CHECK_EQUAL(track.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities
@@ -263,7 +265,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
 }
 
 BOOST_AUTO_TEST_CASE(Fit5Iterations) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("Gx2fTests", logLevel));
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: Fit5Iterations -- Start");
 
   // Create a test context
@@ -280,18 +282,19 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
   // Context objects
-  const GeometryContext geoCtx;
-  const MagneticFieldContext magCtx;
-  // const CalibrationContext calCtx;
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   const MeasurementResolution resPixel = {MeasurementType::eLoc01,
                                           {25_um, 50_um}};
   const MeasurementResolutionMap resolutions = {
-      {GeometryIdentifier().setVolume(0), resPixel}};
+      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   // simulation propagator
-  using SimPropagator = Propagator<StraightLineStepper, Navigator>;
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
   SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
   auto measurements = createMeasurements(
       simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
@@ -329,7 +332,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
       rSurface, false, false, FreeToBoundCorrection(false), 5, true, 0);
 
-  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
 
   // Fit the track
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
@@ -372,7 +376,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 }
 
 BOOST_AUTO_TEST_CASE(MixedDetector) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("Gx2fTests", logLevel));
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: MixedDetector -- Start");
 
   // Create a test context
@@ -389,9 +393,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
   // Context objects
-  const GeometryContext geoCtx;
-  const MagneticFieldContext magCtx;
-  // const CalibrationContext calCtx;
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   const MeasurementResolution resPixel = {MeasurementType::eLoc01,
@@ -399,17 +403,18 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {25_um}};
   const MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {50_um}};
   const MeasurementResolutionMap resolutions = {
-      {GeometryIdentifier().setVolume(2).setLayer(2), resPixel},
-      {GeometryIdentifier().setVolume(2).setLayer(4), resStrip0},
-      {GeometryIdentifier().setVolume(2).setLayer(6), resStrip1},
-      {GeometryIdentifier().setVolume(2).setLayer(8), resPixel},
-      {GeometryIdentifier().setVolume(2).setLayer(10), resStrip0},
-      {GeometryIdentifier().setVolume(2).setLayer(12), resStrip1},
-      {GeometryIdentifier().setVolume(2).setLayer(14), resPixel},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(2), resPixel},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(4), resStrip0},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(6), resStrip1},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(8), resPixel},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(10), resStrip0},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(12), resStrip1},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(14), resPixel},
   };
 
   // simulation propagator
-  using SimPropagator = Propagator<StraightLineStepper, Navigator>;
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
   SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
   auto measurements = createMeasurements(
       simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
@@ -447,7 +452,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
       rSurface, false, false, FreeToBoundCorrection(false), 5, true, 0);
 
-  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
 
   // Fit the track
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
@@ -490,7 +496,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
 
 // This test checks if we can fit QOverP, when a magnetic field is introduced
 BOOST_AUTO_TEST_CASE(FitWithBfield) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("Gx2fTests", logLevel));
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: FitWithBfield -- Start");
 
   // Create a test context
@@ -507,15 +513,15 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
   // Context objects
-  const GeometryContext geoCtx;
-  const MagneticFieldContext magCtx;
-  // const CalibrationContext calCtx;
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   const MeasurementResolution resPixel = {MeasurementType::eLoc01,
                                           {25_um, 50_um}};
   const MeasurementResolutionMap resolutions = {
-      {GeometryIdentifier().setVolume(0), resPixel}};
+      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   using SimStepper = EigenStepper<>;
   const auto simPropagator =
@@ -555,7 +561,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
       rSurface, false, false, FreeToBoundCorrection(false), 5, false, 0);
 
-  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
 
   // Fit the track
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
@@ -598,7 +605,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
 }
 
 BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("Gx2fTests", logLevel));
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: relChi2changeCutOff -- Start");
 
   // Create a test context
@@ -615,18 +622,19 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
   // Context objects
-  const GeometryContext geoCtx;
-  const MagneticFieldContext magCtx;
-  // const CalibrationContext calCtx;
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   const MeasurementResolution resPixel = {MeasurementType::eLoc01,
                                           {25_um, 50_um}};
   const MeasurementResolutionMap resolutions = {
-      {GeometryIdentifier().setVolume(0), resPixel}};
+      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   // simulation propagator
-  using SimPropagator = Propagator<StraightLineStepper, Navigator>;
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
   SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
   auto measurements = createMeasurements(
       simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
@@ -664,7 +672,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
       rSurface, false, false, FreeToBoundCorrection(false), 500, true, 1e-5);
 
-  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
 
   // Fit the track
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
