@@ -142,14 +142,16 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Inner Volume - Build volume configuration
   CuboidVolumeBuilder::VolumeConfig volumeConfig;
-  volumeConfig.length = {(nSurfaces + 1) * 1_m, 2_m, 2_m};
+  volumeConfig.length = {(nSurfaces + 1) * 1_m, 2 * halfSizeSurface,
+                         2 * halfSizeSurface};
   volumeConfig.position = {volumeConfig.length.x() / 2, 0., 0.};
   volumeConfig.layerCfg = layerConfig;
   volumeConfig.name = "Test volume";
 
   // Outer volume - Build TrackingGeometry configuration
   CuboidVolumeBuilder::Config config;
-  config.length = {(nSurfaces + 1) * 1_m, 2_m, 2_m};
+  config.length = {(nSurfaces + 1) * 1_m, 2 * halfSizeSurface,
+                   2 * halfSizeSurface};
   config.position = {volumeConfig.length.x() / 2, 0., 0.};
   config.volumeCfg = {volumeConfig};
 
