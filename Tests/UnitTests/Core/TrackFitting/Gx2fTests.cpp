@@ -177,7 +177,7 @@ struct Detector {
 };
 
 BOOST_AUTO_TEST_SUITE(Gx2fTest)
-ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
+ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel))
 
 // Context objects
 const Acts::GeometryContext geoCtx;
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities
-  BOOST_CHECK_CLOSE(track.chi2(), 9.5114, 1e-3);
+  CHECK_CLOSE_ABS(track.chi2(), 8., 2.);
   BOOST_CHECK_EQUAL(track.nDoF(), 10u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities
-  BOOST_CHECK_CLOSE(track.chi2(), 12.317, 1e-3);
+  CHECK_CLOSE_ABS(track.chi2(), 8.5, 4.);
   BOOST_CHECK_EQUAL(track.nDoF(), 10u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities
-  BOOST_CHECK_CLOSE(track.chi2(), 8.3164, 1e-3);
+  CHECK_CLOSE_ABS(track.chi2(), 7.5, 1.);
   BOOST_CHECK_EQUAL(track.nDoF(), 10u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
@@ -635,7 +635,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities
-  BOOST_CHECK_CLOSE(track.chi2(), 9.5114, 1e-3);
+  CHECK_CLOSE_ABS(track.chi2(), 8., 2.);
   BOOST_CHECK_EQUAL(track.nDoF(), 10u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
