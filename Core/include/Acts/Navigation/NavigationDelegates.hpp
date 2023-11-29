@@ -55,12 +55,5 @@ using DetectorVolumeUpdator =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
                    INavigationDelegate>;
 
-/// @brief  A dummy constructed updator
-inline static DetectorVolumeUpdator unconnectedUpdator() {
-  DetectorVolumeUpdator unconnected;
-  unconnected.disconnect();
-  return unconnected;
-}
-
 }  // namespace Experimental
 }  // namespace Acts
