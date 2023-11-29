@@ -16,9 +16,11 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -101,9 +103,9 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
 
   // Create a links to volumes
   auto linkToAImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
-  DetectorVolumeUpdator linkToA;
+  DetectorVolumeUpdater linkToA;
   linkToA.connect<&LinkToVolumeImpl::link>(std::move(linkToAImpl));
-  portalA->assignDetectorVolumeUpdator(Acts::Direction::Positive,
+  portalA->assignDetectorVolumeUpdater(Acts::Direction::Positive,
                                        std::move(linkToA), {volumeA});
 
   auto attachedDetectorVolumes = portalA->attachedDetectorVolumes();
@@ -123,10 +125,10 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   BOOST_CHECK_EQUAL(nState.currentVolume, nullptr);
 
   auto portalB = Portal::makeShared(surface);
-  DetectorVolumeUpdator linkToB;
+  DetectorVolumeUpdater linkToB;
   auto linkToBImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB.connect<&LinkToVolumeImpl::link>(std::move(linkToBImpl));
-  portalB->assignDetectorVolumeUpdator(Acts::Direction::Negative,
+  portalB->assignDetectorVolumeUpdater(Acts::Direction::Negative,
                                        std::move(linkToB), {volumeB});
 
   // Reverse: positive volume nullptr, negative volume volumeB
@@ -154,18 +156,105 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   auto linkToBIImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
 
   auto portalAI = Portal::makeShared(surface);
-  DetectorVolumeUpdator linkToAI;
+  DetectorVolumeUpdater linkToAI;
   linkToAI.connect<&LinkToVolumeImpl::link>(std::move(linkToAIImpl));
-  portalAI->assignDetectorVolumeUpdator(Acts::Direction::Positive,
+  portalAI->assignDetectorVolumeUpdater(Acts::Direction::Positive,
                                         std::move(linkToAI), {volumeA});
 
   auto portalBI = Portal::makeShared(surface);
-  DetectorVolumeUpdator linkToBI;
+  DetectorVolumeUpdater linkToBI;
   linkToBI.connect<&LinkToVolumeImpl::link>(std::move(linkToBIImpl));
-  portalBI->assignDetectorVolumeUpdator(Acts::Direction::Positive,
+  portalBI->assignDetectorVolumeUpdater(Acts::Direction::Positive,
                                         std::move(linkToBI), {volumeB});
 
   BOOST_CHECK_THROW(portalAI->fuse(portalBI), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
+  // Volume A and B
+  auto dTransform = Acts::Transform3::Identity();
+  auto pGenerator = defaultPortalGenerator();
+  auto volumeA = DetectorVolumeFactory::construct(
+      pGenerator, tContext, "dummyA", dTransform,
+      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
+      tryAllPortalsAndSurfaces());
+  auto volumeB = DetectorVolumeFactory::construct(
+      pGenerator, tContext, "dummyB", dTransform,
+      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
+      tryAllPortalsAndSurfaces());
+
+  // Create some material
+  auto materialSlab = Acts::MaterialSlab(
+      Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.);
+  auto materialA =
+      std::make_shared<Acts::HomogeneousSurfaceMaterial>(materialSlab);
+  auto materialB =
+      std::make_shared<Acts::HomogeneousSurfaceMaterial>(materialSlab);
+
+  // A few portals
+  auto rectangle = std::make_shared<Acts::RectangleBounds>(10., 100.);
+
+  auto surfaceA = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Acts::Transform3::Identity(), rectangle);
+  surfaceA->assignSurfaceMaterial(materialA);
+  auto portalA = Acts::Experimental::Portal::makeShared(surfaceA);
+
+  DetectorVolumeUpdater linkToA;
+  auto linkToAImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
+  linkToA.connect<&LinkToVolumeImpl::link>(std::move(linkToAImpl));
+  portalA->assignDetectorVolumeUpdater(Acts::Direction::Positive,
+                                       std::move(linkToA), {volumeA});
+
+  auto surfaceB = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Acts::Transform3::Identity(), rectangle);
+  auto portalB = Acts::Experimental::Portal::makeShared(surfaceB);
+  DetectorVolumeUpdater linkToB;
+  auto linkToBImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
+  linkToB.connect<&LinkToVolumeImpl::link>(std::move(linkToBImpl));
+  portalB->assignDetectorVolumeUpdater(Acts::Direction::Negative,
+                                       std::move(linkToB), {volumeB});
+
+  // Portal A fuses with B
+  // - has material and keeps it, portal B becomes portal A
+  portalA->fuse(portalB);
+  BOOST_CHECK_EQUAL(portalA->surface().surfaceMaterial(), materialA.get());
+  BOOST_CHECK_EQUAL(portalA, portalB);
+
+  // Remake portal B
+  portalB = Acts::Experimental::Portal::makeShared(surfaceB);
+  DetectorVolumeUpdater linkToB2;
+  auto linkToB2Impl = std::make_unique<const LinkToVolumeImpl>(volumeB);
+  linkToB2.connect<&LinkToVolumeImpl::link>(std::move(linkToB2Impl));
+  portalB->assignDetectorVolumeUpdater(Acts::Direction::Negative,
+                                       std::move(linkToB2), {volumeB});
+
+  // Portal B fuses with A
+  // - A has material and keeps it, portal B gets it from A, A becomes B
+  BOOST_REQUIRE_NE(portalA, portalB);
+  portalB->fuse(portalA);
+  BOOST_CHECK_EQUAL(portalB->surface().surfaceMaterial(), materialA.get());
+  BOOST_CHECK_EQUAL(portalB, portalA);
+
+  // Remake portal A and B, this time both with material
+  portalA = Acts::Experimental::Portal::makeShared(surfaceA);
+  DetectorVolumeUpdater linkToA2;
+  auto linkToA2Impl = std::make_unique<const LinkToVolumeImpl>(volumeA);
+  linkToA2.connect<&LinkToVolumeImpl::link>(std::move(linkToA2Impl));
+  portalA->assignDetectorVolumeUpdater(Acts::Direction::Positive,
+                                       std::move(linkToA2), {volumeA});
+
+  surfaceB->assignSurfaceMaterial(materialB);
+  portalB = Acts::Experimental::Portal::makeShared(surfaceB);
+  DetectorVolumeUpdater linkToB3;
+  auto linkToB3Impl = std::make_unique<const LinkToVolumeImpl>(volumeB);
+  linkToB3.connect<&LinkToVolumeImpl::link>(std::move(linkToB3Impl));
+  portalB->assignDetectorVolumeUpdater(Acts::Direction::Negative,
+                                       std::move(linkToB3), {volumeB});
+
+  // Portal A fuses with B - both have material, throw exception
+  BOOST_CHECK_THROW(portalA->fuse(portalB), std::runtime_error);
+  // Same in reverse
+  BOOST_CHECK_THROW(portalB->fuse(portalA), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
