@@ -206,8 +206,15 @@ class ConstPodioTrackStateContainer final
         m_collection{&trackStates},
         m_params{&params},
         m_jacs{&jacs} {
+    // Not much we can do to recover dynamic columns here
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
+
+  /// Construct a const track state container from a mutable
+  /// @warning If the source mutable container is modified, this container
+  ///          will be corrupted, as surface buffer and dynamic column state can
+  ///          not be synchronized!
+  ConstPodioTrackStateContainer(const MutablePodioTrackStateContainer& other);
 
   ConstPodioTrackStateContainer(const PodioUtil::ConversionHelper& helper,
                                 const podio::Frame& frame,
@@ -714,5 +721,18 @@ static_assert(!MutablePodioTrackStateContainer::ReadOnly,
 
 ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend,
                           MutablePodioTrackStateContainer);
+
+ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
+    const MutablePodioTrackStateContainer& other)
+    : m_helper{other.m_helper},
+      m_collection{other.m_collection.get()},
+      m_params{other.m_params.get()},
+      m_jacs{other.m_jacs.get()},
+      m_surfaces{other.m_surfaces} {
+  for (const auto& [key, col] : other.m_dynamic) {
+    m_dynamic.insert({key, col->asConst()});
+  }
+  m_dynamicKeys = other.m_dynamicKeys;
+}
 
 }  // namespace Acts
