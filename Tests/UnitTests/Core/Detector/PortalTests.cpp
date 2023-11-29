@@ -139,8 +139,16 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   portalB->updateDetectorVolume(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, volumeB.get());
 
+  Acts::GeometryContext gctx;
+  BOOST_CHECK_EQUAL(portalA->surface().center(gctx),
+                    portalB->surface().center(gctx));
+
+  // Fuse with itself, nothing happens
+  BOOST_CHECK_EQUAL(portalA, Portal::fuse(portalA, portalA));
+
   // Now fuse the portals together, both links valid
-  portalA->fuse(portalB);
+  portalA = Portal::fuse(portalA, portalB);
+
   nState.direction = Acts::Vector3(0., 0., 1.);
   portalA->updateDetectorVolume(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, volumeA.get());
@@ -148,8 +156,9 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   portalA->updateDetectorVolume(tContext, nState);
   BOOST_CHECK_EQUAL(nState.currentVolume, volumeB.get());
 
-  // Portal A is now identical to portal B
-  BOOST_CHECK_EQUAL(portalA, portalB);
+  // Portal A retains identical posotion to B
+  BOOST_CHECK_EQUAL(portalA->surface().center(gctx),
+                    portalB->surface().center(gctx));
 
   // An invalid fusing setup
   auto linkToAIImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
@@ -167,7 +176,8 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   portalBI->assignDetectorVolumeUpdater(Acts::Direction::Positive,
                                         std::move(linkToBI), {volumeB});
 
-  BOOST_CHECK_THROW(portalAI->fuse(portalBI), std::runtime_error);
+  BOOST_CHECK_THROW(Portal::fuse(portalAI, portalBI), std::runtime_error);
+  BOOST_CHECK_THROW(Portal::fuse(portalBI, portalAI), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
@@ -215,10 +225,9 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
                                        std::move(linkToB), {volumeB});
 
   // Portal A fuses with B
-  // - has material and keeps it, portal B becomes portal A
-  portalA->fuse(portalB);
+  // - has material and keeps it
+  portalA = Portal::fuse(portalA, portalB);
   BOOST_CHECK_EQUAL(portalA->surface().surfaceMaterial(), materialA.get());
-  BOOST_CHECK_EQUAL(portalA, portalB);
 
   // Remake portal B
   portalB = Acts::Experimental::Portal::makeShared(surfaceB);
@@ -229,11 +238,17 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
                                        std::move(linkToB2), {volumeB});
 
   // Portal B fuses with A
-  // - A has material and keeps it, portal B gets it from A, A becomes B
+  // - A has material, portal B gets it from A
   BOOST_REQUIRE_NE(portalA, portalB);
-  portalB->fuse(portalA);
+
+  // This fails because A has accumulated volumes on both sides through fusing
+  BOOST_CHECK_THROW(Portal::fuse(portalB, portalA), std::invalid_argument);
+  // Remove Negative volume on A
+  portalA->assignDetectorVolumeUpdator(Acts::Direction::Negative,
+                                       DetectorVolumeUpdator{}, {});
+
+  portalB = Portal::fuse(portalB, portalA);
   BOOST_CHECK_EQUAL(portalB->surface().surfaceMaterial(), materialA.get());
-  BOOST_CHECK_EQUAL(portalB, portalA);
 
   // Remake portal A and B, this time both with material
   portalA = Acts::Experimental::Portal::makeShared(surfaceA);
@@ -252,9 +267,9 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
                                        std::move(linkToB3), {volumeB});
 
   // Portal A fuses with B - both have material, throw exception
-  BOOST_CHECK_THROW(portalA->fuse(portalB), std::runtime_error);
+  BOOST_CHECK_THROW(Portal::fuse(portalA, portalB), std::runtime_error);
   // Same in reverse
-  BOOST_CHECK_THROW(portalB->fuse(portalA), std::runtime_error);
+  BOOST_CHECK_THROW(Portal::fuse(portalB, portalA), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -110,7 +110,8 @@ class Portal : public std::enable_shared_from_this<Portal> {
 
   /// Fuse with another portal, this one is kept
   ///
-  /// @param other is the portal that will be fused
+  /// @param keep is the portal that will be kept
+  /// @param discard is the portal that will be fused
   ///
   /// @note this will move the portal links from the other
   /// into this volume, it will throw an exception if the
@@ -121,7 +122,9 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// will be thrown and the portals are not fusable
   ///
   /// @note that other will be overwritten to point to this
-  void fuse(std::shared_ptr<Portal>& other) noexcept(false);
+  static std::shared_ptr<Portal> fuse(
+      std::shared_ptr<Portal>& keep,
+      std::shared_ptr<Portal>& discard) noexcept(false);
 
   /// Update the volume link
   ///
