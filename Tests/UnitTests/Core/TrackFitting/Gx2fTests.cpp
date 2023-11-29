@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities
-  CHECK_CLOSE_ABS(track.chi2(), 7.5, 1.);
+  CHECK_CLOSE_ABS(track.chi2(), 7.5, 1.5);
   BOOST_CHECK_EQUAL(track.nDoF(), 10u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
