@@ -508,10 +508,8 @@ Acts::TrackingVolume::compatibleBoundaries(
       const auto& surface = boundary->surfaceRepresentation();
       ACTS_VERBOSE("Consider boundary surface " << surface.geometryId());
 
-      if (options.startObject == &surface) {
-        ACTS_VERBOSE(" - Surface is excluded surface");
-        continue;
-      }
+      // we don't exclude the start object because we might exit via the same
+      // boundary (e.g. cylinder)
 
       auto candidates =
           surface.intersect(gctx, position, direction, options.boundaryCheck);
