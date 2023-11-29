@@ -370,7 +370,7 @@ class TrigFTF_GNN_TrackingFilter {
     });  // iterator to vector member with this id
     int index = std::distance(m_geo.begin(), iterator);
 
-    return m_geo.at(index).m_type;  // needs to be 0,2 or -2
+    return m_geo.at(index).m_type;  // needs to be 0, 2, or -2
   }
 
   const std::vector<Acts::TrigInDetSiLayer>& m_geo;
