@@ -185,9 +185,9 @@ class VectorTrackContainerBase {
   std::vector<unsigned int> m_nOutliers;
   std::vector<unsigned int> m_nSharedHits;
 
-  std::vector<HashedString> m_dynamicKeys;
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 }  // namespace detail_vtc
