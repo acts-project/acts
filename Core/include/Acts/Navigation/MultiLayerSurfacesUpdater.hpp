@@ -11,7 +11,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
@@ -21,7 +21,7 @@ namespace Acts {
 namespace Experimental {
 
 template <typename grid_t, typename path_generator>
-class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
+class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
  public:
   /// Broadcast the grid type
   using grid_type = grid_t;
@@ -42,12 +42,12 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
-  MultiLayerSurfacesUpdatorImpl(
+  MultiLayerSurfacesUpdaterImpl(
       grid_type&& igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
       const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
-  MultiLayerSurfacesUpdatorImpl() = delete;
+  MultiLayerSurfacesUpdaterImpl() = delete;
 
   void update(const GeometryContext& gctx, NavigationState& nState) const {
     auto step = std::sqrt(std::pow(grid.binWidth()[0], 2) +

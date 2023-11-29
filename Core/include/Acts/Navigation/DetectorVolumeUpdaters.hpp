@@ -12,7 +12,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
@@ -48,7 +48,7 @@ struct SingleDetectorVolumeImpl : public INavigationDelegate {
       : dVolume(sVolume) {
     if (sVolume == nullptr) {
       throw std::invalid_argument(
-          "DetectorVolumeUpdators: nullptr provided, use EndOfWorld instead.");
+          "DetectorVolumeUpdaters: nullptr provided, use EndOfWorld instead.");
     }
   }
 
@@ -98,11 +98,11 @@ struct DetectorVolumesCollection {
 /// of volumes.
 ///
 struct BoundVolumesGrid1Impl : public INavigationDelegate {
-  using IndexedUpdator =
-      IndexedUpdatorImpl<VariableBoundIndexGrid1, DetectorVolumesCollection,
+  using IndexedUpdater =
+      IndexedUpdaterImpl<VariableBoundIndexGrid1, DetectorVolumesCollection,
                          DetectorVolumeFiller>;
   // The indexed updator
-  IndexedUpdator indexedUpdator;
+  IndexedUpdater indexedUpdater;
 
   /// Allowed constructor with explicit arguments
   ///
@@ -114,18 +114,18 @@ struct BoundVolumesGrid1Impl : public INavigationDelegate {
       const std::vector<ActsScalar>& gBoundaries, BinningValue bValue,
       const std::vector<const DetectorVolume*>& cVolumes,
       const Transform3& bTransform = Transform3::Identity()) noexcept(false)
-      : indexedUpdator(IndexedUpdator(VariableBoundIndexGrid1(std::make_tuple(
+      : indexedUpdater(IndexedUpdater(VariableBoundIndexGrid1(std::make_tuple(
                                           VariableBoundAxis(gBoundaries))),
                                       {bValue}, bTransform)) {
-    indexedUpdator.extractor.dVolumes = cVolumes;
+    indexedUpdater.extractor.dVolumes = cVolumes;
 
     if (gBoundaries.size() != cVolumes.size() + 1u) {
       throw std::invalid_argument(
-          "DetectorVolumeUpdators: mismatching boundaries and volume numbers");
+          "DetectorVolumeUpdaters: mismatching boundaries and volume numbers");
     }
     // Initialize the grid entries
     for (std::size_t ib = 1u; ib < gBoundaries.size(); ++ib) {
-      indexedUpdator.grid.at(ib) = ib - 1;
+      indexedUpdater.grid.at(ib) = ib - 1;
     }
   }
   // Deleted default constructor
@@ -137,7 +137,7 @@ struct BoundVolumesGrid1Impl : public INavigationDelegate {
   /// @param nState [in,out] the navigation state to be updated
   inline void update(const GeometryContext& gctx,
                      NavigationState& nState) const {
-    indexedUpdator.update(gctx, nState);
+    indexedUpdater.update(gctx, nState);
   }
 };
 
