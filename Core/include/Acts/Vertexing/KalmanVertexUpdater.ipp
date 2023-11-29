@@ -10,19 +10,19 @@
 
 #include <algorithm>
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::updateVertexWithTrack(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk) {
-  detail::update<input_track_t>(vtx, trk, 1);
+  detail::update<input_track_t, nDimVertex>(vtx, trk, 1);
 }
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::detail::update(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
   double trackWeight = trk.trackWeight;
 
   // Set up cache where entire content is set to 0
-  Cache cache;
+  Cache<nDimVertex> cache;
 
   // Calculate update and save result in cache
   calculateUpdate(vtx, trk.linearizedState, trackWeight, sign, cache);
@@ -65,11 +65,11 @@ void Acts::KalmanVertexUpdater::detail::update(
   }
 }
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::calculateUpdate(
     const Acts::Vertex<input_track_t>& vtx,
     const Acts::LinearizedTrack& linTrack, const double trackWeight,
-    const int sign, Cache& cache) {
+    const int sign, Cache<nDimVertex>& cache) {
   // Retrieve variables from the track linearization. The comments indicate the
   // corresponding symbol used in Ref. (1).
   // A_k
@@ -118,18 +118,18 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
                                 (trkParams - constTerm));
 }
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 double Acts::KalmanVertexUpdater::detail::vertexPositionChi2Update(
-    const Vertex<input_track_t>& oldVtx, const Cache& cache) {
+    const Vertex<input_track_t>& oldVtx, const Cache<nDimVertex>& cache) {
   Vector3 posDiff = cache.newVertexPos - oldVtx.position();
 
   // Calculate and return corresponding chi2
   return posDiff.transpose() * (cache.oldVertexWeight * posDiff);
 }
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
-    const LinearizedTrack& linTrack, const Cache& cache) {
+    const LinearizedTrack& linTrack, const Cache<nDimVertex>& cache) {
   // A_k
   const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
   // B_k

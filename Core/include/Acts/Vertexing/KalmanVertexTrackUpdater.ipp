@@ -11,7 +11,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
                                             const Vertex<input_track_t>& vtx) {
   // Check if linearized state exists
@@ -44,7 +44,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
 
   // Cache object filled with zeros
-  KalmanVertexUpdater::Cache cache;
+  KalmanVertexUpdater::Cache<nDimVertex> cache;
 
   // Calculate the update of the vertex position when the track is removed. This
   // might be unintuitive, but it is needed to compute a symmetric chi2.

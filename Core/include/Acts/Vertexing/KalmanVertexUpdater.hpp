@@ -35,7 +35,9 @@ namespace KalmanVertexUpdater {
 /// Section 5.3.5
 
 /// Cache object, the comments indicate the names of the variables in Ref. (1)
+template <unsigned int nDimVertex>
 struct Cache {
+  using VertexPosition = ActsVector<nDimVertex>;
   // \tilde{x_k}
   Vector3 newVertexPos = Vector3::Zero();
   // C_k
@@ -55,7 +57,7 @@ struct Cache {
 ///
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void updateVertexWithTrack(Vertex<input_track_t>& vtx,
                            TrackAtVertex<input_track_t>& trk);
 
@@ -69,10 +71,11 @@ void updateVertexWithTrack(Vertex<input_track_t>& vtx,
 /// @note Tracks are removed during the smoothing procedure to compute
 /// the chi2 of the track wrt the updated vertex position
 /// @param[out] cache A cache to store the results of this function
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void calculateUpdate(const Acts::Vertex<input_track_t>& vtx,
                      const Acts::LinearizedTrack& linTrack,
-                     const double trackWeight, const int sign, Cache& cache);
+                     const double trackWeight, const int sign,
+                     Cache<nDimVertex>& cache);
 
 namespace detail {
 
@@ -83,9 +86,9 @@ namespace detail {
 /// @param cache Cache containing updated vertex position
 ///
 /// @return Chi2
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 double vertexPositionChi2Update(const Vertex<input_track_t>& oldVtx,
-                                const Cache& cache);
+                                const Cache<nDimVertex>& cache);
 
 /// @brief Calculates chi2 of refitted track parameters
 /// w.r.t. updated vertex
@@ -95,8 +98,9 @@ double vertexPositionChi2Update(const Vertex<input_track_t>& oldVtx,
 /// this function
 ///
 /// @return Chi2
-template <typename input_track_t>
-double trackParametersChi2(const LinearizedTrack& linTrack, const Cache& cache);
+template <typename input_track_t, unsigned int nDimVertex>
+double trackParametersChi2(const LinearizedTrack& linTrack,
+                           const Cache<nDimVertex>& cache);
 
 /// @brief Adds or removes (depending on `sign`) tracks from vertex
 /// and updates the vertex
@@ -106,7 +110,7 @@ double trackParametersChi2(const LinearizedTrack& linTrack, const Cache& cache);
 /// @param sign +1 (add track) or -1 (remove track)
 /// @note Tracks are removed during the smoothing procedure to compute
 /// the chi2 of the track wrt the updated vertex position
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk,
             int sign);
 }  // Namespace detail

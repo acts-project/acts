@@ -308,8 +308,8 @@ Acts::Result<void> Acts::
           trkAtVtx.isLinearized = true;
         }
         // Update the vertex with the new track
-        KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(*vtx,
-                                                                  trkAtVtx);
+        KalmanVertexUpdater::updateVertexWithTrack<input_track_t, 3>(*vtx,
+                                                                     trkAtVtx);
       } else {
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }
@@ -369,7 +369,7 @@ void Acts::AdaptiveMultiVertexFitter<
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
-        KalmanVertexTrackUpdater::update<input_track_t>(trkAtVtx, *vtx);
+        KalmanVertexTrackUpdater::update<input_track_t, 3>(trkAtVtx, *vtx);
       }
     }
   }
