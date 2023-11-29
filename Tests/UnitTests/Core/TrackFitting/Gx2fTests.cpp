@@ -233,19 +233,28 @@ BOOST_AUTO_TEST_CASE(NoFit) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                        startParametersFit, gx2fOptions, tracks);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
-  auto& track = *res;
+  const auto& track = *res;
   BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
   BOOST_CHECK(track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
-  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+  // Track quantities
   BOOST_CHECK_EQUAL(track.chi2(), 0.);
+  BOOST_CHECK_EQUAL(track.nDoF(), 0u);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
+  BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // Parameters
   BOOST_CHECK_EQUAL(track.parameters(), startParametersFit.parameters());
   BOOST_CHECK_EQUAL(track.covariance(), BoundMatrix::Identity());
+
+  // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
           std::size_t,
@@ -316,8 +325,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
-  MagneticFieldContext mfContext;
-  CalibrationContext calContext;
+  const MagneticFieldContext mfContext;
+  const CalibrationContext calContext;
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
@@ -327,17 +336,25 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                        startParametersFit, gx2fOptions, tracks);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
-  auto& track = *res;
+  const auto& track = *res;
+
   BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
   BOOST_CHECK(track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
-  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+  // Track quantities
   BOOST_CHECK_CLOSE(track.chi2(), 9.5114, 1e-3);
+  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
+  BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // Parameters
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
@@ -347,6 +364,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
+
+  // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
           std::size_t,
@@ -426,8 +445,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
-  MagneticFieldContext mfContext;
-  CalibrationContext calContext;
+  const MagneticFieldContext mfContext;
+  const CalibrationContext calContext;
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
@@ -437,17 +456,24 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                        startParametersFit, gx2fOptions, tracks);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
-  auto& track = *res;
+  const auto& track = *res;
   BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
   BOOST_CHECK(track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
-  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+  // Track quantities
   BOOST_CHECK_CLOSE(track.chi2(), 12.317, 1e-3);
+  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
+  BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // Parameters
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
@@ -457,6 +483,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 2e-28, 1e0);
+
+  // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
           std::size_t,
@@ -526,8 +554,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
-  MagneticFieldContext mfContext;
-  CalibrationContext calContext;
+  const MagneticFieldContext mfContext;
+  const CalibrationContext calContext;
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
@@ -537,17 +565,24 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                        startParametersFit, gx2fOptions, tracks);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
-  auto& track = *res;
+  const auto& track = *res;
   BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
   BOOST_CHECK(track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
-  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+  // Track quantities
   BOOST_CHECK_CLOSE(track.chi2(), 8.3164, 1e-3);
+  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
+  BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // Parameters
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
   // TODO investigate further the reference values for eBoundPhi and det(cov)
@@ -558,6 +593,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 0.5, 2e-1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 8e-35, 4e0);
+
+  // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
           std::size_t,
@@ -628,8 +665,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
-  MagneticFieldContext mfContext;
-  CalibrationContext calContext;
+  const MagneticFieldContext mfContext;
+  const CalibrationContext calContext;
 
   const Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
@@ -639,17 +676,24 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                        startParametersFit, gx2fOptions, tracks);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
-  auto& track = *res;
+  const auto& track = *res;
   BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
   BOOST_CHECK(track.hasReferenceSurface());
-  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
-  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+  // Track quantities
   BOOST_CHECK_CLOSE(track.chi2(), 9.5114, 1e-3);
+  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
+  BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // Parameters
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
@@ -659,6 +703,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
+
+  // Convergence
   BOOST_CHECK_LT(
       (track.template component<
           std::size_t,
