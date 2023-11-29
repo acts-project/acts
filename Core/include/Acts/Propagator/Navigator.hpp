@@ -457,7 +457,7 @@ class Navigator {
     // TODO This will also update the step length which is unnecessary
     Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, surface, intersection.index(), state.options.direction,
-        BoundaryCheck(false), state.options.surfaceTolerance, logger());
+        BoundaryCheck(true), state.options.surfaceTolerance, logger());
 
     // Check if we are on surface otherwise wait for the next step.
     if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -469,6 +469,7 @@ class Navigator {
     // necessary for the next `preStep` call.
     ++state.navigation.candidateIndex;
 
+    /*
     // Determine the surface status with boundary check.
     // TODO second intersection should not be necessary
     surfaceStatus = stepper.updateSurfaceStatus(
@@ -481,6 +482,7 @@ class Navigator {
                    << "Surface successfully hit, but outside bounds.");
       return true;
     }
+    */
 
     ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
     // Update navigation state, so actors and aborters can access it
@@ -506,12 +508,16 @@ class Navigator {
       // surfaces we might hit in the layer
 
       ACTS_VERBOSE(volInfo(state)
-                   << "This is a layer. Reinitialize navigation");
+                   << "This is a layer. Initialize layer candidates");
 
       state.navigation.currentLayer =
           intersection.template object<LayerIntersection>();
 
-      reinitializeCandidates(state, stepper);
+      initializeLayerCandidates(state, stepper);
+
+      std::sort(
+          state.navigation.candidates.begin() + state.navigation.candidateIndex,
+          state.navigation.candidates.end(), NavigationCandidate::forwardOrder);
     } else if (intersection.template checkType<BoundaryIntersection>()) {
       // In case of a boundary we need to switch volume and reinitialize
 
@@ -664,7 +670,7 @@ class Navigator {
           state.options.direction * stepper.direction(state.stepping), navOpts);
 
       // Screen output where they are
-      {
+      if (logger().doPrint(Logging::VERBOSE)) {
         std::ostringstream oss;
         oss << surfaces.size();
         oss << " surface candidates found at path(s): ";
