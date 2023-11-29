@@ -61,10 +61,11 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     Seeder seedFinder;
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
-    using Seeder = Acts::AdaptiveGridDensityVertexFinder<109, 1, Fitter>;
+    using Seeder = Acts::AdaptiveGridDensityVertexFinder<Fitter>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
-    // The seeder config argument corresponds to the bin size in mm
-    Seeder::Config seederConfig(0.05);
+    // The first seeder config argument correspond to the number of bins in
+    // z-direction, the second to the bin extent in z-direction
+    Seeder::Config seederConfig(109, 0.05);
     Seeder seedFinder(seederConfig);
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else {

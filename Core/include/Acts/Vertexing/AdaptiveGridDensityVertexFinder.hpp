@@ -30,34 +30,32 @@ namespace Acts {
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
 ///
-/// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
-/// a single track is modelled as a (trkGridSize x trkGridSize) grid
-/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-template <int spatialTrkGridSize = 15, int temporalTrkGridSize = 1,
-          typename vfitter_t = DummyVertexFitter<>>
+/// @tparam vfitter_t Vertex fitter type
+template <typename vfitter_t = DummyVertexFitter<>>
 class AdaptiveGridDensityVertexFinder {
-  // Assert odd grid sizes
-  static_assert(spatialTrkGridSize % 2);
-  static_assert(temporalTrkGridSize % 2);
-
   using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using GridDensity =
-      AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>;
+  using GridDensity = AdaptiveGridTrackDensity;
 
  public:
   using DensityMap = typename GridDensity::DensityMap;
 
   /// @brief The Config struct
   struct Config {
+    /// @param spatialTrkGridSize_ Number of bins per track in z direction
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    Config(float spatialBinExtent = 0.1)
-        : gridDensity(typename GridDensity::Config(spatialBinExtent)) {}
+    Config(unsigned int spatialTrkGridSize = 15, float spatialBinExtent = 0.1)
+        : gridDensity(typename GridDensity::Config(spatialTrkGridSize,
+                                                   spatialBinExtent)) {}
+    /// @param spatialTrkGridSize_ Number of bins per track in z direction
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
+    /// @param temporalTrkGridSize_ Number of bins per track in t direction
     /// @param temporalBinExtent_ The temporal extent of a bin in mm
     /// @note The speed of light is set to 1, hence the unit.
-    Config(float spatialBinExtent, float temporalBinExtent)
-        : gridDensity(typename GridDensity::Config(spatialBinExtent,
-                                                   temporalBinExtent)) {}
+    Config(unsigned int spatialTrkGridSize, float spatialBinExtent,
+           unsigned int temporalTrkGridSize, float temporalBinExtent)
+        : gridDensity(typename GridDensity::Config(
+              spatialTrkGridSize, spatialBinExtent, temporalTrkGridSize,
+              temporalBinExtent)) {}
     ///@param gDensity The grid density
     Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
 

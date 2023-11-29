@@ -558,8 +558,8 @@ BOOST_AUTO_TEST_CASE(
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = AdaptiveGridDensityVertexFinder<55>;
-  SeedFinder::Config seedFinderCfg(0.05);
+  using SeedFinder = AdaptiveGridDensityVertexFinder<>;
+  SeedFinder::Config seedFinderCfg(55, 0.05);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
 
   SeedFinder seedFinder(seedFinderCfg);

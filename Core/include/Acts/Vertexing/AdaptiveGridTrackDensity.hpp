@@ -28,16 +28,8 @@ namespace Acts {
 /// Single tracks can be cached and removed from the overall density.
 /// Unlike in the GaussianGridTrackDensity, the overall density map
 /// grows adaptively when tracks densities are added to the grid.
-///
-/// @tparam spatialTrkGridSize Number of bins per track in z direction
-/// @tparam temporalTrkGridSize Number of bins per track in t direction
-/// @note In total, a track is represented by a grid of size
-/// spatialTrkGridSize * temporalTrkGridSize
-template <int spatialTrkGridSize = 15, int temporalTrkGridSize = 1>
 class AdaptiveGridTrackDensity {
   // Assert odd spatial and temporal track grid size
-  static_assert(spatialTrkGridSize % 2);
-  static_assert(temporalTrkGridSize % 2);
 
  public:
   // The first (second) integer indicates the bin's z (t) position
@@ -52,31 +44,44 @@ class AdaptiveGridTrackDensity {
 
   /// The configuration struct
   struct Config {
+    /// @param spatialTrkGridSize_ Number of bins per track in z direction
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    Config(float spatialBinExtent_) : spatialBinExtent(spatialBinExtent_) {
-      if constexpr (temporalTrkGridSize > 1) {
-        throw std::invalid_argument(
-            "temporalBinExtent must be provided if temporalTrkGridSize > 1 "
-            "(i.e., if time vertex seeding is enabled).");
+    Config(unsigned int spatialTrkGridSize_, float spatialBinExtent_)
+        : spatialTrkGridSize(spatialTrkGridSize_),
+          spatialBinExtent(spatialBinExtent_) {
+      if (!spatialTrkGridSize % 2) {
+        throw std::invalid_argument("Please choose an odd spatialTrkGridSize.");
       }
     }
 
+    /// @param spatialTrkGridSize_ Number of bins per track in z direction
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
+    /// @param temporalTrkGridSize_ Number of bins per track in t direction
     /// @param temporalBinExtent_ The temporal extent of a bin in mm
     /// @note The speed of light is set to 1, hence the unit.
-    Config(float spatialBinExtent_, float temporalBinExtent_)
-        : spatialBinExtent(spatialBinExtent_),
+    Config(unsigned int spatialTrkGridSize_, float spatialBinExtent_,
+           unsigned int temporalTrkGridSize_, float temporalBinExtent_)
+        : spatialTrkGridSize(spatialTrkGridSize_),
+          spatialBinExtent(spatialBinExtent_),
+          temporalTrkGridSize(temporalTrkGridSize_),
           temporalBinExtent(temporalBinExtent_) {
-      if constexpr (temporalTrkGridSize == 1) {
+      if (!spatialTrkGridSize % 2 || !temporalTrkGridSize % 2) {
         throw std::invalid_argument(
-            "temporalBinExtent must not be provided if temporalTrkGridSize == "
-            "1 (i.e., if time vertex seeding is disabled).");
+            "Please choose an odd spatialTrkGridSize and temporalTrkGridSize.");
       }
     }
+
+    // In total, a track is represented by a grid of size
+    // spatialTrkGridSize * temporalTrkGridSize
+    // Number of bins per track in z direction
+    unsigned int spatialTrkGridSize = 15;
 
     // Spatial extent of a bin in d0 and z0 direction, should always be set to a
     // positive value
     float spatialBinExtent = 0.;  // mm
+
+    // Number of bins per track in t direction
+    unsigned int temporalTrkGridSize = 1;
 
     // Temporal extent of a bin, should be set to 0 if time vertex seeding is
     // disabled (i.e., if temporalTrkGridSize = 1)
