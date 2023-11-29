@@ -87,6 +87,16 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
         "Portal: trying to fuse portal (waste) with no links.");
   }
 
+  if (m_surface->surfaceMaterial() != nullptr &&
+      other->surface().surfaceMaterial() != nullptr) {
+    throw std::runtime_error(
+        "Portal: both surfaces have surface material, fusing will lead to "
+        "information loss.");
+  } else if (other->surface().surfaceMaterial() != nullptr) {
+    m_surface->assignSurfaceMaterial(
+        other->surface().surfaceMaterialSharedPtr());
+  }
+
   auto odx = oDir.index();
   m_volumeUpdators[odx] = std::move(other->m_volumeUpdators[odx]);
   m_attachedVolumes[odx] = other->m_attachedVolumes[odx];
