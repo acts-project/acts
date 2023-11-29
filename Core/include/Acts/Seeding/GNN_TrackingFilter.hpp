@@ -316,7 +316,7 @@ class TrigFTF_GNN_TrackingFilter {
 
     int type = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
 
-    if (type == 0) {  // barrel TO-DO:c split into barrel Pixel and barrel SCT
+    if (type == 0) {  // barrel TODO: split into barrel Pixel and barrel SCT
       sigma_rz = sigma_y * sigma_y;
     } else {
       sigma_rz = sigma_y * ts.m_Y[1];
