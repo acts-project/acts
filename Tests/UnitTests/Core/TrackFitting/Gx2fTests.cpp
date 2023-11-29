@@ -76,10 +76,10 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 
 /// @brief Create a simple telescope detector
 ///
-/// @param tgContext
+/// @param geoCtx
 /// @param nSurfaces Number of surfaces
 std::shared_ptr<const TrackingGeometry> makeToyDetector(
-    const GeometryContext& tgContext, const std::size_t nSurfaces = 5) {
+    const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5) {
   if (nSurfaces < 1) {
     throw std::invalid_argument("At least 1 surfaces needs to be created.");
   }
@@ -167,7 +167,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
   TrackingGeometryBuilder tgb(tgbCfg);
 
   std::unique_ptr<const TrackingGeometry> detector =
-      tgb.trackingGeometry(tgContext);
+      tgb.trackingGeometry(geoCtx);
   return detector;
 }
 
@@ -178,16 +178,17 @@ struct Detector {
 
 BOOST_AUTO_TEST_SUITE(Gx2fTest)
 
+// Context objects
+const Acts::GeometryContext geoCtx;
+const Acts::MagneticFieldContext magCtx;
+const Acts::CalibrationContext calCtx;
+
 // This test checks if the call to the fitter works and no errors occur in the
 // framework, without fitting and updating any parameters
 BOOST_AUTO_TEST_CASE(NoFit) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: NoFit -- Start");
 
-  // Context objects
-  Acts::GeometryContext geoCtx;
-  Acts::MagneticFieldContext magCtx;
-  Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   Detector detector;
@@ -268,12 +269,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: Fit5Iterations -- Start");
 
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
-
   Detector detector;
   const std::size_t nSurfaces = 5;
-  detector.geometry = makeToyDetector(tgContext, nSurfaces);
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
 
@@ -281,10 +279,6 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   const auto startParametersFit = makeParameters(
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  // Context objects
-  Acts::GeometryContext geoCtx;
-  Acts::MagneticFieldContext magCtx;
-  // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   const MeasurementResolution resPixel = {MeasurementType::eLoc01,
@@ -325,12 +319,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
-  const MagneticFieldContext mfContext;
-  const CalibrationContext calContext;
-
   const Experimental::Gx2FitterOptions gx2fOptions(
-      tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-      rSurface, false, false, FreeToBoundCorrection(false), 5, true, 0);
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 5, true, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -379,12 +370,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: MixedDetector -- Start");
 
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
-
   Detector detector;
   const std::size_t nSurfaces = 7;
-  detector.geometry = makeToyDetector(tgContext, nSurfaces);
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
 
@@ -392,10 +380,6 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   const auto startParametersFit = makeParameters(
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  // Context objects
-  Acts::GeometryContext geoCtx;
-  Acts::MagneticFieldContext magCtx;
-  // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   const MeasurementResolution resPixel = {MeasurementType::eLoc01,
@@ -445,12 +429,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
-  const MagneticFieldContext mfContext;
-  const CalibrationContext calContext;
-
   const Experimental::Gx2FitterOptions gx2fOptions(
-      tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-      rSurface, false, false, FreeToBoundCorrection(false), 5, true, 0);
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 5, true, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -499,12 +480,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: FitWithBfield -- Start");
 
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
-
   Detector detector;
   const std::size_t nSurfaces = 5;
-  detector.geometry = makeToyDetector(tgContext, nSurfaces);
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
 
@@ -512,10 +490,6 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   const auto startParametersFit = makeParameters(
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  // Context objects
-  Acts::GeometryContext geoCtx;
-  Acts::MagneticFieldContext magCtx;
-  // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   const MeasurementResolution resPixel = {MeasurementType::eLoc01,
@@ -554,12 +528,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
-  const MagneticFieldContext mfContext;
-  const CalibrationContext calContext;
-
   const Experimental::Gx2FitterOptions gx2fOptions(
-      tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-      rSurface, false, false, FreeToBoundCorrection(false), 5, false, 0);
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 5, false, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -608,12 +579,9 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: relChi2changeCutOff -- Start");
 
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
-
   Detector detector;
   const std::size_t nSurfaces = 5;
-  detector.geometry = makeToyDetector(tgContext, nSurfaces);
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
   ACTS_DEBUG("Go to propagator");
 
@@ -621,10 +589,6 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   const auto startParametersFit = makeParameters(
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  // Context objects
-  Acts::GeometryContext geoCtx;
-  Acts::MagneticFieldContext magCtx;
-  // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
   const MeasurementResolution resPixel = {MeasurementType::eLoc01,
@@ -665,12 +629,9 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
-  const MagneticFieldContext mfContext;
-  const CalibrationContext calContext;
-
   const Experimental::Gx2FitterOptions gx2fOptions(
-      tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-      rSurface, false, false, FreeToBoundCorrection(false), 500, true, 1e-5);
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 500, true, 1e-5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
