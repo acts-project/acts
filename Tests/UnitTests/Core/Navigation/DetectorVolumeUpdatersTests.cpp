@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 // NavigaitonState according to some given information.
 //
 BOOST_AUTO_TEST_CASE(UnconnectedUpdate) {
-  Acts::Experimental::DetectorVolumeUpdator ucUpdator;
-  BOOST_CHECK(!ucUpdator.connected());
+  Acts::Experimental::DetectorVolumeUpdater ucUpdater;
+  BOOST_CHECK(!ucUpdater.connected());
 }
 
 // The end of world is reached
