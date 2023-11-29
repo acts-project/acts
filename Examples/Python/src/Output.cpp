@@ -174,7 +174,8 @@ void addOutput(Context& ctx) {
                              fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootParticleWriter, mex,
-                             "RootParticleWriter", inputParticles, filePath,
+                             "RootParticleWriter", inputParticles,
+                             inputFinalParticles, inputSimHits, filePath,
                              fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
