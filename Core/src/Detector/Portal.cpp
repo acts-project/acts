@@ -18,57 +18,47 @@
 #include <stdexcept>
 #include <utility>
 
-namespace Acts {
-namespace Experimental {
-class DetectorVolume;
-}  // namespace Experimental
-}  // namespace Acts
+namespace Acts::Experimental {
 
-Acts::Experimental::Portal::Portal(std::shared_ptr<RegularSurface> surface)
+Portal::Portal(std::shared_ptr<RegularSurface> surface)
     : m_surface(std::move(surface)) {
   throw_assert(m_surface, "Portal surface is nullptr");
 }
 
-std::shared_ptr<Acts::Experimental::Portal>
-Acts::Experimental::Portal::makeShared(
+std::shared_ptr<Portal> Portal::makeShared(
     std::shared_ptr<RegularSurface> surface) {
   return std::shared_ptr<Portal>(new Portal(std::move(surface)));
 }
 
-const Acts::RegularSurface& Acts::Experimental::Portal::surface() const {
+const Acts::RegularSurface& Portal::surface() const {
   return *m_surface.get();
 }
 
-Acts::RegularSurface& Acts::Experimental::Portal::surface() {
+Acts::RegularSurface& Portal::surface() {
   return *m_surface.get();
 }
 
-const Acts::Experimental::Portal::DetectorVolumeUpdaters&
-Acts::Experimental::Portal::detectorVolumeUpdaters() const {
+const Portal::DetectorVolumeUpdaters& Portal::detectorVolumeUpdaters() const {
   return m_volumeUpdaters;
 }
 
-Acts::Experimental::Portal::AttachedDetectorVolumes&
-Acts::Experimental::Portal::attachedDetectorVolumes() {
+Portal::AttachedDetectorVolumes& Portal::attachedDetectorVolumes() {
   return m_attachedVolumes;
 }
 
-std::shared_ptr<Acts::Experimental::Portal>
-Acts::Experimental::Portal::getSharedPtr() {
+std::shared_ptr<Portal> Portal::getSharedPtr() {
   return shared_from_this();
 }
 
-std::shared_ptr<const Acts::Experimental::Portal>
-Acts::Experimental::Portal::getSharedPtr() const {
+std::shared_ptr<const Portal> Portal::getSharedPtr() const {
   return shared_from_this();
 }
 
-void Acts::Experimental::Portal::assignGeometryId(
-    const GeometryIdentifier& geometryId) {
+void Portal::assignGeometryId(const GeometryIdentifier& geometryId) {
   m_surface->assignGeometryId(geometryId);
 }
 
-void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
+void Portal::fuse(std::shared_ptr<Portal>& other) {
   Direction bDir = Direction::Backward;
 
   // Determine this directioon
@@ -104,7 +94,7 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
   other = getSharedPtr();
 }
 
-void Acts::Experimental::Portal::assignDetectorVolumeUpdater(
+void Portal::assignDetectorVolumeUpdater(
     Direction dir, DetectorVolumeUpdater dVolumeUpdater,
     std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes) {
   auto idx = dir.index();
@@ -112,7 +102,7 @@ void Acts::Experimental::Portal::assignDetectorVolumeUpdater(
   m_attachedVolumes[idx] = std::move(attachedVolumes);
 }
 
-void Acts::Experimental::Portal::assignDetectorVolumeUpdater(
+void Portal::assignDetectorVolumeUpdater(
     DetectorVolumeUpdater dVolumeUpdater,
     std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes) {
   // Check and throw exceptions
@@ -127,8 +117,8 @@ void Acts::Experimental::Portal::assignDetectorVolumeUpdater(
   m_attachedVolumes[idx] = std::move(attachedVolumes);
 }
 
-void Acts::Experimental::Portal::updateDetectorVolume(
-    const GeometryContext& gctx, NavigationState& nState) const {
+void Portal::updateDetectorVolume(const GeometryContext& gctx,
+                                  NavigationState& nState) const {
   const auto& position = nState.position;
   const auto& direction = nState.direction;
   const Vector3 normal = surface().normal(gctx, position);
@@ -140,3 +130,5 @@ void Acts::Experimental::Portal::updateDetectorVolume(
     nState.currentVolume = nullptr;
   }
 }
+
+}  // namespace Acts::Experimental
