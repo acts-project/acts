@@ -11,21 +11,16 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
-#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <limits>
 #include <memory>
 
-#include <podio/Frame.h>
-
 namespace ActsPodioEdm {
 class Surface;
 }
 
-namespace Acts {
-namespace PodioUtil {
+namespace Acts::PodioUtil {
 
 using Identifier = uint64_t;
 constexpr Identifier kNoIdentifier = std::numeric_limits<Identifier>::max();
@@ -47,16 +42,5 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
 
 ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
                                             const Acts::Surface& surface);
-}  // namespace PodioUtil
 
-namespace podio_detail {
-/// This is used by both the track and track state container, so the
-/// implementation is shared here
-void recoverDynamicColumns(
-    const podio::Frame& frame, const std::string& stem,
-    std::unordered_map<HashedString,
-                       std::unique_ptr<podio_detail::ConstDynamicColumnBase>>&
-        dynamic,
-    std::vector<HashedString>& dynamicKeys);
-}  // namespace podio_detail
-}  // namespace Acts
+}  // namespace Acts::PodioUtil
