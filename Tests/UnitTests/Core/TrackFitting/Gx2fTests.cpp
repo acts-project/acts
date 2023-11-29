@@ -58,9 +58,9 @@ Acts::CurvilinearTrackParameters makeParameters(
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  const Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
-  Acts::Vector4 mPos4(x, y, z, w);
+  const Acts::Vector4 mPos4(x, y, z, w);
   return Acts::CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
                                           Acts::ParticleHypothesis::pion());
 }
@@ -74,26 +74,65 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
   return result;
 }
 
+/// @brief Create a simple telescope detector
+///
+/// @param tgContext
+/// @param nSurfaces Number of surfaces
 std::shared_ptr<const TrackingGeometry> makeToyDetector(
     const GeometryContext& tgContext, const std::size_t nSurfaces = 5) {
   if (nSurfaces < 1) {
     throw std::invalid_argument("At least 1 surfaces needs to be created.");
   }
+
+  // Define the dimensions of the square surfaces
+  const double halfSizeSurface = 1_m;
+
+  // Rotation of the surfaces
+  const double rotationAngle = M_PI * 0.5;
+  const Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  const Vector3 yPos(0., 1., 0.);
+  const Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+
   // Construct builder
   CuboidVolumeBuilder cvb;
 
   // Create configurations for surfaces
   std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
-  for (unsigned int i = 1; i <= nSurfaces; i++) {
+  for (unsigned int surfPos = 1; surfPos <= nSurfaces; surfPos++) {
+    // Position of the surfaces
+    CuboidVolumeBuilder::SurfaceConfig cfg;
+    cfg.position = {surfPos * UnitConstants::m, 0., 0.};
+
+    // Rotation of the surfaces
+    cfg.rotation.col(0) = xPos;
+    cfg.rotation.col(1) = yPos;
+    cfg.rotation.col(2) = zPos;
+
+    // Boundaries of the surfaces (shape)
+    cfg.rBounds = std::make_shared<const RectangleBounds>(
+        RectangleBounds(halfSizeSurface, halfSizeSurface));
+
+    // Material of the surfaces
+    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
+    cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
+
+    // Thickness of the detector element
+    cfg.thickness = 1_um;
+
+    cfg.detElementConstructor =
+        [](const Transform3& trans,
+           const std::shared_ptr<const RectangleBounds>& bounds,
+           double thickness) {
+          return new DetectorElementStub(trans, bounds, thickness);
+        };
+    surfaceConfig.push_back(cfg);
+  }
+
     // Position of the surfaces
     CuboidVolumeBuilder::SurfaceConfig cfg;
     cfg.position = {i * UnitConstants::m, 0, 0.};
 
     // Rotation of the surfaces
-    double rotationAngle = M_PI * 0.5;
-    Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
-    Vector3 yPos(0., 1., 0.);
-    Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
     cfg.rotation.col(0) = xPos;
     cfg.rotation.col(1) = yPos;
     cfg.rotation.col(2) = zPos;
@@ -182,12 +221,13 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   const std::size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
-  auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree,
-                                           80_degree, 1_GeV, 1_e);
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
-  MeasurementResolutionMap resolutions = {
+  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
+                                          {25_um, 50_um}};
+  const MeasurementResolutionMap resolutions = {
       {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   // propagator
@@ -230,6 +270,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   BOOST_CHECK(track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.chi2(), 0.);
   BOOST_CHECK_EQUAL(track.parameters(), startParametersFit.parameters());
   BOOST_CHECK_EQUAL(track.covariance(), BoundMatrix::Identity());
   BOOST_CHECK_EQUAL(
@@ -254,9 +295,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   ACTS_DEBUG("Go to propagator");
 
-  auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree,
-                                           80_degree, 1_GeV, 1_e);
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
   // Context objects
   Acts::GeometryContext geoCtx;
@@ -264,8 +305,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
-  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
-  MeasurementResolutionMap resolutions = {
+  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
+                                          {25_um, 50_um}};
+  const MeasurementResolutionMap resolutions = {
       {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   // simulation propagator
@@ -322,6 +364,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK(track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_CLOSE(track.chi2(), 9.5114, 1e-3);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
@@ -353,9 +396,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
 
   ACTS_DEBUG("Go to propagator");
 
-  auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree,
-                                           80_degree, 1_GeV, 1_e);
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
   // Context objects
   Acts::GeometryContext geoCtx;
@@ -363,10 +406,11 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
-  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
-  MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {25_um}};
-  MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {50_um}};
-  MeasurementResolutionMap resolutions = {
+  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
+                                          {25_um, 50_um}};
+  const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {25_um}};
+  const MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {50_um}};
+  const MeasurementResolutionMap resolutions = {
       {Acts::GeometryIdentifier().setVolume(2).setLayer(2), resPixel},
       {Acts::GeometryIdentifier().setVolume(2).setLayer(4), resStrip0},
       {Acts::GeometryIdentifier().setVolume(2).setLayer(6), resStrip1},
@@ -430,6 +474,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_CHECK(track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_CLOSE(track.chi2(), 12.317, 1e-3);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
@@ -462,9 +507,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
 
   ACTS_DEBUG("Go to propagator");
 
-  auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree,
-                                           80_degree, 1_GeV, 1_e);
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
   // Context objects
   Acts::GeometryContext geoCtx;
@@ -472,8 +517,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
-  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
-  MeasurementResolutionMap resolutions = {
+  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
+                                          {25_um, 50_um}};
+  const MeasurementResolutionMap resolutions = {
       {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   using SimStepper = EigenStepper<>;
@@ -528,6 +574,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK(track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_CLOSE(track.chi2(), 8.3164, 1e-3);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
   // TODO investigate further the reference values for eBoundPhi and det(cov)
@@ -560,9 +607,9 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
 
   ACTS_DEBUG("Go to propagator");
 
-  auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(7_mm, 11_mm, 15_mm, 42_ns, 10_degree,
-                                           80_degree, 1_GeV, 1_e);
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
   // Context objects
   Acts::GeometryContext geoCtx;
@@ -570,8 +617,9 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   // Acts::CalibrationContext calCtx;
   std::default_random_engine rng(42);
 
-  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
-  MeasurementResolutionMap resolutions = {
+  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
+                                          {25_um, 50_um}};
+  const MeasurementResolutionMap resolutions = {
       {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   // simulation propagator
@@ -628,6 +676,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   BOOST_CHECK(track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_CLOSE(track.chi2(), 9.5114, 1e-3);
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);

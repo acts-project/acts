@@ -814,6 +814,8 @@ class Gx2Fitter {
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
 
+    track.chi2() = chi2sum;
+
     // Return the converted Track
     return track;
   }
