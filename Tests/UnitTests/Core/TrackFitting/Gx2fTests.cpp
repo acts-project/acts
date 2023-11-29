@@ -177,45 +177,53 @@ struct Detector {
 };
 
 BOOST_AUTO_TEST_SUITE(Gx2fTest)
+ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
 
 // Context objects
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 const Acts::CalibrationContext calCtx;
 
+// Measurement resolutions
+const MeasurementResolution resPixel = {MeasurementType::eLoc01,
+                                        {25_um, 50_um}};
+const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {25_um}};
+const MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {50_um}};
+const MeasurementResolutionMap resMapAllPixel = {
+    {Acts::GeometryIdentifier().setVolume(0), resPixel}};
+
 // This test checks if the call to the fitter works and no errors occur in the
 // framework, without fitting and updating any parameters
 BOOST_AUTO_TEST_CASE(NoFit) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: NoFit -- Start");
 
   std::default_random_engine rng(42);
 
-  Detector detector;
+  ACTS_DEBUG("Create the detector");
   const std::size_t nSurfaces = 5;
+  Detector detector;
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
   const auto parametersMeasurements = makeParameters();
   const auto startParametersFit = makeParameters(
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
-                                          {25_um, 50_um}};
-  const MeasurementResolutionMap resolutions = {
-      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
-
-  // propagator
+  ACTS_DEBUG("Create the measurements");
   using SimPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-  SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
-  auto measurements = createMeasurements(
-      simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
-  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
 
+  ACTS_DEBUG("Set up the fitter");
   // Reuse the SimPropagator, since we will not actually use it
   using Gx2Fitter =
       Experimental::Gx2Fitter<SimPropagator, VectorMultiTrajectory>;
-  Gx2Fitter fitter(simPropagator, gx2fLogger->clone());
+  const Gx2Fitter fitter(simPropagator, gx2fLogger->clone());
 
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
@@ -233,7 +241,9 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
-  // Fit the track
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
 
@@ -266,41 +276,33 @@ BOOST_AUTO_TEST_CASE(NoFit) {
 }
 
 BOOST_AUTO_TEST_CASE(Fit5Iterations) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: Fit5Iterations -- Start");
 
-  Detector detector;
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
   const std::size_t nSurfaces = 5;
+  Detector detector;
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
-  ACTS_DEBUG("Go to propagator");
-
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
   const auto parametersMeasurements = makeParameters();
   const auto startParametersFit = makeParameters(
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  std::default_random_engine rng(42);
-
-  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
-                                          {25_um, 50_um}};
-  const MeasurementResolutionMap resolutions = {
-      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
-
-  // simulation propagator
+  ACTS_DEBUG("Create the measurements");
   using SimPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-  SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
-  auto measurements = createMeasurements(
-      simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
-  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
   ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
 
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
 
-  ACTS_DEBUG("Start fitting");
-  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
-  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-
+  ACTS_DEBUG("Set up the fitter");
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   using RecoStepper = EigenStepper<>;
@@ -310,7 +312,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   using RecoPropagator = decltype(recoPropagator);
   using Gx2Fitter =
       Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-  Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -326,7 +328,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
-  // Fit the track
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
 
@@ -367,26 +371,22 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 }
 
 BOOST_AUTO_TEST_CASE(MixedDetector) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: MixedDetector -- Start");
 
-  Detector detector;
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
   const std::size_t nSurfaces = 7;
+  Detector detector;
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
-  ACTS_DEBUG("Go to propagator");
-
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
   const auto parametersMeasurements = makeParameters();
   const auto startParametersFit = makeParameters(
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  std::default_random_engine rng(42);
-
-  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
-                                          {25_um, 50_um}};
-  const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {25_um}};
-  const MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {50_um}};
-  const MeasurementResolutionMap resolutions = {
+  ACTS_DEBUG("Create the measurements");
+  const MeasurementResolutionMap resMap = {
       {Acts::GeometryIdentifier().setVolume(2).setLayer(2), resPixel},
       {Acts::GeometryIdentifier().setVolume(2).setLayer(4), resStrip0},
       {Acts::GeometryIdentifier().setVolume(2).setLayer(6), resStrip1},
@@ -396,21 +396,17 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
       {Acts::GeometryIdentifier().setVolume(2).setLayer(14), resPixel},
   };
 
-  // simulation propagator
   using SimPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-  SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
-  auto measurements = createMeasurements(
-      simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
-  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements = createMeasurements(
+      simPropagator, geoCtx, magCtx, parametersMeasurements, resMap, rng);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
   ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
 
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
 
-  ACTS_DEBUG("Start fitting");
-  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
-  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-
+  ACTS_DEBUG("Set up the fitter");
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   using RecoStepper = EigenStepper<>;
@@ -420,7 +416,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   using RecoPropagator = decltype(recoPropagator);
   using Gx2Fitter =
       Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-  Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -436,7 +432,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
-  // Fit the track
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
 
@@ -477,49 +475,42 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
 
 // This test checks if we can fit QOverP, when a magnetic field is introduced
 BOOST_AUTO_TEST_CASE(FitWithBfield) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: FitWithBfield -- Start");
 
-  Detector detector;
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
   const std::size_t nSurfaces = 5;
+  Detector detector;
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
-  ACTS_DEBUG("Go to propagator");
-
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
   const auto parametersMeasurements = makeParameters();
   const auto startParametersFit = makeParameters(
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  std::default_random_engine rng(42);
-
-  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
-                                          {25_um, 50_um}};
-  const MeasurementResolutionMap resolutions = {
-      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
-
+  ACTS_DEBUG("Create the measurements");
   using SimStepper = EigenStepper<>;
   const auto simPropagator =
       makeConstantFieldPropagator<SimStepper>(detector.geometry, 0.3_T);
 
-  auto measurements = createMeasurements(
-      simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
 
-  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
   ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
 
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
 
-  ACTS_DEBUG("Start fitting");
-  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
-  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-
+  ACTS_DEBUG("Set up the fitter");
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   // Reuse the SimPropagator, since it already uses the EigenStepper<>
   using SimPropagator = decltype(simPropagator);
   using Gx2Fitter =
       Experimental::Gx2Fitter<SimPropagator, VectorMultiTrajectory>;
-  Gx2Fitter fitter(simPropagator, gx2fLogger->clone());
+  const Gx2Fitter fitter(simPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -535,7 +526,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
-  // Fit the track
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
 
@@ -576,41 +569,34 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
 }
 
 BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
   ACTS_INFO("*** Test: relChi2changeCutOff -- Start");
 
-  Detector detector;
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
   const std::size_t nSurfaces = 5;
+  Detector detector;
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
-  ACTS_DEBUG("Go to propagator");
-
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
   const auto parametersMeasurements = makeParameters();
   const auto startParametersFit = makeParameters(
       7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
 
-  std::default_random_engine rng(42);
-
-  const MeasurementResolution resPixel = {MeasurementType::eLoc01,
-                                          {25_um, 50_um}};
-  const MeasurementResolutionMap resolutions = {
-      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
-
+  ACTS_DEBUG("Create the measurements");
   // simulation propagator
   using SimPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-  SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
-  auto measurements = createMeasurements(
-      simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
-  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
   ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
 
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
 
-  ACTS_DEBUG("Start fitting");
-  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
-  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-
+  ACTS_DEBUG("Set up the fitter");
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   using RecoStepper = EigenStepper<>;
@@ -620,7 +606,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   using RecoPropagator = decltype(recoPropagator);
   using Gx2Fitter =
       Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-  Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -636,7 +622,9 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
-  // Fit the track
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
 
