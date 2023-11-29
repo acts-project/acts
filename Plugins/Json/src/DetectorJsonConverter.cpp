@@ -145,7 +145,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   for (const auto [iv, volume] : enumerate(volumes)) {
     // And its surface navigation delegates
     nlohmann::json jSurfacesDelegate = IndexedSurfacesJsonConverter::toJson(
-        volume->surfaceCandidatesUpdator(), true);
+        volume->surfaceCandidatesUpdater(), true);
     if (jSurfacesDelegate.is_null()) {
       continue;
     }
