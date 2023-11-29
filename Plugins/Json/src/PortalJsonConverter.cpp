@@ -131,10 +131,10 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
     if (multiLink1D != nullptr) {
       // Resolve the multi link 1D
       auto boundaries =
-          multiLink1D->indexedUpdator.grid.axes()[0u]->getBinEdges();
-      const auto& cast = multiLink1D->indexedUpdator.casts[0u];
-      const auto& transform = multiLink1D->indexedUpdator.transform;
-      const auto& volumes = multiLink1D->indexedUpdator.extractor.dVolumes;
+          multiLink1D->indexedUpdater.grid.axes()[0u]->getBinEdges();
+      const auto& cast = multiLink1D->indexedUpdater.casts[0u];
+      const auto& transform = multiLink1D->indexedUpdater.transform;
+      const auto& volumes = multiLink1D->indexedUpdater.extractor.dVolumes;
 
       // Apply the correction from local to global boundaries
       ActsScalar gCorr = VectorHelpers::cast(transform.translation(), cast);
