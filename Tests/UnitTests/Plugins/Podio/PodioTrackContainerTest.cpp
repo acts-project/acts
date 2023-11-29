@@ -40,6 +40,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "ActsPodioEdm/Surface.h"
 #include <ActsPodioEdm/TrackCollection.h>
 
@@ -52,7 +53,7 @@
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::HashedStringLiteral;
-BOOST_AUTO_TEST_SUITE(PodioTrackConversion)
+BOOST_AUTO_TEST_SUITE(PodioTrackContainerTest)
 
 class NullHelper : public PodioUtil::ConversionHelper {
  public:
@@ -310,7 +311,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
+BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
   MapHelper helper;
 
   podio::Frame frame;
@@ -368,17 +369,17 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     BOOST_CHECK_GT(t3.nTrackStates(), 0);
     BOOST_REQUIRE_EQUAL(t.nTrackStates(), t3.nTrackStates());
 
-    // for (auto [tsa, tsb] :
-    // zip(t.trackStatesReversed(), t3.trackStatesReversed())) {
-    // BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
+    for (auto [tsa, tsb] :
+         zip(t.trackStatesReversed(), t3.trackStatesReversed())) {
+      BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
 
-    // BOOST_CHECK_EQUAL(
-    // (tsa.template component<std::size_t, "ts_counter"_hash>()),
-    // (tsb.template component<std::size_t, "ts_counter"_hash>()));
+      BOOST_CHECK_EQUAL(
+          (tsa.template component<uint64_t, "ts_counter"_hash>()),
+          (tsb.template component<uint64_t, "ts_counter"_hash>()));
 
-    // BOOST_CHECK_EQUAL((tsa.template component<bool, "ts_odd"_hash>()),
-    // (tsb.template component<bool, "ts_odd"_hash>()));
-    // }
+      BOOST_CHECK_EQUAL((tsa.template component<uint8_t, "ts_odd"_hash>()),
+                        (tsb.template component<uint8_t, "ts_odd"_hash>()));
+    }
 
     BOOST_CHECK_EQUAL(t.template component<uint64_t>("counter"),
                       t3.template component<uint64_t>("counter"));

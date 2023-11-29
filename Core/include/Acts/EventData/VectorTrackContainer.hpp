@@ -165,16 +165,8 @@ class VectorTrackContainerBase {
     return m_tipIndex.size();
   }
 
-  // @TODO: Reconsider return type, by-value -> expensive
-  // Could be generic iterator pair, possibly driven by iterator adapter that
-  // unpacks from unordered_map dynamically
-  std::vector<Acts::HashedString> dynamicKeys_impl() const {
-    std::vector<Acts::HashedString> result;
-    result.reserve(m_dynamic.size());
-    for (const auto& [key, value] : m_dynamic) {
-      result.push_back(key);
-    }
-    return result;
+  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
+    return m_dynamicKeys;
   }
 
   // END INTERFACE HELPER
@@ -193,6 +185,7 @@ class VectorTrackContainerBase {
   std::vector<unsigned int> m_nOutliers;
   std::vector<unsigned int> m_nSharedHits;
 
+  std::vector<HashedString> m_dynamicKeys;
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
 };
@@ -232,8 +225,9 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
-    m_dynamic.insert(
-        {hashString(key), std::make_unique<detail::DynamicColumn<T>>()});
+    Acts::HashedString hashedKey = hashString(key);
+    m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
+    m_dynamicKeys.push_back(hashedKey);
   }
 
   Parameters parameters(IndexType itrack) {

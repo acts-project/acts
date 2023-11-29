@@ -208,8 +208,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
   MapHelper helper;
 
-  // auto tmp_path = std::filesystem::temp_directory_path();
-  auto tmp_path = std::filesystem::current_path();
+  auto tmp_path = std::filesystem::temp_directory_path();
   auto outfile = tmp_path / "trackstates.root";
 
   BoundVector tv1;

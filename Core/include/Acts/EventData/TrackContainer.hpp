@@ -315,7 +315,7 @@ class TrackContainer {
  private:
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void copyDynamicFrom(IndexType dstIdx, const T& src, IndexType srcIdx) {
-    auto dynamicKeys = src.dynamicKeys_impl();
+    const auto& dynamicKeys = src.dynamicKeys_impl();
     for (const auto key : dynamicKeys) {
       std::any srcPtr = src.component_impl(key, srcIdx);
       container().copyDynamicFrom_impl(dstIdx, key, srcPtr);

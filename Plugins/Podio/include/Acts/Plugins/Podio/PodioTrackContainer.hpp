@@ -115,13 +115,8 @@ class PodioTrackContainerBase {
   }
 
   template <typename T>
-  static std::vector<Acts::HashedString> dynamicKeys_impl(T& instance) {
-    std::vector<Acts::HashedString> result;
-    result.reserve(instance.m_dynamic.size());
-    for (const auto& [key, value] : instance.m_dynamic) {
-      result.push_back(key);
-    }
-    return result;
+  static const std::vector<Acts::HashedString>& dynamicKeys_impl(T& instance) {
+    return instance.m_dynamicKeys;
   }
 
   template <typename T>
@@ -223,8 +218,10 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
 
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
-    m_dynamic.insert({hashString(key),
-                      std::make_unique<podio_detail::DynamicColumn<T>>(key)});
+    Acts::HashedString hashedKey = hashString(key);
+    m_dynamic.insert(
+        {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
+    m_dynamicKeys.push_back(hashedKey);
   }
 
   Parameters parameters(IndexType itrack) {
@@ -275,7 +272,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     }
   }
 
-  std::vector<Acts::HashedString> dynamicKeys_impl() const {
+  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
@@ -294,6 +291,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   friend PodioTrackContainerBase;
 
   std::unique_ptr<ActsPodioEdm::TrackCollection> m_collection;
+  std::vector<HashedString> m_dynamicKeys;
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::DynamicColumnBase>>
       m_dynamic;
@@ -306,6 +304,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   ConstPodioTrackContainer(const PodioUtil::ConversionHelper& helper,
                            const ActsPodioEdm::TrackCollection& collection)
       : PodioTrackContainerBase{helper}, m_collection{&collection} {
+    // Not much we can do to recover dynamic columns here
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
@@ -336,8 +335,10 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
     // let's find dynamic columns
-    using types =
-        std::tuple<int32_t, int64_t, uint32_t, uint64_t, float, double>;
+    // See
+    // https://github.com/AIDASoft/podio/blob/858c0ff0b841705d1b18aafd57569fcbd1beda91/include/podio/UserDataCollection.h#L30-L31
+    using types = std::tuple<float, double, int8_t, int16_t, int32_t, int64_t,
+                             uint8_t, uint16_t, uint32_t, uint64_t>;
 
     for (const auto& col : available) {
       std::string prefix = tracksKey + "_extra__";
@@ -375,7 +376,9 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
                                  "' is not of allowed type"};
       }
 
-      m_dynamic.insert({hashString(dynName), std::move(up)});
+      HashedString hashedKey = hashString(dynName);
+      m_dynamic.insert({hashedKey, std::move(up)});
+      m_dynamicKeys.push_back(hashedKey);
     }
   }
 
@@ -422,6 +425,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend, ConstPodioTrackContainer);

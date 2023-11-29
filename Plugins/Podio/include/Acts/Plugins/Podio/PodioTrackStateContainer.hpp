@@ -294,7 +294,9 @@ class ConstPodioTrackStateContainer final
                                  "' is not of allowed type"};
       }
 
-      m_dynamic.insert({hashString(dynName), std::move(up)});
+      HashedString hashedKey = hashString(dynName);
+      m_dynamic.insert({hashedKey, std::move(up)});
+      m_dynamicKeys.push_back(hashedKey);
     }
   }
 
@@ -385,6 +387,7 @@ class ConstPodioTrackStateContainer final
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 static_assert(IsReadOnlyMultiTrajectory<ConstPodioTrackStateContainer>::value,
@@ -616,8 +619,10 @@ class MutablePodioTrackStateContainer final
 
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
-    m_dynamic.insert({hashString(key),
-                      std::make_unique<podio_detail::DynamicColumn<T>>(key)});
+    HashedString hashedKey = hashString(key);
+    m_dynamic.insert(
+        {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
+    m_dynamicKeys.push_back(hashedKey);
   }
 
   void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
@@ -697,6 +702,7 @@ class MutablePodioTrackStateContainer final
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::DynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 static_assert(
@@ -708,31 +714,5 @@ static_assert(!MutablePodioTrackStateContainer::ReadOnly,
 
 ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend,
                           MutablePodioTrackStateContainer);
-
-// ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
-// MutablePodioTrackStateContainer&& other)
-// : m_helper{other.m_helper},
-// m_collection{std::move(other.m_collection)},
-// m_params{std::move(other.m_params)},
-// m_jacs{std::move(other.m_jacs)},
-// m_surfaces{std::move(other.m_surfaces)} {}
-
-// ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
-// const MutablePodioTrackStateContainer& other)
-// : m_helper{other.m_helper},
-// m_surfaces{other.m_surfaces.begin(), other.m_surfaces.end()} {
-// for (auto src : *other.m_collection) {
-// auto dst = m_collection->create();
-// dst = src.clone();
-// }
-// for (auto src : *other.m_params) {
-// auto dst = m_params->create();
-// dst = src.clone();
-// }
-// for (auto src : *other.m_jacs) {
-// auto dst = m_jacs->create();
-// dst = src.clone();
-// }
-// }
 
 }  // namespace Acts

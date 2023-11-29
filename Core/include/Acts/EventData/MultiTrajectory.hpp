@@ -1525,7 +1525,7 @@ class MultiTrajectory {
  private:
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void copyDynamicFrom(IndexType dstIdx, const T& src, IndexType srcIdx) {
-    auto dynamicKeys = src.self().dynamicKeys_impl();
+    const auto& dynamicKeys = src.self().dynamicKeys_impl();
     for (const auto key : dynamicKeys) {
       std::any srcPtr = src.self().component_impl(key, srcIdx);
       self().copyDynamicFrom_impl(dstIdx, key, srcPtr);
