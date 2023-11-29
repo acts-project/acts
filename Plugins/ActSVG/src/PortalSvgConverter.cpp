@@ -69,7 +69,7 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
     if constexpr (decltype(multiLink.indexedUpdator)::grid_type::DIM == 1u) {
       // Get the binning value
       Acts::BinningValue bValue = casts[0u];
-      // Get the boundaries
+      // Get the boundaries - take care, they are in local coordinates
       const auto& boundaries =
           multiLink.indexedUpdator.grid.axes()[0u]->getBinEdges();
 
@@ -81,6 +81,8 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
                                  refPosition.z());
       } else if (bValue == Acts::binZ) {
         position[2] = refC;
+        // correct to global
+        refC += surface.transform(gctx).translation().z();
       } else if (bValue == Acts::binPhi) {
         Acts::ActsScalar r = Acts::VectorHelpers::perp(refPosition);
         position = Acts::Vector3(r * std::cos(refC), r * std::sin(refC),
