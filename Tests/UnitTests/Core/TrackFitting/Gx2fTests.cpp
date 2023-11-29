@@ -128,35 +128,6 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
     surfaceConfig.push_back(cfg);
   }
 
-    // Position of the surfaces
-    CuboidVolumeBuilder::SurfaceConfig cfg;
-    cfg.position = {i * UnitConstants::m, 0, 0.};
-
-    // Rotation of the surfaces
-    cfg.rotation.col(0) = xPos;
-    cfg.rotation.col(1) = yPos;
-    cfg.rotation.col(2) = zPos;
-    /// Shape of the surface
-    // Boundaries of the surfaces
-    cfg.rBounds =
-        std::make_shared<const RectangleBounds>(RectangleBounds(1_m, 1_m));
-
-    // Material of the surfaces
-    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
-    cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
-
-    // Thickness of the detector element
-    cfg.thickness = 1_um;
-
-    cfg.detElementConstructor =
-        [](const Transform3& trans,
-           const std::shared_ptr<const RectangleBounds>& bounds,
-           double thickness) {
-          return new DetectorElementStub(trans, bounds, thickness);
-        };
-    surfaceConfig.push_back(cfg);
-  }
-
   // Build layer configurations
   std::vector<CuboidVolumeBuilder::LayerConfig> layerConfig;
   for (auto& sCfg : surfaceConfig) {
