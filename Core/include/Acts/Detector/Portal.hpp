@@ -86,15 +86,16 @@ class Portal {
   /// @param keep is the portal that will be kept
   /// @param discard is the portal that will be fused
   ///
-  /// @note this will move the portal links from the other
-  /// into this volume, it will throw an exception if the
+  /// @note this will combine the portal links from the both
+  /// portals into a new one, it will throw an exception if the
   /// portals are not fusable
   ///
   /// @note if one portal carries material, it will be kept,
   /// however, if both portals carry material, an exception
   /// will be thrown and the portals are not fusable
   ///
-  /// @note that other will be overwritten to point to this
+  /// @note Both input portals become invalid, in that their update
+  /// delegates and attached volumes are reset
   static std::shared_ptr<Portal> fuse(
       std::shared_ptr<Portal>& keep,
       std::shared_ptr<Portal>& discard) noexcept(false);
