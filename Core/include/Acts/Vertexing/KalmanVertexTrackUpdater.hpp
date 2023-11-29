@@ -24,7 +24,7 @@ namespace KalmanVertexTrackUpdater {
 ///
 /// @param track Track to update
 /// @param vtx Vertex `track` belongs to
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void update(TrackAtVertex<input_track_t>& track,
             const Vertex<input_track_t>& vtx);
 
@@ -37,10 +37,11 @@ namespace detail {
 /// @param newTrkCov New track covariance matrixs
 /// @param vtxCov Vertex covariance matrix
 /// @param newTrkParams New track parameter
-inline BoundMatrix createFullTrackCovariance(const SquareMatrix3& wMat,
-                                             const SquareMatrix3& crossCovVP,
-                                             const SquareMatrix3& vtxCov,
-                                             const BoundVector& newTrkParams);
+template <unsigned int nDimVertex>
+inline BoundMatrix createFullTrackCovariance(
+    const SquareMatrix3& wMat, const ActsMatrix<nDimVertex, 3>& crossCovVP,
+    const ActsSquareMatrix<nDimVertex>& vtxCov,
+    const BoundVector& newTrkParams);
 
 }  // Namespace detail
 

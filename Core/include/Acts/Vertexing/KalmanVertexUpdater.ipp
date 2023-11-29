@@ -97,7 +97,9 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
   // c_k
   const ParameterVector constTerm = linTrack.constantTerm.head<nParams>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
-  // time G_k Note that, when removing a track, G_k -> - G_k, see Ref. (1).
+  // time.
+  // G_k
+  // Note that, when removing a track, G_k -> - G_k, see Ref. (1).
   // Further note that, as we use the weighted formalism, the track weight
   // matrix (i.e., the inverse track covariance matrix) should be multiplied
   // with the track weight from the AMVF formalism. Here, we choose to
@@ -163,12 +165,8 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
   // c_k
   const ParameterVector constTerm = linTrack.constantTerm.head<nParams>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
-  // time G_k Note that, when removing a track, G_k -> - G_k, see Ref. (1).
-  // Further note that, as we use the weighted formalism, the track weight
-  // matrix (i.e., the inverse track covariance matrix) should be multiplied
-  // with the track weight from the AMVF formalism. Here, we choose to
-  // consider these two multiplicative factors directly in the updates of
-  // newVertexWeight and newVertexPos.
+  // time.
+  // G_k
   const ParameterMatrix trkParamWeight =
       linTrack.covarianceAtPCA.block<nParams, nParams>(0, 0).inverse();
 
