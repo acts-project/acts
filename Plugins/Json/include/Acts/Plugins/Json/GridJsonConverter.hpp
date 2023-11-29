@@ -119,9 +119,9 @@ nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
   }
 
   // 2D connections
-  unsigned int iaxis0 = swapAxis ? 1u : 0u;
-  unsigned int iaxis1 = swapAxis ? 0u : 1u;
   if constexpr (grid_type::DIM == 2u) {
+    unsigned int iaxis0 = swapAxis ? 1u : 0u;
+    unsigned int iaxis1 = swapAxis ? 0u : 1u;
     for (unsigned int ib0 = 1u; ib0 <= axes[iaxis0]->getNBins(); ++ib0) {
       for (unsigned int ib1 = 1u; ib1 <= axes[iaxis1]->getNBins(); ++ib1) {
         typename grid_type::index_t lbin;
