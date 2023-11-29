@@ -36,8 +36,8 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
   // p_k
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
-  // TODO we could use `linTrack.weightAtPCA` but only if we would use time
-  // G_k
+  // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
+  // time G_k
   const ActsSquareMatrix<5> trkParamWeight =
       linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
   // c_k
@@ -71,15 +71,16 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * cache.wMat;
 
   // Difference in positions. cache.newVertexPos corresponds to \tilde{x_k^{n*}} in Ref. (1).
-  Vector3 posDiff = vtxPos - cache.newVertexPos;
+  Vector3 posDiff = vtxPos - cache.newVertexPos.template head<3>();
 
   // r_k^n
   ActsVector<5> paramDiff =
       trkParams - (constTerm + posJac * vtxPos + momJac * newTrkMomentum);
 
   // New chi2 to be set later
-  double chi2 = posDiff.dot(cache.newVertexWeight * posDiff) +
-                paramDiff.dot(trkParamWeight * paramDiff);
+  double chi2 =
+      posDiff.dot(cache.newVertexWeight.template block<3, 3>(0, 0) * posDiff) +
+      paramDiff.dot(trkParamWeight * paramDiff);
 
   Acts::BoundMatrix fullPerTrackCov = detail::createFullTrackCovariance(
       cache.wMat, crossCovVP, vtxCov, newTrkParams);

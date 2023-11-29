@@ -37,15 +37,16 @@ namespace KalmanVertexUpdater {
 /// Cache object, the comments indicate the names of the variables in Ref. (1)
 template <unsigned int nDimVertex>
 struct Cache {
-  using VertexPosition = ActsVector<nDimVertex>;
+  using VertexVector = ActsVector<nDimVertex>;
+  using VertexMatrix = ActsSquareMatrix<nDimVertex>;
   // \tilde{x_k}
-  Vector3 newVertexPos = Vector3::Zero();
+  VertexVector newVertexPos = VertexVector::Zero();
   // C_k
-  SquareMatrix3 newVertexCov = SquareMatrix3::Zero();
+  VertexMatrix newVertexCov = VertexMatrix::Zero();
   // C_k^-1
-  SquareMatrix3 newVertexWeight = SquareMatrix3::Zero();
+  VertexMatrix newVertexWeight = VertexMatrix::Zero();
   // C_{k-1}^-1
-  SquareMatrix3 oldVertexWeight = SquareMatrix3::Zero();
+  VertexMatrix oldVertexWeight = VertexMatrix::Zero();
   // W_k
   SquareMatrix3 wMat = SquareMatrix3::Zero();
 };
