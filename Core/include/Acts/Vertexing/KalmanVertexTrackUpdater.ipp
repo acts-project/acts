@@ -79,7 +79,8 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * cache.wMat;
 
   // Difference in positions. cache.newVertexPos corresponds to \tilde{x_k^{n*}} in Ref. (1).
-  VertexVector posDiff = vtxPos - cache.newVertexPos.template head<3>();
+  VertexVector posDiff =
+      vtxPos - cache.newVertexPos.template head<nDimVertex>();
 
   // r_k^n
   ParameterVector paramDiff =
@@ -87,7 +88,9 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
   // New chi2 to be set later
   double chi2 =
-      posDiff.dot(cache.newVertexWeight.template block<3, 3>(0, 0) * posDiff) +
+      posDiff.dot(
+          cache.newVertexWeight.template block<nDimVertex, nDimVertex>(0, 0) *
+          posDiff) +
       paramDiff.dot(trkParamWeight * paramDiff);
 
   Acts::BoundMatrix fullPerTrackCov =
@@ -96,7 +99,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(vtxPos);
+      Surface::makeShared<PerigeeSurface>(vtxPos.template head<3>());
 
   BoundTrackParameters refittedPerigee = BoundTrackParameters(
       perigeeSurface, newTrkParams, std::move(fullPerTrackCov),
@@ -135,10 +138,12 @@ Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
 
   // Fill time cross-covariances
   if constexpr (nFreeParams == 7) {
-    fullTrkCov.block<3, 1>(0, 6) = vtxCov.block<3, 1>(0, 3);
-    fullTrkCov.block<3, 1>(3, 6) = crossCovVP.block<3, 1>(0, 3);
-    fullTrkCov.block<1, 3>(6, 0) = vtxCov.block<1, 3>(3, 0);
-    fullTrkCov.block<1, 3>(6, 3) = crossCovVP.block<1, 3>(3, 0);
+    fullTrkCov.template block<3, 1>(0, 6) = vtxCov.template block<3, 1>(0, 3);
+    fullTrkCov.template block<3, 1>(3, 6) =
+        crossCovVP.template block<3, 1>(0, 3);
+    fullTrkCov.template block<1, 3>(6, 0) = vtxCov.template block<1, 3>(3, 0);
+    fullTrkCov.template block<1, 3>(6, 3) =
+        crossCovVP.template block<1, 3>(3, 0);
   }
 
   // Combined track jacobian

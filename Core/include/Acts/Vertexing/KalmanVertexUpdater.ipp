@@ -120,9 +120,9 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
   cache.wMat = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   // G_k^B = G_k - G_k*B_k*W_k*B_k^(T)*G_k
-  ActsSquareMatrix<5> gBMat =
-      trkParamWeight - trkParamWeight * momJac * cache.wMat *
-                           momJac.transpose() * trkParamWeight;
+  ParameterMatrix gBMat = trkParamWeight - trkParamWeight * momJac *
+                                               cache.wMat * momJac.transpose() *
+                                               trkParamWeight;
 
   // C_k^-1
   cache.newVertexWeight = cache.oldVertexWeight + sign * trackWeight *
