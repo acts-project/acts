@@ -83,8 +83,8 @@ class Portal {
 
   /// Fuse with another portal, this one is kept
   ///
-  /// @param keep is the portal that will be kept
-  /// @param discard is the portal that will be fused
+  /// @param aPortal is the first portal to fuse
+  /// @param bPortal is the second portal to fuse
   ///
   /// @note this will combine the portal links from the both
   /// portals into a new one, it will throw an exception if the
@@ -97,8 +97,8 @@ class Portal {
   /// @note Both input portals become invalid, in that their update
   /// delegates and attached volumes are reset
   static std::shared_ptr<Portal> fuse(
-      std::shared_ptr<Portal>& keep,
-      std::shared_ptr<Portal>& discard) noexcept(false);
+      std::shared_ptr<Portal>& aPortal,
+      std::shared_ptr<Portal>& bPortal) noexcept(false);
 
   /// Update the volume link
   ///
