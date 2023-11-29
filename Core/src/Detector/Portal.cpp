@@ -25,11 +25,6 @@ Portal::Portal(std::shared_ptr<RegularSurface> surface)
   throw_assert(m_surface, "Portal surface is nullptr");
 }
 
-std::shared_ptr<Portal> Portal::makeShared(
-    std::shared_ptr<RegularSurface> surface) {
-  return std::shared_ptr<Portal>(new Portal(std::move(surface)));
-}
-
 const Acts::RegularSurface& Portal::surface() const {
   return *m_surface.get();
 }
@@ -44,14 +39,6 @@ const Portal::DetectorVolumeUpdaters& Portal::detectorVolumeUpdaters() const {
 
 Portal::AttachedDetectorVolumes& Portal::attachedDetectorVolumes() {
   return m_attachedVolumes;
-}
-
-std::shared_ptr<Portal> Portal::getSharedPtr() {
-  return shared_from_this();
-}
-
-std::shared_ptr<const Portal> Portal::getSharedPtr() const {
-  return shared_from_this();
 }
 
 void Portal::assignGeometryId(const GeometryIdentifier& geometryId) {
@@ -101,7 +88,7 @@ std::shared_ptr<Portal> Portal::fuse(std::shared_ptr<Portal>& aPortal,
   const auto& bSurface = bPortal->surface();
 
   // @TODO: There's no safety against fusing portals with different surfaces
-  std::shared_ptr<Portal> fused = Portal::makeShared(aPortal->m_surface);
+  std::shared_ptr<Portal> fused = std::make_shared<Portal>(aPortal->m_surface);
 
   if (aSurface.surfaceMaterial() != nullptr &&
       bSurface.surfaceMaterial() != nullptr) {

@@ -41,14 +41,13 @@ struct NavigationState;
 /// The surface can carry material to allow mapping onto
 /// portal positions if required.
 ///
-class Portal : public std::enable_shared_from_this<Portal> {
- protected:
+class Portal {
+ public:
   /// Constructor from surface w/o portal links
   ///
   /// @param surface is the representing surface
   Portal(std::shared_ptr<RegularSurface> surface);
 
- public:
   /// The volume links forward/backward with respect to the surface normal
   using DetectorVolumeUpdaters = std::array<DetectorVolumeUpdater, 2u>;
 
@@ -59,32 +58,6 @@ class Portal : public std::enable_shared_from_this<Portal> {
 
   /// Declare the DetectorVolume friend for portal setting
   friend class DetectorVolume;
-
-  /// Factory for producing memory managed instances of Portal.
-  static std::shared_ptr<Portal> makeShared(
-      std::shared_ptr<RegularSurface> surface);
-
-  /// Retrieve a @c std::shared_ptr for this surface (non-const version)
-  ///
-  /// @note Will error if this was not created through the @c makeShared factory
-  ///       since it needs access to the original reference. In C++14 this is
-  ///       undefined behavior (but most likely implemented as a @c bad_weak_ptr
-  ///       exception), in C++17 it is defined as that exception.
-  /// @note Only call this if you need shared ownership of this object.
-  ///
-  /// @return The shared pointer
-  std::shared_ptr<Portal> getSharedPtr();
-
-  /// Retrieve a @c std::shared_ptr for this surface (const version)
-  ///
-  /// @note Will error if this was not created through the @c makeShared factory
-  ///       since it needs access to the original reference. In C++14 this is
-  ///       undefined behavior, but most likely implemented as a @c bad_weak_ptr
-  ///       exception, in C++17 it is defined as that exception.
-  /// @note Only call this if you need shared ownership of this object.
-  ///
-  /// @return The shared pointer
-  std::shared_ptr<const Portal> getSharedPtr() const;
 
   Portal() = delete;
   virtual ~Portal() = default;

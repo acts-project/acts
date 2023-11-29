@@ -99,7 +99,7 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
   const auto& stitchBoundaries =
       (stitchValue == Acts::binR) ? rBoundaries : phiBoundaries;
   return Acts::Experimental::PortalReplacement(
-      Acts::Experimental::Portal::makeShared(surface), index, dir,
+      std::make_shared<Acts::Experimental::Portal>(surface), index, dir,
       stitchBoundaries, stitchValue);
 }
 
@@ -135,7 +135,7 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
   const auto& stitchBoundaries =
       (stitchValue == Acts::binZ) ? zBoundaries : phiBoundaries;
   return Acts::Experimental::PortalReplacement(
-      Acts::Experimental::Portal::makeShared(surface), index, dir,
+      std::make_shared<Acts::Experimental::Portal>(surface), index, dir,
       stitchBoundaries, stitchValue);
 }
 
@@ -200,8 +200,8 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
       transform, std::move(bounds));
   // A make a portal and indicate the new link direction
   Acts::Experimental::PortalReplacement pRep = {
-      Acts::Experimental::Portal::makeShared(surface), index, dir, boundaries,
-      binning};
+      std::make_shared<Acts::Experimental::Portal>(surface), index, dir,
+      boundaries, binning};
   return pRep;
 }
 
