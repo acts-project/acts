@@ -116,6 +116,10 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// into this volume, it will throw an exception if the
   /// portals are not fusable
   ///
+  /// @note if one portal carries material, it will be kept,
+  /// however, if both portals carry material, an exception
+  /// will be thrown and the portals are not fusable
+  ///
   /// @note that other will be overwritten to point to this
   void fuse(std::shared_ptr<Portal>& other) noexcept(false);
 
