@@ -12,9 +12,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/EventData/detail/TestTrackState.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/HashedString.hpp"

@@ -14,10 +14,10 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -98,9 +98,9 @@ auto makeDefaultKalmanFitterOptions() {
       &kfUpdater);
   extensions.smoother
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
-  extensions.surfaceAccessor
-      .connect<&Acts::detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
-          &tester.surfaceAccessor);
+  extensions.surfaceAccessor.connect<
+      &Acts::detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
+      &tester.surfaceAccessor);
 
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
                              extensions, PropagatorPlainOptions());

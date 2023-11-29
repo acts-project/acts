@@ -13,9 +13,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Podio/PodioTrackStateContainer.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
@@ -34,7 +34,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using namespace Acts::Test;
+using namespace Acts::detail::Test;
 namespace bd = boost::unit_test::data;
 
 std::default_random_engine rng(31415);

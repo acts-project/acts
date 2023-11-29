@@ -96,7 +96,8 @@ struct Fixture {
     surface->assignGeometryId(gid);
 
     // generate random track parameters
-    auto [par, cov] = Acts::Test::generateBoundParametersCovariance(rng);
+    auto [par, cov] =
+        Acts::detail::Test::generateBoundParametersCovariance(rng);
     boundParams = par;
     freeParams = Acts::detail::transformBoundToFreeParameters(*surface, geoCtx,
                                                               boundParams);

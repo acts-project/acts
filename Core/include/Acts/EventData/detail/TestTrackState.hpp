@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/EventData/detail/GenerateParameters.hpp"
-#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <random>
@@ -132,4 +132,4 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   }
 }
 
-}  // namespace Acts::Test
+}  // namespace Acts::detail::Test
