@@ -11,10 +11,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenerateParameters.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TestSourceLink.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
@@ -28,8 +28,8 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Test;
-using SourceLink = Acts::Test::TestSourceLink;
+using namespace Acts::detail::Test;
+using SourceLink = Acts::detail::Test::TestSourceLink;
 namespace bd = boost::unit_test::data;
 
 namespace {

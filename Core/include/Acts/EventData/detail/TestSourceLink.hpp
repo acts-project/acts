@@ -25,8 +25,7 @@
 #include <iosfwd>
 #include <stdexcept>
 
-namespace Acts {
-namespace Test {
+namespace Acts::detail::Test {
 
 /// A minimal source link implementation for testing.
 ///
@@ -151,5 +150,4 @@ void testSourceLinkCalibrator(
                                                trackState);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::detail::Test

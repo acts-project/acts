@@ -12,8 +12,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TestSourceLink.hpp"
-#include "Acts/EventData/TestTrackState.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -21,7 +21,7 @@
 
 #include <random>
 
-namespace Acts::Test {
+namespace Acts::detail::Test {
 
 template <typename factory_t>
 class MultiTrajectoryTestsCommon {
@@ -1065,4 +1065,4 @@ class MultiTrajectoryTestsCommon {
     // runTest([](std::string_view c) { return c; });
   }
 };
-}  // namespace Acts::Test
+}  // namespace Acts::detail::Test

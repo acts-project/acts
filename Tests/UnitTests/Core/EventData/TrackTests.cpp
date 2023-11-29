@@ -12,9 +12,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenerateParameters.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TestTrackState.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -45,7 +45,8 @@ using namespace Acts::UnitLiterals;
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
-using namespace Acts::Test;
+using namespace Acts::detail::Test;
+
 using MultiTrajectoryTraits::IndexType;
 namespace bd = boost::unit_test::data;
 

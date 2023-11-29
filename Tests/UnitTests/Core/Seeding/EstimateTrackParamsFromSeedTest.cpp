@@ -13,7 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/TestSourceLink.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -58,7 +58,6 @@ using ConstantFieldPropagator =
 
 const GeometryContext geoCtx;
 const MagneticFieldContext magCtx;
-const CalibrationContext calCtx;
 
 // detector geometry
 CylindricalTrackingGeometry geometryStore(geoCtx);

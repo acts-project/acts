@@ -13,6 +13,8 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <cstddef>
 #include <iosfwd>
@@ -90,5 +92,7 @@ class PerigeeSurface : public LineSurface {
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                       std::size_t lseg) const final;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(SurfaceConcept, PerigeeSurface);
 
 }  // namespace Acts

@@ -294,7 +294,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         vertexing \
         $outdir/performance_amvf_ttbar_hist.root \
         --silent \
-        --config CI/physmon/vertexing_config.yml
+        --config CI/physmon/vertexing_ttbar_config.yml
     ec=$(($ec | $?))
 
     Examples/Scripts/generic_plotter.py \
@@ -327,7 +327,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         vertexing \
         $outdir/performance_amvf_gridseeder_ttbar_hist.root \
         --silent \
-        --config CI/physmon/vertexing_config.yml
+        --config CI/physmon/vertexing_ttbar_config.yml
     ec=$(($ec | $?))
 
     # remove ntuple file because it's large

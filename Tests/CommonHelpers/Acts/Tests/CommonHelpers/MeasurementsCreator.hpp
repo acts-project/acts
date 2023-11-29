@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/TestSourceLink.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -26,6 +26,7 @@
 namespace Acts {
 namespace Test {
 
+using namespace Acts::detail::Test;
 /// All supported simulated measurement types.
 enum class MeasurementType {
   eLoc0,

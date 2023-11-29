@@ -74,7 +74,8 @@ Acts::Experimental::Detector::Detector(
         ss << sgeoID;
         throw std::invalid_argument(
             "Detector: duplicate sensitive surface geometry id '" + ss.str() +
-            "' detected. Make sure a GeometryIdGenerator is used.");
+            "' detected in volume '" + v->name() +
+            "'. Make sure a GeometryIdGenerator is used.");
       }
       surfaceGeoIdMap.emplace(sgeoID, s);
     }

@@ -14,9 +14,9 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryTestsCommon.hpp"
-#include "Acts/EventData/TestSourceLink.hpp"
-#include "Acts/EventData/TestTrackState.hpp"
+#include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -40,6 +40,7 @@ namespace {
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 namespace bd = boost::unit_test::data;
 
 using ParametersVector = BoundTrackParameters::ParametersVector;

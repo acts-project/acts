@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include "Acts/EventData/GenerateParameters.hpp"
-#include "Acts/EventData/TestSourceLink.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <random>
 
-namespace Acts::Test {
+namespace Acts::detail::Test {
 
 struct TestTrackState {
   std::shared_ptr<Surface> surface;
