@@ -60,7 +60,6 @@ class Portal {
   friend class DetectorVolume;
 
   Portal() = delete;
-  virtual ~Portal() = default;
 
   /// Const access to the surface representation
   const RegularSurface& surface() const;
