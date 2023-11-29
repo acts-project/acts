@@ -99,7 +99,7 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
   const auto& stitchBoundaries =
       (stitchValue == Acts::binR) ? rBoundaries : phiBoundaries;
   return Acts::Experimental::PortalReplacement(
-      Acts::Experimental::Portal::makeShared(surface), index, dir,
+      std::make_shared<Acts::Experimental::Portal>(surface), index, dir,
       stitchBoundaries, stitchValue);
 }
 
@@ -135,7 +135,7 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
   const auto& stitchBoundaries =
       (stitchValue == Acts::binZ) ? zBoundaries : phiBoundaries;
   return Acts::Experimental::PortalReplacement(
-      Acts::Experimental::Portal::makeShared(surface), index, dir,
+      std::make_shared<Acts::Experimental::Portal>(surface), index, dir,
       stitchBoundaries, stitchValue);
 }
 
@@ -200,8 +200,8 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
       transform, std::move(bounds));
   // A make a portal and indicate the new link direction
   Acts::Experimental::PortalReplacement pRep = {
-      Acts::Experimental::Portal::makeShared(surface), index, dir, boundaries,
-      binning};
+      std::make_shared<Acts::Experimental::Portal>(surface), index, dir,
+      boundaries, binning};
   return pRep;
 }
 
@@ -430,7 +430,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
       // the inner cylinder of the outer portal goes to waste
       auto& keepCylinder = volumes[iv - 1]->portalPtrs()[2u];
       auto& wasteCylinder = volumes[iv]->portalPtrs()[3u];
-      keepCylinder->fuse(wasteCylinder);
+      keepCylinder = Portal::fuse(keepCylinder, wasteCylinder);
       volumes[iv]->updatePortal(keepCylinder, 3u);
     }
   }
@@ -605,7 +605,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
         message += " / " + Acts::toString(wastePosition);
         throw std::runtime_error(message.c_str());
       }
-      keepDisc->fuse(wasteDisc);
+      keepDisc = Portal::fuse(keepDisc, wasteDisc);
       volumes[iv]->updatePortal(keepDisc, 0u);
     }
   }
@@ -766,7 +766,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
     // Fuse and swap
     auto& keepSector = volumes[iv - 1]->portalPtrs()[iSecOffset + 1u];
     auto& wasteSector = volumes[iv]->portalPtrs()[iSecOffset];
-    keepSector->fuse(wasteSector);
+    keepSector = Portal::fuse(keepSector, wasteSector);
     volumes[iv]->updatePortal(keepSector, iSecOffset);
     // The current values
     auto curValues = volumes[iv]->volumeBounds().values();
@@ -877,19 +877,19 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   // Fuse outer cover of first with inner cylinder of wrapping volume
   auto& keepCover = volumes[0u]->portalPtrs()[2u];
   auto& wasteCover = volumes[1u]->portalPtrs()[3u];
-  keepCover->fuse(wasteCover);
+  keepCover = Portal::fuse(keepCover, wasteCover);
   volumes[1u]->updatePortal(keepCover, 3u);
 
   // Stitch sides - negative
   auto& keepDiscN = volumes[1u]->portalPtrs()[4u];
   auto& wasteDiscN = volumes[0u]->portalPtrs()[0u];
-  keepDiscN->fuse(wasteDiscN);
+  keepDiscN = Portal::fuse(keepDiscN, wasteDiscN);
   volumes[0u]->updatePortal(keepDiscN, 0u);
 
   // Stich sides - positive
   auto& keepDiscP = volumes[0u]->portalPtrs()[1u];
   auto& wasteDiscP = volumes[1u]->portalPtrs()[5u];
-  keepDiscP->fuse(wasteDiscP);
+  keepDiscP = Portal::fuse(keepDiscP, wasteDiscP);
   volumes[1u]->updatePortal(keepDiscP, 5u);
 
   // If needed, insert new cylinder
@@ -963,7 +963,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     // Fuse and swap
     std::shared_ptr<Portal> keepCylinder = containers[ic - 1].find(2u)->second;
     std::shared_ptr<Portal> wasteCylinder = containers[ic].find(3u)->second;
-    keepCylinder->fuse(wasteCylinder);
+    keepCylinder = Portal::fuse(keepCylinder, wasteCylinder);
     for (auto& av : wasteCylinder->attachedDetectorVolumes()[1u]) {
       av->updatePortal(keepCylinder, 3u);
     }
@@ -1019,7 +1019,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
     }
     std::shared_ptr<Portal> keepDisc = formerContainer.find(1u)->second;
     std::shared_ptr<Portal> wasteDisc = currentContainer.find(0u)->second;
-    keepDisc->fuse(wasteDisc);
+    keepDisc = Portal::fuse(keepDisc, wasteDisc);
     for (auto& av : wasteDisc->attachedDetectorVolumes()[1u]) {
       ACTS_VERBOSE("Update portal of detector volume '" << av->name() << "'.");
       av->updatePortal(keepDisc, 0u);
@@ -1121,19 +1121,19 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   // Fuse outer cover of first with inner cylinder of wrapping volume
   auto& keepCover = innerContainer[2u];
   auto& wasteCover = wrappingVolume->portalPtrs()[3u];
-  keepCover->fuse(wasteCover);
+  keepCover = Portal::fuse(keepCover, wasteCover);
   wrappingVolume->updatePortal(keepCover, 3u);
 
   // Stitch sides - negative
   auto& keepDiscN = innerContainer[0u];
   auto& wasteDiscN = wrappingVolume->portalPtrs()[4u];
-  keepDiscN->fuse(wasteDiscN);
+  keepDiscN = Portal::fuse(keepDiscN, wasteDiscN);
   wrappingVolume->updatePortal(keepDiscN, 4u);
 
   // Stich sides - positive
   auto& keepDiscP = innerContainer[1u];
   auto& wasteDiscP = wrappingVolume->portalPtrs()[5u];
-  keepDiscP->fuse(wasteDiscP);
+  keepDiscP = Portal::fuse(keepDiscP, wasteDiscP);
   wrappingVolume->updatePortal(keepDiscP, 5u);
 
   // If inner stitching is necessary

@@ -306,7 +306,7 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
     throw std::runtime_error(
         "PortalJsonConverter: surface is not a regular surface.");
   }
-  auto portal = Experimental::Portal::makeShared(regSurface);
+  auto portal = std::make_shared<Experimental::Portal>(regSurface);
 
   std::array<Acts::Direction, 2> normalDirs = {Direction::Backward,
                                                Direction::Forward};
