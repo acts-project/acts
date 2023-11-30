@@ -14,6 +14,12 @@
 template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
                                             const Vertex<input_track_t>& vtx) {
+  if constexpr (nDimVertex != 3 && nDimVertex != 4) {
+    throw std::invalid_argument(
+        "The vertex dimension must either be 3 (when fitting the spatial "
+        "coordinates) or 4 (when fitting the spatial coordinates + time).");
+  }
+
   using VertexVector = ActsVector<nDimVertex>;
   using VertexMatrix = ActsSquareMatrix<nDimVertex>;
   constexpr unsigned int nBoundParams = nDimVertex + 2;
