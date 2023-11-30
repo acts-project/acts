@@ -16,9 +16,9 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
                                             const Vertex<input_track_t>& vtx) {
   using VertexVector = ActsVector<nDimVertex>;
   using VertexMatrix = ActsSquareMatrix<nDimVertex>;
-  constexpr unsigned int nParams = nDimVertex + 2;
-  using ParameterVector = ActsVector<nParams>;
-  using ParameterMatrix = ActsSquareMatrix<nParams>;
+  constexpr unsigned int nBoundParams = nDimVertex + 2;
+  using ParameterVector = ActsVector<nBoundParams>;
+  using ParameterMatrix = ActsSquareMatrix<nBoundParams>;
   // Check if linearized state exists
   if (!track.isLinearized) {
     throw std::invalid_argument("TrackAtVertex object must be linearized.");
@@ -36,20 +36,22 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   // Retrieve variables from the track linearization. The comments indicate the
   // corresponding symbol used in Ref. (1).
   // A_k
-  const ActsMatrix<nParams, nDimVertex> posJac =
-      linTrack.positionJacobian.block<nParams, nDimVertex>(0, 0);
+  const ActsMatrix<nBoundParams, nDimVertex> posJac =
+      linTrack.positionJacobian.block<nBoundParams, nDimVertex>(0, 0);
   // B_k
-  const ActsMatrix<nParams, 3> momJac =
-      linTrack.momentumJacobian.block<nParams, 3>(0, 0);
+  const ActsMatrix<nBoundParams, 3> momJac =
+      linTrack.momentumJacobian.block<nBoundParams, 3>(0, 0);
   // p_k
-  const ParameterVector trkParams = linTrack.parametersAtPCA.head<nParams>();
+  const ParameterVector trkParams =
+      linTrack.parametersAtPCA.head<nBoundParams>();
   // c_k
-  const ParameterVector constTerm = linTrack.constantTerm.head<nParams>();
+  const ParameterVector constTerm = linTrack.constantTerm.head<nBoundParams>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
   // time.
   // G_k
   const ParameterMatrix trkParamWeight =
-      linTrack.covarianceAtPCA.block<nParams, nParams>(0, 0).inverse();
+      linTrack.covarianceAtPCA.block<nBoundParams, nBoundParams>(0, 0)
+          .inverse();
 
   // Cache object filled with zeros
   KalmanVertexUpdater::Cache<nDimVertex> cache;

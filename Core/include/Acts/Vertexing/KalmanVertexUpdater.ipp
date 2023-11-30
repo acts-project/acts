@@ -81,21 +81,22 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
     const Acts::Vertex<input_track_t>& vtx,
     const Acts::LinearizedTrack& linTrack, const double trackWeight,
     const int sign, Cache<nDimVertex>& cache) {
-  constexpr unsigned int nParams = nDimVertex + 2;
-  using ParameterVector = ActsVector<nParams>;
-  using ParameterMatrix = ActsSquareMatrix<nParams>;
+  constexpr unsigned int nBoundParams = nDimVertex + 2;
+  using ParameterVector = ActsVector<nBoundParams>;
+  using ParameterMatrix = ActsSquareMatrix<nBoundParams>;
   // Retrieve variables from the track linearization. The comments indicate the
   // corresponding symbol used in Ref. (1).
   // A_k
-  const ActsMatrix<nParams, nDimVertex> posJac =
-      linTrack.positionJacobian.block<nParams, nDimVertex>(0, 0);
+  const ActsMatrix<nBoundParams, nDimVertex> posJac =
+      linTrack.positionJacobian.block<nBoundParams, nDimVertex>(0, 0);
   // B_k
-  const ActsMatrix<nParams, 3> momJac =
-      linTrack.momentumJacobian.block<nParams, 3>(0, 0);
+  const ActsMatrix<nBoundParams, 3> momJac =
+      linTrack.momentumJacobian.block<nBoundParams, 3>(0, 0);
   // p_k
-  const ParameterVector trkParams = linTrack.parametersAtPCA.head<nParams>();
+  const ParameterVector trkParams =
+      linTrack.parametersAtPCA.head<nBoundParams>();
   // c_k
-  const ParameterVector constTerm = linTrack.constantTerm.head<nParams>();
+  const ParameterVector constTerm = linTrack.constantTerm.head<nBoundParams>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
   // time.
   // G_k
@@ -106,7 +107,8 @@ void Acts::KalmanVertexUpdater::calculateUpdate(
   // consider these two multiplicative factors directly in the updates of
   // newVertexWeight and newVertexPos.
   const ParameterMatrix trkParamWeight =
-      linTrack.covarianceAtPCA.block<nParams, nParams>(0, 0).inverse();
+      linTrack.covarianceAtPCA.block<nBoundParams, nBoundParams>(0, 0)
+          .inverse();
 
   // Retrieve current position of the vertex and its current weight matrix
   const ActsVector<nDimVertex> oldVtxPos =
@@ -151,24 +153,26 @@ double Acts::KalmanVertexUpdater::detail::vertexPositionChi2Update(
 template <typename input_track_t, unsigned int nDimVertex>
 double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
     const LinearizedTrack& linTrack, const Cache<nDimVertex>& cache) {
-  constexpr unsigned int nParams = nDimVertex + 2;
-  using ParameterVector = ActsVector<nParams>;
-  using ParameterMatrix = ActsSquareMatrix<nParams>;
+  constexpr unsigned int nBoundParams = nDimVertex + 2;
+  using ParameterVector = ActsVector<nBoundParams>;
+  using ParameterMatrix = ActsSquareMatrix<nBoundParams>;
   // A_k
-  const ActsMatrix<nParams, nDimVertex> posJac =
-      linTrack.positionJacobian.block<nParams, nDimVertex>(0, 0);
+  const ActsMatrix<nBoundParams, nDimVertex> posJac =
+      linTrack.positionJacobian.block<nBoundParams, nDimVertex>(0, 0);
   // B_k
-  const ActsMatrix<nParams, 3> momJac =
-      linTrack.momentumJacobian.block<nParams, 3>(0, 0);
+  const ActsMatrix<nBoundParams, 3> momJac =
+      linTrack.momentumJacobian.block<nBoundParams, 3>(0, 0);
   // p_k
-  const ParameterVector trkParams = linTrack.parametersAtPCA.head<nParams>();
+  const ParameterVector trkParams =
+      linTrack.parametersAtPCA.head<nBoundParams>();
   // c_k
-  const ParameterVector constTerm = linTrack.constantTerm.head<nParams>();
+  const ParameterVector constTerm = linTrack.constantTerm.head<nBoundParams>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
   // time.
   // G_k
   const ParameterMatrix trkParamWeight =
-      linTrack.covarianceAtPCA.block<nParams, nParams>(0, 0).inverse();
+      linTrack.covarianceAtPCA.block<nBoundParams, nBoundParams>(0, 0)
+          .inverse();
 
   // A_k * \tilde{x_k}
   const ParameterVector posJacVtxPos = posJac * cache.newVertexPos;
