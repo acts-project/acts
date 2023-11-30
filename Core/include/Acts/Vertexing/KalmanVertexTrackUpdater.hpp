@@ -18,7 +18,14 @@ namespace Acts {
 namespace KalmanVertexTrackUpdater {
 
 /// KalmanVertexTrackUpdater
-///
+/// Based on
+/// Ref. (1):
+/// R. Frühwirth et al.
+/// Vertex reconstruction and track bundling at the lep collider using robust
+/// algorithms
+/// Computer Physics Comm.: 96 (1996) 189
+/// Chapter 2.1
+
 /// @brief Refits a single track with the knowledge of
 /// the vertex it has originated from
 ///
@@ -30,15 +37,15 @@ void update(TrackAtVertex<input_track_t>& track,
 
 namespace detail {
 
-/// @brief reates a new covariance matrix for the
-/// refitted track parameters
+/// @brief Calculates a covariance matrix for the refitted track parameters
 ///
-/// @param sMat Track ovariance in momentum space
-/// @param newTrkCov New track covariance matrixs
+/// @param wMat W_k matrix from Ref. (1)
+/// @param crossCovVP Cross-covariance matrix between vertex position and track
+/// momentum
 /// @param vtxCov Vertex covariance matrix
-/// @param newTrkParams New track parameter
+/// @param newTrkParams Refitted track parameters
 template <unsigned int nDimVertex>
-inline BoundMatrix createFullTrackCovariance(
+inline BoundMatrix calculateTrackCovariance(
     const SquareMatrix3& wMat, const ActsMatrix<nDimVertex, 3>& crossCovVP,
     const ActsSquareMatrix<nDimVertex>& vtxCov,
     const BoundVector& newTrkParams);

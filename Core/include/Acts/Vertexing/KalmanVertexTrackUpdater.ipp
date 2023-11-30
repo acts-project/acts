@@ -93,17 +93,16 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
           posDiff) +
       paramDiff.dot(trkParamWeight * paramDiff);
 
-  Acts::BoundMatrix fullPerTrackCov =
-      detail::createFullTrackCovariance<nDimVertex>(cache.wMat, crossCovVP,
-                                                    vtxCov, newTrkParams);
+  Acts::BoundMatrix newTrackCov = detail::calculateTrackCovariance<nDimVertex>(
+      cache.wMat, crossCovVP, vtxCov, newTrkParams);
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtxPos.template head<3>());
 
-  BoundTrackParameters refittedPerigee = BoundTrackParameters(
-      perigeeSurface, newTrkParams, std::move(fullPerTrackCov),
-      track.fittedParams.particleHypothesis());
+  BoundTrackParameters refittedPerigee =
+      BoundTrackParameters(perigeeSurface, newTrkParams, std::move(newTrackCov),
+                           track.fittedParams.particleHypothesis());
 
   // Set new properties
   track.fittedParams = refittedPerigee;
@@ -115,7 +114,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
 template <unsigned int nDimVertex>
 inline Acts::BoundMatrix
-Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
+Acts::KalmanVertexTrackUpdater::detail::calculateTrackCovariance(
     const SquareMatrix3& wMat, const ActsMatrix<nDimVertex, 3>& crossCovVP,
     const ActsSquareMatrix<nDimVertex>& vtxCov,
     const BoundVector& newTrkParams) {
@@ -124,52 +123,55 @@ Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
       wMat + crossCovVP.transpose() * vtxCov.inverse() * crossCovVP;
 
   // Full x, y, z, phi, theta, q/p, and, optionally, t covariance matrix. Note
-  // that we call this set of parameters here free even though that is not quite
-  // correct (free parameters corresponds to x, y, z, t, px, py, pz)
+  // that we call this set of parameters "free" in the following even though
+  // that is not quite correct (free parameters correspond to
+  // x, y, z, t, px, py, pz)
   constexpr unsigned int nFreeParams = nDimVertex + 3;
-  ActsSquareMatrix<nFreeParams> fullTrkCov(
+  ActsSquareMatrix<nFreeParams> freeTrkCov(
       ActsSquareMatrix<nFreeParams>::Zero());
 
-  fullTrkCov.template block<3, 3>(0, 0) = vtxCov.template block<3, 3>(0, 0);
-  fullTrkCov.template block<3, 3>(0, 3) = crossCovVP.template block<3, 3>(0, 0);
-  fullTrkCov.template block<3, 3>(3, 0) =
+  freeTrkCov.template block<3, 3>(0, 0) = vtxCov.template block<3, 3>(0, 0);
+  freeTrkCov.template block<3, 3>(0, 3) = crossCovVP.template block<3, 3>(0, 0);
+  freeTrkCov.template block<3, 3>(3, 0) =
       crossCovVP.template block<3, 3>(0, 0).transpose();
-  fullTrkCov.template block<3, 3>(3, 3) = momCov;
+  freeTrkCov.template block<3, 3>(3, 3) = momCov;
 
-  // Fill time cross-covariances
+  // Fill time (cross-)covariances
   if constexpr (nFreeParams == 7) {
-    fullTrkCov.template block<3, 1>(0, 6) = vtxCov.template block<3, 1>(0, 3);
-    fullTrkCov.template block<3, 1>(3, 6) =
-        crossCovVP.template block<3, 1>(0, 3);
-    fullTrkCov.template block<1, 3>(6, 0) = vtxCov.template block<1, 3>(3, 0);
-    fullTrkCov.template block<1, 3>(6, 3) =
+    freeTrkCov.template block<3, 1>(0, 6) = vtxCov.template block<3, 1>(0, 3);
+    freeTrkCov.template block<3, 1>(3, 6) =
+        crossCovVP.template block<1, 3>(3, 0).transpose();
+    freeTrkCov.template block<1, 3>(6, 0) = vtxCov.template block<1, 3>(3, 0);
+    freeTrkCov.template block<1, 3>(6, 3) =
         crossCovVP.template block<1, 3>(3, 0);
+    freeTrkCov(6, 6) = vtxCov(3, 3);
   }
 
-  // Combined track jacobian
+  // Jacobian relating "free" and bound track parameters
   constexpr unsigned int nBoundParams = nDimVertex + 2;
-  ActsMatrix<nBoundParams, nFreeParams> trkJac(
+  ActsMatrix<nBoundParams, nFreeParams> freeToBoundJac(
       ActsMatrix<nBoundParams, nFreeParams>::Zero());
 
+  // TODO: Jacobian is not quite correct
   // First row
-  trkJac(0, 0) = -std::sin(newTrkParams[2]);
-  trkJac(0, 1) = std::cos(newTrkParams[2]);
+  freeToBoundJac(0, 0) = -std::sin(newTrkParams[2]);
+  freeToBoundJac(0, 1) = std::cos(newTrkParams[2]);
 
   double tanTheta = std::tan(newTrkParams[3]);
 
   // Second row
-  trkJac(1, 0) = -trkJac(0, 1) / tanTheta;
-  trkJac(1, 1) = trkJac(0, 0) / tanTheta;
+  freeToBoundJac(1, 0) = -freeToBoundJac(0, 1) / tanTheta;
+  freeToBoundJac(1, 1) = freeToBoundJac(0, 0) / tanTheta;
 
   // Dimension of the part of the Jacobian that is an identity matrix
   constexpr unsigned int nDimIdentity = nFreeParams - 2;
-  trkJac.template block<nDimIdentity, nDimIdentity>(1, 2) =
+  freeToBoundJac.template block<nDimIdentity, nDimIdentity>(1, 2) =
       ActsMatrix<nDimIdentity, nDimIdentity>::Identity();
 
   // Full perigee track covariance
-  BoundMatrix fullPerTrackCov(BoundMatrix::Identity());
-  fullPerTrackCov.block<nBoundParams, nBoundParams>(0, 0) =
-      (trkJac * (fullTrkCov * trkJac.transpose()));
+  BoundMatrix boundTrackCov(BoundMatrix::Identity());
+  boundTrackCov.block<nBoundParams, nBoundParams>(0, 0) =
+      (freeToBoundJac * (freeTrkCov * freeToBoundJac.transpose()));
 
-  return fullPerTrackCov;
+  return boundTrackCov;
 }
