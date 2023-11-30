@@ -391,9 +391,15 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
     // Random diagonal covariance matrix
     Covariance covMat;
 
-    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
-        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
-        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., resT * resT;
+    // clang-format off
+    covMat <<
+      resD0 * resD0, 0., 0., 0., 0., 0.,
+      0., resZ0 * resZ0, 0., 0., 0., 0.,
+      0., 0., resPh * resPh, 0., 0., 0.,
+      0., 0., 0., resTh * resTh, 0., 0.,
+      0., 0., 0., 0., resQp * resQp, 0.,
+      0., 0., 0., 0., 0., resT * resT;
+    // clang-format on
 
     // Random track parameters
     BoundTrackParameters::ParametersVector paramVec;
@@ -447,7 +453,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
 
   // Check that variances of the vertex position/time are positive
   for (std::size_t i = 0; i <= 3; i++) {
-    BOOST_CHECK(vtxCov(i, i) > 0.);
+    BOOST_CHECK_GT(vtxCov(i, i), 0.);
   }
 
   // Check that the covariance matrix is approximately symmetric
