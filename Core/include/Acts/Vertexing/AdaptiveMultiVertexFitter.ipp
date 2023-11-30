@@ -309,7 +309,7 @@ Acts::Result<void> Acts::
         }
         // Update the vertex with the new track. The second template argument
         // corresponds to the number of fitted vertex dimensions (i.e., 3 if we
-        // only fit spatial coordinates and 4 if we also fit time)
+        // only fit spatial coordinates and 4 if we also fit time).
         if (m_cfg.useTime) {
           KalmanVertexUpdater::updateVertexWithTrack<input_track_t, 4>(
               *vtx, trkAtVtx);
@@ -376,6 +376,10 @@ void Acts::AdaptiveMultiVertexFitter<
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
+        // Update the new track under the assumption that it originates at the
+        // vertex. The second template argument corresponds to the number of
+        // fitted vertex dimensions (i.e., 3 if we only fit spatial coordinates
+        // and 4 if we also fit time).
         if (m_cfg.useTime) {
           KalmanVertexTrackUpdater::update<input_track_t, 4>(trkAtVtx, *vtx);
         } else {
