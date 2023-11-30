@@ -23,10 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Volumes)
 
@@ -107,7 +104,5 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

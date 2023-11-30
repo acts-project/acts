@@ -395,7 +395,7 @@ class CombinatorialKalmanFilter {
       if (!result.filtered &&
           filterTargetReached(state, stepper, navigator, logger())) {
         navigator.navigationBreak(state.navigation, true);
-        stepper.releaseStepSize(state.stepping);
+        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       }
 
       // Update:
@@ -510,7 +510,7 @@ class CombinatorialKalmanFilter {
         // Return error if filtering finds no tracks
         if (result.lastTrackIndices.empty()) {
           // @TODO: Tracks like this should not be in the final output!
-          ACTS_WARNING("No tracks found");
+          ACTS_DEBUG("No tracks found");
           result.finished = true;
         } else {
           if (!smoothing) {

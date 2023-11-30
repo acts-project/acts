@@ -46,6 +46,10 @@
 namespace Acts {
 namespace Experimental {
 
+namespace Gx2fConstants {
+constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
+}  // namespace Gx2fConstants
+
 /// Extension struct which holds delegates to customize the KF behavior
 template <typename traj_t>
 struct Gx2FitterExtensions {
@@ -105,7 +109,7 @@ struct Gx2FitterOptions {
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   /// @param nUpdateMax_ Max number of iterations for updating the parameters
   /// @param zeroField_ Disables the QoP fit in case of missing B-field
-  /// @param relChi2changeCutOff_ Check for convergence (abort condition)
+  /// @param relChi2changeCutOff_ Check for convergence (abort condition). Set to 0 to skip.
   Gx2FitterOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
                    std::reference_wrapper<const CalibrationContext> cctx,
@@ -789,7 +793,8 @@ class Gx2Fitter {
 
     ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
 
-    if (!trackContainer.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
+    if (!trackContainer.hasColumn(
+            Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
       trackContainer.template addColumn<std::size_t>("Gx2fnUpdateColumn");
     }
 
@@ -800,13 +805,18 @@ class Gx2Fitter {
     track.covariance() = fullCovariancePredicted;
     track.setReferenceSurface(params.referenceSurface().getSharedPtr());
 
-    if (trackContainer.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
+    if (trackContainer.hasColumn(
+            Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
       ACTS_DEBUG("Add nUpdate to track")
       track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
     }
 
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
+
+    // Set the chi2sum for the track summary manually, since we don't calculate
+    // it for each state
+    track.chi2() = chi2sum;
 
     // Return the converted Track
     return track;
