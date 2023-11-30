@@ -16,7 +16,6 @@ macos-arm:
 
 
   script:
-    - echo $PATH
     - git clone $CLONE_URL src
 
     - cd src
@@ -37,7 +36,7 @@ macos-arm:
       -DACTS_BUILD_UNITTESTS=ON
 
     - ccache -z
-    - cmake --build build -- -j$(nproc)
+    - cmake --build build
     - ccache -s
 
     - cmake --build build --target test
