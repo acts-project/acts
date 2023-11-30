@@ -5,6 +5,7 @@ target_sources(
     detail/BlueprintDrawer.cpp
     detail/CylindricalDetectorHelper.cpp
     detail/PortalHelper.cpp
+    detail/ProtoMaterialHelper.cpp
     detail/SupportHelper.cpp
     detail/IndexedGridFiller.cpp
     CylindricalContainerBuilder.cpp

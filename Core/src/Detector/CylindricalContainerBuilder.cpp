@@ -12,6 +12,7 @@
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
+#include "Acts/Detector/detail/ProtoMaterialHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
@@ -48,23 +49,23 @@ Acts::Experimental::DetectorComponent::PortalContainer connect(
     const std::vector<Acts::BinningValue>& binning,
     Acts::Logging::Level logLevel) {
   // Return container object
-  Acts::Experimental::DetectorComponent::PortalContainer rContainer;
+  Acts::Experimental::DetectorComponent::PortalContainer portalContainer;
   if (binning.size() == 1u) {
     Acts::BinningValue bv = binning.front();
     // 1-dimensional binning options
     switch (bv) {
       case Acts::binR: {
-        rContainer =
+        portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
                 gctx, objects, {}, logLevel);
       } break;
       case Acts::binZ: {
-        rContainer =
+        portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
                 gctx, objects, {}, logLevel);
       } break;
       case Acts::binPhi: {
-        rContainer =
+        portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
                 gctx, objects, {}, logLevel);
       } break;
@@ -74,11 +75,11 @@ Acts::Experimental::DetectorComponent::PortalContainer connect(
   } else if (binning ==
                  std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR} &&
              objects.size() == 2u) {
-    rContainer =
+    portalContainer =
         Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
             gctx, objects, logLevel);
   }
-  return rContainer;
+  return portalContainer;
 }
 }  // namespace
 
@@ -165,7 +166,7 @@ Acts::Experimental::DetectorComponent
 Acts::Experimental::CylindricalContainerBuilder::construct(
     const GeometryContext& gctx) const {
   // Return container object
-  DetectorComponent::PortalContainer rContainer;
+  DetectorComponent::PortalContainer portalContainer;
   bool atNavigationLevel = true;
 
   // Create the indivudal components, collect for both outcomes
@@ -195,11 +196,12 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     ACTS_VERBOSE(
         "Component volumes are at navigation level: connecting volumes.");
     // Connect volumes
-    rContainer = connect(gctx, volumes, m_cfg.binning, logger().level());
+    portalContainer = connect(gctx, volumes, m_cfg.binning, logger().level());
   } else {
     ACTS_VERBOSE("Components contain sub containers: connect containers.");
     // Connect containers
-    rContainer = connect(gctx, containers, m_cfg.binning, logger().level());
+    portalContainer =
+        connect(gctx, containers, m_cfg.binning, logger().level());
   }
   ACTS_VERBOSE("Number of root volumes: " << rootVolumes.size());
 
@@ -208,7 +210,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     // Return the container
     return Acts::Experimental::DetectorComponent{
         {},
-        rContainer,
+        portalContainer,
         RootDetectorVolumes{
             rootVolumes,
             m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
@@ -231,35 +233,18 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     }
   }
 
-  using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<BinningDescription>;
-
+  // Assign the proto material
   // Material assignment from configuration
-  for (auto [ip, binning] : m_cfg.materialBinning) {
-    if (rContainer.find(ip) != rContainer.end()) {
-      ACTS_VERBOSE("-> Material binning configured for index " << ip);
-      auto& surface = rContainer.at(ip)->surface();
-      // The binning description
-      BinningDescription bDescription;
-      // Measure the surface
-      Extent sExtent = surface.polyhedronRepresentation(gctx, 1).extent();
-      for (const auto& b : binning) {
-        ProtoBinning fBinning = b;
-        // Check if the binning needs to be fixed
-        if (fBinning.edges.front() == fBinning.edges.back()) {
-          auto range = sExtent.range(b.binValue);
-          fBinning = ProtoBinning(b.binValue, b.boundaryType, range.min(),
-                                  range.max(), b.bins(), b.expansion);
-        }
-        bDescription.binning.push_back(fBinning);
-      }
-      ACTS_VERBOSE("-> Binning description: " << bDescription.toString());
-      auto protoGridMaterial =
-          std::make_shared<ProtoGridSurfaceMaterial>(bDescription);
-      surface.assignSurfaceMaterial(protoGridMaterial);
+  for (auto [ip, bDescription] : m_cfg.portalMaterialBinning) {
+    if (portalContainer.find(ip) != portalContainer.end()) {
+      auto bd = detail::ProtoMaterialHelper::attachProtoMaterial(
+          gctx, portalContainer[ip]->surface(), bDescription);
+      ACTS_VERBOSE("-> Assigning proto material to portal " << ip << " with "
+                                                            << bd.toString());
     }
   }
 
   // Return the container
   return Acts::Experimental::DetectorComponent{
-      {}, rContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
+      {}, portalContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
 }

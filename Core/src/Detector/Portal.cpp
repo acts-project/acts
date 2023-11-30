@@ -67,7 +67,6 @@ std::shared_ptr<Portal> Portal::fuse(std::shared_ptr<Portal>& aPortal,
         "both sides.");
   }
 
-<<<<<<< HEAD
   if (noneConnected(*aPortal) || noneConnected(*bPortal)) {
     throw std::invalid_argument(
         "Portal: trying to fuse two portals where at least on has no links.");
@@ -113,23 +112,6 @@ std::shared_ptr<Portal> Portal::fuse(std::shared_ptr<Portal>& aPortal,
       std::move(bPortal->m_attachedVolumes[bDir.index()]);
 
   return fused;
-=======
-  if (m_surface->surfaceMaterial() != nullptr &&
-      other->surface().surfaceMaterial() != nullptr) {
-    throw std::runtime_error(
-        "Portal: both surfaces have surface material, fusing will lead to "
-        "information loss.");
-  } else if (other->surface().surfaceMaterial() != nullptr) {
-    m_surface->assignSurfaceMaterial(
-        other->surface().surfaceMaterialSharedPtr());
-  }
-
-  auto odx = oDir.index();
-  m_volumeUpdators[odx] = std::move(other->m_volumeUpdators[odx]);
-  m_attachedVolumes[odx] = other->m_attachedVolumes[odx];
-  // And finally overwrite the original portal
-  other = getSharedPtr();
->>>>>>> 6554f98b6 (respect portal material when fusing)
 }
 
 void Portal::assignDetectorVolumeUpdater(

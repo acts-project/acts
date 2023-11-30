@@ -93,16 +93,11 @@ class Portal {
   /// however, if both portals carry material, an exception
   /// will be thrown and the portals are not fusable
   ///
-<<<<<<< HEAD
   /// @note Both input portals become invalid, in that their update
   /// delegates and attached volumes are reset
   static std::shared_ptr<Portal> fuse(
       std::shared_ptr<Portal>& aPortal,
       std::shared_ptr<Portal>& bPortal) noexcept(false);
-=======
-  /// @note that other will be overwritten to point to this
-  void fuse(std::shared_ptr<Portal>& other) noexcept(false);
->>>>>>> 6554f98b6 (respect portal material when fusing)
 
   /// Update the volume link
   ///
