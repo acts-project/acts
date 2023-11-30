@@ -814,6 +814,10 @@ class Gx2Fitter {
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
 
+    // Set the chi2sum for the track summary manually, since we don't calculate
+    // it for each state
+    track.chi2() = chi2sum;
+
     // Return the converted Track
     return track;
   }
