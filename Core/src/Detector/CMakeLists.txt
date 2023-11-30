@@ -3,7 +3,9 @@ target_sources(
   PRIVATE
     detail/BlueprintHelper.cpp
     detail/BlueprintDrawer.cpp
+    detail/CuboidalDetectorHelper.cpp
     detail/CylindricalDetectorHelper.cpp
+    detail/DetectorVolumeConsistency.cpp
     detail/PortalHelper.cpp
     detail/SupportHelper.cpp
     detail/IndexedGridFiller.cpp
