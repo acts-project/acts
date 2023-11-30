@@ -47,6 +47,9 @@ class TrackSelector {
 
     std::size_t minMeasurements = 0;
     std::size_t maxHoles = std::numeric_limits<std::size_t>::max();
+    std::size_t maxOutliers = std::numeric_limits<std::size_t>::max();
+    std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
+    float maxChi2 = std::numeric_limits<float>::max();
 
     // Helper factory functions to produce a populated config object more
     // conveniently
@@ -385,7 +388,10 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
          within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
          within(track.time(), cuts.timeMin, cuts.timeMax) &&
          checkMin(track.nMeasurements(), cuts.minMeasurements) &&
-         checkMax(track.nHoles(), cuts.maxHoles);
+         checkMax(track.nHoles(), cuts.maxHoles) &&
+         checkMax(track.nOutliers(), cuts.maxOutliers) &&
+         checkMax(track.nSharedHits(), cuts.maxSharedHits) &&
+         checkMax(track.chi2(), cuts.maxChi2);
 }
 
 inline TrackSelector::TrackSelector(
