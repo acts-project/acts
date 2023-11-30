@@ -334,12 +334,12 @@ Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
   std::array<std::vector<Acts::ActsScalar>, 3u> boundaries;
 
   // The map for collecting
-  std::array<std::map<ActsScalar, size_t>, 3u> valueMaps;
+  std::array<std::map<ActsScalar, std::size_t>, 3u> valueMaps;
   auto& xMap = valueMaps[0u];
   auto& yMap = valueMaps[1u];
   auto& zMap = valueMaps[2u];
 
-  auto fillMap = [&](std::map<ActsScalar, size_t>& map,
+  auto fillMap = [&](std::map<ActsScalar, std::size_t>& map,
                      const std::array<ActsScalar, 2u>& values) {
     for (auto v : values) {
       if (map.find(v) != map.end()) {

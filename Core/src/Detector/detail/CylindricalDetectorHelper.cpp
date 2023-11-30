@@ -880,7 +880,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
 
     // Fuse containers, and update the attached volumes
     std::shared_ptr<Portal> innerCylinder = containers[ic - 1].find(2u)->second;
-    // Direction is explicitely up
+    // Direction is explicitly addressed with a direction index
     auto innerAttachedVolumes =
         innerCylinder
             ->attachedDetectorVolumes()[Direction(Direction::Backward).index()];

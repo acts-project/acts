@@ -96,7 +96,7 @@ std::vector<std::shared_ptr<DetectorVolume>> attachedDetectorVolumes(
 /// @param pContainers the portal containers to be resolved
 /// @param sides the sides to be handled
 /// @param selectedOnly the selected only volumes, e.g. for complex containers
-/// to chose only outisde skins,
+/// to chose only outside skins,
 /// @param logLevel the logging level
 ///
 std::map<unsigned int,
