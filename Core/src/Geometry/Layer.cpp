@@ -122,6 +122,14 @@ Acts::Layer::compatibleSurfaces(
   double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
 
+  auto isUnique = [&](const SurfaceIntersection& b) {
+    auto find_it = std::find_if(
+        sIntersections.begin(), sIntersections.end(), [&b](const auto& a) {
+          return a.object() == b.object() && a.index() == b.index();
+        });
+    return find_it == sIntersections.end();
+  };
+
   // lemma 0 : accept the surface
   auto acceptSurface = [&options](const Surface& sf,
                                   bool sensitive = false) -> bool {
@@ -160,7 +168,8 @@ Acts::Layer::compatibleSurfaces(
     for (const auto& sfi : sfmi.split()) {
       // check if intersection is valid and limits are not exceeded
       if (sfi &&
-          detail::checkIntersection(sfi.intersection(), nearLimit, farLimit)) {
+          detail::checkIntersection(sfi.intersection(), nearLimit, farLimit) &&
+          isUnique(sfi)) {
         sIntersections.push_back(sfi);
       }
     }
@@ -205,22 +214,6 @@ Acts::Layer::compatibleSurfaces(
   // the layer surface itself is a testSurface
   const Surface* layerSurface = &surfaceRepresentation();
   processSurface(*layerSurface);
-
-  // Sort by object address
-  std::sort(
-      sIntersections.begin(), sIntersections.end(),
-      [](const auto& a, const auto& b) { return a.object() < b.object(); });
-  // Now look for duplicates. As we just sorted by object address, duplicates
-  // should be subsequent
-  auto it = std::unique(
-      sIntersections.begin(), sIntersections.end(),
-      [](const SurfaceIntersection& a, const SurfaceIntersection& b) -> bool {
-        return a.object() == b.object() && a.index() == b.index();
-      });
-
-  // resize to remove all items that are past the unique range
-  sIntersections.resize(std::distance(sIntersections.begin(), it),
-                        SurfaceIntersection::invalid());
 
   return sIntersections;
 }

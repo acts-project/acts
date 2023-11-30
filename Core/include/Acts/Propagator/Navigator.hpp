@@ -97,6 +97,9 @@ class Navigator {
 
     /// Which boundary checks to perform for surface approach
     BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
+    /// Whether to perform boundary checks for layer resolving (improves
+    /// navigation for bended tracks)
+    BoundaryCheck boundaryCheckLayerResolving = BoundaryCheck(true);
   };
 
   /// Composes an intersection and a bounds check into a navigation candidate.
@@ -513,11 +516,7 @@ class Navigator {
       state.navigation.currentLayer =
           intersection.template object<LayerIntersection>();
 
-      initializeLayerCandidates(state, stepper);
-
-      std::sort(
-          state.navigation.candidates.begin() + state.navigation.candidateIndex,
-          state.navigation.candidates.end(), NavigationCandidate::forwardOrder);
+      reinitializeCandidates(state, stepper);
     } else if (intersection.template checkType<BoundaryIntersection>()) {
       // In case of a boundary we need to switch volume and reinitialize
 
@@ -543,12 +542,13 @@ class Navigator {
   }
 
  private:
-  /// Helper method to initialize navigation candidates for the current volume.
+  /// Helper method to initialize navigation candidates for the current volume
+  /// boundaries.
   template <typename propagator_state_t, typename stepper_t>
-  void initializeVolumeCandidates(propagator_state_t& state,
-                                  const stepper_t& stepper) const {
+  void initializeVolumeBoundaryCandidates(propagator_state_t& state,
+                                          const stepper_t& stepper) const {
     const TrackingVolume* volume = state.navigation.currentVolume;
-    ACTS_VERBOSE(volInfo(state) << "Initialize volume");
+    ACTS_VERBOSE(volInfo(state) << "Initialize volume boundaries");
 
     if (volume == nullptr) {
       state.navigation.navigationBreak = true;
@@ -556,135 +556,138 @@ class Navigator {
       return;
     }
 
-    // Find boundary candidates
-    {
-      ACTS_VERBOSE(volInfo(state) << "Searching for compatible boundaries.");
+    // The navigation options
+    NavigationOptions<Surface> navOpts;
+    navOpts.boundaryCheck = BoundaryCheck(true);
+    // Exclude the current surface in case it's a boundary
+    navOpts.startObject = state.navigation.currentSurface;
+    navOpts.nearLimit = state.options.surfaceTolerance;
+    navOpts.farLimit = std::numeric_limits<double>::max();
 
-      // The navigation options
-      NavigationOptions<Surface> navOpts;
-      // Exclude the current surface in case it's a boundary
-      navOpts.startObject = state.navigation.currentSurface;
-      navOpts.nearLimit = state.options.surfaceTolerance;
-      navOpts.farLimit = std::numeric_limits<double>::max();
+    ACTS_VERBOSE(volInfo(state)
+                 << "Try to find boundaries, we are at: "
+                 << stepper.position(state.stepping).transpose()
+                 << ", dir: " << stepper.direction(state.stepping).transpose());
 
-      ACTS_VERBOSE(volInfo(state)
-                   << "Try to find boundaries, we are at: "
-                   << stepper.position(state.stepping).transpose() << ", dir: "
-                   << stepper.direction(state.stepping).transpose());
+    auto boundaries = volume->compatibleBoundaries(
+        state.geoContext, stepper.position(state.stepping),
+        state.options.direction * stepper.direction(state.stepping), navOpts,
+        logger());
 
-      auto boundaries = volume->compatibleBoundaries(
-          state.geoContext, stepper.position(state.stepping),
-          state.options.direction * stepper.direction(state.stepping), navOpts,
-          logger());
-
-      // Screen output where they are
-      if (logger().doPrint(Logging::VERBOSE)) {
-        std::ostringstream oss;
-        oss << boundaries.size();
-        oss << " boundary candidates found at path(s): ";
-        for (const auto& boundary : boundaries) {
-          oss << boundary.pathLength() << "  ";
-        }
-        ACTS_VERBOSE(oss.str());
-      }
-
+    // Screen output where they are
+    if (logger().doPrint(Logging::VERBOSE)) {
+      std::ostringstream oss;
+      oss << boundaries.size();
+      oss << " boundary candidates found at path(s): ";
       for (const auto& boundary : boundaries) {
-        state.navigation.candidates.emplace_back(
-            detail::AnyIntersection(boundary), BoundaryCheck(true));
+        oss << boundary.pathLength() << "  ";
       }
+      ACTS_VERBOSE(oss.str());
     }
 
-    // Find layer candidates
-    {
-      ACTS_VERBOSE(volInfo(state) << "Searching for compatible layers.");
+    for (const auto& boundary : boundaries) {
+      state.navigation.candidates.emplace_back(
+          detail::AnyIntersection(boundary), BoundaryCheck(true));
+    }
+  }
 
-      // Create the navigation options
-      // - and get the compatible layers, start layer will be excluded
-      NavigationOptions<Layer> navOpts;
-      navOpts.resolveSensitive = m_cfg.resolveSensitive;
-      navOpts.resolveMaterial = m_cfg.resolveMaterial;
-      navOpts.resolvePassive = m_cfg.resolvePassive;
-      navOpts.startObject = state.navigation.currentLayer;
-      navOpts.nearLimit = state.options.surfaceTolerance;
-      navOpts.farLimit = std::numeric_limits<double>::max();
+  /// Helper method to initialize navigation candidates for the current volume
+  /// layers.
+  template <typename propagator_state_t, typename stepper_t>
+  void initializeVolumeLayerCandidates(propagator_state_t& state,
+                                       const stepper_t& stepper) const {
+    const TrackingVolume* volume = state.navigation.currentVolume;
+    ACTS_VERBOSE(volInfo(state) << "Initialize volume layers");
 
-      // Request the compatible layers
-      auto layers = volume->compatibleLayers(
-          state.geoContext, stepper.position(state.stepping),
-          state.options.direction * stepper.direction(state.stepping), navOpts);
+    if (volume == nullptr) {
+      state.navigation.navigationBreak = true;
+      ACTS_VERBOSE(volInfo(state) << "No volume set. Good luck.");
+      return;
+    }
 
-      // Screen output where they are
-      if (logger().doPrint(Logging::VERBOSE)) {
-        std::ostringstream oss;
-        oss << layers.size();
-        oss << " layer candidates found at path(s): ";
-        for (const auto& layer : layers) {
-          oss << layer.pathLength() << "  ";
-        }
-        ACTS_VERBOSE(oss.str());
-      }
+    // Create the navigation options
+    // - and get the compatible layers, start layer will be excluded
+    NavigationOptions<Layer> navOpts;
+    navOpts.boundaryCheck = m_cfg.boundaryCheckLayerResolving;
+    navOpts.resolveSensitive = m_cfg.resolveSensitive;
+    navOpts.resolveMaterial = m_cfg.resolveMaterial;
+    navOpts.resolvePassive = m_cfg.resolvePassive;
+    navOpts.startObject = state.navigation.currentLayer;
+    navOpts.nearLimit = state.options.surfaceTolerance;
+    navOpts.farLimit = std::numeric_limits<double>::max();
 
+    auto layers = volume->compatibleLayers(
+        state.geoContext, stepper.position(state.stepping),
+        state.options.direction * stepper.direction(state.stepping), navOpts);
+
+    // Screen output where they are
+    if (logger().doPrint(Logging::VERBOSE)) {
+      std::ostringstream oss;
+      oss << layers.size();
+      oss << " layer candidates found at path(s): ";
       for (const auto& layer : layers) {
-        state.navigation.candidates.emplace_back(detail::AnyIntersection(layer),
-                                                 BoundaryCheck(true));
+        oss << layer.pathLength() << "  ";
       }
+      ACTS_VERBOSE(oss.str());
+    }
+
+    for (const auto& layer : layers) {
+      state.navigation.candidates.emplace_back(detail::AnyIntersection(layer),
+                                               BoundaryCheck(true));
     }
   }
 
   /// Helper method to initialize navigation candidates for the current layer.
   template <typename propagator_state_t, typename stepper_t>
-  void initializeLayerCandidates(propagator_state_t& state,
-                                 const stepper_t& stepper) const {
+  void initializeLayerSurfaceCandidates(propagator_state_t& state,
+                                        const stepper_t& stepper) const {
     const Layer* layer = state.navigation.currentLayer;
     assert(layer != nullptr && "Current layer must be set.");
 
-    ACTS_VERBOSE(volInfo(state) << "Initialize layer " << layer->geometryId());
+    ACTS_VERBOSE(volInfo(state) << "Initialize layer surface candidates for "
+                                << layer->geometryId());
 
-    {
-      ACTS_VERBOSE(volInfo(state) << "Searching for compatible surfaces.");
+    // Use navigation parameters and NavigationOptions
+    NavigationOptions<Surface> navOpts;
+    navOpts.boundaryCheck = BoundaryCheck(true);
+    navOpts.resolveSensitive = m_cfg.resolveSensitive;
+    navOpts.resolveMaterial = m_cfg.resolveMaterial;
+    navOpts.resolvePassive = m_cfg.resolvePassive;
+    navOpts.startObject = state.navigation.currentSurface;
+    navOpts.endObject = state.navigation.targetSurface;
+    navOpts.nearLimit = state.options.surfaceTolerance;
+    navOpts.farLimit = std::numeric_limits<double>::max();
 
-      // Use navigation parameters and NavigationOptions
-      NavigationOptions<Surface> navOpts;
-      navOpts.resolveSensitive = m_cfg.resolveSensitive;
-      navOpts.resolveMaterial = m_cfg.resolveMaterial;
-      navOpts.resolvePassive = m_cfg.resolvePassive;
-      navOpts.startObject = state.navigation.currentSurface;
-      navOpts.endObject = state.navigation.targetSurface;
-      navOpts.nearLimit = state.options.surfaceTolerance;
-      navOpts.farLimit = std::numeric_limits<double>::max();
-
-      if (!state.navigation.externalSurfaces.empty()) {
-        auto layerID = layer->geometryId().layer();
-        auto externalSurfaceRange =
-            state.navigation.externalSurfaces.equal_range(layerID);
-        navOpts.externalSurfaces.reserve(
-            state.navigation.externalSurfaces.count(layerID));
-        for (auto itSurface = externalSurfaceRange.first;
-             itSurface != externalSurfaceRange.second; itSurface++) {
-          navOpts.externalSurfaces.push_back(itSurface->second);
-        }
+    if (!state.navigation.externalSurfaces.empty()) {
+      auto layerID = layer->geometryId().layer();
+      auto externalSurfaceRange =
+          state.navigation.externalSurfaces.equal_range(layerID);
+      navOpts.externalSurfaces.reserve(
+          state.navigation.externalSurfaces.count(layerID));
+      for (auto itSurface = externalSurfaceRange.first;
+           itSurface != externalSurfaceRange.second; itSurface++) {
+        navOpts.externalSurfaces.push_back(itSurface->second);
       }
+    }
 
-      auto surfaces = layer->compatibleSurfaces(
-          state.geoContext, stepper.position(state.stepping),
-          state.options.direction * stepper.direction(state.stepping), navOpts);
+    auto surfaces = layer->compatibleSurfaces(
+        state.geoContext, stepper.position(state.stepping),
+        state.options.direction * stepper.direction(state.stepping), navOpts);
 
-      // Screen output where they are
-      if (logger().doPrint(Logging::VERBOSE)) {
-        std::ostringstream oss;
-        oss << surfaces.size();
-        oss << " surface candidates found at path(s): ";
-        for (const auto& surface : surfaces) {
-          oss << surface.pathLength() << "  ";
-        }
-        ACTS_VERBOSE(oss.str());
-      }
-
+    // Screen output where they are
+    if (logger().doPrint(Logging::VERBOSE)) {
+      std::ostringstream oss;
+      oss << surfaces.size();
+      oss << " surface candidates found at path(s): ";
       for (const auto& surface : surfaces) {
-        state.navigation.candidates.emplace_back(
-            detail::AnyIntersection(surface),
-            m_cfg.boundaryCheckSurfaceApproach);
+        oss << surface.pathLength() << "  ";
       }
+      ACTS_VERBOSE(oss.str());
+    }
+
+    for (const auto& surface : surfaces) {
+      state.navigation.candidates.emplace_back(
+          detail::AnyIntersection(surface), m_cfg.boundaryCheckSurfaceApproach);
     }
   }
 
@@ -698,10 +701,11 @@ class Navigator {
     // TODO for layers it might be sufficient to only resolve 1-2 as we will
     // resolve the rest later on anyways
     if (state.navigation.currentLayer != nullptr) {
-      initializeLayerCandidates(state, stepper);
+      initializeLayerSurfaceCandidates(state, stepper);
     }
 
-    initializeVolumeCandidates(state, stepper);
+    initializeVolumeLayerCandidates(state, stepper);
+    initializeVolumeBoundaryCandidates(state, stepper);
 
     std::sort(state.navigation.candidates.begin(),
               state.navigation.candidates.end(),

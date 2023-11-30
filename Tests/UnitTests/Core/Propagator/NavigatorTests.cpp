@@ -980,38 +980,38 @@ StraightLineStepper slstepper;
 
 EigenPropagator epropagator(estepper,
                             Navigator({tGeometry, true, true, false,
-                                       BoundaryCheck(false)},
+                                       BoundaryCheck(false),
+                                       BoundaryCheck(false), false},
                                       getDefaultLogger("e_nav", Logging::INFO)),
                             getDefaultLogger("e_prop", Logging::INFO));
 StraightLinePropagator slpropagator(
     slstepper,
-    Navigator({tGeometry, true, true, false, BoundaryCheck(false)},
+    Navigator({tGeometry, true, true, false},
               getDefaultLogger("sl_nav", Logging::INFO)),
     getDefaultLogger("sl_prop", Logging::INFO));
 
 Reference1EigenPropagator refepropagator1(
     estepper,
     TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
-                    getDefaultLogger("refe1_nav", Logging::INFO)),
-    getDefaultLogger("refe1_prop", Logging::INFO));
+                    getDefaultLogger("ref1_e_nav", Logging::INFO)),
+    getDefaultLogger("ref1_e_prop", Logging::INFO));
 Reference1StraightLinePropagator refslpropagator1(
     slstepper,
-    TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
-                    getDefaultLogger("refsl1_nav", Logging::INFO)),
-    getDefaultLogger("refsl1_prop", Logging::INFO));
+    TryAllNavigator({tGeometry, true, true, false},
+                    getDefaultLogger("ref1_sl_nav", Logging::INFO)),
+    getDefaultLogger("ref1_sl_prop", Logging::INFO));
 
 Reference2EigenPropagator refepropagator2(
     estepper,
     TryAllOverstepNavigator({tGeometry, true, true, false,
                              BoundaryCheck(false)},
-                            getDefaultLogger("refe2_nav", Logging::INFO)),
-    getDefaultLogger("refe2_prop", Logging::INFO));
+                            getDefaultLogger("ref2_e_nav", Logging::INFO)),
+    getDefaultLogger("ref2_e_prop", Logging::INFO));
 Reference2StraightLinePropagator refslpropagator2(
     slstepper,
-    TryAllOverstepNavigator({tGeometry, true, true, false,
-                             BoundaryCheck(false)},
-                            getDefaultLogger("refsl2_nav", Logging::INFO)),
-    getDefaultLogger("refsl2_prop", Logging::INFO));
+    TryAllOverstepNavigator({tGeometry, true, true, false},
+                            getDefaultLogger("ref2_sl_nav", Logging::INFO)),
+    getDefaultLogger("ref2_sl_prop", Logging::INFO));
 
 BOOST_DATA_TEST_CASE(
     Navigator_random,

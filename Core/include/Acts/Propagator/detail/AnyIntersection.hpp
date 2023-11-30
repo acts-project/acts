@@ -24,23 +24,23 @@ class AnyIntersection {
   using Any = std::variant<SurfaceIntersection, LayerIntersection,
                            BoundaryIntersection>;
 
-  AnyIntersection(const Any& any) : m_intersection(any) {}
-  AnyIntersection(Any&& any) : m_intersection(std::move(any)) {}
+  AnyIntersection(const Any& any) : m_any(any) {}
+  AnyIntersection(Any&& any) : m_any(std::move(any)) {}
 
   explicit operator bool() const {
     return std::visit(
         [](const auto& intersection) { return intersection.operator bool(); },
-        m_intersection);
+        m_any);
   }
 
   template <typename intersection_t>
   bool checkType() const {
-    return std::holds_alternative<intersection_t>(m_intersection);
+    return std::holds_alternative<intersection_t>(m_any);
   }
 
   template <typename intersection_t>
   const typename intersection_t::Object* object() const {
-    return std::get<intersection_t>(m_intersection).object();
+    return std::get<intersection_t>(m_any).object();
   }
 
   const Surface* representation() const {
@@ -48,7 +48,7 @@ class AnyIntersection {
         [](const auto& intersection) -> const Surface* {
           return intersection.representation();
         },
-        m_intersection);
+        m_any);
   }
 
   const Intersection3D& intersection() const {
@@ -56,7 +56,7 @@ class AnyIntersection {
         [](const auto& intersection) -> const Intersection3D& {
           return intersection.intersection();
         },
-        m_intersection);
+        m_any);
   }
 
   const Intersection3D::Position& position() const {
@@ -64,25 +64,23 @@ class AnyIntersection {
         [](const auto& intersection) -> const Intersection3D::Position& {
           return intersection.position();
         },
-        m_intersection);
+        m_any);
   }
 
   ActsScalar pathLength() const {
     return std::visit(
         [](const auto& intersection) { return intersection.pathLength(); },
-        m_intersection);
+        m_any);
   }
 
   Intersection3D::Status status() const {
     return std::visit(
-        [](const auto& intersection) { return intersection.status(); },
-        m_intersection);
+        [](const auto& intersection) { return intersection.status(); }, m_any);
   }
 
   std::uint8_t index() const {
     return std::visit(
-        [](const auto& intersection) { return intersection.index(); },
-        m_intersection);
+        [](const auto& intersection) { return intersection.index(); }, m_any);
   }
 
   static bool forwardOrder(const AnyIntersection& aIntersection,
@@ -98,7 +96,7 @@ class AnyIntersection {
   }
 
  private:
-  Any m_intersection;
+  Any m_any;
 };
 
 /// @brief Type erased any intersection
@@ -112,31 +110,30 @@ class AnyMultiIntersection {
       boost::container::static_vector<AnyIntersection,
                                       s_maximumNumberOfIntersections>;
 
-  AnyMultiIntersection(const Any& any) : m_multiIntersection(any) {}
-  AnyMultiIntersection(Any&& any) : m_multiIntersection(std::move(any)) {}
+  AnyMultiIntersection(const Any& any) : m_any(any) {}
+  AnyMultiIntersection(Any&& any) : m_any(std::move(any)) {}
 
   AnyIntersection operator[](std::uint8_t index) const {
     return std::visit(
         [&](const auto& intersection) {
           return AnyIntersection(intersection[index]);
         },
-        m_multiIntersection);
+        m_any);
   }
 
   template <typename intersection_t>
   bool checkType() const {
-    return std::holds_alternative<intersection_t>(m_multiIntersection);
+    return std::holds_alternative<intersection_t>(m_any);
   }
 
   std::size_t size() const {
     return std::visit(
-        [](const auto& intersection) { return intersection.size(); },
-        m_multiIntersection);
+        [](const auto& intersection) { return intersection.size(); }, m_any);
   }
 
   template <typename intersection_t>
   const typename intersection_t::Object* object() const {
-    return std::get<intersection_t>(m_multiIntersection).object();
+    return std::get<intersection_t>(m_any).object();
   }
 
   const Surface* representation() const {
@@ -144,7 +141,7 @@ class AnyMultiIntersection {
         [](const auto& intersection) -> const Surface* {
           return intersection.representation();
         },
-        m_multiIntersection);
+        m_any);
   }
 
   SplitIntersections split() const {
@@ -156,7 +153,7 @@ class AnyMultiIntersection {
   }
 
  private:
-  Any m_multiIntersection;
+  Any m_any;
 };
 
 }  // namespace detail
