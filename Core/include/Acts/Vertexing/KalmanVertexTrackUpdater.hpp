@@ -29,6 +29,10 @@ namespace KalmanVertexTrackUpdater {
 /// @brief Refits a single track with the knowledge of
 /// the vertex it has originated from
 ///
+/// @tparam input_track_t Track object type
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+///
 /// @param track Track to update
 /// @param vtx Vertex `track` belongs to
 template <typename input_track_t, unsigned int nDimVertex>
@@ -38,6 +42,9 @@ void update(TrackAtVertex<input_track_t>& track,
 namespace detail {
 
 /// @brief Calculates a covariance matrix for the refitted track parameters
+///
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
 ///
 /// @param wMat W_k matrix from Ref. (1)
 /// @param crossCovVP Cross-covariance matrix between vertex position and track

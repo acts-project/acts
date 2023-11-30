@@ -35,6 +35,8 @@ namespace KalmanVertexUpdater {
 /// Section 5.3.5
 
 /// Cache object, the comments indicate the names of the variables in Ref. (1)
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
 template <unsigned int nDimVertex>
 struct Cache {
   using VertexVector = ActsVector<nDimVertex>;
@@ -56,6 +58,10 @@ struct Cache {
 /// However, it does not add the track to the TrackAtVertex list. This to be
 /// done manually after calling the method.
 ///
+/// @tparam input_track_t Track object type
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+///
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
 template <typename input_track_t, unsigned int nDimVertex>
@@ -65,6 +71,11 @@ void updateVertexWithTrack(Vertex<input_track_t>& vtx,
 /// @brief Calculates updated vertex position and covariance as well as the
 /// updated track momentum when adding/removing linTrack. Saves the result in
 /// cache.
+///
+/// @tparam input_track_t Track object type
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+///
 /// @param vtx Vertex
 /// @param linTrack Linearized track to be added or removed
 /// @param trackWeight Track weight
@@ -83,6 +94,10 @@ namespace detail {
 /// @brief Calculates the update of the vertex position chi2 after
 /// adding/removing the track
 ///
+/// @tparam input_track_t Track object type
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+///
 /// @param oldVtx Vertex before the track was added/removed
 /// @param cache Cache containing updated vertex position
 ///
@@ -93,6 +108,10 @@ double vertexPositionChi2Update(const Vertex<input_track_t>& oldVtx,
 
 /// @brief Calculates chi2 of refitted track parameters
 /// w.r.t. updated vertex
+///
+/// @tparam input_track_t Track object type
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
 ///
 /// @param linTrack Linearized version of track
 /// @param cache Cache containing some quantities needed in
@@ -105,6 +124,10 @@ double trackParametersChi2(const LinearizedTrack& linTrack,
 
 /// @brief Adds or removes (depending on `sign`) tracks from vertex
 /// and updates the vertex
+///
+/// @tparam input_track_t Track object type
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
 ///
 /// @param vtx Vertex to be updated
 /// @param trk Track to be added to/removed from vtx
