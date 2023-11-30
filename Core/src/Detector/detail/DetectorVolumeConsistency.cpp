@@ -40,14 +40,14 @@ Acts::Experimental::detail::DetectorVolumeConsistency::checkCenterAlignment(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes,
     BinningValue axisValue) {
-  std::vector<Acts::ActsScalar> distances = {};
+  std::vector<ActsScalar> distances = {};
   // First it needs to surfive the rotation check
   checkRotationAlignment(gctx, volumes);
 
   // Get the reference axis
-  auto refAxis = volumes[0u]->transform(gctx).rotation().col(axisValue);
+  Vector3 refAxis = volumes[0u]->transform(gctx).rotation().col(axisValue);
 
-  for (auto [iv, v] : Acts::enumerate(volumes)) {
+  for (auto [iv, v] : enumerate(volumes)) {
     if (iv > 0) {
       Vector3 lastCenter = volumes[iv - 1]->transform(gctx).translation();
       Vector3 curCenter = v->transform(gctx).translation();
