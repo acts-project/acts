@@ -12,3 +12,6 @@ macos-arm:
     - hostname
     - whoami
     - pwd
+    - echo ${CI_PROJECT_DIR}
+    - date > output.txt
+
