@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <stdexcept>
 
@@ -50,12 +51,20 @@ Acts::Experimental::detail::DetectorVolumeConsistency::checkCenterAlignment(
     if (iv > 0) {
       Vector3 lastCenter = volumes[iv - 1]->transform(gctx).translation();
       Vector3 curCenter = v->transform(gctx).translation();
-      Vector3 diff = curCenter - lastCenter;
+      Vector3 diff(curCenter - lastCenter);
       // Check if the difference is aligned with the reference axis
-      if (not diff.normalized().isApprox(refAxis)) {
-        std::string message = "ConsitencyChecker: center of volume ";
+      if (!diff.normalized().isApprox(refAxis)) {
+        std::string message = "ConsitencyChecker: center ";
+        message += toString(curCenter);
+        message += " of volume ";
         message += std::to_string(iv);
-        message += std::string(" is not aligned with previous volume");
+        message += " is not aligned with center ";
+        message += toString(lastCenter);
+        message += " of previous volume.";
+        message += " Axis mismatch:  ";
+        message += toString(refAxis);
+        message += " vs. ";
+        message += toString(diff.normalized());
         throw std::invalid_argument(message.c_str());
       }
       // Check if the projection is positive
