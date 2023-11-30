@@ -157,7 +157,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
-      seedNumber(track) = nSeed;
+      // Set the seed number, this number decrease by 1 since the seed number
+      // has already been updated
+      seedNumber(track) = nSeed - 1;
       if (!m_trackSelector.has_value() ||
           m_trackSelector->isValidTrack(track)) {
         auto destProxy = tracks.getTrack(tracks.addTrack());

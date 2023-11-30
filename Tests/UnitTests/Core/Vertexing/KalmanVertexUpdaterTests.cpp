@@ -164,6 +164,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
+    trkAtVtx.isLinearized = true;
 
     // Create a vertex
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
