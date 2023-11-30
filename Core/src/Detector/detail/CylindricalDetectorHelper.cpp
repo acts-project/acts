@@ -1173,7 +1173,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
                 });
   wrappingVolume->updatePortal(fusedDiscN, 4u);
 
-  // Stich sides - positiv
+  // Stich sides - positive
   auto& firstDiscP = innerContainer[1u];
   auto firstPAttachedVolumes =
       firstDiscP
