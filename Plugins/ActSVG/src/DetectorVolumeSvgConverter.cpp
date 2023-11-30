@@ -66,7 +66,7 @@ Acts::Svg::DetectorVolumeConverter::convert(
   pVolume._v_surfaces = pSurfaces;
 
   // Make dedicated surface grid sheets
-  const auto& internalNavigationDelegate = dVolume.surfaceCandidatesUpdator();
+  const auto& internalNavigationDelegate = dVolume.surfaceCandidatesUpdater();
 
   IndexedSurfacesConverter::Options isOptions;
   // Use or transfer the surface style

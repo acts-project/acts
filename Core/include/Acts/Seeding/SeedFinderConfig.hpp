@@ -173,6 +173,10 @@ struct SeedFinderConfig {
   // Returns position of the center of the top strip.
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
+  // Delegate to apply experiment specific cuts
+  Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
+      DelegateFuncTag<&noopExperimentCuts>{}};
+
   bool isInInternalUnits = false;
 
   SeedFinderConfig toInternalUnits() const {

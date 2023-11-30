@@ -9,7 +9,7 @@
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
 
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
@@ -33,9 +33,9 @@ struct IndexedSurfacesGenerator {
   /// @param bv the bin value array
   /// @param transform the transform for the indexed surfaces inmplementaiton
   ///
-  /// @return a connected SurfaceCandidatesUpdator object
+  /// @return a connected SurfaceCandidatesUpdater object
   template <typename grid_type>
-  Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
+  Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
       grid_type&& grid,
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
@@ -52,23 +52,23 @@ struct IndexedSurfacesGenerator {
         std::tie(allPortals, indexedSurfaces));
 
     // Create the delegate and connect it
-    Acts::Experimental::SurfaceCandidatesUpdator nStateUpdator;
-    nStateUpdator.connect<&DelegateType::update>(
+    Acts::Experimental::SurfaceCandidatesUpdater nStateUpdater;
+    nStateUpdater.connect<&DelegateType::update>(
         std::move(indexedSurfacesAllPortals));
 
-    return nStateUpdator;
+    return nStateUpdater;
   }
 };
 
 }  // namespace
 
-Acts::Experimental::SurfaceCandidatesUpdator
+Acts::Experimental::SurfaceCandidatesUpdater
 Acts::IndexedSurfacesJsonConverter::fromJson(
     const nlohmann::json& jSurfaceNavigation) {
   if (!jSurfaceNavigation.is_null()) {
     // The return object
     auto sfCandidates = IndexedGridJsonHelper::generateFromJson<
-        Experimental::SurfaceCandidatesUpdator, IndexedSurfacesGenerator>(
+        Experimental::SurfaceCandidatesUpdater, IndexedSurfacesGenerator>(
         jSurfaceNavigation, "IndexedSurfaces");
     if (sfCandidates.connected()) {
       return sfCandidates;
