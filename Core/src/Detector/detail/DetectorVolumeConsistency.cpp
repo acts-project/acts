@@ -25,7 +25,7 @@ void Acts::Experimental::detail::DetectorVolumeConsistency::
   for (auto [iv, v] : Acts::enumerate(volumes)) {
     if (iv > 0) {
       auto curRotation = v->transform(gctx).rotation();
-      if (not curRotation.isApprox(refRotation)) {
+      if (!curRotation.isApprox(refRotation)) {
         std::string message = "ConsitencyChecker: rotation of volume ";
         message += std::to_string(iv);
         message += std::string(" is not aligned with previous volume");
@@ -68,7 +68,7 @@ Acts::Experimental::detail::DetectorVolumeConsistency::checkCenterAlignment(
         throw std::invalid_argument(message.c_str());
       }
       // Check if the projection is positive
-      if (diff.dot(refAxis) < 0) {
+      if (diff.dot(refAxis) < 0.) {
         std::string message = "ConsitencyChecker: center of volume ";
         message += std::to_string(iv);
         message += std::string(" is not ordered with previous volume");

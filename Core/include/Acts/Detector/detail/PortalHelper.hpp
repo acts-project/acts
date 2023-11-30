@@ -102,7 +102,7 @@ std::vector<std::shared_ptr<DetectorVolume>> attachedDetectorVolumes(
 std::map<unsigned int,
          std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
 stripSideVolumes(
-    const std::vector<std::map<unsigned int, std::shared_ptr<Portal>>>
+    const std::vector<std::map<unsigned int, std::shared_ptr<Portal>>>&
         pContainers,
     const std::vector<unsigned int>& sides,
     const std::vector<unsigned int>& selectedOnly = {},

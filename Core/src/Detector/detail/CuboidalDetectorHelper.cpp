@@ -61,7 +61,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   // Pick the counter part value
   auto counterPart = [&](BinningValue mValue) -> BinningValue {
     for (auto cValue : possibleValues) {
-      if (cValue != mValue and cValue != bValue) {
+      if (cValue != mValue && cValue != bValue) {
         return cValue;
       }
     }
@@ -187,7 +187,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
 
     for (auto [is, index] : enumerate(portalSets[mergeValue])) {
       // Check if you need to skip due to selections
-      if (not selectedOnly.empty() and
+      if (!selectedOnly.empty() &&
           std::find(selectedOnly.begin(), selectedOnly.end(), index) ==
               selectedOnly.end()) {
         continue;
