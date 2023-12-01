@@ -261,12 +261,12 @@ void collector(typename traj_t::TrackStateProxy& trackStateProxy,
                         predicted)
                            .eval();
 
-  ACTS_VERBOSE("Processing and collecting measurements in Actor:\n"
-               << "\tMeasurement:\t" << measurement.transpose()
-               << "\n\tPredicted:\t" << predicted.transpose()
-               << "\n\tProjector:\t" << trackStateProxy.effectiveProjector()
-               << "\n\tProjected Jacobian:\t" << projJacobian
-               << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
+  ACTS_VERBOSE("Processing and collecting measurements in Actor:"
+               << "\n    Measurement:\t" << measurement.transpose()
+               << "\n    Predicted:\t" << predicted.transpose()
+               << "\n    Projector:\t" << trackStateProxy.effectiveProjector()
+               << "\n    Projected Jacobian:\t" << projJacobian
+               << "\n    Covariance Measurements:\t" << covarianceMeasurement);
 
   // Collect residuals, covariances, and projected jacobians
   for (std::size_t i = 0; i < measDim; i++) {
@@ -280,10 +280,10 @@ void collector(typename traj_t::TrackStateProxy& trackStateProxy,
     result.collectorCovariances.push_back(covarianceMeasurement(i, i));
     result.collectorProjectedJacobians.push_back(projJacobian.row(i));
 
-    ACTS_VERBOSE("\tSplitting the measurement:\n"
-                 << "\t\tResidual:\t" << measurement[i] - projPredicted[i]
-                 << "\n\t\tCovariance:\t" << covarianceMeasurement(i, i)
-                 << "\n\t\tProjected Jacobian:\t" << projJacobian.row(i));
+    ACTS_VERBOSE("    Splitting the measurement:"
+                 << "\n        Residual:\t" << measurement[i] - projPredicted[i]
+                 << "\n        Covariance:\t" << covarianceMeasurement(i, i)
+                 << "\n        Projected Jacobian:\t" << projJacobian.row(i));
   }
 }
 
@@ -415,10 +415,10 @@ class Gx2Fitter {
 
           ACTS_VERBOSE(
               "Actor - indices before processing:"
-              << "\n\t"
+              << "\n    "
               << "result.lastMeasurementIndex: " << result.lastMeasurementIndex
-              << "\n\t"
-              << "result.lastTrackIndex: " << result.lastTrackIndex << "\n\t"
+              << "\n    "
+              << "result.lastTrackIndex: " << result.lastTrackIndex << "\n    "
               << "result.fittedStates->size(): " << result.fittedStates->size())
 
           // TODO generalize the update of the currentTrackIndex
@@ -428,7 +428,7 @@ class Gx2Fitter {
           TrackStatePropMask mask =
               ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered);
 
-          ACTS_VERBOSE("\tprocessSurface: addTrackState");
+          ACTS_VERBOSE("    processSurface: addTrackState");
 
           // Add a <mask> TrackState entry multi trajectory. This allocates
           // storage for all components, which we will set later.
@@ -496,13 +496,13 @@ class Gx2Fitter {
           // We count the processed measurement
           ++result.processedMeasurements;
           ACTS_VERBOSE("Actor - indices after processing, before over writing:"
-                       << "\n\t"
+                       << "\n    "
                        << "result.lastMeasurementIndex: "
-                       << result.lastMeasurementIndex << "\n\t"
+                       << result.lastMeasurementIndex << "\n    "
                        << "trackStateProxy.index(): " << trackStateProxy.index()
-                       << "\n\t"
+                       << "\n    "
                        << "result.lastTrackIndex: " << result.lastTrackIndex
-                       << "\n\t"
+                       << "\n    "
                        << "currentTrackIndex: " << currentTrackIndex)
           result.lastMeasurementIndex = currentTrackIndex;
           result.lastTrackIndex = currentTrackIndex;
@@ -513,7 +513,7 @@ class Gx2Fitter {
       ACTS_DEBUG("result.processedMeasurements: "
                  << result.processedMeasurements << "\n"
                  << "inputMeasurements.size()" << inputMeasurements->size())
-      if (result.processedMeasurements == inputMeasurements->size()) {
+      if (result.processedMeasurements >= inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: all measurements found.");
         result.finished = true;
       }
