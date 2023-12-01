@@ -984,11 +984,11 @@ EigenPropagator epropagator(estepper,
                                        BoundaryCheck(false)},
                                       getDefaultLogger("e_nav", Logging::INFO)),
                             getDefaultLogger("e_prop", Logging::INFO));
-StraightLinePropagator slpropagator(
-    slstepper,
-    Navigator({tGeometry, true, true, false},
-              getDefaultLogger("sl_nav", Logging::INFO)),
-    getDefaultLogger("sl_prop", Logging::INFO));
+StraightLinePropagator slpropagator(slstepper,
+                                    Navigator({tGeometry, true, true, false},
+                                              getDefaultLogger("sl_nav",
+                                                               Logging::INFO)),
+                                    getDefaultLogger("sl_prop", Logging::INFO));
 
 Reference1EigenPropagator refepropagator1(
     estepper,
