@@ -100,28 +100,33 @@ class Navigator {
     /// Whether to perform boundary checks for layer resolving (improves
     /// navigation for bended tracks)
     BoundaryCheck boundaryCheckLayerResolving = BoundaryCheck(true);
+
+    /// Whether to reinitialize the navigation candidates on layer hit.
+    /// This improves navigation for bended tracks but is more expensive.
+    bool reinitializeOnLayerHit = false;
   };
 
-  /// Composes an intersection and a bounds check into a navigation candidate.
-  /// This is used to consistently update intersections after creation.
-  struct NavigationCandidate {
+  /// Composes an intersection and a bounds check into an intersection
+  /// candidate. This is used to consistently update intersections after
+  /// creation.
+  struct IntersectionCandidate {
     detail::AnyIntersection intersection;
     BoundaryCheck boundaryCheck;
 
-    NavigationCandidate(detail::AnyIntersection _intersection,
-                        BoundaryCheck _boundaryCheck)
+    IntersectionCandidate(detail::AnyIntersection _intersection,
+                          BoundaryCheck _boundaryCheck)
         : intersection(std::move(_intersection)),
           boundaryCheck(std::move(_boundaryCheck)) {}
 
-    static bool forwardOrder(const NavigationCandidate& aCandidate,
-                             const NavigationCandidate& bCandidate) {
+    static bool forwardOrder(const IntersectionCandidate& aCandidate,
+                             const IntersectionCandidate& bCandidate) {
       return Intersection3D::forwardOrder(
           aCandidate.intersection.intersection(),
           bCandidate.intersection.intersection());
     }
   };
 
-  using NavigationCandidates = std::vector<NavigationCandidate>;
+  using IntersectionCandidates = std::vector<IntersectionCandidate>;
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
 
@@ -130,13 +135,13 @@ class Navigator {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
-    /// The vector of navigation candidates to work through
-    NavigationCandidates candidates = {};
+    /// The vector of intersection candidates to work through
+    IntersectionCandidates candidates = {};
     /// The current candidate index of the navigation state
     std::size_t candidateIndex = 0;
 
     /// Provides easy access to the active navigation candidate
-    const NavigationCandidate& candidate() const {
+    const IntersectionCandidate& candidate() const {
       return candidates.at(candidateIndex);
     }
 
@@ -516,7 +521,19 @@ class Navigator {
       state.navigation.currentLayer =
           intersection.template object<LayerIntersection>();
 
-      reinitializeCandidates(state, stepper);
+      if (m_cfg.reinitializeOnLayerHit) {
+        reinitializeCandidates(state, stepper);
+      } else {
+        // Note that this is hacky as we do not reintersect the existing
+        // candidates.
+
+        initializeLayerSurfaceCandidates(state, stepper);
+
+        std::sort(state.navigation.candidates.begin() +
+                      state.navigation.candidateIndex,
+                  state.navigation.candidates.end(),
+                  IntersectionCandidate::forwardOrder);
+      }
     } else if (intersection.template checkType<BoundaryIntersection>()) {
       // In case of a boundary we need to switch volume and reinitialize
 
@@ -698,8 +715,6 @@ class Navigator {
     state.navigation.candidates.clear();
     state.navigation.candidateIndex = 0;
 
-    // TODO for layers it might be sufficient to only resolve 1-2 as we will
-    // resolve the rest later on anyways
     if (state.navigation.currentLayer != nullptr) {
       initializeLayerSurfaceCandidates(state, stepper);
     }
@@ -709,7 +724,7 @@ class Navigator {
 
     std::sort(state.navigation.candidates.begin(),
               state.navigation.candidates.end(),
-              NavigationCandidate::forwardOrder);
+              IntersectionCandidate::forwardOrder);
   }
 
   /// Checks if a navigation break had been triggered or navigator is
