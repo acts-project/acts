@@ -35,13 +35,11 @@ namespace detail {
 ///
 /// @param sMat Track ovariance in momentum space
 /// @param newTrkCov New track covariance matrixs
-/// @param vtxWeight Vertex weight matrix
 /// @param vtxCov Vertex covariance matrix
 /// @param newTrkParams New track parameter
-inline BoundMatrix createFullTrackCovariance(const SquareMatrix3& sMat,
-                                             const ActsMatrix<4, 3>& newTrkCov,
-                                             const SquareMatrix4& vtxWeight,
-                                             const SquareMatrix4& vtxCov,
+inline BoundMatrix createFullTrackCovariance(const SquareMatrix3& wMat,
+                                             const SquareMatrix3& crossCovVP,
+                                             const SquareMatrix3& vtxCov,
                                              const BoundVector& newTrkParams);
 
 }  // Namespace detail

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,120 +21,151 @@ void Acts::KalmanVertexUpdater::detail::update(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
   double trackWeight = trk.trackWeight;
 
-  MatrixCache matrixCache;
+  // Set up cache where entire content is set to 0
+  Cache cache;
 
-  updatePosition(vtx, trk.linearizedState, trackWeight, sign, matrixCache);
+  // Calculate update and save result in cache
+  calculateUpdate(vtx, trk.linearizedState, trackWeight, sign, cache);
 
   // Get fit quality parameters wrt to old vertex
   std::pair fitQuality = vtx.fitQuality();
   double chi2 = fitQuality.first;
   double ndf = fitQuality.second;
 
-  // Chi2 wrt to track parameters
-  double trkChi2 = detail::trackParametersChi2<input_track_t>(
-      trk.linearizedState, matrixCache);
+  // Chi2 of the track parameters
+  double trkChi2 =
+      detail::trackParametersChi2<input_track_t>(trk.linearizedState, cache);
+
+  // Update of the chi2 of the vertex position
+  double vtxPosChi2Update =
+      detail::vertexPositionChi2Update<input_track_t>(vtx, cache);
 
   // Calculate new chi2
-  chi2 += sign * (detail::vertexPositionChi2<input_track_t>(vtx, matrixCache) +
-                  trackWeight * trkChi2);
+  chi2 += sign * (vtxPosChi2Update + trackWeight * trkChi2);
 
   // Calculate ndf
   ndf += sign * trackWeight * 2.;
 
   // Updating the vertex
-  vtx.setPosition(matrixCache.newVertexPos);
-  vtx.setCovariance(matrixCache.newVertexCov);
+  vtx.setPosition(cache.newVertexPos);
+  vtx.setCovariance(cache.newVertexCov);
   vtx.setFitQuality(chi2, ndf);
 
-  // Updates track at vertex if already there
-  // by removing it first and adding new one.
-  // Otherwise just adds track to existing list of tracks at vertex
-  if (sign > 0) {
+  if (sign == 1) {
     // Update track
     trk.chi2Track = trkChi2;
     trk.ndf = 2 * trackWeight;
   }
-  // Remove trk from current vertex
-  if (sign < 0) {
-    trk.trackWeight = 0;
+  // Remove trk from current vertex by setting its weight to 0
+  else if (sign == -1) {
+    trk.trackWeight = 0.;
+  } else {
+    throw std::invalid_argument(
+        "Sign for adding/removing track must be +1 (add) or -1 (remove).");
   }
 }
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdater::updatePosition(
+void Acts::KalmanVertexUpdater::calculateUpdate(
     const Acts::Vertex<input_track_t>& vtx,
-    const Acts::LinearizedTrack& linTrack, double trackWeight, int sign,
-    MatrixCache& matrixCache) {
-  // Retrieve linTrack information
+    const Acts::LinearizedTrack& linTrack, const double trackWeight,
+    const int sign, Cache& cache) {
+  // Retrieve variables from the track linearization. The comments indicate the
+  // corresponding symbol used in Ref. (1).
+  // A_k
   const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
-  const ActsMatrix<5, 3> momJac =
-      linTrack.momentumJacobian.block<5, 3>(0, 0);  // B_k in comments below
+  // B_k
+  const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
+  // p_k
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
+  // c_k
   const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would use time
+  // G_k
+  // Note that, when removing a track, G_k -> - G_k, see Ref. (1).
+  // Further note that, as we use the weighted formalism, the track weight
+  // matrix (i.e., the inverse track covariance matrix) should be multiplied
+  // with the track weight from the AMVF formalism. Here, we choose to
+  // consider these two multiplicative factors directly in the updates of
+  // newVertexWeight and newVertexPos.
   const ActsSquareMatrix<5> trkParamWeight =
       linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
-  // Vertex to be updated
+  // Retrieve current position of the vertex and its current weight matrix
   const Vector3& oldVtxPos = vtx.position();
-  matrixCache.oldVertexWeight = (vtx.covariance()).inverse();
+  // C_{k-1}^-1
+  cache.oldVertexWeight = (vtx.covariance()).inverse();
 
-  // W_k matrix
-  matrixCache.momWeightInv =
-      (momJac.transpose() * (trkParamWeight * momJac)).inverse();
+  // W_k
+  cache.wMat = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
-  // G_b = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
-  ActsSquareMatrix<5> gBmat =
-      trkParamWeight -
-      trkParamWeight *
-          (momJac * (matrixCache.momWeightInv * momJac.transpose())) *
-          trkParamWeight.transpose();
+  // G_k^B = G_k - G_k*B_k*W_k*B_k^(T)*G_k
+  ActsSquareMatrix<5> gBMat =
+      trkParamWeight - trkParamWeight * momJac * cache.wMat *
+                           momJac.transpose() * trkParamWeight;
 
-  // New vertex cov matrix
-  matrixCache.newVertexWeight =
-      matrixCache.oldVertexWeight +
-      trackWeight * sign * posJac.transpose() * (gBmat * posJac);
-  matrixCache.newVertexCov = matrixCache.newVertexWeight.inverse();
+  // C_k^-1
+  cache.newVertexWeight = cache.oldVertexWeight + sign * trackWeight *
+                                                      posJac.transpose() *
+                                                      gBMat * posJac;
+  // C_k
+  cache.newVertexCov = cache.newVertexWeight.inverse();
 
-  // New vertex position
-  matrixCache.newVertexPos =
-      matrixCache.newVertexCov * (matrixCache.oldVertexWeight * oldVtxPos +
-                                  trackWeight * sign * posJac.transpose() *
-                                      gBmat * (trkParams - constTerm));
+  // \tilde{x_k}
+  cache.newVertexPos =
+      cache.newVertexCov * (cache.oldVertexWeight * oldVtxPos +
+                            sign * trackWeight * posJac.transpose() * gBMat *
+                                (trkParams - constTerm));
 }
 
 template <typename input_track_t>
-double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
-    const Vertex<input_track_t>& oldVtx, const MatrixCache& matrixCache) {
-  Vector3 posDiff = matrixCache.newVertexPos - oldVtx.position();
+double Acts::KalmanVertexUpdater::detail::vertexPositionChi2Update(
+    const Vertex<input_track_t>& oldVtx, const Cache& cache) {
+  Vector3 posDiff = cache.newVertexPos - oldVtx.position();
 
   // Calculate and return corresponding chi2
-  return posDiff.transpose() * (matrixCache.oldVertexWeight * posDiff);
+  return posDiff.transpose() * (cache.oldVertexWeight * posDiff);
 }
 
 template <typename input_track_t>
 double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
-    const LinearizedTrack& linTrack, const MatrixCache& matrixCache) {
-  // Track properties
+    const LinearizedTrack& linTrack, const Cache& cache) {
+  // A_k
   const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
+  // B_k
   const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
+  // p_k
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
+  // c_k
   const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would use time
+  // G_k
   const ActsSquareMatrix<5> trkParamWeight =
       linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
-  const ActsVector<5> jacVtx = posJac * matrixCache.newVertexPos;
+  // A_k * \tilde{x_k}
+  const ActsVector<5> posJacVtxPos = posJac * cache.newVertexPos;
 
-  // Refitted track momentum
-  Vector3 newTrackMomentum = matrixCache.momWeightInv * momJac.transpose() *
-                             trkParamWeight * (trkParams - constTerm - jacVtx);
+  // \tilde{q_k}
+  Vector3 newTrkMom = cache.wMat * momJac.transpose() * trkParamWeight *
+                      (trkParams - constTerm - posJacVtxPos);
 
-  // Refitted track parameters
-  ActsVector<5> newTrkParams = constTerm + jacVtx + momJac * newTrackMomentum;
+  // Correct phi and theta for possible periodicity changes
+  // Commented out because of broken ATHENA tests.
+  // TODO: uncomment
+  /*
+  const auto correctedPhiTheta =
+      Acts::detail::normalizePhiTheta(newTrkMom(0), newTrkMom(1));
+  newTrkMom(0) = correctedPhiTheta.first;   // phi
+  newTrkMom(1) = correctedPhiTheta.second;  // theta
+  */
 
-  // Parameter difference
-  ActsVector<5> paramDiff = trkParams - newTrkParams;
+  // \tilde{p_k}
+  ActsVector<5> linearizedTrackParameters =
+      constTerm + posJacVtxPos + momJac * newTrkMom;
+
+  // r_k
+  ActsVector<5> paramDiff = trkParams - linearizedTrackParameters;
 
   // Return chi2
   return paramDiff.transpose() * (trkParamWeight * paramDiff);

@@ -28,9 +28,6 @@
 
 #include "PropagationTestHelper.hpp"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
 
 /// Get the ATLAS field from :
@@ -123,5 +120,4 @@ AtlasPropagatorType apropagator(std::move(astepper));
 #include "PropagationTestBase.hpp"
 
 }  // namespace IntegrationTest
-
 }  // namespace Acts
