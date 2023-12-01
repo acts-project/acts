@@ -66,7 +66,7 @@ struct NavigationObjectCandidate {
 };
 
 /// @brief Emplace all navigation candidates for a given volume
-void emplaceAllVolumeCandidates(
+inline void emplaceAllVolumeCandidates(
     std::vector<detail::NavigationObjectCandidate>& candidates,
     const TrackingVolume& volume, bool resolveSensitive, bool resolveMaterial,
     bool resolvePassive, BoundaryCheck boundaryCheckSurfaceApproach,

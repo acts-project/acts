@@ -981,7 +981,7 @@ StraightLineStepper slstepper;
 EigenPropagator epropagator(estepper,
                             Navigator({tGeometry, true, true, false,
                                        BoundaryCheck(false),
-                                       BoundaryCheck(false), false},
+                                       BoundaryCheck(false)},
                                       getDefaultLogger("e_nav", Logging::INFO)),
                             getDefaultLogger("e_prop", Logging::INFO));
 StraightLinePropagator slpropagator(
