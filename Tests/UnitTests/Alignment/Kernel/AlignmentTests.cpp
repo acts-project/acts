@@ -370,6 +370,72 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   BOOST_CHECK_EQUAL(alignState.alignmentToChi2Derivative.size(), 30);
   BOOST_CHECK_EQUAL(alignState.alignmentToChi2SecondDerivative.rows(), 30);
 
+// Unit tests that test makeAlignmentGroup functionality 
+
+struct DetectorAlignment::Config {
+  std::string alignmentGroupsFile;
+};
+
+int DetectorAlignment::runDetectorAlignment(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector,
+    ActsAlignment::AlignedTransformUpdater alignedTransformUpdater,
+    const AlignedDetElementGetter& alignedDetElementsGetter) {
+
+
+// separate function for reading and parsing JSON
+std::vector<AlignmentAlgorithm::AlignmentParameters> readJsonFile(const std::string& filePath) {
+  std::vector<AlignmentAlgorithm::AlignmentParameters> alignmentParameters;
+
+  if (!filePath.empty()) {
+    std::ifstream jsonFile(filePath);
+    if (!jsonFile.is_open()) {
+      std::cerr << " Unable to open an alignment group file" << std::endl;
+      return alignmentParameters;  // Return an empty vector in case of failure
+    }
+
+    // parsing the json file
+    nlohmann::json jsonData;
+    try {
+      jsonFile >> jsonData;
+    } catch (const nlohmann::json::parse_error& e) {
+      std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+      return EXIT_FAILURE;
+    }
+
+    // populate the alignmentParameters vector
+    for (const auto& alignmentData : jsonData) {
+      // create AlignmentParameters
+      AlignmentAlgorithm::AlignmentParameters alignmentPar;
+
+      alignmentParameters.push_back(alignmentPar);
+    }
+
+    jsonFile.close();
+
+    int DetectorAlignment::runDetectorAlignment(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector,
+    ActsAlignment::AlignedTransformUpdater alignedTransformUpdater,
+    const AlignedDetElementGetter& alignedDetElementsGetter) {
+
+  std::string alignmentGroupsFile = vm["name-alignment-groups-file"].as<std::string>();
+
+  // Unit test: Check if the alignmentGroupsFile is empty
+  if (alignmentGroupsFile.empty()) {
+    std::cout << "Unit Test: Alignment groups file is empty." << std::endl;
+    return EXIT_SUCCESS;
+  }
+
+  // Separate function for reading and parsing JSON
+  //std::vector<AlignmentAlgorithm::AlignmentParameters> alignmentParameters =
+   //   readJsonFile(alignmentGroupsFile);
+
+    // makeAlignmentGroup creates alignment groups
+    alignmentAlgorithm.makeAlignmentGroup(alignmentParameters);
+  }
+
+
   // Test the align method
   std::vector<std::vector<TestSourceLink>> trajCollection;
   trajCollection.reserve(10);
