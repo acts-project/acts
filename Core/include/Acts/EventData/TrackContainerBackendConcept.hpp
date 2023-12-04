@@ -45,7 +45,9 @@ concept ConstTrackContainerBackend = requires(const T& cv, HashedString key,
 
   { cv.referenceSurface_impl(itrack) } -> std::same_as<const Surface*>;
 
-  { cv.dynamicKeys_impl() } -> std::same_as<std::vector<Acts::HashedString>>;
+  {
+    cv.dynamicKeys_impl()
+    } -> std::same_as<const std::vector<Acts::HashedString>&>;
 };
 
 template <typename T>
