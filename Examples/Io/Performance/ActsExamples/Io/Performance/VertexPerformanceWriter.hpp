@@ -184,6 +184,10 @@ class VertexPerformanceWriter final
   std::vector<std::vector<double>> m_pullQOverP;
   std::vector<std::vector<double>> m_pullQOverPFitted;
 
+  // Track weights from vertex fit, will be set to 1 if we do unweighted vertex
+  // fitting
+  std::vector<std::vector<double>> m_trkWeight;
+
   // Number of tracks associated with truth/reconstructed vertex
   std::vector<int> m_nTracksOnTruthVertex;
   std::vector<int> m_nTracksOnRecoVertex;
