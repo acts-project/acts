@@ -414,7 +414,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     return *m_collection;
   }
 
-  std::vector<Acts::HashedString> dynamicKeys_impl() const {
+  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 

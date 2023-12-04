@@ -177,16 +177,6 @@ class PodioTrackStateContainerBase {
           helper, trackState.getReferenceSurface()));
     }
   }
-
-  template <typename T>
-  static std::vector<Acts::HashedString> dynamicKeys_impl(T& instance) {
-    std::vector<Acts::HashedString> result;
-    result.reserve(instance.m_dynamic.size());
-    for (const auto& [key, value] : instance.m_dynamic) {
-      result.push_back(key);
-    }
-    return result;
-  }
 };
 
 template <>
@@ -307,8 +297,8 @@ class ConstPodioTrackStateContainer final
     }
   }
 
-  std::vector<Acts::HashedString> dynamicKeys_impl() const {
-    return PodioTrackStateContainerBase::dynamicKeys_impl(*this);
+  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
+    return m_dynamicKeys;
   }
 
  private:
@@ -679,10 +669,13 @@ class MutablePodioTrackStateContainer final
     for (const auto& [key, col] : m_dynamic) {
       col->releaseInto(frame, "trackStates" + s + "_extra__");
     }
+
+    m_dynamic.clear();
+    m_dynamicKeys.clear();
   }
 
-  std::vector<Acts::HashedString> dynamicKeys_impl() const {
-    return PodioTrackStateContainerBase::dynamicKeys_impl(*this);
+  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
+    return m_dynamicKeys;
   }
 
   void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
