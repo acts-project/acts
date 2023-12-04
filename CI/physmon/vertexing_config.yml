@@ -14,11 +14,6 @@ histograms:
     min: 0.3
     max: 1.01
 
-  "trkVtxMatch":
-    nbins: 100
-    min: -0.01
-    max: 1.01
-
   "resX|resY|resZ":
     nbins: 100
     min: -0.1
@@ -89,6 +84,11 @@ histograms:
     nbins: 100
     min: 0.999
     max: 1
+  
+  "trk_weight":
+    nbins: 100
+    min: -0.01
+    max: 1.01
 
 extra_histograms:
   - expression: df["nRecoVtx"] / df["nTrueVtx"]
