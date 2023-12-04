@@ -209,7 +209,7 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
 namespace podio_detail {
 
 template <typename F, typename... Args>
-void apply(F&& f, TypeList<Args...>) {
+void apply(F&& f, TypeList<Args...> /*unused*/) {
   f(Args{}...);
 }
 
