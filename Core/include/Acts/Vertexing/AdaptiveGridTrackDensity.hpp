@@ -49,7 +49,7 @@ class AdaptiveGridTrackDensity {
     Config(unsigned int spatialTrkGridSize_, float spatialBinExtent_)
         : spatialTrkGridSize(spatialTrkGridSize_),
           spatialBinExtent(spatialBinExtent_) {
-      if (!spatialTrkGridSize % 2) {
+      if (!bool(spatialTrkGridSize % 2)) {
         throw std::invalid_argument("Please choose an odd spatialTrkGridSize.");
       }
     }
@@ -65,7 +65,7 @@ class AdaptiveGridTrackDensity {
           spatialBinExtent(spatialBinExtent_),
           temporalTrkGridSize(temporalTrkGridSize_),
           temporalBinExtent(temporalBinExtent_) {
-      if (!spatialTrkGridSize % 2 || !temporalTrkGridSize % 2) {
+      if (!bool(spatialTrkGridSize % 2) || !bool(temporalTrkGridSize % 2)) {
         throw std::invalid_argument(
             "Please choose an odd spatialTrkGridSize and temporalTrkGridSize.");
       }
