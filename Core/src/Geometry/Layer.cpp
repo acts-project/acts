@@ -122,8 +122,8 @@ Acts::Layer::compatibleSurfaces(
   // (0) End surface check
   // @todo: - we might be able to skip this by use of options.pathLimit
   // check if you have to stop at the endSurface
-  double pathLimit = options.pathLimit;
-  double overstepLimit = options.overstepLimit;
+  double nearLimit = options.nearLimit;
+  double farLimit = options.farLimit;
   if (options.endObject != nullptr) {
     // intersect the end surface
     // - it is the final one don't use the boundary check at all
@@ -136,7 +136,7 @@ Acts::Layer::compatibleSurfaces(
     // -> do not return compatible surfaces since they may lead you on a wrong
     // navigation path
     if (endInter) {
-      pathLimit = endInter.pathLength();
+      farLimit = endInter.pathLength();
     } else {
       return sIntersections;
     }
@@ -147,7 +147,7 @@ Acts::Layer::compatibleSurfaces(
     // -> this avoids punch through for cylinders
     double pCorrection =
         surfaceRepresentation().pathCorrection(gctx, position, direction);
-    pathLimit = 1.5 * thickness() * pCorrection;
+    farLimit = 1.5 * thickness() * pCorrection;
   }
 
   // lemma 0 : accept the surface
@@ -187,8 +187,8 @@ Acts::Layer::compatibleSurfaces(
         sf.intersect(gctx, position, direction, BoundaryCheck(boundaryCheck));
     for (const auto& sfi : sfmi.split()) {
       // check if intersection is valid and pathLimit has not been exceeded
-      if (sfi && detail::checkIntersection(sfi.intersection(), overstepLimit,
-                                           pathLimit)) {
+      if (sfi &&
+          detail::checkIntersection(sfi.intersection(), nearLimit, farLimit)) {
         sIntersections.push_back(sfi);
       }
     }
@@ -271,8 +271,8 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
                     (surfaceRepresentation().surfaceMaterial() != nullptr));
 
   // The Limits: current path & overstepping
-  double nearLimit = options.pathLimit;
-  double farLimit = options.overstepLimit;
+  double nearLimit = options.nearLimit;
+  double farLimit = options.farLimit;
 
   // Helper function to find valid intersection
   auto findValidIntersection =
