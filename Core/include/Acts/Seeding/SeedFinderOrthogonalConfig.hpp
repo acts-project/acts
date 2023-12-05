@@ -34,7 +34,7 @@ struct SeedFinderOrthogonalConfig {
   float zMin = -2800 * Acts::UnitConstants::mm;
   float zMax = 2800 * Acts::UnitConstants::mm;
   float rMax = 600 * Acts::UnitConstants::mm;
-  /// WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
+  /// @warning If rMin is smaller than impactMax, the bin size will be 2*pi,
   /// which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
