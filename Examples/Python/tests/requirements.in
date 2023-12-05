@@ -1,7 +1,7 @@
 pytest==7.0.1
 pytest-check==1.0.4
 uproot==4.1.9
-awkward
+awkward==1.7.0
 pytest-rerunfailures==10.2
 pytest-xdist==3.2.1
 pyyaml
