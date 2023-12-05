@@ -240,7 +240,7 @@ void Acts::Experimental::DetectorVolume::updateNavigationState(
     const GeometryContext& gctx, NavigationState& nState) const {
   nState.currentVolume = this;
   m_surfaceCandidatesUpdater(gctx, nState);
-  nState.surfaceCandidate = nState.surfaceCandidates.begin();
+  nState.surfaceCandidateIndex = 0;
 }
 
 void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdater(

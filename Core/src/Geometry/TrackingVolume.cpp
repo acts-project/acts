@@ -482,8 +482,8 @@ Acts::TrackingVolume::compatibleBoundaries(
   boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
   // The Limits: current, path & overstepping
-  double pLimit = options.pathLimit;
-  double oLimit = 0;
+  double nearLimit = 0;
+  double farLimit = options.pathLimit;
 
   // Helper function to test intersection
   auto checkIntersection =
@@ -496,14 +496,14 @@ Acts::TrackingVolume::compatibleBoundaries(
 
       if (options.forceIntersectBoundaries) {
         const bool coCriterion =
-            std::abs(sIntersection.pathLength()) < std::abs(oLimit);
+            std::abs(sIntersection.pathLength()) < std::abs(nearLimit);
         ACTS_VERBOSE("Forcing intersection with surface "
                      << bSurface->surfaceRepresentation().geometryId());
         if (coCriterion) {
           ACTS_VERBOSE("Intersection forced successfully ");
           ACTS_VERBOSE("- intersection path length "
                        << std::abs(sIntersection.pathLength())
-                       << " < overstep limit " << std::abs(oLimit));
+                       << " < overstep limit " << std::abs(nearLimit));
           return BoundaryIntersection(sIntersection.intersection(), bSurface,
                                       sIntersection.object(),
                                       sIntersection.index());
@@ -511,15 +511,14 @@ Acts::TrackingVolume::compatibleBoundaries(
         ACTS_VERBOSE("Can't force intersection: ");
         ACTS_VERBOSE("- intersection path length "
                      << std::abs(sIntersection.pathLength())
-                     << " > overstep limit " << std::abs(oLimit));
+                     << " > overstep limit " << std::abs(nearLimit));
       }
 
       ACTS_VERBOSE("Check intersection with surface "
                    << bSurface->surfaceRepresentation().geometryId());
       if (detail::checkIntersection<decltype(sIntersection.intersection()),
                                     decltype(logger)>(
-              sIntersection.intersection(), pLimit, oLimit,
-              s_onSurfaceTolerance, logger)) {
+              sIntersection.intersection(), nearLimit, farLimit, logger)) {
         return BoundaryIntersection(sIntersection.intersection(), bSurface,
                                     sIntersection.object(),
                                     sIntersection.index());

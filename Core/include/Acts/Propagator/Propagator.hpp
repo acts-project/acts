@@ -23,8 +23,8 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Propagator/detail/ParameterTraits.hpp"
-#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -203,7 +203,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 /// - a type mapping for: (initial track parameter type and destination
 ///   surface type) -> type of internal state object
 ///
-template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
+template <typename stepper_t, typename navigator_t = VoidNavigator>
 class Propagator final {
   /// Re-define bound track parameters dependent on the stepper
   using StepperBoundTrackParameters =

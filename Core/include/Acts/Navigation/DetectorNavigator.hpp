@@ -83,16 +83,6 @@ class DetectorNavigator {
     return result;
   }
 
-  void resetState(State& state, const GeometryContext& /*geoContext*/,
-                  const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  const Surface* /*ssurface*/,
-                  const Surface* /*tsurface*/) const {
-    // Reset everything first
-    state = State();
-
-    // TODO fill state
-  }
-
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
@@ -202,24 +192,24 @@ class DetectorNavigator {
                    << posInfo(state, stepper) << "stepping through portal");
 
       nState.surfaceCandidates.clear();
-      nState.surfaceCandidate = nState.surfaceCandidates.cend();
+      nState.surfaceCandidateIndex = 0;
 
       nState.currentPortal->updateDetectorVolume(state.geoContext, nState);
 
       initializeTarget(state, stepper);
     }
 
-    for (; nState.surfaceCandidate != nState.surfaceCandidates.cend();
-         ++nState.surfaceCandidate) {
+    for (; nState.surfaceCandidateIndex != nState.surfaceCandidates.size();
+         ++nState.surfaceCandidateIndex) {
       // Screen output how much is left to try
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper)
-                   << std::distance(nState.surfaceCandidate,
-                                    nState.surfaceCandidates.cend())
+                   << (nState.surfaceCandidates.size() -
+                       nState.surfaceCandidateIndex)
                    << " out of " << nState.surfaceCandidates.size()
                    << " surfaces remain to try.");
       // Take the surface
-      const auto& c = *(nState.surfaceCandidate);
+      const auto& c = nState.surfaceCandidate();
       const auto& surface =
           (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
       // Screen output which surface you are on
@@ -253,7 +243,7 @@ class DetectorNavigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
+  bool postStep(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state)
                  << posInfo(state, stepper) << "Entering navigator::postStep.");
 
@@ -263,43 +253,43 @@ class DetectorNavigator {
     if (inactive()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper) << "navigator inactive");
-      return;
+      return true;
     }
 
     if (nState.currentDetector == nullptr) {
       initialize(state, stepper);
-      return;
+      return true;
     }
 
-    if (nState.surfaceCandidate == nState.surfaceCandidates.cend()) {
+    if (nState.surfaceCandidateIndex == nState.surfaceCandidates.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper)
                    << "no surface candidates - waiting for target call");
-      return;
+      return true;
     }
 
     const Portal* nextPortal = nullptr;
     const Surface* nextSurface = nullptr;
     bool isPortal = false;
-    bool boundaryCheck = nState.surfaceCandidate->boundaryCheck;
+    bool boundaryCheck = nState.surfaceCandidate().boundaryCheck;
 
-    if (nState.surfaceCandidate->surface != nullptr) {
-      nextSurface = nState.surfaceCandidate->surface;
-    } else if (nState.surfaceCandidate->portal != nullptr) {
-      nextPortal = nState.surfaceCandidate->portal;
+    if (nState.surfaceCandidate().surface != nullptr) {
+      nextSurface = nState.surfaceCandidate().surface;
+    } else if (nState.surfaceCandidate().portal != nullptr) {
+      nextPortal = nState.surfaceCandidate().portal;
       nextSurface = &nextPortal->surface();
       isPortal = true;
     } else {
       ACTS_ERROR(volInfo(state)
                  << posInfo(state, stepper)
                  << "panic: not a surface not a portal - what is it?");
-      return;
+      return true;
     }
 
     // TODO not sure about the boundary check
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *nextSurface,
-        nState.surfaceCandidate->objectIntersection.index(),
+        nState.surfaceCandidate().objectIntersection.index(),
         state.options.direction, BoundaryCheck(boundaryCheck),
         state.options.surfaceTolerance, logger());
 
@@ -327,9 +317,11 @@ class DetectorNavigator {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper) << "current surface set to "
                      << nState.currentSurface->geometryId());
-        ++nState.surfaceCandidate;
+        ++nState.surfaceCandidateIndex;
       }
     }
+
+    return true;
   }
 
  private:
@@ -426,7 +418,7 @@ class DetectorNavigator {
                 return pathToA < pathToB;
               });
     // Set the surface candidate
-    nState.surfaceCandidate = nCandidates.begin();
+    nState.surfaceCandidateIndex = 0;
   }
 
   template <typename propagator_state_t, typename stepper_t>

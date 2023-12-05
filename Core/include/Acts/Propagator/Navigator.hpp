@@ -211,44 +211,6 @@ class Navigator {
     return result;
   }
 
-  /// Reset state
-  ///
-  /// @param state is the state
-  /// @param geoContext is the geometry context
-  /// @param pos is the global position
-  /// @param dir is the direction of navigation
-  /// @param ssurface is the new starting surface
-  /// @param tsurface is the target surface
-  void resetState(State& state, const GeometryContext& geoContext,
-                  const Vector3& pos, const Vector3& dir,
-                  const Surface* ssurface, const Surface* tsurface) const {
-    // Reset everything first
-    state = State();
-
-    // Set the start, current and target objects
-    state.startSurface = ssurface;
-    if (ssurface->associatedLayer() != nullptr) {
-      state.startLayer = ssurface->associatedLayer();
-    }
-    if (state.startLayer->trackingVolume() != nullptr) {
-      state.startVolume = state.startLayer->trackingVolume();
-    }
-    state.currentSurface = state.startSurface;
-    state.currentVolume = state.startVolume;
-    state.targetSurface = tsurface;
-
-    // Get the compatible layers (including the current layer)
-    NavigationOptions<Layer> navOpts;
-    navOpts.resolveSensitive = true;
-    navOpts.resolveMaterial = true;
-    navOpts.resolvePassive = true;
-    state.navLayers =
-        state.currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
-
-    // Set the index to the first
-    state.navLayerIndex = 0;
-  }
-
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
@@ -447,10 +409,10 @@ class Navigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
+  bool postStep(propagator_state_t& state, const stepper_t& stepper) const {
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
-      return;
+      return true;
     }
 
     // Set the navigation stage
@@ -480,11 +442,11 @@ class Navigator {
                          state.navigation.startLayer) {
             // this was the start layer, switch to layer target next
             state.navigation.navigationStage = Stage::layerTarget;
-            return;
+            return true;
           } else {
             // no layers, go to boundary
             state.navigation.navigationStage = Stage::boundaryTarget;
-            return;
+            return true;
           }
         }
       }
@@ -500,7 +462,7 @@ class Navigator {
         if (resolveSurfaces(state, stepper)) {
           // Set the navigation stage back to surface handling
           state.navigation.navigationStage = Stage::surfaceTarget;
-          return;
+          return true;
         }
       } else {
         // Set the navigation stage to layer target
@@ -528,7 +490,7 @@ class Navigator {
         auto boundary = state.navigation.navBoundary().object();
         state.navigation.currentVolume = boundary->attachedVolume(
             state.geoContext, stepper.position(state.stepping),
-            stepper.direction(state.stepping), state.options.direction);
+            state.options.direction * stepper.direction(state.stepping));
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           ACTS_VERBOSE(
@@ -536,7 +498,7 @@ class Navigator {
               << "No more volume to progress to, stopping navigation.");
           // Navigation break & release navigation stepping
           state.navigation.navigationBreak = true;
-          return;
+          return true;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
           // Forget the boundary information
@@ -565,6 +527,8 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
     }
+
+    return true;
   }
 
  private:

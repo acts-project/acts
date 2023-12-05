@@ -9,12 +9,14 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <any>
+#include <cstddef>
 #include <vector>
 
 namespace Acts {
@@ -80,16 +82,20 @@ struct NavigationState {
 
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
-  SurfaceCandidates::const_iterator surfaceCandidate = surfaceCandidates.cend();
+  std::size_t surfaceCandidateIndex = 0;
 
   /// Boundary directives for surfaces
   BoundaryCheck surfaceBoundaryCheck = BoundaryCheck(true);
 
   /// An overstep tolerance
-  ActsScalar overstepTolerance = -0.1;
+  ActsScalar overstepTolerance = -100 * UnitConstants::um;
 
   /// Auxiliary attached information
   std::any auxiliary;
+
+  const SurfaceCandidate& surfaceCandidate() const {
+    return surfaceCandidates.at(surfaceCandidateIndex);
+  }
 };
 
 }  // namespace Experimental

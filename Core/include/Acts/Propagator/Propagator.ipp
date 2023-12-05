@@ -65,7 +65,9 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
       // Post-stepping:
       // navigator post step call - action list - aborter list
       state.stage = PropagatorStage::postStep;
-      m_navigator.postStep(state, m_stepper);
+      if (!m_navigator.postStep(state, m_stepper)) {
+        continue;
+      }
       state.options.actionList(state, m_stepper, m_navigator, result, logger());
       if (state.options.abortList(state, m_stepper, m_navigator, result,
                                   logger())) {
