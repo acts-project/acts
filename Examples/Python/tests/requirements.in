@@ -1,6 +1,6 @@
 pytest==7.0.1
 pytest-check==1.0.4
-uproot
+uproot==4.1.9
 awkward
 pytest-rerunfailures==10.2
 pytest-xdist==3.2.1
