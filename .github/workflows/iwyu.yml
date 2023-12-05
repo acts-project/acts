@@ -58,10 +58,8 @@ jobs:
           -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
 
-      - run: ls -la acts
-      - run: ls -la acts/CI/iwyu/
       - name: Run IWYU
-        run: python3 iwyu-install/bin/iwyu_tool.py -p acts-build/ -j2 -- -Xiwyu --mapping_file=acts/CI/iwyu/mapping.imp | tee iwyu-output.txt
+        run: python3 iwyu-install/bin/iwyu_tool.py -p acts-build/ -j2 -- -Xiwyu --mapping_file=${{ github.workspace }}/acts/CI/iwyu/mapping.imp | tee iwyu-output.txt
       - name: Filter IWYU output
         run: python3 acts/CI/iwyu/filter.py acts/CI/iwyu/filter.yaml iwyu-output.txt iwyu-filtered.txt
       - name: Apply IWYU
