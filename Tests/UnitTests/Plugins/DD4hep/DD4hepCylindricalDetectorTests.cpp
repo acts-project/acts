@@ -373,14 +373,26 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
   dsOptions.logLevel = Acts::Logging::VERBOSE;
   dsOptions.emulateToGraph = "cylindrical_detector_structure";
 
+  auto [detectorEm, detectorStoreEm] =
+      Acts::Experimental::DD4hepDetectorStructure(
+          Acts::getDefaultLogger("DD4hepDetectorStructure",
+                                 Acts::Logging::VERBOSE))
+          .construct(tContext, world, dsOptions);
+
+  // Detector construction : no detector constructed, as we have only
+  // emulated the grapth writing
+  BOOST_CHECK_EQUAL(detectorEm, nullptr);
+
+  // Now build in non-emulation mode
+  dsOptions.emulateToGraph = "";
   auto [detector, detectorStore] =
       Acts::Experimental::DD4hepDetectorStructure(
           Acts::getDefaultLogger("DD4hepDetectorStructure",
                                  Acts::Logging::VERBOSE))
           .construct(tContext, world, dsOptions);
 
-  // Detector construction check
   BOOST_REQUIRE_NE(detector, nullptr);
+
   // We should have 14 volumes
   // 1 : beampipe
   // 3 : negative endcap
