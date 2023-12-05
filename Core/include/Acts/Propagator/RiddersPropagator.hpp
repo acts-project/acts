@@ -99,7 +99,7 @@ class RiddersPropagator {
   template <typename stepper_t, typename navigator_t = VoidNavigator>
   RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t(),
                     Config config = {})
-      : m_propagator(Propagator(stepper, navigator)),
+      : m_propagator(std::move(stepper), std::move(navigator)),
         m_config(std::move(config)) {}
 
   /// @brief Propagation method targeting curvilinear parameters
