@@ -295,7 +295,6 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     ringLayoutConfiguration(lbc.layerConfigurations[0]);
     ringLayoutConfiguration(lbc.layerConfigurations[2]);
     volumeConfig.layerBuilder = layerBuilder;
-    volumeConfig.volumeSignature = 0;
     auto volumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
         volumeConfig, logger.clone(lbc.configurationName + "VolumeBuilder",
                                    config.volumeLogLevel));
