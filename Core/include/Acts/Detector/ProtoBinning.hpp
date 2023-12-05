@@ -89,7 +89,7 @@ struct ProtoBinning {
     }
   }
 
-  /// Placehoder constructors - for equidistant binning
+  /// Placeholder constructors - for equidistant binning
   ///
   /// @note this is designed to give a binning prescription
   /// when the actual extent is not yet evaluated, only works
