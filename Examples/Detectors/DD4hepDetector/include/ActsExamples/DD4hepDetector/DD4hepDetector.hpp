@@ -68,7 +68,7 @@ struct DD4hepDetector {
   /// @param config is the configuration of the geometry service
   /// @param mdecorator is the material decorator provided
   ///
-  /// @return a pair of trackign geometry and context decorators
+  /// @return a pair of tracking geometry and context decorators
   std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
       DD4hepGeometryService::Config config,
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
@@ -78,7 +78,7 @@ struct DD4hepDetector {
   /// @param gctx is the geometry context
   /// @param options is the options struct for the building process
   ///
-  /// @return a tuple of detector, context decorators, and the elemnt store
+  /// @return a tuple of detector, context decorators, and the element store
   std::tuple<DetectorPtr, ContextDecorators, Acts::DD4hepDetectorElement::Store>
   finalize(
       const Acts::GeometryContext& gctx,
