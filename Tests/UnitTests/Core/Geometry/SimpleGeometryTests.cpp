@@ -83,7 +83,6 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   bpvConfig.layerBuilder = beamPipeBuilder;
   bpvConfig.layerEnvelopeR = {1_mm, 1_mm};
   bpvConfig.buildToRadiusZero = true;
-  bpvConfig.volumeSignature = 0;
   auto beamPipeVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
       bpvConfig, getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
 
@@ -102,7 +101,6 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   cvbConfig.layerBuilder = layerBuilder;
   cvbConfig.layerEnvelopeR = {1_mm, 1_mm};
   cvbConfig.buildToRadiusZero = false;
-  cvbConfig.volumeSignature = 0;
   auto centralVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
       cvbConfig, getDefaultLogger("CentralVolumeBuilder", volumeLLevel));
 

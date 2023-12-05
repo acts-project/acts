@@ -259,7 +259,6 @@ struct CylindricalTrackingGeometry {
     bpvConfig.layerBuilder = beamPipeBuilder;
     bpvConfig.layerEnvelopeR = {1_mm, 1_mm};
     bpvConfig.buildToRadiusZero = true;
-    bpvConfig.volumeSignature = 0;
     auto beamPipeVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
         bpvConfig, getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
 
