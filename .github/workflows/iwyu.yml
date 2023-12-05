@@ -1,6 +1,10 @@
 name: IWYU
 
 on:
+  push:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
   schedule:
     - cron: "0 12 * * 0"
@@ -54,6 +58,8 @@ jobs:
           -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
 
+      - run: ls -la acts
+      - run: ls -la acts/CI/iwyu/
       - name: Run IWYU
         run: python3 iwyu-install/bin/iwyu_tool.py -p acts-build/ -j2 -- -Xiwyu --mapping_file=acts/CI/iwyu/mapping.imp | tee iwyu-output.txt
       - name: Filter IWYU output
