@@ -85,8 +85,8 @@ class RiddersPropagator {
   ///
   /// @param [in] propagator Underlying propagator that will be used
   /// @param [in] config Config for the Ridders propagation
-  RiddersPropagator(propagator_t& propagator, Config config = {})
-      : m_propagator(propagator), m_config(std::move(config)) {}
+  RiddersPropagator(propagator_t propagator, Config config = {})
+      : m_propagator(std::move(propagator)), m_config(std::move(config)) {}
 
   /// @brief Constructor building a propagator
   ///
