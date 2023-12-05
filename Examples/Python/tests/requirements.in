@@ -1,7 +1,7 @@
-pytest
-pytest-check
-uproot==4.1.9
+pytest==7.0.1
+pytest-check==1.0.4
+uproot
 awkward
-pytest-rerunfailures
-pytest-xdist
+pytest-rerunfailures==10.2
+pytest-xdist==3.2.1
 pyyaml
