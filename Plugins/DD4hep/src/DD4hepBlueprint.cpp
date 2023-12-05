@@ -236,6 +236,8 @@ Acts::Experimental::DD4hepBlueprint::extractInternals(
         Extent internalsExtent;
         ExtentEnvelope clearance = zeroEnvelopes;
         for (const auto& bv : internalBinningValues) {
+          ACTS_VERBOSE("   -> measuring extent for "
+                       << binningValueNames()[bv]);
           clearance[bv] = {internalsClearance, internalsClearance};
         }
         internalsExtent.setEnvelope(clearance);

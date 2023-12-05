@@ -4,6 +4,7 @@ add_library(
   ActsPluginDD4hep SHARED
   src/ConvertDD4hepDetector.cpp
   src/DD4hepBlueprint.cpp
+  src/DD4hepBinningHelpers.cpp
   src/DD4hepDetectorStructure.cpp
   src/DD4hepMaterialHelpers.cpp
   src/DD4hepDetectorElement.cpp

@@ -54,9 +54,9 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
   detectorStore = bpdCache.dd4hepStore;
 
   // Draw the raw graph
-  if (options.blueprintDot) {
+  if (!options.emulateToGraph.empty()) {
     ACTS_DEBUG("Writing the initial bluepring to file before gap filling.")
-    std::ofstream bpi(dd4hepBlueprint->name + "_initial.dot");
+    std::ofstream bpi(options.emulateToGraph + "_initial.dot");
     detail::BlueprintDrawer::dotStream(bpi, *dd4hepBlueprint);
     bpi.close();
   }
@@ -68,11 +68,13 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
     detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
 
     // Draw the synchronized graph
-    if (options.blueprintDot) {
+    if (!options.emulateToGraph.empty()) {
       ACTS_DEBUG("Writing the final bluepring to file.")
-      std::ofstream bpf(dd4hepBlueprint->name + "_final.dot");
+      std::ofstream bpf(options.emulateToGraph + "_final.dot");
       detail::BlueprintDrawer::dotStream(bpf, *dd4hepBlueprint);
       bpf.close();
+      // Return without building
+      return std::tie(detector, detectorStore);
     }
 
     // Create a Cylindrical detector builder from this blueprint

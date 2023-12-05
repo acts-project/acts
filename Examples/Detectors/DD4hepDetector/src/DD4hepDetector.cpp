@@ -13,11 +13,12 @@
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
-#include <string>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
+#include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
 #include <DD4hep/Fields.h>
 #include <boost/program_options.hpp>
@@ -25,25 +26,14 @@
 namespace ActsExamples {
 namespace DD4hep {
 
-DD4hepDetector::DD4hepDetector(const std::vector<std::string>& _compactFiles)
-    : geometryService(nullptr), compactFiles(_compactFiles) {}
-
 DD4hepDetector::DD4hepDetector(
-    std::shared_ptr<DD4hepGeometryService> _geometryService,
-    const std::vector<std::string>& _compactFiles)
-    : geometryService(std::move(_geometryService)),
-      compactFiles(_compactFiles) {}
+    std::shared_ptr<DD4hepGeometryService> _geometryService)
+    : geometryService(std::move(_geometryService)) {}
 
 auto DD4hepDetector::finalize(
     ActsExamples::DD4hep::DD4hepGeometryService::Config config,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  if (geometryService == nullptr) {
-    throw std::runtime_error{
-        "No DD4hep geometry service configured, can not build "
-        "TrackingGeometry."};
-  }
-
   Acts::GeometryContext dd4HepContext;
   config.matDecorator = std::move(mdecorator);
   geometryService =
@@ -60,26 +50,28 @@ auto DD4hepDetector::finalize(
       std::move(dd4tGeometry), std::move(dd4ContextDecorators));
 }
 
-auto DD4hepDetector::finalize(const Acts::GeometryContext& gctx)
+auto DD4hepDetector::finalize(
+    const Acts::GeometryContext& gctx,
+    const Acts::Experimental::DD4hepDetectorStructure::Options& options)
     -> std::tuple<DetectorPtr, ContextDecorators,
                   Acts::DD4hepDetectorElement::Store> {
-  
-  // Check if the xml files are present
-  auto dd4hepDetector = &dd4hep::Detector::getInstance();
-  for (const auto& file : compactFiles) {
-    dd4hepDetector->fromCompact(file.c_str());
+  if (geometryService == nullptr) {
+    throw std::runtime_error{
+        "No DD4hep geometry service configured, can not build "
+        "TrackingGeometry."};
   }
-  dd4hepDetector->volumeManager();
-  dd4hepDetector->apply("DD4hepVolumeManager", 0, nullptr);
-  auto world = dd4hepDetector->world();
 
+  auto world = geometryService->geometry();
   // Build the detector structure
+  Acts::Experimental::DD4hepDetectorStructure dd4hepStructure(
+      Acts::getDefaultLogger("DD4hepDetectorStructure", options.logLevel));
 
+  /// @return a detector, a blue node and a store
+  auto [detector, detectorElements] =
+      dd4hepStructure.construct(gctx, world, options);
 
   // Prepare the return objects
-  DetectorPtr detector = nullptr;
   ContextDecorators contextDecorators = {};
-  Acts::DD4hepDetectorElement::Store detectorElements = {};
 
   return {detector, contextDecorators, detectorElements};
 }

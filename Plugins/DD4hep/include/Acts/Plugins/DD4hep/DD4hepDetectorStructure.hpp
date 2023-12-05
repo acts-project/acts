@@ -39,8 +39,9 @@ class DD4hepDetectorStructure {
   struct Options {
     /// The log level of the tools
     Logging::Level logLevel = Logging::INFO;
-    /// Boolean to flag if blueprint should be written out
-    bool blueprintDot = false;
+    /// Chose to emulate the building and plot a graph instead with the given
+    /// name
+    std::string emulateToGraph = "";
   };
 
   /// Constructor with from file name

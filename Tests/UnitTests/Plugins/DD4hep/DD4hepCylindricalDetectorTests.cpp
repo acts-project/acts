@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
 
   Acts::Experimental::DD4hepDetectorStructure::Options dsOptions;
   dsOptions.logLevel = Acts::Logging::VERBOSE;
-  dsOptions.blueprintDot = true;
+  dsOptions.emulateToGraph = "cylindrical_detector_structure";
 
   auto [detector, detectorStore] =
       Acts::Experimental::DD4hepDetectorStructure(

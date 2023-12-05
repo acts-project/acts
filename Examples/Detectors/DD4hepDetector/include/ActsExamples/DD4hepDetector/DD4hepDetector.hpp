@@ -10,7 +10,7 @@
 
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
 #include <memory>
@@ -25,6 +25,7 @@ class Detector;
 namespace Acts {
 class TrackingGeometry;
 class IMaterialDecorator;
+class DD4hepFieldAdapter;
 namespace Experimental {
 class Detector;
 }  // namespace Experimental
@@ -48,15 +49,12 @@ struct DD4hepDetector {
   /// @brief The detector geometry
   using DetectorPtr = std::shared_ptr<const Acts::Experimental::Detector>;
 
-  /// Constructor from compact fileas
-  /// @param _compactFiles is the list of compact files
-  DD4hepDetector(const std::vector<std::string>& _compactFiles = {});
-
+  /// @brief Default constructor
+  DD4hepDetector() = default;
   /// @brief Constructor from geometry service
   /// @param _geometryService the geometry service
-  /// @param _compactFiles is the list of compact files
-  DD4hepDetector(std::shared_ptr<DD4hepGeometryService> _geometryService,
-                 const std::vector<std::string>& _compactFiles = {});
+  DD4hepDetector(std::shared_ptr<DD4hepGeometryService> _geometryService);
+  /// @brief  Default destructor
   ~DD4hepDetector() = default;
 
   /// @brief The DD4hep geometry service
@@ -78,8 +76,13 @@ struct DD4hepDetector {
   /// @brief Build the detector from the DD4hep geometry
   ///
   /// @param gctx is the geometry context
+  /// @param options is the options struct for the building process
+  ///
+  /// @return a tuple of detector, context decorators, and the elemnt store
   std::tuple<DetectorPtr, ContextDecorators, Acts::DD4hepDetectorElement::Store>
-  finalize(const Acts::GeometryContext& gctx);
+  finalize(
+      const Acts::GeometryContext& gctx,
+      const Acts::Experimental::DD4hepDetectorStructure::Options& options = {});
 
   /// @brief Access to the DD4hep field
   /// @return a shared pointer to the DD4hep field

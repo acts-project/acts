@@ -86,11 +86,15 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
     std::vector<ProtoBinning> binnings = {};
+    /// @brief Optional extent (if already parsed)
+    std::optional<Extent> extent = std::nullopt;
     /// Minimum number of surfaces to build an internal structure
     /// - otherwise the tryAll options is used
     unsigned int nMinimalSurfaces = 4u;
     /// Polyhedron approximations
     unsigned int nSegments = 1u;
+    /// Full closed phi binning
+    bool fullPhiBinning = true;
     /// Extra information, mainly for screen output
     std::string auxiliary = "";
   };
@@ -106,6 +110,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   /// The interface definition for internal structure creation
   ///
   /// @param gctx the geometry context at the creation of the internal structure
+  /// @param options the options struct
   ///
   /// @return a consistent set of detector volume internals
   InternalStructure construct(const GeometryContext& gctx) const final;

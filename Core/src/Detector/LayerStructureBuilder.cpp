@@ -9,6 +9,7 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
@@ -37,6 +38,36 @@ class DetectorVolume;
 }  // namespace Acts
 
 namespace {
+
+/// Helper method to patch the binning with an extent
+///
+/// @param pBinning the proto binning
+/// @param extent the extent
+/// @param fullPhi indicates whether the full phi range is used
+///
+void patchProtoBinning(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
+                       const Acts::Extent& extent, bool fullPhiBinning) {
+  for (auto& pb : pBinning) {
+    if (extent.constrains(pb.binValue)) {
+      const auto& range = extent.range(pb.binValue);
+      // Patch the edges values from the range
+      Acts::ActsScalar vmin = range.min();
+      Acts::ActsScalar vmax = range.max();
+      if (pb.binValue == Acts::binPhi && fullPhiBinning) {
+        vmin = -M_PI;
+        vmax = M_PI;
+        pb.boundaryType = Acts::detail::AxisBoundaryType::Closed;
+      }
+      // Update the edges
+      if (pb.axisType == Acts::detail::AxisType::Equidistant) {
+        pb.edges = {vmin, vmax};
+      } else {
+        pb.edges.front() = vmin;
+        pb.edges.back() = vmax;
+      }
+    }
+  }
+}
 
 /// Helper for 1-dimensional generators
 ///
@@ -204,9 +235,14 @@ Acts::Experimental::LayerStructureBuilder::construct(
       }
       // To correctly attach the support structures, estimate the extent
       Extent internalExtent;
-      for (const auto& s : internalSurfaces) {
-        auto sPolyhedron = s->polyhedronRepresentation(gctx, m_cfg.nSegments);
-        internalExtent.extend(sPolyhedron.extent(), support.constraints);
+      if (m_cfg.extent.has_value()) {
+        internalExtent = m_cfg.extent.value();
+      } else {
+        // Estimate the extent from the surfaces
+        for (const auto& s : internalSurfaces) {
+          auto sPolyhedron = s->polyhedronRepresentation(gctx, m_cfg.nSegments);
+          internalExtent.extend(sPolyhedron.extent(), support.constraints);
+        }
       }
       // Use the support bulder helper to add support surfaces
       detail::SupportHelper::addSupport(
@@ -216,14 +252,22 @@ Acts::Experimental::LayerStructureBuilder::construct(
   }
 
   if (internalSurfaces.size() >= m_cfg.nMinimalSurfaces) {
-    if (m_cfg.binnings.empty()) {
+    // Copy as we might patch it with the surface extent
+    auto binnings = m_cfg.binnings;
+
+    if (binnings.empty()) {
       ACTS_DEBUG(
           "No surface binning provided, navigation will be 'tryAll' "
           "(potentially slow).");
-    } else if (m_cfg.binnings.size() == 1u) {
+    } else if (binnings.size() == 1u) {
+      // Try to patch the binning with an Extent
+      if (m_cfg.extent.has_value()) {
+        ACTS_DEBUG("- patching the proto binning with the extent.");
+        patchProtoBinning(binnings, m_cfg.extent.value(), m_cfg.fullPhiBinning);
+      }
       ACTS_DEBUG("- 1-dimensional surface binning detected.");
       // Capture the binning
-      auto binning = m_cfg.binnings[0u];
+      auto binning = binnings[0u];
       if (binning.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
         ACTS_VERBOSE("-- closed binning option.");
         internalCandidatesUpdater =
@@ -235,11 +279,17 @@ Acts::Experimental::LayerStructureBuilder::construct(
             createUpdater<Acts::detail::AxisBoundaryType::Bound>(
                 gctx, internalSurfaces, assignToAll, binning);
       }
-    } else if (m_cfg.binnings.size() == 2u) {
+    } else if (binnings.size() == 2u) {
+      // Try to patch the binning with an Extent
+      if (m_cfg.extent.has_value()) {
+        ACTS_DEBUG("- patching the proto binning with the extent.");
+        patchProtoBinning(binnings, m_cfg.extent.value(), m_cfg.fullPhiBinning);
+      }
+
       ACTS_DEBUG("- 2-dimensional surface binning detected.");
       // Capture the binnings
-      const auto& binning0 = m_cfg.binnings[0u];
-      const auto& binning1 = m_cfg.binnings[1u];
+      const auto& binning0 = binnings[0u];
+      const auto& binning1 = binnings[1u];
 
       if (binning0.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
         ACTS_VERBOSE("-- closed/bound binning option.");
