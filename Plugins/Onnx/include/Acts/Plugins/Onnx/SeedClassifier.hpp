@@ -44,10 +44,9 @@ class SeedClassifier {
   /// @param outputTensor is the score vector obtained from inferScores.
   /// @param minSeedScore is the minimum score a seed need to be selected
   /// @return a vector of seedID corresponding tho the good seeds
-  std::vector<int> seedSelection(
-      std::vector<std::vector<int>>& clusters,
-      std::vector<std::vector<float>>& outputTensor float minSeedScore =
-          0.1) const {
+  std::vector<int> seedSelection(std::vector<std::vector<int>>& clusters,
+                                 std::vector<std::vector<float>>& outputTensor,
+                                 float minSeedScore = 0.1) const {
     std::vector<int> goodSeeds;
     int iOut = 0;
     // Loop over all the cluster and only keep the seed with the highest score

@@ -82,8 +82,8 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
       clusteringParams, m_cfg.epsilonDBScan, m_cfg.minPointsDBScan);
 
   // Select the ID of the track we want to keep
-  std::vector<int> goodSeed =
-      m_seedClassifier.solveAmbiguity(cluster, networkInput, minSeedScore);
+  std::vector<int> goodSeed = m_seedClassifier.solveAmbiguity(
+      cluster, networkInput, m_cfg.minSeedScore);
 
   // Create the output seed collection
   SimSeedContainer outputSeeds;

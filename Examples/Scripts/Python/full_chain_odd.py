@@ -175,7 +175,7 @@ addSeeding(
 if seedFilter_ML:
     addSeedFilterML(
         s,
-        SeedFilterMLDBScanConfig(epsilonDBScan=0.1, minPointsDBScan=2, minSeedScore=0.05),
+        SeedFilterMLDBScanConfig(epsilonDBScan=0.05, minPointsDBScan=2, minSeedScore=0.1),
         onnxModelFile=os.path.dirname(__file__)
         + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
         outputDirRoot=outputDir,

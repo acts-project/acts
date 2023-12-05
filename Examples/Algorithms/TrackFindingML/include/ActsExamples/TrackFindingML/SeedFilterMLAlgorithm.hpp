@@ -38,11 +38,11 @@ class SeedFilterMLAlgorithm : public IAlgorithm {
     /// Output seeds collection.
     std::string outputSimSeeds;
     /// Maximum distance between 2 tracks to be clustered in the DBScan
-    float epsilonDBScan = 0.1;
+    float epsilonDBScan = 0.05;
     /// Minimum number of tracks to create a cluster in the DBScan
     int minPointsDBScan = 2;
     /// Minimum score a seed need to be selected
-    int minSeedScore = 0.1;
+    float minSeedScore = 0.1;
     /// Clustering parameters weight for phi used before the DBSCAN
     double clusteringWeighPhi = 1.0;
     /// Clustering parameters weight for eta used before the DBSCAN

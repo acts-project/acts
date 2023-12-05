@@ -150,6 +150,13 @@ plt.ylabel("nb seed")
 plt.savefig("pT.png")
 plt.clf()
 
+plotDF.plot.scatter(x="eta", y="pT")
+plt.xlabel("eta")
+plt.ylabel("pT")
+plt.savefig("pT_eta.png")
+plt.clf()
+
+
 plotDF2 = pd.DataFrame()
 # Create histogram filled with the number of seed per cluster
 for event in plotData:
