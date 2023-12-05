@@ -1,6 +1,6 @@
 pytest
 pytest-check
-uproot
+uproot==4.1.9
 awkward
 pytest-rerunfailures
 pytest-xdist
