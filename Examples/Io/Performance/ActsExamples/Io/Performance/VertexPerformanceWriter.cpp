@@ -154,6 +154,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("trk_pullQOverP", &m_pullQOverP);
     m_outputTree->Branch("trk_pullQOverPFitted", &m_pullQOverPFitted);
 
+    m_outputTree->Branch("trk_weight", &m_trkWeight);
+
     m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
     m_outputTree->Branch("nTracksRecoVtx", &m_nTracksOnRecoVertex);
 
@@ -489,6 +491,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       auto& innerPullThetaFitted = m_pullThetaFitted.emplace_back();
       auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
 
+      auto& innerTrkWeight = m_trkWeight.emplace_back();
+
       for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
         const auto& particle = associatedTruthParticles[j];
         int priVtxId = particle.particleId().vertexPrimary();
@@ -687,6 +691,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 innerPullQOverPFitted.push_back(
                     pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
+                innerTrkWeight.push_back(trk.trackWeight);
+
                 const auto& recoUnitDirFitted = paramsAtVtxFitted->direction();
                 double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
                 innerMomOverlapFitted.push_back(overlapFitted);
@@ -751,6 +757,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_pullThetaFitted.clear();
   m_pullQOverP.clear();
   m_pullQOverPFitted.clear();
+
+  m_trkWeight.clear();
 
   m_nTracksOnTruthVertex.clear();
   m_nTracksOnRecoVertex.clear();

@@ -84,10 +84,14 @@ nlohmann::json toJson(const grid_type& grid) {
 ///
 /// @tparam grid_type the type of the grid
 /// @param grid the grid object
+/// @param swapAxis - this is needed for detray
+///
+/// @note detray has a different offset for the
+/// local indices, it starts at 0
 ///
 /// @return a json object to represent the grid
 template <typename grid_type>
-nlohmann::json toJsonDetray(const grid_type& grid) {
+nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
   nlohmann::json jGrid;
 
   auto axes = grid.axes();
@@ -106,7 +110,7 @@ nlohmann::json toJsonDetray(const grid_type& grid) {
   if constexpr (grid_type::DIM == 1u) {
     for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
       typename grid_type::index_t lbin;
-      lbin[0u] = ib0;
+      lbin[0u] = ib0 - 1u;
       nlohmann::json jBin;
       jBin["loc_index"] = lbin;
       jBin["content"] = grid.atLocalBins(lbin);
@@ -116,11 +120,13 @@ nlohmann::json toJsonDetray(const grid_type& grid) {
 
   // 2D connections
   if constexpr (grid_type::DIM == 2u) {
-    for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
-      for (unsigned int ib1 = 1u; ib1 <= axes[1u]->getNBins(); ++ib1) {
+    unsigned int iaxis0 = swapAxis ? 1u : 0u;
+    unsigned int iaxis1 = swapAxis ? 0u : 1u;
+    for (unsigned int ib0 = 1u; ib0 <= axes[iaxis0]->getNBins(); ++ib0) {
+      for (unsigned int ib1 = 1u; ib1 <= axes[iaxis1]->getNBins(); ++ib1) {
         typename grid_type::index_t lbin;
-        lbin[0u] = ib0;
-        lbin[1u] = ib1;
+        lbin[0u] = ib0 - 1u;
+        lbin[1u] = ib1 - 1u;
         nlohmann::json jBin;
         jBin["loc_index"] = lbin;
         jBin["content"] = grid.atLocalBins(lbin);

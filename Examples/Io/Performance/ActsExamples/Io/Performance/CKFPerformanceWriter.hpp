@@ -73,7 +73,11 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
     /// Min reco-truth matching probability
     double truthMatchProbMin = 0.5;
 
-    /// function to check if neural network predicted track label is duplicate
+    /// Write additional matching details to a TTree
+    bool writeMatchingDetails = false;
+
+    /// function to check if neural network predicted track label is
+    /// duplicate
     std::function<bool(std::vector<float>&)> duplicatedPredictor = nullptr;
   };
 
@@ -107,6 +111,14 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
+
+  /// For optional output of the matching details
+  TTree* m_matchingTree{nullptr};
+
+  /// Variables to fill in the TTree
+  uint32_t m_treeEventNr{};
+  uint64_t m_treeParticleId{};
+  bool m_treeIsMatched{};
 
   // Adding numbers for efficiency, fake, duplicate calculations
   std::size_t m_nTotalTracks = 0;
