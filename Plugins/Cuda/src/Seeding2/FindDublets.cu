@@ -107,16 +107,16 @@ __device__ float getCotTheta<TopSP>(float middleZ, float topZ, float deltaR) {
 ///             the "other" spacepoint indices for the identified dublets
 ///
 template <int SPType>
-__global__ void findDublets(size_t nMiddleSPs,
+__global__ void findDublets(std::size_t nMiddleSPs,
                             const Details::SpacePoint* middleSPs,
-                            size_t nOtherSPs,
+                            std::size_t nOtherSPs,
                             const Details::SpacePoint* otherSPs,
                             float deltaRMin, float deltaRMax, float cotThetaMax,
                             float collisionRegionMin, float collisionRegionMax,
-                            unsigned int* dubletCounts, size_t* dublets) {
+                            unsigned int* dubletCounts, std::size_t* dublets) {
   // Figure out which dublet the kernel operates on.
-  const size_t middleIndex = blockIdx.x * blockDim.x + threadIdx.x;
-  const size_t otherIndex = blockIdx.y * blockDim.y + threadIdx.y;
+  const std::size_t middleIndex = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::size_t otherIndex = blockIdx.y * blockDim.y + threadIdx.y;
 
   // If we're outside of bounds, stop here.
   if ((middleIndex >= nMiddleSPs) || (otherIndex >= nOtherSPs)) {
@@ -150,16 +150,17 @@ __global__ void findDublets(size_t nMiddleSPs,
 
 namespace Details {
 
-void findDublets(size_t maxBlockSize, size_t nBottomSPs,
-                 const device_array<SpacePoint>& bottomSPs, size_t nMiddleSPs,
-                 const device_array<SpacePoint>& middleSPs, size_t nTopSPs,
+void findDublets(std::size_t maxBlockSize, std::size_t nBottomSPs,
+                 const device_array<SpacePoint>& bottomSPs,
+                 std::size_t nMiddleSPs,
+                 const device_array<SpacePoint>& middleSPs, std::size_t nTopSPs,
                  const device_array<SpacePoint>& topSPs, float deltaRMin,
                  float deltaRMax, float cotThetaMax, float collisionRegionMin,
                  float collisionRegionMax,
                  device_array<unsigned int>& middleBottomCounts,
-                 device_array<size_t>& middleBottomDublets,
+                 device_array<std::size_t>& middleBottomDublets,
                  device_array<unsigned int>& middleTopCounts,
-                 device_array<size_t>& middleTopDublets) {
+                 device_array<std::size_t>& middleTopDublets) {
   // Calculate the parallelisation for the middle<->bottom spacepoint
   // compatibility flagging.
   const dim3 blockSizeMB(1, maxBlockSize);

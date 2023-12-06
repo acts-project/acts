@@ -15,21 +15,44 @@ concurrency:
 jobs:
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
     env:
         DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
+        DOXYGEN_VERSION: 1.9.4
     steps:
       - uses: actions/checkout@v3
+
+      - name: Cache doxygen
+        id: cache-doxygen
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/bin/doxygen
+          key: doxygen_${{ env.DOXYGEN_VERSION }}
+
+      - name: Install doxygen
+        if: steps.cache-doxygen.outputs.cache-hit != 'true'
+        run: >
+          curl -SL https://sourceforge.net/projects/doxygen/files/rel-${{ env.DOXYGEN_VERSION }}/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz/download | tar -xzC .
+          && mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
+
       - name: Install dependencies
         run: >
-          curl -SL https://sourceforge.net/projects/doxygen/files/rel-1.9.4/doxygen-1.9.4.linux.bin.tar.gz/download | tar -xzC .
-          && mv doxygen-1.9.4/bin/doxygen /usr/local/bin/doxygen
-          && pip3 install --upgrade pip
+          pip3 install --upgrade pip
           && pip install -r docs/requirements.txt
-      - name: Configure
-        run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=ON
-      - name: Build
-        run: cmake --build build --target docs-with-api
+
+      - name: Build documentation
+        run: >
+          cd docs
+          && sphinx-build
+          -b html
+          -d _build/doctrees/
+          -j auto
+          -W
+          --keep-going
+          -t run_doxygen
+          -t lazy_autodoc
+          -b linkcheck
+          . _build/html/
+
       - uses: actions/upload-artifact@v3
         with:
           name: acts-docs

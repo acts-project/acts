@@ -213,19 +213,19 @@ class ConstPodioTrackStateContainer final
     if (std::find(available.begin(), available.end(), trackStatesKey) ==
         available.end()) {
       throw std::runtime_error{"Track state collection '" + trackStatesKey +
-                               "'not found in frame"};
+                               "' not found in frame"};
     }
 
     if (std::find(available.begin(), available.end(), paramsKey) ==
         available.end()) {
       throw std::runtime_error{"Track state parameters collection '" +
-                               paramsKey + "'not found in frame"};
+                               paramsKey + "' not found in frame"};
     }
 
     if (std::find(available.begin(), available.end(), jacsKey) ==
         available.end()) {
       throw std::runtime_error{"Track state jacobian collection '" + jacsKey +
-                               "'not found in frame"};
+                               "' not found in frame"};
     }
 
     loadCollection<ActsPodioEdm::TrackStateCollection>(m_collection, frame,
@@ -236,52 +236,7 @@ class ConstPodioTrackStateContainer final
 
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
-    // let's find dynamic columns
-
-    using load_type = std::unique_ptr<podio_detail::DynamicColumnBase> (*)(
-        const podio::CollectionBase*);
-
-    using types =
-        std::tuple<int32_t, int64_t, uint32_t, uint64_t, float, double>;
-
-    for (const auto& col : available) {
-      std::string prefix = trackStatesKey + "_extra__";
-      size_t p = col.find(prefix);
-      if (p == std::string::npos) {
-        continue;
-      }
-      std::string dynName = col.substr(prefix.size());
-      const podio::CollectionBase* coll = frame.get(col);
-
-      std::unique_ptr<podio_detail::ConstDynamicColumnBase> up;
-
-      std::apply(
-          [&](auto... args) {
-            auto inner = [&](auto arg) {
-              if (up) {
-                return;
-              }
-              using T = decltype(arg);
-              const auto* dyn =
-                  dynamic_cast<const podio::UserDataCollection<T>*>(coll);
-              if (dyn == nullptr) {
-                return;
-              }
-              up = std::make_unique<podio_detail::ConstDynamicColumn<T>>(
-                  dynName, *dyn);
-            };
-
-            ((inner(args)), ...);
-          },
-          types{});
-
-      if (!up) {
-        throw std::runtime_error{"Dynamic column '" + dynName +
-                                 "' is not of allowed type"};
-      }
-
-      m_dynamic.insert({hashString(dynName), std::move(up)});
-    }
+    podio_detail::recoverDynamicColumns(frame, trackStatesKey, m_dynamic);
   }
 
  private:
@@ -313,14 +268,14 @@ class ConstPodioTrackStateContainer final
     return ConstCovariance{m_jacs->at(ijacobian).getData().values.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType index) const {
     return ConstTrackStateProxy::Measurement<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
   measurementCovariance_impl(IndexType index) const {
     return ConstTrackStateProxy::MeasurementCovariance<measdim>{
@@ -418,27 +373,27 @@ class MutablePodioTrackStateContainer final
     return Covariance{m_jacs->at(ijacobian).data().values.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType index) const {
     return ConstTrackStateProxy::Measurement<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   TrackStateProxy::Measurement<measdim> measurement_impl(IndexType index) {
     return TrackStateProxy::Measurement<measdim>{
         m_collection->at(index).data().measurement.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
   measurementCovariance_impl(IndexType index) const {
     return ConstTrackStateProxy::MeasurementCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   TrackStateProxy::MeasurementCovariance<measdim> measurementCovariance_impl(
       IndexType index) {
     return TrackStateProxy::MeasurementCovariance<measdim>{
@@ -602,7 +557,7 @@ class MutablePodioTrackStateContainer final
                       std::make_unique<podio_detail::DynamicColumn<T>>(key)});
   }
 
-  void allocateCalibrated_impl(IndexType istate, size_t measdim) {
+  void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
     assert(measdim > 0 && "Zero measdim not supported");
     auto& data = m_collection->at(istate).data();
     data.measdim = measdim;

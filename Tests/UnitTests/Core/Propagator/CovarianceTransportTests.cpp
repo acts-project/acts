@@ -21,14 +21,12 @@
 #include <tuple>
 #include <variant>
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
 namespace Test {
 
 BOOST_AUTO_TEST_CASE(covariance_transport_invalid) {
   CovarianceCache covCache;
-  BOOST_CHECK(covCache.applyTransport == false);
+  BOOST_CHECK(!covCache.applyTransport);
 }
 
 BOOST_AUTO_TEST_CASE(covariance_transport_bound_start) {
@@ -57,7 +55,7 @@ BOOST_AUTO_TEST_CASE(covariance_transport_bound_start) {
   CovarianceCache covCache(tgContext, *planeSurface, position, boundParameters,
                            boundCovariance);
   // Test that the transport should be applied now
-  BOOST_CHECK(covCache.applyTransport == true);
+  BOOST_CHECK(covCache.applyTransport);
   // Test that the set covariance is 5x5 and what it has been set
   BOOST_CHECK_EQUAL(std::get<BoundSquareMatrix>(covCache.covariance),
                     boundCovariance);
@@ -136,7 +134,7 @@ BOOST_AUTO_TEST_CASE(covariance_transport_curvilinear_start) {
 
   CovarianceCache covCache(position, direction, boundCovariance);
   // Test that the transport should be applied now
-  BOOST_CHECK(covCache.applyTransport == true);
+  BOOST_CHECK(covCache.applyTransport);
   // Test that the set covariance is 5x5 and what it has been set
   BOOST_CHECK_EQUAL(std::get<BoundSquareMatrix>(covCache.covariance),
                     boundCovariance);
@@ -196,7 +194,7 @@ BOOST_AUTO_TEST_CASE(covariance_transport_free_start) {
   FreeSquareMatrix freeCovariance = 8. * FreeSquareMatrix::Identity();
 
   CovarianceCache covCache(freeParameters, freeCovariance);
-  BOOST_CHECK(covCache.applyTransport == true);
+  BOOST_CHECK(covCache.applyTransport);
   // Test that the set covariance is 5x5 and what it has been set
   BOOST_CHECK_THROW(std::get<BoundSquareMatrix>(covCache.covariance),
                     std::bad_variant_access);

@@ -13,6 +13,7 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
@@ -22,10 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Volumes)
 
@@ -63,7 +61,11 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 
   for (auto& os : tvbOrientedSurfaces) {
     auto osCenter = os.first->center(geoCtx);
-    auto osNormal = os.first->normal(geoCtx, osCenter);
+    const auto* pSurface =
+        dynamic_cast<const Acts::PlaneSurface*>(os.first.get());
+    BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
+                          "The surface is not a plane surface");
+    auto osNormal = pSurface->normal(geoCtx);
     // Check if you step inside the volume with the oriented normal
     Vector3 insideTvb = osCenter + os.second * osNormal;
     Vector3 outsideTvb = osCenter - os.second * osNormal;
@@ -102,7 +104,5 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

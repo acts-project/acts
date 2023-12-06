@@ -33,12 +33,7 @@
 #include <string>
 #include <utility>
 
-namespace tt = boost::test_tools;
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -101,14 +96,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
       binningPosition);
   //
   /// Test referenceFrame
-  Vector3 globalPosition{2.0, 2.0, 0.0};
+  Vector3 arbitraryGlobalPosition{2.0, 2.0, 2.0};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
   RotationMatrix3 expectedFrame;
   expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
-  CHECK_CLOSE_OR_SMALL(
-      planeSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
-      expectedFrame, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(planeSurfaceObject->referenceFrame(
+                           tgContext, arbitraryGlobalPosition, momentum),
+                       expectedFrame, 1e-6, 1e-9);
   //
   /// Test normal, given 3D position
   Vector3 normal3D(0., 0., 1.);
@@ -120,7 +115,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test localToGlobal
   Vector2 localPosition{1.5, 1.7};
-  globalPosition =
+  Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   //
   // expected position is the translated one

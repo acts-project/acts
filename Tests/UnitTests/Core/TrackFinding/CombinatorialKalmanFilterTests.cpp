@@ -22,6 +22,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -35,7 +36,6 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
@@ -71,13 +71,14 @@ class TrackingGeometry;
 namespace {
 
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 static const auto pion = Acts::ParticleHypothesis::pion();
 
 struct Detector {
   // expected number of measurements for the given detector
-  size_t numMeasurements = 6u;
+  std::size_t numMeasurements = 6u;
 
   // geometry
   CubicTrackingGeometry store;
@@ -246,7 +247,8 @@ struct Fixture {
     // create some measurements
     auto measPropagator = makeStraightPropagator(detector.geometry);
     std::default_random_engine rng(421235);
-    for (size_t trackId = 0u; trackId < startParameters.size(); ++trackId) {
+    for (std::size_t trackId = 0u; trackId < startParameters.size();
+         ++trackId) {
       auto measurements = createMeasurements(
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
@@ -318,7 +320,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
                           Acts::VectorMultiTrajectory{}};
 
   // run the CKF for all initial track states
-  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.startParameters.size();
+       ++trackId) {
     auto res = f.ckf.findTracks(f.startParameters.at(trackId), options, tc);
     if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
@@ -330,7 +333,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   BOOST_CHECK_EQUAL(tc.size(), 3u);
 
   // check the found tracks
-  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.startParameters.size();
+       ++trackId) {
     const auto track = tc.getTrack(trackId);
     const auto& params = f.startParameters[trackId];
     BOOST_TEST_INFO("initial parameters before detector:\n" << params);
@@ -339,8 +343,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
     // check purity of first found track
     // find the number of hits not originating from the right track
-    size_t numHits = 0u;
-    size_t nummismatchedHits = 0u;
+    std::size_t numHits = 0u;
+    std::size_t nummismatchedHits = 0u;
     for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =
@@ -375,7 +379,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
                           Acts::VectorMultiTrajectory{}};
 
   // run the CKF for all initial track states
-  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.startParameters.size();
+       ++trackId) {
     auto res = f.ckf.findTracks(f.endParameters.at(trackId), options, tc);
     if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
@@ -386,7 +391,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   BOOST_CHECK_EQUAL(tc.size(), 3u);
 
   // check the found tracks
-  for (size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
     const auto track = tc.getTrack(trackId);
     const auto& params = f.endParameters[trackId];
     BOOST_TEST_INFO("initial parameters after detector:\n" << params);
@@ -395,8 +400,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
 
     // check purity of first found track
     // find the number of hits not originating from the right track
-    size_t numHits = 0u;
-    size_t nummismatchedHits = 0u;
+    std::size_t numHits = 0u;
+    std::size_t nummismatchedHits = 0u;
     for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =
