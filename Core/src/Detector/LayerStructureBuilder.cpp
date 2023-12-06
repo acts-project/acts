@@ -296,6 +296,11 @@ Acts::Experimental::LayerStructureBuilder::construct(
         ACTS_DEBUG("- patching the proto binning with the extent.");
         patchProtoBinning(binnings, m_cfg.extent.value(), m_cfg.fullPhiBinning);
       }
+      // Sort the binning for conventions
+      std::sort(binnings.begin(), binnings.end(),
+                [](const ProtoBinning& a, const ProtoBinning& b) {
+                  return a.binValue < b.binValue;
+                });
 
       ACTS_DEBUG("- 2-dimensional surface binning detected.");
       // Capture the binnings

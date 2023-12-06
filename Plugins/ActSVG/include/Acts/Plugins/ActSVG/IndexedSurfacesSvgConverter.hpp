@@ -139,7 +139,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
       // Register the bin naming
       std::string binInfo =
           std::string("- bin : [") + std::to_string(ib0) + std::string("]");
-      ActsScalar binCenter = 0.5 * (binEdges[ib0 + 1u] + binEdges[ib0]);
+      ActsScalar binCenter = 0.5 * (binEdges[ib0] + binEdges[ib0 - 1u]);
       binInfo += "\n - center : (" + std::to_string(binCenter) + ")";
       pGrid._bin_ids.push_back(binInfo);
     }
@@ -158,8 +158,8 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
         std::string binInfo = std::string("- bin : [") + std::to_string(ib0) +
                               std::string(", ") + std::to_string(ib1) +
                               std::string("]");
-        ActsScalar binCenter0 = 0.5 * (binEdges0[ib0 + 1u] + binEdges0[ib0]);
-        ActsScalar binCenter1 = 0.5 * (binEdges1[ib1 + 1u] + binEdges1[ib1]);
+        ActsScalar binCenter0 = 0.5 * (binEdges0[ib0] + binEdges0[ib0 - 1u]);
+        ActsScalar binCenter1 = 0.5 * (binEdges1[ib1] + binEdges1[ib1 - 1u]);
         binInfo += "\n - center : (" + std::to_string(binCenter0) + ", " +
                    std::to_string(binCenter1) + ")";
         pGrid._bin_ids.push_back(binInfo);
@@ -299,7 +299,7 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
     binText.push_back(pGrid._bin_ids[ig]);
     binText.push_back("Target:");
     for (const auto [is, sis] : enumerate(pIndices[ig])) {
-      const auto& ps = pSurfaces[is];
+      const auto& ps = pSurfaces[sis];
       std::string oInfo = std::string("- object: ") + std::to_string(sis);
       if (ps._aux_info.find("center") != ps._aux_info.end()) {
         for (const auto& ci : ps._aux_info.at("center")) {
