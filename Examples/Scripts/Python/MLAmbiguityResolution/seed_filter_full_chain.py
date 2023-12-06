@@ -53,7 +53,7 @@ def prepareInferenceData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
 
 
 def clusterSeed(
-    event: pd.DataFrame, DBSCAN_eps: float = 0.1, DBSCAN_min_samples: int = 2
+    event: pd.DataFrame, DBSCAN_eps: float = 0.03, DBSCAN_min_samples: int = 2
 ) -> pd.DataFrame:
     """
     Cluster together all the track that appear to belong to the same truth particle
@@ -82,7 +82,7 @@ def renameCluster(clusterarray: np.ndarray) -> np.ndarray:
     @param[in] clusterarray: numpy array containing the hits IDs and the cluster ID
     @return: numpy array with updated cluster IDs
     """
-    new_id = len(set(clustering.labels_)) - (1 if -1 in clustering.labels_ else 0))
+    new_id = len(set(clusterarray)) - (1 if -1 in clusterarray else 0)
     for i, cluster in enumerate(clusterarray):
         if cluster == -1:
             clusterarray[i] = new_id
@@ -170,7 +170,6 @@ for event in plotData:
     event["nb_seed_removed"] = 0
     event["particleId"] = event.index
     event["nb_seed"] = event.groupby(["cluster"])["cluster"].transform("size")
-    event["nb_seed"] = event.groupby(["cluster"])["cluster"].transform("size")
     # Create histogram filled with the number of fake seed per cluster
     event.loc[event["good/duplicate/fake"] == "fake", "nb_fake"] = (
         event.loc[event["good/duplicate/fake"] == "fake"]
@@ -232,17 +231,16 @@ for clusteredEvent in clusteredData:
     # Keep only the track in cluster of more than 1 track or with a score above 0.5
     idx = clusteredEvent["score"] > 0.1
     cleanedEvent = clusteredEvent[idx]
-
     # For each cluster only keep the seed with the highest score
     idx = (
         cleanedEvent.groupby(["cluster"])["score"].transform(max)
         == cleanedEvent["score"]
     )
     cleanedEvent = cleanedEvent[idx]
-    # For cluster with more than 1 seed, keep the one with the smallest nb_seed
+    # For cluster with more than 1 seed, keep the one with the smallest seed_id
     idx = (
-        cleanedEvent.groupby(["cluster"])["nb_seed"].transform(min)
-        == cleanedEvent["nb_seed"]
+        cleanedEvent.groupby(["cluster"])["seed_id"].transform(min)
+        == cleanedEvent["seed_id"]
     )
     cleanedEvent = cleanedEvent[idx]
     cleanedData.append(cleanedEvent)
@@ -330,7 +328,6 @@ cleanedDataPlots = pd.concat(cleanedData)
 import matplotlib.pyplot as plt
 
 # Plot the average score distribution for each type of track
-
 plt.figure()
 weightsGood = np.ones_like(
     cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "good"]["score"]
@@ -379,8 +376,10 @@ plt.xlabel("score")
 plt.ylabel("Fraction of good/duplicate/fake tracks")
 plt.title("Score distribution for each type of track")
 plt.savefig("score_distribution.png")
+plt.yscale("log")
+plt.savefig("score_distribution_log.png")
 
-# Average value of the score for 50 eta bins
+# Average value of the score
 averageCleanedDataPlots = cleanedDataPlots.loc[
     cleanedDataPlots["good/duplicate/fake"] == "good"
 ].groupby(
@@ -426,6 +425,32 @@ plt.ylabel("number of tracks")
 plt.yscale("log")
 plt.title("pT distribution for each type of track")
 plt.savefig("pT_distribution.png")
+
+# Plot the eta distribution for each type of track
+plt.figure()
+plt.hist(
+    [
+        clusteredDataPlots.loc[clusteredDataPlots["good/duplicate/fake"] == "good"][
+            "eta"
+        ],
+        clusteredDataPlots.loc[
+            clusteredDataPlots["good/duplicate/fake"] == "duplicate"
+        ]["eta"],
+        clusteredDataPlots.loc[clusteredDataPlots["good/duplicate/fake"] == "fake"][
+            "eta"
+        ],
+    ],
+    bins=100,
+    range=(-3, 3),
+    stacked=False,
+    label=["good", "duplicate", "fake"],
+)
+plt.legend()
+plt.xlabel("eta")
+plt.ylabel("number of tracks")
+plt.yscale("log")
+plt.title("eta distribution for each type of track")
+plt.savefig("eta_distribution.png")
 
 # Average value of the score for 50 pt bins
 averageCleanedDataPlots = cleanedDataPlots.loc[

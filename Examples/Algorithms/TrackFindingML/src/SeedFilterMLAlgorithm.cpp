@@ -51,13 +51,11 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
   Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
       networkInput(seeds.size(), 14);
   std::vector<std::vector<double>> clusteringParams;
-  std::vector<int> mapSeepIndex;
   // Loop over the seed and parameters to fill the input for the clustering
   // and the NN
   for (std::size_t i = 0; i < seeds.size(); i++) {
     // Keep track of the index of the seed in the original collection
-    std::size_t NNindex = mapSeepIndex.size() - 1;
-    mapSeepIndex.push_back(i);
+    std::size_t NNindex = i;
     // Compute the track parameters
     double pT = std::abs(1.0 / params[i].parameters()[Acts::eBoundQOverP]) *
                 std::sin(params[i].parameters()[Acts::eBoundTheta]);
@@ -94,8 +92,8 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
   outputTrackParameters.reserve(goodSeed.size());
 
   for (auto&& i : goodSeed) {
-    outputSeeds.push_back(seeds[mapSeepIndex[i]]);
-    outputTrackParameters.push_back(params[mapSeepIndex[i]]);
+    outputSeeds.push_back(seeds[i]);
+    outputTrackParameters.push_back(params[i]);
   }
 
   m_outputSimSeeds(ctx, SimSeedContainer{outputSeeds});

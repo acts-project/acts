@@ -48,18 +48,16 @@ class SeedClassifier {
                                  std::vector<std::vector<float>>& outputTensor,
                                  float minSeedScore = 0.1) const {
     std::vector<int> goodSeeds;
-    int iOut = 0;
     // Loop over all the cluster and only keep the seed with the highest score
     // in each cluster
     for (const auto& cluster : clusters) {
       int bestSeedID = 0;
       float bestSeedScore = 0;
       for (const auto& seed : cluster) {
-        if (outputTensor[iOut][0] > bestSeedScore) {
-          bestSeedScore = outputTensor[iOut][0];
+        if (outputTensor[seed][0] > bestSeedScore) {
+          bestSeedScore = outputTensor[seed][0];
           bestSeedID = seed;
         }
-        iOut++;
       }
       if (bestSeedScore >= minSeedScore) {
         goodSeeds.push_back(bestSeedID);
