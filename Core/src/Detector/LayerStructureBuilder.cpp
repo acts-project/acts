@@ -48,23 +48,34 @@ namespace {
 void patchProtoBinning(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
                        const Acts::Extent& extent, bool fullPhiBinning) {
   for (auto& pb : pBinning) {
+    // Starting values
+    Acts::ActsScalar vmin = pb.edges.front();
+    Acts::ActsScalar vmax = pb.edges.back();
+    // Get the number of bins
+    std::size_t nBins = pb.bins();
+    // Check if extent overwrites that
     if (extent.constrains(pb.binValue)) {
       const auto& range = extent.range(pb.binValue);
       // Patch the edges values from the range
-      Acts::ActsScalar vmin = range.min();
-      Acts::ActsScalar vmax = range.max();
-      if (pb.binValue == Acts::binPhi && fullPhiBinning) {
-        vmin = -M_PI;
-        vmax = M_PI;
-        pb.boundaryType = Acts::detail::AxisBoundaryType::Closed;
+      vmin = range.min();
+      vmax = range.max();
+    } else if (pb.binValue == Acts::binPhi && fullPhiBinning) {
+      vmin = -M_PI;
+      vmax = M_PI;
+      pb.boundaryType = Acts::detail::AxisBoundaryType::Closed;
+    }
+    // Eventually update the edges
+    if (pb.axisType == Acts::detail::AxisType::Equidistant) {
+      Acts::ActsScalar binWidth = (vmax - vmin) / nBins;
+      // Fill the edges 
+      pb.edges = { vmin };
+      pb.edges.resize(nBins + 1);
+      for (std::size_t ib = 0; ib <= nBins; ++ib) {
+        pb.edges[ib] = vmin + ib * binWidth;
       }
-      // Update the edges
-      if (pb.axisType == Acts::detail::AxisType::Equidistant) {
-        pb.edges = {vmin, vmax};
-      } else {
-        pb.edges.front() = vmin;
-        pb.edges.back() = vmax;
-      }
+    } else {
+      pb.edges.front() = vmin;
+      pb.edges.back() = vmax;
     }
   }
 }

@@ -6,8 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
@@ -152,6 +154,41 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(infoBoxTitle);
     ACTS_PYTHON_MEMBER(outputDir);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    py::class_<actsvg::svg::object, std::shared_ptr<actsvg::svg::object>>(
+        m, "SvgObject");
+  }
+
+  {
+    m.def("svgIndexedSurfaceGrid",
+          [](const GeometryContext& gctx,
+             const Acts::Experimental::DetectorVolume& dvolume,
+             const Acts::GeometryHierarchyMap<Acts::Svg::Style>& surfaceStyles)
+              -> auto {
+            if (!dvolume.surfaces().empty()) {
+              // Create the draw options
+              Acts::Svg::IndexedSurfacesConverter::Options iOptions;
+              iOptions.surfaceStyles = surfaceStyles;
+
+              auto protoIndexedSurfaceGrid =
+                  Acts::Svg::IndexedSurfacesConverter::convert(
+                      gctx, dvolume.surfaces(),
+                      dvolume.surfaceCandidatesUpdater(), iOptions);
+
+              return Acts::Svg::View::xy(protoIndexedSurfaceGrid,
+                                         dvolume.name() + "_surface_grid");
+            }
+            return actsvg::svg::object{};
+          });
+  }
+
+  {
+    m.def("svgToFile", [](const std::vector<actsvg::svg::object>& objects,
+                          const std::string& fileName) {
+      Acts::Svg::toFile(objects, fileName);
+    });
   }
 }
 }  // namespace Acts::Python

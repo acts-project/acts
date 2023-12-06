@@ -183,11 +183,15 @@ void addExperimentalGeometry(Context& ctx) {
   using namespace Acts::Experimental;
 
   // Detector definition
-  py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector");
+  py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector")
+      .def("volumes", &Detector::volumes);
 
   // Detector volume definition
   py::class_<DetectorVolume, std::shared_ptr<DetectorVolume>>(m,
-                                                              "DetectorVolume");
+                                                              "DetectorVolume")
+      .def("name", &DetectorVolume::name)
+      .def("surfaces", &DetectorVolume::surfaces)
+      .def("geometryId", &DetectorVolume::geometryId);
 
   {
     // The surface hierarchy map

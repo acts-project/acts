@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 import os
 import acts
-from acts import examples, logging, GeometryContext
+from acts import (
+    examples, 
+    logging, 
+    GeometryContext,
+    SvgStyle)
 from acts.examples.dd4hep import (
     DD4hepDetector,
     DD4hepDetectorOptions,
@@ -28,3 +32,20 @@ if "__main__" == __name__:
     geoContext = acts.GeometryContext()
     cOptions = DD4hepDetectorOptions(logLevel=acts.logging.INFO, emulateToGraph="")
     [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
+
+    # Create the Surface style map
+    sStyle = SvgStyle()
+    sStyle.fillColor = [ 0, 171, 250 ]
+    sStyle.fillOpacity = 0.5
+    sStyle.highlightColor = [ 250, 125, 0 ]
+
+    sStyles = []
+    for volume in detector.volumes():
+        sStyles += [ [ volume.geometryId(), sStyle ] ]
+    sStyleMap = acts.SvgStyleMap(sStyles)
+
+    # Create the Surface grid
+    for volume in detector.volumes():
+        if len(volume.surfaces()) > 1 :
+            svgGrid = acts.svgIndexedSurfaceGrid(geoContext, volume, sStyleMap)
+            acts.svgToFile([svgGrid], volume.name() + ".svg")
