@@ -26,7 +26,6 @@
 namespace Acts {
 namespace Test {
 
-using namespace Acts::detail::Test;
 /// All supported simulated measurement types.
 enum class MeasurementType {
   eLoc0,
@@ -47,8 +46,8 @@ using MeasurementResolutionMap =
 
 /// Result struct for generated measurements and outliers.
 struct Measurements {
-  std::vector<TestSourceLink> sourceLinks;
-  std::vector<TestSourceLink> outlierSourceLinks;
+  std::vector<Acts::detail::Test::TestSourceLink> sourceLinks;
+  std::vector<Acts::detail::Test::TestSourceLink> outlierSourceLinks;
   std::vector<BoundVector> truthParameters;
 };
 

@@ -72,8 +72,8 @@ inline bool operator==(const TestSpacePoint& lhs, const TestSpacePoint& rhs) {
   return (std::equal(lhs.sourceLinks().begin(), lhs.sourceLinks().end(),
                      rhs.sourceLinks().begin(),
                      [](const auto& lsl, const auto& rsl) {
-                       return lsl.template get<TestSourceLink>() ==
-                              rsl.template get<TestSourceLink>();
+                       return lsl.template get<Acts::detail::Test::TestSourceLink>() ==
+                              rsl.template get<Acts::detail::Test::TestSourceLink>();
                      }) &&
           lhs.x() == rhs.x()) &&
          (lhs.y() == rhs.y()) && (lhs.z() == rhs.z()) &&

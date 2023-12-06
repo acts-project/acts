@@ -50,6 +50,7 @@ namespace {
 using namespace Acts;
 using namespace ActsAlignment;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 using StraightPropagator =

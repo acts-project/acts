@@ -53,7 +53,7 @@ namespace Test {
 using namespace UnitLiterals;
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
-
+using TestSourceLink = detail::Test::TestSourceLink;
 using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 // Construct initial track parameters.

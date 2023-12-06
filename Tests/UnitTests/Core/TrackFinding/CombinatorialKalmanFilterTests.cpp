@@ -71,6 +71,7 @@ class TrackingGeometry;
 namespace {
 
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 static const auto pion = Acts::ParticleHypothesis::pion();

@@ -64,6 +64,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 static const auto electron = ParticleHypothesis::electron();
