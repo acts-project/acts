@@ -236,52 +236,7 @@ class ConstPodioTrackStateContainer final
 
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
-    // let's find dynamic columns
-
-    using load_type = std::unique_ptr<podio_detail::DynamicColumnBase> (*)(
-        const podio::CollectionBase*);
-
-    using types =
-        std::tuple<int32_t, int64_t, uint32_t, uint64_t, float, double>;
-
-    for (const auto& col : available) {
-      std::string prefix = trackStatesKey + "_extra__";
-      std::size_t p = col.find(prefix);
-      if (p == std::string::npos) {
-        continue;
-      }
-      std::string dynName = col.substr(prefix.size());
-      const podio::CollectionBase* coll = frame.get(col);
-
-      std::unique_ptr<podio_detail::ConstDynamicColumnBase> up;
-
-      std::apply(
-          [&](auto... args) {
-            auto inner = [&](auto arg) {
-              if (up) {
-                return;
-              }
-              using T = decltype(arg);
-              const auto* dyn =
-                  dynamic_cast<const podio::UserDataCollection<T>*>(coll);
-              if (dyn == nullptr) {
-                return;
-              }
-              up = std::make_unique<podio_detail::ConstDynamicColumn<T>>(
-                  dynName, *dyn);
-            };
-
-            ((inner(args)), ...);
-          },
-          types{});
-
-      if (!up) {
-        throw std::runtime_error{"Dynamic column '" + dynName +
-                                 "' is not of allowed type"};
-      }
-
-      m_dynamic.insert({hashString(dynName), std::move(up)});
-    }
+    podio_detail::recoverDynamicColumns(frame, trackStatesKey, m_dynamic);
   }
 
  private:
