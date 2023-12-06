@@ -1,5 +1,5 @@
 pytest
-pytest-check
+pytest-check==1.0.4
 uproot
 awkward
 pytest-rerunfailures
