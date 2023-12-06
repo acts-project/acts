@@ -17,6 +17,7 @@
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/AlignedTelescopeDetector/AlignedTelescopeDetector.hpp"
 
 #include <array>
 #include <cstddef>
@@ -88,7 +89,34 @@ void addDetector(Context& ctx) {
         .def_readwrite("surfaceType", &Config::surfaceType)
         .def_readwrite("binValue", &Config::binValue);
   }
+  {
+    using AlignedTelescopeDetector = AlignedTelescope::AlignedTelescopeDetector;
+    using Config = AlignedTelescopeDetector::Config;
 
+    auto Altd =
+        py::class_<AlignedTelescopeDetector, std::shared_ptr<AlignedTelescopeDetector>>(
+            mex, "AlignedTelescopeDetector")
+            .def(py::init<>())
+            .def("finalize",
+                 py::overload_cast<
+                     const Config&,
+                     const std::shared_ptr<const Acts::IMaterialDecorator>&>(
+                     &AlignedTelescopeDetector::finalize));
+
+    py::class_<Config>(Altd, "Config")
+        .def(py::init<>())
+        .def_readwrite("positions", &Config::positions)
+        .def_readwrite("offsets", &Config::offsets)
+        .def_readwrite("bounds", &Config::bounds)
+        .def_readwrite("thickness", &Config::thickness)
+        .def_readwrite("surfaceType", &Config::surfaceType)
+        .def_readwrite("binValue", &Config::binValue)
+        .def_readwrite("rnd", &Config::rnd)
+        .def_readwrite("sigmaInPlane", &Config::sigmaInPlane)
+        .def_readwrite("sigmaOutPlane", &Config::sigmaOutPlane)
+        .def_readwrite("sigmaOutRot", &Config::sigmaOutRot)
+        .def_readwrite("sigmaInRot", &Config::sigmaInRot);
+  }
   {
     using AlignedDetector = Contextual::AlignedDetector;
     using Config = AlignedDetector::Config;
