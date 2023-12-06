@@ -15,8 +15,7 @@
 #include <random>
 #include <utility>
 
-namespace Acts {
-namespace Test {
+namespace Acts::detail::Test {
 
 /// Generate a random parameters vector and covariance matrix.
 ///
@@ -77,5 +76,4 @@ inline auto generateFreeParametersCovariance(generator_t& rng) {
   return generateParametersCovariance<ActsScalar, eFreeSize>(rng);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::detail::Test
