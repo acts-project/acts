@@ -1,7 +1,8 @@
+numpy==1.24.4 # to support python 3.8 in CI: test_exatrkx_python
 pytest
 pytest-check
-uproot==5.0.0
-awkward==2.0.0
+uproot
+awkward
 pytest-rerunfailures
 pytest-xdist
 pyyaml
