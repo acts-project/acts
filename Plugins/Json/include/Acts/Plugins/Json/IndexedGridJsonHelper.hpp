@@ -32,7 +32,7 @@ nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false,
   nlohmann::json jIndexedGrid;
 
   // Axis swapping (detray version)
-  bool swapAxes = false;
+  bool swapAxes = checkSwap;
 
   // Fill the casts
   nlohmann::json jCasts;
