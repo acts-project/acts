@@ -34,7 +34,6 @@ def main():
         "cmake",
         ".git",
         ".github",
-        ".",
         ".idea",
     )
     exclude_files = (
@@ -105,6 +104,7 @@ def main():
     exit = 0
 
     dirs_base = next(os.walk("."))[1]
+    dirs_base.append(".")
     dirs_base[:] = [d for d in dirs_base if d not in exclude_dirs]
     dirs_base_docs = ("docs",)
     dirs_base_code = [d for d in dirs_base if d not in dirs_base_docs]
