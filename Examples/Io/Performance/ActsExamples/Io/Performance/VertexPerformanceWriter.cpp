@@ -405,7 +405,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         for (std::size_t i = 0; i < trackParameters.size(); ++i) {
           const auto& params = trackParameters[i].parameters();
 
-          if (origTrack.parameters() == params) {
+          if (origTrack.parameters() == params &&
+              trk.trackWeight > m_cfg.minTrkWeight) {
             // We expect that the i-th associated truth particle corresponds to
             // the i-th track parameters
             const auto& particle = associatedTruthParticles[i];
@@ -450,11 +451,18 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }
     }
 
+    // Get number of contributing tracks (i.e., tracks with a weight above
+    // threshold)
+    auto weightHighEnough = [this](const auto& trkAtVtx) {
+      return trkAtVtx.trackWeight > m_cfg.minTrkWeight;
+    };
+    unsigned int nTracksOnRecoVertex =
+        std::count_if(tracksAtVtx.begin(), tracksAtVtx.end(), weightHighEnough);
     // Match reconstructed and truth vertex if the tracks of the truth vertex
     // make up at least minTrackVtxMatchFraction of the tracks at the
     // reconstructed vertex.
     double trackVtxMatchFraction =
-        (m_cfg.useTracks ? (double)fmap[maxOccurrenceId] / tracksAtVtx.size()
+        (m_cfg.useTracks ? (double)fmap[maxOccurrenceId] / nTracksOnRecoVertex
                          : 1.0);
     if (trackVtxMatchFraction > m_cfg.minTrackVtxMatchFraction) {
       int count = 0;
@@ -581,7 +589,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreeTime));
 
             m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
-            m_nTracksOnRecoVertex.push_back(tracksAtVtx.size());
+            m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
 
             m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
           }
