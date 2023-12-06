@@ -110,10 +110,12 @@ nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
   if constexpr (grid_type::DIM == 1u) {
     for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
       typename grid_type::index_t lbin;
-      lbin[0u] = ib0 - 1u;
+      lbin[0u] = ib0;
       nlohmann::json jBin;
-      jBin["loc_index"] = lbin;
       jBin["content"] = grid.atLocalBins(lbin);
+      // Corrections for detray -> offset to 0
+      lbin[0u] = ib0 - 1u;
+      jBin["loc_index"] = lbin;
       jData.push_back(jBin);
     }
   }
@@ -125,11 +127,14 @@ nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
     for (unsigned int ib0 = 1u; ib0 <= axes[iaxis0]->getNBins(); ++ib0) {
       for (unsigned int ib1 = 1u; ib1 <= axes[iaxis1]->getNBins(); ++ib1) {
         typename grid_type::index_t lbin;
+        lbin[0u] = ib0;
+        lbin[1u] = ib1;
+        nlohmann::json jBin;
+        jBin["content"] = grid.atLocalBins(lbin);
+        // Corrections for detray -> osset to 0
         lbin[0u] = ib0 - 1u;
         lbin[1u] = ib1 - 1u;
-        nlohmann::json jBin;
         jBin["loc_index"] = lbin;
-        jBin["content"] = grid.atLocalBins(lbin);
         jData.push_back(jBin);
       }
     }
