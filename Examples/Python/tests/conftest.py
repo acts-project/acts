@@ -105,7 +105,7 @@ def assert_root_hash(request, root_file_exp_hashes, record_property):
         key: Explicit lookup key for the expected hash, should be unique per test function
         file: Root file to check the expected hash against
         """
-        __tracebackhide__ = True
+        __tracebackhide__ = False
         gkey = f"{request.node.name}__{key}"
         act_hash = helpers.hash_root.hash_root_file(file)
         if not gkey in root_file_exp_hashes:
