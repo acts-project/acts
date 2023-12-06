@@ -46,22 +46,32 @@ struct SeedFinderFTFConfig {
   // helix. This is useful for e.g. misaligned seeding.
   float helixCutTolerance = 1.;
 
-  float m_phiSliceWidth{};
-  float m_nMaxPhiSlice{};
-  bool m_useClusterWidth = false;
-  std::string fastrack_input_file;
+  float m_phiSliceWidth{};    // initialised in loadSpacePoints function
+  float m_nMaxPhiSlice = 53;  // used to calculate phi slices
+  bool m_useClusterWidth =
+      false;  // bool for use of cluster width in loadSpacePoints function
+  std::string fastrack_input_file;  // input file for fastrack object
   std::vector<TrigInDetSiLayer> m_layerGeometry;
 
-  // for run function
-  // m_settings:
+  // for runGNN_TrackFinder
   bool m_LRTmode = true;  // eventually want to set from full chain
-  bool m_useEtaBinning = true;
-  bool m_doubletFilterRZ = true;
-  float m_minDeltaRadius = 5.0;  // eventually set in config or to equivalent
-                                 // acts 2.0 but increasing to test loops
-  // float m_maxDeltaRadius = 270.0 ;
-  float m_tripletD0Max = 4.0;  // m_settings
-  unsigned int m_maxTripletBufferLength = 3;
+  bool m_useEtaBinning =
+      true;  // bool to use eta binning from geometry structure
+  bool m_doubletFilterRZ = true;  // bool applies new Z cuts on doublets
+  float m_minDeltaRadius = 2.0;   // min dr for doublet
+  float m_tripletD0Max = 4.0;     // D0 cut for triplets
+  unsigned int m_maxTripletBufferLength =
+      3;                        // maximum number of space points per triplet
+  int MaxEdges = 2000000;       // max number of GNN edges/doublets
+  float cut_dphi_max = 0.012;   // phi cut for triplets
+  float cut_dcurv_max = 0.001;  // curv cut for triplets
+  float cut_tau_ratio_max = 0.007;  // tau cut for doublets and triplets
+  float maxOuterRadius = 550.0;     // used to calculate Z cut on doublets
+  float m_PtMin = 1000.0;
+  float m_tripletPtMinFrac = 0.3;
+  float m_tripletPtMin = m_PtMin * m_tripletPtMinFrac;  // Limit on triplet pt
+  double ptCoeff =
+      0.29997 * 1.9972 / 2.0;  // ~0.3*B/2 - assumes nominal field of 2*T
 
   // ROI:
   bool containsPhi() {
