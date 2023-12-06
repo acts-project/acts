@@ -148,7 +148,7 @@ def main():
 
     print("Write to", args.output)
     with open(args.output, "w+") as jf:
-        jf.write(ItemCollection(__root__=items).json(indent=2))
+        jf.write(ItemCollection(pydantic.RootModel=items).json(indent=2))
 
 
 if "__main__" == __name__:

@@ -26,4 +26,4 @@ class Item(pydantic.BaseModel):
 
 
 class ItemCollection(pydantic.BaseModel):
-    __root__: List[Item]
+    pydantic.RootModel: List[Item]
