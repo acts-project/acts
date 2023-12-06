@@ -17,6 +17,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
 #include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
+#include "Acts/MagneticField/RestrictedBField.hpp"
 
 #include <array>
 #include <cstddef>
@@ -53,6 +54,10 @@ void addMagneticField(Context& ctx) {
   py::class_<Acts::ConstantBField, Acts::MagneticFieldProvider,
              std::shared_ptr<Acts::ConstantBField>>(m, "ConstantBField")
       .def(py::init<Acts::Vector3>());
+  
+  py::class_<RestrictedBField, Acts::MagneticFieldProvider, std::shared_ptr<RestrictedBField>>(m, "RestrictedBField")
+      .def(py::init<Acts::Vector3>());
+
 
   py::class_<ActsExamples::detail::InterpolatedMagneticField2,
              Acts::InterpolatedMagneticField, Acts::MagneticFieldProvider,
