@@ -148,7 +148,7 @@ def main():
 
     print("Write to", args.output)
     with open(args.output, "w+") as jf:
-        jf.write(ItemCollection(root=items).json(indent=2))
+        jf.write(ItemCollection(root=items).model_dump_json(indent=2))
 
 
 if "__main__" == __name__:
