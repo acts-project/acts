@@ -701,7 +701,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
       auto sfmi =
           srf.intersect(gctx, position, direction, BoundaryCheck(false));
       for (const auto& sfi : sfmi.split()) {
-        if (sfi && detail::checkIntersection(sfi, farLimit, nearLimit)) {
+        if (sfi && detail::checkIntersection(sfi, nearLimit, farLimit)) {
           sIntersections.push_back(sfi);
         }
       }
