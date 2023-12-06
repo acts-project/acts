@@ -33,7 +33,7 @@ pytest==7.4.3
     #   pytest-check
     #   pytest-rerunfailures
     #   pytest-xdist
-pytest-check==2.0.0
+pytest-check==2.1.0
     # via -r Examples/Python/tests/requirements.in
 pytest-rerunfailures==13.0
     # via -r Examples/Python/tests/requirements.in
