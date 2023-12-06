@@ -25,5 +25,5 @@ class Item(pydantic.BaseModel):
         )
 
 
-class ItemCollection(pydantic.BaseModel):
-    pydantic.RootModel: List[Item]
+class ItemCollection(pydantic.RootModel[List[Item]]):
+    pass
