@@ -76,8 +76,9 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 
   Acts::GainMatrixUpdater updater;
 
-  size_t maxComponents = 0;
+  std::size_t maxComponents = 0;
   double weightCutoff = 0;
+  const double momentumCutoff = 0;  // 500_MeV;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
   MixtureReductionAlgorithm reductionAlg =
@@ -144,6 +145,14 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     if (!tracks.hasColumn(Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
       tracks.template addColumn<FinalMultiComponentState>(key);
+    }
+
+    if (!tracks.hasColumn(Acts::hashString(kFwdMaxMaterialXOverX0))) {
+      tracks.template addColumn<double>(std::string(kFwdMaxMaterialXOverX0));
+    }
+
+    if (!tracks.hasColumn(Acts::hashString(kFwdSumMaterialXOverX0))) {
+      tracks.template addColumn<double>(std::string(kFwdSumMaterialXOverX0));
     }
 
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,

@@ -11,39 +11,68 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
                                             const Vertex<input_track_t>& vtx) {
-  const Vector3 vtxPos = vtx.fullPosition().template head<3>();
+  if constexpr (nDimVertex != 3 && nDimVertex != 4) {
+    throw std::invalid_argument(
+        "The vertex dimension must either be 3 (when fitting the spatial "
+        "coordinates) or 4 (when fitting the spatial coordinates + time).");
+  }
+
+  using VertexVector = ActsVector<nDimVertex>;
+  using VertexMatrix = ActsSquareMatrix<nDimVertex>;
+  constexpr unsigned int nBoundParams = nDimVertex + 2;
+  using ParameterVector = ActsVector<nBoundParams>;
+  using ParameterMatrix = ActsSquareMatrix<nBoundParams>;
+  // Check if linearized state exists
+  if (!track.isLinearized) {
+    throw std::invalid_argument("TrackAtVertex object must be linearized.");
+  }
+
+  // Extract vertex position and covariance
+  // \tilde{x_n}
+  const VertexVector vtxPos = vtx.fullPosition().template head<nDimVertex>();
+  // C_n
+  const VertexMatrix vtxCov =
+      vtx.fullCovariance().template block<nDimVertex, nDimVertex>(0, 0);
 
   // Get the linearized track
   const LinearizedTrack& linTrack = track.linearizedState;
+  // Retrieve variables from the track linearization. The comments indicate the
+  // corresponding symbol used in Ref. (1).
+  // A_k
+  const ActsMatrix<nBoundParams, nDimVertex> posJac =
+      linTrack.positionJacobian.block<nBoundParams, nDimVertex>(0, 0);
+  // B_k
+  const ActsMatrix<nBoundParams, 3> momJac =
+      linTrack.momentumJacobian.block<nBoundParams, 3>(0, 0);
+  // p_k
+  const ParameterVector trkParams =
+      linTrack.parametersAtPCA.head<nBoundParams>();
+  // c_k
+  const ParameterVector constTerm = linTrack.constantTerm.head<nBoundParams>();
+  // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
+  // time.
+  // G_k
+  const ParameterMatrix trkParamWeight =
+      linTrack.covarianceAtPCA.block<nBoundParams, nBoundParams>(0, 0)
+          .inverse();
 
-  // Check if linearized state exists
-  if (linTrack.covarianceAtPCA.determinant() == 0.) {
-    // Track has no linearized state, returning w/o update
-    return;
-  }
+  // Cache object filled with zeros
+  KalmanVertexUpdater::Cache<nDimVertex> cache;
 
-  // Retrieve linTrack information
-  const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
-  const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
-  const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
-  // TODO we could use `linTrack.weightAtPCA` but only if we would use time
-  const ActsSquareMatrix<5> trkParamWeight =
-      linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
+  // Calculate the update of the vertex position when the track is removed. This
+  // might be unintuitive, but it is needed to compute a symmetric chi2.
+  KalmanVertexUpdater::calculateUpdate<input_track_t>(
+      vtx, linTrack, track.trackWeight, -1, cache);
 
-  // Calculate S matrix
-  ActsSquareMatrix<3> sMat =
-      (momJac.transpose() * (trkParamWeight * momJac)).inverse();
+  // Refit track momentum with the final vertex position
+  Vector3 newTrkMomentum = cache.wMat * momJac.transpose() * trkParamWeight *
+                           (trkParams - constTerm - posJac * vtxPos);
 
-  const ActsVector<5> residual = linTrack.constantTerm.head<5>();
-
-  // Refit track momentum
-  Vector3 newTrkMomentum = sMat * momJac.transpose() * trkParamWeight *
-                           (trkParams - residual - posJac * vtxPos);
-
-  // Refit track parameters
+  // Track parameters, impact parameters are set to 0 and momentum corresponds
+  // to newTrkMomentum. TODO: Make transition fitterParams -> fittedMomentum.
   BoundVector newTrkParams(BoundVector::Zero());
 
   // Get phi and theta and correct for possible periodicity changes
@@ -53,56 +82,35 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   newTrkParams(BoundIndices::eBoundTheta) = correctedPhiTheta.second;  // theta
   newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
 
-  // Vertex covariance and weight matrices
-  const SquareMatrix3 vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
-  const SquareMatrix3 vtxWeight = vtxCov.inverse();
+  // E_k^n
+  const ActsMatrix<nDimVertex, 3> crossCovVP =
+      -vtxCov * posJac.transpose() * trkParamWeight * momJac * cache.wMat;
 
-  // New track covariance matrix
-  const SquareMatrix3 newTrkCov =
-      -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
+  // Difference in positions. cache.newVertexPos corresponds to \tilde{x_k^{n*}} in Ref. (1).
+  VertexVector posDiff =
+      vtxPos - cache.newVertexPos.template head<nDimVertex>();
 
-  KalmanVertexUpdater::MatrixCache matrixCache;
-
-  // Now determine the smoothed chi2 of the track in the following
-  KalmanVertexUpdater::updatePosition<input_track_t>(
-      vtx, linTrack, track.trackWeight, -1, matrixCache);
-
-  // Corresponding weight matrix
-  const SquareMatrix3& reducedVtxWeight = matrixCache.newVertexWeight;
-
-  // Difference in positions
-  Vector3 posDiff = vtx.position() - matrixCache.newVertexPos;
-
-  // Get smoothed params
-  ActsVector<5> smParams =
-      trkParams - (residual + posJac * vtx.fullPosition().template head<3>() +
-                   momJac * newTrkMomentum);
+  // r_k^n
+  ParameterVector paramDiff =
+      trkParams - (constTerm + posJac * vtxPos + momJac * newTrkMomentum);
 
   // New chi2 to be set later
-  double chi2 = posDiff.dot(reducedVtxWeight * posDiff) +
-                smParams.dot(trkParamWeight * smParams);
+  double chi2 =
+      posDiff.dot(
+          cache.newVertexWeight.template block<nDimVertex, nDimVertex>(0, 0) *
+          posDiff) +
+      paramDiff.dot(trkParamWeight * paramDiff);
 
-  // Not yet 4d ready. This can be removed together will all head<> statements,
-  // once time is consistently introduced to vertexing
-  ActsMatrix<4, 3> newFullTrkCov(ActsMatrix<4, 3>::Zero());
-  newFullTrkCov.block<3, 3>(0, 0) = newTrkCov;
-
-  SquareMatrix4 vtxFullWeight(SquareMatrix4::Zero());
-  vtxFullWeight.block<3, 3>(0, 0) = vtxWeight;
-
-  SquareMatrix4 vtxFullCov(SquareMatrix4::Zero());
-  vtxFullCov.block<3, 3>(0, 0) = vtxCov;
-
-  Acts::BoundMatrix fullPerTrackCov = detail::createFullTrackCovariance(
-      sMat, newFullTrkCov, vtxFullWeight, vtxFullCov, newTrkParams);
+  Acts::BoundMatrix newTrackCov = detail::calculateTrackCovariance<nDimVertex>(
+      cache.wMat, crossCovVP, vtxCov, newTrkParams);
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(vtx.position());
+      Surface::makeShared<PerigeeSurface>(vtxPos.template head<3>());
 
-  BoundTrackParameters refittedPerigee = BoundTrackParameters(
-      perigeeSurface, newTrkParams, std::move(fullPerTrackCov),
-      track.fittedParams.particleHypothesis());
+  BoundTrackParameters refittedPerigee =
+      BoundTrackParameters(perigeeSurface, newTrkParams, std::move(newTrackCov),
+                           track.fittedParams.particleHypothesis());
 
   // Set new properties
   track.fittedParams = refittedPerigee;
@@ -112,44 +120,66 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   return;
 }
 
+template <unsigned int nDimVertex>
 inline Acts::BoundMatrix
-Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
-    const SquareMatrix3& sMat, const ActsMatrix<4, 3>& newTrkCov,
-    const SquareMatrix4& vtxWeight, const SquareMatrix4& vtxCov,
+Acts::KalmanVertexTrackUpdater::detail::calculateTrackCovariance(
+    const SquareMatrix3& wMat, const ActsMatrix<nDimVertex, 3>& crossCovVP,
+    const ActsSquareMatrix<nDimVertex>& vtxCov,
     const BoundVector& newTrkParams) {
-  // Now new momentum covariance
+  // D_k^n
   ActsSquareMatrix<3> momCov =
-      sMat + (newTrkCov.block<3, 3>(0, 0)).transpose() *
-                 (vtxWeight.block<3, 3>(0, 0) * newTrkCov.block<3, 3>(0, 0));
+      wMat + crossCovVP.transpose() * vtxCov.inverse() * crossCovVP;
 
-  // Full (x,y,z,phi, theta, q/p) covariance matrix
-  // To be made 7d again after switching to (x,y,z,phi, theta, q/p, t)
-  ActsSquareMatrix<6> fullTrkCov(ActsSquareMatrix<6>::Zero());
+  // Full x, y, z, phi, theta, q/p, and, optionally, t covariance matrix. Note
+  // that we call this set of parameters "free" in the following even though
+  // that is not quite correct (free parameters correspond to
+  // x, y, z, t, px, py, pz)
+  constexpr unsigned int nFreeParams = nDimVertex + 3;
+  ActsSquareMatrix<nFreeParams> freeTrkCov(
+      ActsSquareMatrix<nFreeParams>::Zero());
 
-  fullTrkCov.block<3, 3>(0, 0) = vtxCov.block<3, 3>(0, 0);
-  fullTrkCov.block<3, 3>(0, 3) = newTrkCov.block<3, 3>(0, 0);
-  fullTrkCov.block<3, 3>(3, 0) = (newTrkCov.block<3, 3>(0, 0)).transpose();
-  fullTrkCov.block<3, 3>(3, 3) = momCov;
+  freeTrkCov.template block<3, 3>(0, 0) = vtxCov.template block<3, 3>(0, 0);
+  freeTrkCov.template block<3, 3>(0, 3) = crossCovVP.template block<3, 3>(0, 0);
+  freeTrkCov.template block<3, 3>(3, 0) =
+      crossCovVP.template block<3, 3>(0, 0).transpose();
+  freeTrkCov.template block<3, 3>(3, 3) = momCov;
 
-  // Combined track jacobian
-  ActsMatrix<5, 6> trkJac(ActsMatrix<5, 6>::Zero());
+  // Fill time (cross-)covariances
+  if constexpr (nFreeParams == 7) {
+    freeTrkCov.template block<3, 1>(0, 6) = vtxCov.template block<3, 1>(0, 3);
+    freeTrkCov.template block<3, 1>(3, 6) =
+        crossCovVP.template block<1, 3>(3, 0).transpose();
+    freeTrkCov.template block<1, 3>(6, 0) = vtxCov.template block<1, 3>(3, 0);
+    freeTrkCov.template block<1, 3>(6, 3) =
+        crossCovVP.template block<1, 3>(3, 0);
+    freeTrkCov(6, 6) = vtxCov(3, 3);
+  }
 
+  // Jacobian relating "free" and bound track parameters
+  constexpr unsigned int nBoundParams = nDimVertex + 2;
+  ActsMatrix<nBoundParams, nFreeParams> freeToBoundJac(
+      ActsMatrix<nBoundParams, nFreeParams>::Zero());
+
+  // TODO: Jacobian is not quite correct
   // First row
-  trkJac(0, 0) = -std::sin(newTrkParams[2]);
-  trkJac(0, 1) = std::cos(newTrkParams[2]);
+  freeToBoundJac(0, 0) = -std::sin(newTrkParams[2]);
+  freeToBoundJac(0, 1) = std::cos(newTrkParams[2]);
 
   double tanTheta = std::tan(newTrkParams[3]);
 
   // Second row
-  trkJac(1, 0) = -trkJac(0, 1) / tanTheta;
-  trkJac(1, 1) = trkJac(0, 0) / tanTheta;
+  freeToBoundJac(1, 0) = -freeToBoundJac(0, 1) / tanTheta;
+  freeToBoundJac(1, 1) = freeToBoundJac(0, 0) / tanTheta;
 
-  trkJac.block<4, 4>(1, 2) = ActsMatrix<4, 4>::Identity();
+  // Dimension of the part of the Jacobian that is an identity matrix
+  constexpr unsigned int nDimIdentity = nFreeParams - 2;
+  freeToBoundJac.template block<nDimIdentity, nDimIdentity>(1, 2) =
+      ActsMatrix<nDimIdentity, nDimIdentity>::Identity();
 
   // Full perigee track covariance
-  BoundMatrix fullPerTrackCov(BoundMatrix::Identity());
-  fullPerTrackCov.block<5, 5>(0, 0) =
-      (trkJac * (fullTrkCov * trkJac.transpose()));
+  BoundMatrix boundTrackCov(BoundMatrix::Identity());
+  boundTrackCov.block<nBoundParams, nBoundParams>(0, 0) =
+      (freeToBoundJac * (freeTrkCov * freeToBoundJac.transpose()));
 
-  return fullPerTrackCov;
+  return boundTrackCov;
 }

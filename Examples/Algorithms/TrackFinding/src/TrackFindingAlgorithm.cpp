@@ -139,7 +139,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   unsigned int nSeed = 0;
 
-  for (size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     // Clear trackContainerTemp and trackStateContainerTemp
     tracksTemp.clear();
 
@@ -157,7 +157,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
-      seedNumber(track) = nSeed;
+      // Set the seed number, this number decrease by 1 since the seed number
+      // has already been updated
+      seedNumber(track) = nSeed - 1;
       if (!m_trackSelector.has_value() ||
           m_trackSelector->isValidTrack(track)) {
         auto destProxy = tracks.getTrack(tracks.addTrack());

@@ -45,8 +45,8 @@ std::string ActsExamples::CsvSimHitReader::CsvSimHitReader::name() const {
   return "CsvSimHitReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::CsvSimHitReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvSimHitReader::availableEvents() const {
   return m_eventsRange;
 }
 

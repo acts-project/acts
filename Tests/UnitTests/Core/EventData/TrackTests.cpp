@@ -19,11 +19,11 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
-#include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -45,7 +45,8 @@ using namespace Acts::UnitLiterals;
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
-using namespace Acts::Test;
+using namespace Acts::detail::Test;
+
 using MultiTrajectoryTraits::IndexType;
 namespace bd = boost::unit_test::data;
 
@@ -334,7 +335,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   auto tsRange = tNone.trackStatesReversed();
   BOOST_CHECK(tsRange.begin() == tsRange.end());
 
-  size_t i = 0;
+  std::size_t i = 0;
   for (const auto& state : tNone.trackStatesReversed()) {
     (void)state;
     i++;
@@ -539,7 +540,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(DynamicColumns, factory_t, holder_types) {
 
 BOOST_AUTO_TEST_CASE(EnsureDynamicColumns) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  tc.addColumn<size_t>("counter");
+  tc.addColumn<std::size_t>("counter");
   tc.addColumn<bool>("odd");
 
   BOOST_CHECK(tc.hasColumn("counter"));
@@ -570,7 +571,7 @@ BOOST_AUTO_TEST_CASE(AppendTrackState) {
 
   BOOST_CHECK_EQUAL(trackStates.size(), t.nTrackStates());
 
-  for (size_t i = trackStates.size() - 1; i > 0; i--) {
+  for (std::size_t i = trackStates.size() - 1; i > 0; i--) {
     BOOST_CHECK_EQUAL(trackStates.at(i).index(), i);
   }
 }
@@ -580,7 +581,7 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
   {
     // let's create an unrelated track first
     auto t = tc.getTrack(tc.addTrack());
-    for (size_t i = 0; i < 10; i++) {
+    for (std::size_t i = 0; i < 10; i++) {
       t.appendTrackState();
     }
   }

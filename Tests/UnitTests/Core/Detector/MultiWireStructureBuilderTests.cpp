@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
 
   // Set the number of surfaces along each dimension of the multi wire structure
   // aligned along z axis
-  size_t nSurfacesY = 3;
-  size_t nSurfacesX = 15;
+  std::size_t nSurfacesY = 3;
+  std::size_t nSurfacesX = 15;
 
   double radius = 15.;
   double halfZ = 250.;
@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   Vector3 pos = ipos;
 
   // Generate the surfaces
-  for (size_t i = 0; i < nSurfacesY; i++) {
-    for (size_t j = 0; j < nSurfacesX; j++) {
+  for (std::size_t i = 0; i < nSurfacesY; i++) {
+    for (std::size_t j = 0; j < nSurfacesX; j++) {
       auto surface = Surface::makeShared<StrawSurface>(
           Transform3(Translation3(pos)), radius, halfZ);
       strawSurfaces.push_back(surface);
@@ -63,6 +63,7 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   }
 
   std::vector<ActsScalar> vBounds = {0.5 * nSurfacesX * 2 * radius,
+                                     0.5 * nSurfacesX * 2 * radius,
                                      0.5 * nSurfacesY * 2 * radius, halfZ};
 
   MultiWireStructureBuilder::Config mlCfg;
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   BOOST_CHECK_EQUAL(volumes.front()->surfaces().size(),
                     nSurfacesX * nSurfacesY);
   BOOST_CHECK(volumes.front()->volumes().empty());
-  BOOST_CHECK(volumes.front()->surfaceCandidatesUpdator().connected());
+  BOOST_CHECK(volumes.front()->surfaceCandidatesUpdater().connected());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

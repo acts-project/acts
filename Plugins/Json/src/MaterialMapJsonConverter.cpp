@@ -280,7 +280,7 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap =
       m_volumeMaterialConverter.fromJson(materialVolume);
   VolumeMaterialMap volumeMap;
-  for (size_t i = 0; i < hierarchyVolumeMap.size(); i++) {
+  for (std::size_t i = 0; i < hierarchyVolumeMap.size(); i++) {
     std::shared_ptr<const IVolumeMaterial> volumePointer(
         hierarchyVolumeMap.valueAt(i));
     volumeMap.insert({hierarchyVolumeMap.idAt(i), std::move(volumePointer)});
@@ -289,7 +289,7 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
   GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap =
       m_surfaceMaterialConverter.fromJson(materialSurface);
   SurfaceMaterialMap surfaceMap;
-  for (size_t i = 0; i < hierarchySurfaceMap.size(); i++) {
+  for (std::size_t i = 0; i < hierarchySurfaceMap.size(); i++) {
     std::shared_ptr<const ISurfaceMaterial> surfacePointer(
         hierarchySurfaceMap.valueAt(i));
     surfaceMap.insert({hierarchySurfaceMap.idAt(i), std::move(surfacePointer)});
