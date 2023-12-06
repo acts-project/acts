@@ -21,14 +21,14 @@
 
 Acts::Experimental::Detector::Detector(
     std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    DetectorVolumeUpdator detectorVolumeUpdator)
+    DetectorVolumeUpdater detectorVolumeUpdater)
     : m_name(std::move(name)),
       m_rootVolumes(std::move(rootVolumes)),
-      m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)) {
+      m_detectorVolumeUpdater(std::move(detectorVolumeUpdater)) {
   if (m_rootVolumes.internal.empty()) {
     throw std::invalid_argument("Detector: no volume were given.");
   }
-  if (!m_detectorVolumeUpdator.connected()) {
+  if (!m_detectorVolumeUpdater.connected()) {
     throw std::invalid_argument(
         "Detector: volume finder delegate is not connected.");
   }
@@ -74,7 +74,8 @@ Acts::Experimental::Detector::Detector(
         ss << sgeoID;
         throw std::invalid_argument(
             "Detector: duplicate sensitive surface geometry id '" + ss.str() +
-            "' detected. Make sure a GeometryIdGenerator is used.");
+            "' detected in volume '" + v->name() +
+            "'. Make sure a GeometryIdGenerator is used.");
       }
       surfaceGeoIdMap.emplace(sgeoID, s);
     }
@@ -92,10 +93,10 @@ Acts::Experimental::Detector::Detector(
 std::shared_ptr<Acts::Experimental::Detector>
 Acts::Experimental::Detector::makeShared(
     std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    DetectorVolumeUpdator detectorVolumeUpdator) {
+    DetectorVolumeUpdater detectorVolumeUpdater) {
   return std::shared_ptr<Detector>(
       new Detector(std::move(name), std::move(rootVolumes),
-                   std::move(detectorVolumeUpdator)));
+                   std::move(detectorVolumeUpdater)));
 }
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
@@ -119,13 +120,13 @@ Acts::Experimental::Detector::volumes() const {
 }
 
 void Acts::Experimental::Detector::updateDetectorVolumeFinder(
-    DetectorVolumeUpdator detectorVolumeUpdator) {
-  m_detectorVolumeUpdator = std::move(detectorVolumeUpdator);
+    DetectorVolumeUpdater detectorVolumeUpdater) {
+  m_detectorVolumeUpdater = std::move(detectorVolumeUpdater);
 }
 
-const Acts::Experimental::DetectorVolumeUpdator&
+const Acts::Experimental::DetectorVolumeUpdater&
 Acts::Experimental::Detector::detectorVolumeFinder() const {
-  return m_detectorVolumeUpdator;
+  return m_detectorVolumeUpdater;
 }
 
 const std::string& Acts::Experimental::Detector::name() const {
@@ -144,7 +145,7 @@ Acts::Experimental::Detector::getSharedPtr() const {
 
 void Acts::Experimental::Detector::updateDetectorVolume(
     const GeometryContext& gctx, NavigationState& nState) const {
-  m_detectorVolumeUpdator(gctx, nState);
+  m_detectorVolumeUpdater(gctx, nState);
 }
 
 const Acts::Experimental::DetectorVolume*
@@ -153,7 +154,7 @@ Acts::Experimental::Detector::findDetectorVolume(
   NavigationState nState;
   nState.currentDetector = this;
   nState.position = position;
-  m_detectorVolumeUpdator(gctx, nState);
+  m_detectorVolumeUpdater(gctx, nState);
   return nState.currentVolume;
 }
 
