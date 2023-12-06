@@ -110,7 +110,6 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   /// The interface definition for internal structure creation
   ///
   /// @param gctx the geometry context at the creation of the internal structure
-  /// @param options the options struct
   ///
   /// @return a consistent set of detector volume internals
   InternalStructure construct(const GeometryContext& gctx) const final;
