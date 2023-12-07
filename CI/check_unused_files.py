@@ -167,11 +167,11 @@ def main():
                 if str(root).find("Examples/Python") != -1:
                     continue
 
-                if not file_can_be_removed("import .*" + filepath.stem, dirs_base_docs):
+                if not file_can_be_removed("import .*" + filepath.stem, dirs_base):
                     continue
 
                 if not file_can_be_removed(
-                    "from " + filepath.stem + " import", dirs_base_docs
+                    "from " + filepath.stem + " import", dirs_base
                 ):
                     continue
 
