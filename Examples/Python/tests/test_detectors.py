@@ -9,7 +9,7 @@ import acts.examples
 
 
 def count_surfaces(geo):
-    __tracebackhide__ = False
+    __tracebackhide__ = True
     nSurfaces = 0
 
     def visit(srf):

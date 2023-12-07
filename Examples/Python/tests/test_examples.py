@@ -50,14 +50,14 @@ def seq():
 
 
 def assert_csv_output(csv_path, stem):
-    __tracebackhide__ = False
+    __tracebackhide__ = True
     # print(list(csv_path.iterdir()))
     assert len([f for f in csv_path.iterdir() if f.name.endswith(stem + ".csv")]) > 0
     assert all([f.stat().st_size > 100 for f in csv_path.iterdir()])
 
 
 def assert_entries(root_file, tree_name, exp=None, non_zero=False):
-    __tracebackhide__ = False
+    __tracebackhide__ = True
     import ROOT
 
     ROOT.PyConfig.IgnoreCommandLineOptions = True
@@ -74,7 +74,7 @@ def assert_entries(root_file, tree_name, exp=None, non_zero=False):
 
 
 def assert_has_entries(root_file, tree_name):
-    __tracebackhide__ = False
+    __tracebackhide__ = True
     assert_entries(root_file, tree_name, non_zero=True)
 
 
