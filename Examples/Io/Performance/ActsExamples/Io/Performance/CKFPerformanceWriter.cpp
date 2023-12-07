@@ -124,8 +124,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
       << duplicationRate_particle);
 
   auto writeFloat = [&](float f, const char* name) {
-		TVectorF v(1);
-		v[0] = f;
+    TVectorF v(1);
+    v[0] = f;
     m_outputFile->WriteObject(&v, name);
   };
 

@@ -23,6 +23,7 @@
 #include <vector>
 
 #include <TFile.h>
+#include <TVectorT.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
@@ -100,8 +101,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
       << aveNDuplicatedSeeds);
 
   auto writeFloat = [&](float f, const char* name) {
-		TVectorF v(1);
-		v[0] = f;
+    TVectorF v(1);
+    v[0] = f;
     m_outputFile->WriteObject(&v, name);
   };
 
