@@ -78,7 +78,7 @@ def main():
         ".md",
         ".rst",
     )
-    suffix_bash = (".sh")
+    suffix_bash = (".sh",)
     suffix_other = (
         "",
         ".csv",
