@@ -287,6 +287,9 @@ void collector(typename traj_t::TrackStateProxy& trackStateProxy,
   }
 }
 
+BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
+                                 const BoundVector& bVector);
+
 /// Global Chi Square fitter (GX2F) implementation.
 ///
 /// @tparam propagator_t Type of the propagation class
@@ -718,20 +721,8 @@ class Gx2Fitter {
       }
 
       // calculate delta params [a] * delta = b
-      deltaParams = BoundVector::Zero();
-      if (gx2fOptions.zeroField) {
-        constexpr std::size_t reducedMatrixSize = 4;
-        deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
-            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-                .colPivHouseholderQr()
-                .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-      } else {
-        constexpr std::size_t reducedMatrixSize = 5;
-        deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
-            aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-                .colPivHouseholderQr()
-                .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-      }
+      deltaParams =
+          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
 
       ACTS_VERBOSE("aMatrix:\n"
                    << aMatrix << "\n"
@@ -822,5 +813,6 @@ class Gx2Fitter {
     return track;
   }
 };
+
 }  // namespace Experimental
 }  // namespace Acts
