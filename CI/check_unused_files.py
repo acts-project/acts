@@ -29,6 +29,7 @@ def main():
     exclude_dirs = (
         "Scripts",
         "thirdparty",
+        "CI",
         "git",
         "cmake",
         ".git",
@@ -78,7 +79,6 @@ def main():
         ".md",
         ".rst",
     )
-    suffix_bash = (".sh")
     suffix_other = (
         "",
         ".csv",
@@ -101,7 +101,6 @@ def main():
         + suffix_image
         + suffix_python
         + suffix_doc
-        + suffix_bash
         + suffix_other
     )
 
@@ -195,10 +194,6 @@ def main():
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)
                     os.system(remove_cmd)
-
-            # TODO should we make a catalogue for scripts?
-            elif filepath.suffix in suffix_bash:
-                continue
 
         # Print the progress in place
         progress = int(20 * processed_files / number_files)
