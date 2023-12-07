@@ -10,6 +10,8 @@ awkward==2.5.0
     #   uproot
 awkward-cpp==26
     # via awkward
+execnet==2.0.2
+    # via pytest-xdist
 iniconfig==2.0.0
     # via pytest
 numpy==1.26.2
@@ -28,7 +30,10 @@ pytest==7.4.3
     # via
     #   -r Examples/Python/tests/requirements.in
     #   pytest-check
+    #   pytest-xdist
 pytest-check==2.1.5
+    # via -r Examples/Python/tests/requirements.in
+pytest-xdist==3.5.0
     # via -r Examples/Python/tests/requirements.in
 pyyaml==6.0.1
     # via -r Examples/Python/tests/requirements.in

@@ -2,4 +2,5 @@ pytest
 pytest-check==2.1.5
 uproot
 awkward
+pytest-xdist
 pyyaml
