@@ -101,10 +101,10 @@ struct SurfaceReached {
       return true;
     }
 
-    const double pLimit =
-        state.stepping.stepSize.value(ConstrainedStep::aborter);
-    const double oLimit =
+    const double nearLimit =
         overstepLimit.value_or(stepper.overstepLimit(state.stepping));
+    const double farLimit =
+        state.stepping.stepSize.value(ConstrainedStep::aborter);
     const double tolerance = state.options.surfaceTolerance;
 
     const auto sIntersection = surface->intersect(
@@ -124,8 +124,8 @@ struct SurfaceReached {
 
     for (const auto& intersection : sIntersection.split()) {
       if (intersection &&
-          detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
-                                    tolerance, logger)) {
+          detail::checkIntersection(intersection.intersection(), nearLimit,
+                                    farLimit, logger)) {
         stepper.updateStepSize(state.stepping, intersection.pathLength(),
                                ConstrainedStep::aborter, false);
         ACTS_VERBOSE(
