@@ -630,6 +630,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // We save the momenta if we find a match.
           for (const auto& trk : tracksAtVtx) {
             if (trk.originalParams->parameters() == params) {
+              innerTrkWeight.push_back(trk.trackWeight);
               const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
               trueMom.head(2) = Acts::makePhiThetaFromDirection(trueUnitDir);
@@ -673,7 +674,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
               // Save track parameters after the vertex fit
               const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
-              if (paramsAtVtxFitted != std::nullopt) {
+              if (paramsAtVtxFitted != std::nullopt &&
+                  trk.trackWeight > m_cfg.minTrkWeight) {
                 Acts::ActsVector<3> recoMomFitted =
                     paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
                 const Acts::ActsMatrix<3, 3>& momCovFitted =
@@ -698,8 +700,6 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                     pull(diffMomFitted[1], momCovFitted(1, 1), "theta"));
                 innerPullQOverPFitted.push_back(
                     pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
-
-                innerTrkWeight.push_back(trk.trackWeight);
 
                 const auto& recoUnitDirFitted = paramsAtVtxFitted->direction();
                 double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
