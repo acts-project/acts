@@ -56,8 +56,7 @@ def main():
         "alignment-geo-contextualDetector.json",
         # TODO Mention these files somewhere?
         "generate_particle_data_table.py",
-        "odd_light.py",
-        "mockupbuilder.py",
+        "lazy_autodoc.py",
     )
 
     suffix_header = (
@@ -158,7 +157,6 @@ def main():
 
             # Check header files and remove
             elif filepath.suffix in suffix_header + suffix_source:
-                continue
                 if file_can_be_removed(filepath.stem, dirs_base_code):
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)
@@ -166,7 +164,7 @@ def main():
 
             elif filepath.suffix in suffix_python:
                 # Skip the python tests folder
-                if str(root).find("Examples/Python/tests") != -1:
+                if str(root).find("Examples/Python") != -1:
                     continue
 
                 if not file_can_be_removed("import .*" + filepath.stem, dirs_base_docs):
