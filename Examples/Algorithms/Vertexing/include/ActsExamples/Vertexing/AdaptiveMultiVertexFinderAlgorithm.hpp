@@ -73,6 +73,8 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputVertices = "vertices";
     /// Enum member determining the choice of the vertex seed finder
     SeedFinder seedFinder;
+    /// Use time information in vertex seeder, finder, and fitter
+    bool useTime = false;
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
