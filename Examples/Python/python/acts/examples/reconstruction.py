@@ -187,6 +187,7 @@ def addSeeding(
     ] = acts.ParticleHypothesis.pion,
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> None:
@@ -367,6 +368,24 @@ def addSeeding(
                 parEstimateAlg.config.outputTrackParameters,
                 logLevel,
             )
+
+        if outputDirCsv is not None:
+            outputDirCsv = Path(outputDirCsv)
+
+            if not outputDirCsv.exists():
+                outputDirCsv.mkdir()
+
+            CsvSeedWriter = acts.examples.CsvSeedWriter(
+                level=logLevel,
+                inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
+                inputSimSeeds=seeds,
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                outputDir=str(outputDirCsv),
+                fileName=str(f"seed.csv"),
+            )
+            s.addWriter(CsvSeedWriter)
 
     return s
 
@@ -866,6 +885,7 @@ def addFTFSeeding(
         inputSourceLinks="sourcelinks",
         trackingGeometry=trackingGeometry,
         fill_module_csv=False,
+        inputClusters="clusters",
     )
 
     sequence.addAlgorithm(seedingAlg)
@@ -1113,10 +1133,12 @@ def addGx2fTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    # directNavigation: bool = False,
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = False,
     energyLoss: bool = False,
+    nUpdateMax: int = 5,
+    zeroField: bool = False,
+    relChi2changeCutOff: float = 1e-7,
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
@@ -1127,6 +1149,9 @@ def addGx2fTracks(
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
+        "nUpdateMax": nUpdateMax,
+        "zeroField": zeroField,
+        "relChi2changeCutOff": relChi2changeCutOff,
         "level": customLogLevel(),
     }
 
