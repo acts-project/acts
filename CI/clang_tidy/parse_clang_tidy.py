@@ -7,14 +7,8 @@ Currently implemented is clang-tidy warnings.
 
 import argparse
 import re
-from collections import namedtuple
-from itertools import groupby
 import os
-import html
 from fnmatch import fnmatch
-import json
-import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 from item import Item, ItemCollection

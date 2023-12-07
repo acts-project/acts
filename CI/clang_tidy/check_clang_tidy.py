@@ -16,7 +16,7 @@ from rich.emoji import Emoji
 from rich.table import Table
 
 
-from item import Item, ItemCollection
+from item import ItemCollection
 
 
 def main():
