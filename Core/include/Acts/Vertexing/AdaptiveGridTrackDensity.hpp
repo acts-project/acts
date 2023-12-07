@@ -207,5 +207,3 @@ class AdaptiveGridTrackDensity {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/AdaptiveGridTrackDensity.ipp"
