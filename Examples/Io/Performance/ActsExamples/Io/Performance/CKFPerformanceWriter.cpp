@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include <TFile.h>
 #include <TTree.h>
 #include <TVectorFfwd.h>
 #include <TVectorT.h>
@@ -123,7 +124,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
       << duplicationRate_particle);
 
   auto writeFloat = [&](float f, const char* name) {
-		std::vector<float> v(1);
+		TVectorF v(1);
 		v[0] = f;
     m_outputFile->WriteObject(&v, name);
   };
