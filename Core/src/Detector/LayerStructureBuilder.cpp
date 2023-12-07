@@ -39,14 +39,14 @@ class DetectorVolume;
 
 namespace {
 
-/// Helper method to patch the binning with an extent
+/// Check autorange for a given binning
 ///
 /// @param pBinning the proto binning
 /// @param extent the extent
 /// @param fullPhi indicates whether the full phi range is used
 ///
-void patchProtoBinning(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
-                       const Acts::Extent& extent, bool fullPhiBinning) {
+void adaptBinningRage(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
+                      const Acts::Extent& extent, bool fullPhiBinning) {
   for (auto& pb : pBinning) {
     // Starting values
     Acts::ActsScalar vmin = pb.edges.front();
@@ -271,10 +271,10 @@ Acts::Experimental::LayerStructureBuilder::construct(
           "No surface binning provided, navigation will be 'tryAll' "
           "(potentially slow).");
     } else if (binnings.size() == 1u) {
-      // Try to patch the binning with an Extent
+      // Check if autorange for binning applies
       if (m_cfg.extent.has_value()) {
-        ACTS_DEBUG("- patching the proto binning with the extent.");
-        patchProtoBinning(binnings, m_cfg.extent.value(), m_cfg.fullPhiBinning);
+        ACTS_DEBUG("- adapting the proto binning range to the surface extent.");
+        adaptBinningRage(binnings, m_cfg.extent.value(), m_cfg.fullPhiBinning);
       }
       ACTS_DEBUG("- 1-dimensional surface binning detected.");
       // Capture the binning
@@ -291,10 +291,11 @@ Acts::Experimental::LayerStructureBuilder::construct(
                 gctx, internalSurfaces, assignToAll, binning);
       }
     } else if (binnings.size() == 2u) {
-      // Try to patch the binning with an Extent
+      // Check if autorange for binning applies
       if (m_cfg.extent.has_value()) {
-        ACTS_DEBUG("- patching the proto binning with the extent.");
-        patchProtoBinning(binnings, m_cfg.extent.value(), m_cfg.fullPhiBinning);
+        ACTS_DEBUG(
+            "- adapting the proto binning range(s) to the surface extent.");
+        adaptBinningRage(binnings, m_cfg.extent.value(), m_cfg.fullPhiBinning);
       }
       // Sort the binning for conventions
       std::sort(binnings.begin(), binnings.end(),

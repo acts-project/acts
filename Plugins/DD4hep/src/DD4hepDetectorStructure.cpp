@@ -12,7 +12,7 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBlueprint.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 
@@ -44,11 +44,11 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
       getDefaultLogger("DD4hepLayerStructure", options.logLevel));
 
   // Draw the blue print from the dd4hep detector element tree
-  DD4hepBlueprint::Config bpdCfg{layerStructure};
-  DD4hepBlueprint::Cache bpdCache;
+  DD4hepBlueprintFactory::Config bpdCfg{layerStructure};
+  DD4hepBlueprintFactory::Cache bpdCache;
 
-  DD4hepBlueprint dd4hepBlueprintDrawer(
-      bpdCfg, getDefaultLogger("DD4hepBlueprint", options.logLevel));
+  DD4hepBlueprintFactory dd4hepBlueprintDrawer(
+      bpdCfg, getDefaultLogger("DD4hepBlueprintFactory", options.logLevel));
   auto dd4hepBlueprint =
       dd4hepBlueprintDrawer.create(bpdCache, gctx, dd4hepElement);
   detectorStore = bpdCache.dd4hepStore;

@@ -14,7 +14,7 @@
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBlueprint.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
@@ -311,11 +311,12 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
           Acts::getDefaultLogger("DD4hepLayerStructure",
                                  Acts::Logging::VERBOSE));
 
-  Acts::Experimental::DD4hepBlueprint::Config bpCfg{layerStructure};
-  Acts::Experimental::DD4hepBlueprint::Cache bpCache;
+  Acts::Experimental::DD4hepBlueprintFactory::Config bpCfg{layerStructure};
+  Acts::Experimental::DD4hepBlueprintFactory::Cache bpCache;
 
-  Acts::Experimental::DD4hepBlueprint bp(
-      bpCfg, Acts::getDefaultLogger("DD4hepBlueprint", Acts::Logging::VERBOSE));
+  Acts::Experimental::DD4hepBlueprintFactory bp(
+      bpCfg,
+      Acts::getDefaultLogger("DD4hepBlueprintFactory", Acts::Logging::VERBOSE));
   auto dd4hepBlueprint = bp.create(bpCache, tContext, world);
 
   // We should have 6 store entries now

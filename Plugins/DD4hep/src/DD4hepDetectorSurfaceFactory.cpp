@@ -44,9 +44,9 @@ void Acts::DD4hepDetectorSurfaceFactory::construct(
              << cache.sensitiveSurfaces.size() << " sensitive surface(s), "
              << cache.passiveSurfaces.size() << " passive surface(s)");
 
-  // Check for binning patching
+  // Check for auto-range determination
   if (!cache.binnings.empty() && cache.sExtent.has_value()) {
-    ACTS_DEBUG("Checking for patching the binnig structure ... ");
+    ACTS_DEBUG("Autorange deterimnation of binning enabled.");
   }
 }
 
