@@ -17,8 +17,6 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <limits>
-
 namespace Acts {
 namespace detail {
 

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -245,12 +246,14 @@ bool checkIntersection(const intersection_t& intersection, double nearLimit,
                        double farLimit,
                        const Logger& logger = getDummyLogger()) {
   const double distance = intersection.pathLength();
+  // TODO why?
+  const double tolerance = s_onSurfaceTolerance;
 
   ACTS_VERBOSE(" -> near limit, far limit, distance: "
                << nearLimit << ", " << farLimit << ", " << distance);
 
   const bool coCriterion = distance > nearLimit;
-  const bool cpCriterion = distance < farLimit;
+  const bool cpCriterion = std::abs(distance) < std::abs(farLimit) + tolerance;
 
   const bool accept = coCriterion && cpCriterion;
 
@@ -263,8 +266,10 @@ bool checkIntersection(const intersection_t& intersection, double nearLimit,
                    << distance << " <= near limit " << nearLimit);
     }
     if (!cpCriterion) {
-      ACTS_VERBOSE("- intersection path length " << distance << " >= far limit "
-                                                 << farLimit);
+      ACTS_VERBOSE("- intersection path length "
+                   << std::abs(distance) << " is over the far limit "
+                   << (std::abs(farLimit) + tolerance)
+                   << " (including tolerance of " << tolerance << ")");
     }
   }
 
