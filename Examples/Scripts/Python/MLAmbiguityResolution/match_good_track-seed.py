@@ -14,7 +14,6 @@ def matchGood(seed_files: list[str], ckf_files: list[str]) -> pd.DataFrame:
     data_seed = pd.DataFrame()
     data_track = pd.DataFrame()
     goodSeed = pd.DataFrame()
-    data = pd.DataFrame()
     # Loop over the different track files and collect the list of seed ID associated to the good tracks
     for f_ckf, f_seed in zip(ckf_files, seed_files):
         print("reading file: ", f_ckf, f_seed)
@@ -52,7 +51,6 @@ def matchGood(seed_files: list[str], ckf_files: list[str]) -> pd.DataFrame:
         matchedData = matchedData.set_index("seed_id")
         matchedData = matchedData.drop(columns=["goodSeed"])
         matchedData.to_csv(matched)
-        data = pd.concat([data, matchedData])
 
         # Save the cleaned dataset for future use (the cleaning is time consuming)
         cleaned = f_seed[:-4] + "_cleaned.csv"
@@ -61,7 +59,7 @@ def matchGood(seed_files: list[str], ckf_files: list[str]) -> pd.DataFrame:
         cleanedData = cleanedData.drop(columns=["goodSeed"])
         cleanedData.to_csv(cleaned)
 
-    return data
+    return
 
 
 # Read the seed and track files and match them
