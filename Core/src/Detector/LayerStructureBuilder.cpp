@@ -49,13 +49,13 @@ namespace {
 ///
 /// @return a configured surface candidate updators
 template <Acts::detail::AxisBoundaryType aType>
-Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
+Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Surface>> lSurfaces,
     std::vector<std::size_t> assignToAll,
     const Acts::Experimental::ProtoBinning& binning) {
   // The surface candidate updator & a generator for polyhedrons
-  Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
+  Acts::Experimental::SurfaceCandidatesUpdater sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<
@@ -92,14 +92,14 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
 /// @return a configured surface candidate updators
 template <Acts::detail::AxisBoundaryType aType,
           Acts::detail::AxisBoundaryType bType>
-Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
+Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
     const Acts::GeometryContext& gctx,
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
     const std::vector<std::size_t>& assignToAll,
     const Acts::Experimental::ProtoBinning& aBinning,
     const Acts::Experimental::ProtoBinning& bBinning) {
   // The surface candidate updator & a generator for polyhedrons
-  Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
+  Acts::Experimental::SurfaceCandidatesUpdater sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<
@@ -159,7 +159,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
     const Acts::GeometryContext& gctx) const {
   // Trivialities first: internal volumes
   std::vector<std::shared_ptr<DetectorVolume>> internalVolumes = {};
-  DetectorVolumeUpdator internalVolumeUpdator = tryNoVolumes();
+  DetectorVolumeUpdater internalVolumeUpdater = tryNoVolumes();
 
   // Print the auxiliary information
   if (!m_cfg.auxiliary.empty()) {
@@ -167,7 +167,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
   }
 
   // Retrieve the layer surfaces
-  SurfaceCandidatesUpdator internalCandidatesUpdator =
+  SurfaceCandidatesUpdater internalCandidatesUpdater =
       tryAllPortalsAndSurfaces();
   auto internalSurfaces = m_cfg.surfacesProvider->surfaces(gctx);
   ACTS_DEBUG("Building internal layer structure from "
@@ -226,13 +226,13 @@ Acts::Experimental::LayerStructureBuilder::construct(
       auto binning = m_cfg.binnings[0u];
       if (binning.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
         ACTS_VERBOSE("-- closed binning option.");
-        internalCandidatesUpdator =
-            createUpdator<Acts::detail::AxisBoundaryType::Closed>(
+        internalCandidatesUpdater =
+            createUpdater<Acts::detail::AxisBoundaryType::Closed>(
                 gctx, internalSurfaces, assignToAll, binning);
       } else {
         ACTS_VERBOSE("-- bound binning option.");
-        internalCandidatesUpdator =
-            createUpdator<Acts::detail::AxisBoundaryType::Bound>(
+        internalCandidatesUpdater =
+            createUpdater<Acts::detail::AxisBoundaryType::Bound>(
                 gctx, internalSurfaces, assignToAll, binning);
       }
     } else if (m_cfg.binnings.size() == 2u) {
@@ -243,21 +243,21 @@ Acts::Experimental::LayerStructureBuilder::construct(
 
       if (binning0.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
         ACTS_VERBOSE("-- closed/bound binning option.");
-        internalCandidatesUpdator =
-            createUpdator<Acts::detail::AxisBoundaryType::Closed,
+        internalCandidatesUpdater =
+            createUpdater<Acts::detail::AxisBoundaryType::Closed,
                           Acts::detail::AxisBoundaryType::Bound>(
                 gctx, internalSurfaces, assignToAll, binning0, binning1);
       } else if (binning1.boundaryType ==
                  Acts::detail::AxisBoundaryType::Closed) {
         ACTS_VERBOSE("-- bound/closed binning option.");
-        internalCandidatesUpdator =
-            createUpdator<Acts::detail::AxisBoundaryType::Bound,
+        internalCandidatesUpdater =
+            createUpdater<Acts::detail::AxisBoundaryType::Bound,
                           Acts::detail::AxisBoundaryType::Closed>(
                 gctx, internalSurfaces, assignToAll, binning0, binning1);
       } else {
         ACTS_VERBOSE("-- bound/bound binning option.");
-        internalCandidatesUpdator =
-            createUpdator<Acts::detail::AxisBoundaryType::Bound,
+        internalCandidatesUpdater =
+            createUpdater<Acts::detail::AxisBoundaryType::Bound,
                           Acts::detail::AxisBoundaryType::Bound>(
                 gctx, internalSurfaces, assignToAll, binning0, binning1);
       }
@@ -271,13 +271,13 @@ Acts::Experimental::LayerStructureBuilder::construct(
   }
 
   // Check if everything went ok
-  if (!internalCandidatesUpdator.connected()) {
+  if (!internalCandidatesUpdater.connected()) {
     throw std::runtime_error(
         "LayerStructureBuilder: could not connect surface candidate updator.");
   }
 
   // Return the internal structure
   return InternalStructure{internalSurfaces, internalVolumes,
-                           std::move(internalCandidatesUpdator),
-                           std::move(internalVolumeUpdator)};
+                           std::move(internalCandidatesUpdater),
+                           std::move(internalVolumeUpdater)};
 }
