@@ -32,7 +32,7 @@ void DD4hepTestsHelper::decodeBinning(
     variantParams.set<int>(bname + "_" + bv + "_exp", nExpansion);
     // Equidistant binning detected
     if (nBins > 0) {
-      // Set the type identificatio
+      // Set the type identification
       variantParams.set<std::string>(bname + "_" + bv + "_type", "equidistant");
       // Set the number of bins
       variantParams.set<int>(bname + "_" + bv + "_n", nBins);
@@ -60,7 +60,7 @@ void DD4hepTestsHelper::decodeBinning(
         unitScalar = Acts::UnitConstants::mm / dd4hep::millimeter;
       }
       // Split and convert
-      while (end != boundaries.end()) {
+      while (end != -1) {
         double bR = unitScalar * dd4hep::_toFloat(boundaries.substr(0, end));
         variantParams.set<double>(
             bname + "_" + bv + "_b" + std::to_string(ib++), bR);

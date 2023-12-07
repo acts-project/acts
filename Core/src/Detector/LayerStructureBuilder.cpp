@@ -64,7 +64,7 @@ void adaptBinningRage(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
       vmax = M_PI;
       pb.boundaryType = Acts::detail::AxisBoundaryType::Closed;
     }
-    // Eventually update the edges
+    // Possibly update the edges
     if (pb.axisType == Acts::detail::AxisType::Equidistant) {
       Acts::ActsScalar binWidth = (vmax - vmin) / nBins;
       // Fill the edges

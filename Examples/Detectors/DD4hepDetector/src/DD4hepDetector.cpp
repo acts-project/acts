@@ -66,7 +66,7 @@ auto DD4hepDetector::finalize(
   Acts::Experimental::DD4hepDetectorStructure dd4hepStructure(
       Acts::getDefaultLogger("DD4hepDetectorStructure", options.logLevel));
 
-  /// @return a detector, a blue node and a store
+  /// @return a detector and the detector store
   auto [detector, detectorElements] =
       dd4hepStructure.construct(gctx, world, options);
 

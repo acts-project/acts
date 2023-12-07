@@ -93,7 +93,7 @@ nlohmann::json toJson(const grid_type& grid) {
 template <typename grid_type>
 nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
   nlohmann::json jGrid;
-  // Get the grid axes & potentiall swap them
+  // Get the grid axes & potentially swap them
   std::array<const Acts::IAxis*, grid_type::DIM> axes = grid.axes();
   if (swapAxis && grid_type::DIM == 2u) {
     std::swap(axes[0u], axes[1u]);
@@ -130,7 +130,7 @@ nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
     for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
       for (unsigned int ib1 = 1u; ib1 <= axes[1u]->getNBins(); ++ib1) {
         typename grid_type::index_t lbin;
-        // Lookup bin - respect swap if it happen for the lookup
+        // Lookup bin - respect swap (if it happened) for the lookup
         lbin[0u] = swapAxis ? ib1 : ib0;
         lbin[1u] = swapAxis ? ib0 : ib1;
         nlohmann::json jBin;

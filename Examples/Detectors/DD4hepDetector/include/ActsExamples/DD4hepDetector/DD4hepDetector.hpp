@@ -78,6 +78,10 @@ struct DD4hepDetector {
   /// @param gctx is the geometry context
   /// @param options is the options struct for the building process
   ///
+  /// @note the lifetime of the detector store has to exceed that of the
+  ///      detector object as the converted surfaces point back to the
+  ///      detector elements
+  ///
   /// @return a tuple of detector, context decorators, and the element store
   std::tuple<DetectorPtr, ContextDecorators, Acts::DD4hepDetectorElement::Store>
   finalize(
