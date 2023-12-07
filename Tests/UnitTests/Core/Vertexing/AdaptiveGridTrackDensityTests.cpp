@@ -72,7 +72,9 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   BoundTrackParameters params1(perigeeSurface, paramVec, covMat,
                                ParticleHypothesis::pion());
 
-  AdaptiveGridTrackDensity::Config cfg(spatialTrkGridSize, binExtent);
+  AdaptiveGridTrackDensity::Config cfg;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
   // Empty map
@@ -157,8 +159,11 @@ BOOST_AUTO_TEST_CASE(
 
   ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
 
-  AdaptiveGridTrackDensity::Config cfg(spatialTrkGridSize, spatialBinExtent,
-                                       temporalTrkGridSize, temporalBinExtent);
+  AdaptiveGridTrackDensity::Config cfg;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialBinExtent = spatialBinExtent;
+  cfg.temporalTrkGridSize = temporalTrkGridSize;
+  cfg.temporalBinExtent = temporalBinExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
   // Empty map
@@ -232,7 +237,9 @@ BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   // Dummy track grid size (not needed for this unit test)
   const unsigned int spatialTrkGridSize = 1;
   float binExtent = 2.;
-  AdaptiveGridTrackDensity::Config cfg(spatialTrkGridSize, binExtent);
+  AdaptiveGridTrackDensity::Config cfg;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
   // Empty map
@@ -269,7 +276,9 @@ BOOST_AUTO_TEST_CASE(track_adding) {
 
   double binExtent = 0.1;  // mm
 
-  AdaptiveGridTrackDensity::Config cfg(spatialTrkGridSize, binExtent);
+  AdaptiveGridTrackDensity::Config cfg;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
   // Create some test tracks in such a way that some tracks
@@ -331,12 +340,17 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   double binExtent = 0.05;
 
   // 1D grid of z values
-  AdaptiveGridTrackDensity::Config cfg1D(spatialTrkGridSize, binExtent);
+  AdaptiveGridTrackDensity::Config cfg1D;
+  cfg1D.spatialTrkGridSize = spatialTrkGridSize;
+  cfg1D.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid1D(cfg1D);
 
   // 2D grid of z and t values
-  AdaptiveGridTrackDensity::Config cfg2D(spatialTrkGridSize, binExtent,
-                                         temporalTrkGridSize, binExtent);
+  AdaptiveGridTrackDensity::Config cfg2D;
+  cfg2D.spatialTrkGridSize = spatialTrkGridSize;
+  cfg2D.spatialBinExtent = binExtent;
+  cfg2D.temporalTrkGridSize = temporalTrkGridSize;
+  cfg2D.temporalBinExtent = binExtent;
   AdaptiveGridTrackDensity grid2D(cfg2D);
 
   // Create some test tracks
@@ -414,7 +428,9 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
 
   double binExtent = 0.05;  // mm
 
-  AdaptiveGridTrackDensity::Config cfg(spatialTrkGridSize, binExtent);
+  AdaptiveGridTrackDensity::Config cfg;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialBinExtent = binExtent;
   cfg.useHighestSumZPosition = true;
 
   AdaptiveGridTrackDensity grid(cfg);
@@ -480,12 +496,17 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   double binExtent = 0.05;
 
   // 1D grid
-  AdaptiveGridTrackDensity::Config cfg1D(spatialTrkGridSize, binExtent);
+  AdaptiveGridTrackDensity::Config cfg1D;
+  cfg1D.spatialTrkGridSize = spatialTrkGridSize;
+  cfg1D.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid1D(cfg1D);
 
   // 2D grid
-  AdaptiveGridTrackDensity::Config cfg2D(spatialTrkGridSize, binExtent,
-                                         spatialTrkGridSize, binExtent);
+  AdaptiveGridTrackDensity::Config cfg2D;
+  cfg2D.spatialTrkGridSize = spatialTrkGridSize;
+  cfg2D.spatialBinExtent = binExtent;
+  cfg2D.temporalTrkGridSize = temporalTrkGridSize;
+  cfg2D.temporalBinExtent = binExtent;
   AdaptiveGridTrackDensity grid2D(cfg2D);
 
   // Create some test tracks

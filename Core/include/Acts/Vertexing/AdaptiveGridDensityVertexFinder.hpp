@@ -41,21 +41,6 @@ class AdaptiveGridDensityVertexFinder {
 
   /// @brief The Config struct
   struct Config {
-    /// @param spatialTrkGridSize_ Number of bins per track in z direction
-    /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    Config(unsigned int spatialTrkGridSize = 15, float spatialBinExtent = 0.1)
-        : gridDensity(typename GridDensity::Config(spatialTrkGridSize,
-                                                   spatialBinExtent)) {}
-    /// @param spatialTrkGridSize_ Number of bins per track in z direction
-    /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    /// @param temporalTrkGridSize_ Number of bins per track in t direction
-    /// @param temporalBinExtent_ The temporal extent of a bin in mm
-    /// @note The speed of light is set to 1, hence the unit.
-    Config(unsigned int spatialTrkGridSize, float spatialBinExtent,
-           unsigned int temporalTrkGridSize, float temporalBinExtent)
-        : gridDensity(typename GridDensity::Config(
-              spatialTrkGridSize, spatialBinExtent, temporalTrkGridSize,
-              temporalBinExtent)) {}
     ///@param gDensity The grid density
     Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
 

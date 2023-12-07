@@ -44,32 +44,8 @@ class AdaptiveGridTrackDensity {
 
   /// The configuration struct
   struct Config {
-    /// @param spatialTrkGridSize_ Number of bins per track in z direction
-    /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    Config(unsigned int spatialTrkGridSize_, float spatialBinExtent_)
-        : spatialTrkGridSize(spatialTrkGridSize_),
-          spatialBinExtent(spatialBinExtent_) {
-      if (!bool(spatialTrkGridSize % 2)) {
-        throw std::invalid_argument("Please choose an odd spatialTrkGridSize.");
-      }
-    }
-
-    /// @param spatialTrkGridSize_ Number of bins per track in z direction
-    /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    /// @param temporalTrkGridSize_ Number of bins per track in t direction
-    /// @param temporalBinExtent_ The temporal extent of a bin in mm
-    /// @note The speed of light is set to 1, hence the unit.
-    Config(unsigned int spatialTrkGridSize_, float spatialBinExtent_,
-           unsigned int temporalTrkGridSize_, float temporalBinExtent_)
-        : spatialTrkGridSize(spatialTrkGridSize_),
-          spatialBinExtent(spatialBinExtent_),
-          temporalTrkGridSize(temporalTrkGridSize_),
-          temporalBinExtent(temporalBinExtent_) {
-      if (!bool(spatialTrkGridSize % 2) || !bool(temporalTrkGridSize % 2)) {
-        throw std::invalid_argument(
-            "Please choose an odd spatialTrkGridSize and temporalTrkGridSize.");
-      }
-    }
+    /// Default constructor
+    Config() = default;
 
     // In total, a track is represented by a grid of size
     // spatialTrkGridSize * temporalTrkGridSize
@@ -101,7 +77,14 @@ class AdaptiveGridTrackDensity {
     float maxRelativeDensityDev = 0.01;
   };
 
-  AdaptiveGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
+  AdaptiveGridTrackDensity(const Config& cfg) : m_cfg(cfg) {
+    // Check that spatial and temporal track grid size are odd
+    if (!bool(m_cfg.spatialTrkGridSize % 2) ||
+        !bool(m_cfg.temporalTrkGridSize % 2)) {
+      throw std::invalid_argument(
+          "Please choose an odd spatialTrkGridSize and temporalTrkGridSize.");
+    }
+  }
 
   /// @brief Calculates the bin center from the bin number
   /// @param bin Bin number

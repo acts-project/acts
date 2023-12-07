@@ -15,6 +15,7 @@
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -61,11 +62,18 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     Seeder seedFinder;
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
+    // Set up track density used during vertex seeding
+    Acts::AdaptiveGridTrackDensity::Config trkDensityCfg;
+    // Number of bins in z-direction
+    trkDensityCfg.spatialTrkGridSize = 109;
+    // Bin extent in z-direction
+    trkDensityCfg.spatialBinExtent = 0.05;
+    Acts::AdaptiveGridTrackDensity trkDensity(trkDensityCfg);
+
+    // Set up vertex seeder and finder
     using Seeder = Acts::AdaptiveGridDensityVertexFinder<Fitter>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
-    // The first seeder config argument correspond to the number of bins in
-    // z-direction, the second to the bin extent in z-direction
-    Seeder::Config seederConfig(109, 0.05);
+    Seeder::Config seederConfig(trkDensity);
     Seeder seedFinder(seederConfig);
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else {
