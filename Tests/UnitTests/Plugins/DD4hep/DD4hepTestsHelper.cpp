@@ -36,7 +36,7 @@ void DD4hepTestsHelper::decodeBinning(
       variantParams.set<std::string>(bname + "_" + bv + "_type", "equidistant");
       // Set the number of bins
       variantParams.set<int>(bname + "_" + bv + "_n", nBins);
-      // Set min/max paraeter
+      // Set min/max parameter
       if (!autoRange) {
         variantParams.set<double>(
             bname + "_" + bv + "_min",
