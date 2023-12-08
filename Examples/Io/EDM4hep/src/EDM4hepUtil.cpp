@@ -42,13 +42,11 @@ ActsFatras::Particle EDM4hepUtil::readParticle(
                   from.getTime() * Acts::UnitConstants::ns);
 
   // Only used for direction; normalization/units do not matter
-  to.setDirection(from.getMomentum()[0], from.getMomentum()[1],
-                  from.getMomentum()[2]);
+  Acts::Vector3 momentum = {from.getMomentum()[0], from.getMomentum()[1],
+                            from.getMomentum()[2]};
+  to.setDirection(momentum.normalized());
 
-  to.setAbsoluteMomentum(std::hypot(from.getMomentum()[0],
-                                    from.getMomentum()[1],
-                                    from.getMomentum()[2]) *
-                         Acts::UnitConstants::GeV);
+  to.setAbsoluteMomentum(momentum.norm() * Acts::UnitConstants::GeV);
 
   return to;
 }
