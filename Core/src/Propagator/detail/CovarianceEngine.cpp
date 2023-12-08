@@ -64,6 +64,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
     // becomes numerically unstable, and we need to switch to another one
     const double c = std::hypot(y, z);
     const double invC = 1. / c;
+    // jacToCurv(eBoundLoc0, eFreePos0) = 0;
     jacToCurv(eBoundLoc0, eFreePos1) = -z * invC;
     jacToCurv(eBoundLoc0, eFreePos2) = y * invC;
     jacToCurv(eBoundLoc1, eFreePos0) = c;
