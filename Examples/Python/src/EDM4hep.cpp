@@ -12,6 +12,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
@@ -32,6 +33,10 @@ namespace Acts::Python {
 void addEDM4hep(Context& ctx) {
   auto mex = ctx.get("examples");
   auto edm4hep = mex.def_submodule("_edm4hep");
+
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepReader, edm4hep,
+                             "EDM4hepReader", inputPath, inputParticles,
+                             outputParticles);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepSimHitReader, edm4hep,
                              "EDM4hepSimHitReader", inputPath, inputParticles,
