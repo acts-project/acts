@@ -45,8 +45,13 @@ MaterialSlab MaterialSlab::combine(const std::vector<MaterialSlab>& layers) {
   //   of the averaging are only small corrections to the large average of
   //   the initial layers. this could be enforced by sorting the layers first,
   //   but I am not sure if this is actually a problem.
-  return std::reduce(layers.begin(), layers.end(), MaterialSlab(),
-                     detail::combineSlabs);
+  // NOTE yes, this loop is exactly like std::reduce which apparently does not
+  //   exist on gcc 8 although it is required by C++17.
+  MaterialSlab result;
+  for (const auto& layer : layers) {
+    result = detail::combineSlabs(result, layer);
+  }
+  return result;
 }
 
 void MaterialSlab::scaleThickness(float scale) {
