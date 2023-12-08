@@ -13,6 +13,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -104,6 +105,7 @@ class EigenStepper {
     /// associated with the initial error on track parameters
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
+    std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();

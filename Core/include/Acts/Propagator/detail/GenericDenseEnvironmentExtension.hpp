@@ -11,10 +11,13 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 
 #include <array>
@@ -24,11 +27,12 @@
 namespace Acts {
 namespace detail {
 
-/// @brief Evaluater of the k_i's and elements of the transport matrix
-/// D of the RKN4 stepping. This implementation involves energy loss due to
-/// ioninisation, bremsstrahlung, pair production and photonuclear interaction
-/// in the propagation and the jacobian. These effects will only occur if the
+/// Evaluater of the k_i's and elements of the transport matrix D of the RKN4
+/// stepping. This implementation involves energy loss due to ioninisation,
+/// bremsstrahlung, pair production and photonuclear interaction in the
+/// propagation and the jacobian. These effects will only occur if the
 /// propagation is in a TrackingVolume with attached material.
+///
 /// @note This it templated on the scalar type because of the autodiff plugin.
 template <typename scalar_t>
 struct GenericDenseEnvironmentExtension {
@@ -36,12 +40,16 @@ struct GenericDenseEnvironmentExtension {
   /// @brief Vector3 replacement for the custom scalar type
   using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
 
+  PdgParticle absPdg = PdgParticle::eInvalid;
+  float mass{};
+  float absQ{};
+  float initialQOverP{};
+
   /// Momentum at a certain point
   Scalar currentMomentum = 0.;
   /// Particles momentum at k1
   Scalar initialMomentum = 0.;
   /// Material that will be passed
-  /// TODO : Might not be needed anymore
   Material material;
   /// Derivatives dLambda''dlambda at each sub-step point
   std::array<Scalar, 4> dLdl{};
@@ -60,6 +68,8 @@ struct GenericDenseEnvironmentExtension {
   /// Energy at each sub-step
   std::array<Scalar, 4> energy{};
 
+  MaterialSlab accumulatedMaterial;
+
   /// @brief Default constructor
   GenericDenseEnvironmentExtension() = default;
 
@@ -77,10 +87,10 @@ struct GenericDenseEnvironmentExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   int bid(const propagator_state_t& state, const stepper_t& stepper,
-          const navigator_t& navigator) const {
+          const navigator_t& navigator) {
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    float absQ = particleHypothesis.absoluteCharge();
-    float mass = particleHypothesis.mass();
+    mass = particleHypothesis.mass();
+    absQ = particleHypothesis.absoluteCharge();
 
     // Check for valid particle properties
     if (absQ == 0. || mass == 0. ||
@@ -98,7 +108,7 @@ struct GenericDenseEnvironmentExtension {
   }
 
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
-  /// step sets up member parameters, too.
+  ///        step sets up member parameters, too.
   ///
   /// @tparam stepper_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
@@ -119,17 +129,20 @@ struct GenericDenseEnvironmentExtension {
             typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
-         std::array<Scalar, 4>& kQoP, const int i = 0, const double h = 0.,
-         const ThisVector3& kprev = ThisVector3::Zero()) {
+         std::array<Scalar, 4>& kQoP, int i, double h,
+         const ThisVector3& kprev) {
     // using because of autodiff
     using std::hypot;
 
-    double q = stepper.charge(state.stepping);
-    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    float mass = particleHypothesis.mass();
-
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
+      const auto& particleHypothesis =
+          stepper.particleHypothesis(state.stepping);
+      absPdg = particleHypothesis.absolutePdg();
+      mass = particleHypothesis.mass();
+      absQ = particleHypothesis.absoluteCharge();
+      initialQOverP = stepper.qOverP(state.stepping);
+
       // Set up container for energy loss
       auto volumeMaterial = navigator.currentVolumeMaterial(state.navigation);
       ThisVector3 position = stepper.position(state.stepping);
@@ -137,17 +150,17 @@ struct GenericDenseEnvironmentExtension {
       initialMomentum = stepper.absoluteMomentum(state.stepping);
       currentMomentum = initialMomentum;
       qop[0] = stepper.qOverP(state.stepping);
-      initializeEnergyLoss(state, stepper);
+      initializeEnergyLoss(state);
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
       // Evaluate k for the time propagation
-      Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] / (q * q);
+      Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] / (absQ * absQ);
       //~ tKi[0] = std::hypot(1, mass / initialMomentum);
       tKi[0] = hypot(1, mass * qop[0]);
       kQoP[0] = Lambdappi[0];
     } else {
       // Update parameters and check for momentum condition
-      updateEnergyLoss(mass, h, state, stepper, i);
+      updateEnergyLoss(state, stepper, i, h);
       if (currentMomentum < state.options.momentumCutOff) {
         return false;
       }
@@ -156,17 +169,18 @@ struct GenericDenseEnvironmentExtension {
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
       auto qopNew = qop[0] + h * Lambdappi[i - 1];
-      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] / (q * q);
+      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] / (absQ * absQ);
       tKi[i] = hypot(1, mass * qopNew);
       kQoP[i] = Lambdappi[i];
     }
+
     return true;
   }
 
-  /// @brief After a RKN4 step was accepted by the stepper this method has an
-  /// additional veto on the quality of the step. The veto lies in evaluation
-  /// of the energy loss and the therewith constrained to keep the momentum
-  /// after the step in reasonable values.
+  /// After a RKN4 step was accepted by the stepper this method has an
+  /// additional veto on the quality of the step. The veto lies in evaluation of
+  /// the energy loss and the therewith constrained to keep the momentum after
+  /// the step in reasonable values.
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
@@ -180,12 +194,9 @@ struct GenericDenseEnvironmentExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& /*navigator*/, const double h) const {
+                const navigator_t& /*navigator*/, double h) const {
     // using because of autodiff
     using std::hypot;
-
-    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    float mass = particleHypothesis.mass();
 
     // Evaluate the new momentum
     auto newMomentum =
@@ -213,12 +224,11 @@ struct GenericDenseEnvironmentExtension {
     return true;
   }
 
-  /// @brief After a RKN4 step was accepted by the stepper this method has an
+  /// After a RKN4 step was accepted by the stepper this method has an
   /// additional veto on the quality of the step. The veto lies in the
-  /// evaluation
-  /// of the energy loss, the therewith constrained to keep the momentum
-  /// after the step in reasonable values and the evaluation of the transport
-  /// matrix.
+  /// evaluation of the energy loss, the therewith constrained to keep the
+  /// momentum after the step in reasonable values and the evaluation of the
+  /// transport matrix.
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
@@ -234,10 +244,20 @@ struct GenericDenseEnvironmentExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& navigator, const double h,
-                FreeMatrix& D) const {
-    return finalize(state, stepper, navigator, h) &&
-           transportMatrix(state, stepper, navigator, h, D);
+                const navigator_t& navigator, double h, FreeMatrix& D,
+                std::optional<FreeMatrix>& additionalFreeCovariance) {
+    if (!finalize(state, stepper, navigator, h) ||
+        !transportMatrix(state, stepper, h, D)) {
+      return false;
+    }
+
+    if (!additionalFreeCovariance) {
+      additionalFreeCovariance = FreeMatrix::Zero();
+    }
+    updateAdditionalFreeCovariance(state, stepper, h, D,
+                                   *additionalFreeCovariance);
+
+    return true;
   }
 
  private:
@@ -252,11 +272,9 @@ struct GenericDenseEnvironmentExtension {
   /// @param [out] D Transport matrix
   ///
   /// @return Boolean flag if evaluation is valid
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const navigator_t& /*navigator*/, const double h,
-                       FreeMatrix& D) const {
+                       double h, FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -282,11 +300,9 @@ struct GenericDenseEnvironmentExtension {
 
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
-    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    float mass = particleHypothesis.mass();
 
     D = FreeMatrix::Identity();
-    const double half_h = h * 0.5;
+    double half_h = h * 0.5;
 
     // This sets the reference to the sub matrices
     // dFdx is already initialised as (3x3) zero
@@ -391,22 +407,15 @@ struct GenericDenseEnvironmentExtension {
   }
 
   /// @brief Initializer of all parameters related to a RKN4 step with energy
-  /// loss of a particle in material
+  ///        loss of a particle in material
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
-  /// @tparam stepper_t Type of the stepper
   ///
   /// @param [in] state Deliverer of configurations
-  template <typename propagator_state_t, typename stepper_t>
-  void initializeEnergyLoss(const propagator_state_t& state,
-                            const stepper_t& stepper) {
+  template <typename propagator_state_t>
+  void initializeEnergyLoss(const propagator_state_t& state) {
     // using because of autodiff
     using std::hypot;
-
-    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    float mass = particleHypothesis.mass();
-    PdgParticle absPdg = particleHypothesis.absolutePdg();
-    float absQ = particleHypothesis.absoluteCharge();
 
     energy[0] = hypot(initialMomentum, mass);
     // use unit length as thickness to compute the energy loss per unit length
@@ -446,7 +455,7 @@ struct GenericDenseEnvironmentExtension {
   }
 
   /// @brief Update of the kinematic parameters of the RKN4 sub-steps after
-  /// initialization with energy loss of a particle in material
+  ///        initialization with energy loss of a particle in material
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
@@ -455,9 +464,8 @@ struct GenericDenseEnvironmentExtension {
   /// @param [in] state State of the stepper
   /// @param [in] i Index of the sub-step (1-3)
   template <typename propagator_state_t, typename stepper_t>
-  void updateEnergyLoss(const double mass, const double h,
-                        const propagator_state_t& state,
-                        const stepper_t& stepper, const int i) {
+  void updateEnergyLoss(const propagator_state_t& state,
+                        const stepper_t& stepper, int i, double h) {
     // using because of autodiff
     using std::hypot;
 
@@ -473,6 +481,65 @@ struct GenericDenseEnvironmentExtension {
                                (energy[i] * energy[i])) -
                  qop[i] * qop[i] * qop[i] * energy[i] * dgdqopValue);
     }
+  }
+
+  template <typename propagator_state_t, typename stepper_t>
+  void updateAdditionalFreeCovariance(const propagator_state_t& state,
+                                      const stepper_t& stepper, double h,
+                                      const FreeMatrix& D,
+                                      FreeMatrix& additionalFreeCovariance) {
+    MaterialSlab newMaterial(material, h);
+
+    // handle multiple scattering
+    {
+      Vector3 direction = stepper.direction(state.stepping);
+      float theta0 = computeMultipleScatteringTheta0(newMaterial, absPdg, mass,
+                                                     initialQOverP, absQ);
+
+      /*
+      double sigmaTheta = theta0;
+      double sigmaPhi =
+          theta0 * (direction.norm() / VectorHelpers::perp(direction));
+
+      // phi=0, theta=1
+      ActsSquareMatrix<2> angleCov = ActsSquareMatrix<2>::Zero();
+      angleCov(0, 0) = sigmaPhi * sigmaPhi;
+      angleCov(1, 1) = sigmaTheta * sigmaTheta;
+
+      auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+          VectorHelpers::evaluateTrigonomics(direction);
+
+      // dir_x=0, dir_y=1, dir_z=2
+      ActsMatrix<3, 2> jacobian = ActsMatrix<3, 2>::Zero();
+      jacobian(0, 0) = -sinTheta * sinPhi;
+      jacobian(0, 1) = cosTheta * cosPhi;
+      jacobian(1, 0) = sinTheta * cosPhi;
+      jacobian(1, 1) = cosTheta * sinPhi;
+      jacobian(2, 1) = -sinTheta;
+
+      additionalFreeCovariance.block<3, 3>(eFreeDir0, eFreeDir0) +=
+          jacobian * angleCov * jacobian.transpose();
+      */
+
+      additionalFreeCovariance.block<3, 3>(eFreeDir0, eFreeDir0) +=
+          theta0 * theta0 *
+          (ActsSquareMatrix<3>::Identity() - direction * direction.transpose());
+    }
+
+    accumulatedMaterial =
+        MaterialSlab::combine(accumulatedMaterial, newMaterial);
+
+    // handle energy loss covariance
+    {
+      float qOverPSigma = computeEnergyLossLandauSigmaQOverP(
+          accumulatedMaterial, mass, initialQOverP, absQ);
+
+      additionalFreeCovariance(eFreeQOverP, eFreeQOverP) =
+          qOverPSigma * qOverPSigma;
+    }
+
+    // transpost covariance
+    additionalFreeCovariance = D * additionalFreeCovariance * D.transpose();
   }
 };
 

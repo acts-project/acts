@@ -52,9 +52,9 @@ auto Acts::EigenStepper<E, A>::boundState(
     -> Result<BoundState> {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
-      state.covTransport && transportCov, state.pathAccumulated, surface,
-      freeToBoundCorrection);
+      state.derivative, state.jacToGlobal, state.additionalFreeCovariance,
+      state.pars, state.particleHypothesis, state.covTransport && transportCov,
+      state.pathAccumulated, surface, freeToBoundCorrection);
 }
 
 template <typename E, typename A>
@@ -63,8 +63,9 @@ auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
     -> CurvilinearState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.particleHypothesis,
-      state.covTransport && transportCov, state.pathAccumulated);
+      state.jacToGlobal, state.additionalFreeCovariance, state.pars,
+      state.particleHypothesis, state.covTransport && transportCov,
+      state.pathAccumulated);
 }
 
 template <typename E, typename A>
@@ -92,9 +93,9 @@ void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::transportCovarianceToCurvilinear(
     State& state) const {
-  detail::transportCovarianceToCurvilinear(state.cov, state.jacobian,
-                                           state.jacTransport, state.derivative,
-                                           state.jacToGlobal, direction(state));
+  detail::transportCovarianceToCurvilinear(
+      state.cov, state.jacobian, state.jacTransport, state.derivative,
+      state.jacToGlobal, state.additionalFreeCovariance, direction(state));
 }
 
 template <typename E, typename A>
@@ -103,8 +104,8 @@ void Acts::EigenStepper<E, A>::transportCovarianceToBound(
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
       state.geoContext.get(), state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars, surface,
-      freeToBoundCorrection);
+      state.derivative, state.jacToGlobal, state.additionalFreeCovariance,
+      state.pars, surface, freeToBoundCorrection);
 }
 
 template <typename E, typename A>
@@ -229,7 +230,9 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   if (state.stepping.covTransport) {
     // The step transport matrix in global coordinates
     FreeMatrix D;
-    if (!state.stepping.extension.finalize(state, *this, navigator, h, D)) {
+    if (!state.stepping.extension.finalize(
+            state, *this, navigator, h, D,
+            state.stepping.additionalFreeCovariance)) {
       return EigenStepperError::StepInvalid;
     }
 

@@ -16,6 +16,7 @@
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 
 #include <array>
+#include <optional>
 
 namespace Acts {
 
@@ -70,7 +71,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
                              const stepper_t& stepper,
                              const navigtor_t& navigator) {
     const auto bids = std::apply(
-        [&](const auto&... ext) {
+        [&](auto&... ext) {
           return std::array<int, nExtensions>{
               ext.bid(state, stepper, navigator)...};
         },
@@ -169,7 +170,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& navigator, const double h, FreeMatrix& D) {
+                const navigator_t& navigator, const double h, FreeMatrix& D,
+                std::optional<FreeMatrix>& additionalFreeCovariance) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, h](auto intType, auto& implRef) {
       constexpr int N = decltype(intType)::value;
@@ -183,7 +185,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
         }
         // Continue as long as evaluations are 'true'
         if (std::get<N - 1>(this->tuple())
-                .finalize(state, stepper, navigator, h, D)) {
+                .finalize(state, stepper, navigator, h, D,
+                          additionalFreeCovariance)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         } else {
           // Break at false

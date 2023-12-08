@@ -12,6 +12,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
+#include <optional>
 
 namespace Acts {
 namespace detail {
@@ -60,8 +61,8 @@ struct GenericDefaultExtension {
             typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          const navigator_t& /*navigator*/, ThisVector3& knew,
-         const Vector3& bField, std::array<Scalar, 4>& kQoP, const int i = 0,
-         const double h = 0., const ThisVector3& kprev = ThisVector3::Zero()) {
+         const Vector3& bField, std::array<Scalar, 4>& kQoP, int i, double h,
+         const ThisVector3& kprev) {
     auto qop = stepper.qOverP(state.stepping);
     // First step does not rely on previous data
     if (i == 0) {
@@ -90,7 +91,7 @@ struct GenericDefaultExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& navigator, const double h) const {
+                const navigator_t& navigator, double h) const {
     propagateTime(state, stepper, navigator, h);
     return true;
   }
@@ -112,10 +113,20 @@ struct GenericDefaultExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& navigator, const double h,
-                FreeMatrix& D) const {
+                const navigator_t& navigator, double h, FreeMatrix& D,
+                std::optional<FreeMatrix>& additionalFreeCovariance) const {
     propagateTime(state, stepper, navigator, h);
-    return transportMatrix(state, stepper, navigator, h, D);
+    if (!transportMatrix(state, stepper, navigator, h, D)) {
+      return false;
+    }
+
+    if (additionalFreeCovariance) {
+      auto& cov = *additionalFreeCovariance;
+
+      cov = D * cov * D.transpose();
+    }
+
+    return true;
   }
 
  private:
@@ -131,7 +142,7 @@ struct GenericDefaultExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void propagateTime(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& /*navigator*/, const double h) const {
+                     const navigator_t& /*navigator*/, double h) const {
     // using because of autodiff
     using std::hypot;
 
@@ -162,7 +173,7 @@ struct GenericDefaultExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const navigator_t& /*navigator*/, const double h,
+                       const navigator_t& /*navigator*/, double h,
                        FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.

@@ -110,6 +110,9 @@ struct LoopComponentProxy
   auto& derivative() { return cmp.state.derivative; }
   auto& jacTransport() { return cmp.state.jacTransport; }
   auto& cov() { return cmp.state.cov; }
+  auto& additionalFreeCovariance() {
+    return cmp.state.additionalFreeCovariance;
+  }
   auto& jacobian() { return cmp.state.jacobian; }
   auto& jacToGlobal() { return cmp.state.jacToGlobal; }
 
@@ -128,9 +131,9 @@ struct LoopComponentProxy
       const FreeToBoundCorrection& freeToBoundCorrection) {
     return detail::boundState(
         all_state.geoContext, cov(), jacobian(), jacTransport(), derivative(),
-        jacToGlobal(), pars(), all_state.particleHypothesis,
-        all_state.covTransport && transportCov, cmp.state.pathAccumulated,
-        surface, freeToBoundCorrection);
+        jacToGlobal(), additionalFreeCovariance(), pars(),
+        all_state.particleHypothesis, all_state.covTransport && transportCov,
+        cmp.state.pathAccumulated, surface, freeToBoundCorrection);
   }
 
   void update(const FreeVector& freeParams, const BoundVector& boundParams,
