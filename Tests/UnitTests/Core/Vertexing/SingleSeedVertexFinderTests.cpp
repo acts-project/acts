@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_planes_test) {
             << std::endl;
 
   // check if all vertices have compatible positions
-  BOOST_CHECK(vtxFound == nEvents);
+  BOOST_CHECK_EQUAL(vtxFound, nEvents);
 }
 
 /// @brief Unit test for SingleSeedVertexFinder. Generates real-looking sets of the spacepoints, then fits them with rays, finds a vertex, and then verifies the reconstructed vertex is actually near the original one
@@ -453,5 +453,5 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_rays_test) {
             << std::endl;
 
   // check if all vertices have compatible positions
-  BOOST_CHECK(vtxFound == nEvents);
+  BOOST_CHECK_EQUAL(vtxFound, nEvents);
 }

@@ -25,7 +25,7 @@ Acts::TrackingGeometry::TrackingGeometry(
     : m_world(highestVolume),
       m_beam(Surface::makeShared<PerigeeSurface>(Vector3::Zero())) {
   // Close the geometry: assign geometryID and successively the material
-  size_t volumeID = 0;
+  std::size_t volumeID = 0;
   highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID, hook,
                                logger);
   m_volumesById.rehash(0);

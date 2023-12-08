@@ -92,7 +92,7 @@ struct TGeoSurfaceConverter {
   /// @param degree The input in degree
   /// @return angle in radians
   static double toRadian(double degree) {
-    if (degree > 180. and degree < 360.) {
+    if (degree > 180. && degree < 360.) {
       degree -= 360.;
     }
     return degree / 180. * M_PI;

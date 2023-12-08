@@ -163,6 +163,7 @@ addSeeding(
     initialVarInflation=[1.0] * 6,
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
+    # outputDirCsv=outputDir,
 )
 
 addCKFTracks(

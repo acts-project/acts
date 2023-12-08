@@ -91,7 +91,7 @@ void RootBFieldWriter::run(const Config& config,
     // Write out the interpolated magnetic field map
     double minX = 0., minY = 0., minZ = 0.;
     double maxX = 0., maxY = 0., maxZ = 0.;
-    size_t nBinsX = 0, nBinsY = 0, nBinsZ = 0;
+    std::size_t nBinsX = 0, nBinsY = 0, nBinsZ = 0;
 
     // The position values in xyz
     double x = 0;
@@ -172,11 +172,11 @@ void RootBFieldWriter::run(const Config& config,
     double stepY = (maxY - minY) / (nBinsY - 1);
     double stepZ = (maxZ - minZ) / (nBinsZ - 1);
 
-    for (size_t i = 0; i < nBinsX; i++) {
+    for (std::size_t i = 0; i < nBinsX; i++) {
       double raw_x = minX + i * stepX;
-      for (size_t j = 0; j < nBinsY; j++) {
+      for (std::size_t j = 0; j < nBinsY; j++) {
         double raw_y = minY + j * stepY;
-        for (size_t k = 0; k < nBinsZ; k++) {
+        for (std::size_t k = 0; k < nBinsZ; k++) {
           double raw_z = minZ + k * stepZ;
           Acts::Vector3 position(raw_x, raw_y, raw_z);
           Vector3 bField = config.bField->getFieldUnchecked(position);
@@ -208,7 +208,7 @@ void RootBFieldWriter::run(const Config& config,
 
     double minR = 0, maxR = 0;
     double minZ = 0, maxZ = 0;
-    size_t nBinsR = 0, nBinsZ = 0;
+    std::size_t nBinsR = 0, nBinsZ = 0;
 
     if (config.rBounds && config.zBounds) {
       ACTS_INFO("User defined ranges handed over.");
@@ -258,9 +258,9 @@ void RootBFieldWriter::run(const Config& config,
     double stepR = (maxR - minR) / (nBinsR - 1);
     double stepZ = (maxZ - minZ) / (nBinsZ - 1);
 
-    for (size_t k = 0; k < nBinsZ; k++) {
+    for (std::size_t k = 0; k < nBinsZ; k++) {
       double raw_z = minZ + k * stepZ;
-      for (size_t j = 0; j < nBinsR; j++) {
+      for (std::size_t j = 0; j < nBinsR; j++) {
         double raw_r = minR + j * stepR;
         Acts::Vector3 position(raw_r, 0.0, raw_z);  // position at phi=0
         ACTS_VERBOSE("Requesting position: " << position.transpose());

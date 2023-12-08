@@ -56,6 +56,9 @@ nlohmann::json toJson(
 /// @param detectorVolumes the list of other detector volumes
 /// @param options the options for the conversion
 ///
+/// @note that detray prepares for three independent files to be written out
+/// one for the geometry, one for the surface grids, one for the material
+///
 /// @return a json object representing the detector volume
 nlohmann::json toJsonDetray(
     const GeometryContext& gctx, const Experimental::DetectorVolume& volume,

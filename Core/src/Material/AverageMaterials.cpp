@@ -57,7 +57,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   double molarAmount = molarAmount1 + molarAmount2;
 
   // handle vacuum specially
-  if (not(0.0 < molarAmount)) {
+  if (!(0.0 < molarAmount)) {
     return {Material(), static_cast<float>(thickness)};
   }
 

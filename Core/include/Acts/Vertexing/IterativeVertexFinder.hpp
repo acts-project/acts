@@ -75,12 +75,12 @@ class IterativeVertexFinder {
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(const vfitter_t& fitter, Linearizer_t lin, sfinder_t sfinder,
-           const IPEstimator& est)
-        : vertexFitter(fitter),
+    Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder,
+           IPEstimator est)
+        : vertexFitter(std::move(fitter)),
           linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
-          ipEst(est) {}
+          ipEst(std::move(est)) {}
 
     /// Vertex fitter
     vfitter_t vertexFitter;
@@ -142,7 +142,7 @@ class IterativeVertexFinder {
   template <
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  IterativeVertexFinder(Config& cfg,
+  IterativeVertexFinder(Config cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "IterativeVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
@@ -156,7 +156,7 @@ class IterativeVertexFinder {
   /// @param func Function extracting BoundTrackParameters from InputTrack_t
   /// object
   /// @param logger The logging instance
-  IterativeVertexFinder(Config& cfg,
+  IterativeVertexFinder(Config cfg,
                         std::function<BoundTrackParameters(InputTrack_t)> func,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "IterativeVertexFinder", Logging::INFO))

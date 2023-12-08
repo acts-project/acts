@@ -61,12 +61,12 @@ class IndexSourceLink final {
 
   friend bool operator==(const IndexSourceLink& lhs,
                          const IndexSourceLink& rhs) {
-    return (lhs.geometryId() == rhs.geometryId()) and
+    return (lhs.geometryId() == rhs.geometryId()) &&
            (lhs.m_index == rhs.m_index);
   }
   friend bool operator!=(const IndexSourceLink& lhs,
                          const IndexSourceLink& rhs) {
-    return not(lhs == rhs);
+    return !(lhs == rhs);
   }
 };
 

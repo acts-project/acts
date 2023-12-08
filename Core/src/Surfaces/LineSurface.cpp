@@ -132,10 +132,11 @@ Acts::Vector3 Acts::LineSurface::binningPosition(
   return center(gctx);
 }
 
-Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& /*gctx*/,
-                                        const Vector2& /*lpos*/) const {
-  throw std::runtime_error(
-      "LineSurface: normal is undefined without known direction");
+Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& gctx,
+                                        const Vector3& pos,
+                                        const Vector3& direction) const {
+  auto ref = referenceFrame(gctx, pos, direction);
+  return ref.col(2);
 }
 
 const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
@@ -179,12 +180,12 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
   Vector3 result = ma + u * ea;
   // Evaluate the boundary check if requested
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
-  if (bcheck and m_bounds) {
+  if (bcheck && m_bounds) {
     // At closest approach: check inside R or and inside Z
     Vector3 vecLocal = result - mb;
     double cZ = vecLocal.dot(eb);
     double hZ = m_bounds->get(LineBounds::eHalfLengthZ) + tolerance;
-    if ((std::abs(cZ) > std::abs(hZ)) or
+    if ((std::abs(cZ) > std::abs(hZ)) ||
         ((vecLocal - cZ * eb).norm() >
          m_bounds->get(LineBounds::eR) + tolerance)) {
       status = Intersection3D::Status::missed;

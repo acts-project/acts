@@ -168,7 +168,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     // write per-track performance measures
     {
       std::lock_guard<std::mutex> guardTrk(trkMutex);
-      for (size_t itrack = 0; itrack < tracks.size(); ++itrack) {
+      for (std::size_t itrack = 0; itrack < tracks.size(); ++itrack) {
         const auto& track = tracks[itrack];
 
         identifyContributingParticles(hitParticlesMap, track,
@@ -177,7 +177,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
         // empty track hits counts could originate from a  buggy track finder
         // that results in empty tracks or from purely noise track where no hits
         // are from a particle.
-        if (not particleHitCounts.empty()) {
+        if (!particleHitCounts.empty()) {
           auto it = majorityCount
                         .try_emplace(particleHitCounts.front().particleId, 0u)
                         .first;

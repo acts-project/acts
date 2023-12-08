@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -30,9 +29,6 @@
 
 #include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
-
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
 
 namespace Acts {
 
@@ -89,7 +85,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
                     someSurfaces.size());
 
-  for (size_t i = 0; i < someSurfaces.size(); i++) {
+  for (std::size_t i = 0; i < someSurfaces.size(); i++) {
     BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().at(i),
                       someSurfaces.at(i).get());
   }

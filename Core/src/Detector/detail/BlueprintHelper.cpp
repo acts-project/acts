@@ -37,7 +37,7 @@ void Acts::Experimental::detail::BlueprintHelper::sort(Blueprint::Node& node,
   if (node.binning.size() == 1) {
     auto bVal = node.binning.front();
     // x,y,z binning along the axis
-    if (bVal == binX or bVal == binY or bVal == binZ) {
+    if (bVal == binX || bVal == binY || bVal == binZ) {
       Vector3 nodeCenter = node.transform.translation();
       Vector3 nodeSortAxis = node.transform.rotation().col(bVal);
       std::sort(
@@ -46,7 +46,7 @@ void Acts::Experimental::detail::BlueprintHelper::sort(Blueprint::Node& node,
             return (a->transform.translation() - nodeCenter).dot(nodeSortAxis) <
                    (b->transform.translation() - nodeCenter).dot(nodeSortAxis);
           });
-    } else if (bVal == binR and node.boundsType == VolumeBounds::eCylinder) {
+    } else if (bVal == binR && node.boundsType == VolumeBounds::eCylinder) {
       std::sort(node.children.begin(), node.children.end(),
                 [](const auto& a, const auto& b) {
                   return 0.5 * (a->boundaryValues[0] + a->boundaryValues[1]) <
@@ -97,7 +97,8 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
         unsigned int igap = 0;
         for (auto& child : node.children) {
           auto [neg, pos] = cylEndpointsZ(*child);
-          if ((neg - negC).norm() > s_onSurfaceTolerance) {
+          ActsScalar gapSpan = (neg - negC).norm();
+          if (gapSpan > s_onSurfaceTolerance) {
             // Fill a gap node
             auto gapName = node.name + "_gap_" + std::to_string(igap);
             auto gapTransform = Transform3::Identity();
@@ -105,7 +106,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
             gapTransform.translate(0.5 * (neg + negC));
             auto gap = std::make_unique<Blueprint::Node>(
                 gapName, gapTransform, VolumeBounds::eCylinder,
-                std::vector<ActsScalar>{cInnerR, cOuterR, negC.z() - neg.z()});
+                std::vector<ActsScalar>{cInnerR, cOuterR, 0.5 * gapSpan});
             gaps.push_back(std::move(gap));
             ++igap;
           }
@@ -113,7 +114,8 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
           negC = pos;
         }
         // Check if a last one needs to be filled
-        if ((negC - posC).norm() > s_onSurfaceTolerance) {
+        ActsScalar gapSpan = (negC - posC).norm();
+        if (gapSpan > s_onSurfaceTolerance) {
           // Fill a gap node
           auto gapName = node.name + "_gap_" + std::to_string(igap);
           auto gapTransform = Transform3::Identity();
@@ -121,7 +123,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGaps(
           gapTransform.translate(0.5 * (negC + posC));
           auto gap = std::make_unique<Blueprint::Node>(
               gapName, gapTransform, VolumeBounds::eCylinder,
-              std::vector<ActsScalar>{cInnerR, cOuterR, posC.z() - negC.z()});
+              std::vector<ActsScalar>{cInnerR, cOuterR, 0.5 * gapSpan});
           gaps.push_back(std::move(gap));
         }
 
