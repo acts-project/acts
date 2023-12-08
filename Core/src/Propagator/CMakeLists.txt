@@ -8,5 +8,4 @@ target_sources(
     StraightLineStepper.cpp
     detail/PointwiseMaterialInteraction.cpp
     detail/CovarianceEngine.cpp
-    detail/JacobianEngine.cpp
 )
