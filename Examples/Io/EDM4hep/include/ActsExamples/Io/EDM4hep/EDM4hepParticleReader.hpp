@@ -55,6 +55,8 @@ class EDM4hepParticleReader final : public IReader {
   const Config& config() const { return m_cfg; }
 
  private:
+  const Acts::Logger& logger() const { return *m_logger; }
+
   Config m_cfg;
   std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;

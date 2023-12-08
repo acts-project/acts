@@ -51,6 +51,8 @@ ProcessCode EDM4hepParticleReader::read(const AlgorithmContext& ctx) {
 
   SimParticleContainer::sequence_type unordered;
 
+  ACTS_VERBOSE("Reading " << mcParticleCollection.size() << " particles from '"
+                          << m_cfg.inputParticles << "'");
   for (const auto& mcParticle : mcParticleCollection) {
     auto particle =
         EDM4hepUtil::readParticle(mcParticle, [](const edm4hep::MCParticle& p) {
@@ -58,6 +60,7 @@ ProcessCode EDM4hepParticleReader::read(const AlgorithmContext& ctx) {
           result.setParticle(EDM4hepUtil::podioObjectIDToInteger(p.id()));
           return result;
         });
+    ACTS_VERBOSE("- " << particle);
     unordered.push_back(particle);
   }
 
