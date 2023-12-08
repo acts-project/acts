@@ -55,6 +55,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
     // We normally operate in curvilinear coordinates defined as follows
     jacToCurv(eBoundLoc0, eFreePos0) = -sinPhi;
     jacToCurv(eBoundLoc0, eFreePos1) = cosPhi;
+    // jacToCurv(eBoundLoc0, eFreePos2) = 0;
     jacToCurv(eBoundLoc1, eFreePos0) = -cosPhi * cosTheta;
     jacToCurv(eBoundLoc1, eFreePos1) = -sinPhi * cosTheta;
     jacToCurv(eBoundLoc1, eFreePos2) = sinTheta;
