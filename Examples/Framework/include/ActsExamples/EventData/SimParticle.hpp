@@ -33,14 +33,14 @@ struct CompareParticleId {
 struct PrimaryVertexIdGetter {
   constexpr ActsFatras::Barcode operator()(
       const ActsFatras::Particle& particle) const {
-    return ActsFatras::Barcode(0u).setVertexPrimary(
+    return ActsFatras::Barcode().setVertexPrimary(
         particle.particleId().vertexPrimary());
   }
 };
 struct SecondaryVertexIdGetter {
   constexpr ActsFatras::Barcode operator()(
       const ActsFatras::Particle& particle) const {
-    return ActsFatras::Barcode(0u)
+    return ActsFatras::Barcode()
         .setVertexPrimary(particle.particleId().vertexPrimary())
         .setVertexSecondary(particle.particleId().vertexSecondary());
   }
