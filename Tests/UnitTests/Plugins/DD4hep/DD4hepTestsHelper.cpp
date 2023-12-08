@@ -52,7 +52,7 @@ void DD4hepTestsHelper::decodeBinning(
       auto boundaries =
           xmlBinning.attr<std::string>(std::string(bv + "boundaries").c_str());
       std::string del = ",";
-      int end = boundaries.find(del);
+      auto end = boundaries.find(del);
       int ib = 0;
       // Unit conversion
       double unitScalar = 1.;
