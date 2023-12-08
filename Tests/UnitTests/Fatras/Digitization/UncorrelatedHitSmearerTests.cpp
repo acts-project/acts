@@ -13,13 +13,13 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
@@ -96,7 +96,8 @@ struct Fixture {
     surface->assignGeometryId(gid);
 
     // generate random track parameters
-    auto [par, cov] = Acts::Test::generateBoundParametersCovariance(rng);
+    auto [par, cov] =
+        Acts::detail::Test::generateBoundParametersCovariance(rng);
     boundParams = par;
     freeParams = Acts::detail::transformBoundToFreeParameters(*surface, geoCtx,
                                                               boundParams);
@@ -158,7 +159,7 @@ BOOST_DATA_TEST_CASE(Bound1, bd::make(boundIndices), index) {
   {
     s.smearFunctions.fill(InvalidSmearer{});
     auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
-    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(!ret.ok());
     BOOST_CHECK(ret.error());
   }
 }
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(BoundAll) {
     auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
     BOOST_CHECK(ret.ok());
     auto [par, cov] = ret.value();
-    for (size_t i = 0; i < s.indices.size(); ++i) {
+    for (std::size_t i = 0; i < s.indices.size(); ++i) {
       BOOST_TEST_INFO("Comparing smeared measurement "
                       << i << " originating from bound parameter "
                       << s.indices[i]);
@@ -190,7 +191,7 @@ BOOST_AUTO_TEST_CASE(BoundAll) {
     auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
     BOOST_CHECK(ret.ok());
     auto [par, cov] = ret.value();
-    for (size_t i = 0; i < s.indices.size(); ++i) {
+    for (std::size_t i = 0; i < s.indices.size(); ++i) {
       BOOST_TEST_INFO("Comparing smeared measurement "
                       << i << " originating from bound parameter "
                       << s.indices[i]);
@@ -202,7 +203,7 @@ BOOST_AUTO_TEST_CASE(BoundAll) {
     s.smearFunctions.fill(SterileSmearer{});
     s.smearFunctions[3] = InvalidSmearer{};
     auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
-    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(!ret.ok());
     BOOST_CHECK(ret.error());
   }
 }
@@ -232,7 +233,7 @@ BOOST_DATA_TEST_CASE(Free1, bd::make(freeIndices), index) {
   {
     s.smearFunctions.fill(InvalidSmearer{});
     auto ret = s(f.rng, f.hit);
-    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(!ret.ok());
     BOOST_CHECK(ret.error());
   }
 }
@@ -249,7 +250,7 @@ BOOST_AUTO_TEST_CASE(FreeAll) {
     auto ret = s(f.rng, f.hit);
     BOOST_CHECK(ret.ok());
     auto [par, cov] = ret.value();
-    for (size_t i = 0; i < s.indices.size(); ++i) {
+    for (std::size_t i = 0; i < s.indices.size(); ++i) {
       BOOST_TEST_INFO("Comparing smeared measurement "
                       << i << " originating from free parameter "
                       << s.indices[i]);
@@ -262,7 +263,7 @@ BOOST_AUTO_TEST_CASE(FreeAll) {
     auto ret = s(f.rng, f.hit);
     BOOST_CHECK(ret.ok());
     auto [par, cov] = ret.value();
-    for (size_t i = 0; i < s.indices.size(); ++i) {
+    for (std::size_t i = 0; i < s.indices.size(); ++i) {
       BOOST_TEST_INFO("Comparing smeared measurement "
                       << i << " originating from free parameter "
                       << s.indices[i]);
@@ -274,7 +275,7 @@ BOOST_AUTO_TEST_CASE(FreeAll) {
     s.smearFunctions.fill(SterileSmearer{});
     s.smearFunctions[3] = InvalidSmearer{};
     auto ret = s(f.rng, f.hit);
-    BOOST_CHECK(not ret.ok());
+    BOOST_CHECK(!ret.ok());
     BOOST_CHECK(ret.error());
   }
 }

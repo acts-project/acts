@@ -53,7 +53,7 @@ void setupMaterialRecording(
     std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory) {
   auto g4loglevel =
       Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
-  size_t seed = vars["g4-seed"].as<size_t>();
+  std::size_t seed = vars["g4-seed"].as<std::size_t>();
 
   Geant4MaterialRecording::Config g4Cfg;
 
@@ -76,7 +76,7 @@ void setupGeant4Simulation(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   auto g4loglevel =
       Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
-  size_t seed = vars["g4-seed"].as<size_t>();
+  std::size_t seed = vars["g4-seed"].as<std::size_t>();
 
   Geant4Simulation::Config g4Cfg;
 

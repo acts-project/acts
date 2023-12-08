@@ -123,10 +123,10 @@ int main(int argc, char** argv) {
       auto zmins = vm["sub-zmin"].as<VariableReals>().values;
       auto zmaxs = vm["sub-zmax"].as<VariableReals>().values;
 
-      size_t subs = snames.size();
+      std::size_t subs = snames.size();
 
-      if (subs != rmins.size() or subs != rmaxs.size() or
-          subs != zmins.size() or subs != zmaxs.size()) {
+      if (subs != rmins.size() || subs != rmaxs.size() ||
+          subs != zmins.size() || subs != zmaxs.size()) {
         std::cerr << "Configuration problem." << std::endl;
         return 1;
       }

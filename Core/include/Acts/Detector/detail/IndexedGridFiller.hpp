@@ -13,7 +13,7 @@
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -68,7 +68,7 @@ std::set<typename grid_type::index_t> localIndices(
     throw std::runtime_error("IndexedSurfaceGridFiller: no query point given.");
   }
 
-  if (not expansion.empty() and expansion.size() != grid_type::DIM) {
+  if (!expansion.empty() && expansion.size() != grid_type::DIM) {
     throw std::runtime_error(
         "IndexedSurfaceGridFiller: wrong dimension of bin expansion given.");
   }
@@ -222,7 +222,7 @@ struct IndexedGridFiller {
     }
 
     // Assign the indices into all
-    if (not aToAll.empty()) {
+    if (!aToAll.empty()) {
       assignToAll(iGrid, aToAll);
     }
   }

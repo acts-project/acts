@@ -14,6 +14,8 @@
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderFTF.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
+
 // in core
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -50,6 +52,8 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
     std::map<std::pair<int, int>, std::pair<int, int>> ACTS_FTF_Map;
 
     bool fill_module_csv = false;
+
+    std::string inputClusters;
   };
 
   // constructor:
@@ -87,6 +91,8 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
       this, "InputSourceLinks"};
+
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 
 }  // namespace ActsExamples

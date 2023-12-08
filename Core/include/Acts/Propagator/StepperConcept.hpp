@@ -54,7 +54,7 @@ METHOD_TRAIT(covariance_transport_curvilinear_t,
              transportCovarianceToCurvilinear);
 METHOD_TRAIT(step_t, step);
 METHOD_TRAIT(update_surface_status_t, updateSurfaceStatus);
-METHOD_TRAIT(set_step_size_t, setStepSize);
+METHOD_TRAIT(update_step_size_t, updateStepSize);
 METHOD_TRAIT(get_step_size_t, getStepSize);
 METHOD_TRAIT(release_step_size_t, releaseStepSize);
 METHOD_TRAIT(output_step_size_t, outputStepSize);
@@ -124,13 +124,13 @@ constexpr bool MultiStepperStateConcept= require<
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_curvilinear_t, state&>,
                                                                     has_method<const S, void, covariance_transport_bound_t, state&, const Surface&, const FreeToBoundCorrection&>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
-        constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, Direction, const BoundaryCheck&, ActsScalar, const Logger&>;
+        constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, std::uint8_t, Direction, const BoundaryCheck&, ActsScalar, const Logger&>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");
-        constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type, bool>;
-        static_assert(set_step_size_exists, "setStepSize method not found");
+        constexpr static bool update_step_size_exists = has_method<const S, void, update_step_size_t, state&, double, ConstrainedStep::Type, bool>;
+        static_assert(update_step_size_exists, "updateStepSize method not found");
         constexpr static bool get_step_size_exists = has_method<const S, double, get_step_size_t, const state &, ConstrainedStep::Type>;
         static_assert(get_step_size_exists, "getStepSize method not found");
-        constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&>;
+        constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&, ConstrainedStep::Type>;
         static_assert(release_step_size_exists, "releaseStepSize method not found");
         constexpr static bool output_step_size_exists = has_method<const S, std::string, output_step_size_t, const state&>;
         static_assert(output_step_size_exists, "outputStepSize method not found");
@@ -151,7 +151,7 @@ constexpr bool MultiStepperStateConcept= require<
                                               curvilinear_state_method_exists,
                                               covariance_transport_exists,
                                               update_surface_exists,
-                                              set_step_size_exists,
+                                              update_step_size_exists,
                                               release_step_size_exists,
                                               output_step_size_exists>;
 

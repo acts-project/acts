@@ -39,7 +39,8 @@ std::string EDM4hepParticleReader::name() const {
   return "EDM4hepParticleReader";
 }
 
-std::pair<size_t, size_t> EDM4hepParticleReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> EDM4hepParticleReader::availableEvents()
+    const {
   return m_eventsRange;
 }
 
@@ -54,8 +55,7 @@ ProcessCode EDM4hepParticleReader::read(const AlgorithmContext& ctx) {
     auto particle =
         EDM4hepUtil::readParticle(mcParticle, [](const edm4hep::MCParticle& p) {
           ActsFatras::Barcode result;
-          // TODO dont use podio internal id
-          result.setParticle(p.id());
+          result.setParticle(EDM4hepUtil::podioObjectIDToInteger(p.id()));
           return result;
         });
     unordered.push_back(particle);

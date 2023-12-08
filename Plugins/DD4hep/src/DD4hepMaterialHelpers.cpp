@@ -38,7 +38,7 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     // finding the iterator position to determine the binning value
     auto bit = std::find(Acts::binningValueNames().begin(),
                          Acts::binningValueNames().end(), bin.first);
-    size_t indx = std::distance(Acts::binningValueNames().begin(), bit);
+    std::size_t indx = std::distance(Acts::binningValueNames().begin(), bit);
     Acts::BinningValue bval = Acts::BinningValue(indx);
     Acts::BinningOption bopt = bin.second;
     double min = 0.;
@@ -69,7 +69,7 @@ void Acts::addLayerProtoMaterial(
       &(layer.surfaceRepresentation())};
   // Now fill (optionally) with the approach surfaces
   auto aDescriptor = layer.approachDescriptor();
-  if (aDescriptor != nullptr and aDescriptor->containedSurfaces().size() >= 2) {
+  if (aDescriptor != nullptr && aDescriptor->containedSurfaces().size() >= 2) {
     // Add the inner and outer approach surface
     const std::vector<const Surface*>& aSurfaces =
         aDescriptor->containedSurfaces();

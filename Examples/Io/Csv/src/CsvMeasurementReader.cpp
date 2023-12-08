@@ -55,7 +55,7 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   // Check if event ranges match (should also catch missing files)
   auto checkRange = [&](const std::string& fileStem) {
     const auto hitmapRange = determineEventFilesRange(m_cfg.inputDir, fileStem);
-    if (hitmapRange.first > m_eventsRange.first or
+    if (hitmapRange.first > m_eventsRange.first ||
         hitmapRange.second < m_eventsRange.second) {
       throw std::runtime_error("event range mismatch for 'event**-" + fileStem +
                                "'");
@@ -63,7 +63,7 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   };
 
   checkRange("measurement-simhit-map.csv");
-  if (not m_cfg.outputClusters.empty()) {
+  if (!m_cfg.outputClusters.empty()) {
     checkRange("cells.csv");
   }
 }
@@ -73,8 +73,8 @@ std::string ActsExamples::CsvMeasurementReader::CsvMeasurementReader::name()
   return "CsvMeasurementReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::CsvMeasurementReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvMeasurementReader::availableEvents() const {
   return m_eventsRange;
 }
 
@@ -106,7 +106,7 @@ struct CompareGeometryId {
 template <typename Data>
 inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
-    const std::vector<std::string>& optionalColumns, size_t event) {
+    const std::vector<std::string>& optionalColumns, std::size_t event) {
   std::string path = ActsExamples::perEventFilepath(inputDir, filename, event);
   dfe::NamedTupleCsvReader<Data> reader(path, optionalColumns);
 
@@ -120,7 +120,7 @@ inline std::vector<Data> readEverything(
 }
 
 std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
-    const std::string& inputDir, size_t event) {
+    const std::string& inputDir, std::size_t event) {
   // geometry_id and t are optional columns
   auto measurements = readEverything<ActsExamples::MeasurementData>(
       inputDir, "measurements.csv", {"geometry_id", "t"}, event);
@@ -145,10 +145,10 @@ ActsExamples::ClusterContainer makeClusters(
 
     for (auto it = begin; it != end; ++it) {
       const auto& cellData = it->second;
-      ActsFatras::Channelizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
+      ActsFatras::Segmentizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
                                                          Acts::Vector2::Zero()};
 
-      ActsFatras::Channelizer::Bin2D bin{
+      ActsFatras::Segmentizer::Bin2D bin{
           static_cast<unsigned int>(cellData.channel0),
           static_cast<unsigned int>(cellData.channel1)};
 
@@ -158,7 +158,7 @@ ActsExamples::ClusterContainer makeClusters(
     // update the iterator
 
     // Compute cluster size
-    if (not cluster.channels.empty()) {
+    if (!cluster.channels.empty()) {
       auto compareX = [](const auto& a, const auto& b) {
         return a.bin[0] < b.bin[0];
       };

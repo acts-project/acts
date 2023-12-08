@@ -81,10 +81,11 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   std::shared_ptr<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(coordinateSystem);
 
-  auto intersection = planeSurface
-                          ->intersect(gctx, trkParams.position(gctx),
-                                      trkParams.direction(), false)
-                          .closest();
+  auto intersection =
+      planeSurface
+          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
+                      BoundaryCheck(false))
+          .closest();
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
@@ -97,6 +98,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   if (result.ok()) {
     return *result->endParameters;
   } else {
+    ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
+    ACTS_DEBUG(
+        "The plane surface to which we tried to propagate has its origin at\n"
+        << vtxPos);
     return result.error();
   }
 }
@@ -109,7 +114,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getVertexCompatibility(const GeometryContext& gctx,
                            const BoundTrackParameters* trkParams,
                            const ActsVector<nDim>& vertexPos) const {
-  static_assert(nDim == 3 or nDim == 4,
+  static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
   if (trkParams == nullptr) {
@@ -118,7 +123,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Retrieve weight matrix of the track's local x-, y-, and time-coordinate
   // (the latter only if nDim = 4). For this, the covariance needs to be set.
-  if (not trkParams->covariance().has_value()) {
+  if (!trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
   ActsSquareMatrix<nDim - 1> subCovMat;
@@ -204,6 +209,8 @@ Acts::Result<double> Acts::ImpactPointEstimator<
                                   rho * cotTheta * cotTheta);
 
     if (secDerivative < 0.) {
+      ACTS_ERROR(
+          "Encountered negative second derivative during Newton optimization.");
       return VertexingError::NumericFailure;
     }
 
@@ -221,7 +228,7 @@ Acts::Result<double> Acts::ImpactPointEstimator<
   }  // end while loop
 
   if (!hasConverged) {
-    // max iterations reached but did not converge
+    ACTS_ERROR("Newton optimization did not converge.");
     return VertexingError::NotConverged;
   }
   return phi;
@@ -235,7 +242,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundTrackParameters& trkParams,
                            const ActsVector<nDim>& vtxPos, State& state) const {
-  static_assert(nDim == 3 or nDim == 4,
+  static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
   // Reference point R
@@ -249,6 +256,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Note that we assume a constant B field here!
   auto fieldRes = m_cfg.bField->getField(refPoint, state.fieldCache);
   if (!fieldRes.ok()) {
+    ACTS_ERROR("In getDistanceAndMomentum, the B field at\n"
+               << refPoint << "\ncould not be retrieved.");
     return fieldRes.error();
   }
   double bZ = (*fieldRes)[eZ];
@@ -256,7 +265,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // The particle moves on a straight trajectory if its charge is 0 or if there
   // is no B field. In that case, the 3D PCA can be calculated analytically, see
   // Sec 3.2 of the reference.
-  if (absoluteCharge == 0. or bZ == 0.) {
+  if (absoluteCharge == 0. || bZ == 0.) {
     // Momentum direction (constant for straight tracks)
     Vector3 momDirStraightTrack = trkParams.direction();
 
@@ -377,10 +386,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
-  auto intersection =
-      perigeeSurface
-          ->intersect(gctx, track.position(gctx), track.direction(), false)
-          .closest();
+  auto intersection = perigeeSurface
+                          ->intersect(gctx, track.position(gctx),
+                                      track.direction(), BoundaryCheck(false))
+                          .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
@@ -388,13 +397,17 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
+    ACTS_ERROR("Error during propagation in getImpactParameters.");
+    ACTS_DEBUG(
+        "The Perigee surface to which we tried to propagate has its origin at\n"
+        << vtx.position());
     return result.error();
   }
 
   const auto& propRes = *result;
 
   // Check if the covariance matrix of the Perigee parameters exists
-  if (not propRes.endParameters->covariance().has_value()) {
+  if (!propRes.endParameters->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
 

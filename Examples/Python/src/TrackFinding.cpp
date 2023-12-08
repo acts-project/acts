@@ -29,6 +29,7 @@
 #include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
 #include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
+#include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
@@ -275,7 +276,7 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::SeedingFTFAlgorithm, mex, "SeedingFTFAlgorithm",
       inputSpacePoints, outputSeeds, seedFilterConfig, seedFinderConfig,
       seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks,
-      trackingGeometry, ACTS_FTF_Map, fill_module_csv);
+      trackingGeometry, ACTS_FTF_Map, fill_module_csv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
@@ -338,12 +339,16 @@ void addTrackFinding(Context& ctx) {
                                 "TracksToTrajectories", inputTracks,
                                 outputTrajectories);
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TracksToParameters, mex,
+                                "TracksToParameters", inputTracks,
+                                outputTrackParameters);
+
   {
-    auto constructor = [](const std::vector<
-                           std::pair<GeometryIdentifier,
-                                     std::tuple<std::vector<double>,
-                                                std::vector<double>,
-                                                std::vector<size_t>>>>& input) {
+    auto constructor = [](const std::vector<std::pair<
+                              GeometryIdentifier,
+                              std::tuple<std::vector<double>,
+                                         std::vector<double>,
+                                         std::vector<std::size_t>>>>& input) {
       std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
           converted;
       converted.reserve(input.size());
@@ -357,7 +362,7 @@ void addTrackFinding(Context& ctx) {
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
         .def(py::init<std::vector<double>, std::vector<double>,
-                      std::vector<size_t>>())
+                      std::vector<std::size_t>>())
         .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
         .def_readwrite("chi2CutOff", &MeasurementSelectorCuts::chi2CutOff)
         .def_readwrite("numMeasurementsCutOff",

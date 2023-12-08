@@ -181,12 +181,12 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
 
 BOOST_DATA_TEST_CASE(
     TrapezoidInsideCheck,
-    bdata::random((bdata::seed = 1,
-                   bdata::distribution = std::uniform_real_distribution<>(-7,
-                                                                          7))) ^
-        bdata::random(
-            (bdata::seed = 2,
-             bdata::distribution = std::uniform_real_distribution<>(-3, 3))) ^
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 21,
+         bdata::distribution = std::uniform_real_distribution<double>(-7, 7))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-3, 3))) ^
         bdata::xrange(1000) * bdata::make({0.0, 0.1, 0.2, 0.3}),
     x, y, index, tol) {
   (void)index;

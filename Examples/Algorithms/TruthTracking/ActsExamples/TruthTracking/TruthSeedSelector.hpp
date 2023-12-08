@@ -69,8 +69,8 @@ class TruthSeedSelector final : public IAlgorithm {
     bool keepNeutral = false;
     /// Requirement on number of recorded hits
     //@TODO: implement detector-specific requirements
-    size_t nHitsMin = 0;
-    size_t nHitsMax = std::numeric_limits<size_t>::max();
+    std::size_t nHitsMin = 0;
+    std::size_t nHitsMax = std::numeric_limits<std::size_t>::max();
   };
 
   TruthSeedSelector(const Config& config, Acts::Logging::Level level);

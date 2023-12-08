@@ -42,7 +42,7 @@ template <typename ColumnContainer>
 static inline auto findByPdg(std::int32_t pdg, const ColumnContainer& column)
     -> std::optional<std::decay_t<decltype(column[0])>> {
   // should be a static_assert, but that seems to fail on LLVM
-  assert((std::size(column) == kParticlesCount) and "Inconsistent column size");
+  assert((std::size(column) == kParticlesCount) && "Inconsistent column size");
 
   auto index = findIndexByPdg(pdg);
   if (!index) {
@@ -117,7 +117,7 @@ std::optional<std::string_view> Acts::pdgToShortAbsString(PdgParticle pdg) {
   if (pdg == eTau) {
     return "t";
   }
-  if (pdg == eTau) {
+  if (pdg == eGamma) {
     return "g";
   }
   if (pdg == ePionZero) {

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 
@@ -19,6 +20,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
     -> Result<void> {
   // Pre-stepping call to the navigator and action list
   ACTS_VERBOSE("Entering propagation.");
+
+  state.stage = PropagatorStage::prePropagation;
 
   // Navigator initialize state call
   m_navigator.initialize(state, m_stepper);
@@ -41,6 +44,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
     // Propagation loop : stepping
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Pre-Stepping: target setting
+      state.stage = PropagatorStage::preStep;
       m_navigator.preStep(state, m_stepper);
       // Perform a propagation step - it takes the propagation state
       Result<double> res = m_stepper.step(state, m_navigator);
@@ -55,8 +59,12 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
         // pass error to caller
         return res.error();
       }
+      // release actor and aborter constrains after step was performed
+      m_stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+      m_stepper.releaseStepSize(state.stepping, ConstrainedStep::aborter);
       // Post-stepping:
       // navigator post step call - action list - aborter list
+      state.stage = PropagatorStage::postStep;
       m_navigator.postStep(state, m_stepper);
       state.options.actionList(state, m_stepper, m_navigator, result, logger());
       if (state.options.abortList(state, m_stepper, m_navigator, result,
@@ -68,6 +76,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   } else {
     ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
   }
+
+  state.stage = PropagatorStage::postPropagation;
 
   // if we didn't terminate normally (via aborters) set navigation break.
   // this will trigger error output in the lines below
@@ -224,6 +234,7 @@ auto Acts::Propagator<S, N>::propagate(
 
   // Type of provided options
   target_aborter_t targetAborter;
+  targetAborter.surface = &target;
   path_aborter_t pathAborter;
   pathAborter.internalLimit = options.pathLimit;
   auto abortList = options.abortList.append(targetAborter, pathAborter);
