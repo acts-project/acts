@@ -60,7 +60,7 @@ void DD4hepTestsHelper::decodeBinning(
         unitScalar = Acts::UnitConstants::mm / dd4hep::millimeter;
       }
       // Split and convert
-      while (end != -1) {
+      while (end != std::string::npos) {
         double bR = unitScalar * dd4hep::_toFloat(boundaries.substr(0, end));
         variantParams.set<double>(
             bname + "_" + bv + "_b" + std::to_string(ib++), bR);
