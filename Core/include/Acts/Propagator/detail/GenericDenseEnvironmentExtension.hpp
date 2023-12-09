@@ -69,6 +69,7 @@ struct GenericDenseEnvironmentExtension {
   std::array<Scalar, 4> energy{};
 
   MaterialSlab accumulatedMaterial;
+  std::optional<double> firstQOverP;
 
   /// @brief Default constructor
   GenericDenseEnvironmentExtension() = default;
@@ -142,6 +143,9 @@ struct GenericDenseEnvironmentExtension {
       mass = particleHypothesis.mass();
       absQ = particleHypothesis.absoluteCharge();
       initialQOverP = stepper.qOverP(state.stepping);
+      if (!firstQOverP) {
+        firstQOverP = initialQOverP;
+      }
 
       // Set up container for energy loss
       auto volumeMaterial = navigator.currentVolumeMaterial(state.navigation);
@@ -486,15 +490,19 @@ struct GenericDenseEnvironmentExtension {
   template <typename propagator_state_t, typename stepper_t>
   void updateAdditionalFreeCovariance(const propagator_state_t& state,
                                       const stepper_t& stepper, double h,
-                                      const FreeMatrix& D,
+                                      const FreeMatrix& /*D*/,
                                       FreeMatrix& additionalFreeCovariance) {
     MaterialSlab newMaterial(material, h);
+
+    accumulatedMaterial =
+        MaterialSlab::combine(accumulatedMaterial, newMaterial);
 
     // handle multiple scattering
     {
       Vector3 direction = stepper.direction(state.stepping);
-      float theta0 = computeMultipleScatteringTheta0(newMaterial, absPdg, mass,
-                                                     initialQOverP, absQ);
+
+      float theta0 = computeMultipleScatteringTheta0(
+          accumulatedMaterial, absPdg, mass, *firstQOverP, absQ);
 
       /*
       double sigmaTheta = theta0;
@@ -521,13 +529,22 @@ struct GenericDenseEnvironmentExtension {
           jacobian * angleCov * jacobian.transpose();
       */
 
-      additionalFreeCovariance.block<3, 3>(eFreeDir0, eFreeDir0) +=
+      // for derivation see
+      // https://github.com/andiwand/cern-scripts/blob/5f0ebf1bef35db65322f28c2e840c1db1aaaf9a7/notebooks/2023-12-07_qp-dense-nav.ipynb
+      //
+      FreeMatrix additionalMscCovariance = FreeMatrix::Zero();
+      additionalMscCovariance.block<3, 3>(eFreeDir0, eFreeDir0) =
           theta0 * theta0 *
           (ActsSquareMatrix<3>::Identity() - direction * direction.transpose());
-    }
 
-    accumulatedMaterial =
-        MaterialSlab::combine(accumulatedMaterial, newMaterial);
+      double transportDistance = accumulatedMaterial.thickness() / 2;
+      FreeMatrix transportJacobian = FreeMatrix::Identity();
+      transportJacobian.block<3, 3>(eFreePos0, eFreeDir0) =
+          transportDistance * ActsSquareMatrix<3>::Identity();
+
+      additionalFreeCovariance = transportJacobian * additionalMscCovariance *
+                                 transportJacobian.transpose();
+    }
 
     // handle energy loss covariance
     {
@@ -537,9 +554,6 @@ struct GenericDenseEnvironmentExtension {
       additionalFreeCovariance(eFreeQOverP, eFreeQOverP) =
           qOverPSigma * qOverPSigma;
     }
-
-    // transpost covariance
-    additionalFreeCovariance = D * additionalFreeCovariance * D.transpose();
   }
 };
 

@@ -145,7 +145,7 @@ BOOST_DATA_TEST_CASE(dense_propagator_test,
       particleHypothesis);
 
   DenseStepperPropagatorOptions<> options(geoCtx, magCtx);
-  options.maxStepSize = 1_mm;
+  options.maxStepSize = 1_m;
   options.maxSteps = 10000;
 
   const Acts::Surface& target = *surfaces.back();
