@@ -33,12 +33,13 @@ MaterialSlab::MaterialSlab(const Material& material, float thickness)
   }
 }
 
-MaterialSlab MaterialSlab::combine(const MaterialSlab& layerA,
-                                   const MaterialSlab& layerB) {
+MaterialSlab MaterialSlab::averageLayers(const MaterialSlab& layerA,
+                                         const MaterialSlab& layerB) {
   return detail::combineSlabs(layerA, layerB);
 }
 
-MaterialSlab MaterialSlab::combine(const std::vector<MaterialSlab>& layers) {
+MaterialSlab MaterialSlab::averageLayers(
+    const std::vector<MaterialSlab>& layers) {
   // NOTE 2020-08-26 msmk
   //   the reduce work best (in the numerical stability sense) if the input
   //   layers are sorted by thickness/mass density. then, the later terms
