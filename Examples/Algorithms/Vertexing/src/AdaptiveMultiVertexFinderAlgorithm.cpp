@@ -112,7 +112,6 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   typename Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
                                        ipEstimator, std::move(linearizer),
                                        m_cfg.bField);
-  finderConfig.looseConstrValue = 1e2;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;
