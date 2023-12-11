@@ -12,12 +12,9 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
-
-#include <cmath>
 
 namespace Acts {
 
@@ -52,7 +49,8 @@ void detail::boundToCurvilinearTransportJacobian(
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
   // Calculate the jacobian from global to local at the curvilinear surface
-  FreeToBoundMatrix freeToBoundJacobian = freeToCurvilinearJacobian(direction);
+  FreeToBoundMatrix freeToBoundJacobian =
+      CurvilinearSurface(direction).freeToBoundJacobian();
 
   // Update the jacobian to include the derivative of the path length at the
   // curvilinear surface w.r.t. the free parameters
@@ -101,7 +99,7 @@ FreeToBoundMatrix detail::freeToCurvilinearTransportJacobian(
 
   // Since the jacobian to local needs to calculated for the bound parameters
   // here, it is convenient to do the same here
-  return freeToCurvilinearJacobian(direction) *
+  return CurvilinearSurface(direction).freeToBoundJacobian() *
          (freeTransportJacobian - freeToPathDerivatives * sfactors);
 }
 
@@ -139,20 +137,7 @@ void detail::reinitializeJacobians(FreeMatrix& freeTransportJacobian,
   // Reset the jacobians
   freeTransportJacobian = FreeMatrix::Identity();
   freeToPathDerivatives = FreeVector::Zero();
-  boundToFreeJacobian = BoundToFreeMatrix::Zero();
-
-  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
-      VectorHelpers::evaluateTrigonomics(direction);
-
-  boundToFreeJacobian(eFreePos0, eBoundLoc0) = -sinPhi;
-  boundToFreeJacobian(eFreePos0, eBoundLoc1) = -cosPhi * cosTheta;
-  boundToFreeJacobian(eFreePos1, eBoundLoc0) = cosPhi;
-  boundToFreeJacobian(eFreePos1, eBoundLoc1) = -sinPhi * cosTheta;
-  boundToFreeJacobian(eFreePos2, eBoundLoc1) = sinTheta;
-  boundToFreeJacobian(eFreeTime, eBoundTime) = 1;
-  boundToFreeJacobian.block<3, 2>(eFreeDir0, eBoundPhi) =
-      sphericalToFreeDirectionJacobian(direction);
-  boundToFreeJacobian(eFreeQOverP, eBoundQOverP) = 1;
+  boundToFreeJacobian = CurvilinearSurface(direction).boundToFreeJacobian();
 }
 
 }  // namespace Acts

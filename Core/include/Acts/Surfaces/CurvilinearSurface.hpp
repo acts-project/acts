@@ -23,10 +23,13 @@ namespace Acts {
 
 /// @brief Utility class for curvilinear surfaces
 ///
-class CurilinearSurface {
+class CurvilinearSurface {
  public:
+  explicit CurvilinearSurface(const Vector3& direction)
+      : m_direction{direction} {}
+
   /// Constructor with direction vector
-  CurilinearSurface(const Vector3& position, const Vector3& direction)
+  CurvilinearSurface(const Vector3& position, const Vector3& direction)
       : m_position{position}, m_direction{direction} {}
 
   /// Return method for the surface center by reference

@@ -23,22 +23,6 @@ namespace detail {
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a separate file.
 
-/// @brief Evaluate the projection Jacobian from free to curvilinear parameters
-///        without transport jacobian.
-///
-/// @param [in] direction Normalised direction vector
-///
-/// @return Projection Jacobian
-FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction);
-
-/// @brief Evaluate the projection Jacobian from curvilinear to free parameters
-///        without transport jacobian.
-///
-/// @param [in] direction Normalised direction vector
-///
-/// @return Projection Jacobian
-BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction);
-
 /// @brief This function calculates the full transport jacobian from a bound
 ///        curvilinear representation to a new bound representation
 ///
