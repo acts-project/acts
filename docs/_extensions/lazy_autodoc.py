@@ -72,6 +72,7 @@ def run() -> None:
         "Acts::FreeToBoundMatrix",
         "Acts::FreeSquareMatrix",
         "Acts::FreeToPathMatrix",
+        "Acts::HashedString",
     }
 
     role_instances["struct"] |= {

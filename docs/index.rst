@@ -43,6 +43,8 @@ Key features:
 
    white_papers/index.rst
 
+   glossary
+
 TODOs
 =====
 

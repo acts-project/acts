@@ -1,4 +1,203 @@
 :::{attention}
 This section is **incomplete!**
 :::
-# Tracks
+
+(edm_tracks)=
+# High-level Track Event Data Model
+
+Track information in ACTS can be divided into two parts: track-level
+information and track state-level information.
+
+Track-level information are properties that relate to the full track. This
+includes the fitted track parameters with respect to some reference point,
+often the origin of the detector or the beamspot. It can also include summary
+information from the track finding stage, like the overall number of clusters
+that were used in the creation of the track, or the fit quality from the track
+fit.
+
+Tracks are built-up from track states, where each track state corresponds to a
+discrete state determining the track properties. This mainly includes
+measurements states, expected intersections with sensors where no measurement
+was found ({term}`holes<Hole>`), and intersections with known passive material.  The
+{term}`EDM` allows building up a track from these track states iteratively. For
+example, the Kalman Filter will append track states to the sequence whenever it
+encounters a sensitive detector layer. The content of the track states is
+defined such that the fitter can store all relevant information, with as little
+need for extra information as possible. It is also designed to be flexible
+enough to support different fitters, which might require different information
+to be stored, as well as the combinatorial Kalman Filter, which produces a tree
+of track states, instead of a fully linear sequence.
+
+Ultimately, each output track is associated with a well-defined sequence of
+track states, allowing downstream consumers of the {term}`EDM` to access the fully
+detailed information produced during track reconstruction.
+
+---
+
+This section will first discuss the architecture and general implementation of
+the Track {term}`EDM` in [](#edm_track_conceptual), and then report on the API
+of the involved classes in [](#edm_track_api).
+
+(edm_track_conceptual)=
+## Conceptual
+
+### Architecture
+
+The Track {term}`EDM` is structured such that the memory-layout can be
+{term}`SoA`, while presenting an object-oriented interface for convenient
+usage.
+
+{numref}`track_proxy` shows this object-oriented access model for
+the example of the track container and track proxy object.  The track container
+holds vectors of the various pieces of information, and has methods to add a
+track, and to allow iteration over all tracks. This iteration, or index based
+access, yields a track proxy object, which exposes the properties as methods
+returning references, while internally only holding a pointer to and an index
+into the track container. The types are built in a way that preserves
+const-correctness, i.e. even though a track proxy is a value type which can be
+copied, it will not allow modification of the underlying track container if it
+is immutable:
+
+```cpp
+auto mutableTrackContainer = /*...*/;
+auto trackProxy = mutableTrackContainer.getTrack(5); // is mutable
+const auto& constTrackProxy = trackProxy; // is const
+// ...
+auto constTrackContainer = /*...*/;
+auto trackProxy = trackContainer.getTrack(5); // is const, even as an lvalue
+```
+
+(track_proxy)=
+:::{figure} figures/proxy.svg
+:align: center
+Illustration of the proxy pattern used in the track {term}`EDM`. The track
+proxy logically represents a single track, and points to the data stored in
+the track container.
+:::
+
+The track {term}`EDM` is fully agnostic to the concrete persistency framework
+of an experiment. This avoids having to convert the data between different
+representations, if implemented correctly.
+
+### Implementation
+
+To make the {term}`EDM` implementation independent of an experiment persistency
+framework, it is separated into a *frontend layer* and a *backend layer*. The
+frontend layer contains user-facing getters and setters, as well as convenience
+methods that can be helpful. These methods are located either in the proxy
+objects or in the containers, depending on whether they operate on a single
+element or the entire container.
+
+Overall, there are four main classes that make up the frontend layer:
+{class}`Acts::TrackProxy`, `TrackContainer`, `TrackStateProxy` and `MultiTrajectory`.  The
+latter serves as the track state container, where the name indicates that it is
+able to handle a branching tree structure of track states.  `TrackProxy` and
+`TrackStateProxy` expose methods to get the local track parameters and
+covariance, corresponding reference surface, and also includes global
+statistics like the total number of measurements, {term}`outliers<Outlier>` or
+{term}`holes<Hole>` in case of `TrackProxy`.  `TrackProxy` also has a method to
+conveniently iterate over the associated track states from the outside inwards,
+yielding `TrackStateProxy` objects from the track state container.
+
+In case of `TrackStateProxy`, functionality is exposed in the frontend
+layer to allocate optional components, with the goal of reduced memory
+footprint. There are two main uses of this: track parameters and measurements.
+The track-state {term}`EDM` supports storing up to three sets of local track parameters
+and covariance matrices, modeled after the information the Kalman Filter
+formalism needs to store:
+
+1. predicted parameter vector and covariance matrix
+2. filtered parameter vector and covariance matrix
+3. smoothed parameter vector and covariance matrix
+
+In case of combinatorial track finding (see [](#track_finding), specifically
+{numref}`tracking_ckf`), track hypothesis can start out with a common sequence
+of track states, and then branch out when multiple compatible measurements are
+encountered, as seen in {numref}`ckf_tree`.
+
+The track state {term}`EDM` allows allocating only the track parameters that
+are needed, and also allows sharing the same track parameters between multiple
+track states, so that branching track states can share for example the same
+predicted parameters. How this is achieved exactly is left to the backend
+layer. Measurements are handled in a similar way, where the track finding
+decides how much storage is needed based on the number of dimensions of an
+incoming measurement. It then instructs the {term}`EDM` through the frontend
+layer to ensure enough memory is available, where the specifics are again left
+up to the backend layer.
+
+(ckf_tree)=
+:::{figure} figures/ckf_tree.svg
+:width: 300px
+:align: center
+Illustration of a branching multi-trajectory that is created during
+combinatorial track finding.
+:::
+
+The backend layer exposes an interface that is used by the frontend layer to
+store and retrieve information.  It uses dedicated methods where needed, such as
+for storing reference surfaces or source-link objects, which are lightweight
+container objects for experiment-specific measurements. For the majority of
+components, the frontend communicates with the backend through a single method
+to obtain references to the underlying data. Components are accessed via hashes
+of the component name, where the hashes are calculated at compile-time wherever
+possible. The backend can then use the hashed component name to retrieve the
+relevant memory. To allow directly manipulating the backing memory, the frontend
+expects the backend to return references into the backing storage.
+
+`TrackProxy` provides a method to copy a track between different track
+containers, and only uses the frontend layer to accomplish this. This means that
+copying tracks between different backend implementations is trivial.
+
+(track_architecture)=
+:::{figure} figures/edm_diagram.svg
+:align: center
+Diagram of the {term}`EDM` architecture. The frontend layer is used by other
+ACTS components, and downstream clients. It is separated from the backend
+layer by an interface. Conversion to and from EDM4hep is possible. Examples
+of direct backend implementations are shown.
+:::
+
+{numref}`track_architecture` shows a diagram of the {term}`EDM` architecture. At the center
+are the `TrackProxy` and `TrackContainer`. These classes are
+produced by the track finding and track fitting components, and are the main
+interface point with the clients of tracking.  In ACTS itself, all of the
+performance monitoring and downstream reconstruction is either directly built on
+top of these objects, or converts them into an internal {term}`EDM` on the use
+case.  Behind the backend interface, the track container coordinates with both a
+track state and a track backend, where a few examples are shown, and will be
+discussed below.
+
+(edm_track_api)=
+## Track EDM API
+
+:::{doxygenclass} Acts::TrackProxy
+:members:
+:::
+
+:::{doxygenclass} Acts::TrackContainer
+:members:
+:::
+
+### Dynamic columns
+
+(edm_track_accessors)=
+### Accessors
+
+(edm_track_iteration)=
+### Track state iteration and forward linking
+
+:::{todo}
+Add picture of track state sequence and stem and tip index
+:::
+
+You can manually add forward-linking to a track by calling
+{func}`Acts::TrackProxy::linkForward`.  {func}`Acts::TrackProxy::copyFrom` and
+{func}`Acts::TrackProxy::reverseTrackStates` will also implicitly
+
+
+### How to create a track from scratch
+
+## Track EDM backends
+
+### Backends shipped with ACTS
+### How to build a backend
