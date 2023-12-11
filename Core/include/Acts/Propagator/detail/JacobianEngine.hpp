@@ -12,20 +12,19 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
+namespace detail {
 
 /// @brief These functions perform the calculation of the Jacobians for the
 /// the covariance transport. This is a purely algebraic problem the
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a separate file.
-namespace detail {
 
 /// @brief Evaluate the projection Jacobian from free to curvilinear parameters
-/// without transport jacobian.
+///        without transport jacobian.
 ///
 /// @param [in] direction Normalised direction vector
 ///
@@ -33,31 +32,15 @@ namespace detail {
 FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction);
 
 /// @brief Evaluate the projection Jacobian from curvilinear to free parameters
-/// without transport jacobian.
+///        without transport jacobian.
 ///
 /// @param [in] direction Normalised direction vector
 ///
 /// @return Projection Jacobian
 BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction);
 
-/// @brief This function calculates the jacobian from a free parameterisation
-/// to a mixed one with angular representation.
-///
-/// @param direction The direction of the track
-///
-/// @return the 7x8 jacobian for direction to angles relation
-ActsMatrix<7, 8> directionToAnglesJacobian(const Vector3& direction);
-
-/// @brief This function calculates the jacobian from a free parameterisation
-/// to a mixed one with angular representation.
-///
-/// @param direction The direction of the track
-///
-/// @return the 8x7 jacobian for angles to direction relation
-ActsMatrix<8, 7> anglesToDirectionJacobian(const Vector3& direction);
-
 /// @brief This function calculates the full transport jacobian from a bound
-/// curvilinear representation to a new bound representation
+///        curvilinear representation to a new bound representation
 ///
 /// @note Modifications of the jacobian related to the
 /// projection onto a surface is considered. Since a variation of the start
@@ -97,7 +80,7 @@ BoundMatrix boundToBoundTransportJacobian(
 /// @param [in] boundToFreeJacobian Jacobian from bound to free at start
 /// @param [in] freeTransportJacobian Transport jacobian free to free
 /// @param [in] freeToPathDerivatives Path length derivatives for free
-/// parameters
+///        parameters
 ///
 /// @note The parameter @p surface is only required if projected to bound
 /// parameters. In the case of curvilinear parameters the geometry and the
@@ -110,8 +93,7 @@ BoundMatrix boundToCurvilinearTransportJacobian(
     const FreeVector& freeToPathDerivatives);
 
 /// @brief This function calculates the full jacobian from a given
-/// bound/curvilinear parameterisation from a new free
-/// parameterisation.
+/// bound/curvilinear parameterisation from a new free parameterisation.
 ///
 /// @param [in] boundToFreeJacobian Jacobian from bound to free at start
 /// @param [in] freeTransportJacobian Transport jacobian free to free
@@ -122,8 +104,7 @@ BoundToFreeMatrix boundToFreeTransportJacobian(
     const FreeMatrix& freeTransportJacobian);
 
 /// @brief This function calculates the full jacobian from a given
-/// free parameterisation to a new curvilinear bound
-/// parameterisation.
+/// free parameterisation to a new curvilinear bound parameterisation.
 ///
 /// @note Modifications of the jacobian related to the
 /// projection onto the target surface is considered. Since a variation of
@@ -134,12 +115,12 @@ BoundToFreeMatrix boundToFreeTransportJacobian(
 /// @param [in] geoContext The geometry Context
 /// @param [in] freeParameters Free, nominal parametrisation
 /// @param [in] directionToAnglesJacobian The relation jacobian from dir to
-/// angle
+///        angle
 /// @param [in] anglesToDirectionJacobian The relation jacobian from angle to
-/// dir
+///        dir
 /// @param [in] freeTransportJacobian Transport jacobian free to free
 /// @param [in] freeToPathDerivatives Path length derivatives for free
-/// parameters
+///        parameters
 /// @param [in] surface The target surface
 ///
 /// @return the 6x8 transport jacobian from bound to free
@@ -158,9 +139,9 @@ FreeToBoundMatrix freeToBoundTransportJacobian(
 ///
 /// @param [in] direction Normalised direction vector
 /// @param [in] directionToAnglesJacobian The relation jacobian from dir to
-/// angle
+///        angle
 /// @param [in] anglesToDirectionJacobian The relation jacobian from angle to
-/// dir
+///        dir
 /// @param [in] freeTransportJacobian Transport jacobian free to free
 /// @param [in] freeToPathDerivatives Path length derivatives for free
 ///
@@ -174,9 +155,9 @@ FreeToBoundMatrix freeToCurvilinearTransportJacobian(
 /// @brief This function calculates the free transfport jacobian from a free
 /// parameterisation.
 /// @param [in] directionToAnglesJacobian The relation jacobian from dir to
-/// angle
+///        angle
 /// @param [in] anglesToDirectionJacobian The relation jacobian from angle to
-/// dir
+///        dir
 /// @param [in] freeTransportJacobian Transport jacobian free to free
 ///
 /// @return a 8x8 transport jacobian from free to free
@@ -185,6 +166,39 @@ FreeMatrix freeToFreeTransportJacobian(
     const ActsMatrix<8, 7>& anglesToDirectionJacobian,
     const FreeMatrix& freeTransportJacobian);
 
-}  // namespace detail
+/// @brief This function reinitialises the state members required for the
+///        covariance transport
+///
+/// @param [in] geoContext The geometry context
+/// @param [in, out] freeTransportJacobian The transport jacobian from start
+///        free to final free parameters
+/// @param [in, out] freeToPathDerivatives Path length derivatives of the free,
+///        nominal parameters
+/// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
+///        parametrisation to free parameters
+/// @param [in] freeParameters Free, nominal parametrisation
+/// @param [in] surface The reference surface of the local parametrisation
+Result<void> reinitializeJacobians(const GeometryContext& geoContext,
+                                   FreeMatrix& freeTransportJacobian,
+                                   FreeVector& freeToPathDerivatives,
+                                   BoundToFreeMatrix& boundToFreeJacobian,
+                                   const FreeVector& freeParameters,
+                                   const Surface& surface);
 
+/// @brief This function reinitialises the state members required for the
+///        covariance transport
+///
+/// @param [in, out] freeTransportJacobian The transport jacobian from start
+///        free to final free parameters
+/// @param [in, out] derivatives Path length derivatives of the free, nominal
+///        parameters
+/// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
+///        parametrisation to free parameters
+/// @param [in] direction Normalised direction vector
+void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
+                           FreeVector& freeToPathDerivatives,
+                           BoundToFreeMatrix& boundToFreeJacobian,
+                           const Vector3& direction);
+
+}  // namespace detail
 }  // namespace Acts
