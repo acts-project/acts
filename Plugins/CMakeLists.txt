@@ -1,7 +1,6 @@
 # plugins are manually ordered such that dependent plugins appear after their
 # dependencies in the component list.
 # independent plugins
-add_component_if(Autodiff PluginAutodiff ACTS_BUILD_PLUGIN_AUTODIFF)
 add_component_if(ActSVG PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 add_component_if(Cuda PluginCuda ACTS_BUILD_PLUGIN_CUDA)
 add_component_if(FpeMonitoring PluginFpeMonitoring ACTS_BUILD_PLUGIN_FPEMON)
