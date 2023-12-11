@@ -124,7 +124,6 @@ class ObjectIntersection {
   ///
   /// @param intersection is the intersection
   /// @param object is the object to be instersected
-  /// @param representation is the object representation
   /// @param index is the intersection index
   constexpr ObjectIntersection(const Intersection3D& intersection,
                                const object_t* object, std::uint8_t index = 0)
@@ -191,7 +190,6 @@ class ObjectMultiIntersection {
   ///
   /// @param intersections are the intersections
   /// @param object is the object to be instersected
-  /// @param representation is the object representation
   constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
                                     const object_t* object)
       : m_intersections(intersections), m_object(object) {}
