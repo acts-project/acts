@@ -9,7 +9,7 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
 
    definitions/algebra
    definitions/units
-   eventdata
+   eventdata/index
 
    geometry/index
    material
