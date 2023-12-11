@@ -24,7 +24,6 @@ namespace Acts {
 template <typename C>
 concept ChargeConcept = requires(C c, float f, double d) {
   {C{f}};
-  {C{d}};
 
   { c == c } -> std::same_as<bool>;
   { c != c } -> std::same_as<bool>;
