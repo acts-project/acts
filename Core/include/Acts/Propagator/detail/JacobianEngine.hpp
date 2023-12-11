@@ -118,12 +118,14 @@ BoundToFreeMatrix boundToFreeTransportJacobian(
 /// @param [in] freeParameters Free, nominal parametrisation
 /// @param [in] freeTransportJacobian Transport jacobian free to free
 /// @param [in] freeToPathDerivatives Path length derivatives for free parameters
+/// @param [out] fullTransportJacobian The 6x8 transport jacobian from bound to free
 ///
-/// @return the 6x8 transport jacobian from bound to free
-FreeToBoundMatrix freeToBoundTransportJacobian(
-    const GeometryContext& geoContext, const Surface& surface,
-    const FreeVector& freeParameters, const FreeMatrix& freeTransportJacobian,
-    const FreeVector& freeToPathDerivatives);
+void freeToBoundTransportJacobian(const GeometryContext& geoContext,
+                                  const Surface& surface,
+                                  const FreeVector& freeParameters,
+                                  const FreeMatrix& freeTransportJacobian,
+                                  const FreeVector& freeToPathDerivatives,
+                                  FreeToBoundMatrix& fullTransportJacobian);
 
 /// @brief This function calculates the full transport jacobian from a free
 /// parameterisation to a bound one. Since a variation of the start

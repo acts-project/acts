@@ -143,19 +143,20 @@ BoundToFreeMatrix detail::boundToFreeTransportJacobian(
   return (freeTransportJacobian * boundToFreeJacobian);
 }
 
-FreeToBoundMatrix detail::freeToBoundTransportJacobian(
+void detail::freeToBoundTransportJacobian(
     const GeometryContext& geoContext, const Surface& surface,
     const FreeVector& freeParameters, const FreeMatrix& freeTransportJacobian,
-    const FreeVector& freeToPathDerivatives) {
+    const FreeVector& freeToPathDerivatives,
+    FreeToBoundMatrix& fullTransportJacobian) {
   // Calculate the jacobian from free to bound at the final surface
   FreeToBoundMatrix freeToBoundJacobian =
       surface.freeToBoundJacobian(geoContext, freeParameters);
   FreeToPathMatrix sVec =
       surface.freeToPathDerivative(geoContext, freeParameters);
   // Return the jacobian to local
-  return freeToBoundJacobian *
-         (freeTransportJacobian +
-          freeToPathDerivatives * sVec * freeTransportJacobian);
+  fullTransportJacobian = freeToBoundJacobian * (freeTransportJacobian +
+                                                 freeToPathDerivatives * sVec *
+                                                     freeTransportJacobian);
 }
 
 FreeToBoundMatrix detail::freeToCurvilinearTransportJacobian(
