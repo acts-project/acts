@@ -7,6 +7,61 @@ Write CKF documentation
 (ckf_core)=
 ## Combinatorial Kalman Filter
 
+Acts provides a Combinatorial Kalman Filter (CKF) implementation for track finding
+( {class}`Acts::CombinatorialKalmanFilter`).  Its usage is demonstrated in the
+example algorithm {class}`ActsExamples::TrackFindingAlgorithm`.
+
+The CKF requires as input a track seed i.e. an estimation of the track parameters,
+and a list of measurements with an association to the (sensitive) surfaces of the
+tracking geometry. The CKF propagates track states initialised by the track
+parameter estimates in direction of the momentum (forward propagation).  When ever
+a surface is reached, compatible measurements are search for. In case of multiple
+compatible measurements the trajectory is branched. The track states of all
+branches are updated and smoothed following the Kalman filter prescription. The
+propagation is aborted if either the maximum path length is exceeded or if user
+customizable abort conditions are reached.
+
+The CKF is customizable via template parameters, and options. The template parameters
+allow
+
+1. to steer the propagation of the track states e.g. {class}`Acts::Propagator`, and
+2. to the define the storage container for the trajectories and its track states
+   e.g. {class}`Acts::VectorMultiTrajectory`
+
+The options {struct}`Acts::CombinatorialKalmanFilterOptions` are also customizable via
+template parameters:
+
+1. an iterator to iterate over links to (selected) measurements per tracking
+   surface and which returns an {class}`Acts::SourceLink` when dereferenced.
+
+2. the storage container for the trajectories and states which must be the same as
+   for the CKF.
+
+and provide:
+
+1. user defined geometry (e.g. alignment), magnetic field and measurement
+   calibration context which are unused by Acts but passed to the possibly
+   user defined delegates.
+
+2. the reference surface with respect to which the track defining parameters are
+   expressed (perigee)
+
+3. delegates {class}`Acts::Delegate` mostly via the
+   {struct}`Acts::CombinatorialKalmanFilterExtensions` to define the updater
+   e.g. {class}`Acts::GainMatrixUpdater`, smoother
+   e.g. {class}`Acts::GainMatrixSmoother`, measurement selector
+   e.g. {class}`Acts::MeasurementSelector`, the SourceLinkAccessor, the
+   measurement calibrator and an optional branch stopper.
+
+Typically users have to provide the tracking geometry, an implementation of a
+{class}`Acts::MagneticFieldProvider`, which is needed by the stepper
+e.g. {class}`Acts::EigenStepper` which is needed by the propagator, a
+SourceLinkAccessor and a measurement calibrator. An implementation of a source link
+accessor and the measurement calibrator can be found among the examples
+{struct}`ActsExamples::IndexSourceLinkAccessor`, and
+{class}`ActsExamples::MeasurementCalibratorAdapter`
+
+
 % Functional approach
 % Implementation as an actor
 % Limitations (no inward filtering)
