@@ -185,36 +185,18 @@ void boundToCurvilinearJacobian(const Vector3& direction,
 /// parametrisation to free parameters
 /// @param [in] freeParameters Free, nominal parametrisation
 /// @param [in] surface The reference surface of the local parametrisation
-Result<void> reinitializeJacobians(const GeometryContext& geoContext,
-                                   FreeMatrix& freeTransportJacobian,
-                                   FreeVector& freeToPathDerivatives,
-                                   BoundToFreeMatrix& boundToFreeJacobian,
-                                   const FreeVector& freeParameters,
-                                   const Surface& surface) {
-  using VectorHelpers::phi;
-  using VectorHelpers::theta;
-
+void reinitializeJacobians(const GeometryContext& geoContext,
+                           FreeMatrix& freeTransportJacobian,
+                           FreeVector& freeToPathDerivatives,
+                           BoundToFreeMatrix& boundToFreeJacobian,
+                           const FreeVector& freeParameters,
+                           const Surface& surface) {
   // Reset the jacobians
   freeTransportJacobian = FreeMatrix::Identity();
   freeToPathDerivatives = FreeVector::Zero();
 
-  // Get the local position
-  const Vector3 position = freeParameters.segment<3>(eFreePos0);
-  const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
-  auto lpResult = surface.globalToLocal(geoContext, position, direction);
-  if (!lpResult.ok()) {
-    return lpResult.error();
-  }
-  // Transform from free to bound parameters
-  Result<BoundVector> boundParameters = detail::transformFreeToBoundParameters(
-      freeParameters, surface, geoContext);
-  if (!boundParameters.ok()) {
-    return boundParameters.error();
-  }
   // Reset the jacobian from local to global
-  boundToFreeJacobian =
-      surface.boundToFreeJacobian(geoContext, *boundParameters);
-  return Result<void>::success();
+  boundToFreeJacobian = surface.boundToFreeJacobian(geoContext, freeParameters);
 }
 
 /// @brief This function reinitialises the state members required for the
