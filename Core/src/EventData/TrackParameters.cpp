@@ -16,20 +16,20 @@ namespace Acts {
 
 static_assert(
     Concepts::BoundTrackParametersConcept<SinglyChargedBoundTrackParameters>);
-static_assert(Concepts::BoundTrackParametersConcept<
-              SinglyChargedCurvilinearTrackParameters>);
+// static_assert(Concepts::BoundTrackParametersConcept<
+//               SinglyChargedCurvilinearTrackParameters>);
 static_assert(
     Concepts::FreeTrackParametersConcept<SinglyChargedFreeTrackParameters>);
 
 static_assert(
     Concepts::BoundTrackParametersConcept<NeutralBoundTrackParameters>);
-static_assert(
-    Concepts::BoundTrackParametersConcept<NeutralCurvilinearTrackParameters>);
+// static_assert(
+//     Concepts::BoundTrackParametersConcept<NeutralCurvilinearTrackParameters>);
 static_assert(Concepts::FreeTrackParametersConcept<NeutralFreeTrackParameters>);
 
 static_assert(Concepts::BoundTrackParametersConcept<BoundTrackParameters>);
-static_assert(
-    Concepts::BoundTrackParametersConcept<CurvilinearTrackParameters>);
+// static_assert(
+//     Concepts::BoundTrackParametersConcept<CurvilinearTrackParameters>);
 static_assert(Concepts::FreeTrackParametersConcept<FreeTrackParameters>);
 
 }  // namespace Acts

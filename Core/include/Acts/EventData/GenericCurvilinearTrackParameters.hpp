@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,7 +10,9 @@
 
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 namespace Acts {
 
@@ -25,10 +27,7 @@ namespace Acts {
 ///
 /// @see GenericBoundTrackParameters
 template <typename particle_hypothesis_t>
-class GenericCurvilinearTrackParameters
-    : public GenericBoundTrackParameters<particle_hypothesis_t> {
-  using Base = GenericBoundTrackParameters<particle_hypothesis_t>;
-
+class GenericCurvilinearTrackParameters {
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
@@ -46,10 +45,11 @@ class GenericCurvilinearTrackParameters
                                     Scalar qOverP,
                                     std::optional<CovarianceMatrix> cov,
                                     ParticleHypothesis particleHypothesis)
-      : Base(Surface::makeShared<PlaneSurface>(pos4.segment<3>(ePos0), dir),
-             detail::transformFreeToCurvilinearParameters(pos4[eTime], dir,
-                                                          qOverP),
-             std::move(cov), std::move(particleHypothesis)) {}
+      : m_surface(pos4.segment<3>(ePos0), dir),
+        m_params{detail::transformFreeToCurvilinearParameters(pos4[eTime], dir,
+                                                              qOverP)},
+        m_cov{std::move(cov)},
+        m_particleHypothesis{std::move(particleHypothesis)} {}
 
   /// Construct from four-position, angles, and qOverP.
   ///
@@ -63,11 +63,12 @@ class GenericCurvilinearTrackParameters
                                     Scalar theta, Scalar qOverP,
                                     std::optional<CovarianceMatrix> cov,
                                     ParticleHypothesis particleHypothesis)
-      : Base(Surface::makeShared<PlaneSurface>(
-                 pos4.segment<3>(ePos0), makeDirectionFromPhiTheta(phi, theta)),
-             detail::transformFreeToCurvilinearParameters(pos4[eTime], phi,
-                                                          theta, qOverP),
-             std::move(cov), std::move(particleHypothesis)) {}
+      : m_surface(pos4.segment<3>(ePos0),
+                  makeDirectionFromPhiTheta(phi, theta)),
+        m_params{detail::transformFreeToCurvilinearParameters(pos4[eTime], phi,
+                                                              theta, qOverP)},
+        m_cov{std::move(cov)},
+        m_particleHypothesis{std::move(particleHypothesis)} {}
 
   /// Converts a bound track parameter with a different hypothesis.
   template <typename other_particle_hypothesis_t>
@@ -101,17 +102,125 @@ class GenericCurvilinearTrackParameters
   GenericCurvilinearTrackParameters& operator=(
       GenericCurvilinearTrackParameters&&) = default;
 
-  using GenericBoundTrackParameters<ParticleHypothesis>::fourPosition;
-  using GenericBoundTrackParameters<ParticleHypothesis>::position;
+  /// Parameters vector.
+  ParametersVector& parameters() { return m_params; }
+  /// Parameters vector.
+  const ParametersVector& parameters() const { return m_params; }
+  /// Vector of spatial impact parameters (i.e., d0 and z0)
+  ActsVector<2> spatialImpactParameters() const { return m_params.head<2>(); }
+  /// Vector of spatial and temporal impact parameters (i.e., d0, z0, and t)
+  ActsVector<3> impactParameters() const {
+    ActsVector<3> ip;
+    ip.template head<2>() = m_params.template head<2>();
+    ip(2) = m_params(eBoundTime);
+    return ip;
+  }
 
+  /// Optional covariance matrix.
+  std::optional<CovarianceMatrix>& covariance() { return m_cov; }
+  /// Optional covariance matrix.
+  const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
+  /// Covariance matrix of the spatial impact parameters (i.e., of d0 and z0)
+  std::optional<ActsSquareMatrix<2>> spatialImpactParameterCovariance() const {
+    if (!m_cov.has_value()) {
+      return std::nullopt;
+    }
+
+    return m_cov.value().template topLeftCorner<2, 2>();
+  }
+
+  /// Covariance matrix of the spatial and temporal impact parameters (i.e., of
+  /// d0, z0, and t)
+  std::optional<ActsSquareMatrix<3>> impactParameterCovariance() const {
+    if (!m_cov.has_value()) {
+      return std::nullopt;
+    }
+
+    ActsSquareMatrix<3> ipCov;
+    ipCov.template topLeftCorner<2, 2>() =
+        m_cov.value().template topLeftCorner<2, 2>();
+    ipCov.template block<2, 1>(0, 2) =
+        m_cov.value().template block<2, 1>(0, eBoundTime);
+    ipCov.template block<1, 2>(2, 0) =
+        m_cov.value().template block<1, 2>(eBoundTime, 0);
+    ipCov(2, 2) = m_cov.value()(eBoundTime, eBoundTime);
+    return ipCov;
+  }
+
+  /// Access a single parameter value identified by its index.
+  ///
+  /// @tparam kIndex Track parameter index
+  template <BoundIndices kIndex>
+  Scalar get() const {
+    return m_params[kIndex];
+  }
+
+  /// Local spatial position two-vector.
+  Vector2 localPosition() const { return m_params.segment<2>(eBoundLoc0); }
   /// Space-time position four-vector.
+  ///
+  /// This uses the associated surface to transform the local position on
+  /// the surface to globalcoordinates.
   Vector4 fourPosition() const {
-    return GenericBoundTrackParameters<ParticleHypothesis>::fourPosition({});
+    Vector4 pos4;
+    pos4.segment<3>(ePos0) = m_surface.center();
+    pos4[eTime] = m_params[eBoundTime];
+    return pos4;
   }
   /// Spatial position three-vector.
-  Vector3 position() const {
-    return GenericBoundTrackParameters<ParticleHypothesis>::position({});
+  ///
+  /// This uses the associated surface to transform the local position on
+  /// the surface to globalcoordinates.
+  Vector3 position() const { return m_surface.center(); }
+  /// Time coordinate.
+  Scalar time() const { return m_params[eBoundTime]; }
+
+  /// Phi direction.
+  Scalar phi() const { return m_params[eBoundPhi]; }
+  /// Theta direction.
+  Scalar theta() const { return m_params[eBoundTheta]; }
+  /// Charge over momentum.
+  Scalar qOverP() const { return m_params[eBoundQOverP]; }
+
+  /// Unit direction three-vector, i.e. the normalized momentum
+  /// three-vector.
+  Vector3 direction() const {
+    return makeDirectionFromPhiTheta(m_params[eBoundPhi],
+                                     m_params[eBoundTheta]);
   }
+  /// Absolute momentum.
+  Scalar absoluteMomentum() const {
+    return m_particleHypothesis.extractMomentum(m_params[eBoundQOverP]);
+  }
+  /// Transverse momentum.
+  Scalar transverseMomentum() const {
+    return std::sin(m_params[eBoundTheta]) * absoluteMomentum();
+  }
+  /// Momentum three-vector.
+  Vector3 momentum() const { return absoluteMomentum() * direction(); }
+
+  /// Particle electric charge.
+  Scalar charge() const {
+    return m_particleHypothesis.extractCharge(get<eBoundQOverP>());
+  }
+
+  /// Particle hypothesis.
+  const ParticleHypothesis& particleHypothesis() const {
+    return m_particleHypothesis;
+  }
+
+  GenericBoundTrackParameters<ParticleHypothesis> boundParameters() const {
+    return GenericBoundTrackParameters<ParticleHypothesis>(
+        m_surface.planeSurface(), m_params, m_cov, m_particleHypothesis);
+  }
+
+ private:
+  /// reference surface
+  CurvilinearSurface m_surface;
+  BoundVector m_params;
+  std::optional<BoundSquareMatrix> m_cov;
+  // TODO use [[no_unique_address]] once we switch to C++20
+  ParticleHypothesis m_particleHypothesis;
 };
 
 }  // namespace Acts

@@ -168,7 +168,7 @@ class CurvilinearSurface {
   }
 
   std::shared_ptr<PlaneSurface> planeSurface() const {
-    return std::make_shared<PlaneSurface>(transform());
+    return Surface::makeShared<PlaneSurface>(transform());
   }
 
  private:
@@ -177,7 +177,7 @@ class CurvilinearSurface {
 };
 
 inline std::ostream& operator<<(std::ostream& os,
-                                const CurilinearSurface& surface) {
+                                const CurvilinearSurface& surface) {
   surface.toStream(os);
   return os;
 }
