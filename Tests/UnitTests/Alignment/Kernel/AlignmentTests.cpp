@@ -312,18 +312,52 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
       kfOptions, voidAlignUpdater);
   alignOptions.maxIterations = 1;
 
+
+  // manually configured alignmeny group with a geo_id (specified for the alignment group)
+
+
   // Set the surfaces to be aligned (fix the layer 8)
   unsigned int iSurface = 0;
   std::unordered_map<const Surface*, std::size_t> idxedAlignSurfaces;
   // Loop over the detector elements
   for (auto& det : detector.detectorStore) {
     const auto& surface = det->surface();
-    if (surface.geometryId().layer() != 8) {
-      alignOptions.alignedDetElements.push_back(det.get());
-      idxedAlignSurfaces.emplace(&surface, iSurface);
-      iSurface++;
+    //if (surface.geometryId().layer() != 8) {
+     // alignOptions.alignedDetElements.push_back(det.get());
+     // idxedAlignSurfaces.emplace(&surface, iSurface);
+     // iSurface++;
+       if (surface.geometryId() = geoIdToAlign){
+          surfacetoALign = & surface; 
+          break; 
+          }
     }
   }
+
+// Check 2 cases: geo_id - found or geo_id is not found
+
+// case 1: geo_id is found
+if (surfaceToAlign){
+    alignOptions.alignedDetElements.push_back(surfaceToAlign -> associatedDetectorElement());
+    idxedAlignSurfaces.emplace(surfaceToAlign, iSurface); 
+    iSurface++; 
+// case 2: geo_id is not found
+else  {  
+    std::cerr <<"Surface_ " << geoIdToAlign << "can't be found!" <<std::endl; 
+    return EXIT_FAILURE;
+}
+
+// misalignment shift 
+
+/*Acts::Vector3 misalignmentShift (0.2_mm, 0.5_mm, 0.8_mm); 
+// preform misalignment shift to the surface 
+Acts::Surface modifiedSurface =*surfaceToAlign; 
+modifiedSurface.applyAlignmentCorrections(misalignmentShift); 
+*/
+
+ // Test Clyinder Geometry
+  TestCylinderDetector testCylinderDetector; 
+  const auto geometry = testCylinderDetector(); 
+}
 
   // Test the method to evaluate alignment state for a single track
   const auto& inputTraj = trajectories.front();
@@ -382,36 +416,34 @@ int DetectorAlignment::runDetectorAlignment(
     ActsAlignment::AlignedTransformUpdater alignedTransformUpdater,
     const AlignedDetElementGetter& alignedDetElementsGetter) {
 
+// replace json file with test cylinder geometry 
 
-// separate function for reading and parsing JSON
-std::vector<AlignmentAlgorithm::AlignmentParameters> readJsonFile(const std::string& filePath) {
-  std::vector<AlignmentAlgorithm::AlignmentParameters> alignmentParameters;
+struct TestCylinderDetector {
+    std::shared_ptr<const TrackingGeometry> operator()() const {
+    using namespace Acts::UnitLiterals; 
+    auto cylinderRadius = 100_mm; 
+    auto cylinderLength = 500_mm;
+    
+// cylinder layer 
 
-  if (!filePath.empty()) {
-    std::ifstream jsonFile(filePath);
-    if (!jsonFile.is_open()) {
-      std::cerr << " Unable to open an alignment group file" << std::endl;
-      return alignmentParameters;  // Return an empty vector in case of failure
-    }
+auto cylinderLayer = Acts::CylinderLayer::create(
+    Acts::Transform3::Identity(), cylinderRadius, -cylinderLength/2, cylinderLenghth / 2, cylinderSurface); 
+    
 
-    // parsing the json file
-    nlohmann::json jsonData;
-    try {
-      jsonFile >> jsonData;
-    } catch (const nlohmann::json::parse_error& e) {
-      std::cerr << "Error parsing JSON: " << e.what() << std::endl;
-      return EXIT_FAILURE;
-    }
+// cylinder surface 
+auto cylinderSurface = Acts::Surface::makeShared<Acts::CylinderSurface> (Acts::Transform3::Identity(), cylinderRadius, -cylinderLength / 2, cylinderLength / 2); 
 
-    // populate the alignmentParameters vector
-    for (const auto& alignmentData : jsonData) {
-      // create AlignmentParameters
-      AlignmentAlgorithm::AlignmentParameters alignmentPar;
 
-      alignmentParameters.push_back(alignmentPar);
-    }
+auto trackingVolume = Acts::TrackingVolume::create(
+    Acts::Transform3::Identity(), nullptr, nullptr, 
+    Acts::LayerArray::create(cylinderLayer), nullptr, {}, "Cylinder_testing"); 
 
-    jsonFile.close();
+
+return std::make_shared<const Acts::TrackingGeometry> (trackingVolume); 
+  }
+};
+
+ 
 
     int DetectorAlignment::runDetectorAlignment(
     int argc, char* argv[],

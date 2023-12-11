@@ -29,6 +29,9 @@ using AlignedDetElementGetter =
 /// @param desc The options description to add options to
 void addAlignmentOptions(ActsExamples::Options::Description& desc);
 
+// Function for applying misalignment shift to a specific surface
+//void applyMisalignmentShift(const Acts::GeometryIdentifier& geoId, Acts::Vector3 shift, Acts::Surface& surface);
+
 /// Main function for running alignment for specific detector.
 ///
 /// @param argc number of command line arguments
