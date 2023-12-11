@@ -6,9 +6,9 @@ We can run the track fitting algorithms, after we allocated all hits to single t
 It is not necessary, that all points of a track are present.
 
 Currently, we have implementations for three different fitters:
-* Kalman Filter
-* GSF
-* Global Chi-Square Fitter (GX2F) [wip]
+* Kalman Filter (KF)
+* Gaussian Sum Filter (GSF)
+* Global Chi-Square Fitter (GX2F) [in development]
 Even though all of them are least-squares fits, the concepts are quite different.
 Therefore, we should not expect identical results from all of them.
 
@@ -128,29 +128,36 @@ The {class}`Acts::AtlasBetheHeitlerApprox` is constructed with two parameterizat
 (gx2f_core)=
 ## Global Chi-Square Fitter (GX2F)
 
-In general the GX2F is a weighted least squares fit, minimising the $\chi^2$
+In general the *GX2F* is a weighted least squares fit, minimising the
+
 $$
 \chi^2 = \sum_i \frac{r_i^2}{\sigma_i^2}
 $$
+
 of a track.
 Here, $r_i$ are our residuals that we weight with $\sigma_i^2$, the covariance of the measurement (a detector property).
-Unlike the KF and the GSF, the GX2F looks at all measurements at the same time and iteratively minimises the starting parameters.
+Unlike the *KF* and the *GSF*, the *GX2F* looks at all measurements at the same time and iteratively minimises the starting parameters.
 
-With the GX2F we can obtain the final parameters $\vec\alpha_n$ from starting parameters $\vec\alpha_0$.
+With the *GX2F* we can obtain the final parameters $\vec\alpha_n$ from starting parameters $\vec\alpha_0$.
 We set the $\chi^2 = \chi^2(\vec\alpha)$ as a function of the track parameters, but the $\chi^2$-minimisation could be used for many other problems.
-Even in the context of track fitting, we are quite free on how to use the GX2F.
+Even in the context of track fitting, we are quite free on how to use the *GX2F*.
 Especially the residuals $r_i$ can have many interpretations.
 Most of the time we will see them as the distance between a measurement and our prediction.
 But we can also use scattering angles, energy loss, ... as residuals.
 
-This chapter on the GX2F guides through:
+This chapter on the *GX2F* guides through:
 - Mathematical description of the base algorithm
 - Mathematical description of the multiple scattering [wip]
 - (coming soon) Mathematical description of the energy loss
-- Implementation in ACTS[wip]
+- Implementation in ACTS [wip]
 - Pros/Cons [wip]
 
-### Mathematical description of the algorithm
+### Mathematical description of the base algorithm
+
+:::{note}
+The mathematical derivation is shortened at some places.
+There will be a publication including the full derivation coming soon.
+:::
 
 To begin with, there will be a short overview on the algorithm.
 Later in this section, each step is described in more detail.
@@ -158,42 +165,91 @@ Later in this section, each step is described in more detail.
 2. Update the initial parameters (iteratively)
 3. Calculate the covariance for the final parameters
 
+But before going into detail, we need to introduce a few symbols.
+As already mentioned, we have our track parameters $\vec\alpha$ that we want to fit.
+To fit them we, we need to calculate our residuals as
+
+$$
+r_i = m_i - f_i^m(\vec\alpha)
+$$
+
+where $f^m(\vec\alpha)$ is the projection of our propagation function $f(\vec\alpha)$ into the measurement dimension.
+Basically, if we have a pixel measurement we project onto the surface, discarding all angular information.
+This projection could be different for each measurement surface.
+
 #### 1. Minimise the $\chi^2$ function
 
 We expect the minimum of the $\chi^2$ function at
+
 $$
 \frac{\partial\chi^2(\vec\alpha)}{\partial\vec\alpha} = 0.
 $$
-To find the zero(s) of this function we could use any method but we will stick to a modified [Newton-Raphson method](https://en.wikipedia.org/wiki/Newton%27s_method),
+
+To find the zero(s) of this function we could use any method, but we will stick to a modified [Newton-Raphson method](https://en.wikipedia.org/wiki/Newton%27s_method),
 since it requires just another derivative of the $\chi^2$ function.
-
-TODO:
-
 
 #### 2. Update the initial parameters (iteratively)
 
 Since we are using the Newton-Raphson method to find the minimum of the $\chi^2$ function, we need to iterate.
+Each iteration (should) give as improved parameters $\vec\alpha$.
+While iterating we update a system, therefore we want to bring it in this form:
 
+$$
+\vec\alpha_{n+i} = \vec\alpha_n + \vec{\delta\alpha}_n.
+$$
+
+After some derivations of the $\chi^2$ function and the Newton-Raphson method, we find matrix equation to calculate $\vec{\delta\alpha}_n$:
+
+$$
+[a_{kl}] \vec{\delta\alpha}_n = \vec b
+$$
+
+with
+
+$$
+a_{kl} = \sum_{i=1}^N \frac{1}{\sigma_i^2} \frac{\partial f_i^m(\vec\alpha)}{\partial \alpha_k}\frac{\partial f_i^m(\vec\alpha)}{\partial \alpha_l}\\
+$$
+
+and
+
+$$
+b_k = \sum_{i=1}^N \frac{r_i}{\sigma_i^2} \frac{\partial f_i^m(\vec\alpha)}{\partial \alpha_k}.
+$$
+
+At first sight, these expression might seem intimidating and hard to compute.
+But having a closer look, we see, that those derivatives already exist in our framework.
+All derivatives are elements of the Jacobian
+
+$$
+\mathbf{J} = \begin{pmatrix}
+                 \cdot & \dots & \cdot\\
+                 \vdots & \frac{\partial f^m(\vec\alpha)}{\partial \alpha_k} & \vdots\\
+                 \cdot & \dots & \cdot
+             \end{pmatrix}.
+$$
+
+At this point we got all information to perform a parameter update and repeat until the parameters $\vec\alpha$ converge.
 
 #### 3. Calculate the covariance for the final parameters
 
 The calculation of the covariance of the final parameters is quite simple compared to the steps before:
+
 $$
 cov_{\vec\alpha} = [a_{kl}]^{-1}
 $$
-Since it only depends on the $[a_{kl}]$ of the last iteration, the GX2F does not need an initial estimate for the covariance.
 
+Since it only depends on the $[a_{kl}]$ of the last iteration, the *GX2F* does not need an initial estimate for the covariance.
 
 ### Mathematical description of the multiple scattering [wip]
 
 :::{todo}
-Write GX2F: Mathematical description of the multiple scattering
+Write *GX2F*: Mathematical description of the multiple scattering
 :::
 
 ### (coming soon) Mathematical description of the energy loss [wip]
 
 :::{todo}
-Write GX2F: Mathematical description of the energy loss
+Write *GX2F*: Mathematical description of the energy loss
 
 The development work on the energy loss has not finished yet.
 :::
@@ -202,12 +258,12 @@ The development work on the energy loss has not finished yet.
 ### Implementation in ACTS [wip]
 
 :::{todo}
-Write GX2F: Implementation in ACTS
+Write *GX2F*: Implementation in ACTS
 :::
 
 ### Pros/Cons [wip]
 :::{todo}
-Write GX2F: Pros/Cons
+Write *GX2F*: Pros/Cons
 :::
 
 [^billoir]: https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf
