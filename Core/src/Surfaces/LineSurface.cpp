@@ -207,7 +207,8 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
 
-  Vector2 local = *globalToLocal(gctx, position, direction);
+  Vector2 local = *globalToLocal(gctx, position, direction,
+                                 std::numeric_limits<double>::max());
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));

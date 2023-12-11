@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_bound) {
   FreeToPathMatrix freeToPathDerivatives =
       pSurface->freeToPathDerivative(tgContext, freeParameters);
   BoundToFreeMatrix boundToFreeJacobian =
-      pSurface->boundToFreeJacobian(tgContext, boundParameters);
+      pSurface->boundToFreeJacobian(tgContext, freeParameters);
 
   // (1) curvilinear/bound to bound transport jacobian
   // a) test without actual transport into the same surface
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   FreeMatrix noTransportJacobian = FreeMatrix::Identity();
 
   BoundToFreeMatrix boundToFreeJacobian =
-      pSurface->boundToFreeJacobian(tgContext, boundParameters);
+      pSurface->boundToFreeJacobian(tgContext, freeParameters);
 
   // (1) bound to free
   BoundToFreeMatrix b2fTransportJacobian = detail::boundToFreeTransportJacobian(
