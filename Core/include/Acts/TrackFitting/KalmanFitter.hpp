@@ -569,8 +569,10 @@ class KalmanFitter {
       // Reset navigation state
       // We do not need to specify a target here since this will be handled
       // separately in the KF actor
-      state.navigation = navigator.makeState(&st.referenceSurface(), nullptr);
-      navigator.initialize(state, stepper);
+      navigator.resetState(
+          state.navigation, state.geoContext, stepper.position(state.stepping),
+          state.options.direction * stepper.direction(state.stepping),
+          &st.referenceSurface(), nullptr);
 
       // Update material effects for last measurement state in reversed
       // direction
@@ -1046,8 +1048,10 @@ class KalmanFitter {
       // Reset the navigation state to enable propagation towards the target
       // surface
       // Set targetSurface to nullptr as it is handled manually in the actor
-      state.navigation = navigator.makeState(&surface, nullptr);
-      navigator.initialize(state, stepper);
+      navigator.resetState(
+          state.navigation, state.geoContext, stepper.position(state.stepping),
+          state.options.direction * stepper.direction(state.stepping), &surface,
+          nullptr);
 
       return Result<void>::success();
     }
