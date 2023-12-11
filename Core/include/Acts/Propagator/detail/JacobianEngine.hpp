@@ -114,20 +114,13 @@ BoundToFreeMatrix boundToFreeTransportJacobian(
 ///
 /// @param [in] geoContext The geometry Context
 /// @param [in] freeParameters Free, nominal parametrisation
-/// @param [in] directionToAnglesJacobian The relation jacobian from dir to
-///        angle
-/// @param [in] anglesToDirectionJacobian The relation jacobian from angle to
-///        dir
 /// @param [in] freeTransportJacobian Transport jacobian free to free
-/// @param [in] freeToPathDerivatives Path length derivatives for free
-///        parameters
+/// @param [in] freeToPathDerivatives Path length derivatives for free parameters
 /// @param [in] surface The target surface
 ///
 /// @return the 6x8 transport jacobian from bound to free
 FreeToBoundMatrix freeToBoundTransportJacobian(
     const GeometryContext& geoContext, const FreeVector& freeParameters,
-    const ActsMatrix<7, 8>& directionToAnglesJacobian,
-    const ActsMatrix<8, 7>& anglesToDirectionJacobian,
     const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives, const Surface& surface);
 
@@ -138,33 +131,13 @@ FreeToBoundMatrix freeToBoundTransportJacobian(
 /// approximated approach to treat the (assumed) small change.
 ///
 /// @param [in] direction Normalised direction vector
-/// @param [in] directionToAnglesJacobian The relation jacobian from dir to
-///        angle
-/// @param [in] anglesToDirectionJacobian The relation jacobian from angle to
-///        dir
 /// @param [in] freeTransportJacobian Transport jacobian free to free
 /// @param [in] freeToPathDerivatives Path length derivatives for free
 ///
 /// @return a 6x8 transport jacobian from curvilinear to free
 FreeToBoundMatrix freeToCurvilinearTransportJacobian(
-    const Vector3& direction, const ActsMatrix<7, 8>& directionToAnglesJacobian,
-    const ActsMatrix<8, 7>& anglesToDirectionJacobian,
-    const FreeMatrix& freeTransportJacobian,
+    const Vector3& direction, const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives);
-
-/// @brief This function calculates the free transfport jacobian from a free
-/// parameterisation.
-/// @param [in] directionToAnglesJacobian The relation jacobian from dir to
-///        angle
-/// @param [in] anglesToDirectionJacobian The relation jacobian from angle to
-///        dir
-/// @param [in] freeTransportJacobian Transport jacobian free to free
-///
-/// @return a 8x8 transport jacobian from free to free
-FreeMatrix freeToFreeTransportJacobian(
-    const ActsMatrix<7, 8>& directionToAnglesJacobian,
-    const ActsMatrix<8, 7>& anglesToDirectionJacobian,
-    const FreeMatrix& freeTransportJacobian);
 
 /// @brief This function reinitialises the state members required for the
 ///        covariance transport

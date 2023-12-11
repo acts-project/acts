@@ -90,16 +90,6 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_helper) {
   CHECK_CLOSE_REL(c2fJacobian(eFreeDir2, eBoundTheta), -sinTheta, 1e-5);
   // Q/P parameter: stays as is
   CHECK_CLOSE_REL(c2fJacobian(eFreeQOverP, eBoundQOverP), 1, 1e-5);
-
-  // (3) Test angle - directio relational jacobians
-  direction = Vector3(2., 3., 4.).normalized();
-
-  ActsMatrix<7, 8> d2aJacobian = detail::directionToAnglesJacobian(direction);
-  ActsMatrix<8, 7> a2dJacobian = detail::anglesToDirectionJacobian(direction);
-
-  auto roundTrip = a2dJacobian * d2aJacobian;
-  BOOST_CHECK_EQUAL(roundTrip.cols(), 8);
-  BOOST_CHECK_EQUAL(roundTrip.rows(), 8);
 }
 
 /// These tests do not test for a correct covariance transport but only for the
@@ -168,15 +158,8 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_bound) {
       b2bTransportJacobian * boundCovariance * b2bTransportJacobian.transpose();
   BOOST_CHECK(!boundCovariance.isApprox(newBoundCovariance));
 
-  // (2) free to bound transport jacobian
-  const ActsMatrix<7, 8>& directionToAnglesJacobian =
-      detail::directionToAnglesJacobian(direction);
-  const ActsMatrix<8, 7>& anglesToDirectionJacobian =
-      detail::anglesToDirectionJacobian(direction);
-
   FreeToBoundMatrix f2bTransportJacobian = detail::freeToBoundTransportJacobian(
-      tgContext, freeParameters, directionToAnglesJacobian,
-      anglesToDirectionJacobian, noTransportJacobian, freeToPathDerivatives,
+      tgContext, freeParameters, noTransportJacobian, freeToPathDerivatives,
       *pSurface);
 
   newBoundCovariance =
@@ -238,16 +221,9 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_curvilinear) {
       b2cTransportJacobian * boundCovariance * b2cTransportJacobian.transpose();
   BOOST_CHECK(!boundCovariance.isApprox(newBoundCovariance));
 
-  // (2) free to bound transport jacobian
-  const ActsMatrix<7, 8>& directionToAnglesJacobian =
-      detail::directionToAnglesJacobian(direction);
-  const ActsMatrix<8, 7>& anglesToDirectionJacobian =
-      detail::anglesToDirectionJacobian(direction);
-
   FreeToBoundMatrix f2cTransportJacobian =
-      detail::freeToCurvilinearTransportJacobian(
-          direction, directionToAnglesJacobian, anglesToDirectionJacobian,
-          noTransportJacobian, freeToPathDerivatives);
+      detail::freeToCurvilinearTransportJacobian(direction, noTransportJacobian,
+                                                 freeToPathDerivatives);
 
   newBoundCovariance =
       f2cTransportJacobian * freeCovariance * f2cTransportJacobian.transpose();

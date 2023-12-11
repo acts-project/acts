@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
@@ -139,46 +140,29 @@ BoundToFreeMatrix detail::boundToFreeTransportJacobian(
 
 FreeToBoundMatrix detail::freeToBoundTransportJacobian(
     const GeometryContext& geoContext, const FreeVector& freeParameters,
-    const ActsMatrix<7, 8>& directionToAnglesJacobian,
-    const ActsMatrix<8, 7>& anglesToDirectionJacobian,
     const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives, const Surface& surface) {
   // Calculate the jacobian from free to bound at the final surface
   FreeToBoundMatrix freeToBoundJacobian =
       surface.freeToBoundJacobian(geoContext, freeParameters);
-  // Calculate the form factors for the derivatives
-  auto transport = freeTransportJacobian * anglesToDirectionJacobian;
   FreeToPathMatrix sVec =
       surface.freeToPathDerivative(geoContext, freeParameters);
   // Return the jacobian to local
   return freeToBoundJacobian *
-         (transport + freeToPathDerivatives * sVec * transport) *
-         directionToAnglesJacobian;
+         (freeTransportJacobian +
+          freeToPathDerivatives * sVec * freeTransportJacobian);
 }
 
 FreeToBoundMatrix detail::freeToCurvilinearTransportJacobian(
-    const Vector3& direction, const ActsMatrix<7, 8>& directionToAnglesJacobian,
-    const ActsMatrix<8, 7>& anglesToDirectionJacobian,
-    const FreeMatrix& freeTransportJacobian,
+    const Vector3& direction, const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives) {
-  const ActsMatrix<8, 7> transport =
-      freeTransportJacobian * anglesToDirectionJacobian;
-  auto sfactors =
-      direction.transpose() * transport.template topLeftCorner<3, 7>();
+  auto sfactors = direction.transpose() *
+                  freeTransportJacobian.template topLeftCorner<3, 8>();
 
   // Since the jacobian to local needs to calculated for the bound parameters
   // here, it is convenient to do the same here
   return freeToCurvilinearJacobian(direction) *
-         (transport - freeToPathDerivatives * sfactors) *
-         directionToAnglesJacobian;
-}
-
-FreeMatrix detail::freeToFreeTransportJacobian(
-    const ActsMatrix<7, 8>& directionToAnglesJacobian,
-    const ActsMatrix<8, 7>& anglesToDirectionJacobian,
-    const FreeMatrix& freeTransportJacobian) {
-  return freeTransportJacobian * anglesToDirectionJacobian *
-         directionToAnglesJacobian;
+         (freeTransportJacobian - freeToPathDerivatives * sfactors);
 }
 
 Result<void> detail::reinitializeJacobians(
