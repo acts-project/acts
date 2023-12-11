@@ -110,7 +110,11 @@ addCKFTracks(
 
 addAmbiguityResolution(
     s,
-    AmbiguityResolutionConfig(maximumSharedHits=3),
+    AmbiguityResolutionConfig(
+        maximumSharedHits=3,
+        maximumIterations=10000,
+        nMeasurementsMin=6,
+    ),
     outputDirRoot=outputDir,
 )
 
