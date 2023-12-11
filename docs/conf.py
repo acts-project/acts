@@ -167,9 +167,10 @@ if tags.has("lazy_autodoc") or on_readthedocs:
     extensions += ["lazy_autodoc"]
 
 
-import white_papers
+if tags.has("white_papers"):
+    import white_papers
 
-white_papers.render()
+    white_papers.render()
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 
