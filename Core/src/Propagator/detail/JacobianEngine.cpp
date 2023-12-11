@@ -140,7 +140,7 @@ BoundToFreeMatrix detail::boundToFreeTransportJacobian(
     const FreeMatrix& freeTransportJacobian) {
   // Calculate the full jacobian, in this case simple a product of
   // jacobian(transport in free) * jacobian(bound to free)
-  return (freeTransportJacobian * boundToFreeJacobian);
+  return freeTransportJacobian * boundToFreeJacobian;
 }
 
 void detail::freeToBoundTransportJacobian(
@@ -175,9 +175,6 @@ Result<void> detail::reinitializeJacobians(
     const GeometryContext& geoContext, const Surface& surface,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters) {
-  using VectorHelpers::phi;
-  using VectorHelpers::theta;
-
   // Reset the jacobians
   freeTransportJacobian = FreeMatrix::Identity();
   freeToPathDerivatives = FreeVector::Zero();
