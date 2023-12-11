@@ -210,7 +210,7 @@ Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
 }
 
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
-    const GeometryContext& gctx, const BoundVector& boundParams) const {
+    const GeometryContext& gctx, const FreeVector& parameters) const {
   // Transform from bound to free parameters
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
