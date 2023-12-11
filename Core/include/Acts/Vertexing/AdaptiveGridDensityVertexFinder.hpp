@@ -49,11 +49,11 @@ class AdaptiveGridDensityVertexFinder {
 
   /// @brief The Config struct
   struct Config {
-    /// @param spatialBinExtent_ The spatial extent of a bin in mm
+    /// @param spatialBinExtent The spatial extent of a bin in mm
     Config(float spatialBinExtent = 0.1)
         : gridDensity(typename GridDensity::Config(spatialBinExtent)) {}
-    /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    /// @param temporalBinExtent_ The temporal extent of a bin in mm
+    /// @param spatialBinExtent The spatial extent of a bin in mm
+    /// @param temporalBinExtent The temporal extent of a bin in mm
     /// @note The speed of light is set to 1, hence the unit.
     Config(float spatialBinExtent, float temporalBinExtent)
         : gridDensity(typename GridDensity::Config(spatialBinExtent,
