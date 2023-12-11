@@ -126,88 +126,10 @@ The {class}`Acts::AtlasBetheHeitlerApprox` is constructed with two parameterizat
 * *R Frühwirth*, A Gaussian-mixture approximation of the Bethe–Heitler model of electron energy loss by bremsstrahlung, 2003, see [here](https://doi.org/10.1016/S0010-4655(03)00292-3)
 
 (gx2f_core)=
-## Global Chi-Square Fitter (GX2F)
-
-In general the GX2F is a weighted least squares fit, minimising the $\chi^2$
-$$
-\chi^2 = \sum_i \frac{r_i^2}{\sigma_i^2}
-$$
-of a track.
-Here, $r_i$ are our residuals that we weight with $\sigma_i^2$, the covariance of the measurement (a detector property).
-Unlike the KF and the GSF, the GX2F looks at all measurements at the same time and iteratively minimises the starting parameters.
-
-With the GX2F we can obtain the final parameters $\vec\alpha_n$ from starting parameters $\vec\alpha_0$.
-We set the $\chi^2 = \chi^2(\vec\alpha)$ as a function of the track parameters, but the $\chi^2$-minimisation could be used for many other problems.
-Even in the context of track fitting, we are quite free on how to use the GX2F.
-Especially the residuals $r_i$ can have many interpretations.
-Most of the time we will see them as the distance between a measurement and our prediction.
-But we can also use scattering angles, energy loss, ... as residuals.
-
-This chapter on the GX2F guides through:
-- Mathematical description of the base algorithm
-- Mathematical description of the multiple scattering [wip]
-- (coming soon) Mathematical description of the energy loss
-- Implementation in ACTS[wip]
-- Pros/Cons [wip]
-
-### Mathematical description of the algorithm
-
-To begin with, there will be a short overview on the algorithm.
-Later in this section, each step is described in more detail.
-1. Minimise the $\chi^2$ function
-2. Update the initial parameters (iteratively)
-3. Calculate the covariance for the final parameters
-
-#### 1. Minimise the $\chi^2$ function
-
-We expect the minimum of the $\chi^2$ function at
-$$
-\frac{\partial\chi^2(\vec\alpha)}{\partial\vec\alpha} = 0.
-$$
-To find the zero(s) of this function we could use any method but we will stick to a modified [Newton-Raphson method](https://en.wikipedia.org/wiki/Newton%27s_method),
-since it requires just another derivative of the $\chi^2$ function.
-
-TODO:
-
-
-#### 2. Update the initial parameters (iteratively)
-
-Since we are using the Newton-Raphson method to find the minimum of the $\chi^2$ function, we need to iterate.
-
-
-#### 3. Calculate the covariance for the final parameters
-
-The calculation of the covariance of the final parameters is quite simple compared to the steps before:
-$$
-cov_{\vec\alpha} = [a_{kl}]^{-1}
-$$
-Since it only depends on the $[a_{kl}]$ of the last iteration, the GX2F does not need an initial estimate for the covariance.
-
-
-### Mathematical description of the multiple scattering [wip]
+## Global Chi-Square Fitter (GX2F) [wip]
 
 :::{todo}
-Write GX2F: Mathematical description of the multiple scattering
-:::
-
-### (coming soon) Mathematical description of the energy loss [wip]
-
-:::{todo}
-Write GX2F: Mathematical description of the energy loss
-
-The development work on the energy loss has not finished yet.
-:::
-
-
-### Implementation in ACTS [wip]
-
-:::{todo}
-Write GX2F: Implementation in ACTS
-:::
-
-### Pros/Cons [wip]
-:::{todo}
-Write GX2F: Pros/Cons
+Write GX2F documentation
 :::
 
 [^billoir]: https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf
