@@ -953,7 +953,7 @@ implemented in ACTS.
 :::
 
 A vertex is a point within the detector, where an interaction or a 
-decay occured. We distinguish between primary vertices (from 
+decay occurred. We distinguish between primary vertices (from 
 collisions/interactions) and secondary vertices (from subsequent particle 
 decays), see {numref}`vertexing_illust`. Primary vertices are further divided 
 into hard-scatter and pile-up vertices. While primary vertices are located in 
