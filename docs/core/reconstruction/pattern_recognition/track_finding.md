@@ -9,7 +9,7 @@ Write CKF documentation
 
 Acts provides a Combinatorial Kalman Filter (CKF) implementation for track finding
 ( {class}`Acts::CombinatorialKalmanFilter`).  Its usage is demonstrated in the
-example algorithm {class}`ActsExamples::TrackFindingAlgorithm`.
+example algorithm ActsExamples::TrackFindingAlgorithm.
 
 The CKF requires as input a track seed i.e. an estimation of the track parameters,
 and a list of measurements with an association to the (sensitive) surfaces of the
@@ -58,8 +58,8 @@ Typically users have to provide the tracking geometry, an implementation of a
 e.g. {class}`Acts::EigenStepper` which is needed by the propagator, a
 SourceLinkAccessor and a measurement calibrator. An implementation of a source link
 accessor and the measurement calibrator can be found among the examples
-{struct}`ActsExamples::IndexSourceLinkAccessor`, and
-{class}`ActsExamples::MeasurementCalibratorAdapter`
+ActsExamples::IndexSourceLinkAccessor, and
+ActsExamples::MeasurementCalibratorAdapter
 
 
 % Functional approach
