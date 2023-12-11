@@ -15,11 +15,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Podio/PodioTrackStateContainer.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/MultiTrajectoryTestsCommon.hpp"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
@@ -34,7 +34,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using namespace Acts::Test;
+using namespace Acts::detail::Test;
 namespace bd = boost::unit_test::data;
 
 std::default_random_engine rng(31415);
