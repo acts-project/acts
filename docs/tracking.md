@@ -980,10 +980,10 @@ finding, we compute a rough estimate of the vertex position from a set of
 tracks. This first estimate can be calculated in many different ways, and is
 referred to as "vertex seed". Seeding algorithms differ for primary and 
 secondary vertexing. For primary vertex seeding, one option is to use a 
-histogram approach to cluster tracks on the $z$-axis [^phd:piacquadio:2010]. 
+histogram approach to cluster tracks on the $z$-axis[^phd:piacquadio:2010]. 
 This is based on the assumption that primary vertices will be close to the 
 beamline. Other approaches model tracks as multivariate Gaussian distributions 
-and identify regions of high track density as vertex seeds [^phd:schlag:2022]. 
+and identify regions of high track density as vertex seeds[^phd:schlag:2022]. 
 For secondary vertexing, seeds are formed from pairs of reconstructed tracks as 
 the constraint to the beamline does not apply.
 
@@ -992,17 +992,17 @@ selected as part of the vertex finding.
 
 Before the vertex fit, we linearize tracks in the vicinity of the vertex seed
 under assuming that they follow a helical (for constant magnetic field) or
-straight (for no magnetic field) trajectory [^phd:piacquadio:2010]. The vertex 
+straight (for no magnetic field) trajectory[^phd:piacquadio:2010]. The vertex 
 fitter then uses this linearization to improve the position of the vertex seed. 
 Furthermore, the track momenta are refitted under the assumption that the tracks 
-originate at the vertex [^billoirfitting:1992] [^Fruhwirth:1987fm]. 
+originate at the vertex [^Fruhwirth:1987fm],[^billoirfitting:1992] . 
 
 One issue with an approach like this is that the assignment of tracks to 
-vertices is ambiguous. To avoid this, one can perform a multi-vertex fit,
+vertices is ambiguous. As an improvement, one can perform a multi-vertex fit,
 where vertices compete for tracks. This means that one track can be assigned to 
 several vertices. Their contribution to each vertex fit is determined by a
 weight factor, which, in turn, depends on the tracks' compatibility with respect
-to all vertices [^fruwirth:amvfitting:2004].
+to all vertices[^fruwirth:amvfitting:2004].
 
 A flowchart of a multi-vertex reconstruction chain is shown in 
 {numref}`vertexing_flowchart`.
@@ -1011,8 +1011,8 @@ A flowchart of a multi-vertex reconstruction chain is shown in
 :::{figure} /figures/tracking/vertexing_flowchart.svg
 :width: 400px
 :align: center
-Simplified flowchart of a vertexing algorithm. From a set of seed tracks, we 
-first compute a rough estimate of the vertex position, i.e., the vertex seed. 
+Simplified flowchart of multi-vertex reconstruction. From a set of seed tracks, 
+we first compute a rough estimate of the vertex position, i.e., the vertex seed. 
 Then, we evaluate the compatibility of all tracks with the the latter. If a 
 track is deemed compatible, it is assigned a weight and attached to the vertex 
 seed. Next, the vertex seed and all previously found vertices that share tracks 
