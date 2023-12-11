@@ -960,11 +960,6 @@ into hard-scatter and pile-up vertices. While primary vertices are located in
 the luminous region, secondary vertices are slightly displaced due to the finite
  life time of the decaying particle. 
 
-Vertices play an important role in higher-level reconstruction algorithms. For 
-example, secondary vertices can help with the identification of particles: 
-During *$b$-tagging*, a displaced vertex located inside a jet is a sign for the 
-decay of a $b$-hadron.
-
 (vertexing_illust)=
 :::{figure} /figures/tracking/vertexing.svg
 :width: 400px
@@ -973,6 +968,11 @@ Illustration of a set of three vertices in a proton-proton
 collision. We distinguish between primary hard-scatter, primary pile-up, and 
 secondary vertices.
 :::
+
+Vertices play an important role in higher-level reconstruction algorithms. For 
+example, secondary vertices can help with the identification of particles: 
+During *$b$-tagging*, a displaced vertex located inside a jet is a sign for the 
+decay of a $b$-hadron.
 
 In analogy to track reconstruction, vertex reconstruction can be divided into 
 two stages: vertex finding and vertex fitting. As a first step of vertex 
@@ -995,7 +995,7 @@ under assuming that they follow a helical (for constant magnetic field) or
 straight (for no magnetic field) trajectory[^phd:piacquadio:2010]. The vertex 
 fitter then uses this linearization to improve the position of the vertex seed. 
 Furthermore, the track momenta are refitted under the assumption that the tracks 
-originate at the vertex [^Fruhwirth:1987fm],[^billoirfitting:1992] . 
+originate at the vertex[^Fruhwirth:1987fm] [^billoirfitting:1992] . 
 
 One issue with an approach like this is that the assignment of tracks to 
 vertices is ambiguous. As an improvement, one can perform a multi-vertex fit,
@@ -1009,7 +1009,7 @@ A flowchart of a multi-vertex reconstruction chain is shown in
 
 (vertexing_flowchart)=
 :::{figure} /figures/tracking/vertexing_flowchart.svg
-:width: 400px
+:width: 600px
 :align: center
 Simplified flowchart of multi-vertex reconstruction. From a set of seed tracks, 
 we first compute a rough estimate of the vertex position, i.e., the vertex seed. 
