@@ -9,7 +9,6 @@
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
@@ -20,11 +19,8 @@
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <algorithm>
-#include <cmath>
 #include <optional>
 #include <system_error>
-#include <type_traits>
 #include <utility>
 
 namespace Acts {
@@ -35,51 +31,6 @@ using Jacobian = BoundMatrix;
 using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 using CurvilinearState =
     std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-
-/// @brief Evaluate the projection Jacobian from free to curvilinear parameters
-/// without transport jacobian.
-///
-/// @param [in] direction Normalised direction vector
-///
-/// @return Projection Jacobian
-FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
-  // Optimized trigonometry on the propagation direction
-  const double x = direction(0);  // == cos(phi) * sin(theta)
-  const double y = direction(1);  // == sin(phi) * sin(theta)
-  const double z = direction(2);  // == cos(theta)
-  // prepare the jacobian to curvilinear
-  FreeToBoundMatrix jacToCurv = FreeToBoundMatrix::Zero();
-  if (std::abs(z) < s_curvilinearProjTolerance) {
-    auto [cosPhi, sinPhi, cosTheta, sinTheta] =
-        VectorHelpers::evaluateTrigonomics(direction);
-    // We normally operate in curvilinear coordinates defined as follows
-    jacToCurv(eBoundLoc0, eFreePos0) = -sinPhi;
-    jacToCurv(eBoundLoc0, eFreePos1) = cosPhi;
-    // jacToCurv(eBoundLoc0, eFreePos2) = 0;
-    jacToCurv(eBoundLoc1, eFreePos0) = -cosPhi * cosTheta;
-    jacToCurv(eBoundLoc1, eFreePos1) = -sinPhi * cosTheta;
-    jacToCurv(eBoundLoc1, eFreePos2) = sinTheta;
-  } else {
-    // Under grazing incidence to z, the above coordinate system definition
-    // becomes numerically unstable, and we need to switch to another one
-    const double c = std::hypot(y, z);
-    const double invC = 1. / c;
-    // jacToCurv(eBoundLoc0, eFreePos0) = 0;
-    jacToCurv(eBoundLoc0, eFreePos1) = -z * invC;
-    jacToCurv(eBoundLoc0, eFreePos2) = y * invC;
-    jacToCurv(eBoundLoc1, eFreePos0) = c;
-    jacToCurv(eBoundLoc1, eFreePos1) = -x * y * invC;
-    jacToCurv(eBoundLoc1, eFreePos2) = -x * z * invC;
-  }
-  // Time parameter
-  jacToCurv(eBoundTime, eFreeTime) = 1.;
-  // Directional and momentum parameters for curvilinear
-  jacToCurv.block<2, 3>(eBoundPhi, eFreeDir0) =
-      freeToSphericalDirectionJacobian(direction);
-  jacToCurv(eBoundQOverP, eFreeQOverP) = 1.;
-
-  return jacToCurv;
-}
 
 /// @brief This function calculates the full jacobian from local parameters at
 /// the start surface to bound parameters at the final surface

@@ -13,9 +13,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <algorithm>
 #include <iomanip>
 #include <utility>
 
