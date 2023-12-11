@@ -28,10 +28,13 @@ from acts.examples.reconstruction import (
 )
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
+import acts.examples.edm4hep
 
 parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetector")
 
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
+
+parser.add_argument("--skip", "-s", help="Number of events", type=int, default=0)
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
 )
@@ -75,156 +78,152 @@ rnd = acts.examples.RandomNumbers(seed=42)
 
 s = acts.examples.Sequencer(
     events=args["events"],
+    skip=args["skip"],
     numThreads=1,
     outputDir=str(outputDir),
 )
 
-if not ttbar:
-    addParticleGun(
-        s,
-        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
-        EtaConfig(-3.0, 3.0),
-        PhiConfig(0.0, 360.0 * u.degree),
-        ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
-        vtxGen=acts.examples.GaussianVertexGenerator(
-            mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns),
-        ),
-        multiplicity=200,
-        rnd=rnd,
+s.addReader(
+    acts.examples.edm4hep.EDM4hepReader(
+        #  inputPath="ddsim.edm4hep.root",
+        inputPath="ddsim_pi.edm4hep.root",
+        #  inputPath="ddsimDefault_singleMuon_ODD_100events_1GeV_muon_eta0_phi0_edm4hep.root",
+        outputParticles="MCParticles",
+        level=acts.logging.VERBOSE,
     )
-else:
-    addPythia8(
-        s,
-        hardProcess=["Top:qqbar2ttbar=on"],
-        npileup=50,
-        vtxGen=acts.examples.GaussianVertexGenerator(
-            mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
-        ),
-        rnd=rnd,
-        outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
-    )
-if g4_simulation:
-    if s.config.numThreads != 1:
-        raise ValueError("Geant 4 simulation does not support multi-threading")
+)
 
-    # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
-    # Older version of G4 might not work, this as has been tested on version `geant4-11-00-patch-03`
-    # For more detail see issue #1578
-    addGeant4(
-        s,
-        detector,
-        trackingGeometry,
-        field,
-        preSelectParticles=ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-            eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
-            removeNeutral=True,
-        ),
-        outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
-        rnd=rnd,
-        killVolume=trackingGeometry.worldVolume,
-        killAfterTime=25 * u.ns,
-    )
-else:
-    addFatras(
-        s,
-        trackingGeometry,
-        field,
-        preSelectParticles=ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-            eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
-            removeNeutral=True,
+print("GO")
+s.run()
+
+if False:
+    if not ttbar:
+        addParticleGun(
+            s,
+            MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+            EtaConfig(-3.0, 3.0),
+            PhiConfig(0.0, 360.0 * u.degree),
+            ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                ),
+            ),
+            multiplicity=200,
+            rnd=rnd,
         )
-        if ttbar
-        else ParticleSelectorConfig(),
-        enableInteractions=True,
+    else:
+        addPythia8(
+            s,
+            hardProcess=["Top:qqbar2ttbar=on"],
+            npileup=50,
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
+                ),
+            ),
+            rnd=rnd,
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+        )
+    if g4_simulation:
+        if s.config.numThreads != 1:
+            raise ValueError("Geant 4 simulation does not support multi-threading")
+
+        # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
+        # Older version of G4 might not work, this as has been tested on version `geant4-11-00-patch-03`
+        # For more detail see issue #1578
+        addGeant4(
+            s,
+            detector,
+            trackingGeometry,
+            field,
+            preSelectParticles=ParticleSelectorConfig(
+                rho=(0.0, 24 * u.mm),
+                absZ=(0.0, 1.0 * u.m),
+                eta=(-3.0, 3.0),
+                pt=(150 * u.MeV, None),
+                removeNeutral=True,
+            ),
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+            rnd=rnd,
+            killVolume=trackingGeometry.worldVolume,
+            killAfterTime=25 * u.ns,
+        )
+    else:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            preSelectParticles=ParticleSelectorConfig(
+                rho=(0.0, 24 * u.mm),
+                absZ=(0.0, 1.0 * u.m),
+                eta=(-3.0, 3.0),
+                pt=(150 * u.MeV, None),
+                removeNeutral=True,
+            )
+            if ttbar
+            else ParticleSelectorConfig(),
+            enableInteractions=True,
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+            rnd=rnd,
+        )
+
+    addDigitization(
+        s,
+        trackingGeometry,
+        field,
+        digiConfigFile=oddDigiConfig,
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
         rnd=rnd,
     )
 
-addDigitization(
-    s,
-    trackingGeometry,
-    field,
-    digiConfigFile=oddDigiConfig,
-    outputDirRoot=outputDir,
-    # outputDirCsv=outputDir,
-    rnd=rnd,
-)
-
-addSeeding(
-    s,
-    trackingGeometry,
-    field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-    if ttbar
-    else TruthSeedRanges(),
-    initialSigmas=[
-        1 * u.mm,
-        1 * u.mm,
-        1 * u.degree,
-        1 * u.degree,
-        0.1 / u.GeV,
-        1 * u.ns,
-    ],
-    initialVarInflation=[1.0] * 6,
-    geoSelectionConfigFile=oddSeedingSel,
-    outputDirRoot=outputDir,
-    # outputDirCsv=outputDir,
-)
-if seedFilter_ML:
-    addSeedFilterML(
+    addDigitization(
         s,
-        SeedFilterMLDBScanConfig(
-            epsilonDBScan=0.03, minPointsDBScan=2, minSeedScore=0.1
-        ),
-        onnxModelFile=os.path.dirname(__file__)
-        + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
+        trackingGeometry,
+        field,
+        digiConfigFile=oddDigiConfig,
+        outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
+        rnd=rnd,
+    )
+
+    addSeeding(
+        s,
+        trackingGeometry,
+        field,
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
+        if ttbar
+        else TruthSeedRanges(),
+        geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
     )
+    if seedFilter_ML:
+        addSeedFilterML(
+            s,
+            SeedFilterMLDBScanConfig(
+                epsilonDBScan=0.03, minPointsDBScan=2, minSeedScore=0.1
+            ),
+            onnxModelFile=os.path.dirname(__file__)
+            + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+        )
 
-addCKFTracks(
-    s,
-    trackingGeometry,
-    field,
-    TrackSelectorConfig(
-        pt=(1.0 * u.GeV if ttbar else 0.0, None),
-        absEta=(None, 3.0),
-        loc0=(-4.0 * u.mm, 4.0 * u.mm),
-        nMeasurementsMin=7,
-    ),
-    outputDirRoot=outputDir,
-    writeCovMat=True,
-    # outputDirCsv=outputDir,
-)
-
-if ambiguity_MLSolver:
-    addAmbiguityResolutionML(
+    addCKFTracks(
         s,
-        AmbiguityResolutionMLConfig(
-            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
-        ),
-        outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
-        onnxModelFile=os.path.dirname(__file__)
-        + "/MLAmbiguityResolution/duplicateClassifier.onnx",
-    )
-else:
-    addAmbiguityResolution(
-        s,
-        AmbiguityResolutionConfig(
-            maximumSharedHits=3,
-            maximumIterations=1000000,
+        trackingGeometry,
+        field,
+        TrackSelectorConfig(
+            pt=(1.0 * u.GeV if ttbar else 0.0, None),
+            absEta=(None, 3.0),
+            loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=7,
         ),
         outputDirRoot=outputDir,
@@ -232,11 +231,58 @@ else:
         # outputDirCsv=outputDir,
     )
 
-addVertexFitting(
-    s,
-    field,
-    vertexFinder=VertexFinder.Iterative,
-    outputDirRoot=outputDir,
-)
+    if ambiguity_MLSolver:
+        addAmbiguityResolutionML(
+            s,
+            trackingGeometry,
+            field,
+            TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
+            if ttbar
+            else TruthSeedRanges(),
+            geoSelectionConfigFile=oddSeedingSel,
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+        )
 
-s.run()
+        addCKFTracks(
+            s,
+            AmbiguityResolutionConfig(
+                maximumSharedHits=3,
+                maximumIterations=1000000,
+                nMeasurementsMin=7,
+            ),
+            outputDirRoot=outputDir,
+            writeCovMat=True,
+            # outputDirCsv=outputDir,
+        )
+
+        if ambiguity_MLSolver:
+            addAmbiguityResolutionML(
+                s,
+                AmbiguityResolutionMLConfig(
+                    maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+                ),
+                outputDirRoot=outputDir,
+                # outputDirCsv=outputDir,
+                onnxModelFile=os.path.dirname(__file__)
+                + "/MLAmbiguityResolution/duplicateClassifier.onnx",
+            )
+        else:
+            addAmbiguityResolution(
+                s,
+                AmbiguityResolutionConfig(
+                    maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+                ),
+                outputDirRoot=outputDir,
+                writeCovMat=True,
+                # outputDirCsv=outputDir,
+            )
+
+        addVertexFitting(
+            s,
+            field,
+            vertexFinder=VertexFinder.Iterative,
+            outputDirRoot=outputDir,
+        )
+
+        s.run()
