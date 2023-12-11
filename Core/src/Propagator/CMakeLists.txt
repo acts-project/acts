@@ -1,7 +1,6 @@
 target_sources(
   ActsCore
   PRIVATE
-    CovarianceTransport.cpp
     EigenStepperError.cpp
     MultiStepperError.cpp
     PropagatorError.cpp
