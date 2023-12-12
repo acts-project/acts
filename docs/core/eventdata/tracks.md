@@ -168,7 +168,7 @@ track state and a track backend, where a few examples are shown, and will be
 discussed below.
 
 (edm_track_api)=
-## Track EDM API
+## Track API
 
 :::{doxygenclass} Acts::TrackProxy
 :members:
@@ -177,11 +177,6 @@ discussed below.
 :::{doxygenclass} Acts::TrackContainer
 :members:
 :::
-
-### Dynamic columns
-
-(edm_track_accessors)=
-### Accessors
 
 (edm_track_iteration)=
 ### Track state iteration and forward linking
@@ -193,6 +188,20 @@ Add picture of track state sequence and stem and tip index
 You can manually add forward-linking to a track by calling
 {func}`Acts::TrackProxy::linkForward`.  {func}`Acts::TrackProxy::copyFrom` and
 {func}`Acts::TrackProxy::reverseTrackStates` will also implicitly
+
+
+## Track State API
+
+:::{doxygenclass} Acts::TrackStateProxy
+:members:
+:::
+
+### Component sharing
+
+## Dynamic columns
+
+(edm_track_accessors)=
+## Accessors
 
 
 ### How to create a track from scratch

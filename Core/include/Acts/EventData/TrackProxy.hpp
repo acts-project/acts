@@ -166,7 +166,7 @@ class TrackProxy {
   /// The track state container backend given as a template parameter
   using Trajectory = trajectory_t;
 
-  /// The index type of the track container, taken from the container backend
+  /// The index type of the track container
   using IndexType = typename Container::IndexType;
 
   /// Sentinel value that indicates an invalid index
@@ -213,6 +213,15 @@ class TrackProxy {
   friend class TrackProxy;
 #endif
 
+  /// @anchor track_proxy_construct
+  /// @name Constructors and assignment operator
+  ///
+  /// Public constructors and assignment operators for @c TrackProxy only
+  /// allow construction from another @c TrackProxy. You should generally
+  /// not have to construct @c TrackProxy manually.
+  ///
+  /// @{
+
   /// Copy constructor from a mutable track proxy. This is always valid, either
   /// mutable to mutable or mutable to const
   /// @param other the other track state proxy
@@ -228,6 +237,8 @@ class TrackProxy {
     return *this;
   }
 
+  /// @}
+
   /// Equality operator with another track proxy
   /// Checks the container identity and the track index
   /// @return True if the track proxies refer to the same track
@@ -237,12 +248,12 @@ class TrackProxy {
 
   /// @anchor track_proxy_props
   /// @name TrackProxy properties
-  /// Methods that give access to the properties of a track represented by @c
-  /// TrackProxy.
+  /// Methods that give access to the properties of a track represented by
+  /// @c TrackProxy.
   ///
   /// Many of these methods come in a @c const and a non-@c const version. The
-  /// non-@c const version is only available if you have an instance of @c
-  /// TrackProxy that does not have the @c read_only template parameter set to
+  /// non-@c const version is only available if you have an instance of
+  /// @c TrackProxy that does not have the @c read_only template parameter set to
   /// @c true, even if you hold it as an lvalue.
   ///
   /// @{
