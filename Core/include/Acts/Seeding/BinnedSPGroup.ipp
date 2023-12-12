@@ -232,6 +232,6 @@ inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::end() {
   std::array<std::size_t, 2ul> endline;
   endline[0ul] = m_bins[0ul].size();
-  endline[1ul] = m_bins[1ul].size(); 
+  endline[1ul] = m_bins[1ul].size();
   return {*this, std::move(endline), m_bins};
 }
