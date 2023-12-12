@@ -18,6 +18,7 @@
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBlueprint.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
@@ -320,11 +321,12 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
           Acts::getDefaultLogger("DD4hepLayerStructure",
                                  Acts::Logging::VERBOSE));
 
-  Acts::Experimental::DD4hepBlueprint::Config bpCfg{layerStructure};
-  Acts::Experimental::DD4hepBlueprint::Cache bpCache;
+  Acts::Experimental::DD4hepBlueprintFactory::Config bpCfg{layerStructure};
+  Acts::Experimental::DD4hepBlueprintFactory::Cache bpCache;
 
-  Acts::Experimental::DD4hepBlueprint bp(
-      bpCfg, Acts::getDefaultLogger("DD4hepBlueprint", Acts::Logging::VERBOSE));
+  Acts::Experimental::DD4hepBlueprintFactory bp(
+      bpCfg,
+      Acts::getDefaultLogger("DD4hepBlueprintFactory", Acts::Logging::VERBOSE));
   auto dd4hepBlueprint = bp.create(bpCache, tContext, world);
 
   // We should have 6 store entries now
@@ -380,16 +382,28 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
 
   Acts::Experimental::DD4hepDetectorStructure::Options dsOptions;
   dsOptions.logLevel = Acts::Logging::VERBOSE;
-  dsOptions.blueprintDot = true;
+  dsOptions.emulateToGraph = "cylindrical_detector_structure";
 
+  auto [detectorEm, detectorStoreEm] =
+      Acts::Experimental::DD4hepDetectorStructure(
+          Acts::getDefaultLogger("DD4hepDetectorStructure",
+                                 Acts::Logging::VERBOSE))
+          .construct(tContext, world, dsOptions);
+
+  // Detector construction : no detector constructed, as we have only
+  // emulated the grapth writing
+  BOOST_CHECK_EQUAL(detectorEm, nullptr);
+
+  // Now build in non-emulation mode
+  dsOptions.emulateToGraph = "";
   auto [detector, detectorStore] =
       Acts::Experimental::DD4hepDetectorStructure(
           Acts::getDefaultLogger("DD4hepDetectorStructure",
                                  Acts::Logging::VERBOSE))
           .construct(tContext, world, dsOptions);
 
-  // Detector construction check
   BOOST_REQUIRE_NE(detector, nullptr);
+
   // We should have 14 volumes
   // 1 : beampipe
   // 3 : negative endcap
