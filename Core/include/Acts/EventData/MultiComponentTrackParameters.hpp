@@ -262,7 +262,7 @@ class MultiComponentCurvilinearTrackParameters
       avgDir += w * dir;
     }
 
-    auto s = CurvilinearSurface(avgPos, avgDir).planeSurface();
+    auto s = Surface::makeShared<PlaneSurface>(avgPos, avgDir);
 
     std::vector<std::tuple<double, BoundVector, covariance_t>> bound;
     bound.reserve(curvi.size());

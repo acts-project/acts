@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -34,6 +35,11 @@ Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
     : GeometryObject(),
       RegularSurface(gctx, other, transform),
       m_bounds(other.m_bounds) {}
+
+Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
+    : RegularSurface(), m_bounds(nullptr) {
+  m_transform = CurvilinearSurface(center, normal).transform();
+}
 
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
                                  const Acts::DetectorElementBase& detelement)
