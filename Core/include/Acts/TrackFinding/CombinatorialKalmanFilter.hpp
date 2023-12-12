@@ -29,6 +29,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
@@ -332,6 +333,13 @@ class CombinatorialKalmanFilter {
 
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
+      // Initialize path limit reached aborter
+      if (result.pathLimitReached.internalLimit ==
+          std::numeric_limits<double>::max()) {
+        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
+                                    true, logger());
+      }
+
       if (!result.filtered &&
           targetReached(state, stepper, navigator, logger())) {
         // Bind the parameter to the target surface
@@ -442,12 +450,19 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      if (endOfWorldReached(state, stepper, navigator, logger()) ||
-          result.pathLimitReached(state, stepper, navigator, logger())) {
-        navigator.targetReached(state.navigation, false);
-        if (result.activeTips.empty()) {
-          // we are already done
-        } else if (result.activeTips.size() == 1) {
+      bool isEndOfWorldReached =
+          endOfWorldReached(state, stepper, navigator, logger());
+      bool isPathLimitReached =
+          result.pathLimitReached(state, stepper, navigator, logger());
+      if (isEndOfWorldReached || isPathLimitReached) {
+        if (isEndOfWorldReached) {
+          ACTS_VERBOSE("End of world reached");
+        }
+        if (isPathLimitReached) {
+          ACTS_VERBOSE("Path limit reached");
+        }
+
+        if (result.activeTips.size() <= 1) {
           // this was the last track - we are done
           ACTS_VERBOSE("Kalman filtering finds "
                        << result.lastTrackIndices.size() << " tracks");
@@ -1050,6 +1065,20 @@ class CombinatorialKalmanFilter {
     }
   };
 
+  /// Void path limit reached aborter to replace the default since the path
+  /// limit is handled in the CKF actor internally.
+  struct StubPathLimitReached {
+    double internalLimit{};
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    bool operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
+                    const navigator_t& /*unused*/,
+                    const Logger& /*unused*/) const {
+      return false;
+    }
+  };
+
  public:
   /// Combinatorial Kalman Filter implementation, calls the Kalman filter
   ///
@@ -1126,7 +1155,8 @@ class CombinatorialKalmanFilter {
     r.stateBuffer = stateBuffer;
     r.stateBuffer->clear();
 
-    auto result = m_propagator.template propagate(
+    auto result = m_propagator.template propagate<
+        start_parameters_t, decltype(propOptions), PathLimitReached>(
         initialParameters, propOptions, false, std::move(inputResult));
 
     if (!result.ok()) {

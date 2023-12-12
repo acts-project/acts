@@ -18,31 +18,44 @@ namespace Acts {
 namespace KalmanVertexTrackUpdater {
 
 /// KalmanVertexTrackUpdater
-///
+/// Based on
+/// Ref. (1):
+/// R. Frühwirth et al.
+/// Vertex reconstruction and track bundling at the lep collider using robust
+/// algorithms
+/// Computer Physics Comm.: 96 (1996) 189
+/// Chapter 2.1
+
 /// @brief Refits a single track with the knowledge of
 /// the vertex it has originated from
 ///
+/// @tparam input_track_t Track object type
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+///
 /// @param track Track to update
 /// @param vtx Vertex `track` belongs to
-template <typename input_track_t>
+template <typename input_track_t, unsigned int nDimVertex>
 void update(TrackAtVertex<input_track_t>& track,
             const Vertex<input_track_t>& vtx);
 
 namespace detail {
 
-/// @brief reates a new covariance matrix for the
-/// refitted track parameters
+/// @brief Calculates a covariance matrix for the refitted track parameters
 ///
-/// @param sMat Track ovariance in momentum space
-/// @param newTrkCov New track covariance matrixs
-/// @param vtxWeight Vertex weight matrix
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+///
+/// @param wMat W_k matrix from Ref. (1)
+/// @param crossCovVP Cross-covariance matrix between vertex position and track
+/// momentum
 /// @param vtxCov Vertex covariance matrix
-/// @param newTrkParams New track parameter
-inline BoundMatrix createFullTrackCovariance(const SquareMatrix3& sMat,
-                                             const ActsMatrix<4, 3>& newTrkCov,
-                                             const SquareMatrix4& vtxWeight,
-                                             const SquareMatrix4& vtxCov,
-                                             const BoundVector& newTrkParams);
+/// @param newTrkParams Refitted track parameters
+template <unsigned int nDimVertex>
+inline BoundMatrix calculateTrackCovariance(
+    const SquareMatrix3& wMat, const ActsMatrix<nDimVertex, 3>& crossCovVP,
+    const ActsSquareMatrix<nDimVertex>& vtxCov,
+    const BoundVector& newTrkParams);
 
 }  // Namespace detail
 
