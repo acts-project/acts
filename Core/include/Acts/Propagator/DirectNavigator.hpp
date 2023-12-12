@@ -286,7 +286,7 @@ class DirectNavigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  bool postStep(propagator_state_t& state, const stepper_t& stepper) const {
+  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state) << "post step");
 
     // Navigator post step always resets the current surface
@@ -330,8 +330,6 @@ class DirectNavigator {
                      << stepper.outputStepSize(state.stepping));
       }
     }
-
-    return true;
   }
 
  private:

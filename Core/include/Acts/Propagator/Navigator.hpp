@@ -434,14 +434,11 @@ class Navigator {
   ///
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
-  ///
-  /// @return Boolean to indicate if we continue with the actors and
-  ///         aborters or if we should target again.
   template <typename propagator_state_t, typename stepper_t>
-  bool postStep(propagator_state_t& state, const stepper_t& stepper) const {
+  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
-      return true;
+      return;
     }
 
     // Set the navigation stage
@@ -471,11 +468,11 @@ class Navigator {
                          state.navigation.startLayer) {
             // this was the start layer, switch to layer target next
             state.navigation.navigationStage = Stage::layerTarget;
-            return true;
+            return;
           } else {
             // no layers, go to boundary
             state.navigation.navigationStage = Stage::boundaryTarget;
-            return true;
+            return;
           }
         }
       }
@@ -491,7 +488,7 @@ class Navigator {
         if (resolveSurfaces(state, stepper)) {
           // Set the navigation stage back to surface handling
           state.navigation.navigationStage = Stage::surfaceTarget;
-          return true;
+          return;
         }
       } else {
         // Set the navigation stage to layer target
@@ -527,7 +524,7 @@ class Navigator {
               << "No more volume to progress to, stopping navigation.");
           // Navigation break & release navigation stepping
           state.navigation.navigationBreak = true;
-          return true;
+          return;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
           // Forget the boundary information
@@ -556,8 +553,6 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
     }
-
-    return true;
   }
 
  private:

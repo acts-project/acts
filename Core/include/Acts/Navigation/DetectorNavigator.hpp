@@ -243,7 +243,7 @@ class DetectorNavigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  bool postStep(propagator_state_t& state, const stepper_t& stepper) const {
+  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state)
                  << posInfo(state, stepper) << "Entering navigator::postStep.");
 
@@ -253,19 +253,19 @@ class DetectorNavigator {
     if (inactive()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper) << "navigator inactive");
-      return true;
+      return;
     }
 
     if (nState.currentDetector == nullptr) {
       initialize(state, stepper);
-      return true;
+      return;
     }
 
     if (nState.surfaceCandidateIndex == nState.surfaceCandidates.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper)
                    << "no surface candidates - waiting for target call");
-      return true;
+      return;
     }
 
     const Portal* nextPortal = nullptr;
@@ -283,7 +283,7 @@ class DetectorNavigator {
       ACTS_ERROR(volInfo(state)
                  << posInfo(state, stepper)
                  << "panic: not a surface not a portal - what is it?");
-      return true;
+      return;
     }
 
     // TODO not sure about the boundary check
@@ -320,8 +320,6 @@ class DetectorNavigator {
         ++nState.surfaceCandidateIndex;
       }
     }
-
-    return true;
   }
 
  private:
