@@ -166,8 +166,9 @@ class MultiTrajectory {
 
  public:
   using ConstTrackStateProxy =
-      TrackStateProxy<Derived, MeasurementSizeMax, true>;
-  using TrackStateProxy = TrackStateProxy<Derived, MeasurementSizeMax, false>;
+      Acts::TrackStateProxy<Derived, MeasurementSizeMax, true>;
+  using TrackStateProxy =
+      Acts::TrackStateProxy<Derived, MeasurementSizeMax, false>;
 
   using IndexType = typename TrackStateProxy::IndexType;
   static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
