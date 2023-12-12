@@ -255,12 +255,57 @@ class MultiTrajectory {
     return getTrackState(addTrackState(istate));
   }
 
+  /// @}
+
+  /// @anchor track_state_container_iteration
+  /// @name MultiTrajectory track state iteraion
+  /// @{
+
   /// Visit all previous states starting at a given endpoint.
   ///
   /// @param iendpoint  index of the last state
   /// @param callable   non-modifying functor to be called with each point
   template <typename F>
   void visitBackwards(IndexType iendpoint, F&& callable) const;
+
+  /// Apply a function to all previous states starting at a given endpoint.
+  ///
+  /// @param iendpoint  index of the last state
+  /// @param callable   modifying functor to be called with each point
+  ///
+  /// @warning If the trajectory contains multiple components with common
+  ///          points, this can have an impact on the other components.
+  /// @note Only available if the MultiTrajectory is not read-only
+  template <typename F, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void applyBackwards(IndexType iendpoint, F&& callable) {
+    static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
+                  "Callable needs to satisfy VisitorConcept");
+
+    if (iendpoint == MultiTrajectoryTraits::kInvalid) {
+      throw std::runtime_error(
+          "Cannot apply backwards with kInvalid as endpoint");
+    }
+
+    while (true) {
+      auto ts = getTrackState(iendpoint);
+      if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
+                                   bool>) {
+        bool proceed = callable(ts);
+        // this point has no parent and ends the trajectory, or a break was
+        // requested
+        if (!proceed || !ts.hasPrevious()) {
+          break;
+        }
+      } else {
+        callable(ts);
+        // this point has no parent and ends the trajectory
+        if (!ts.hasPrevious()) {
+          break;
+        }
+      }
+      iendpoint = ts.previous();
+    }
+  }
 
   /// Range for the track states from @p iendpoint to the trajectory start
   /// @param iendpoint Trajectory entry point to start from
@@ -324,45 +369,6 @@ class MultiTrajectory {
     }
 
     return range_t{getTrackState(istartpoint)};
-  }
-
-  /// Apply a function to all previous states starting at a given endpoint.
-  ///
-  /// @param iendpoint  index of the last state
-  /// @param callable   modifying functor to be called with each point
-  ///
-  /// @warning If the trajectory contains multiple components with common
-  ///          points, this can have an impact on the other components.
-  /// @note Only available if the MultiTrajectory is not read-only
-  template <typename F, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void applyBackwards(IndexType iendpoint, F&& callable) {
-    static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
-                  "Callable needs to satisfy VisitorConcept");
-
-    if (iendpoint == MultiTrajectoryTraits::kInvalid) {
-      throw std::runtime_error(
-          "Cannot apply backwards with kInvalid as endpoint");
-    }
-
-    while (true) {
-      auto ts = getTrackState(iendpoint);
-      if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
-                                   bool>) {
-        bool proceed = callable(ts);
-        // this point has no parent and ends the trajectory, or a break was
-        // requested
-        if (!proceed || !ts.hasPrevious()) {
-          break;
-        }
-      } else {
-        callable(ts);
-        // this point has no parent and ends the trajectory
-        if (!ts.hasPrevious()) {
-          break;
-        }
-      }
-      iendpoint = ts.previous();
-    }
   }
 
   /// @}
