@@ -34,7 +34,6 @@ VectorTrackContainerBase::VectorTrackContainerBase(
   for (const auto& [key, value] : other.m_dynamic) {
     m_dynamic.insert({key, value->clone()});
   }
-  m_dynamicKeys = other.m_dynamicKeys;
   assert(checkConsistency());
 }
 }  // namespace detail_vtc

@@ -14,6 +14,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -181,7 +182,6 @@ class VectorMultiTrajectoryBase {
     for (const auto& [key, value] : other.m_dynamic) {
       m_dynamic.insert({key, value->clone()});
     }
-    m_dynamicKeys = other.m_dynamicKeys;
   };
 
   VectorMultiTrajectoryBase(VectorMultiTrajectoryBase&& other) = default;
@@ -290,8 +290,8 @@ class VectorMultiTrajectoryBase {
   }
 
  public:
-  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
-    return m_dynamicKeys;
+  detail::DynamicKeyRange<detail::DynamicColumnBase> dynamicKeys_impl() const {
+    return {m_dynamic.begin(), m_dynamic.end()};
   }
 
   // END INTERFACE HELPER
@@ -333,7 +333,6 @@ class VectorMultiTrajectoryBase {
   // be handled in a smart way by moving but not sure.
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
-  std::vector<HashedString> m_dynamicKeys;
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
 };
@@ -455,7 +454,6 @@ class VectorMultiTrajectory final
   constexpr void addColumn_impl(const std::string& key) {
     Acts::HashedString hashedKey = hashString(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
-    m_dynamicKeys.push_back(hashedKey);
   }
 
   constexpr bool hasColumn_impl(HashedString key) const {

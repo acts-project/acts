@@ -14,6 +14,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
@@ -165,8 +166,8 @@ class VectorTrackContainerBase {
     return m_tipIndex.size();
   }
 
-  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
-    return m_dynamicKeys;
+  detail::DynamicKeyRange<detail::DynamicColumnBase> dynamicKeys_impl() const {
+    return {m_dynamic.begin(), m_dynamic.end()};
   }
 
   // END INTERFACE HELPER
@@ -187,7 +188,6 @@ class VectorTrackContainerBase {
 
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
-  std::vector<HashedString> m_dynamicKeys;
 };
 
 }  // namespace detail_vtc
@@ -227,7 +227,6 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   constexpr void addColumn_impl(const std::string& key) {
     Acts::HashedString hashedKey = hashString(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
-    m_dynamicKeys.push_back(hashedKey);
   }
 
   Parameters parameters(IndexType itrack) {

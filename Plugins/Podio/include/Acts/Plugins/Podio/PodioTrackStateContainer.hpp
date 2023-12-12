@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioTrackContainer.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
@@ -247,12 +248,19 @@ class ConstPodioTrackStateContainer final
 
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
+    std::vector<HashedString> dynamicKeys;
+    dynamicKeys.reserve(m_dynamic.size());
+    for (const auto& [key, col] : m_dynamic) {
+      dynamicKeys.push_back(key);
+    }
+
     podio_detail::recoverDynamicColumns(frame, trackStatesKey, m_dynamic,
-                                        m_dynamicKeys);
+                                        dynamicKeys);
   }
 
-  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
-    return m_dynamicKeys;
+  detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
+  dynamicKeys_impl() const {
+    return {m_dynamic.begin(), m_dynamic.end()};
   }
 
  private:
@@ -338,7 +346,6 @@ class ConstPodioTrackStateContainer final
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
-  std::vector<HashedString> m_dynamicKeys;
 };
 
 static_assert(IsReadOnlyMultiTrajectory<ConstPodioTrackStateContainer>::value,
@@ -573,7 +580,6 @@ class MutablePodioTrackStateContainer final
     HashedString hashedKey = hashString(key);
     m_dynamic.insert(
         {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
-    m_dynamicKeys.push_back(hashedKey);
   }
 
   void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
@@ -625,11 +631,11 @@ class MutablePodioTrackStateContainer final
     }
 
     m_dynamic.clear();
-    m_dynamicKeys.clear();
   }
 
-  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
-    return m_dynamicKeys;
+  detail::DynamicKeyRange<podio_detail::DynamicColumnBase> dynamicKeys_impl()
+      const {
+    return {m_dynamic.begin(), m_dynamic.end()};
   }
 
   void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
@@ -656,7 +662,6 @@ class MutablePodioTrackStateContainer final
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::DynamicColumnBase>>
       m_dynamic;
-  std::vector<HashedString> m_dynamicKeys;
 };
 
 static_assert(
@@ -679,7 +684,6 @@ ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
   for (const auto& [key, col] : other.m_dynamic) {
     m_dynamic.insert({key, col->asConst()});
   }
-  m_dynamicKeys = other.m_dynamicKeys;
 }
 
 }  // namespace Acts

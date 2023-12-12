@@ -31,6 +31,25 @@ using Covariance = Eigen::Map<BoundMatrix>;
 using ConstParameters = Eigen::Map<const BoundVector>;
 using ConstCovariance = Eigen::Map<const BoundMatrix>;
 
+template <typename T>
+concept ForwardIteratorLike = requires(T t, T t2) {
+  typename T::value_type;
+
+  { t++ } -> std::same_as<T&>;
+  { ++t } -> std::same_as<T&>;
+  { *t } -> std::convertible_to<typename T::value_type>;
+  { t == t2 } -> std::same_as<bool>;
+};
+
+template <typename R>
+concept RangeLike = requires(R r) {
+  {r.begin()};
+  {r.end()};
+
+  requires ForwardIteratorLike<decltype(r.begin())>;
+  requires ForwardIteratorLike<decltype(r.end())>;
+};
+
 }  // namespace detail
 
 template <typename T>
@@ -64,9 +83,8 @@ concept CommonMultiTrajectoryBackend = requires(const T& cv, HashedString key,
 
   { cv.hasColumn_impl(key) } -> std::same_as<bool>;
 
-  {
-    cv.dynamicKeys_impl()
-    } -> std::same_as<const std::vector<Acts::HashedString>&>;
+  {cv.dynamicKeys_impl()};
+  requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
 };
 
 template <typename T>
