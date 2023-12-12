@@ -216,6 +216,10 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   for (auto& iv : volumes) {
     ACTS_VERBOSE("- update portals of volume '" << iv->name() << "'.");
     for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
+      (void)dir;
+      (void)boundaries;
+      (void)binning;
+
       // Fill the map
       dShell[i] = p;
       ACTS_VERBOSE("-- update portal with index " << i);
