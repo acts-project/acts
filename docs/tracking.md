@@ -561,7 +561,6 @@ Additionally, merged clusters typically feature worse position resolution,
 which manifests itself since it negatively affects the final fit of the
 track.
 
-(tracking_sp_formation)=
 ## Spacepoint formation
 
 The basic input to most forms of pattern recognition algorithms for tracking
