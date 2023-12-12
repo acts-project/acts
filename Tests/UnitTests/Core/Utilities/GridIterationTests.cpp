@@ -15,6 +15,61 @@
 
 namespace Acts::Test {
 
+BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global_operators) {
+  const std::size_t nBins = 10ul;
+  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
+      std::make_tuple(std::move(xAxis)));
+
+  BOOST_CHECK_EQUAL(grid.size(true), nBins + 2ul);
+  
+  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridStart =
+      grid.begin();
+  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridStop =
+      grid.end();
+
+  BOOST_CHECK_EQUAL(gridStart == gridStop, false);
+  BOOST_CHECK_EQUAL(gridStart != gridStop, true);
+  BOOST_CHECK_EQUAL(gridStart < gridStop, true);
+  BOOST_CHECK_EQUAL(gridStart <= gridStop, true);
+  BOOST_CHECK_EQUAL(gridStart > gridStop, false);
+  BOOST_CHECK_EQUAL(gridStart >= gridStop, false);
+
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBins + 2ul);
+  auto itr = gridStart++;
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStart), 1ul);
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStop), nBins + 2ul);
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBins + 1ul);
+
+  itr = ++gridStart;
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStart), 0ul);
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBins);
+
+  itr = gridStart + std::distance(gridStart, gridStop);
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBins);
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStop), 0ul);
+  BOOST_CHECK_EQUAL(itr == gridStop, true);
+  
+  itr = gridStart - 1ul;
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBins);
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStop), nBins + 1ul);
+
+  gridStart += std::distance(gridStart, gridStop);
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), 0ul);
+  BOOST_CHECK_EQUAL(gridStart == gridStop, true);
+  
+  gridStart -= 3ul;
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), 3ul);
+  BOOST_CHECK_EQUAL(gridStart != gridStop, true);
+
+  [[maybe_unused]] double value = *gridStart;
+
+  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridDefault;
+  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridDummy(grid, 0ul);
+
+  BOOST_CHECK_EQUAL(gridDefault == gridDummy, false);
+}
+
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
   const std::size_t nBins = 10ul;
   Acts::detail::EquidistantAxis xAxis(0, 100, nBins);

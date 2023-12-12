@@ -475,7 +475,7 @@ class Grid final {
 
   local_iterator_t begin(
       const std::array<std::vector<std::size_t>, DIM>& navigator) const {
-    std::array<std::size_t, DIM> localBin;
+    std::array<std::size_t, DIM> localBin{};
     for (std::size_t i(0); i < DIM; ++i) {
       localBin[i] = 0ul;
     }
@@ -484,7 +484,7 @@ class Grid final {
 
   local_iterator_t end(
       const std::array<std::vector<std::size_t>, DIM>& navigator) const {
-    std::array<std::size_t, DIM> endline;
+    std::array<std::size_t, DIM> endline{};
     for (std::size_t i(0ul); i < DIM; ++i) {
       endline[i] = navigator[i].size();
     }
