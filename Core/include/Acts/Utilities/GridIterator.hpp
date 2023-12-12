@@ -27,6 +27,7 @@ class GridGlobalIterator {
   using pointer = value_type*;
   using reference = value_type&;
 
+  GridGlobalIterator() = default;
   GridGlobalIterator(Acts::Grid<T, Axes...>&& grid, std::size_t idx) = delete;
   GridGlobalIterator(const Acts::Grid<T, Axes...>& grid, std::size_t idx = 0ul);
 
@@ -77,6 +78,7 @@ class GridLocalIterator {
   using pointer = value_type*;
   using reference = value_type&;
 
+  GridLocalIterator() = default;
   GridLocalIterator(Acts::Grid<T, Axes...>&& grid,
                     std::array<std::size_t, DIM> indexes) = delete;
   GridLocalIterator(

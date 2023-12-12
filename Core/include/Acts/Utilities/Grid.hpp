@@ -484,7 +484,11 @@ class Grid final {
 
   local_iterator_t end(
       const std::array<std::vector<std::size_t>, DIM>& navigator) const {
-    return local_iterator_t(*this, numLocalBins(), navigator);
+    std::array<std::size_t, DIM> endline;
+    for (std::size_t i(0ul); i<DIM; ++i) {
+      endline[i] = navigator[i].size();
+    }
+    return local_iterator_t(*this, endline, navigator);
   }
 
  private:
