@@ -9,7 +9,8 @@
 namespace Acts {
 template <typename D, std::size_t M, bool ReadOnly>
 inline TrackStateProxy<D, M, ReadOnly>::TrackStateProxy(
-    detail_lt::ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory, IndexType istate)
+    detail_lt::ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory,
+    IndexType istate)
     : m_traj(&trajectory), m_istate(istate) {}
 
 template <typename D, std::size_t M, bool ReadOnly>
@@ -73,4 +74,4 @@ inline auto TrackStateProxy<D, M, ReadOnly>::getUncalibratedSourceLink() const
   return m_traj->getUncalibratedSourceLink(m_istate);
 }
 
-} // namespace Acts
+}  // namespace Acts
