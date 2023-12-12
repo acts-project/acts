@@ -167,7 +167,7 @@ class TrackStateProxy {
   /// Matrix representing the projector (measurement mapping function) for a
   /// measurement.  This is not a map type, but an actual matrix. This matrix
   /// is always \f$M \times M\f$, even if the local measurement dimension is lower.
-  /// The actualy \f$N\times M\f$ projector is given by the top \f$N\f$ rows.
+  /// The actual \f$N\times M\f$ projector is given by the top \f$N\f$ rows.
   using Projector = typename TrackStateTraits<M, ReadOnly>::Projector;
 
   /// Dynamic variant of the projector matrix

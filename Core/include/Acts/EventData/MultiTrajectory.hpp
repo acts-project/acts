@@ -260,7 +260,7 @@ class MultiTrajectory {
   /// @}
 
   /// @anchor track_state_container_iteration
-  /// @name MultiTrajectory track state iteraion
+  /// @name MultiTrajectory track state iteration
   /// @{
 
   /// Visit all previous states starting at a given endpoint.
