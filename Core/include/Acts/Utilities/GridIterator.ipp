@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2016-2023 CERN for the benefit of the Acts project
@@ -200,40 +201,6 @@ bool Acts::GridLocalIterator<T, Axes...>::operator!=(
 }
 
 template <typename T, class... Axes>
-bool Acts::GridLocalIterator<T, Axes...>::operator<(
-    const GridLocalIterator<T, Axes...>& other) const {
-  return m_grid.globalBinFromLocalBins(m_currentIndex) <
-         other.m_grid.globalBinFromLocalBins(m_currentIndex);
-}
-
-template <typename T, class... Axes>
-bool Acts::GridLocalIterator<T, Axes...>::operator>(
-    const GridLocalIterator<T, Axes...>& other) const {
-  return m_grid.globalBinFromLocalBins(m_currentIndex) >
-         other.m_grid.globalBinFromLocalBins(m_currentIndex);
-}
-
-template <typename T, class... Axes>
-bool Acts::GridLocalIterator<T, Axes...>::operator<=(
-    const GridLocalIterator<T, Axes...>& other) const {
-  return !(*this > other);
-}
-
-template <typename T, class... Axes>
-bool Acts::GridLocalIterator<T, Axes...>::operator>=(
-    const GridLocalIterator<T, Axes...>& other) const {
-  return !(*this < other);
-}
-
-template <typename T, class... Axes>
-typename Acts::GridLocalIterator<T, Axes...>::difference_type
-Acts::GridLocalIterator<T, Axes...>::operator-(
-    const Acts::GridLocalIterator<T, Axes...>& other) const {
-  return m_grid->globalBinFromLocalBins(m_currentIndex) -
-  	 other.m_grid->globalBinFromLocalBins(m_currentIndex);
-}
-
-template <typename T, class... Axes>
 const typename Acts::GridLocalIterator<T, Axes...>::value_type&
 Acts::GridLocalIterator<T, Axes...>::operator*() const {
   std::array<std::size_t, DIM> localPositionBin;
@@ -251,7 +218,7 @@ GridLocalIterator<T, Axes...>& GridLocalIterator<T, Axes...>::operator++() {
 
 template <typename T, class... Axes>
 GridLocalIterator<T, Axes...> GridLocalIterator<T, Axes...>::operator++(int) {
-  GridLocalIterator<T, Axes...> output(m_grid.ptr, m_currentIndex);
+  GridLocalIterator<T, Axes...> output(*this);
   this->operator++();
   return output;
 }
