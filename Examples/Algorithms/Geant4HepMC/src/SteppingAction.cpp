@@ -8,13 +8,24 @@
 
 #include "SteppingAction.hpp"
 
+#include <algorithm>
 #include <stdexcept>
+#include <utility>
 
+#include <G4DynamicParticle.hh>
+#include <G4Material.hh>
 #include <G4RunManager.hh>
 #include <G4Step.hh>
+#include <G4StepPoint.hh>
+#include <G4ThreeVector.hh>
+#include <G4Track.hh>
+#include <G4TrackStatus.hh>
 #include <G4VProcess.hh>
 #include <HepMC3/Attribute.h>
-#include <HepMC3/Units.h>
+#include <HepMC3/FourVector.h>
+#include <HepMC3/GenEvent.h>
+#include <HepMC3/GenParticle.h>
+#include <HepMC3/GenVertex.h>
 
 #include "EventAction.hpp"
 

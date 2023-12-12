@@ -8,21 +8,9 @@
 
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/detail/ReferenceGenerators.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
-#include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/Logger.hpp"
-
 #include <algorithm>
 #include <array>
-#include <set>
-#include <string>
+#include <cstdlib>
 #include <vector>
 
 std::vector<std::size_t> Acts::Experimental::detail::binSequence(

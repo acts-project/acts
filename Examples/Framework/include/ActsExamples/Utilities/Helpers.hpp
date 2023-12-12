@@ -8,16 +8,18 @@
 
 #pragma once
 
+#include <algorithm>
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "TEfficiency.h"
-#include "TFitResult.h"
-#include "TFitResultPtr.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TProfile.h"
-#include "TROOT.h"
+#include <TEfficiency.h>
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
+#include <TH1F.h>
+#include <TH2F.h>
+#include <TProfile.h>
+#include <TROOT.h>
 
 class TEfficiency;
 class TH1D;

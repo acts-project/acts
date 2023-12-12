@@ -12,6 +12,7 @@
 #include "Acts/Clusterization/Clusterization.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <memory>

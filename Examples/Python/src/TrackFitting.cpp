@@ -31,9 +31,6 @@ namespace Acts {
 class MagneticFieldProvider;
 class TrackingGeometry;
 }  // namespace Acts
-namespace ActsExamples {
-class IAlgorithm;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 

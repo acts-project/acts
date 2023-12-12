@@ -18,8 +18,8 @@
 #include <system_error>
 #include <utility>
 
+#include <CLHEP/Units/SystemOfUnits.h>
 #include <G4SystemOfUnits.hh>
-#include <G4UnitsTable.hh>
 
 ActsExamples::MagneticFieldWrapper::MagneticFieldWrapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)

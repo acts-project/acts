@@ -8,9 +8,16 @@
 
 #include "HelloWhiteBoardAlgorithm.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include "HelloData.hpp"
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::HelloWhiteBoardAlgorithm::HelloWhiteBoardAlgorithm(
     const Config& cfg, Acts::Logging::Level level)

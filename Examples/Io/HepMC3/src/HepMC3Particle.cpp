@@ -9,7 +9,17 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
 #include "Acts/Definitions/ParticleData.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+
+#include <optional>
+
+#include <HepMC3/FourVector.h>
+#include <HepMC3/GenParticle.h>
+#include <HepMC3/GenVertex.h>
+#include <HepMC3/GenVertex_fwd.h>
 
 ActsExamples::SimParticle ActsExamples::HepMC3Particle::particle(
     const HepMC3::ConstGenParticlePtr& particle) {

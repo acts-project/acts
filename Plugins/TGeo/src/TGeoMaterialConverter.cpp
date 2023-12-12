@@ -10,7 +10,9 @@
 
 #include "Acts/Material/Material.hpp"
 
-#include "TGeoMaterial.h"
+#include <cmath>
+
+#include <TGeoMaterial.h>
 
 Acts::MaterialSlab Acts::TGeoMaterialConverter::materialSlab(
     const TGeoMaterial& tgMaterial, ActsScalar thicknessIn,

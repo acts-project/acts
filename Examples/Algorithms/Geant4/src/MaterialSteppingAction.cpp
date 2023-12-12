@@ -21,7 +21,6 @@
 #include <utility>
 
 #include <G4Material.hh>
-#include <G4RunManager.hh>
 #include <G4Step.hh>
 
 ActsExamples::MaterialSteppingAction::MaterialSteppingAction(

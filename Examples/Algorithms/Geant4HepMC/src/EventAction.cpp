@@ -8,12 +8,20 @@
 
 #include "EventAction.hpp"
 
+#include <algorithm>
+#include <memory>
 #include <stdexcept>
+#include <utility>
 
-#include <G4Event.hh>
-#include <G4RunManager.hh>
+#include <HepMC3/GenParticle.h>
+#include <HepMC3/GenParticle_fwd.h>
+#include <HepMC3/GenVertex.h>
+#include <HepMC3/GenVertex_fwd.h>
+#include <HepMC3/Units.h>
 
 #include "SteppingAction.hpp"
+
+class G4Event;
 
 namespace {
 

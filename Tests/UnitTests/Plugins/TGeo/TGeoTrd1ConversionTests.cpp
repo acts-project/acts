@@ -26,16 +26,15 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
-#include "TGeoManager.h"
+#include <TGeoManager.h>
 #include "TGeoMaterial.h"
 #include "TGeoMatrix.h"
 #include "TGeoMedium.h"
-#include "TGeoTrd1.h"
 #include "TGeoVolume.h"
-#include "TView.h"
 
 namespace Acts {
 namespace Test {

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "G4VUserDetectorConstruction.hh"
+#include <G4VUserDetectorConstruction.hh>
 
 class G4LogicalVolume;
 class G4VPhysicalVolume;

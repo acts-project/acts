@@ -14,7 +14,7 @@
 #include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <memory>
 #include <optional>

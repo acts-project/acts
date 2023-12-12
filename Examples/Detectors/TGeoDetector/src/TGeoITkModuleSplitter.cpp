@@ -20,6 +20,8 @@
 #include <cstddef>
 #include <sstream>
 
+#include <TGeoNode.h>
+
 ActsExamples::TGeoITkModuleSplitter::TGeoITkModuleSplitter(
     const ActsExamples::TGeoITkModuleSplitter::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)

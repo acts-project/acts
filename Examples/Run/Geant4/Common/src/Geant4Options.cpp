@@ -8,8 +8,7 @@
 
 #include "ActsExamples/Options/Geant4Options.hpp"
 
-#include "ActsExamples/Utilities/Options.hpp"
-
+#include <cstddef>
 #include <string>
 
 #include <boost/program_options.hpp>

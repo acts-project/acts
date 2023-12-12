@@ -8,6 +8,15 @@
 
 #include "ActsExamples/Utilities/HitSelector.hpp"
 
+#include <algorithm>
+#include <iterator>
+#include <ostream>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
+
 ActsExamples::HitSelector::HitSelector(const Config& config,
                                        Acts::Logging::Level level)
     : IAlgorithm("HitSelector", level), m_cfg(config) {

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -15,11 +16,21 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <functional>
 #include <iostream>
+#include <iterator>
+#include <limits>
+#include <memory>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace Acts {
+class IAxis;
 
 using SurfaceVector = std::vector<const Surface*>;
 

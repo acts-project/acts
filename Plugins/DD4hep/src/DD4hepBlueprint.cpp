@@ -8,14 +8,26 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepBlueprint.hpp"
 
+#include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
+#include <cmath>
+#include <map>
 #include <sstream>
+#include <utility>
+
+namespace Acts {
+namespace Experimental {
+class IGeometryIdGenerator;
+class IInternalStructureBuilder;
+class IRootVolumeFinderBuilder;
+}  // namespace Experimental
+}  // namespace Acts
 
 Acts::Experimental::DD4hepBlueprint::DD4hepBlueprint(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)

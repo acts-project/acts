@@ -8,9 +8,17 @@
 
 #include "ActsExamples/Detector/GenericDetectorWithOptions.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Options/GenericDetectorOptions.hpp"
 
+#include <cstddef>
+#include <string>
+
 #include <boost/program_options.hpp>
+
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
 
 namespace ActsExamples {
 

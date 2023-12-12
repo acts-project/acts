@@ -8,9 +8,13 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include <ostream>
+#include <stdexcept>
+
+#include <HepMC3/ReaderAscii.h>
 #include <HepMC3/Units.h>
 
 bool ActsExamples::HepMC3AsciiReader::readEvent(HepMC3::ReaderAscii& reader,

@@ -11,7 +11,9 @@
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <memory>
 #include <vector>

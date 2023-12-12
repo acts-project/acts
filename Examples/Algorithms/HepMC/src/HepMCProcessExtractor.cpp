@@ -8,14 +8,29 @@
 
 #include "ActsExamples/HepMC/HepMCProcessExtractor.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
+#include <HepMC3/FourVector.h>
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
+#include <HepMC3/GenParticle_fwd.h>
 #include <HepMC3/GenVertex.h>
+#include <HepMC3/GenVertex_fwd.h>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 namespace {
 

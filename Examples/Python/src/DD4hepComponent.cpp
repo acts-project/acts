@@ -23,6 +23,7 @@
 
 namespace Acts {
 class IMaterialDecorator;
+class MagneticFieldProvider;
 }  // namespace Acts
 
 namespace py = pybind11;

@@ -10,10 +10,13 @@
 
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+
+#include <nlohmann/json.hpp>
 
 namespace Acts {
 

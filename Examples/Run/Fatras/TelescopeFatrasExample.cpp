@@ -9,6 +9,8 @@
 #include "ActsExamples/Detector/TelescopeDetectorWithOptions.hpp"
 #include "ActsExamples/Fatras/FatrasCommon.hpp"
 
+#include <memory>
+
 int main(int argc, char* argv[]) {
   return runFatras(
       argc, argv,

@@ -30,6 +30,7 @@
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -45,7 +46,8 @@
 #include <cmath>
 #include <cstddef>
 #include <map>
-#include <stdexcept>
+
+#include <nlohmann/json.hpp>
 
 namespace Acts {
 // specialisations of decoration helper function

@@ -8,21 +8,23 @@
 
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/DigitizationOptions.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
-#include <fstream>
+#include <cstdlib>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/program_options.hpp>
-
-#include "DigitizationInput.hpp"
 
 using namespace ActsExamples;
 

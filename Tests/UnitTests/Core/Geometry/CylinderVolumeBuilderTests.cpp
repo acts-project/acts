@@ -11,6 +11,7 @@
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 
+#include <random>
 #include <utility>
 
 namespace bdata = boost::unit_test::data;

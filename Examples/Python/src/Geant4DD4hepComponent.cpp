@@ -11,11 +11,15 @@
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <G4VUserDetectorConstruction.hh>
+#include <memory>
+#include <vector>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-class G4VUserDetectorConstruction;
+namespace ActsExamples {
+class DetectorConstructionFactory;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 

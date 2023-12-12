@@ -24,6 +24,7 @@
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
+class BoundaryCheck;
 
 /// @brief base class for convex polygon bounds
 ///

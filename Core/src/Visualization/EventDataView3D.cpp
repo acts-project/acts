@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <cmath>
 #include <utility>

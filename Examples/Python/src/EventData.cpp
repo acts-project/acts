@@ -6,8 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+
+#include <sstream>
+#include <tuple>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

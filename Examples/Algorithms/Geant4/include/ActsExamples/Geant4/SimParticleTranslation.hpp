@@ -15,12 +15,14 @@
 #include <optional>
 #include <string>
 
+#include <G4Types.hh>
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <globals.hh>
 
 class G4Event;
 
 namespace ActsExamples {
+struct EventStore;
 
 /// @class SimParticleTranslation
 ///

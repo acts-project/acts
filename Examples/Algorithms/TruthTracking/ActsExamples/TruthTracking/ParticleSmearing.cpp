@@ -10,10 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/GenericParticleHypothesis.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -25,9 +26,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <ostream>
 #include <random>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 
 ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,

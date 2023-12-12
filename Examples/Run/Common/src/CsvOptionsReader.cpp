@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Options/CsvOptionsReader.hpp"
 
+#include <string>
+
 #include <boost/program_options.hpp>
 
 ActsExamples::CsvParticleReader::Config

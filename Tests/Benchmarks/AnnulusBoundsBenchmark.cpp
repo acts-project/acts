@@ -7,17 +7,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
-#include <chrono>
-#include <fstream>
-#include <functional>
+#include <cstddef>
 #include <iostream>
 #include <random>
+#include <string>
+#include <tuple>
 #include <vector>
 
 using namespace Acts;

@@ -11,10 +11,14 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <G4UserEventAction.hh>
+#include <HepMC3/Attribute.h>
 #include <HepMC3/GenEvent.h>
 #include <globals.hh>
+
+class G4Event;
 
 namespace ActsExamples::Geant4::HepMC3 {
 

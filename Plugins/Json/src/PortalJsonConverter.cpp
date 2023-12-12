@@ -8,26 +8,41 @@
 
 #include "Acts/Plugins/Json/PortalJsonConverter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
 #include <iterator>
+#include <limits>
+#include <map>
 #include <memory>
+#include <stdexcept>
+#include <utility>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 namespace {
 

@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
-#include <utility>
 
 #include <DD4hep/Detector.h>
 #include <DD4hep/Handle.h>

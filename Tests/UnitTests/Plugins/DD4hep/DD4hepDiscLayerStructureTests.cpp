@@ -8,23 +8,34 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cstddef>
 #include <fstream>
+#include <memory>
 #include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
-#include <DD4hep/DetElement.h>
-#include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Detector.h>
-#include <XML/Utilities.h>
 #include <XMLFragments.hpp>
 
 #include "DD4hepTestsHelper.hpp"
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 Acts::GeometryContext tContext;
 Acts::Test::CylindricalTrackingGeometry cGeometry =

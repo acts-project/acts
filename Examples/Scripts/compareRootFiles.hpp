@@ -14,8 +14,8 @@
 #include <sstream>
 #include <vector>
 
-#include "TDictionary.h"
-#include "TTreeReaderValue.h"
+#include <TDictionary.h>
+#include <TTreeReaderValue.h>
 
 // Pairs of elements of the same type
 template <typename T>

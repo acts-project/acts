@@ -8,6 +8,8 @@
 
 #include "Acts/Surfaces/LineBounds.hpp"
 
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+
 #include <iomanip>
 #include <iostream>
 

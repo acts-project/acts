@@ -8,6 +8,9 @@
 
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
 
+#include <algorithm>
+#include <ostream>
+
 namespace Acts {
 
 namespace {

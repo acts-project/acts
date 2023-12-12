@@ -6,16 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
@@ -24,11 +26,14 @@
 #include "ActsExamples/Options/CsvOptionsWriter.hpp"
 #include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <fstream>
+#include <cstdlib>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/program_options.hpp>
 

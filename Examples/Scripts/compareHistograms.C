@@ -6,26 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "TFile.h"
-#include "TH1F.h"
-#include "TROOT.h"
-#include "TTree.h"
+#include <TFile.h>
+#include <TH1F.h>
+#include <TROOT.h>
+#include <TTree.h>
 
 // This root script draws the histograms with the name "hist1Name" and the name
 // "hist2Name" (and possibly also a third histogram with name "hist3Name") from
 // the input file into the same canvas with the colors given
 
-void
-compareHistograms(std::string inFile1,
-                  std::string hist1Name,
-                  int         col1,
-                  std::string inFile2,
-                  std::string hist2Name,
-                  int         col2,
-                  std::string inFile3   = "",
-                  std::string hist3Name = "",
-                  int         col3      = 0)
-{
+void compareHistograms(std::string inFile1, std::string hist1Name, int col1,
+                       std::string inFile2, std::string hist2Name, int col2,
+                       std::string inFile3 = "", std::string hist3Name = "",
+                       int col3 = 0) {
   std::cout << "Opening file: " << inFile1 << std::endl;
   TFile inputFile1(inFile1.c_str());
   std::cout << "Opening file: " << inFile2 << std::endl;

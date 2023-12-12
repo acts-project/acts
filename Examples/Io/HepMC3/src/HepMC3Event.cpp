@@ -8,8 +8,24 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Event.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <algorithm>
+#include <iostream>
+
+#include <HepMC3/FourVector.h>
+#include <HepMC3/GenEvent.h>
+#include <HepMC3/GenParticle.h>
+#include <HepMC3/GenParticle_fwd.h>
+#include <HepMC3/GenVertex.h>
+#include <HepMC3/GenVertex_fwd.h>
+#include <HepMC3/Units.h>
 
 namespace {
 /// @brief Converts an SimParticle into HepMC3::GenParticle

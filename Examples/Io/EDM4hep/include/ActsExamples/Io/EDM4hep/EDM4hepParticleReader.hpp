@@ -12,14 +12,18 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include <edm4hep/MCParticleCollection.h>
 #include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Read particles from EDM4hep.
 ///

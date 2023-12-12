@@ -19,6 +19,8 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/Digitization/Segmentizer.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
 #include <algorithm>
 #include <array>
@@ -27,11 +29,16 @@
 #include <iterator>
 #include <list>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
+
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
     const ActsExamples::CsvMeasurementReader::Config& config,

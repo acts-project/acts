@@ -8,7 +8,12 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+
+#include <stdexcept>
+
+#include <HepMC3/WriterAscii.h>
 
 ActsExamples::HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
                                                    Acts::Logging::Level level)

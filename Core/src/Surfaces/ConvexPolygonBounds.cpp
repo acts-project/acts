@@ -8,6 +8,9 @@
 
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+
 #include <algorithm>
 #include <ostream>
 

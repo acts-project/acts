@@ -8,20 +8,28 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <fstream>
 #include <map>
+#include <memory>
 #include <mutex>
+#include <string>
 
 // Convenience shorthand
 
 namespace Acts {
+class ISurfaceMaterial;
+class IVolumeMaterial;
+class Surface;
+class TrackingVolume;
 
 /// @brief Material decorator from Json format
 ///

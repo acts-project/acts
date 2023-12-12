@@ -16,20 +16,11 @@
 
 #include "ActsExamples/Geant4/Geant4Common.hpp"
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
-#include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
-#include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
-#include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
-#include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
-#include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
-#include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
-#include "ActsExamples/Geant4/SimParticleTranslation.hpp"
+#include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
@@ -37,12 +28,12 @@
 #include "ActsExamples/Simulation/CommonSimulation.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
-#include <FTFP_BERT.hh>
-#include <G4RunManager.hh>
-#include <G4VUserDetectorConstruction.hh>
 #include <boost/program_options.hpp>
 
 namespace ActsExamples {

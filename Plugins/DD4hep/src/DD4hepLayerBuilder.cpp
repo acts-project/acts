@@ -25,9 +25,9 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Range1D.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <array>
@@ -39,15 +39,17 @@
 #include <stdexcept>
 #include <utility>
 
+#include <DD4hep/Alignments.h>
+#include <DD4hep/DetElement.h>
+#include <DD4hep/Volumes.h>
+#include <DDRec/DetectorData.h>
+#include <RtypesCore.h>
+#include <TGeoMatrix.h>
+#include <TGeoNode.h>
+#include <TGeoShape.h>
+#include <TGeoTube.h>
+#include <TGeoVolume.h>
 #include <boost/algorithm/string.hpp>
-
-#include "DD4hep/Alignments.h"
-#include "DD4hep/DetElement.h"
-#include "DD4hep/Volumes.h"
-#include "DDRec/DetectorData.h"
-#include "RtypesCore.h"
-#include "TGeoManager.h"
-#include "TGeoMatrix.h"
 
 Acts::DD4hepLayerBuilder::DD4hepLayerBuilder(
     const Acts::DD4hepLayerBuilder::Config& config,

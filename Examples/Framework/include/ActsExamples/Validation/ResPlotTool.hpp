@@ -21,6 +21,7 @@
 
 class TH1F;
 class TH2F;
+
 namespace ActsFatras {
 class Particle;
 }  // namespace ActsFatras

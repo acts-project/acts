@@ -27,12 +27,16 @@
 #include <cstddef>
 #include <functional>
 #include <iosfwd>
+#include <iterator>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 void Acts::to_json(nlohmann::json& j, const Material& t) {
   if (!t) {

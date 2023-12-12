@@ -8,10 +8,11 @@
 
 #include "ActsExamples/Options/CsvOptionsWriter.hpp"
 
+#include <cstddef>
 #include <limits>
+#include <string>
 
 #include <boost/program_options.hpp>
-#include <dfe/dfe_io_dsv.hpp>
 
 void ActsExamples::Options::addCsvWriterOptions(
     ActsExamples::Options::Description& desc) {

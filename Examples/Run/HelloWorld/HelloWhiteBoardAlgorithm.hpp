@@ -8,15 +8,18 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
+#include <string>
 
 #include "HelloData.hpp"
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Example algorithm that reads/writes data from/to the event store.
 class HelloWhiteBoardAlgorithm : public ActsExamples::IAlgorithm {

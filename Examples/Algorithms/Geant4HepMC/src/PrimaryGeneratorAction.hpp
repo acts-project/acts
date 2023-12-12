@@ -15,11 +15,13 @@
 #include <G4ParticleTable.hh>
 #include <G4SystemOfUnits.hh>
 #include <G4ThreeVector.hh>
+#include <G4Types.hh>
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <globals.hh>
 
 class G4ParticleGun;
 class G4Event;
+class G4ParticleTable;
 
 namespace ActsExamples {
 

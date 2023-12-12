@@ -8,16 +8,25 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/WhiteBoardUtilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 
-#include <fstream>
-#include <iostream>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <random>
+#include <string>
+#include <tuple>
+#include <utility>
 
 using namespace ActsExamples;
 using namespace Acts::Test;

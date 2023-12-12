@@ -11,10 +11,17 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <cstddef>
+#include <memory>
 #include <random>
+#include <string>
+#include <tuple>
+#include <variant>
 
 int main(int argc, char* argv[]) {
   using namespace Acts;

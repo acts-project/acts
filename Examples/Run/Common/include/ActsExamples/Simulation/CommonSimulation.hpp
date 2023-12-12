@@ -12,7 +12,12 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
+#include <memory>
+
 namespace ActsExamples {
+class RandomNumbers;
+class Sequencer;
+
 namespace Simulation {
 
 /// Collection names

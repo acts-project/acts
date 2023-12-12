@@ -10,7 +10,6 @@
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 
 #include <cmath>
-#include <sstream>
 
 namespace Acts {
 

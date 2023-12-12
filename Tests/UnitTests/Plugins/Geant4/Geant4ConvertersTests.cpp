@@ -27,16 +27,15 @@
 #include <stdexcept>
 #include <tuple>
 
-#include "G4Box.hh"
-#include "G4LogicalVolume.hh"
-#include "G4Material.hh"
-#include "G4PVPlacement.hh"
-#include "G4RotationMatrix.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4ThreeVector.hh"
-#include "G4Trd.hh"
-#include "G4Tubs.hh"
-#include "G4VPhysicalVolume.hh"
+#include <G4Box.hh>
+#include <G4LogicalVolume.hh>
+#include <G4Material.hh>
+#include <G4PVPlacement.hh>
+#include <G4RotationMatrix.hh>
+#include <G4SystemOfUnits.hh>
+#include <G4ThreeVector.hh>
+#include <G4Trd.hh>
+#include <G4Tubs.hh>
 
 Acts::ActsScalar rho = 1.2345;
 G4Material* g4Material = new G4Material("Material", 6., 12., rho);

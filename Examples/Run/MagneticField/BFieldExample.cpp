@@ -6,16 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Framework/Sequencer.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <array>
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+#include <optional>
 #include <string>
 
 #include <boost/program_options.hpp>
+
+namespace Acts {
+class InterpolatedMagneticField;
+}  // namespace Acts
 
 namespace po = boost::program_options;
 

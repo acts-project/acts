@@ -17,6 +17,7 @@
 #include <DD4hep/Fields.h>
 #include <DD4hep/Handle.h>
 #include <DD4hep/Objects.h>
+#include <Math/GenVector/DisplacementVector3D.h>
 
 namespace Acts {
 

@@ -13,6 +13,7 @@
 #include <memory>
 
 #include <G4MagneticField.hh>
+#include <G4Types.hh>
 
 namespace Acts {
 class MagneticFieldProvider;

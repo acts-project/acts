@@ -14,8 +14,11 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace ActsExamples {
 struct AlgorithmContext;

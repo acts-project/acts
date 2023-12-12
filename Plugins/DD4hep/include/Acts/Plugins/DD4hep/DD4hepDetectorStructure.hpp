@@ -25,6 +25,7 @@ class DetElement;
 namespace Acts {
 
 namespace Experimental {
+class Detector;
 
 /// @brief This class allows to generate layer structure builders for dd4hep sub detectors
 /// It performs an intermediate step by taking dd4hep::DetElemnent objects that

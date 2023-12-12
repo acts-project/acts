@@ -8,10 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <fstream>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Experimental {

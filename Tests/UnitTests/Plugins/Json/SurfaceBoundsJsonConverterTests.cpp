@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <vector>

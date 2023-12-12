@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-#include <algorithm>
 #include <utility>
 #include <vector>
 

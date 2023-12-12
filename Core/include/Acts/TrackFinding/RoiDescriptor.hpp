@@ -8,14 +8,14 @@
 
 #pragma once
 
+#include <stdint.h>
 // TODO: update to C++17 style
 #include <atomic>
+#include <cstddef>
 #include <iostream>
 #include <map>
 #include <ostream>
 #include <vector>
-
-#include <stdint.h>
 
 namespace Acts {
 

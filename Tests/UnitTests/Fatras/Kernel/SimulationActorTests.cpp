@@ -26,6 +26,7 @@
 #include "ActsFatras/Kernel/detail/SimulationActor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>

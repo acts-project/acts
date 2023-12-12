@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
@@ -16,6 +18,7 @@
 #include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write particles to EDM4hep
 ///

@@ -15,6 +15,7 @@
 #include <DD4hep/Alignments.h>
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Volumes.h>
+#include <TGeoMatrix.h>
 
 namespace Acts {
 class ISurfaceMaterial;

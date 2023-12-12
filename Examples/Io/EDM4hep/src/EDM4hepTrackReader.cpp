@@ -8,8 +8,10 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <stdexcept>
 

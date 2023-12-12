@@ -8,7 +8,13 @@
 
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 
+#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cassert>
 
 template <typename proj_t, typename angle_desc_t>
 void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,

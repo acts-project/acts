@@ -40,7 +40,6 @@
 
 #include "DD4hep/DetType.h"
 #include "DDRec/DetectorData.h"
-#include "TGeoManager.h"
 
 namespace Acts {
 class IMaterialDecorator;

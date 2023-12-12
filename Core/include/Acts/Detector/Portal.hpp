@@ -28,6 +28,7 @@ namespace Acts {
 
 class ISurfaceMaterial;
 class Surface;
+class RegularSurface;
 
 namespace Experimental {
 class DetectorVolume;

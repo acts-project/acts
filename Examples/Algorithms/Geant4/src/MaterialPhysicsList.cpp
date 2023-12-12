@@ -10,10 +10,9 @@
 
 #include <utility>
 
-#include <G4ParticleTypes.hh>
-#include <G4ProcessManager.hh>
-#include <G4ProcessVector.hh>
-#include <G4UnitsTable.hh>
+#include <CLHEP/Units/SystemOfUnits.h>
+#include <G4ChargedGeantino.hh>
+#include <G4Geantino.hh>
 
 ActsExamples::MaterialPhysicsList::MaterialPhysicsList(
     std::unique_ptr<const Acts::Logger> logger)

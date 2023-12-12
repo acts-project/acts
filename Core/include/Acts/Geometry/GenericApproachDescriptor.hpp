@@ -24,6 +24,7 @@ namespace Acts {
 
 class Layer;
 class Surface;
+class BoundaryCheck;
 
 /// @class GenericApproachDescriptor
 ///

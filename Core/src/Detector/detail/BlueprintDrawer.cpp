@@ -8,6 +8,12 @@
 
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/Blueprint.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+
+#include <memory>
 #include <vector>
 
 namespace {

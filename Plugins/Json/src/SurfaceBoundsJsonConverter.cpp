@@ -11,6 +11,9 @@
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
+#include <map>
+#include <tuple>
+
 void Acts::to_json(nlohmann::json& j, const Acts::SurfaceBounds& bounds) {
   j["type"] = bounds.type();
   j["values"] = bounds.values();

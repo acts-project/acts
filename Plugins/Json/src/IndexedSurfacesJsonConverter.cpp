@@ -8,15 +8,17 @@
 
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
-#include "Acts/Navigation/NavigationStateUpdaters.hpp"
-#include "Acts/Plugins/Json/GridJsonConverter.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <array>
 #include <memory>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace {

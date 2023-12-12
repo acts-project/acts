@@ -19,6 +19,7 @@
 class G4Step;
 
 namespace ActsExamples {
+struct EventStore;
 
 /// The G4SteppingAction that is called for every step in
 /// the simulation process.

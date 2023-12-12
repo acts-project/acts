@@ -15,37 +15,35 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Podio/PodioTrackContainer.hpp"
 #include "Acts/Plugins/Podio/PodioTrackStateContainer.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/ConeSurface.hpp"
-#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiamondBounds.hpp"
-#include "Acts/Surfaces/DiscBounds.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
-#include "Acts/Surfaces/EllipseBounds.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/HashedString.hpp"
+#include "ActsPodioEdm/MutableTrack.h"
 #include "ActsPodioEdm/Surface.h"
+#include "ActsPodioEdm/TrackInfo.h"
 #include <ActsPodioEdm/TrackCollection.h>
 
-#include <algorithm>
-#include <iterator>
+#include <array>
+#include <cstdint>
 #include <memory>
-#include <random>
-#include <stdexcept>
+#include <optional>
+#include <ostream>
+#include <unordered_map>
+#include <utility>
+
+#include <podio/CollectionBase.h>
+#include <podio/CollectionBuffers.h>
+#include <podio/Frame.h>
+#include <podio/UserDataCollection.h>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;

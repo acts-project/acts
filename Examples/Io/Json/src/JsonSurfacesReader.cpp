@@ -9,13 +9,15 @@
 #include "ActsExamples/Io/Json/JsonSurfacesReader.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 
 #include <fstream>
-#include <iostream>
+#include <initializer_list>
+#include <map>
+#include <utility>
+
+#include <nlohmann/json.hpp>
 
 namespace ActsExamples {
 

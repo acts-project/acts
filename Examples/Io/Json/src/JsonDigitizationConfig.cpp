@@ -19,9 +19,12 @@
 #include <cstddef>
 #include <fstream>
 #include <initializer_list>
+#include <map>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 namespace ActsExamples {
 namespace {

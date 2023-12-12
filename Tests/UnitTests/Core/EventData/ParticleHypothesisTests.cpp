@@ -9,12 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
-#include <type_traits>
 
 using namespace Acts::UnitLiterals;
 

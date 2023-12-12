@@ -10,16 +10,17 @@
 ///
 /// This examples shows how to use the framework CSV I/O and printer algorithms.
 
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/ParticleSelectorOptions.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
+#include <cstdlib>
 #include <memory>
+#include <string>
 
 #include <boost/program_options.hpp>
 

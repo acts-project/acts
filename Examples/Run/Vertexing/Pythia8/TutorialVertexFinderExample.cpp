@@ -7,10 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/ParticleSelectorOptions.hpp"
+#include "ActsExamples/Options/ParticleSmearingOptions.hpp"
 #include "ActsExamples/Options/Pythia8Options.hpp"
 #include "ActsExamples/Options/VertexingOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
@@ -18,7 +22,9 @@
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
 
+#include <cstdlib>
 #include <memory>
+#include <string>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;

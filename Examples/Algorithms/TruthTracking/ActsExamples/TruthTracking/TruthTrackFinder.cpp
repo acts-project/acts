@@ -15,7 +15,6 @@
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
 #include <ostream>
 #include <stdexcept>
 #include <utility>

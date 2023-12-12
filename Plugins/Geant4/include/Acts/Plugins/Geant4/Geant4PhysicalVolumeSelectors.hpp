@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "G4VPhysicalVolume.hh"
+#include <G4VPhysicalVolume.hh>
 
 namespace Acts {
 

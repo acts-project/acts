@@ -8,9 +8,17 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
+
+#include <vector>
 
 using namespace Acts;
 using namespace ActsFatras;

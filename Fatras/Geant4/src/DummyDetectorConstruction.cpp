@@ -8,13 +8,14 @@
 
 #include "ActsFatras/Geant4/DummyDetectorConstruction.hpp"
 
-#include "G4Box.hh"
-#include "G4LogicalVolume.hh"
-#include "G4Material.hh"
-#include "G4PVPlacement.hh"
-#include "G4RunManager.hh"
-#include "G4ThreeVector.hh"
-#include "QGSP_BERT.hh"
+#include <G4Box.hh>
+#include <G4LogicalVolume.hh>
+#include <G4Material.hh>
+#include <G4PVPlacement.hh>
+#include <G4RunManager.hh>
+#include <G4ThreeVector.hh>
+#include <G4VPhysicalVolume.hh>
+#include <QGSP_BERT.hh>
 
 class G4VUserPhysicsList;
 

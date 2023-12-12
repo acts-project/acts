@@ -12,10 +12,11 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
 #include <array>

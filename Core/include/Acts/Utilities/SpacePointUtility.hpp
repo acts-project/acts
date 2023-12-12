@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <array>

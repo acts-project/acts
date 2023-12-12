@@ -20,6 +20,11 @@
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Volumes.h>
 #include <RtypesCore.h>
+#include <TGeoMatrix.h>
+#include <TGeoNode.h>
+#include <TGeoShape.h>
+#include <TGeoTube.h>
+#include <TGeoVolume.h>
 
 Acts::DD4hepVolumeBuilder::DD4hepVolumeBuilder(
     const Acts::DD4hepVolumeBuilder::Config& config,

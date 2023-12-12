@@ -8,21 +8,30 @@
 
 #include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/Portal.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
 #include "Acts/Plugins/Json/PortalJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <ctime>
 #include <set>
+#include <string>
+#include <vector>
+
+#include <nlohmann/json.hpp>
+
+namespace Acts {
+namespace Experimental {
+class Portal;
+}  // namespace Experimental
+}  // namespace Acts
 
 nlohmann::json Acts::DetectorJsonConverter::toJson(
     const GeometryContext& gctx, const Experimental::Detector& detector,

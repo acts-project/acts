@@ -8,19 +8,24 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <stdexcept>
+#include <unordered_map>
+#include <utility>
 
-#include <edm4hep/MCParticle.h>
-#include <edm4hep/SimTrackerHit.h>
+#include <edm4hep/MCParticleCollection.h>
+#include <edm4hep/MutableMCParticle.h>
+#include <edm4hep/SimTrackerHitCollection.h>
 #include <podio/Frame.h>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 EDM4hepSimHitWriter::EDM4hepSimHitWriter(
     const EDM4hepSimHitWriter::Config& config, Acts::Logging::Level level)

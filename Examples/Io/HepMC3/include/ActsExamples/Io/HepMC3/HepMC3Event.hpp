@@ -8,16 +8,26 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
+
+#include <memory>
+#include <vector>
 
 #include <HepMC3/FourVector.h>
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 
+namespace HepMC3 {
+class GenEvent;
+}  // namespace HepMC3
+
 namespace ActsExamples {
+struct SimVertex;
+
 namespace HepMC3Event {
 
 ///

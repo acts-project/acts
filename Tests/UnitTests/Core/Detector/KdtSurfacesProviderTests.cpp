@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/KdtSurfacesProvider.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
+#include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
@@ -21,8 +21,8 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <iterator>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 

@@ -16,8 +16,10 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace Acts {
 namespace Experimental {

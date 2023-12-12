@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
@@ -20,8 +19,6 @@
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
 #include <algorithm>
-#include <array>
-#include <map>
 #include <memory>
 #include <optional>
 #include <string>

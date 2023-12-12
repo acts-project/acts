@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/interface/IDetectorBuilder.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -19,6 +20,8 @@ namespace Acts {
 namespace Experimental {
 
 class IGeometryIdGenerator;
+class Detector;
+class IDetectorComponentBuilder;
 
 /// @brief Standard generic Detector builder that calls
 /// the top level component builder and transfers the

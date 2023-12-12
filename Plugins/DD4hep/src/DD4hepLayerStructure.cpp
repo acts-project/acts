@@ -8,7 +8,21 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 
+#include "Acts/Detector/LayerStructureBuilder.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Detector/ProtoSupport.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+
+#include <map>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
+
+#include <DD4hep/DetElement.h>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
     std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,

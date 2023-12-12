@@ -9,10 +9,16 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
+#include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
 #include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
+#include "Acts/Plugins/Json/PortalJsonConverter.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
+#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -34,6 +40,7 @@
 namespace Acts {
 class IMaterialDecorator;
 }  // namespace Acts
+
 namespace ActsExamples {
 class IMaterialWriter;
 class IWriter;
@@ -219,18 +226,17 @@ void addJson(Context& ctx) {
   }
 
   {
-    mex.def(
-        "readDetectorFromJson",
-        [](const Acts::GeometryContext& gctx,
-           const std::string& fileName) -> auto{
-          auto in = std::ifstream(fileName,
-                                  std::ifstream::in | std::ifstream::binary);
-          nlohmann::json jDetectorIn;
-          in >> jDetectorIn;
-          in.close();
+    mex.def("readDetectorFromJson",
+            [](const Acts::GeometryContext& gctx,
+               const std::string& fileName) -> auto {
+              auto in = std::ifstream(
+                  fileName, std::ifstream::in | std::ifstream::binary);
+              nlohmann::json jDetectorIn;
+              in >> jDetectorIn;
+              in.close();
 
-          return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
-        });
+              return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
+            });
   }
 }
 }  // namespace Acts::Python

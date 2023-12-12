@@ -14,6 +14,8 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -29,8 +31,8 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
-#include <array>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <utility>
 #include <vector>

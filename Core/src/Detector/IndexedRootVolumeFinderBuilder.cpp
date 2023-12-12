@@ -8,11 +8,19 @@
 
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationStateFillers.hpp"
+#include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+
+#include <array>
+#include <cstddef>
+#include <stdexcept>
+#include <utility>
 
 namespace {
 

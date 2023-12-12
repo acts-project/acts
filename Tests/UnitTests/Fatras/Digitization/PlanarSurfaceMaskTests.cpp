@@ -20,14 +20,15 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 
 #include <array>
 #include <cmath>
 #include <fstream>
 #include <memory>
+#include <random>
 #include <string>
 #include <tuple>
 #include <utility>

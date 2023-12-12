@@ -11,7 +11,12 @@
 
 #include "Acts/TrackFinding/TrackSelector.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <limits>
+#include <memory>
+#include <stdexcept>
+#include <vector>
 
 using namespace Acts;
 namespace bdata = boost::unit_test::data;

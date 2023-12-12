@@ -18,11 +18,13 @@
 #include <string>
 
 #include <G4Track.hh>
+#include <G4Types.hh>
 #include <G4UserTrackingAction.hh>
 
 class G4Track;
 
 namespace ActsExamples {
+struct EventStore;
 
 /// The G4UserTrackingAction that is called for every track in
 /// the simulation process.

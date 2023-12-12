@@ -8,16 +8,23 @@
 
 #include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
-#include "Acts/Plugins/Json/GridJsonConverter.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <array>
 #include <memory>
-#include <tuple>
+#include <utility>
 #include <vector>
+
+namespace Acts {
+namespace Experimental {
+struct DetectorVolumeFiller;
+}  // namespace Experimental
+}  // namespace Acts
 
 namespace {
 /// @brief  The generator struct

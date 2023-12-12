@@ -25,6 +25,7 @@
 
 class TFile;
 class TTree;
+
 namespace ActsFatras {
 class Barcode;
 }  // namespace ActsFatras

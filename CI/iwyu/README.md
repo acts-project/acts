@@ -11,6 +11,5 @@ offline resources
 - [Custom filter script](./filter.py)
 
 online resources
-
 - https://include-what-you-use.org/
 - https://github.com/include-what-you-use/include-what-you-use

@@ -24,6 +24,7 @@ class IMaterialDecorator;
 
 namespace ActsExamples {
 class IContextDecorator;
+
 namespace Generic {
 class GenericDetectorElement;
 }  // namespace Generic

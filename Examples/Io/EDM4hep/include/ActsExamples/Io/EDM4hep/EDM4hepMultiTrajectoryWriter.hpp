@@ -8,8 +8,12 @@
 
 #pragma once
 
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -18,7 +22,12 @@
 
 #include <podio/ROOTFrameWriter.h>
 
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
+
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out the tracks reconstructed using Combinatorial Kalman Filter to
 /// EDM4hep.

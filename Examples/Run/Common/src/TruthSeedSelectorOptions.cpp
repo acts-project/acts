@@ -11,6 +11,10 @@
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <cstddef>
+#include <ios>
+#include <string>
+
 #include <boost/program_options.hpp>
 
 namespace ActsExamples {

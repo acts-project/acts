@@ -10,8 +10,6 @@
 
 #include <stdexcept>
 
-#include <G4Run.hh>
-
 #include "EventAction.hpp"
 
 namespace ActsExamples::Geant4::HepMC3 {

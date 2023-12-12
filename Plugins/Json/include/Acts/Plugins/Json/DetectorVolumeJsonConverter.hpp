@@ -14,6 +14,11 @@
 #include "Acts/Plugins/Json/PortalJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
+#include <memory>
+#include <vector>
+
+#include <nlohmann/json_fwd.hpp>
+
 // Custom Json encoder/decoders
 
 namespace Acts {

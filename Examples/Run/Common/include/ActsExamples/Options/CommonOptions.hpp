@@ -13,6 +13,8 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 
+#include <cstdint>
+#include <limits>
 #include <string>
 
 #include <boost/program_options.hpp>

@@ -10,6 +10,10 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+
+#include <ostream>
+#include <vector>
 
 dd4hep::Transform3D DD4hepTestsHelper::createTransform(
     const xml_comp_t& x_det_comp) {

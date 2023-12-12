@@ -15,10 +15,11 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
-#include <cstddef>
+#include <cmath>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 
 using namespace Acts::UnitLiterals;
 

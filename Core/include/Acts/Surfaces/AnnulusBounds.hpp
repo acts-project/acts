@@ -24,6 +24,7 @@
 #include <vector>
 
 namespace Acts {
+class BoundaryCheck;
 
 /// @brief Class that implements a (potentially asymmetric) bounds with
 /// difference between surface bound center and surface coordinate center

@@ -8,10 +8,16 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackWriter.hpp"
 
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <edm4hep/TrackCollection.h>
 #include <podio/Frame.h>

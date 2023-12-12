@@ -5,15 +5,22 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #pragma once
 
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 
 #include "edm4hep/MCParticle.h"
@@ -27,7 +34,17 @@
 #include "edm4hep/TrackerHitCollection.h"
 #include "edm4hep/TrackerHitPlane.h"
 
+namespace edm4hep {
+class TrackerHitCollection;
+}  // namespace edm4hep
+namespace podio {
+class ObjectID;
+}  // namespace podio
+
 namespace ActsExamples {
+struct Cluster;
+struct Trajectories;
+
 namespace EDM4hepUtil {
 
 using MapParticleIdFrom =

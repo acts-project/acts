@@ -8,6 +8,8 @@
 
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
+
 namespace ActsAlignment {
 namespace detail {
 

@@ -11,11 +11,18 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
+#include <array>
 #include <string>
 
 #include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Objects.h>
 #include <XML/Utilities.h>
+#include <XML/XML.h>
+#include <XML/config.h>
+
+namespace dd4hep {
+class DetElement;
+}  // namespace dd4hep
 
 using namespace dd4hep;
 

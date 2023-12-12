@@ -17,6 +17,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -25,6 +26,7 @@ namespace Acts {
 class Surface;
 class VolumeBounds;
 class Direction;
+class RegularSurface;
 
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 

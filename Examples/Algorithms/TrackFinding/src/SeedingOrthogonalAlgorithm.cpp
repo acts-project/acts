@@ -9,7 +9,9 @@
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SeedFinderOrthogonal.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>

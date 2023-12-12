@@ -11,9 +11,16 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <cstddef>
+#include <memory>
+#include <vector>
+
+#include <nlohmann/json_fwd.hpp>
 
 // Custom Json encoder/decoders
 

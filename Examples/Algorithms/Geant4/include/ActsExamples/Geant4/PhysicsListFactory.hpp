@@ -11,6 +11,8 @@
 #include <functional>
 #include <memory>
 
+#include <G4VUserPhysicsList.hh>
+
 class G4VUserPhysicsList;
 
 namespace ActsExamples {

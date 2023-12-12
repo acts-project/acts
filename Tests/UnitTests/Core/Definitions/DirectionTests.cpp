@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 
-#include <string>
-
 using namespace Acts;
 
 BOOST_AUTO_TEST_SUITE(DefinitionsDirection)

@@ -8,11 +8,12 @@
 
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 
-#include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -20,7 +21,6 @@
 #include <stdexcept>
 
 #include <TChain.h>
-#include <TMathBase.h>
 
 ActsExamples::RootSimHitReader::RootSimHitReader(
     const ActsExamples::RootSimHitReader::Config& config,

@@ -9,7 +9,6 @@
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -37,7 +36,6 @@
 
 #include <algorithm>
 #include <array>
-#include <map>
 #include <ostream>
 #include <stdexcept>
 #include <system_error>

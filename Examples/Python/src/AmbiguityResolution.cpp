@@ -7,9 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 
-#include <memory>
+#include <tuple>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

@@ -23,6 +23,9 @@
 
 #include <G4LogicalVolume.hh>
 #include <G4Material.hh>
+#include <G4RotationMatrix.hh>
+#include <G4String.hh>
+#include <G4Types.hh>
 #include <G4VPhysicalVolume.hh>
 
 ActsExamples::SensitiveSurfaceMapper::SensitiveSurfaceMapper(

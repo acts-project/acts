@@ -8,11 +8,19 @@
 
 #include "ActsExamples/Vertexing/SingleSeedVertexFinderAlgorithm.hpp"
 
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/SingleSeedVertexFinder.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
+#include <algorithm>
 #include <chrono>
+#include <ostream>
+#include <utility>
 #include <vector>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::SingleSeedVertexFinderAlgorithm::SingleSeedVertexFinderAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)

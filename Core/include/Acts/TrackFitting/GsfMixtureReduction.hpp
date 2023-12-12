@@ -11,7 +11,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 
+#include <cstddef>
+#include <vector>
+
 namespace Acts {
+struct GsfComponent;
 
 /// Very simple mixture reduction method: Just removes the components with the
 /// smallest weight until the required number of components is reached

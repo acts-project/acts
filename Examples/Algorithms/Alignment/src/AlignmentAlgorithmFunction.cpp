@@ -6,17 +6,32 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+class VectorMultiTrajectory;
+}  // namespace Acts
 
 namespace {
 

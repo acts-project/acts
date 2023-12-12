@@ -6,23 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "TFile.h"
-#include "TH1F.h"
-#include "TROOT.h"
-#include "TTree.h"
+#include <TFile.h>
+#include <TH1F.h>
+#include <TROOT.h>
+#include <TTree.h>
 
 /// This root script reads in two histograms with the names 'hist1Name' and
 /// 'hist2Name' from the root file 'inFile' and draws them normalized with
 /// different colors in one Canvas
 
-void
-compareDistributions(std::string inFile1,
-                     std::string hist1Name,
-                     int         col1,
-                     std::string inFile2,
-                     std::string hist2Name,
-                     int         col2)
-{
+void compareDistributions(std::string inFile1, std::string hist1Name, int col1,
+                          std::string inFile2, std::string hist2Name,
+                          int col2) {
   std::cout << "Opening file: " << inFile1 << std::endl;
   TFile inputFile1(inFile1.c_str());
   std::cout << "Opening file: " << inFile2 << std::endl;

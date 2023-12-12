@@ -8,14 +8,24 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 
+#include <memory>
+
 #include <HepMC3/FourVector.h>
 #include <HepMC3/GenParticle.h>
+#include <HepMC3/GenParticle_fwd.h>
 #include <HepMC3/GenVertex.h>
 
+namespace HepMC3 {
+class GenParticle;
+}  // namespace HepMC3
+
 namespace ActsExamples {
+struct SimVertex;
+
 namespace HepMC3Particle {
 
 /// @brief Returns the particle translated into Acts

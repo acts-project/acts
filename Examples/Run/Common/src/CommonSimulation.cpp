@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Simulation/CommonSimulation.hpp"
 
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
@@ -19,9 +21,14 @@
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include <string>
+#include <utility>
+
 #include <boost/program_options.hpp>
 
 namespace ActsExamples {
+class RandomNumbers;
+
 namespace Simulation {
 
 // input handling

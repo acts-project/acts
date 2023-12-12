@@ -8,12 +8,17 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <array>
-#include <fstream>
-#include <memory>
+#include <cmath>
+#include <cstddef>
+#include <map>
+#include <stdexcept>
 #include <vector>
 
 #include <nlohmann/json.hpp>

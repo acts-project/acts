@@ -26,31 +26,24 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
+#include <algorithm>
 #include <array>
 #include <memory>
-#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include <G4RunManager.hh>
 #include <G4Transform3D.hh>
-#include <G4UserEventAction.hh>
-#include <G4UserRunAction.hh>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-class G4UserSteppingAction;
-class G4VUserPhysicsList;
 namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-class Volume;
+class Surface;
 }  // namespace Acts
 namespace ActsExamples {
-class RandomNumbers;
+class IAlgorithm;
 }  // namespace ActsExamples
 
 namespace py = pybind11;

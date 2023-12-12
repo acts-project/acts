@@ -9,11 +9,13 @@
 // TODO: update to C++17 style
 #include "Acts/TrackFinding/FasTrackConnector.hpp"
 
+#include <algorithm>
 #include <fstream>
-#include <iostream>
+#include <iterator>
 #include <list>
 #include <set>
 #include <unordered_map>
+#include <utility>
 
 namespace Acts {
 

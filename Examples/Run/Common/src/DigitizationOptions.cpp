@@ -8,14 +8,7 @@
 
 #include "ActsExamples/Options/DigitizationOptions.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Digitization/Smearers.hpp"
-#include "ActsExamples/Digitization/SmearingConfig.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
-
-#include <numeric>
+#include <sstream>
 #include <string>
 
 #include <boost/program_options.hpp>

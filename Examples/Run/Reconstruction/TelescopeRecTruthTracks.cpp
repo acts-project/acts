@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Detector/TelescopeDetectorWithOptions.hpp"
 
+#include <memory>
+
 #include "RecTruthTracks.hpp"
 
 int main(int argc, char* argv[]) {

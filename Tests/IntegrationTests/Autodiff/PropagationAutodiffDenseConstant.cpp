@@ -9,8 +9,11 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -21,9 +24,17 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Propagator/detail/GenericDenseEnvironmentExtension.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include <autodiff/forward/dual/dual.hpp>
 
 #include "../PropagationDatasets.hpp"
 #include "../PropagationTests.hpp"

@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
@@ -20,6 +22,7 @@
 #include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out a simhit collection to EDM4hep.
 ///

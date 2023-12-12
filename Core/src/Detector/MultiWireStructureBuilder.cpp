@@ -10,25 +10,35 @@
 
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
-#include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
-#include <algorithm>
-#include <functional>
-#include <iostream>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <set>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 class MultiWireInternalStructureBuilder
     : public Acts::Experimental::IInternalStructureBuilder {

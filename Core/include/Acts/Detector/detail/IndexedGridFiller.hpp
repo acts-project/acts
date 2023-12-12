@@ -18,10 +18,15 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <limits>
+#include <memory>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 

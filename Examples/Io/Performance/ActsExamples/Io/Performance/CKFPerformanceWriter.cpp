@@ -8,17 +8,17 @@
 
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -33,10 +33,6 @@
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
-
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
 ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
     ActsExamples::CKFPerformanceWriter::Config cfg, Acts::Logging::Level lvl)

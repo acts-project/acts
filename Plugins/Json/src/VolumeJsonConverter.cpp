@@ -12,6 +12,10 @@
 #include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 
+#include <map>
+
+#include <nlohmann/json.hpp>
+
 void Acts::to_json(nlohmann::json& j,
                    const Acts::TrackingVolumeAndMaterial& volume) {
   j[Acts::jsonKey().namekey] = volume.first->volumeName();

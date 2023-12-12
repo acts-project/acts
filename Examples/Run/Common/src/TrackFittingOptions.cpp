@@ -10,6 +10,9 @@
 
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <sstream>
+#include <string>
+
 using namespace boost::program_options;
 
 void ActsExamples::Options::addFittingOptions(

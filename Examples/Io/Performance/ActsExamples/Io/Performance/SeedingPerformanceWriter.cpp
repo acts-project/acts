@@ -15,6 +15,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <cmath>
 #include <cstddef>
 #include <ostream>
 #include <stdexcept>

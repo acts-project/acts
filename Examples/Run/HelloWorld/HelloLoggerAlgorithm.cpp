@@ -8,9 +8,10 @@
 
 #include "HelloLoggerAlgorithm.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <cstddef>
+#include <memory>
+#include <string>
 
 ActsExamples::HelloLoggerAlgorithm::HelloLoggerAlgorithm(
     Acts::Logging::Level level)

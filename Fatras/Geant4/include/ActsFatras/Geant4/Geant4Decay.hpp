@@ -18,7 +18,7 @@
 #include <random>
 #include <vector>
 
-#include "G4ParticleDefinition.hh"
+#include <G4ParticleDefinition.hh>
 
 class G4RunManager;
 

@@ -8,14 +8,16 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleReader.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <stdexcept>
+#include <type_traits>
 
+#include <edm4hep/MCParticle.h>
+#include <edm4hep/MCParticleCollection.h>
 #include <podio/Frame.h>
 
 namespace ActsExamples {

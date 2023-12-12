@@ -9,6 +9,7 @@
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 
 #include "Acts/Material/Interactions.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts {
 namespace detail {

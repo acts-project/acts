@@ -15,7 +15,6 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
-#include <iterator>
 #include <stdexcept>
 #include <utility>
 

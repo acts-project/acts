@@ -8,19 +8,15 @@
 
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 
-#include <ios>
-#include <optional>
-#include <stdexcept>
+#include <memory>
+#include <ostream>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 

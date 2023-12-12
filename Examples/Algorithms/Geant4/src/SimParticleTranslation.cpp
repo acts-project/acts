@@ -13,9 +13,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <ostream>
@@ -23,6 +21,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include <CLHEP/Units/SystemOfUnits.h>
 #include <G4ChargedGeantino.hh>
 #include <G4Event.hh>
 #include <G4Geantino.hh>
@@ -30,11 +29,7 @@
 #include <G4ParticleTable.hh>
 #include <G4PrimaryParticle.hh>
 #include <G4PrimaryVertex.hh>
-#include <G4UnitsTable.hh>
-
-namespace ActsExamples {
-class WhiteBoard;
-}  // namespace ActsExamples
+#include <G4String.hh>
 
 ActsExamples::SimParticleTranslation::SimParticleTranslation(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)

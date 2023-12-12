@@ -8,14 +8,12 @@
 
 #include "Acts/Geometry/Layer.hpp"
 
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <algorithm>
-#include <functional>
 #include <iterator>
 #include <vector>
 

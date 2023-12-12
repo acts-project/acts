@@ -8,9 +8,11 @@
 
 #include "ActsExamples/Options/SpacePointMakerOptions.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 
 #include <string>
+#include <vector>
 
 #include <boost/program_options.hpp>
 

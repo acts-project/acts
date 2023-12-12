@@ -10,9 +10,10 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
+#include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include <boost/program_options.hpp>
 

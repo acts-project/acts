@@ -8,11 +8,14 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// A simple algorithm that just prints hello world.
 class HelloLoggerAlgorithm : public ActsExamples::IAlgorithm {

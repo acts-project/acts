@@ -11,7 +11,9 @@
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <cmath>
-#include <optional>
+#include <iostream>
+#include <limits>
+#include <vector>
 
 namespace {
 

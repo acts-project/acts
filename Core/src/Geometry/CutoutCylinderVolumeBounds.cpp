@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <memory>
 #include <ostream>

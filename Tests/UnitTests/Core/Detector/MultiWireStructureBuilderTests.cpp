@@ -9,20 +9,22 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/MultiWireStructureBuilder.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/LineBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Visualization/GeometryView3D.hpp"
-#include "Acts/Visualization/IVisualization3D.hpp"
-#include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
-#include <algorithm>
-#include <iterator>
+#include <cmath>
+#include <cstddef>
 #include <memory>
-#include <utility>
+#include <string>
 #include <vector>
 
 using namespace Acts;

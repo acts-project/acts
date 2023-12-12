@@ -9,13 +9,16 @@
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <functional>
+#include <iterator>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <utility>

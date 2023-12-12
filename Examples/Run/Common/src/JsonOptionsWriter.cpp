@@ -8,6 +8,10 @@
 
 #include "ActsExamples/Options/JsonOptionsWriter.hpp"
 
+#include <cstddef>
+#include <limits>
+#include <string>
+
 #include <boost/program_options.hpp>
 
 void ActsExamples::Options::addJsonWriterOptions(

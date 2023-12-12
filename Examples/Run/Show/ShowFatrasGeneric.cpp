@@ -12,16 +12,20 @@
 
 #include "ActsExamples/Detector/GenericDetectorWithOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Printers/HitsPrinter.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
+#include <cstdint>
+#include <cstdlib>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/program_options.hpp>
 

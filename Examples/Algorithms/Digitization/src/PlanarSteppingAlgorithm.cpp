@@ -18,6 +18,7 @@
 #include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"

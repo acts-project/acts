@@ -10,11 +10,10 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
 #include <cmath>

@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Detector/DD4hepDetectorWithOptions.hpp"
 
+#include <memory>
+
 #include "DigitizationExample.hpp"
 
 int main(int argc, char* argv[]) {

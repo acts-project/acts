@@ -18,6 +18,7 @@
 #include <vector>
 
 namespace Acts {
+class BoundaryCheck;
 
 /// @class LineBounds
 ///

@@ -15,6 +15,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -31,6 +32,8 @@
 // using boost::test_tools::output_test_stream;
 
 namespace Acts {
+class AssertionFailureException;
+
 namespace Test {
 
 // Create a test context

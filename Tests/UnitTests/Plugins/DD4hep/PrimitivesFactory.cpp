@@ -8,11 +8,24 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 
-#include <DD4hep/DetFactoryHelper.h>
-#include <DD4hep/Objects.h>
+#include <string>
+
+#include <DD4hep/DetElement.h>
+#include <DD4hep/Detector.h>
+#include <DD4hep/Factories.h>
+#include <DD4hep/Handle.h>
+#include <DD4hep/Shapes.h>
+#include <DD4hep/Volumes.h>
+#include <DD4hep/config.h>
 #include <XML/Utilities.h>
+#include <XML/XML.h>
+#include <XML/XMLTags.h>
 
 #include "DD4hepTestsHelper.hpp"
+
+namespace dd4hep {
+class NamedObject;
+}  // namespace dd4hep
 
 using namespace dd4hep;
 

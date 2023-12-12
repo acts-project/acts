@@ -21,6 +21,7 @@
 #include <vector>
 
 namespace Acts {
+class BoundaryCheck;
 
 /// @class RectangleBounds
 ///

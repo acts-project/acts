@@ -19,6 +19,7 @@
 namespace Acts {
 class ConstVectorMultiTrajectory;
 class VectorMultiTrajectory;
+class SourceLink;
 }  // namespace Acts
 
 namespace ActsExamples {

@@ -8,7 +8,6 @@
 
 #include "HoughExample.hpp"
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Detector/GenericDetectorWithOptions.hpp"
 
 int main(int argc, char* argv[]) {

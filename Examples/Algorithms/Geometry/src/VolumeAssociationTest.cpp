@@ -11,10 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 
-#include <exception>
+#include <cmath>
 #include <memory>
-#include <string>
+#include <ostream>
+#include <random>
+#include <stdexcept>
 #include <vector>
 
 ActsExamples::VolumeAssociationTest::VolumeAssociationTest(

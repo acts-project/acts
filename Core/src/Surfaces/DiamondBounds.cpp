@@ -8,6 +8,8 @@
 
 #include "Acts/Surfaces/DiamondBounds.hpp"
 
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+
 #include <iomanip>
 #include <iostream>
 

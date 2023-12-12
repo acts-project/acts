@@ -6,11 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Common.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/Geant4Options.hpp"
 #include "ActsExamples/Options/ParticleGunOptions.hpp"
+
+#include <cstdlib>
+#include <memory>
+#include <string>
 
 #include <boost/program_options.hpp>
 

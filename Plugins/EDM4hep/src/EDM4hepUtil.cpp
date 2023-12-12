@@ -8,11 +8,13 @@
 
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Propagator/CovarianceTransport.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include "edm4hep/TrackState.h"
+#include <cmath>
+#include <variant>
 
 namespace Acts {
 namespace EDM4hepUtil {

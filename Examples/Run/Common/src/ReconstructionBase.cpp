@@ -8,25 +8,23 @@
 
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 
-#include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
-#include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Options/DigitizationOptions.hpp"
-#include "ActsExamples/Options/TrackFindingOptions.hpp"
-#include "ActsExamples/Options/TrackFittingOptions.hpp"
-#include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
-#include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
-#include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
-#include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
-#include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/ParticleSmearingOptions.hpp"
+
+#include <utility>
+
+namespace Acts {
+class TrackingGeometry;
+}  // namespace Acts
+namespace ActsExamples {
+class RandomNumbers;
+}  // namespace ActsExamples
 
 ActsExamples::CsvSimHitReader::Config setupSimHitReading(
     const ActsExamples::Options::Variables& vars,

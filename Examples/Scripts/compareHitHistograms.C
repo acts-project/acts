@@ -14,10 +14,11 @@
  */
 
 #include <tuple>
-#include "TFile.h"
-#include "TH1F.h"
-#include "TROOT.h"
-#include "TTree.h"
+
+#include <TFile.h>
+#include <TH1F.h>
+#include <TROOT.h>
+#include <TTree.h>
 
 // This root script draws all histograms given in a vector into the same Canvas.
 // The information should be handed over as a vector of a tuple.
@@ -25,13 +26,11 @@
 // found. The second entry should be the name of the histogram. The third entry
 // is the color in which the histogram should be printed.
 
-void
-compareHitHistograms(
-    std::vector<std::tuple<std::string, std::string, int>> hist)
-{
+void compareHitHistograms(
+    std::vector<std::tuple<std::string, std::string, int>> hist) {
   for (auto& i : hist) {
     std::cout << "Opening file: " << std::get<0>(i).c_str() << std::endl;
-    TFile      inputFile(std::get<0>(i).c_str());
+    TFile inputFile(std::get<0>(i).c_str());
     TDirectory dir = outputFile.mkdir(layerName.c_str());
     dir->cd();
 

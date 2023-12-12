@@ -8,9 +8,14 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
+
+#include <DD4hep/Fields.h>
 
 namespace dd4hep {
 class OverlayedField;

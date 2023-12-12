@@ -11,7 +11,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <cstddef>
@@ -20,6 +19,7 @@
 #include <vector>
 
 namespace Acts {
+class BoundaryCheck;
 
 /// Class to implement pure virtual method of SurfaceBounds for testing only
 class SurfaceBoundsStub : public SurfaceBounds {

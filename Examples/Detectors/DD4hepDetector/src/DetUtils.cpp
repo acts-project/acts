@@ -18,6 +18,7 @@
 
 #include <DD4hep/CartesianGridXZ.h>
 #include <DD4hep/Segmentations.h>
+#include <XML/XMLElements.h>
 #include <XML/XMLTags.h>
 
 namespace det {

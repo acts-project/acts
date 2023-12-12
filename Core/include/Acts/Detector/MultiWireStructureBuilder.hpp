@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
@@ -18,10 +20,13 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace Acts {
+class Surface;
+
 namespace Experimental {
 
 class MultiWireStructureBuilder {

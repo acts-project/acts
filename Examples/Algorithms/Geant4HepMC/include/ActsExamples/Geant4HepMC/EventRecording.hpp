@@ -19,7 +19,10 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 
+#include <HepMC3/Attribute.h>
 #include <HepMC3/GenEvent.h>
 
 class G4RunManager;
@@ -27,6 +30,7 @@ class G4RunManager;
 namespace ActsExamples {
 
 class DetectorConstructionFactory;
+struct AlgorithmContext;
 
 class EventRecording final : public ActsExamples::IAlgorithm {
  public:

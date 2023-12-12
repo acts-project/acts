@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 

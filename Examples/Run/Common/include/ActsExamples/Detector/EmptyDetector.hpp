@@ -12,7 +12,17 @@
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
+#include <utility>
 #include <vector>
+
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
+namespace boost {
+namespace program_options {
+class options_description;
+}  // namespace program_options
+}  // namespace boost
 
 struct EmptyDetector : public ActsExamples::IBaseDetector {
   void addOptions(

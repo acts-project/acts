@@ -18,9 +18,11 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 class G4RunManager;
 class G4VUserPrimaryGeneratorAction;
@@ -47,6 +49,8 @@ class DetectorConstructionFactory;
 class SensitiveSurfaceMapper;
 struct EventStore;
 struct Geant4Handle;
+class RandomNumbers;
+struct AlgorithmContext;
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
 class Geant4SimulationBase : public IAlgorithm {

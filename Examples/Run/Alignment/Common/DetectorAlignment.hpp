@@ -13,7 +13,14 @@
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
+#include <functional>
 #include <memory>
+#include <vector>
+
+namespace Acts {
+class DetectorElementBase;
+class GeometryIdentifier;
+}  // namespace Acts
 
 namespace ActsExamples {
 class IBaseDetector;

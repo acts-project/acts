@@ -9,11 +9,17 @@
 #include "HelloRandomAlgorithm.hpp"
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <ostream>
 #include <random>
+#include <stdexcept>
+#include <utility>
 
 #include "HelloData.hpp"
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::HelloRandomAlgorithm::HelloRandomAlgorithm(
     const HelloRandomAlgorithm::Config& cfg, Acts::Logging::Level level)

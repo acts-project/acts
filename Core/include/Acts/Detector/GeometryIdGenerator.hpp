@@ -13,6 +13,8 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <any>
+#include <memory>
+#include <utility>
 
 namespace Acts {
 

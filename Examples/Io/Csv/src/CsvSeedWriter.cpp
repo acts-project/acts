@@ -8,26 +8,25 @@
 
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
-#include <ios>
-#include <iostream>
+#include <cmath>
+#include <fstream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
+#include <vector>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;

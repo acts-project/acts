@@ -10,18 +10,20 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <ios>
 #include <limits>
 #include <ostream>
 #include <stdexcept>
 #include <unordered_map>
+#include <utility>
 
 #include <TFile.h>
 #include <TTree.h>

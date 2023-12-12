@@ -8,23 +8,31 @@
 
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
-#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 #include <FTFP_BERT.hh>
 #include <G4RunManager.hh>
-#include <G4VUserDetectorConstruction.hh>
+#include <HepMC3/FourVector.h>
 #include <HepMC3/GenParticle.h>
+#include <HepMC3/GenVertex.h>
+#include <HepMC3/GenVertex_fwd.h>
 
 #include "EventAction.hpp"
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::EventRecording::~EventRecording() {
   m_runManager = nullptr;

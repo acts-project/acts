@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Detector/TGeoDetectorWithOptions.hpp"
 
+#include <memory>
+
 #include "DigitizationExample.hpp"
 
 int main(int argc, char* argv[]) {

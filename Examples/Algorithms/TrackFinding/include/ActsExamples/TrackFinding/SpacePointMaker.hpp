@@ -19,6 +19,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 

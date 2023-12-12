@@ -22,12 +22,12 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 
-#include <algorithm>
-#include <iterator>
+#include <cmath>
+#include <cstdlib>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <utility>
-#include <vector>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;

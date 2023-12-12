@@ -12,13 +12,15 @@
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include "RtypesCore.h"
-#include "TCollection.h"
-#include "TGeoBBox.h"
-#include "TGeoNode.h"
-#include "TGeoVolume.h"
-#include "TObjArray.h"
-#include "TObject.h"
+#include <RtypesCore.h>
+#include <TCollection.h>
+#include <TGeoBBox.h>
+#include <TGeoMatrix.h>
+#include <TGeoNode.h>
+#include <TGeoShape.h>
+#include <TGeoVolume.h>
+#include <TObjArray.h>
+#include <TObject.h>
 
 void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
                               const Acts::TGeoParser::Options& options,

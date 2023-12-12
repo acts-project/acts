@@ -9,11 +9,14 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 
 #include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
-#include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
+#include <algorithm>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 Acts::Experimental::DetectorBuilder::DetectorBuilder(
     const Acts::Experimental::DetectorBuilder::Config& cfg,

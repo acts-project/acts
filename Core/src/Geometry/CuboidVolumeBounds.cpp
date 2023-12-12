@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
+#include <cmath>
 #include <type_traits>
 #include <utility>
 

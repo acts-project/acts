@@ -9,11 +9,11 @@
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
 #include <memory>
-#include <stdexcept>
+#include <utility>
 
-#include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
 #include <DDG4/Geant4Converter.h>
 #include <DDG4/Geant4GeometryInfo.h>

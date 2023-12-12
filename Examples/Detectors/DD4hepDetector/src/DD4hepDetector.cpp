@@ -9,15 +9,13 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
-#include <cstddef>
 #include <memory>
 #include <stdexcept>
 
-#include <DD4hep/Fields.h>
+#include <DD4hep/Detector.h>
 #include <boost/program_options.hpp>
 
 namespace ActsExamples {

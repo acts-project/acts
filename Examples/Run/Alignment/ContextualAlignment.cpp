@@ -6,10 +6,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "ActsAlignment/Kernel/Alignment.hpp"
+#include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Detector/AlignedDetectorWithOptions.hpp"
+#include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
+
+#include <algorithm>
+#include <cassert>
+#include <memory>
+#include <vector>
 
 #include "DetectorAlignment.hpp"
+
+namespace ActsExamples {
+class IBaseDetector;
+}  // namespace ActsExamples
 
 int main(int argc, char* argv[]) {
   // 1. The aligned transform updater

@@ -8,15 +8,20 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <string>
+#include <vector>
 
+#include <HepMC3/Attribute.h>
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/WriterAscii.h>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// HepMC3 event writer.
 class HepMC3AsciiWriter final : public WriterT<std::vector<HepMC3::GenEvent>> {

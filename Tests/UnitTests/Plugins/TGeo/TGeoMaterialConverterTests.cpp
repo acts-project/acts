@@ -9,14 +9,16 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <string>
-#include <vector>
+#include <cmath>
 
-#include "TGeoManager.h"
+#include <TGeoManager.h>
 #include "TGeoMaterial.h"
 
 namespace Acts {

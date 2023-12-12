@@ -18,6 +18,7 @@
 #include "ActsExamples/EventData/Trajectories.hpp"
 
 #include <optional>
+#include <ostream>
 #include <utility>
 #include <vector>
 

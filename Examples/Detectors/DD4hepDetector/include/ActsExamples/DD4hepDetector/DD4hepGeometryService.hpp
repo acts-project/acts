@@ -27,6 +27,7 @@
 #include <TGeoNode.h>
 
 class TGeoNode;
+
 namespace Acts {
 class IMaterialDecorator;
 class TrackingGeometry;

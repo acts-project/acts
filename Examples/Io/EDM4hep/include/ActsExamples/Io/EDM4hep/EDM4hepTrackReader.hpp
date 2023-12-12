@@ -8,19 +8,25 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstddef>
+#include <memory>
 #include <string>
+#include <utility>
 
 #include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class EDM4hepTrackReader : public IReader {
  public:

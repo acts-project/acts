@@ -9,10 +9,11 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <iomanip>
 #include <utility>
 
 // implementation for pure virtual destructor of ISurfaceGridLookup

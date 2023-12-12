@@ -12,7 +12,10 @@
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
+#include <algorithm>
+#include <iterator>
 #include <utility>
+#include <vector>
 
 namespace ActsExamples {
 struct AlgorithmContext;

@@ -12,9 +12,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <limits>
 #include <optional>
 #include <ostream>
 #include <type_traits>

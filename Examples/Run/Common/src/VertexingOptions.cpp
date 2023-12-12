@@ -8,13 +8,7 @@
 
 #include "ActsExamples/Options/VertexingOptions.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
-
-#include <fstream>
-#include <numeric>
+#include <sstream>
 #include <string>
 
 #include <boost/program_options.hpp>

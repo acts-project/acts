@@ -15,14 +15,22 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Detector/ProtoSupport.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
+#include <memory>
+#include <optional>
 #include <tuple>
 #include <vector>
 
 #include <DD4hep/DD4hepUnits.h>
+#include <Evaluator/DD4hepUnits.h>
 
 class TGeoMatrix;
 
@@ -31,6 +39,7 @@ class DetElement;
 }
 
 namespace Acts {
+class Surface;
 
 using namespace UnitLiterals;
 

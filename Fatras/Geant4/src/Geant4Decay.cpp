@@ -17,8 +17,8 @@
 #include <cstdint>
 #include <utility>
 
-#include "G4DecayProducts.hh"
-#include "G4DecayTable.hh"
+#include <G4DecayProducts.hh>
+#include <G4DecayTable.hh>
 
 ActsFatras::Geant4Decay::Geant4Decay()
     : m_g4RunManager(ensureGeant4RunManager()) {}

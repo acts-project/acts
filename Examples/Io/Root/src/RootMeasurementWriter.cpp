@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -18,14 +19,11 @@
 #include <cstddef>
 #include <ios>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 #include <variant>
 
 #include <TFile.h>
-
-namespace Acts {
-class Surface;
-}  // namespace Acts
 
 ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
     const ActsExamples::RootMeasurementWriter::Config& config,

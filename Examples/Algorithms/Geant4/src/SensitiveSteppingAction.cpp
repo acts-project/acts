@@ -16,18 +16,31 @@
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
-#include <cstddef>
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <cstdlib>
+#include <ostream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
-#include <G4RunManager.hh>
+#include <G4DynamicParticle.hh>
+#include <G4ParticleDefinition.hh>
+#include <G4ProcessType.hh>
 #include <G4Step.hh>
 #include <G4StepPoint.hh>
+#include <G4StepStatus.hh>
+#include <G4String.hh>
+#include <G4ThreeVector.hh>
 #include <G4Track.hh>
-#include <G4UnitsTable.hh>
+#include <G4Types.hh>
 #include <G4VPhysicalVolume.hh>
+#include <G4VProcess.hh>
 
 class G4PrimaryParticle;
 

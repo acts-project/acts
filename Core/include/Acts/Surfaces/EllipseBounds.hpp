@@ -24,6 +24,7 @@
 #include <vector>
 
 namespace Acts {
+class BoundaryCheck;
 
 /// @class EllipseBounds
 ///

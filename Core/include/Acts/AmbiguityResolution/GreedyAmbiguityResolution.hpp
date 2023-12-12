@@ -14,7 +14,12 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>

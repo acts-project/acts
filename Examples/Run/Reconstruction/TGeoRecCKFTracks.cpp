@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Detector/TGeoDetectorWithOptions.hpp"
 
+#include <memory>
+
 #include "RecCKFTracks.hpp"
 
 int main(int argc, char* argv[]) {

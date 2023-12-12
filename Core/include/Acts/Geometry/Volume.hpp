@@ -20,6 +20,7 @@
 namespace Acts {
 
 class VolumeBounds;
+
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 /// @class Volume

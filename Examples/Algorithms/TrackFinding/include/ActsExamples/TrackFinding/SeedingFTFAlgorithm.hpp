@@ -16,19 +16,33 @@
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 // in core
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Seeding/GNN_Geometry.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <string>
-#include <vector>
+namespace Acts {
+class TrackingGeometry;
+template <typename space_point_t>
+struct FTF_SP;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class SeedingFTFAlgorithm final : public IAlgorithm {
  public:

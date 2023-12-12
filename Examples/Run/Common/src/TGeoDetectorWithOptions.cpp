@@ -8,30 +8,22 @@
 
 #include "ActsExamples/Detector/TGeoDetectorWithOptions.hpp"
 
-#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
-#include "Acts/Geometry/CylinderVolumeHelper.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/LayerArrayCreator.hpp"
-#include "Acts/Geometry/LayerCreator.hpp"
-#include "Acts/Geometry/PassiveLayerBuilder.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
-#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
-#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
-#include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
-#include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
+#include <array>
 #include <cstdlib>
 #include <fstream>
-#include <list>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
+
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
 
 namespace ActsExamples {
 using namespace Options;

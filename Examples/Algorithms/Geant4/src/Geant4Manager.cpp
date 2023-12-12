@@ -12,22 +12,18 @@
 
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 #include <FTFP_BERT.hh>
 #include <FTFP_BERT_ATL.hh>
 #include <G4EmParameters.hh>
+#include <G4EventManager.hh>
 #include <G4HadronicParameters.hh>
 #include <G4HadronicProcessStore.hh>
-#include <G4Profiler.hh>
 #include <G4RunManager.hh>
 #include <G4RunManagerFactory.hh>
-#include <G4UserEventAction.hh>
-#include <G4UserRunAction.hh>
-#include <G4UserSteppingAction.hh>
-#include <G4UserTrackingAction.hh>
-#include <G4VUserDetectorConstruction.hh>
-#include <G4VUserPhysicsList.hh>
-#include <G4VUserPrimaryGeneratorAction.hh>
+#include <G4StackManager.hh>
+#include <G4TrackingManager.hh>
 #include <G4Version.hh>
 
 namespace ActsExamples {

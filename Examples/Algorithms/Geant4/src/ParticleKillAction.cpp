@@ -15,12 +15,9 @@
 #include <ostream>
 #include <utility>
 
-#include <G4RunManager.hh>
 #include <G4Step.hh>
-#include <G4StepPoint.hh>
+#include <G4ThreeVector.hh>
 #include <G4Track.hh>
-#include <G4UnitsTable.hh>
-#include <G4VPhysicalVolume.hh>
 
 ActsExamples::ParticleKillAction::ParticleKillAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)

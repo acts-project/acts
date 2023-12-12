@@ -8,7 +8,7 @@
 
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <cmath>
 

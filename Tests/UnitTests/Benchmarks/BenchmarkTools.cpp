@@ -13,11 +13,17 @@
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <complex>
+#include <cstddef>
 #include <iostream>
-#include <sstream>
+#include <memory>
+#include <string>
 #include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {

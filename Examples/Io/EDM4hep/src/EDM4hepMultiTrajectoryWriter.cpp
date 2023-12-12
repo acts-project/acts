@@ -8,11 +8,12 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryWriter.hpp"
 
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <edm4hep/TrackCollection.h>
 #include <podio/Frame.h>

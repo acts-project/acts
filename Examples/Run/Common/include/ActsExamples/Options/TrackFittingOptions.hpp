@@ -10,6 +10,12 @@
 
 #include <boost/program_options.hpp>
 
+namespace boost {
+namespace program_options {
+class options_description;
+}  // namespace program_options
+}  // namespace boost
+
 namespace ActsExamples {
 namespace Options {
 

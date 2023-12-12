@@ -12,6 +12,10 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 
+#include <algorithm>
+#include <iterator>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(

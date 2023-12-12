@@ -6,12 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/detail/SteppingLogger.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
@@ -22,12 +24,21 @@
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
-#include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include <cstdlib>
 #include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include <boost/program_options.hpp>
+
+namespace ActsExamples {
+template <typename propagator_t>
+class ConcretePropagator;
+}  // namespace ActsExamples
 
 int propagationExample(int argc, char* argv[],
                        ActsExamples::IBaseDetector& detector) {

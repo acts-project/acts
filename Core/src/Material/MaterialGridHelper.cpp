@@ -8,7 +8,7 @@
 
 #include "Acts/Material/MaterialGridHelper.hpp"
 
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>

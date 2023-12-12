@@ -18,7 +18,6 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <chrono>
 #include <ostream>
 #include <stdexcept>
 #include <system_error>

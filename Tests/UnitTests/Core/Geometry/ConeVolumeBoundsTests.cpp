@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 
 #include <cmath>
 #include <memory>

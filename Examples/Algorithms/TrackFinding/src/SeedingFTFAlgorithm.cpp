@@ -8,21 +8,37 @@
 
 #include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
+#include "Acts/Seeding/GNN_DataStorage.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SeedFinderFTF.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/TrackFinding/FasTrackConnector.hpp"
+#include "Acts/TrackFinding/RoiDescriptor.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <fstream>
-#include <iostream>
+#include <functional>
+#include <iterator>
 #include <map>
-#include <random>
-#include <sstream>
+#include <stdexcept>
+#include <type_traits>
 #include <vector>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 template class Acts::TrigFTF_GNN_Layer<ActsExamples::SimSpacePoint>;
 template class Acts::TrigFTF_GNN_Geometry<ActsExamples::SimSpacePoint>;

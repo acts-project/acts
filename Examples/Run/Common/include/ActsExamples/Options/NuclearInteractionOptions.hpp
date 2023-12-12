@@ -14,9 +14,14 @@
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteractionParameters.hpp"
 
+#include <string>
 #include <utility>
 
 #include "boost/program_options.hpp"
+
+namespace ActsFatras {
+struct NuclearInteraction;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
 namespace Options {

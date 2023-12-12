@@ -17,7 +17,9 @@
 #include "ActsExamples/Utilities/tbbWrap.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
+#include <atomic>
 #include <cstddef>
+#include <iosfwd>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -27,6 +29,7 @@
 #include <utility>
 #include <vector>
 
+#include <oneapi/tbb/enumerable_thread_specific.h>
 #include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {

@@ -10,6 +10,9 @@
 
 #include <fstream>
 #include <initializer_list>
+#include <map>
+
+#include <nlohmann/json.hpp>
 
 void ActsExamples::from_json(const nlohmann::json& data,
                              Acts::GeometryIdentifier& geoId) {

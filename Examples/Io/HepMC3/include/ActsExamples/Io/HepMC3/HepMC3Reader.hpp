@@ -11,11 +11,24 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <HepMC3/Attribute.h>
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/ReaderAscii.h>
 
+namespace HepMC3 {
+class ReaderAscii;
+}  // namespace HepMC3
+
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// HepMC3 event reader.
 class HepMC3AsciiReader final : public IReader {

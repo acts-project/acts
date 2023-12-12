@@ -8,10 +8,9 @@
 
 #include "ActsExamples/Options/HepMC3Options.hpp"
 
-#include "ActsExamples/Utilities/Options.hpp"
-
 #include <string>
 
+#include <HepMC3/Attribute.h>
 #include <boost/program_options.hpp>
 
 void ActsExamples::Options::addHepMC3WriterOptions(

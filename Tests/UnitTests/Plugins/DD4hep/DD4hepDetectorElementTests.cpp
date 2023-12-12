@@ -12,16 +12,17 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
-#include <iostream>
+#include <map>
+#include <memory>
+#include <vector>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
 
-#include "DD4hep/DetFactoryHelper.h"
-#include "XML/Utilities.h"
 #include "XMLFragments.hpp"
 
 Acts::GeometryContext tContext;

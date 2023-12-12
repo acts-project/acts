@@ -17,24 +17,41 @@
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
+#include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
+#include "Acts/Plugins/Json/PortalJsonConverter.hpp"
+#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <nlohmann/json.hpp>
+
+namespace Acts {
+namespace Experimental {
+class IDetectorComponentBuilder;
+}  // namespace Experimental
+}  // namespace Acts
 
 namespace {
 

@@ -11,7 +11,9 @@
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
-#include "G4VUserDetectorConstruction.hh"
+#include <memory>
+
+#include <G4VUserDetectorConstruction.hh>
 
 class G4VPhysicalVolume;
 class G4LogicalVolume;

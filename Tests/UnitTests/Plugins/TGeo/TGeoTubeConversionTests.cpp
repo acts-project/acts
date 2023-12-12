@@ -27,15 +27,14 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <vector>
 
-#include "TGeoManager.h"
+#include <TGeoManager.h>
 #include "TGeoMaterial.h"
 #include "TGeoMatrix.h"
 #include "TGeoMedium.h"
-#include "TGeoTube.h"
 #include "TGeoVolume.h"
-#include "TView.h"
 
 namespace Acts {
 

@@ -8,14 +8,18 @@
 
 #include "ActsExamples/Detector/EmptyDetector.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Options/EmptyDetectorOptions.hpp"
 
 #include <boost/program_options.hpp>
+
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
 
 void EmptyDetector::addOptions(
     boost::program_options::options_description& opt) const {

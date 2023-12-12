@@ -17,7 +17,9 @@
 #include <memory>
 #include <string>
 
-#include "TGeoManager.h"
+#include <TGeoManager.h>
+#include <TGeoMatrix.h>
+#include <TGeoNode.h>
 
 namespace Acts {
 

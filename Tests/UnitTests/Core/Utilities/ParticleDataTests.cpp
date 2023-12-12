@@ -13,7 +13,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <cmath>
+#include <optional>
 #include <string_view>
 
 using namespace Acts;

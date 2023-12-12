@@ -10,15 +10,16 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include <Acts/Surfaces/AnnulusBounds.hpp>
 #include <Acts/Surfaces/DiscTrapezoidBounds.hpp>
 #include <Acts/Surfaces/PlanarBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Helpers.hpp>
 
 #include <algorithm>
 #include <cmath>

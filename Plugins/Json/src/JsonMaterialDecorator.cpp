@@ -16,6 +16,19 @@
 
 #include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
 
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <cstdint>
+#include <fstream>
+#include <initializer_list>
+#include <iterator>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+#include <nlohmann/json.hpp>
+
 namespace Acts {
 
 JsonMaterialDecorator::JsonMaterialDecorator(

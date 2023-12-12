@@ -9,15 +9,21 @@
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Plugins/Python/Utilities.hpp>
-#include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Visualization/GeometryView3D.hpp>
 #include <Acts/Visualization/ObjVisualization3D.hpp>
 #include <Acts/Visualization/ViewConfig.hpp>
 
+#include <array>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 namespace py = pybind11;
 using namespace pybind11::literals;

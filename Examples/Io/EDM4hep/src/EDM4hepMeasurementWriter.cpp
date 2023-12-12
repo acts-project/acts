@@ -8,17 +8,20 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
-#include <stdexcept>
+#include <ostream>
+#include <utility>
 
+#include <edm4hep/TrackerHitCollection.h>
+#include <edm4hep/TrackerHitPlaneCollection.h>
 #include <podio/Frame.h>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 EDM4hepMeasurementWriter::EDM4hepMeasurementWriter(
     const EDM4hepMeasurementWriter::Config& config, Acts::Logging::Level level)

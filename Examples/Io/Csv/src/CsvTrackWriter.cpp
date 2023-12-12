@@ -9,14 +9,19 @@
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <algorithm>
@@ -29,10 +34,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
-
-namespace ActsExamples {
-class IndexSourceLink;
-}  // namespace ActsExamples
 
 using namespace ActsExamples;
 

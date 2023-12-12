@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
@@ -18,6 +19,7 @@
 namespace Acts {
 
 class Surface;
+class RegularSurface;
 
 using SurfacePtr = std::shared_ptr<const RegularSurface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;

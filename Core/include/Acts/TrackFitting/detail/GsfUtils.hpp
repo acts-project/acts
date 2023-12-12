@@ -13,6 +13,7 @@
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -23,6 +24,7 @@
 #include <map>
 #include <numeric>
 #include <ostream>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
 

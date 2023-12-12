@@ -8,21 +8,33 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/WhiteBoardUtilities.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Zip.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
+#include "ActsFatras/Digitization/Segmentizer.hpp"
 
-#include <fstream>
-#include <iostream>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <random>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
 using namespace ActsExamples;
 using namespace Acts::Test;

@@ -26,9 +26,12 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Acts {
+class Surface;
+
 namespace Experimental {
 
 /// @brief This is a builder of layer structures to be contained

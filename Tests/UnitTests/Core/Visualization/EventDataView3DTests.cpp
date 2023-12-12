@@ -14,6 +14,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "EventDataView3DBase.hpp"
 #include "Visualization3DTester.hpp"

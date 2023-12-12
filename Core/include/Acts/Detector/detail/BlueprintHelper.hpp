@@ -14,6 +14,9 @@
 namespace Acts {
 
 namespace Experimental {
+namespace Blueprint {
+struct Node;
+}  // namespace Blueprint
 
 namespace detail {
 namespace BlueprintHelper {

@@ -8,12 +8,12 @@
 
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
-#include "TFile.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TProfile.h"
-#include "TROOT.h"
-#include "TTree.h"
+#include <TFile.h>
+#include <TH1F.h>
+#include <TH2F.h>
+#include <TProfile.h>
+#include <TROOT.h>
+#include <TTree.h>
 
 // This script prints the histogram of a magnetic field map.
 // To be used with the Output of the RootInterpolatedBFieldWriter.

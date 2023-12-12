@@ -9,15 +9,19 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
-#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 
-#include <limits>
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"

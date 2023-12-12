@@ -17,8 +17,8 @@
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
-#include <iterator>
 #include <map>
+#include <ostream>
 #include <stdexcept>
 #include <utility>
 #include <vector>

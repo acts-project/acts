@@ -13,7 +13,9 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <cstddef>
 #include <fstream>
+#include <initializer_list>
 #include <string>
 #include <utility>
 #include <vector>

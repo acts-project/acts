@@ -9,7 +9,7 @@
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/ILayerBuilder.hpp"
+#include "Acts/Geometry/ILayerArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
@@ -20,6 +20,8 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
+
+#include <string>
 
 using namespace Acts::UnitLiterals;
 namespace ActsExamples::Contextual {

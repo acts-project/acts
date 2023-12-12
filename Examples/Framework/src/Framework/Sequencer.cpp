@@ -9,7 +9,6 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -28,20 +27,22 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
-#include <exception>
+#include <deque>
 #include <functional>
 #include <iterator>
-#include <limits>
 #include <numeric>
-#include <ostream>
 #include <ratio>
 #include <regex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <typeinfo>
 
 #include <boost/stacktrace/stacktrace.hpp>
+#include <oneapi/tbb/blocked_range.h>
+#include <oneapi/tbb/detail/_exception.h>
+#include <oneapi/tbb/task_arena.h>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>

@@ -30,7 +30,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdlib>
 #include <fstream>
 #include <functional>
 #include <initializer_list>
@@ -38,10 +37,9 @@
 #include <list>
 #include <optional>
 
+#include <TGeoManager.h>
 #include <boost/program_options.hpp>
 #include <nlohmann/json.hpp>
-
-#include "TGeoManager.h"
 
 namespace ActsExamples {
 using namespace Options;

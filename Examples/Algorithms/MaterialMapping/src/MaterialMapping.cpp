@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 
 namespace ActsExamples {

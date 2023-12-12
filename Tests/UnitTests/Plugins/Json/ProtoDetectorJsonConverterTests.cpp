@@ -20,7 +20,6 @@
 #include <array>
 #include <cmath>
 #include <fstream>
-#include <iterator>
 #include <optional>
 #include <string>
 #include <vector>

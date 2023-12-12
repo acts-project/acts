@@ -22,7 +22,6 @@
 
 #include <TApplication.h>
 #include <boost/program_options.hpp>
-#include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
 #if ((BOOST_VERSION / 100) % 1000) <= 71

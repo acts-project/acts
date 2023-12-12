@@ -8,14 +8,25 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
-#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
+#include "ActsFatras/Digitization/Segmentizer.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <memory>
 #include <numeric>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 

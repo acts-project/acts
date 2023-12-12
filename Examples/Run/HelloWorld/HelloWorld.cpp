@@ -13,8 +13,10 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 
+#include <array>
 #include <cstdlib>
 #include <memory>
+#include <string>
 
 #include "HelloLoggerAlgorithm.hpp"
 #include "HelloRandomAlgorithm.hpp"

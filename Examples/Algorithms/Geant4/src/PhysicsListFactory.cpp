@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Geant4/PhysicsListFactory.hpp"
 
-#include <G4VUserPhysicsList.hh>
+#include <utility>
 
 namespace ActsExamples {
 

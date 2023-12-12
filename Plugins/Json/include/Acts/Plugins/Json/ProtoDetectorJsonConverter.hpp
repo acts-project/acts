@@ -11,7 +11,7 @@
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.

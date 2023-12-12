@@ -10,7 +10,7 @@
 
 #include "Acts/Clusterization/Clusterization.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
-#include "ActsFatras/Digitization/Channelizer.hpp"
+#include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include <array>
 #include <cmath>

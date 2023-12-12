@@ -9,16 +9,25 @@
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Geometry/MaterialWiper.hpp"
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
-#include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Plugins/Json/JsonMaterialDecorator.hpp>
 #include <Acts/Plugins/Json/MaterialMapJsonConverter.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/program_options.hpp>
 
+namespace Acts {
+class IMaterialDecorator;
+class TrackingGeometry;
+}  // namespace Acts
+
 namespace ActsExamples {
+class IContextDecorator;
+
 namespace Geometry {
 
 /// @brief helper method to setup the geometry

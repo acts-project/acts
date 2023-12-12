@@ -20,7 +20,9 @@
 #include <ostream>
 #include <stdexcept>
 
-#include "G4VPhysicalVolume.hh"
+#include <G4String.hh>
+#include <G4Transform3D.hh>
+#include <G4VPhysicalVolume.hh>
 
 auto ActsExamples::Geant4::Geant4Detector::constructDetector(
     const ActsExamples::Geant4::Geant4Detector::Config& cfg,

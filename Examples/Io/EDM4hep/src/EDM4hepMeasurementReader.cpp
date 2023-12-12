@@ -8,18 +8,18 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
-#include <list>
+#include <cstdint>
 #include <stdexcept>
+#include <type_traits>
 
-#include <edm4hep/TrackerHit.h>
 #include <edm4hep/TrackerHitCollection.h>
-#include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
 #include <podio/Frame.h>
 

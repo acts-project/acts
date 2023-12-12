@@ -8,12 +8,12 @@
 
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
-#include "TFile.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TProfile.h"
-#include "TROOT.h"
-#include "TTree.h"
+#include <TFile.h>
+#include <TH1F.h>
+#include <TH2F.h>
+#include <TProfile.h>
+#include <TROOT.h>
+#include <TTree.h>
 
 // This root script creates different histograms displaying the sensitive
 // material, the boundaries and the material of the detector in different views.

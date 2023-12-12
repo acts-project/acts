@@ -12,10 +12,18 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <array>
+#include <cstddef>
 #include <iostream>
+#include <map>
+#include <tuple>
+#include <vector>
+
+#include <nlohmann/json_fwd.hpp>
 
 // Custom Json encoder/decoders.
 namespace Acts {
+class IAxis;
 
 namespace AxisJsonConverter {
 

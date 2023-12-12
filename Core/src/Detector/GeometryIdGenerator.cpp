@@ -10,7 +10,14 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <algorithm>
+#include <any>
+#include <ostream>
+#include <string>
+#include <vector>
 
 Acts::Experimental::IGeometryIdGenerator::GeoIdCache
 Acts::Experimental::GeometryIdGenerator::generateCache() const {

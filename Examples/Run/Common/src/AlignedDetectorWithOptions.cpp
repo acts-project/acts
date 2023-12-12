@@ -8,9 +8,20 @@
 
 #include "ActsExamples/Detector/AlignedDetectorWithOptions.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Options/GenericDetectorOptions.hpp"
 
+#include <cstddef>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
 #include <boost/program_options.hpp>
+
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
 
 using namespace Acts::UnitLiterals;
 

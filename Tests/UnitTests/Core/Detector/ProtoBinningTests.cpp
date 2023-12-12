@@ -9,7 +9,13 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+
+#include <stdexcept>
+#include <vector>
 
 using namespace Acts::Experimental;
 

@@ -30,6 +30,7 @@ class G4VUserPhysicsList;
 namespace ActsExamples {
 
 class DetectorConstructionFactory;
+class Sequencer;
 
 /// Main function for running Geant4 material recording with a specific
 /// detector.

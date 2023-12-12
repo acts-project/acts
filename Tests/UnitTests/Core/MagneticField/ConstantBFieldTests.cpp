@@ -17,6 +17,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <random>
 #include <utility>
 
 namespace bdata = boost::unit_test::data;

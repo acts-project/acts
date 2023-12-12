@@ -9,12 +9,14 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
-#include <exception>
+#include <cstddef>
 #include <fstream>
+#include <iostream>
+#include <optional>
 #include <regex>
 #include <system_error>
+#include <vector>
 
 using namespace boost::program_options;
 

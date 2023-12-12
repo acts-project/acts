@@ -15,18 +15,12 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <tuple>
 #include <utility>
 
+#include <TGeoVolume.h>
 #include <boost/algorithm/string.hpp>
 
 #include "RtypesCore.h"
-#include "TGeoArb8.h"
-#include "TGeoBBox.h"
-#include "TGeoBoolNode.h"
-#include "TGeoCompositeShape.h"
-#include "TGeoTrd2.h"
-#include "TGeoTube.h"
 
 using Line2D = Eigen::Hyperplane<double, 2>;
 

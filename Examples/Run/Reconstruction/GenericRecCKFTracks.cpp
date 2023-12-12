@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Detector/GenericDetectorWithOptions.hpp"
 
+#include <memory>
+
 #include "RecCKFTracks.hpp"
 
 int main(int argc, char* argv[]) {

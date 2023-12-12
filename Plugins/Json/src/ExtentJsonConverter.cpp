@@ -16,8 +16,10 @@
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <array>
-#include <iterator>
+#include <map>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
   const auto& bValueNames = binningValueNames();

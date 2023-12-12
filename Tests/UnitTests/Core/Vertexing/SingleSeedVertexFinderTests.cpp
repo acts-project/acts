@@ -10,11 +10,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/SingleSeedVertexFinder.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <random>
+#include <string>
 #include <vector>
 
 /// @brief SpacePoint definition to be used for the unit tests. Implements all the relevant methods.

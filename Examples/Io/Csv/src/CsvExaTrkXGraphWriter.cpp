@@ -8,14 +8,11 @@
 
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
-#include <stdexcept>
+#include <cstdint>
+#include <type_traits>
 #include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>

@@ -8,16 +8,29 @@
 
 #pragma once
 
+#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/TypeList.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <cstddef>
+#include <map>
+#include <stdexcept>
 #include <vector>
 
+#include <nlohmann/json_fwd.hpp>
+
 namespace Acts {
+namespace Experimental {
+struct DetectorVolumeFiller;
+struct IndexedDetectorVolumeExtractor;
+}  // namespace Experimental
 
 namespace DetectorVolumeFinderJsonConverter {
 

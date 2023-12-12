@@ -21,12 +21,17 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 
 class TFile;
 class TTree;
+namespace Acts {
+class MagneticFieldProvider;
+}  // namespace Acts
+
 namespace ActsFatras {
 class Barcode;
 }  // namespace ActsFatras

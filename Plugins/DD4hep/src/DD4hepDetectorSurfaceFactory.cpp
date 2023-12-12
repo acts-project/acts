@@ -8,16 +8,33 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
+
+#include <map>
+#include <ostream>
+#include <string>
+#include <utility>
+
+#include <DD4hep/Alignments.h>
+#include <DD4hep/Volumes.h>
+#include <TGeoMatrix.h>
+#include <TGeoMedium.h>
+#include <TGeoNode.h>
+#include <TGeoVolume.h>
 
 #include "DD4hep/DetElement.h"
+
+namespace Acts {
+class ISurfaceMaterial;
+}  // namespace Acts
 
 using namespace Acts::detail;
 

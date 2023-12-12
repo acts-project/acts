@@ -8,17 +8,49 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/Digitization/Segmentizer.hpp"
+
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <variant>
+#include <vector>
+
+#include <edm4hep/MCParticle.h>
+#include <edm4hep/MutableMCParticle.h>
+#include <edm4hep/MutableSimTrackerHit.h>
+#include <edm4hep/MutableTrack.h>
+#include <edm4hep/MutableTrackerHit.h>
+#include <edm4hep/MutableTrackerHitPlane.h>
+#include <edm4hep/ObjectID.h>
+#include <edm4hep/SimTrackerHit.h>
+#include <edm4hep/TrackerHit.h>
+#include <edm4hep/TrackerHitCollection.h>
+#include <edm4hep/TrackerHitPlane.h>
+#include <edm4hep/Vector3d.h>
+#include <edm4hep/Vector3f.h>
+#include <podio/RelationRange.h>
 
 #include "edm4hep/TrackState.h"
 

@@ -8,12 +8,20 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
 #include <vector>
 
 #include <G4UserSteppingAction.hh>
+#include <HepMC3/Attribute.h>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 #include <globals.hh>
+
+class G4Step;
+namespace HepMC3 {
+class GenVertex;
+}  // namespace HepMC3
 
 namespace ActsExamples::Geant4::HepMC3 {
 

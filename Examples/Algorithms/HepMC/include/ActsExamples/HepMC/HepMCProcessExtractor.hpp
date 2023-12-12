@@ -21,11 +21,13 @@
 #include <string>
 #include <vector>
 
+#include <HepMC3/Attribute.h>
 #include <HepMC3/GenEvent.h>
 
 class G4RunManager;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @brief This class extracts a certain process from a HepMC event record.
 class HepMCProcessExtractor final : public ActsExamples::IAlgorithm {

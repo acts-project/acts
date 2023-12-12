@@ -20,6 +20,7 @@
 class G4Step;
 
 namespace ActsExamples {
+struct EventStore;
 
 /// @class MaterialSteppingAction
 ///

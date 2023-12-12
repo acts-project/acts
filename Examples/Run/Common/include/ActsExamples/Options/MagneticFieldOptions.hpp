@@ -12,6 +12,12 @@
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
+#include <memory>
+
+namespace Acts {
+class MagneticFieldProvider;
+}  // namespace Acts
+
 namespace ActsExamples {
 
 class Sequencer;

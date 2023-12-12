@@ -16,6 +16,7 @@
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
 

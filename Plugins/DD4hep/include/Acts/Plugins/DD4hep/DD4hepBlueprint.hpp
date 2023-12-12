@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
@@ -18,18 +19,29 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
 #include <memory>
 #include <optional>
+#include <string>
 #include <tuple>
 #include <vector>
 
 #include <DD4hep/DD4hepUnits.h>
 #include <DD4hep/DetElement.h>
+#include <Evaluator/DD4hepUnits.h>
 
 namespace Acts {
 namespace Experimental {
+class DD4hepLayerStructure;
+class IGeometryIdGenerator;
+class IInternalStructureBuilder;
+class IRootVolumeFinderBuilder;
+namespace Blueprint {
+struct Node;
+}  // namespace Blueprint
 
 class DD4hepBlueprint {
  public:

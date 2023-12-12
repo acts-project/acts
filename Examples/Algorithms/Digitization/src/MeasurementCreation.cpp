@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <stdexcept>
 #include <string>

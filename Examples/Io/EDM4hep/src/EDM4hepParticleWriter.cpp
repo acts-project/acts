@@ -8,18 +8,16 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
 
 #include <stdexcept>
+#include <utility>
 
-#include <edm4hep/MCParticle.h>
 #include <edm4hep/MCParticleCollection.h>
 #include <podio/Frame.h>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 EDM4hepParticleWriter::EDM4hepParticleWriter(
     const EDM4hepParticleWriter::Config& cfg, Acts::Logging::Level lvl)

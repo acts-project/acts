@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
@@ -46,8 +47,13 @@
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
+#include "ActsExamples/Utilities/Helpers.hpp"
+#include "ActsExamples/Validation/DuplicationPlotTool.hpp"
+#include "ActsExamples/Validation/EffPlotTool.hpp"
+#include "ActsExamples/Validation/FakeRatePlotTool.hpp"
 
 #include <array>
+#include <map>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -58,13 +64,13 @@
 
 namespace Acts {
 class TrackingGeometry;
+
 namespace detail {
 struct Step;
 }  // namespace detail
 }  // namespace Acts
 namespace ActsExamples {
 class IWriter;
-struct AlgorithmContext;
 }  // namespace ActsExamples
 
 namespace py = pybind11;

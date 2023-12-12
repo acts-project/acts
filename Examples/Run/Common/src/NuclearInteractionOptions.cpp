@@ -8,13 +8,20 @@
 
 #include "ActsExamples/Options/NuclearInteractionOptions.hpp"
 
-#include "ActsExamples/Utilities/Options.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
+#include <cstdint>
 #include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
+#include <TDirectory.h>
 #include <TFile.h>
-#include <TH1F.h>
-#include <TVectorF.h>
+#include <TList.h>
+#include <TObject.h>
+#include <TVectorFfwd.h>
+#include <TVectorT.h>
 
 namespace {
 std::pair<std::vector<float>, std::vector<uint32_t>> readHistogram(

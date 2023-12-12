@@ -23,6 +23,7 @@ class Detector;
 namespace Acts {
 class TrackingGeometry;
 class IMaterialDecorator;
+class DD4hepFieldAdapter;
 }  // namespace Acts
 
 namespace ActsExamples {

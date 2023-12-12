@@ -8,9 +8,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
-#include <cstdlib>
-
 namespace Acts {
 
 namespace Logging {

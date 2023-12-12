@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -20,6 +22,7 @@
 #include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class EDM4hepTrackWriter : public WriterT<ConstTrackContainer> {
  public:

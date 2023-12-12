@@ -12,6 +12,10 @@
 
 #include <boost/program_options.hpp>
 
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
+
 namespace ActsExamples {
 
 void DD4hepDetectorWithOptions::addOptions(

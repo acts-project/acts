@@ -13,6 +13,9 @@
 /// tracks as the input to the vertex finder.
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
@@ -21,13 +24,14 @@
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/ParticleSelectorOptions.hpp"
 #include "ActsExamples/Options/VertexingOptions.hpp"
-#include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 
+#include <cstdlib>
 #include <memory>
+#include <string>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;

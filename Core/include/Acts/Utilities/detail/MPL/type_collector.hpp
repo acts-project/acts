@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <boost/hana/filter.hpp>
 #include <boost/hana/set.hpp>
 #include <boost/hana/type.hpp>

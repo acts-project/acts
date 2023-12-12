@@ -18,9 +18,13 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
+#include <cmath>
+#include <cstddef>
 #include <limits>
 #include <map>
 #include <memory>
+#include <ostream>
+#include <set>
 #include <vector>
 
 namespace Acts {

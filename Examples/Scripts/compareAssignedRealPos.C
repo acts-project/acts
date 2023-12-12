@@ -14,11 +14,12 @@
  */
 
 #include <tuple>
-#include "TFile.h"
-#include "TH2F.h"
-#include "TIterator.h"
-#include "TROOT.h"
-#include "TTree.h"
+
+#include <TFile.h>
+#include <TH2F.h>
+#include <TIterator.h>
+#include <TROOT.h>
+#include <TTree.h>
 
 // This root script prints global real position of layers in darker
 // color and the assigned positions in corresponding lighter color.
@@ -27,34 +28,33 @@
 // histograms.
 // This script is foreseen to use the input of scripts/layerMaterial.C
 
-void
-compareAssignedRealPos(std::string inFile,
-                       std::string infile_geoRZ   = "",
-                       std::string histName_geoRZ = "",
-                       std::string infile_geoXY   = "",
-                       std::string histName_geoXY = "")
-{
+void compareAssignedRealPos(std::string inFile, std::string infile_geoRZ = "",
+                            std::string histName_geoRZ = "",
+                            std::string infile_geoXY = "",
+                            std::string histName_geoXY = "") {
   std::cout << "Opening file: " << inFile << std::endl;
-  TFile  inputFile(inFile.c_str());
+  TFile inputFile(inFile.c_str());
   TList* layers = inputFile.GetListOfKeys();
   std::cout << "Layers to print: " << std::endl;
   layers->Print();
-  TIter    next(layers);
+  TIter next(layers);
   TObject* obj = 0;
 
-  int      entry   = 2;
+  int entry = 2;
   TCanvas* canvas1 = new TCanvas();
   TCanvas* canvas2 = new TCanvas();
 
   while ((obj = next())) {
     inputFile.cd();
-    TDirectory* dir          = inputFile.GetDirectory(obj->GetName());
-    TH2F*       r_z          = (TH2F*)dir->Get("r_z");
-    TH2F*       r_z_assigned = (TH2F*)dir->Get("r_z_assigned");
-    TH2F*       x_y          = (TH2F*)dir->Get("x_y");
-    TH2F*       x_y_assigned = (TH2F*)dir->Get("x_y_assigned");
-    if (entry == 17) entry = 20;
-    if (entry == 10 || entry == 50) entry++;
+    TDirectory* dir = inputFile.GetDirectory(obj->GetName());
+    TH2F* r_z = (TH2F*)dir->Get("r_z");
+    TH2F* r_z_assigned = (TH2F*)dir->Get("r_z_assigned");
+    TH2F* x_y = (TH2F*)dir->Get("x_y");
+    TH2F* x_y_assigned = (TH2F*)dir->Get("x_y_assigned");
+    if (entry == 17)
+      entry = 20;
+    if (entry == 10 || entry == 50)
+      entry++;
     if (r_z && r_z_assigned) {
       canvas1->cd();
       r_z->SetStats(0);

@@ -22,6 +22,8 @@
 #include <TH1F.h>
 #include <TVectorFfwd.h>
 
+class TH1F;
+
 namespace ActsExamples {
 namespace detail {
 namespace NuclearInteractionParametrisation {

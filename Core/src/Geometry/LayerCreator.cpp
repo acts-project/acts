@@ -20,12 +20,14 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <array>
 #include <iterator>
 #include <ostream>
 #include <set>
+#include <stdexcept>
 #include <utility>
 
 namespace Acts {

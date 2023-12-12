@@ -8,9 +8,16 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace Acts {
 namespace Experimental {
@@ -21,6 +28,7 @@ class Detector;
 namespace ActsExamples {
 
 struct AlgorithmContext;
+class RandomNumbers;
 
 /// This is a test algorithm that checks the unique volume identification
 /// and association for Detector objects

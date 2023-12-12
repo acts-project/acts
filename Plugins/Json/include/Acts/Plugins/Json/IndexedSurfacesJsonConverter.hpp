@@ -25,7 +25,14 @@
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <climits>
+#include <cstddef>
+#include <limits>
+#include <map>
+#include <stdexcept>
+#include <tuple>
 #include <vector>
+
+#include <nlohmann/json_fwd.hpp>
 
 namespace Acts {
 

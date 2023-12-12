@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
@@ -31,12 +32,17 @@
 
 #include <any>
 #include <cmath>
-#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace Acts {
+namespace Experimental {
+class Portal;
+}  // namespace Experimental
+}  // namespace Acts
 
 using namespace Acts;
 using namespace Acts::Experimental;

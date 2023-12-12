@@ -9,7 +9,10 @@
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 
 #include <array>
+#include <map>
 #include <stdexcept>
+
+#include <nlohmann/json.hpp>
 
 void Acts::to_json(nlohmann::json& j, const Acts::Transform3& t) {
   auto translation = t.translation();

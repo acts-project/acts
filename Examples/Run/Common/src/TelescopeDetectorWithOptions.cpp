@@ -10,7 +10,16 @@
 
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <array>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include <boost/program_options.hpp>
+
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
 
 namespace ActsExamples {
 

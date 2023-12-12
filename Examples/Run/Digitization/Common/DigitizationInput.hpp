@@ -15,9 +15,14 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Options/CsvOptionsReader.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
 #include <string>
+
+namespace ActsExamples {
+class Sequencer;
+}  // namespace ActsExamples
 
 /// Setup sim hit csv reader
 ///

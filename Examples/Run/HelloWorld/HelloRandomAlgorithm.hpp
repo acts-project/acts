@@ -8,17 +8,22 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <string>
 
 #include "HelloData.hpp"
 
 namespace ActsExamples {
+class RandomNumbers;
+struct AlgorithmContext;
 
 /// An example algorithm that uses the random number generator to generate data.
 class HelloRandomAlgorithm : public ActsExamples::IAlgorithm {

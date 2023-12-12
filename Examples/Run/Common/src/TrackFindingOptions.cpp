@@ -9,9 +9,13 @@
 #include "ActsExamples/Options/TrackFindingOptions.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <cstddef>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include <boost/program_options.hpp>
 

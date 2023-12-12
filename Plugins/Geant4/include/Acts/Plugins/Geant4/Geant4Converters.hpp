@@ -16,9 +16,9 @@
 #include <memory>
 #include <tuple>
 
-#include "G4RotationMatrix.hh"
-#include "G4ThreeVector.hh"
-#include "G4Transform3D.hh"
+#include <G4RotationMatrix.hh>
+#include <G4ThreeVector.hh>
+#include <G4Transform3D.hh>
 
 class G4Box;
 class G4Material;

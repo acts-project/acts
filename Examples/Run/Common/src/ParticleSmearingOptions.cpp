@@ -8,6 +8,14 @@
 
 #include "ActsExamples/Options/ParticleSmearingOptions.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+
+#include <array>
+#include <sstream>
+#include <string>
+
 void ActsExamples::Options::addParticleSmearingOptions(Description& desc) {
   using boost::program_options::value;
   using Options::Reals;

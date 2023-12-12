@@ -7,19 +7,21 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
 #include <algorithm>
-#include <chrono>
-#include <functional>
+#include <array>
+#include <cmath>
+#include <cstddef>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <random>
+#include <string>
+#include <utility>
 #include <vector>
 
 using namespace Acts;

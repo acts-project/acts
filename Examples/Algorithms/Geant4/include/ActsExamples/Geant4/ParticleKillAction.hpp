@@ -11,12 +11,14 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <limits>
 #include <memory>
 #include <string>
 
 #include <G4UserSteppingAction.hh>
 
 class G4Step;
+
 namespace Acts {
 class Volume;
 }  // namespace Acts

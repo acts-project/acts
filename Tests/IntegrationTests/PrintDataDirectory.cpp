@@ -13,8 +13,9 @@
 
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
-#include <cstddef>
+#include <cstdlib>
 #include <iostream>
+#include <string>
 
 int main(void) {
   std::cout << Acts::Test::getDataPath("") << std::endl;

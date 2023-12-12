@@ -16,14 +16,16 @@
 #include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <ostream>
 #include <stdexcept>
 
-#include "TGeoManager.h"
-#include "TGeoMatrix.h"
+#include <TGeoManager.h>
+#include <TGeoMatrix.h>
+#include <TGeoNode.h>
+#include <TGeoVolume.h>
 
 namespace Acts {
 class ISurfaceMaterial;

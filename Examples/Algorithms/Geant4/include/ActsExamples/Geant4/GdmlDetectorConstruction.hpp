@@ -10,6 +10,7 @@
 
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 
+#include <memory>
 #include <string>
 
 #include <G4VUserDetectorConstruction.hh>

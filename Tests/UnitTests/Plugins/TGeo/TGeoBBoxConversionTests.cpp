@@ -22,15 +22,14 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <memory>
+#include <tuple>
 #include <utility>
 
-#include "TGeoBBox.h"
-#include "TGeoManager.h"
-#include "TGeoMaterial.h"
-#include "TGeoMatrix.h"
-#include "TGeoMedium.h"
-#include "TGeoVolume.h"
-#include "TView.h"
+#include <TGeoManager.h>
+#include <TGeoMaterial.h>
+#include <TGeoMatrix.h>
+#include <TGeoMedium.h>
+#include <TGeoVolume.h>
 
 namespace Acts {
 namespace Test {

@@ -20,7 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "G4Types.hh"
+#include <G4Types.hh>
 
 namespace ActsExamples {
 

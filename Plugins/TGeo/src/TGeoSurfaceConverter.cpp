@@ -20,7 +20,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <array>
@@ -32,19 +32,18 @@
 #include <utility>
 #include <vector>
 
+#include <RtypesCore.h>
+#include <TGeoArb8.h>
+#include <TGeoBBox.h>
+#include <TGeoBoolNode.h>
+#include <TGeoCompositeShape.h>
+#include <TGeoMatrix.h>
+#include <TGeoShape.h>
+#include <TGeoTrd1.h>
+#include <TGeoTrd2.h>
+#include <TGeoTube.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-
-#include "RtypesCore.h"
-#include "TGeoArb8.h"
-#include "TGeoBBox.h"
-#include "TGeoBoolNode.h"
-#include "TGeoCompositeShape.h"
-#include "TGeoMatrix.h"
-#include "TGeoShape.h"
-#include "TGeoTrd1.h"
-#include "TGeoTrd2.h"
-#include "TGeoTube.h"
 
 std::tuple<std::shared_ptr<const Acts::CylinderBounds>, const Acts::Transform3,
            double>

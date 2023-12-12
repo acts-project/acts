@@ -24,6 +24,9 @@ namespace Experimental {
 
 class IRootVolumeFinderBuilder;
 class IGeometryIdGenerator;
+namespace Blueprint {
+struct Node;
+}  // namespace Blueprint
 
 /// @brief A dedicated container builder for cylindrical detector containers
 ///

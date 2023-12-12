@@ -12,6 +12,11 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <ostream>
+
 #include <Eigen/Dense>
 
 Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;

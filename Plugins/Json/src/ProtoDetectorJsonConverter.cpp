@@ -14,9 +14,12 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 void Acts::to_json(nlohmann::json& j, const Acts::ProtoVolume& pv) {
   j["name"] = pv.name;

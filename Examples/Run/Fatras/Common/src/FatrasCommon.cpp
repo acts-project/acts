@@ -12,25 +12,24 @@
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
-#include "ActsExamples/Io/Root/RootParticleWriter.hpp"
-#include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/FatrasOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
-#include "ActsExamples/Options/ParticleGunOptions.hpp"
 #include "ActsExamples/Simulation/CommonSimulation.hpp"
-#include "ActsExamples/TruthTracking/ParticleSelector.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
+#include <cstdlib>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/program_options.hpp>
+
+namespace Acts {
+class TrackingGeometry;
+}  // namespace Acts
 
 using namespace ActsExamples;
 

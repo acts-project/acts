@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Detector/TGeoDetectorWithOptions.hpp"
 
+#include <memory>
+
 #include "MeasurementsToSpacepoints.hpp"
 
 int main(int argc, char* argv[]) {

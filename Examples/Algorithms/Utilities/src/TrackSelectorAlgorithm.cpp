@@ -8,13 +8,13 @@
 
 #include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
 
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 
-#include <cmath>
 #include <memory>
 #include <stdexcept>
 #include <utility>

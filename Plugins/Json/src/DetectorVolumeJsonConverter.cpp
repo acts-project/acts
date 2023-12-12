@@ -8,9 +8,10 @@
 
 #include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
@@ -21,7 +22,18 @@
 #include "Acts/Plugins/Json/VolumeBoundsJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
-#include <ctime>
+#include <algorithm>
+#include <iterator>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <utility>
+
+#include <nlohmann/json.hpp>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 namespace {
 

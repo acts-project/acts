@@ -14,9 +14,10 @@
  */
 
 #include <iostream>
-#include "TFile.h"
-#include "TH1F.h"
-#include "TROOT.h"
+
+#include <TFile.h>
+#include <TH1F.h>
+#include <TROOT.h>
 
 // This root script compares either two 1D or two 2D histograms with each other,
 // by plotting them in different colors into the same canvas and displaying the

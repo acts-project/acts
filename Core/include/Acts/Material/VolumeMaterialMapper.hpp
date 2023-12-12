@@ -8,6 +8,12 @@
 
 #pragma once
 
+#include <functional>
+#include <map>
+#include <memory>
+#include <utility>
+#include <vector>
+
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
@@ -27,12 +33,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
-#include <functional>
-#include <map>
-#include <memory>
-#include <utility>
-#include <vector>
 
 namespace Acts {
 

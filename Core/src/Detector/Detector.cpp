@@ -8,12 +8,12 @@
 
 #include "Acts/Detector/Detector.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
-#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>

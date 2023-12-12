@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/IConfinedTrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -20,6 +21,7 @@
 #include "DD4hep/DetElement.h"
 
 class TrackingVolume;
+
 namespace Acts {
 class Logger;
 }  // namespace Acts

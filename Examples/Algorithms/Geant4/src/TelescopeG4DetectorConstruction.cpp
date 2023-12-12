@@ -19,16 +19,18 @@
 #include <string>
 #include <vector>
 
-#include "G4Box.hh"
-#include "G4Cons.hh"
-#include "G4LogicalVolume.hh"
-#include "G4NistManager.hh"
-#include "G4Orb.hh"
-#include "G4PVPlacement.hh"
-#include "G4RunManager.hh"
-#include "G4Sphere.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4Trd.hh"
+#include <G4Box.hh>
+#include <G4LogicalVolume.hh>
+#include <G4Material.hh>
+#include <G4NistManager.hh>
+#include <G4PVPlacement.hh>
+#include <G4RotationMatrix.hh>
+#include <G4String.hh>
+#include <G4SystemOfUnits.hh>
+#include <G4ThreeVector.hh>
+#include <G4Types.hh>
+
+class G4VUserDetectorConstruction;
 
 ActsExamples::Telescope::TelescopeG4DetectorConstruction::
     TelescopeG4DetectorConstruction(const TelescopeDetector::Config& cfg)

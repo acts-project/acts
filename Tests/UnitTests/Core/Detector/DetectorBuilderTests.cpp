@@ -21,15 +21,24 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <any>
+#include <map>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
+
+namespace Acts {
+namespace Experimental {
+class Portal;
+}  // namespace Experimental
+}  // namespace Acts
 
 class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
  public:

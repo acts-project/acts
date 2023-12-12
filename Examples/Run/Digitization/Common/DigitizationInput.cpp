@@ -8,10 +8,13 @@
 
 #include "DigitizationInput.hpp"
 
-#include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
+
+#include <memory>
+#include <string>
 
 ActsExamples::CsvSimHitReader::Config setupSimHitReading(
     const ActsExamples::Options::Variables& vars,

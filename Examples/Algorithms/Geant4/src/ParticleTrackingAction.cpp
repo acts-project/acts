@@ -21,11 +21,11 @@
 #include <ostream>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include <G4ParticleDefinition.hh>
-#include <G4RunManager.hh>
+#include <G4ThreeVector.hh>
 #include <G4Track.hh>
-#include <G4UnitsTable.hh>
 
 ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)

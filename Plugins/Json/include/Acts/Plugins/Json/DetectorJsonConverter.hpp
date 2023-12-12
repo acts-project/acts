@@ -12,6 +12,10 @@
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
 
+#include <memory>
+
+#include <nlohmann/json_fwd.hpp>
+
 // Custom Json encoder/decoders
 
 namespace Acts {

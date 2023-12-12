@@ -8,23 +8,37 @@
 
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
 #include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "ActsExamples/MagneticField/ScalableBField.hpp"
 #include "ActsExamples/MagneticField/ScalableBFieldService.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <array>
+#include <cstddef>
 #include <filesystem>
 #include <memory>
+#include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include <boost/program_options.hpp>
+
+namespace Acts {
+class MagneticFieldProvider;
+}  // namespace Acts
 
 void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
   using boost::program_options::bool_switch;

@@ -12,15 +12,18 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
+#include <vector>
 
 namespace dd4hep {
 class DetElement;
@@ -29,6 +32,7 @@ class DetElement;
 namespace Acts {
 
 namespace Experimental {
+class LayerStructureBuilder;
 
 /// @brief This class allows to generate layer structure builders for dd4hep sub detectors
 /// It performs an intermediate step by taking dd4hep::DetElemnent objects that

@@ -8,8 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
@@ -19,13 +21,21 @@
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <fstream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 template <typename surface_type>
 class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {

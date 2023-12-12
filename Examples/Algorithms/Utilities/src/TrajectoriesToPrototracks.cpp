@@ -9,6 +9,7 @@
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 

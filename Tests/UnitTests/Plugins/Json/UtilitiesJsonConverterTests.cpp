@@ -18,6 +18,7 @@
 #include <cmath>
 #include <fstream>
 #include <initializer_list>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>

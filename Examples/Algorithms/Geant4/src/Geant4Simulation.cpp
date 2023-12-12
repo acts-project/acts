@@ -12,10 +12,10 @@
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
@@ -29,26 +29,26 @@
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4/SteppingActionList.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
-#include <cassert>
 #include <cstddef>
 #include <iostream>
 #include <map>
+#include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 
 #include <G4FieldManager.hh>
+#include <G4LogicalVolume.hh>
+#include <G4MagneticField.hh>
 #include <G4RunManager.hh>
-#include <G4TransportationManager.hh>
-#include <G4UniformMagField.hh>
-#include <G4UserEventAction.hh>
-#include <G4UserLimits.hh>
-#include <G4UserRunAction.hh>
 #include <G4UserSteppingAction.hh>
 #include <G4UserTrackingAction.hh>
+#include <G4VPhysicalVolume.hh>
 #include <G4VUserDetectorConstruction.hh>
 #include <G4VUserPhysicsList.hh>
-#include <G4Version.hh>
+#include <G4VUserPrimaryGeneratorAction.hh>
 #include <Randomize.hh>
 
 ActsExamples::Geant4SimulationBase::Geant4SimulationBase(

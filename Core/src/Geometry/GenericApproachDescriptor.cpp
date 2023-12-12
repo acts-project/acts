@@ -15,6 +15,10 @@
 
 #include <boost/container/small_vector.hpp>
 
+namespace Acts {
+class BoundaryCheck;
+}  // namespace Acts
+
 void Acts::GenericApproachDescriptor::registerLayer(const Layer& lay) {
   // go through the surfaces
   for (auto& sf : m_surfaceCache) {

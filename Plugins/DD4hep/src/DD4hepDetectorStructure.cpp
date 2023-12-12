@@ -8,17 +8,29 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 
+#include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBlueprint.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 
 #include <fstream>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 #include <DD4hep/DetElement.h>
+
+namespace Acts {
+namespace Experimental {
+class Detector;
+}  // namespace Experimental
+}  // namespace Acts
 
 Acts::Experimental::DD4hepDetectorStructure::DD4hepDetectorStructure(
     std::unique_ptr<const Logger> mlogger)
