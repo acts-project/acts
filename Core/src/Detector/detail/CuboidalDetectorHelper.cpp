@@ -178,7 +178,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
         break;
     }
 
-    // The stitch boundarieS for portal pointing
+    // The stitch boundaries for portal pointing
     std::vector<ActsScalar> stitchBoundaries;
     stitchBoundaries.push_back(-mergeHalfLengths[im]);
     for (auto step : mergeSplits[im]) {
