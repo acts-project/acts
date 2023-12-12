@@ -59,7 +59,7 @@ class CurvilinearSurface {
     /// U = Z x T
     /// V = T x U
     Vector3 T = m_direction;
-    Vector3 U = Vector3::UnitZ().cross(T);
+    Vector3 U = Vector3::UnitZ().cross(T).normalized();
     Vector3 V = T.cross(U);
 
     RotationMatrix3 rframe;
