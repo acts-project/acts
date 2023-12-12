@@ -64,7 +64,8 @@ struct associatedConstProxy<
 
 }  // namespace detail
 
-/// Utility class that eases accessing dynamic columns in track containers
+/// Utility class that eases accessing dynamic columns in track and track state
+/// containers
 /// @tparam T the type of the value to access
 /// @tparam ReadOnly true if this is a const accessor
 template <typename T, bool ReadOnly>
@@ -79,9 +80,9 @@ struct ProxyAccessorBase {
   /// @param _key the key
   ProxyAccessorBase(const std::string& _key) : key{hashString(_key)} {}
 
-  /// Access the stored key on the track given as an argument. Mutable version
-  /// @tparam track_proxy_t the type of the track proxy
-  /// @param track the track to access
+  /// Access the stored key on the proxy given as an argument. Mutable version
+  /// @tparam proxy_t the type of the proxy
+  /// @param proxy the proxy object to access
   /// @return mutable reference to the column behind the key
   template <ACTS_CONCEPT(detail::MutableProxyType) proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
@@ -91,9 +92,9 @@ struct ProxyAccessorBase {
     return proxy.template component<T>(key);
   }
 
-  /// Access the stored key on the track given as an argument. Const version
-  /// @tparam track_proxy_t the type of the track proxy
-  /// @param track the track to access
+  /// Access the stored key on the proxy given as an argument. Const version
+  /// @tparam proxy_t the type of the track proxy
+  /// @param proxy the proxy to access
   /// @return const reference to the column behind the key
   template <ACTS_CONCEPT(detail::ProxyType) proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<RO>>
