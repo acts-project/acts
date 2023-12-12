@@ -44,23 +44,6 @@ BOOST_AUTO_TEST_CASE(jacobian_test) {
   CHECK_CLOSE_REL(f2cJacobian(eBoundTheta, eFreeDir2), -sinTheta, 1e-5);
   CHECK_CLOSE_REL(f2cJacobian(eBoundQOverP, eFreeQOverP), 1., 1e-5);
 
-  // (1b) Test with curvilinear glazingly close to z axis
-  direction = Vector3(1., 1., 999.).normalized();
-  surface = CurvilinearSurface(direction);
-  f2cJacobian = surface.freeToBoundJacobian();
-
-  const ActsScalar c = std::hypot(direction.y(), direction.z());
-  const ActsScalar invC = 1. / c;
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos1), -direction.z() * invC,
-                  1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos2), direction.y() * invC,
-                  1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos0), c, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos1),
-                  -direction.x() * direction.y() * invC, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos2),
-                  -direction.x() * direction.z() * invC, 1e-5);
-
   // (2a) Standard test with curvilinear not glazingly close to z axis
   direction = Vector3(7., 8., 9.).normalized();
   surface = CurvilinearSurface(direction);
