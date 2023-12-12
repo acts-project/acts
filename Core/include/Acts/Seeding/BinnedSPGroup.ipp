@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -17,9 +16,11 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
     std::array<std::size_t, 2> index,
     std::array<std::vector<std::size_t>, 2> navigation)
     : m_group(group),
-      m_gridItr(*group.m_grid.get(), std::move(index), navigation),
-      m_gridItrEnd(*group.m_grid.get(), group.m_grid->numLocalBins(),
-                   std::move(navigation)) {
+      m_gridItr(*group.m_grid.get(), std::move(index), navigation) {
+  std::array<std::size_t, 2ul> endline;
+  endline[0ul] = navigation[0ul].size();
+  endline[1ul] = navigation[1ul].size();
+  m_gridItrEnd = typename Acts::SpacePointGrid<external_spacepoint_t>::local_iterator_t(*group.m_grid.get(), std::move(endline), std::move(navigation));
   findNotEmptyBin();
 }
 
@@ -195,13 +196,18 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   m_topBinFinder = tBinFinder;
 
   m_skipZMiddleBin = config.skipZMiddleBinSearch;
+
+  // phi axis
   m_bins[INDEX::PHI].resize(m_grid->numLocalBins()[0]);
-  std::iota(m_bins[INDEX::PHI].begin(), m_bins[INDEX::PHI].end(), 1);
-  m_bins[INDEX::Z] = config.zBinsCustomLooping;
-  if (m_bins[INDEX::Z].empty()) {
-    std::size_t nZbins = m_grid->numLocalBins()[1];
-    m_bins[INDEX::Z].resize(nZbins);
-    std::iota(m_bins[INDEX::Z].begin(), m_bins[INDEX::Z].end(), 1);
+  std::iota(m_bins[INDEX::PHI].begin(), m_bins[INDEX::PHI].end(), 1ul);
+
+  // z axis
+  if (config.zBinsCustomLooping.empty()) {
+    std::size_t nZbins = m_grid->numLocalBins()[1] - m_skipZMiddleBin;
+    m_bins[INDEX::Z] = std::vector<std::size_t>(nZbins);
+    std::iota(m_bins[INDEX::Z].begin(), m_bins[INDEX::Z].end(), 1ul + m_skipZMiddleBin);
+  } else {
+    m_bins[INDEX::Z] = std::vector<std::size_t>(config.zBinsCustomLooping.begin() + m_skipZMiddleBin, config.zBinsCustomLooping.end());
   }
 }
 
