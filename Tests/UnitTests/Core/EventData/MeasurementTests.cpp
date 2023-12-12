@@ -13,9 +13,9 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 
 #include <algorithm>
 #include <array>
@@ -28,8 +28,8 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Test;
-using SourceLink = Acts::Test::TestSourceLink;
+using namespace Acts::detail::Test;
+using SourceLink = Acts::detail::Test::TestSourceLink;
 namespace bd = boost::unit_test::data;
 
 namespace {

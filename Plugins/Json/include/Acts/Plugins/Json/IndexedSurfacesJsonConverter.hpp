@@ -59,7 +59,7 @@ void convert(nlohmann::json& jIndexedSurfaces,
     // Get the surface updator
     auto indexedSurfaces = std::get<SubDelegateType>(castedDelegate->updators);
     jIndexedSurfaces = IndexedGridJsonHelper::convertImpl<SubDelegateType>(
-        indexedSurfaces, detray);
+        indexedSurfaces, detray, detray);
     if (detray) {
       nlohmann::json jAccLink;
       jAccLink["type"] =
