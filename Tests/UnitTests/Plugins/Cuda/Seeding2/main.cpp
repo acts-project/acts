@@ -179,13 +179,15 @@ int main(int argc, char* argv[]) {
   navigation[1ul].resize(spGroup.grid().numLocalBins()[1ul]);
   std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
   std::iota(navigation[1ul].begin(), navigation[1ul].end(), 1ul);
-  
+
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
     decltype(seedFinder_host)::SeedingState state;
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-      std::array<std::size_t, 2ul> localPosition = spGroup.grid().localBinsFromGlobalBin(i);
-      auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
+      std::array<std::size_t, 2ul> localPosition =
+          spGroup.grid().localBinsFromGlobalBin(i);
+      auto spGroup_itr =
+          Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
       }
@@ -221,8 +223,10 @@ int main(int argc, char* argv[]) {
 
   // Perform the seed finding.
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-    std::array<std::size_t, 2ul> localPosition = spGroup.grid().localBinsFromGlobalBin(i);
-    auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
+    std::array<std::size_t, 2ul> localPosition =
+        spGroup.grid().localBinsFromGlobalBin(i);
+    auto spGroup_itr =
+        Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;
     }

@@ -267,10 +267,12 @@ int main(int argc, char** argv) {
   std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
   std::iota(navigation[1ul].begin(), navigation[1ul].end(), 1ul);
 
-  std::array<std::size_t, 2ul> localPosition = spGroup.grid().localBinsFromGlobalBin(skip);
-    
+  std::array<std::size_t, 2ul> localPosition =
+      spGroup.grid().localBinsFromGlobalBin(skip);
+
   int group_count;
-  auto groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, localPosition, navigation);
+  auto groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, localPosition,
+                                                         navigation);
 
   //----------- CPU ----------//
   group_count = 0;
@@ -306,7 +308,8 @@ int main(int argc, char** argv) {
 
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
-  groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, localPosition, navigation);
+  groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, localPosition,
+                                                    navigation);
 
   Acts::SpacePointData spacePointData;
   spacePointData.resize(spVec.size());
