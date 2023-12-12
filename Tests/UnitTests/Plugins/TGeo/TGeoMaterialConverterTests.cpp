@@ -19,6 +19,7 @@
 #include <cmath>
 
 #include <TGeoManager.h>
+
 #include "TGeoMaterial.h"
 
 namespace Acts {

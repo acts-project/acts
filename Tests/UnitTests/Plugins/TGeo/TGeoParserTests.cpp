@@ -23,10 +23,9 @@
 #include <utility>
 #include <vector>
 
+#include <TGeoManager.h>
 #include <TGeoNode.h>
 #include <TGeoVolume.h>
-
-#include <TGeoManager.h>
 
 namespace Acts {
 
