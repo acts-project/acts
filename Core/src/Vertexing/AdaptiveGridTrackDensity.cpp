@@ -5,30 +5,24 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
+
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-float Acts::AdaptiveGridTrackDensity<
-    spatialTrkGridSize, temporalTrkGridSize>::getBinCenter(int bin,
-                                                           float binExtent) {
+float Acts::AdaptiveGridTrackDensity::getBinCenter(int bin, float binExtent) {
   return bin * binExtent;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-int Acts::AdaptiveGridTrackDensity<
-    spatialTrkGridSize, temporalTrkGridSize>::getBin(float value,
-                                                     float binExtent) {
+int Acts::AdaptiveGridTrackDensity::getBin(float value, float binExtent) {
   return static_cast<int>(std::floor(value / binExtent - 0.5) + 1);
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-typename Acts::AdaptiveGridTrackDensity<
-    spatialTrkGridSize, temporalTrkGridSize>::DensityMap::const_iterator
-Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    highestDensityEntry(const DensityMap& densityMap) const {
+typename Acts::AdaptiveGridTrackDensity::DensityMap::const_iterator
+Acts::AdaptiveGridTrackDensity::highestDensityEntry(
+    const DensityMap& densityMap) const {
   auto maxEntry = std::max_element(
       std::begin(densityMap), std::end(densityMap),
       [](const auto& densityEntry1, const auto& densityEntry2) {
@@ -37,11 +31,8 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   return maxEntry;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-Acts::Result<typename Acts::AdaptiveGridTrackDensity<
-    spatialTrkGridSize, temporalTrkGridSize>::ZTPosition>
-Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    getMaxZTPosition(DensityMap& densityMap) const {
+Acts::Result<typename Acts::AdaptiveGridTrackDensity::ZTPosition>
+Acts::AdaptiveGridTrackDensity::getMaxZTPosition(DensityMap& densityMap) const {
   if (densityMap.empty()) {
     return VertexingError::EmptyInput;
   }
@@ -61,7 +52,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   ZTPosition maxValues = std::make_pair(maxZ, 0.);
 
   // Get t value of the maximum if we do time vertex seeding
-  if constexpr (temporalTrkGridSize > 1) {
+  if (m_cfg.temporalTrkGridSize > 1) {
     float maxT = getBinCenter(bin.second, m_cfg.temporalBinExtent);
     maxValues.second = maxT;
   }
@@ -69,11 +60,9 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   return maxValues;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-Acts::Result<typename Acts::AdaptiveGridTrackDensity<
-    spatialTrkGridSize, temporalTrkGridSize>::ZTPositionAndWidth>
-Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    getMaxZTPositionAndWidth(DensityMap& densityMap) const {
+Acts::Result<typename Acts::AdaptiveGridTrackDensity::ZTPositionAndWidth>
+Acts::AdaptiveGridTrackDensity::getMaxZTPositionAndWidth(
+    DensityMap& densityMap) const {
   // Get z value where the density is the highest
   auto maxZTRes = getMaxZTPosition(densityMap);
   if (!maxZTRes.ok()) {
@@ -91,19 +80,16 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   return maxZTAndWidth;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-typename Acts::AdaptiveGridTrackDensity<spatialTrkGridSize,
-                                        temporalTrkGridSize>::DensityMap
-Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    addTrack(const Acts::BoundTrackParameters& trk,
-             DensityMap& mainDensityMap) const {
+typename Acts::AdaptiveGridTrackDensity::DensityMap
+Acts::AdaptiveGridTrackDensity::addTrack(const Acts::BoundTrackParameters& trk,
+                                         DensityMap& mainDensityMap) const {
   ActsVector<3> impactParams = trk.impactParameters();
   ActsSquareMatrix<3> cov = trk.impactParameterCovariance().value();
 
   // Calculate bin in d direction
   int centralDBin = getBin(impactParams(0), m_cfg.spatialBinExtent);
   // Check if current track affects grid density
-  if (std::abs(centralDBin) > (spatialTrkGridSize - 1) / 2.) {
+  if (std::abs(centralDBin) > (m_cfg.spatialTrkGridSize - 1) / 2.) {
     DensityMap emptyTrackDensityMap;
     return emptyTrackDensityMap;
   }
@@ -114,7 +100,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   Bin centralBin = std::make_pair(centralZBin, 0.);
 
   // Calculate bin in t direction if we do time vertex seeding
-  if constexpr (temporalTrkGridSize > 1) {
+  if (m_cfg.temporalTrkGridSize > 1) {
     int centralTBin = getBin(impactParams(2), m_cfg.temporalBinExtent);
     centralBin.second = centralTBin;
   }
@@ -135,40 +121,36 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   return trackDensityMap;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-void Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    subtractTrack(const DensityMap& trackDensityMap,
-                  DensityMap& mainDensityMap) const {
+void Acts::AdaptiveGridTrackDensity::subtractTrack(
+    const DensityMap& trackDensityMap, DensityMap& mainDensityMap) const {
   for (auto it = trackDensityMap.begin(); it != trackDensityMap.end(); it++) {
     mainDensityMap.at(it->first) -= it->second;
   }
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-typename Acts::AdaptiveGridTrackDensity<spatialTrkGridSize,
-                                        temporalTrkGridSize>::DensityMap
-Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    createTrackGrid(const Acts::Vector3& impactParams, const Bin& centralBin,
-                    const Acts::SquareMatrix3& cov) const {
+typename Acts::AdaptiveGridTrackDensity::DensityMap
+Acts::AdaptiveGridTrackDensity::createTrackGrid(
+    const Acts::Vector3& impactParams, const Bin& centralBin,
+    const Acts::SquareMatrix3& cov) const {
   DensityMap trackDensityMap;
 
-  int halfSpatialTrkGridSize = (spatialTrkGridSize - 1) / 2;
+  int halfSpatialTrkGridSize = (m_cfg.spatialTrkGridSize - 1) / 2;
   int firstZBin = centralBin.first - halfSpatialTrkGridSize;
 
   // If we don't do time vertex seeding, firstTBin will be 0.
-  int halfTemporalTrkGridSize = (temporalTrkGridSize - 1) / 2;
+  int halfTemporalTrkGridSize = (m_cfg.temporalTrkGridSize - 1) / 2;
   int firstTBin = centralBin.second - halfTemporalTrkGridSize;
 
   // Loop over bins
-  for (int i = 0; i < temporalTrkGridSize; i++) {
+  for (unsigned int i = 0; i < m_cfg.temporalTrkGridSize; i++) {
     int tBin = firstTBin + i;
     // If we don't do vertex time seeding, we set the time to 0 since it will be
     // discarded in the for loop below anyways
     float t = 0;
-    if constexpr (temporalTrkGridSize > 1) {
+    if (m_cfg.temporalTrkGridSize > 1) {
       t = getBinCenter(tBin, m_cfg.temporalBinExtent);
     }
-    for (int j = 0; j < spatialTrkGridSize; j++) {
+    for (unsigned int j = 0; j < m_cfg.spatialTrkGridSize; j++) {
       int zBin = firstZBin + j;
       float z = getBinCenter(zBin, m_cfg.spatialBinExtent);
       // Bin coordinates in the d-z-t plane
@@ -176,7 +158,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
       // Transformation to coordinate system with origin at the track center
       binCoords -= impactParams;
       Bin bin = std::make_pair(zBin, tBin);
-      if constexpr (temporalTrkGridSize == 1) {
+      if (m_cfg.temporalTrkGridSize == 1) {
         trackDensityMap[bin] = multivariateGaussian<2>(
             binCoords.head<2>(), cov.topLeftCorner<2, 2>());
       } else {
@@ -187,11 +169,8 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   return trackDensityMap;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-Acts::Result<float> Acts::AdaptiveGridTrackDensity<
-    spatialTrkGridSize,
-    temporalTrkGridSize>::estimateSeedWidth(const DensityMap& densityMap,
-                                            const ZTPosition& maxZT) const {
+Acts::Result<float> Acts::AdaptiveGridTrackDensity::estimateSeedWidth(
+    const DensityMap& densityMap, const ZTPosition& maxZT) const {
   if (densityMap.empty()) {
     return VertexingError::EmptyInput;
   }
@@ -200,7 +179,7 @@ Acts::Result<float> Acts::AdaptiveGridTrackDensity<
   int zMaxBin = getBin(maxZT.first, m_cfg.spatialBinExtent);
   int tMaxBin = 0;
   // Fill the time bin with a non-zero value if we do time vertex seeding
-  if constexpr (temporalTrkGridSize > 1) {
+  if (m_cfg.temporalTrkGridSize > 1) {
     tMaxBin = getBin(maxZT.second, m_cfg.temporalBinExtent);
   }
   const float maxValue = densityMap.at(std::make_pair(zMaxBin, tMaxBin));
@@ -260,21 +239,18 @@ Acts::Result<float> Acts::AdaptiveGridTrackDensity<
   return std::isnormal(width) ? width : 0.0f;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
 template <unsigned int nDim>
-float Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    multivariateGaussian(const Acts::ActsVector<nDim>& args,
-                         const Acts::ActsSquareMatrix<nDim>& cov) {
+float Acts::AdaptiveGridTrackDensity::multivariateGaussian(
+    const Acts::ActsVector<nDim>& args,
+    const Acts::ActsSquareMatrix<nDim>& cov) {
   float expo = -0.5 * args.transpose().dot(cov.inverse() * args);
   float gaussianDensity = safeExp(expo) / std::sqrt(cov.determinant());
   return gaussianDensity;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-typename Acts::AdaptiveGridTrackDensity<spatialTrkGridSize,
-                                        temporalTrkGridSize>::Bin
-Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    highestDensitySumBin(DensityMap& densityMap) const {
+typename Acts::AdaptiveGridTrackDensity::Bin
+Acts::AdaptiveGridTrackDensity::highestDensitySumBin(
+    DensityMap& densityMap) const {
   // The global maximum
   auto firstMax = highestDensityEntry(densityMap);
   Bin binFirstMax = firstMax->first;
@@ -323,9 +299,8 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   return binFirstMax;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize>
-float Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    getDensitySum(const DensityMap& densityMap, const Bin& bin) const {
+float Acts::AdaptiveGridTrackDensity::getDensitySum(
+    const DensityMap& densityMap, const Bin& bin) const {
   // Add density from the bin.
   float sum = densityMap.at(bin);
   // Check if neighboring bins are part of the densityMap and add them (if they
