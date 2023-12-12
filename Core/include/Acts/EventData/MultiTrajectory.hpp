@@ -1145,6 +1145,7 @@ class MultiTrajectory {
       IndexType iprevious = kInvalid) {
     return getTrackState(addTrackState(mask, iprevious));
   }
+
   /// Visit all previous states starting at a given endpoint.
   ///
   /// @param iendpoint  index of the last state
