@@ -8,6 +8,7 @@ add_library(
   src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp
   src/SeedingFTFAlgorithm.cpp
+  src/MuonHoughSeeder.cpp
 )
 
 target_include_directories(
@@ -22,6 +23,8 @@ target_link_libraries(
     ActsExamplesFramework
     ActsExamplesIoJson
     ActsExamplesMagneticField
+    
+  PRIVATE  ROOT::Core ROOT::Geom ROOT::Graf ROOT::GenVector ROOT::Hist ROOT::Tree ROOT::TreePlayer
 )
 
 install(
