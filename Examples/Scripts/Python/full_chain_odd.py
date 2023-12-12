@@ -195,7 +195,9 @@ else:
     addAmbiguityResolution(
         s,
         AmbiguityResolutionConfig(
-            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+            maximumSharedHits=3,
+            maximumIterations=1000000,
+            nMeasurementsMin=7,
         ),
         outputDirRoot=outputDir,
         writeCovMat=True,
