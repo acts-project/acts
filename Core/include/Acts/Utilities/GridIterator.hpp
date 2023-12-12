@@ -72,7 +72,7 @@ class GridLocalIterator {
  public:
   static constexpr std::size_t DIM = sizeof...(Axes);
 
-  using iterator_category = std::random_access_iterator_tag;
+  using iterator_category = std::bidirectional_iterator_tag;
   using value_type = T;
   using difference_type = std::ptrdiff_t;
   using pointer = value_type*;
@@ -102,13 +102,6 @@ class GridLocalIterator {
 
   bool operator==(const Acts::GridLocalIterator<T, Axes...>& other) const;
   bool operator!=(const Acts::GridLocalIterator<T, Axes...>& other) const;
-
-  bool operator<(const Acts::GridLocalIterator<T, Axes...>& other) const;
-  bool operator>(const Acts::GridLocalIterator<T, Axes...>& other) const;
-  bool operator<=(const Acts::GridLocalIterator<T, Axes...>& other) const;
-  bool operator>=(const Acts::GridLocalIterator<T, Axes...>& other) const;
-
-  difference_type operator-(const GridLocalIterator<T, Axes...>& other) const;
 
   const value_type& operator*() const;
 

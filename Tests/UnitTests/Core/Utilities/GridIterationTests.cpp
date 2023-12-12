@@ -70,6 +70,63 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global_operators) {
   BOOST_CHECK_EQUAL(gridDefault == gridDummy, false);
 }
 
+BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global_operators) {
+  const std::size_t nBinsX = 10ul;
+  const std::size_t nBinsY = 5ul;
+  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
+  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
+  Acts::Grid<double, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis> grid(
+      std::make_tuple(std::move(xAxis), std::move(yAxis)));
+
+  BOOST_CHECK_EQUAL(grid.size(true), (nBinsX + 2ul) * (nBinsY + 2ul));
+
+  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis> gridStart =
+      grid.begin();
+  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis> gridStop =
+      grid.end();
+
+  BOOST_CHECK_EQUAL(gridStart == gridStop, false);
+  BOOST_CHECK_EQUAL(gridStart != gridStop, true);
+  BOOST_CHECK_EQUAL(gridStart < gridStop, true);
+  BOOST_CHECK_EQUAL(gridStart <= gridStop, true);
+  BOOST_CHECK_EQUAL(gridStart > gridStop, false);
+  BOOST_CHECK_EQUAL(gridStart >= gridStop, false);
+
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), grid.size(true));
+  auto itr = gridStart++;
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStart), 1ul);
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStop), grid.size(true));
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), grid.size(true) - 1ul);
+
+  itr = ++gridStart;
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStart), 0ul);
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), grid.size(true) - 2ul);
+
+  itr = gridStart + std::distance(gridStart, gridStop);
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), grid.size(true) - 2ul);
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStop), 0ul);
+  BOOST_CHECK_EQUAL(itr == gridStop, true);
+
+  itr = gridStart - 1ul;
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), grid.size(true) - 2ul);
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStop), grid.size(true) - 1ul);
+
+  gridStart += std::distance(gridStart, gridStop);
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), 0ul);
+  BOOST_CHECK_EQUAL(gridStart == gridStop, true);
+
+  gridStart -= 3ul;
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), 3ul);
+  BOOST_CHECK_EQUAL(gridStart != gridStop, true);
+
+  [[maybe_unused]] double value = *gridStart;
+
+  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis> gridDefault;
+  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis> gridDummy(grid, 0ul);
+
+  BOOST_CHECK_EQUAL(gridDefault == gridDummy, false);
+}
+  
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
   const std::size_t nBins = 10ul;
   Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
@@ -159,6 +216,49 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_global) {
   BOOST_CHECK_EQUAL(numIterations, grid.size(true));
 }
 
+BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_operators) {
+  const std::size_t nBins = 10ul;
+  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
+      std::make_tuple(std::move(xAxis)));
+    
+  std::array<std::vector<std::size_t>, 1ul> navigation;
+  navigation[0ul].resize(nBins);
+  std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
+  
+  // Constructor without navigation
+  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridIterNoNav(grid, {0ul});
+  // Constructor(s) with navigation
+  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridStart(grid, {0ul}, navigation);
+
+  BOOST_CHECK_EQUAL(std::distance(gridIterNoNav, gridStart), 0ul);
+  BOOST_CHECK_EQUAL(gridIterNoNav == gridStart, true);
+
+  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridStop(grid, {nBins}, std::move(navigation));
+
+  BOOST_CHECK_EQUAL(gridStart == gridStop, false);
+  BOOST_CHECK_EQUAL(gridStart != gridStop, true);
+
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), grid.size(false));
+  BOOST_CHECK_EQUAL(gridStart != gridStop, true);
+
+  auto itr = gridStart++;
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStart), 1ul);
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStop), nBins);
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBins - 1ul);
+
+  itr = ++gridStart;
+  BOOST_CHECK_EQUAL(std::distance(itr, gridStart), 0ul);
+  BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBins - 2ul);
+
+  [[maybe_unused]] double value = *gridStart;
+
+  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridDefault;
+  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridDummy(grid, {0ul});
+
+  BOOST_CHECK_EQUAL(gridDefault == gridDummy, false);
+}
+  
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local) {
   const std::size_t nBins = 10ul;
   Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
@@ -174,7 +274,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local) {
 
   std::array<std::vector<std::size_t>, 1ul> navigation;
   navigation[0ul].resize(nBins);
-  std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1);
+  std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
 
   Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridStart =
       grid.begin(navigation);
@@ -207,7 +307,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local) {
   navigation[0ul].resize(nBins);
   navigation[1ul].resize(nBins);
   for (std::size_t i(0ul); i < 2ul; ++i) {
-    std::iota(navigation[i].begin(), navigation[i].end(), 1);
+    std::iota(navigation[i].begin(), navigation[i].end(), 1ul);
   }
 
   Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
@@ -249,7 +349,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local) {
   navigation[1ul].resize(nBins);
   navigation[2ul].resize(nBinsZ);
   for (std::size_t i(0ul); i < 3ul; ++i) {
-    std::iota(navigation[i].begin(), navigation[i].end(), 1);
+    std::iota(navigation[i].begin(), navigation[i].end(), 1ul);
   }
 
   Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
