@@ -546,7 +546,7 @@ class TrackStateProxy {
   /// The projector matrix is packed as a bitset, which is converted to a matrix
   /// on-demand (and therefore returned by value).
   ///
-  /// A convenience function to assign this from the @ref Acts::Measurement class
+  /// A convenience function to assign this from the @ref Measurement class
   /// is provided, although it's use is discouraged.
   ///
   /// The track state also includes a @ref SourceLink which acts as a proxy
