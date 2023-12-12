@@ -663,9 +663,6 @@ static_assert(
     !IsReadOnlyMultiTrajectory<MutablePodioTrackStateContainer>::value,
     "MutablePodioTrackStateContainer should not be read-only");
 
-static_assert(!MutablePodioTrackStateContainer::ReadOnly,
-              "MutablePodioTrackStateContainer should not be read-only");
-
 ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend,
                           MutablePodioTrackStateContainer);
 
