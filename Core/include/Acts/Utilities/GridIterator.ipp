@@ -164,8 +164,7 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
     : m_grid(std::exchange(other.m_grid.ptr, nullptr)),
       m_numLocalBins(std::move(other.m_numLocalBins)),
       m_currentIndex(std::move(other.m_currentIndex)),
-      m_navigationIndex(std::move(other.m_navigationIndex))
-      {}
+      m_navigationIndex(std::move(other.m_navigationIndex)) {}
 
 template <typename T, class... Axes>
 Acts::GridLocalIterator<T, Axes...>&
