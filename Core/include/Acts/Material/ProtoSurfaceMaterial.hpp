@@ -33,7 +33,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Constructor without binningType - homogeneous material
   ProtoSurfaceMaterialT() = default;
 
-  /// Constructor with BinnintType
+  /// Constructor with BinningType
   /// @param binningType a binning description for the material map binning
   /// @param mappingType is the type of surface mapping associated to the surface
   ProtoSurfaceMaterialT(const BinningType& binning,
