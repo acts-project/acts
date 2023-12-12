@@ -10,13 +10,13 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <random>
 
-namespace Acts::Test {
+namespace Acts::detail::Test {
 
 struct TestTrackState {
   std::shared_ptr<Surface> surface;
@@ -132,4 +132,4 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   }
 }
 
-}  // namespace Acts::Test
+}  // namespace Acts::detail::Test

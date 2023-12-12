@@ -193,5 +193,4 @@ FasTrackConnector::~FasTrackConnector() {
     }
   }
 }
-
 }  // namespace Acts
