@@ -84,16 +84,24 @@ nlohmann::json toJson(const grid_type& grid) {
 ///
 /// @tparam grid_type the type of the grid
 /// @param grid the grid object
+/// @param swapAxis - this is needed for detray
+///
+/// @note detray has a different offset for the
+/// local indices, it starts at 0
 ///
 /// @return a json object to represent the grid
 template <typename grid_type>
-nlohmann::json toJsonDetray(const grid_type& grid) {
+nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
   nlohmann::json jGrid;
+  // Get the grid axes & potentially swap them
+  std::array<const Acts::IAxis*, grid_type::DIM> axes = grid.axes();
+  if (swapAxis && grid_type::DIM == 2u) {
+    std::swap(axes[0u], axes[1u]);
+  }
 
-  auto axes = grid.axes();
   nlohmann::json jAxes;
 
-  // Fill the axes
+  // Fill the axes in the order they are
   for (unsigned int ia = 0u; ia < grid_type::DIM; ++ia) {
     auto jAxis = AxisJsonConverter::toJsonDetray(*axes[ia]);
     jAxis["label"] = ia;
@@ -105,11 +113,14 @@ nlohmann::json toJsonDetray(const grid_type& grid) {
   // 1D connections
   if constexpr (grid_type::DIM == 1u) {
     for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
+      // Lookup bin
       typename grid_type::index_t lbin;
       lbin[0u] = ib0;
       nlohmann::json jBin;
-      jBin["loc_index"] = lbin;
       jBin["content"] = grid.atLocalBins(lbin);
+      // Corrected bin for detray
+      lbin[0u] = ib0 - 1u;
+      jBin["loc_index"] = lbin;
       jData.push_back(jBin);
     }
   }
@@ -119,11 +130,15 @@ nlohmann::json toJsonDetray(const grid_type& grid) {
     for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
       for (unsigned int ib1 = 1u; ib1 <= axes[1u]->getNBins(); ++ib1) {
         typename grid_type::index_t lbin;
-        lbin[0u] = ib0;
-        lbin[1u] = ib1;
+        // Lookup bin - respect swap (if it happened) for the lookup
+        lbin[0u] = swapAxis ? ib1 : ib0;
+        lbin[1u] = swapAxis ? ib0 : ib1;
         nlohmann::json jBin;
-        jBin["loc_index"] = lbin;
         jBin["content"] = grid.atLocalBins(lbin);
+        // Corrected bin for detray
+        lbin[0u] = ib0 - 1u;
+        lbin[1u] = ib1 - 1u;
+        jBin["loc_index"] = lbin;
         jData.push_back(jBin);
       }
     }
