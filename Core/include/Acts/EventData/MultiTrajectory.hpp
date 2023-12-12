@@ -390,7 +390,7 @@ class TrackStateProxy {
       setReferenceSurface(other.referenceSurface().getSharedPtr());
     }
 
-    m_traj->copyDynamicFrom(m_istate, other.container(), other.index());
+    m_traj->copyDynamicFrom(m_istate, other.trajectory(), other.index());
   }
 
   /// Unset an optional track state component
@@ -952,23 +952,16 @@ class TrackStateProxy {
         component<TrackStateType::raw_type, hashString("typeFlags")>()};
   }
 
+  /// Get a mutable reference to the track state container backend
+  /// @return a mutable reference to the backend
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   MultiTrajectory<Trajectory>& trajectory() {
     return *m_traj;
   }
 
-  const MultiTrajectory<Trajectory>& trajectory() const { return *m_traj; }
-
-  /// Get a mutable reference to the track state container backend
-  /// @return a mutable reference to the backend
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto& container() {
-    return *m_traj;
-  }
-
   /// Get a const reference to the track state container backend
   /// @return a const reference to the backend
-  const auto& container() const { return *m_traj; }
+  const MultiTrajectory<Trajectory>& trajectory() const { return *m_traj; }
 
  private:
   // Private since it can only be created by the trajectory.
