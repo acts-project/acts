@@ -189,7 +189,7 @@ point<Space point>`.
 
 (ckf_tree)=
 :::{figure} figures/ckf_tree.svg
-:width: 300px
+:width: 400px
 :align: center
 Illustration of a branching multi-trajectory that is created during
 combinatorial track finding.
@@ -220,7 +220,7 @@ possible to connect the states forward, i.e. store in $S_1$ what the *next*
 state is going to be: it is ambiguous!
 
 However, when track finding has concluded, and the trajectories identified by
-{term}`tip states<tip state` $S_7$ and $S_8$ have been discarded or are being
+{term}`tip states<tip state>` $S_7$ and $S_8$ have been discarded or are being
 copied into an output cotainer, it is possible to *forward link* the track
 state sequences. This is possible **if** the trajectory does not branch
 anymore! {func}`Acts::TrackProxy::copyFrom` will implicitly forward link the
@@ -238,19 +238,60 @@ has branching will break the branching! If you have other tracks pointing at a
 forward-link, it will be corrupted!
 :::
 
-In this example
+In this example, before any forward linking, the sequence looks like this:
 
 :::{graphviz}
-graph {
-A -> B;
+
+digraph {
+rankdir="LR";
+S2 -> S1;
+S3 -> S1;
+S7 -> S5 -> S4 -> S2;
+S6 -> S3;
 }
+
 :::
 
+After a copy operation of $S_6$ and $S_7$ the resultig track state sequences will look like this:
 
+
+:::{graphviz}
+
+digraph {
+rankdir="LR";
+S11[label="S1 (copy)"];
+S12[label="S1 (copy)"];
+S7 -> S5 -> S4 -> S11;
+S11 -> S4 -> S5 -> S7;
+S6 -> S3 -> S12;
+S12 -> S3 -> S6;
+}
+
+:::
+
+This now includes both forward and backward links, which allows iteration from
+$S_1$/$S_2$ to $S_6$/$S_7$ and the othe other way around.
+
+Forward iteration can then be achieved like this:
+
+```cpp
+auto track = getTrackFromSomewhere();
+for(const auto trackState : track.trackStates()) {
+  // iterate forward
+  // do something with track state
+}
+```
+
+and the innermost track state becomes directly accessible via
+{func}`Acts::TrackProxy::innermostTrackState`.
 
 ## Track State API
 
 :::{doxygenclass} Acts::TrackStateProxy
+:members:
+:::
+
+:::{doxygenclass} Acts::MultiTrajectory
 :members:
 :::
 
