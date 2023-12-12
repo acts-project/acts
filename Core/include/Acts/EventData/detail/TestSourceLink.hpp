@@ -25,8 +25,7 @@
 #include <iosfwd>
 #include <stdexcept>
 
-namespace Acts {
-namespace Test {
+namespace Acts::detail::Test {
 
 /// A minimal source link implementation for testing.
 ///
@@ -69,7 +68,24 @@ struct TestSourceLink final {
   TestSourceLink(TestSourceLink&&) = default;
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
-
+  bool operator==(const TestSourceLink& rhs) const {
+    return (m_geometryId == rhs.m_geometryId) && (sourceId == rhs.sourceId) &&
+           (indices == rhs.indices) && (parameters == rhs.parameters) &&
+           (covariance == rhs.covariance);
+  }
+  bool operator!=(const TestSourceLink& rhs) const { return !(*this == rhs); }
+  std::ostream& print(std::ostream& os) const {
+    os << "TestsSourceLink(geometryId=" << m_geometryId
+       << ",sourceId=" << sourceId;
+    if (indices[0] != eBoundSize) {
+      os << ",index0=" << indices[0];
+    }
+    if (indices[1] != eBoundSize) {
+      os << ",index1=" << indices[1];
+    }
+    os << ")";
+    return os;
+  }
   constexpr std::size_t index() const { return sourceId; }
 
   struct SurfaceAccessor {
@@ -82,9 +98,10 @@ struct TestSourceLink final {
   };
 };
 
-bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs);
-bool operator!=(const TestSourceLink& lhs, const TestSourceLink& rhs);
-std::ostream& operator<<(std::ostream& os, const TestSourceLink& sourceLink);
+inline std::ostream& operator<<(std::ostream& os,
+                                const TestSourceLink& sourceLink) {
+  return sourceLink.print(os);
+}
 
 /// Extract the measurement from a TestSourceLink.
 ///
@@ -133,5 +150,4 @@ void testSourceLinkCalibrator(
                                                trackState);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::detail::Test

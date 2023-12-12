@@ -72,9 +72,12 @@ struct ProtoBinning {
                std::size_t exp = 0u)
       : binValue(bValue), boundaryType(bType), expansion(exp) {
     if (minE >= maxE) {
-      throw std::invalid_argument(
-          "ProtoBinning: Invalid binning, min edge needs to be smaller than "
-          "max edge.");
+      std::string msg = "ProtoBinning: Invalid binning for value '";
+      msg += binningValueNames()[bValue];
+      msg += "', min edge (" + std::to_string(minE) + ") ";
+      msg += " needs to be smaller than max edge (";
+      msg += std::to_string(maxE) + ").";
+      throw std::invalid_argument(msg);
     }
     if (nbins < 1u) {
       throw std::invalid_argument(
@@ -88,7 +91,7 @@ struct ProtoBinning {
     }
   }
 
-  /// Placehoder constructors - for equidistant binning
+  /// Placeholder constructors - for equidistant binning
   ///
   /// @note this is designed to give a binning prescription
   /// when the actual extent is not yet evaluated, only works

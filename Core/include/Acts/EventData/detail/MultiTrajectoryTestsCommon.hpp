@@ -13,15 +13,15 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <random>
 
-namespace Acts::Test {
+namespace Acts::detail::Test {
 
 template <typename factory_t>
 class MultiTrajectoryTestsCommon {
@@ -376,7 +376,7 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
         ttsb.sourceLink.sourceId);
-    auto m2 = std::get<Measurement<BoundIndices, 2u>>(meas);
+    auto m2 = std::get<Acts::Measurement<BoundIndices, 2u>>(meas);
 
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
     BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), m2.parameters());
@@ -1065,4 +1065,4 @@ class MultiTrajectoryTestsCommon {
     // runTest([](std::string_view c) { return c; });
   }
 };
-}  // namespace Acts::Test
+}  // namespace Acts::detail::Test
