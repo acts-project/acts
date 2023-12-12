@@ -43,7 +43,7 @@ void checkRotationAlignment(
 /// @param volumes the input volumes to be checked
 /// @param axisValue the alignment axist
 ///
-/// @note this will call checkRotation Alginemtn first
+/// @note this will call checkRotationAlignment first
 /// @note throws exception if the volumes are not ordered
 ///
 /// @return a vector with position differences (ordered)
