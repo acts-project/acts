@@ -488,7 +488,7 @@ class Grid final {
     for (std::size_t i(0ul); i < DIM; ++i) {
       endline[i] = navigator[i].size();
     }
-    return local_iterator_t(*this, endline, navigator);
+    return local_iterator_t(*this, std::move(endline), navigator);
   }
 
  private:

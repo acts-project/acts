@@ -125,7 +125,6 @@ class GridLocalIterator {
   Acts::detail::RefHolder<const Acts::Grid<T, Axes...>> m_grid{nullptr};
   std::array<std::size_t, DIM> m_numLocalBins{};
   std::array<std::size_t, DIM> m_currentIndex{};
-  std::array<std::size_t, DIM> m_localPosition{};
   std::array<std::vector<std::size_t>, DIM> m_navigationIndex{};
 };
 
