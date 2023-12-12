@@ -80,7 +80,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
       std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
                 volumeName) != m_cfg.volumeMappings.end();
 
-  if (isSensitive && (isMappedMaterial || isMappedVolume)) {
+  if (isSensitive || isMappedMaterial || isMappedVolume) {
     // Find the associated ACTS object
     auto actsLayer = m_cfg.trackingGeometry->associatedLayer(
         Acts::GeometryContext(), g4AbsPosition);
