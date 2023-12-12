@@ -116,7 +116,8 @@ class PodioTrackContainerBase {
 
   template <typename T>
   static auto dynamicKeys_impl(T& instance) {
-    using column_type = decltype(instance.m_dynamic)::mapped_type::element_type;
+    using column_type =
+        typename decltype(instance.m_dynamic)::mapped_type::element_type;
     return detail::DynamicKeyRange<column_type>{instance.m_dynamic.begin(),
                                                 instance.m_dynamic.end()};
   }
