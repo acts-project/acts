@@ -230,5 +230,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::begin() {
 template <typename external_spacepoint_t>
 inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::end() {
-  return {*this, m_grid->numLocalBins(), m_bins};
+  std::array<std::size_t, 2ul> endline;
+  endline[0ul] = m_bins[0ul].size();
+  endline[1ul] = m_bins[1ul].size(); 
+  return {*this, std::move(endline), m_bins};
 }

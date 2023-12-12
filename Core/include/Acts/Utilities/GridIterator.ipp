@@ -126,7 +126,6 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
   for (std::size_t i(0); i < DIM; ++i) {
     m_navigationIndex[i].resize(m_numLocalBins[i]);
     std::iota(m_navigationIndex[i].begin(), m_navigationIndex[i].end(), 1ul);
-    m_localPosition[i] = 1ul;
   }
 }
 
@@ -156,7 +155,6 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
           "specified.");
     }
     m_numLocalBins[i] = m_navigationIndex[i].size();
-    m_localPosition[i] = m_navigationIndex[i][m_currentIndex[i]];
   }
 }
 
@@ -166,8 +164,8 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
     : m_grid(std::exchange(other.m_grid.ptr, nullptr)),
       m_numLocalBins(std::move(other.m_numLocalBins)),
       m_currentIndex(std::move(other.m_currentIndex)),
-      m_navigationIndex(std::move(other.m_navigationIndex)),
-      m_localPosition(std::move(other.m_localPosition)) {}
+      m_navigationIndex(std::move(other.m_navigationIndex))
+      {}
 
 template <typename T, class... Axes>
 Acts::GridLocalIterator<T, Axes...>&
@@ -177,7 +175,6 @@ Acts::GridLocalIterator<T, Axes...>::operator=(
   m_numLocalBins = std::move(other.m_numLocalBins);
   m_currentIndex = std::move(other.m_currentIndex);
   m_navigationIndex = std::move(other.m_navigationIndex);
-  m_localPosition = std::move(other.m_localPosition);
   return *this;
 }
 
