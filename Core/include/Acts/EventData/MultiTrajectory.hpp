@@ -246,6 +246,17 @@ class MultiTrajectory {
     return self().addTrackState_impl(mask, iprevious);
   }
 
+  /// Add a track state to the container and return a track state proxy to it
+  /// This effectively calls @c addTrackState and @c getTrackState
+  /// @note Only available if the track state container is not read-only
+  /// @return a track state proxy to the newly added track state
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  TrackStateProxy makeTrackState(
+      TrackStatePropMask mask = TrackStatePropMask::All,
+      IndexType iprevious = kInvalid) {
+    return getTrackState(addTrackState(mask, iprevious));
+  }
+
   /// @}
 
   /// @anchor track_state_container_iteration
