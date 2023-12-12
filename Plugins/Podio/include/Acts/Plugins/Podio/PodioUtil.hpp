@@ -56,7 +56,6 @@ void recoverDynamicColumns(
     const podio::Frame& frame, const std::string& stem,
     std::unordered_map<HashedString,
                        std::unique_ptr<podio_detail::ConstDynamicColumnBase>>&
-        dynamic,
-    std::vector<HashedString>& dynamicKeys);
+        dynamic);
 }  // namespace podio_detail
 }  // namespace Acts
