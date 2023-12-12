@@ -95,7 +95,7 @@ template <typename T, class... Axes>
 typename GridGlobalIterator<T, Axes...>::difference_type
 GridGlobalIterator<T, Axes...>::operator-(
     const GridGlobalIterator<T, Axes...>& other) const {
-  assert(other > *this);
+  assert(other <= *this);
   return m_idx - other.m_idx;
 }
 
