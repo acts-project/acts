@@ -31,7 +31,7 @@ nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false,
                            bool checkSwap = false) {
   nlohmann::json jIndexedGrid;
 
-  // Axis swapping
+  // Axis swapping (detray version)
   bool swapAxes = checkSwap;
 
   // Fill the casts
@@ -44,6 +44,7 @@ nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false,
   if constexpr (index_grid::grid_type::DIM == 2u) {
     jCasts.push_back(indexGrid.casts[0u]);
     jCasts.push_back(indexGrid.casts[1u]);
+    // Check for axis swap (detray version)
     swapAxes = checkSwap &&
                (indexGrid.casts[0u] == binZ && indexGrid.casts[1u] == binPhi);
   }
