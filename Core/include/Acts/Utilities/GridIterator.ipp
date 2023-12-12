@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2016-2023 CERN for the benefit of the Acts project
@@ -139,12 +138,20 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
       m_numLocalBins(std::move(grid.numLocalBins())),
       m_currentIndex(std::move(indexes)),
       m_navigationIndex(std::move(navigation)) {
-  // check navigation consistency
-  for (std::size_t i(0); i < DIM; ++i) {
-    if (m_navigationIndex[i].size() != m_numLocalBins[i]) {
-      throw std::invalid_argument(
-          "Invalid navigation sequence in local grid iterator.");
+  // We can allow navigation on only a subset of bins.
+  // If the number of specified bins in the navigation for one axis is not
+  // zero then override the maximum number of navigation bins instead of using the
+  // total number of available bins in the axis
+  for (std::size_t i(0ul); i<DIM; ++i) {
+    // We do not allow empty bin sequences
+    if (m_navigationIndex[i].size() == 0) {
+       throw std::invalid_argument("Invalid navigation sequence in local grid iterator. No bins specified.");
     }
+    // Too many bins
+    if (m_navigationIndex[i].size() > m_numLocalBins[i]) {
+      throw std::invalid_argument("Invalid navigation sequence in local grid iterator. Too many bins specified.");
+    }
+    m_numLocalBins[i] = m_navigationIndex[i].size();    
     m_localPosition[i] = m_navigationIndex[i][m_currentIndex[i]];
   }
 }
