@@ -16,13 +16,13 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
     std::array<std::size_t, 2> index,
     std::array<std::vector<std::size_t>, 2> navigation)
     : m_group(group),
-      m_gridItr(*group.m_grid.get(), std::move(index), navigation) {
-  std::array<std::size_t, 2ul> endline;
+      m_gridItr(*group.m_grid.get(), index, navigation) {
+  std::array<std::size_t, 2ul> endline{};
   endline[0ul] = navigation[0ul].size();
   endline[1ul] = navigation[1ul].size();
   m_gridItrEnd =
       typename Acts::SpacePointGrid<external_spacepoint_t>::local_iterator_t(
-          *group.m_grid.get(), std::move(endline), std::move(navigation));
+          *group.m_grid.get(), endline, std::move(navigation));
   findNotEmptyBin();
 }
 
@@ -79,12 +79,13 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
 template <typename external_spacepoint_t>
 inline void
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
-  if (m_gridItr == m_gridItrEnd)
+  if (m_gridItr == m_gridItrEnd) {
     return;
+  }
   // Iterate on the grid till we find a not-empty bin
   // We start from the current bin configuration and move forward
   std::size_t dimCollection = (*m_gridItr).size();
-  while (dimCollection == 0ul and ++m_gridItr != m_gridItrEnd) {
+  while (dimCollection == 0ul && ++m_gridItr != m_gridItrEnd) {
     dimCollection = (*m_gridItr).size();
   }
 }
@@ -230,8 +231,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::begin() {
 template <typename external_spacepoint_t>
 inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::end() {
-  std::array<std::size_t, 2ul> endline;
+  std::array<std::size_t, 2ul> endline{};
   endline[0ul] = m_bins[0ul].size();
   endline[1ul] = m_bins[1ul].size();
-  return {*this, std::move(endline), m_bins};
+  return {*this, endline, m_bins};
 }

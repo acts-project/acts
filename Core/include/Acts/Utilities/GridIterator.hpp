@@ -80,14 +80,14 @@ class GridLocalIterator {
 
   GridLocalIterator() = default;
   GridLocalIterator(Acts::Grid<T, Axes...>&& grid,
-                    std::array<std::size_t, DIM> indexes) = delete;
+                    const std::array<std::size_t, DIM>& indexes) = delete;
   GridLocalIterator(
-      Acts::Grid<T, Axes...>&& grid, std::array<std::size_t, DIM> indexes,
+      Acts::Grid<T, Axes...>&& grid, const std::array<std::size_t, DIM>& indexes,
       std::array<std::vector<std::size_t>, DIM> navigation) = delete;
   GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
-                    std::array<std::size_t, DIM> indexes);
+                    const std::array<std::size_t, DIM>& indexes);
   GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
-                    std::array<std::size_t, DIM> indexes,
+                    const std::array<std::size_t, DIM>& indexes,
                     std::array<std::vector<std::size_t>, DIM> navigation);
 
   GridLocalIterator(const GridLocalIterator<T, Axes...>& other) = default;
