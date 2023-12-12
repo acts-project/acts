@@ -184,7 +184,7 @@ int main(int argc, char* argv[]) {
   if (!cmdl.onlyGPU) {
     decltype(seedFinder_host)::SeedingState state;
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-      std::array<std::size_t, 2ul> localPosition = spGroup.grid().globalBinFromLocalBins(i);
+      std::array<std::size_t, 2ul> localPosition = spGroup.grid().localBinsFromGlobalBin(i);
       auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
@@ -221,7 +221,7 @@ int main(int argc, char* argv[]) {
 
   // Perform the seed finding.
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-     std::array<std::size_t, 2ul> localPosition = spGroup.grid().globalBinFromLocalBins(i);
+    std::array<std::size_t, 2ul> localPosition = spGroup.grid().localBinsFromGlobalBin(i);
     auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;
