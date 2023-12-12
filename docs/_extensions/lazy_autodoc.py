@@ -138,6 +138,7 @@ def run() -> None:
         "Acts::BoundIndices",
         "Acts::FreeIndices",
         "Acts::MagneticFieldError",
+        "Acts::TrackStatePropMask",
     }
 
     role_ex = re.compile(r"[{:](" + "|".join(roles) + r")[}:]`(.+?)`")

@@ -21,4 +21,14 @@ SoA
 AoS
   Memory layout where a collection of objects are stored in a single array,
   where each object internally has a member for each property.
+
+Seed
+  A starting point for the track finding stage. E.g. a triplet of {term}`space
+  points<Space point>` that are loosely compatible with a track hypothesis.
+
+Space point
+  A three dimensional (possibly approximated) location through which a particle
+  will have passed and created masurements. In some cases, like strip
+  detectors, space points are [formed from multiple
+  measurements](#tracking_sp_formation).
 :::

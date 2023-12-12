@@ -33,6 +33,7 @@ extensions = [
     "breathe",
     "myst_parser",
     "sphinx.ext.mathjax",
+    "sphinx.ext.graphviz",
     "sphinx.ext.todo",
     "warnings_filter",
 ]

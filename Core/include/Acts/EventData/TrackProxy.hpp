@@ -605,6 +605,8 @@ class TrackProxy {
   /// track state range, which means you cannot modify the track states obtained
   /// in the iteration.
   /// @note This range is from the inside out!
+  /// @warning This access direction is only possible if the track states are
+  ///          **forward-linked**.
   /// @return Track state range to iterate over
   auto trackStates() const {
     return m_container->forwardTrackStateRange(m_index);
@@ -616,6 +618,8 @@ class TrackProxy {
   /// can modify the track states obtained in the iteration.
   /// @note Only available if the track proxy is not read-only
   /// @note This range is from the inside out!
+  /// @warning This access direction is only possible if the track states are
+  ///          **forward-linked**.
   /// @return Track state range to iterate over
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStates() {

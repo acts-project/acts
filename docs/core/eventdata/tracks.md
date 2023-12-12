@@ -2,6 +2,9 @@
 This section is **incomplete!**
 :::
 
+:::{contents}
+:::
+
 (edm_tracks)=
 # High-level Track Event Data Model
 
@@ -125,14 +128,6 @@ incoming measurement. It then instructs the {term}`EDM` through the frontend
 layer to ensure enough memory is available, where the specifics are again left
 up to the backend layer.
 
-(ckf_tree)=
-:::{figure} figures/ckf_tree.svg
-:width: 300px
-:align: center
-Illustration of a branching multi-trajectory that is created during
-combinatorial track finding.
-:::
-
 The backend layer exposes an interface that is used by the frontend layer to
 store and retrieve information.  It uses dedicated methods where needed, such as
 for storing reference surfaces or source-link objects, which are lightweight
@@ -181,13 +176,76 @@ discussed below.
 (edm_track_iteration)=
 ### Track state iteration and forward linking
 
-:::{todo}
-Add picture of track state sequence and stem and tip index
+By default, track states are connected as a one-directional linked list, where
+each track state knows its *previous* track state. {numref}`ckf_tree` shows an
+example of a track state tree, like it is constructed by the combinatorial
+track finding.
+
+In {numref}`ckf_tree` states $S_7$ and $S_6$ are the two {term}`tip states<tip
+state>` of the track state tree, whil $S_1$ is the single {term}`stem state`.
+In the case of combinatorial track finding starting from e.g. a
+{term}`seed<Seed>`, it could be the location of the innermost {term}`space
+point<Space point>`.
+
+(ckf_tree)=
+:::{figure} figures/ckf_tree.svg
+:width: 300px
+:align: center
+Illustration of a branching multi-trajectory that is created during
+combinatorial track finding.
 :::
 
+Each track object points at a single {term}`tip state` to define its track state sequence.
+The {class}`Acts::TrackProxy` class has various methods to access the track state sequence:
+
+```cpp
+auto track = getTrackFromSomewhere();
+for(const auto trackState : track.trackStatesReversed()) {
+  // do something with track state
+}
+
+```
+
+Note that {func}`Acts::TrackProxy::trackStatesReversed` iterates from the {term}`tip state` to
+the {term}`stem state`, i.e. from the outside in.
+
+:::{attention}
+By-default, it is not possible to iterate *forward* through the track states on a track!
+The track's track states need to be *forward-linked* for this to be possible.
+:::
+
+The reason for this is this:
+As the trajectory branches at the second sensor into $S_2$/$S_3$, it is not
+possible to connect the states forward, i.e. store in $S_1$ what the *next*
+state is going to be: it is ambiguous!
+
+However, when track finding has concluded, and the trajectories identified by
+{term}`tip states<tip state` $S_7$ and $S_8$ have been discarded or are being
+copied into an output cotainer, it is possible to *forward link* the track
+state sequences. This is possible **if** the trajectory does not branch
+anymore! {func}`Acts::TrackProxy::copyFrom` will implicitly forward link the
+track states, as it is guaranteed to not branch after copying.
+
 You can manually add forward-linking to a track by calling
-{func}`Acts::TrackProxy::linkForward`.  {func}`Acts::TrackProxy::copyFrom` and
-{func}`Acts::TrackProxy::reverseTrackStates` will also implicitly
+{func}`Acts::TrackProxy::linkForward` or
+{func}`Acts::TrackProxy::reverseTrackStates`.
+
+:::{warning}
+Calling either {func}`Acts::TrackProxy::linkForward` or
+{func}`Acts::TrackProxy::reverseTrackStates` on a track state sequence which
+has branching will break the branching! If you have other tracks pointing at a
+{term}`tip state` that branches from the sequence you're trying to
+forward-link, it will be corrupted!
+:::
+
+In this example
+
+:::{graphviz}
+graph {
+A -> B;
+}
+:::
+
 
 
 ## Track State API
@@ -210,3 +268,13 @@ You can manually add forward-linking to a track by calling
 
 ### Backends shipped with ACTS
 ### How to build a backend
+
+## Glossary
+
+:::{glossary}
+tip state
+  The state at the *tip* of a trajectory, usually the *outermost* track state, on the opposite end of the {term}`stem state`.
+
+stem state
+  The state at the *stem* of a trajectory, meaning the *innermost* track state. The opposite end is the {term}`tip state`.
+:::

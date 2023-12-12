@@ -779,7 +779,7 @@ class TrackStateProxy {
   /// @tparam kMeasurementSize Size of the calibrated measurement
   /// @param meas The measurement object to set
   ///
-  /// @note This assumes this TrackState stores it's own calibrated
+  /// @warning This assumes this TrackState stores it's own calibrated
   ///       measurement. **If storage is shared with another TrackState, both
   ///       will be overwritten!**. Also assumes none of the calibrated
   ///       components is *invalid* (i.e. unset) for this TrackState.
