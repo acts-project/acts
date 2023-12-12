@@ -160,7 +160,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
       continue;
     }
 
-    // Create the new RecangleBounds
+    // Create the new RectangleBounds
     // - there are conventions involved, regarding the bounds orientation
     // - This is an anticyclic swap
     bool mergedInX = true;
