@@ -46,6 +46,8 @@ concept ConstTrackContainerBackend = requires(const T& cv, HashedString key,
 
   { cv.referenceSurface_impl(itrack) } -> std::same_as<const Surface*>;
 
+  { cv.particleHypothesis_impl(itrack) } -> std::same_as<ParticleHypothesis>;
+
   {cv.dynamicKeys_impl()};
   requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
 };

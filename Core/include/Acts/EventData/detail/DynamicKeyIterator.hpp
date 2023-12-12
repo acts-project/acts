@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <unordered_map>
@@ -27,15 +28,17 @@ class DynamicKeyIterator {
   using reference = void;
 
   DynamicKeyIterator(typename map_t::const_iterator it) : m_it{it} {}
+  DynamicKeyIterator() = default;
 
   DynamicKeyIterator& operator++() {
     m_it++;
     return *this;
   }
 
-  DynamicKeyIterator& operator++(int /*value*/) {
-    ++m_it;
-    return *this;
+  DynamicKeyIterator operator++(int /*value*/) {
+    auto copy = *this;
+    ++(copy.m_it);
+    return copy;
   }
 
   bool operator==(const DynamicKeyIterator& other) const {
@@ -51,6 +54,8 @@ class DynamicKeyIterator {
  private:
   typename map_t::const_iterator m_it;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(std::forward_iterator, DynamicKeyIterator<int>);
 
 template <typename C>
 class DynamicKeyRange {
