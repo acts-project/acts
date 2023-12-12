@@ -9,7 +9,6 @@
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -117,8 +116,14 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
 
   std::shared_ptr<const Acts::Surface> refSurface =
       params.referenceSurface().getSharedPtr();
+
   Acts::BoundVector targetPars = params.parameters();
-  std::optional<Acts::BoundSquareMatrix> targetCov = params.covariance();
+  std::optional<Acts::FreeVector> freePars;
+
+  auto makeFreePars = [&]() {
+    return Acts::detail::transformBoundToFreeParameters(
+        params.referenceSurface(), gctx, params.parameters());
+  };
 
   // If the reference surface is a perigee surface, we use that. Otherwise
   // we create a new perigee surface at the global position of the track
@@ -129,31 +134,20 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
     // We need to convert to the target parameters
     // Keep the free parameters around we might need them for the covariance
     // conversion
-    Acts::FreeVector freePars = Acts::detail::transformBoundToFreeParameters(
-        params.referenceSurface(), gctx, params.parameters());
-    targetPars = Acts::detail::transformFreeToBoundParameters(freePars,
+    freePars = makeFreePars();
+    targetPars = Acts::detail::transformFreeToBoundParameters(freePars.value(),
                                                               *refSurface, gctx)
                      .value();
-
-    if (targetCov) {
-      // We need to convert the covariance as well
-      Acts::BoundToFreeMatrix boundToFree =
-          params.referenceSurface().boundToFreeJacobian(gctx, targetPars);
-      Acts::FreeToBoundMatrix freeToBound =
-          refSurface->freeToBoundJacobian(gctx, freePars);
-      Acts::BoundSquareMatrix boundToBound = freeToBound * boundToFree;
-      targetCov = boundToBound * targetCov.value() * boundToBound.transpose();
-    }
   }
 
   Parameters result;
   result.surface = refSurface;
 
   // Only run covariance conversion if we have a covariance input
-  if (targetCov) {
+  if (params.covariance()) {
     Acts::ActsSquareMatrix<6> J = jacobianToEdm4hep(
         targetPars[eBoundTheta], targetPars[eBoundQOverP], Bz);
-    result.covariance = J * targetCov.value() * J.transpose();
+    result.covariance = J * params.covariance().value() * J.transpose();
   }
 
   result.values[0] = targetPars[Acts::eBoundLoc0];
