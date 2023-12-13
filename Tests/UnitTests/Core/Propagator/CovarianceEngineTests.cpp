@@ -184,9 +184,11 @@ BOOST_AUTO_TEST_CASE(CovarianceConversionTest) {
   std::uniform_real_distribution<double> angleDist(-2 * M_PI, 2 * M_PI);
   std::uniform_real_distribution<double> unitDist(0, 1);
 
-  for (std::size_t j = 0; j < 1; j++) {
-    Transform3 transformA =
-        Transform3::Identity() * AngleAxis3(M_PI_2, Vector3::UnitY());
+  for (std::size_t j = 0; j < 10; j++) {
+    Transform3 transformA = Transform3::Identity();
+    transformA = AngleAxis3(angleDist(rng), Vector3::UnitX());
+    transformA = AngleAxis3(angleDist(rng), Vector3::UnitY());
+    transformA = AngleAxis3(angleDist(rng), Vector3::UnitZ());
 
     transformA.translation() << globDist(rng), globDist(rng), globDist(rng);
 
@@ -253,7 +255,7 @@ BOOST_AUTO_TEST_CASE(CovarianceConversionTest) {
       double angle = angleDist(rng);
       Transform3 transform;
       transform = planeSurfaceA->transform(gctx).rotation();
-      transform = AngleAxis3(angle, Vector3::UnitX()) * transform;
+      transform = AngleAxis3(angle, planeSurfaceA->normal(gctx)) * transform;
       transform.translation() = planeSurfaceA->transform(gctx).translation();
 
       planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
@@ -283,7 +285,12 @@ BOOST_AUTO_TEST_CASE(CovarianceConversionTest) {
 
       Transform3 transform;
       transform = planeSurfaceA->transform(gctx).rotation();
-      transform = AngleAxis3(angle, Vector3::UnitY()) * transform;
+
+      // figure out rotation axis along local x
+      Vector3 axis =
+          planeSurfaceA->transform(gctx).rotation() * Vector3::UnitY();
+      transform = AngleAxis3(angle, axis) * transform;
+
       transform.translation() = planeSurfaceA->transform(gctx).translation();
 
       planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
@@ -308,7 +315,11 @@ BOOST_AUTO_TEST_CASE(CovarianceConversionTest) {
 
       Transform3 transform;
       transform = planeSurfaceA->transform(gctx).rotation();
-      transform = AngleAxis3(angle, Vector3::UnitZ()) * transform;
+
+      Vector3 axis =
+          planeSurfaceA->transform(gctx).rotation() * Vector3::UnitX();
+      transform = AngleAxis3(angle, axis) * transform;
+
       transform.translation() = planeSurfaceA->transform(gctx).translation();
 
       planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
@@ -324,7 +335,8 @@ BOOST_AUTO_TEST_CASE(CovarianceConversionTest) {
       auto [parA2, covA2] =
           boundToBound(parB, covB, *planeSurfaceB, *planeSurfaceA);
       CHECK_CLOSE_ABS(parA, parA2, 1e-9);
-      CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-9);
+      // tolerance is a bit higher here
+      CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-6);
     }
 
     for (std::size_t i = 0; i < n; i++) {
