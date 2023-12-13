@@ -28,6 +28,7 @@ struct DynamicColumnBase {
   virtual std::size_t size() const = 0;
   virtual void copyFrom(std::size_t dstIdx, const DynamicColumnBase& src,
                         std::size_t srcIdx) = 0;
+  virtual void copyFrom(std::size_t dstIdx, const std::any& srcPtr) = 0;
 
   virtual std::unique_ptr<DynamicColumnBase> clone(
       bool empty = false) const = 0;
@@ -64,6 +65,13 @@ struct DynamicColumn : public DynamicColumnBase {
     assert(other != nullptr &&
            "Source column is not of same type as destination");
     m_vector.at(dstIdx) = other->m_vector.at(srcIdx);
+  }
+
+  void copyFrom(std::size_t dstIdx, const std::any& srcPtr) override {
+    const auto* other = std::any_cast<const T*>(srcPtr);
+    assert(other != nullptr &&
+           "Source column is not of same type as destination");
+    m_vector.at(dstIdx) = *other;
   }
 
   std::vector<T> m_vector;
@@ -104,6 +112,13 @@ struct DynamicColumn<bool> : public DynamicColumnBase {
     assert(other != nullptr &&
            "Source column is not of same type as destination");
     m_vector.at(dstIdx) = other->m_vector.at(srcIdx);
+  }
+
+  void copyFrom(std::size_t dstIdx, const std::any& srcPtr) override {
+    const auto* other = std::any_cast<const bool*>(srcPtr);
+    assert(other != nullptr &&
+           "Source column is not of same type as destination");
+    m_vector.at(dstIdx).value = *other;
   }
 
   std::vector<Wrapper> m_vector;

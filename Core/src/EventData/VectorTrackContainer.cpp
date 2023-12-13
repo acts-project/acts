@@ -9,6 +9,7 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 
 #include <iterator>
 
@@ -96,17 +97,16 @@ void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
   }
 }
 
-void VectorTrackContainer::copyDynamicFrom_impl(
-    IndexType dstIdx, const VectorTrackContainerBase& src, IndexType srcIdx) {
-  for (const auto& [key, value] : src.m_dynamic) {
-    auto it = m_dynamic.find(key);
-    if (it == m_dynamic.end()) {
-      throw std::invalid_argument{
-          "Destination container does not have matching dynamic column"};
-    }
-
-    it->second->copyFrom(dstIdx, *value, srcIdx);
+void VectorTrackContainer::copyDynamicFrom_impl(IndexType dstIdx,
+                                                HashedString key,
+                                                const std::any& srcPtr) {
+  auto it = m_dynamic.find(key);
+  if (it == m_dynamic.end()) {
+    throw std::invalid_argument{
+        "Destination container does not have matching dynamic column"};
   }
+
+  it->second->copyFrom(dstIdx, srcPtr);
 }
 
 void VectorTrackContainer::ensureDynamicColumns_impl(
