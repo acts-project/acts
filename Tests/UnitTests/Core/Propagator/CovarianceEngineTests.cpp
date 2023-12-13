@@ -212,12 +212,12 @@ BOOST_AUTO_TEST_CASE(CovarianceConversionTest) {
       FreeVector freeToPathDerivatives = FreeVector::Zero();
       freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
 
-      BoundMatrix boundToBound = detail::boundToBoundTransportJacobian(
+      BoundMatrix boundToBoundJac = detail::boundToBoundTransportJacobian(
           gctx, freePars, boundToFreeJacobian, freeTransportJacobian,
           freeToPathDerivatives, srfB);
 
       Acts::BoundMatrix covOut =
-          boundToBound * covIn * boundToBound.transpose();
+          boundToBoundJac * covIn * boundToBoundJac.transpose();
 
       return {parOut, covOut};
     };
