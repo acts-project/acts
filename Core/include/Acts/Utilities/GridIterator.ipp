@@ -202,7 +202,7 @@ bool Acts::GridLocalIterator<T, Axes...>::operator!=(
 template <typename T, class... Axes>
 const typename Acts::GridLocalIterator<T, Axes...>::value_type&
 Acts::GridLocalIterator<T, Axes...>::operator*() const {
-  std::array<std::size_t, DIM> localPositionBin;
+  std::array<std::size_t, DIM> localPositionBin{};
   for (std::size_t i(0); i < DIM; ++i) {
     localPositionBin[i] = m_navigationIndex[i][m_currentIndex[i]];
   }
@@ -225,8 +225,9 @@ GridLocalIterator<T, Axes...> GridLocalIterator<T, Axes...>::operator++(int) {
 template <typename T, class... Axes>
 template <std::size_t N>
 void GridLocalIterator<T, Axes...>::increment() {
-  if (++m_currentIndex[N] < m_numLocalBins[N])
+  if (++m_currentIndex[N] < m_numLocalBins[N]) {
     return;
+  }
   if constexpr (N != 0) {
     m_currentIndex[N] = 0;
     increment<N - 1>();
