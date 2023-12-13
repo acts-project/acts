@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <initializer_list>
 #include <iostream>
+#include <ofstream>
 #include <sstream>
 #include <string>
 #include <tuple>

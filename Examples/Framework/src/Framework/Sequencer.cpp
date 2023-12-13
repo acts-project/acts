@@ -39,20 +39,16 @@
 #include <string_view>
 #include <typeinfo>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/core/demangle.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
-#include <oneapi/tbb/blocked_range.h>
-#include <oneapi/tbb/detail/_exception.h>
-#include <oneapi/tbb/task_arena.h>
+#include <dfe/dfe_io_dsv.hpp>
+#include <dfe/dfe_namedtuple.hpp>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/core/demangle.hpp>
-#include <dfe/dfe_io_dsv.hpp>
-#include <dfe/dfe_namedtuple.hpp>
 
 namespace ActsExamples {
 
@@ -622,10 +618,9 @@ void Sequencer::fpeReport() const {
 
     std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
         sorted;
-    std::transform(
-        merged.stackTraces().begin(), merged.stackTraces().end(),
-        std::back_inserter(sorted),
-        [](const auto& f) -> const auto& { return f; });
+    std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
+                   std::back_inserter(sorted),
+                   [](const auto& f) -> const auto& { return f; });
     std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
       return a.get().count > b.get().count;
     });
