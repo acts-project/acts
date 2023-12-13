@@ -15,8 +15,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
     Acts::BinnedSPGroup<external_spacepoint_t>& group,
     std::array<std::size_t, 2> index,
     std::array<std::vector<std::size_t>, 2> navigation)
-    : m_group(group),
-      m_gridItr(*group.m_grid.get(), index, navigation) {
+    : m_group(group), m_gridItr(*group.m_grid.get(), index, navigation) {
   std::array<std::size_t, 2ul> endline{};
   endline[0ul] = navigation[0ul].size();
   endline[1ul] = navigation[1ul].size();
