@@ -391,7 +391,7 @@ jobs:
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_PLUGIN_JSON=ON
+          -DACTS_BUILD_PLUGIN_JSON=OFF
       - name: Build
         run: ${SETUP} && ( cmake --build build || cmake --build build )
       # The above line is required as a sort of retry mechanism. Without it,
