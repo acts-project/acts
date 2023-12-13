@@ -161,6 +161,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   ct.testTrackStateProxyCopy(rng);
 }
 
+BOOST_AUTO_TEST_CASE(TrackStateCopyDynamicColumns) {
+  CommonTests ct;
+  ct.testTrackStateCopyDynamicColumns();
+}
+
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   CommonTests ct;
   ct.testTrackStateProxyCopyDiffMTJ();

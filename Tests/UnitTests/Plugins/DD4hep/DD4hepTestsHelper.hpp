@@ -15,6 +15,7 @@
 
 #include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Objects.h>
+#include <DDRec/DetectorData.h>
 #include <XML/Utilities.h>
 
 using namespace dd4hep;
@@ -40,6 +41,34 @@ T& ensureExtension(dd4hep::DetElement& elt) {
   elt.addExtension<T>(ext);
   return *ext;
 }
+
+/// Helper method to decode the binning from what would appear in the
+/// xml into variant parameters, such that it can be understood in the
+/// downstream processing.
+///
+/// This parses the dediced \< surface_binning \> tag
+/// - allowed/understood binnings are x,y,z,phi,r
+/// - allowed/unserstood types are equidistant/variable (those are
+/// auto-detected)
+///
+/// Example for e.g. bname = \"surface_binning\":
+///
+/// - Equidistant binning in r and phi:
+///   \<acts_surface_binning nr=\"2\" rmin=\"25\" rmax=\"100\" nphi=\"22\"
+///   phimin=\"-3.1415\" phimax=\"3.1415\" \/ \>
+/// - Variable binning in z:
+///   \<acts_surface_binning zboundaries=\"-100,-90,90,100\" \/ \>
+///
+/// And 2D combinations of this are allowed.
+///
+/// @param variantParams [in,out] the variant parameters that will be overwritten
+/// @param xmlBinning the surface binning
+/// @param bname the binning base name, e.g. surface_binning, material_binning
+/// @param bvals the boundary values, i.e. x,y,z,phi,r
+///
+void decodeBinning(dd4hep::rec::VariantParameters& variantParams,
+                   const xml_comp_t& xmlBinning, const std::string& bname,
+                   const std::vector<std::string>& bvals);
 
 /// Helper method to create a Transform3D from an xml detector
 /// component

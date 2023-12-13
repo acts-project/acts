@@ -29,6 +29,20 @@ struct ConstDynamicColumnBase {
   std::string m_name;
 };
 
+template <typename T>
+struct ConstDynamicColumn : public ConstDynamicColumnBase {
+  ConstDynamicColumn(const std::string& name,
+                     const podio::UserDataCollection<T>& collection)
+      : ConstDynamicColumnBase(name), m_collection{collection} {}
+
+  std::any get(std::size_t i) const override {
+    return &m_collection.vec().at(i);
+  }
+  std::size_t size() const override { return m_collection.size(); }
+
+  const podio::UserDataCollection<T>& m_collection;
+};
+
 struct DynamicColumnBase : public ConstDynamicColumnBase {
   DynamicColumnBase(const std::string& name) : ConstDynamicColumnBase{name} {}
 
@@ -40,9 +54,12 @@ struct DynamicColumnBase : public ConstDynamicColumnBase {
   virtual void erase(std::size_t i) = 0;
   virtual void copyFrom(std::size_t dstIdx, const DynamicColumnBase& src,
                         std::size_t srcIdx) = 0;
+  virtual void copyFrom(std::size_t dstIdx, const std::any& srcPtr) = 0;
 
   virtual std::unique_ptr<DynamicColumnBase> clone(
       bool empty = false) const = 0;
+
+  virtual std::unique_ptr<ConstDynamicColumnBase> asConst() const = 0;
 
   virtual void releaseInto(podio::Frame& frame, const std::string& prefix) = 0;
 };
@@ -78,12 +95,23 @@ struct DynamicColumn : public DynamicColumnBase {
     return std::make_unique<DynamicColumn<T>>(m_name, std::move(copy));
   }
 
+  std::unique_ptr<ConstDynamicColumnBase> asConst() const override {
+    return std::make_unique<ConstDynamicColumn<T>>(m_name, m_collection);
+  }
+
   void copyFrom(std::size_t dstIdx, const DynamicColumnBase& src,
                 std::size_t srcIdx) override {
     const auto* other = dynamic_cast<const DynamicColumn<T>*>(&src);
     assert(other != nullptr &&
            "Source column is not of same type as destination");
     m_collection.vec().at(dstIdx) = other->m_collection.vec().at(srcIdx);
+  }
+
+  void copyFrom(std::size_t dstIdx, const std::any& srcPtr) override {
+    const auto* other = std::any_cast<const T*>(srcPtr);
+    assert(other != nullptr &&
+           "Source column is not of same type as destination");
+    m_collection.vec().at(dstIdx) = *other;
   }
 
   void releaseInto(podio::Frame& frame, const std::string& prefix) override {
@@ -93,17 +121,4 @@ struct DynamicColumn : public DynamicColumnBase {
   podio::UserDataCollection<T> m_collection;
 };
 
-template <typename T>
-struct ConstDynamicColumn : public ConstDynamicColumnBase {
-  ConstDynamicColumn(const std::string& name,
-                     const podio::UserDataCollection<T>& collection)
-      : ConstDynamicColumnBase(name), m_collection{collection} {}
-
-  std::any get(std::size_t i) const override {
-    return &m_collection.vec().at(i);
-  }
-  std::size_t size() const override { return m_collection.size(); }
-
-  const podio::UserDataCollection<T>& m_collection;
-};
 }  // namespace Acts::podio_detail
