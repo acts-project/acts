@@ -10,11 +10,11 @@ A dedicated description of the propagation can be found [here](propagation_impl)
 :::
 
 Hits on sensitive surfaces are recorded and tagged with the particle passing through the surface.
-This information can afterwards be used by a digitization algorithm to mimic a detector response.
+Later, this hit information can be used by a digitization algorithm to mimic a detector response.
 
-ACTS Fatras is fully capable of handling secondary particles even tho the current set of interactions is not utilizing this to a big extent.
+ACTS Fatras is fully capable of handling secondary particles even though the current set of interactions is not utilizing this to a big extent.
 The simulation will propagate each particle until it reaches the end of the detector or until a specified path length is reached.
-Afterwards the first secondary particle that might have been generated in the process will be propagated.
+Afterwards, the first secondary particle that might have been generated in the process will be propagated.
 This continues until all particles are transported.
 
 ## Supported interactions
