@@ -14,7 +14,6 @@
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBlueprint.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"

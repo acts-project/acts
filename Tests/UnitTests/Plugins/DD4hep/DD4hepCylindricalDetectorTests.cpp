@@ -17,7 +17,6 @@
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBlueprint.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
