@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Propagator/detail/JacobianEngine.hpp"
 
 #include "edm4hep/TrackState.h"
 
@@ -135,26 +136,23 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
                      .value();
 
     if (targetCov) {
-      std::cout << "plane in: " << params.parameters().transpose() << std::endl;
-      std::cout << "perigee in: " << targetPars.transpose() << std::endl;
-      std::cout << "free in: " << freePars.transpose() << std::endl;
       // We need to convert the covariance as well
-      Acts::BoundToFreeMatrix boundToFree =
+      Acts::BoundToFreeMatrix boundToFreeJacobian =
           params.referenceSurface().boundToFreeJacobian(gctx,
                                                         params.parameters());
-      Acts::FreeToBoundMatrix freeToBound =
-          refSurface->freeToBoundJacobian(gctx, freePars);
-      Acts::BoundSquareMatrix boundToBound = freeToBound * boundToFree;
-      targetCov = boundToBound * targetCov.value() * boundToBound.transpose();
 
-      std::cout << "J(b2f)\n" << boundToFree << std::endl;
-      std::cout << "J(f2b)\n" << freeToBound << std::endl;
-      std::cout << "J(plane->perigee)\n" << boundToBound << std::endl;
+      FreeVector freeToPathDerivatives = FreeVector::Zero();
+      freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
+
+      const Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
+
+      BoundMatrix boundToBound = Acts::detail::boundToBoundTransportJacobian(
+          gctx, freePars, boundToFreeJacobian, freeTransportJacobian,
+          freeToPathDerivatives, *refSurface);
+
+      targetCov = boundToBound * targetCov.value() * boundToBound.transpose();
     }
   }
-
-  std::cout << "targetPars:" << targetPars.transpose() << std::endl;
-  std::cout << "targetCov:\n" << targetCov.value() << std::endl;
 
   Parameters result;
   result.surface = refSurface;
