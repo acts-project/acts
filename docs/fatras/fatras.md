@@ -30,6 +30,7 @@ These interactions are meant to be physical accurate within their boundaries but
 ## Use-cases
 
 The primary use-case for ACTS Fatras is early algorithm validation.
-It is fast enough to simulate thousands of small to medium events (about 100 tracks) on consumer hardware in a few seconds which provides a quick turnaround time for development.
+It is fast enough to simulate thousands of small to medium events (about 100 tracks) on consumer hardware in a few seconds.
+This provides a quick turnaround time for development.
 
 Fatras does not replace a full detector simulation like Geant4 as only a few interactions are implemented and the geometry is highly simplified.
