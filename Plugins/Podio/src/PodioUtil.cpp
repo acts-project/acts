@@ -217,7 +217,8 @@ void recoverDynamicColumns(
     const podio::Frame& frame, const std::string& stem,
     std::unordered_map<HashedString,
                        std::unique_ptr<podio_detail::ConstDynamicColumnBase>>&
-        dynamic) {
+        dynamic,
+    std::vector<HashedString>& dynamicKeys) {
   using load_type = std::unique_ptr<podio_detail::DynamicColumnBase> (*)(
       const podio::CollectionBase*);
 
@@ -266,6 +267,7 @@ void recoverDynamicColumns(
 
     HashedString hashedKey = hashString(dynName);
     dynamic.insert({hashedKey, std::move(up)});
+    dynamicKeys.push_back(hashedKey);
   }
 }
 
