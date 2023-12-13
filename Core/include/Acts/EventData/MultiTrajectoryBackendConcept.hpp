@@ -17,6 +17,7 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
+#include <iterator>
 #include <type_traits>
 
 #if defined(__cpp_concepts)
@@ -30,6 +31,15 @@ using Covariance = Eigen::Map<BoundMatrix>;
 
 using ConstParameters = Eigen::Map<const BoundVector>;
 using ConstCovariance = Eigen::Map<const BoundMatrix>;
+
+template <typename R>
+concept RangeLike = requires(R r) {
+  {r.begin()};
+  {r.end()};
+
+  requires std::forward_iterator<decltype(r.begin())>;
+  requires std::forward_iterator<decltype(r.end())>;
+};
 
 }  // namespace detail
 
@@ -64,9 +74,8 @@ concept CommonMultiTrajectoryBackend = requires(const T& cv, HashedString key,
 
   { cv.hasColumn_impl(key) } -> std::same_as<bool>;
 
-  {
-    cv.dynamicKeys_impl()
-    } -> std::same_as<const std::vector<Acts::HashedString>&>;
+  {cv.dynamicKeys_impl()};
+  requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
 };
 
 template <typename T>

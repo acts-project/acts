@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -45,9 +46,10 @@ concept ConstTrackContainerBackend = requires(const T& cv, HashedString key,
 
   { cv.referenceSurface_impl(itrack) } -> std::same_as<const Surface*>;
 
-  {
-    cv.dynamicKeys_impl()
-    } -> std::same_as<const std::vector<Acts::HashedString>&>;
+  { cv.particleHypothesis_impl(itrack) } -> std::same_as<ParticleHypothesis>;
+
+  {cv.dynamicKeys_impl()};
+  requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
 };
 
 template <typename T>

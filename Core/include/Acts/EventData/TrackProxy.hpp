@@ -699,7 +699,6 @@ class TrackProxy {
     chi2() = other.chi2();
     nDoF() = other.nDoF();
 
-    // This will only be valid if the backends match and support this operation
     m_container->copyDynamicFrom(m_index, other.m_container->container(),
                                  other.m_index);
   }

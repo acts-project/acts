@@ -14,6 +14,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -290,8 +291,8 @@ class VectorMultiTrajectoryBase {
   }
 
  public:
-  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
-    return m_dynamicKeys;
+  detail::DynamicKeyRange<detail::DynamicColumnBase> dynamicKeys_impl() const {
+    return {m_dynamic.begin(), m_dynamic.end()};
   }
 
   // END INTERFACE HELPER
@@ -455,7 +456,6 @@ class VectorMultiTrajectory final
   constexpr void addColumn_impl(const std::string& key) {
     Acts::HashedString hashedKey = hashString(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
-    m_dynamicKeys.push_back(hashedKey);
   }
 
   constexpr bool hasColumn_impl(HashedString key) const {

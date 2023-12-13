@@ -115,8 +115,11 @@ class PodioTrackContainerBase {
   }
 
   template <typename T>
-  static const std::vector<Acts::HashedString>& dynamicKeys_impl(T& instance) {
-    return instance.m_dynamicKeys;
+  static auto dynamicKeys_impl(T& instance) {
+    using column_type =
+        typename decltype(instance.m_dynamic)::mapped_type::element_type;
+    return detail::DynamicKeyRange<column_type>{instance.m_dynamic.begin(),
+                                                instance.m_dynamic.end()};
   }
 
   template <typename T>
@@ -221,7 +224,6 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     Acts::HashedString hashedKey = hashString(key);
     m_dynamic.insert(
         {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
-    m_dynamicKeys.push_back(hashedKey);
   }
 
   Parameters parameters(IndexType itrack) {
@@ -272,7 +274,8 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     }
   }
 
-  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
+  detail::DynamicKeyRange<podio_detail::DynamicColumnBase> dynamicKeys_impl()
+      const {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
@@ -334,8 +337,14 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
+    std::vector<HashedString> dynamicKeys;
+    dynamicKeys.reserve(m_dynamic.size());
+    for (const auto& [key, col] : m_dynamic) {
+      dynamicKeys.push_back(key);
+    }
+
     podio_detail::recoverDynamicColumns(frame, tracksKey, m_dynamic,
-                                        m_dynamicKeys);
+                                        dynamicKeys);
   }
 
   std::any component_impl(HashedString key, IndexType itrack) const {
@@ -370,7 +379,8 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     return *m_collection;
   }
 
-  const std::vector<Acts::HashedString>& dynamicKeys_impl() const {
+  detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
+  dynamicKeys_impl() const {
     return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
