@@ -23,4 +23,4 @@ Ultimately there is a collection of classes which fill the charge type into the 
  - {class}`Acts::NonNeutralChargedParticleHypothesis`
  - {class}`Acts::ParticleHypothesis`
 
-Internally, ACTS will use {class}`Acts::ParticleHypothesis`, if not specified otherwise, which is convertible from all the other hypotheses.
+Internally, ACTS will use {class}`Acts::ParticleHypothesis`, if not specified otherwise. This is the most generic one which is convertible from all the other hypotheses.
