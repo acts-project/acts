@@ -263,11 +263,6 @@ class ConstPodioTrackStateContainer final
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
-  detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
-  dynamicKeys_impl() const {
-    return {m_dynamic.begin(), m_dynamic.end()};
-  }
-
  private:
   template <typename collection_t>
   static void loadCollection(collection_t const*& dest,
