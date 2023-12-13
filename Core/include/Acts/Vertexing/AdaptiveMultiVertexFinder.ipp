@@ -524,7 +524,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const SquareMatrix4& otherCov = otherVtx->fullCovariance();
 
     double significance = 0;
-    if (!m_cfg.do3dSplitting) {
+    if (!m_cfg.doFullSplitting) {
       if (m_cfg.useTime) {
         const Vector2 deltaZT = otherPos.tail<2>() - candidatePos.tail<2>();
         SquareMatrix2 sumCovZT = candidateCov.bottomRightCorner<2, 2>() +
