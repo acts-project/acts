@@ -93,6 +93,9 @@ class vector2D {
     }
     return m_data.data() + (i * m_d2);
   }
+  void reset(const T& t){
+    m_data.assign(m_data.size(),t);
+  }
 
   T* data() { return m_data.data(); }
 
