@@ -43,6 +43,11 @@ void Acts::DD4hepDetectorSurfaceFactory::construct(
   ACTS_DEBUG("Recursive search did yield: "
              << cache.sensitiveSurfaces.size() << " sensitive surface(s), "
              << cache.passiveSurfaces.size() << " passive surface(s)");
+
+  // Check for auto-range determination
+  if (!cache.binnings.empty() && cache.sExtent.has_value()) {
+    ACTS_DEBUG("Autorange deterimnation of binning enabled.");
+  }
 }
 
 void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
@@ -55,7 +60,8 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
   // Check if any surface binnning can be detected
   int sBinning = getParamOr<int>("acts_surface_binning_dim", dd4hepElement, 0);
   if (sBinning > 0) {
-    cache.binnings = convertBinning(dd4hepElement, "acts_surface_binning");
+    cache.binnings = DD4hepBinningHelpers::convertBinning(
+        dd4hepElement, "acts_surface_binning");
   }
 
   // Deal with passive surface if detected
