@@ -20,10 +20,10 @@ This continues until all particles are transported.
 ## Supported interactions
 
 Fatras implements a few interactions
- - Bethe-Bloch energy loss for charged particles {class}`ActsFatras::BetheBloch`
- - Bethe-Heitler energy loss for electrons (and positrons) {class}`ActsFatras::BetheHeitler`
- - Photon conversion for pair production {class}`ActsFatras::PhotonConversion`
- - Scattering for charged particles {class}`ActsFatras::GenericScattering`
+ - Bethe-Bloch energy loss for charged particles (see `ActsFatras::BetheBloch`)
+ - Bethe-Heitler energy loss for electrons (and positrons) (see `ActsFatras::BetheHeitler`)
+ - Photon conversion for pair production (see `ActsFatras::PhotonConversion`)
+ - Scattering for charged particles (see `ActsFatras::GenericScattering`)
 
 These interactions are meant to be physical accurate within their boundaries but are far from sufficient for a full simulation.
 
