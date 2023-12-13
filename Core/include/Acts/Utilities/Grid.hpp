@@ -476,9 +476,6 @@ class Grid final {
   local_iterator_t begin(
       const std::array<std::vector<std::size_t>, DIM>& navigator) const {
     std::array<std::size_t, DIM> localBin{};
-    for (std::size_t i(0); i < DIM; ++i) {
-      localBin[i] = 0ul;
-    }
     return local_iterator_t(*this, std::move(localBin), navigator);
   }
 
