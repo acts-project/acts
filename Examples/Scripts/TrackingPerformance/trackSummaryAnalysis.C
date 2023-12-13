@@ -26,6 +26,7 @@
 #include <TStyle.h>
 #include <TTree.h>
 #include <TVectorF.h>
+#include <nlohmann/json.hpp>
 
 #include "CommonUtils.h"
 #include "TreeReader.h"
@@ -283,7 +284,7 @@ int trackSummaryAnalysis(
   // Preparation phase for handles
 #ifdef NLOHMANN_AVAILABLE
   nlohmann::json handle_configs;
-  if (! inConfig.empty()) {
+  if (!inConfig.empty()) {
     std::ifstream ifs(inConfig.c_str());
     handle_configs = nlohmann::json::parse(ifs);
   }
@@ -296,21 +297,22 @@ int trackSummaryAnalysis(
   /// @param handle the parameter handle in question
   /// @param handleTag the unique tangle tag
   /// @param peakE the number of entries used for range peaking
-  auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag, unsigned int peakE) -> void {
+  auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag,
+                         unsigned int peakE) -> void {
     bool rangeDetermined = false;
-    if (! inConfig.empty()) {
+    if (!inConfig.empty()) {
       if (handle_configs.contains((handleTag).Data())) {
         auto handle_config = handle_configs[(handleTag).Data()];
         handle.range = handle_config["range"].get<std::array<float, 2>>();
         rangeDetermined = true;
       }
     }
-    if (! rangeDetermined) {
+    if (!rangeDetermined) {
       estimateResiudalRange(handle, *rangeCanvas, *tracks.tree, peakE,
                             ++histBarcode);
     }
 
-    if (! outConfig.empty()) {
+    if (!outConfig.empty()) {
       nlohmann::json range_config;
       range_config["range"] = handle.range;
       handle_configs[(handleTag).Data()] = range_config;
@@ -404,8 +406,8 @@ int trackSummaryAnalysis(
 
 #ifdef BOOST_AVAILABLE
   std::cout << "*** Handle Preparation: " << std::endl;
-  progress_display handle_preparation_progress(
-      nPhiBins * nEtaBins * nPtBins * baseResidualPulls.size());
+  progress_display handle_preparation_progress(nPhiBins * nEtaBins * nPtBins *
+                                               baseResidualPulls.size());
 #endif
 
   std::string land = " && ";
@@ -565,7 +567,7 @@ int trackSummaryAnalysis(
   }
 
 #ifdef NLOHMANN_AVAILABLE
-  if (! outConfig.empty()) {
+  if (!outConfig.empty()) {
     std::ofstream config_out;
     config_out.open(outConfig.c_str());
     config_out << handle_configs.dump(4);
@@ -731,7 +733,7 @@ int trackSummaryAnalysis(
       // Create a unique handle tag
       TString auxiliaryTag = TString(aHandle.tag) + matrixTag;
       TH2F* auxHist = new TH2F(auxiliaryTag, auxiliaryTag, nOuterBins,
-                                 outerValues, nInnerBins, innerValues);
+                               outerValues, nInnerBins, innerValues);
       summary.auxiliaries.push_back(auxHist);
     }
 

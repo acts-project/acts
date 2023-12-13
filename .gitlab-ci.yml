@@ -132,7 +132,7 @@ test_exatrkx_python:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - pip3 install -r Examples/Python/tests/requirements.txt
+    - pip3 install -r Examples/Python/tests/requirements_ubuntu2004.txt
     - nvidia-smi
     - pytest -rFsv -k test_exatrkx
 
