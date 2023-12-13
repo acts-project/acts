@@ -12,20 +12,27 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
 #include <memory>
 #include <optional>
+#include <random>
 #include <tuple>
 #include <utility>
 
 namespace Acts {
 namespace Test {
+
+using namespace Acts::UnitLiterals;
 
 using Covariance = BoundSquareMatrix;
 using Jacobian = BoundMatrix;
@@ -163,6 +170,187 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   BOOST_CHECK(std::get<0>(boundResult).covariance().has_value());
   BOOST_CHECK_NE(*(std::get<0>(boundResult).covariance()),
                  Covariance::Identity());
+}
+
+BOOST_AUTO_TEST_CASE(CovarianceConversionTest) {
+  GeometryContext gctx;
+
+  std::size_t n = 100;
+
+  std::mt19937 rng{42};
+
+  std::uniform_real_distribution<double> locDist(-5., 5.);
+  std::uniform_real_distribution<double> globDist(-50., 50.);
+  std::uniform_real_distribution<double> angleDist(-2 * M_PI, 2 * M_PI);
+  std::uniform_real_distribution<double> unitDist(0, 1);
+
+  for (std::size_t j = 0; j < 1; j++) {
+    Transform3 transformA =
+        Transform3::Identity() * AngleAxis3(M_PI_2, Vector3::UnitY());
+
+    transformA.translation() << globDist(rng), globDist(rng), globDist(rng);
+
+    auto planeSurfaceA = Surface::makeShared<PlaneSurface>(transformA);
+
+    auto planeSurfaceB = Surface::makeShared<PlaneSurface>(transformA);
+
+    auto boundToBound =
+        [&gctx](const auto& parIn, const auto& covIn, const auto& srfA,
+                const auto& srfB) -> std::pair<BoundVector, BoundMatrix> {
+      Acts::FreeVector freePars =
+          Acts::detail::transformBoundToFreeParameters(srfA, gctx, parIn);
+      Acts::BoundVector parOut =
+          Acts::detail::transformFreeToBoundParameters(freePars, srfB, gctx)
+              .value();
+
+      Acts::BoundToFreeMatrix boundToFreeJacobian =
+          srfA.boundToFreeJacobian(gctx, parIn);
+      Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
+
+      FreeVector freeToPathDerivatives = FreeVector::Zero();
+      freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
+
+      BoundMatrix boundToBound = detail::boundToBoundTransportJacobian(
+          gctx, freePars, boundToFreeJacobian, freeTransportJacobian,
+          freeToPathDerivatives, srfB);
+
+      Acts::BoundMatrix covOut =
+          boundToBound * covIn * boundToBound.transpose();
+
+      return {parOut, covOut};
+    };
+
+    BoundMatrix covA;
+    covA.setZero();
+    covA.diagonal() << 1, 2, 3, 4, 5, 6;
+
+    for (std::size_t i = 0; i < n; i++) {
+      BoundVector parA;
+      parA << locDist(rng) * 1_mm, locDist(rng) * 1_mm, M_PI / 4., M_PI_2 * 0.9,
+          -1 / 1_GeV, 5_ns;
+
+      // identical surface, this should work
+      auto [parB, covB] =
+          boundToBound(parA, covA, *planeSurfaceA, *planeSurfaceB);
+
+      // these should be the same because the plane surface are the same
+      CHECK_CLOSE_ABS(parA, parB, 1e-9);
+      CHECK_CLOSE_COVARIANCE(covA, covB, 1e-9);
+
+      // now go back
+      auto [parA2, covA2] =
+          boundToBound(parB, covB, *planeSurfaceB, *planeSurfaceA);
+      CHECK_CLOSE_ABS(parA, parA2, 1e-9);
+      CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-9);
+    }
+
+    for (std::size_t i = 0; i < n; i++) {
+      BoundVector parA;
+      parA << locDist(rng) * 1_mm, locDist(rng) * 1_mm, M_PI / 4., M_PI_2 * 0.9,
+          -1 / 1_GeV, 5_ns;
+
+      // make plane surface that is rotated around the normal
+      double angle = angleDist(rng);
+      Transform3 transform;
+      transform = planeSurfaceA->transform(gctx).rotation();
+      transform = AngleAxis3(angle, Vector3::UnitX()) * transform;
+      transform.translation() = planeSurfaceA->transform(gctx).translation();
+
+      planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
+
+      // sanity check that the normal didn't change
+      CHECK_CLOSE_ABS(planeSurfaceA->normal(gctx), planeSurfaceB->normal(gctx),
+                      1e-9);
+
+      auto [parB, covB] =
+          boundToBound(parA, covA, *planeSurfaceA, *planeSurfaceB);
+      BoundVector exp = parA;
+      // loc0 and loc1 are rotated
+      exp.head<2>() = Eigen::Rotation2D<double>(-angle) * parA.head<2>();
+
+      CHECK_CLOSE_ABS(exp, parB, 1e-9);
+
+      // now go back
+      auto [parA2, covA2] =
+          boundToBound(parB, covB, *planeSurfaceB, *planeSurfaceA);
+      CHECK_CLOSE_ABS(parA, parA2, 1e-9);
+      CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-9);
+    }
+
+    for (std::size_t i = 0; i < n; i++) {
+      // make plane that is slightly rotated
+      double angle = unitDist(rng) * M_PI_2;
+
+      Transform3 transform;
+      transform = planeSurfaceA->transform(gctx).rotation();
+      transform = AngleAxis3(angle, Vector3::UnitY()) * transform;
+      transform.translation() = planeSurfaceA->transform(gctx).translation();
+
+      planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
+
+      BoundVector parA;
+      // loc 0 must be zero so we're on the intersection of both surfaces.
+      parA << 0, locDist(rng) * 1_mm, M_PI / 4., M_PI_2 * 0.9, -1 / 1_GeV, 5_ns;
+
+      auto [parB, covB] =
+          boundToBound(parA, covA, *planeSurfaceA, *planeSurfaceB);
+
+      // now go back
+      auto [parA2, covA2] =
+          boundToBound(parB, covB, *planeSurfaceB, *planeSurfaceA);
+      CHECK_CLOSE_ABS(parA, parA2, 1e-9);
+      CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-9);
+    }
+
+    for (std::size_t i = 0; i < n; i++) {
+      // make plane that is slightly rotated
+      double angle = unitDist(rng) * M_PI_2;
+
+      Transform3 transform;
+      transform = planeSurfaceA->transform(gctx).rotation();
+      transform = AngleAxis3(angle, Vector3::UnitZ()) * transform;
+      transform.translation() = planeSurfaceA->transform(gctx).translation();
+
+      planeSurfaceB = Surface::makeShared<PlaneSurface>(transform);
+
+      BoundVector parA;
+      // loc 1 must be zero so we're on the intersection of both surfaces.
+      parA << locDist(rng) * 1_mm, 0, M_PI / 4., M_PI_2 * 0.9, -1 / 1_GeV, 5_ns;
+
+      auto [parB, covB] =
+          boundToBound(parA, covA, *planeSurfaceA, *planeSurfaceB);
+
+      // now go back
+      auto [parA2, covA2] =
+          boundToBound(parB, covB, *planeSurfaceB, *planeSurfaceA);
+      CHECK_CLOSE_ABS(parA, parA2, 1e-9);
+      CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-9);
+    }
+
+    for (std::size_t i = 0; i < n; i++) {
+      BoundVector parA;
+      parA << locDist(rng) * 1_mm, locDist(rng) * 1_mm, M_PI / 4., M_PI_2 * 0.9,
+          -1 / 1_GeV, 5_ns;
+
+      Vector3 global = planeSurfaceA->localToGlobal(gctx, parA.head<2>());
+
+      Transform3 transform;
+      transform.setIdentity();
+      transform.rotate(AngleAxis3(angleDist(rng), Vector3::UnitX()));
+      transform.rotate(AngleAxis3(angleDist(rng), Vector3::UnitY()));
+      transform.rotate(AngleAxis3(angleDist(rng), Vector3::UnitZ()));
+      transform.translation() = global;
+
+      auto perigee = Surface::makeShared<PerigeeSurface>(transform);
+
+      auto [parB, covB] = boundToBound(parA, covA, *planeSurfaceA, *perigee);
+
+      // now go back
+      auto [parA2, covA2] = boundToBound(parB, covB, *perigee, *planeSurfaceA);
+      CHECK_CLOSE_ABS(parA, parA2, 1e-9);
+      CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-9);
+    }
+  }
 }
 }  // namespace Test
 }  // namespace Acts
