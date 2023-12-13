@@ -411,7 +411,7 @@ class TrackProxy {
   /// Get the particle hypothesis
   /// @return the particle hypothesis
   ParticleHypothesis particleHypothesis() const {
-    return component<ParticleHypothesis, hashString("particleHypothesis")>();
+    return m_container->container().particleHypothesis_impl(m_index);
   }
 
   /// Set a new particle hypothesis for this track
@@ -672,7 +672,6 @@ class TrackProxy {
     chi2() = other.chi2();
     nDoF() = other.nDoF();
 
-    // This will only be valid if the backends match and support this operation
     m_container->copyDynamicFrom(m_index, other.m_container->container(),
                                  other.m_index);
   }
