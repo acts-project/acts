@@ -13,8 +13,8 @@ The implementation consists of a generic, templated class {class}`Acts::GenericP
 There are four different charge types
  - {struct}`Acts::Neutral`
  - {struct}`Acts::SinglyCharged`
- - {struct}`Acts::NonNeutralCharge`
- - {struct}`Acts::AnyCharge`
+ - {class}`Acts::NonNeutralCharge`
+ - {class}`Acts::AnyCharge`
 The reason for these different charge types is that in special cases it is not necessary to carry the *absolute charge* as it is already described by the type.
 
 Ultimately there is a collection of classes which fill the charge type into the {class}`Acts::GenericParticleHypothesis` for the user and provide a set of common particle hypotheses.
