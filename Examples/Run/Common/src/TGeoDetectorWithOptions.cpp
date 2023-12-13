@@ -9,6 +9,7 @@
 #include "ActsExamples/Detector/TGeoDetectorWithOptions.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Options/JsonOptionsWriter.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <array>
