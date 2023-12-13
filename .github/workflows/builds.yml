@@ -389,9 +389,8 @@ jobs:
           -DACTS_BUILD_INTEGRATIONTESTS=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_PLUGIN_JSON=OFF
+          -DACTS_USE_SYSTEM_LIBS=OFF
+          -DACTS_BUILD_PLUGIN_JSON=ON
       - name: Build
         run: ${SETUP} && ( cmake --build build || cmake --build build )
       # The above line is required as a sort of retry mechanism. Without it,
@@ -424,8 +423,7 @@ jobs:
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
+          -DACTS_USE_SYSTEM_LIBS=OFF
           -DACTS_BUILD_EXAMPLES=ON
       - name: Build Examples
         run: ${SETUP} && cmake --build build
