@@ -24,6 +24,7 @@
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
+#include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <cstdlib>
@@ -34,11 +35,6 @@
 #include <vector>
 
 #include <boost/program_options.hpp>
-
-namespace ActsExamples {
-template <typename propagator_t>
-class ConcretePropagator;
-}  // namespace ActsExamples
 
 int propagationExample(int argc, char* argv[],
                        ActsExamples::IBaseDetector& detector) {

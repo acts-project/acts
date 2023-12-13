@@ -39,20 +39,16 @@
 #include <string_view>
 #include <typeinfo>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/core/demangle.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
-#include <oneapi/tbb/blocked_range.h>
-#include <oneapi/tbb/detail/_exception.h>
-#include <oneapi/tbb/task_arena.h>
+#include <dfe/dfe_io_dsv.hpp>
+#include <dfe/dfe_namedtuple.hpp>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/core/demangle.hpp>
-#include <dfe/dfe_io_dsv.hpp>
-#include <dfe/dfe_namedtuple.hpp>
 
 namespace ActsExamples {
 
