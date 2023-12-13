@@ -167,7 +167,6 @@ struct DenseEnvironmentExtension {
   ///
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagator
-  /// @param [in] navigator Navigator of the propagator
   /// @param [in] h Step size
   ///
   /// @return Boolean flag if the calculation is valid
