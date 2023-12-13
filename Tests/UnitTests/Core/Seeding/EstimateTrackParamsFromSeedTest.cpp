@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
@@ -28,7 +29,7 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
