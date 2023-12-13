@@ -24,6 +24,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <string>
