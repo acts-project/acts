@@ -167,6 +167,7 @@ struct DenseEnvironmentExtension {
   ///
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagator
+  /// @param [in] navigator Navigator of the propagator
   /// @param [in] h Step size
   ///
   /// @return Boolean flag if the calculation is valid
@@ -227,7 +228,7 @@ struct DenseEnvironmentExtension {
                 const navigator_t& navigator, const double h,
                 FreeMatrix& D) const {
     return finalize(state, stepper, navigator, h) &&
-           transportMatrix(state, stepper, navigator, h, D);
+           transportMatrix(state, stepper, h, D);
   }
 
  private:
@@ -235,18 +236,16 @@ struct DenseEnvironmentExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagator
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
   ///
   /// @return Boolean flag if evaluation is valid
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const navigator_t& /*navigator*/, const double h,
-                       FreeMatrix& D) const {
+                       const double h, FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -384,6 +383,7 @@ struct DenseEnvironmentExtension {
   /// @tparam stepper_t Type of the stepper
   ///
   /// @param [in] state Deliverer of configurations
+  /// @param [in] stepper Stepper of the propagator
   template <typename propagator_state_t, typename stepper_t>
   void initializeEnergyLoss(const propagator_state_t& state,
                             const stepper_t& stepper) {
@@ -436,7 +436,9 @@ struct DenseEnvironmentExtension {
   /// @tparam stepper_t Type of the stepper
   ///
   /// @param [in] h Stepped distance of the sub-step (1-3)
+  /// @param [in] mass Mass of the particle
   /// @param [in] state State of the stepper
+  /// @param [in] stepper Stepper of the propagator
   /// @param [in] i Index of the sub-step (1-3)
   template <typename propagator_state_t, typename stepper_t>
   void updateEnergyLoss(const double mass, const double h,

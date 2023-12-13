@@ -88,8 +88,8 @@ struct DefaultExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& navigator, const double h) const {
-    propagateTime(state, stepper, navigator, h);
+                const navigator_t& /*navigator*/, const double h) const {
+    propagateTime(state, stepper, h);
     return true;
   }
 
@@ -110,10 +110,10 @@ struct DefaultExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& navigator, const double h,
+                const navigator_t& /*navigator*/, const double h,
                 FreeMatrix& D) const {
-    propagateTime(state, stepper, navigator, h);
-    return transportMatrix(state, stepper, navigator, h, D);
+    propagateTime(state, stepper, h);
+    return transportMatrix(state, stepper, h, D);
   }
 
  private:
@@ -121,15 +121,13 @@ struct DefaultExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in, out] state State of the propagator
   /// @param [in] stepper Stepper of the propagation
   /// @param [in] h Step size
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <typename propagator_state_t, typename stepper_t>
   void propagateTime(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& /*navigator*/, const double h) const {
+                     const double h) const {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
@@ -146,7 +144,6 @@ struct DefaultExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagation
@@ -154,11 +151,9 @@ struct DefaultExtension {
   /// @param [out] D Transport matrix
   ///
   /// @return Boolean flag if evaluation is valid
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const navigator_t& /*navigator*/, const double h,
-                       FreeMatrix& D) const {
+                       const double h, FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
