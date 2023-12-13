@@ -248,7 +248,19 @@ class ConstPodioTrackStateContainer final
 
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
-    podio_detail::recoverDynamicColumns(frame, trackStatesKey, m_dynamic);
+    std::vector<HashedString> dynamicKeys;
+    dynamicKeys.reserve(m_dynamic.size());
+    for (const auto& [key, col] : m_dynamic) {
+      dynamicKeys.push_back(key);
+    }
+
+    podio_detail::recoverDynamicColumns(frame, trackStatesKey, m_dynamic,
+                                        dynamicKeys);
+  }
+
+  detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
+  dynamicKeys_impl() const {
+    return {m_dynamic.begin(), m_dynamic.end()};
   }
 
   detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>

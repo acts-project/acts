@@ -336,7 +336,14 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
-    podio_detail::recoverDynamicColumns(frame, tracksKey, m_dynamic);
+    std::vector<HashedString> dynamicKeys;
+    dynamicKeys.reserve(m_dynamic.size());
+    for (const auto& [key, col] : m_dynamic) {
+      dynamicKeys.push_back(key);
+    }
+
+    podio_detail::recoverDynamicColumns(frame, tracksKey, m_dynamic,
+                                        dynamicKeys);
   }
 
   std::any component_impl(HashedString key, IndexType itrack) const {
