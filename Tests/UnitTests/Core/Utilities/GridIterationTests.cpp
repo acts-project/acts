@@ -12,6 +12,7 @@
 #include "Acts/Utilities/GridIterator.hpp"
 
 #include <array>
+#include <unordered_set>
 
 namespace Acts::Test {
 
@@ -580,6 +581,71 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_5d_local_custom_subnavigation) {
   }
 
   BOOST_CHECK_EQUAL(numIterations, expectedIterations);
+}
+
+BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_norepetitions) {
+  const std::size_t nBinsX = 5ul;
+  const std::size_t nBinsY = 5ul;
+  const std::size_t nBinsZ = 2ul;
+  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
+  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
+  Acts::detail::EquidistantAxis zAxis(0, 100, nBinsZ);
+  Acts::Grid<double, Acts::detail::EquidistantAxis,
+             Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>
+      grid(std::make_tuple(std::move(xAxis), std::move(yAxis),
+                           std::move(zAxis)));
+
+  std::array<std::vector<std::size_t>, 3ul> navigation;
+  navigation[0ul] = {1ul, 5ul, 3ul, 2ul, 4ul};
+  navigation[1ul] = {4ul, 2ul, 3ul, 5ul, 1ul};
+  navigation[2ul] = {2ul, 1ul};
+
+  std::size_t expectedIterations =
+      navigation[0ul].size() * navigation[1ul].size() * navigation[2ul].size();
+
+  // Set the allowed values
+  std::unordered_set<std::size_t> allowed_global_bins;
+  for (std::size_t x : navigation[0ul]) {
+    for (std::size_t y : navigation[1ul]) {
+      for (std::size_t z : navigation[2ul]) {
+        std::array<std::size_t, 3ul> locPos({x, y, z});
+        std::size_t globPos = grid.globalBinFromLocalBins(locPos);
+        BOOST_CHECK_EQUAL(
+            allowed_global_bins.find(globPos) != allowed_global_bins.end(),
+            false);
+        allowed_global_bins.insert(globPos);
+      }
+    }
+  }
+
+  BOOST_CHECK_EQUAL(expectedIterations, allowed_global_bins.size());
+
+  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
+                          Acts::detail::EquidistantAxis,
+                          Acts::detail::EquidistantAxis>
+      gridStart = grid.begin(navigation);
+  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
+                          Acts::detail::EquidistantAxis,
+                          Acts::detail::EquidistantAxis>
+      gridStop = grid.end(navigation);
+
+  // Prepare visited values
+  std::unordered_set<std::size_t> visited_global_bins;
+
+  std::size_t numIterations = 0ul;
+  for (; gridStart != gridStop; ++gridStart) {
+    ++numIterations;
+    std::array<std::size_t, 3ul> locPos = gridStart.localPosition();
+    std::size_t globPos = grid.globalBinFromLocalBins(locPos);
+    BOOST_CHECK_EQUAL(
+        visited_global_bins.find(globPos) != visited_global_bins.end(), false);
+    BOOST_CHECK_EQUAL(
+        allowed_global_bins.find(globPos) != allowed_global_bins.end(), true);
+    visited_global_bins.insert(globPos);
+  }
+
+  BOOST_CHECK_EQUAL(expectedIterations, numIterations);
+  BOOST_CHECK_EQUAL(visited_global_bins.size(), allowed_global_bins.size());
 }
 
 }  // namespace Acts::Test
