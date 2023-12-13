@@ -32,7 +32,7 @@
 #include <tuple>
 #include <vector>
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 
 namespace Acts {
 

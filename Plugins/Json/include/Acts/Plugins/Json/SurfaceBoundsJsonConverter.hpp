@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders.
 namespace Acts {
