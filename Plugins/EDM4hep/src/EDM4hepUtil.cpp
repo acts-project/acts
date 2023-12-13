@@ -38,7 +38,7 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // =
   //
   // [     2                        ]
-  // [- cot (theta) - 1       0     ]
+  // [- csc (theta)           0     ]
   // [                              ]
   // [-B*q/p*cos(theta)       B     ]
   // [------------------  ----------]
@@ -47,10 +47,9 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
 
   ActsSquareMatrix<6> J;
   J.setIdentity();
-  double cotTheta = std::tan(M_PI_2 + theta);
-  J(3, 3) = -cotTheta * cotTheta - 1;  // d(tanLambda) / dTheta
-  J(4, 4) = Bz / std::sin(theta);      // dOmega / d(qop)
   double sinTheta = std::sin(theta);
+  J(3, 3) = -1.0 / (sinTheta * sinTheta);
+  J(4, 4) = Bz / sinTheta;  // dOmega / d(qop)
   J(4, 3) = -Bz * qOverP * std::cos(theta) /
             (sinTheta * sinTheta);  // dOmega / dTheta
   return J;
@@ -136,15 +135,26 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
                      .value();
 
     if (targetCov) {
+      std::cout << "plane in: " << params.parameters().transpose() << std::endl;
+      std::cout << "perigee in: " << targetPars.transpose() << std::endl;
+      std::cout << "free in: " << freePars.transpose() << std::endl;
       // We need to convert the covariance as well
       Acts::BoundToFreeMatrix boundToFree =
-          params.referenceSurface().boundToFreeJacobian(gctx, targetPars);
+          params.referenceSurface().boundToFreeJacobian(gctx,
+                                                        params.parameters());
       Acts::FreeToBoundMatrix freeToBound =
           refSurface->freeToBoundJacobian(gctx, freePars);
       Acts::BoundSquareMatrix boundToBound = freeToBound * boundToFree;
       targetCov = boundToBound * targetCov.value() * boundToBound.transpose();
+
+      std::cout << "J(b2f)\n" << boundToFree << std::endl;
+      std::cout << "J(f2b)\n" << freeToBound << std::endl;
+      std::cout << "J(plane->perigee)\n" << boundToBound << std::endl;
     }
   }
+
+  std::cout << "targetPars:" << targetPars.transpose() << std::endl;
+  std::cout << "targetCov:\n" << targetCov.value() << std::endl;
 
   Parameters result;
   result.surface = refSurface;
