@@ -116,6 +116,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;
+  finderConfig.do3dSplitting = true;
+
   if (m_cfg.useTime) {
     // When using time, we have an extra contribution to the chi2 by the time
     // coordinate. We thus need to increase tracksMaxSignificance (i.e., the
@@ -123,12 +125,13 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
     finderConfig.tracksMaxSignificance = 7.5;
     // Check if vertices are merged in space and time
     // TODO rename do3dSplitting -> doFullSplitting
-    finderConfig.do3dSplitting = true;
     // Reset the maximum significance that two vertices can have before they are
     // considered as merged. The default value 3 is tuned for comparing the
     // vertices' z-coordinates. Since we consider 4 dimensions here, we need to
     // multiply the value by 4 and thus we set it to 3 * 4 = 12.
     finderConfig.maxMergeVertexSignificance = 12.;
+  } else {
+    finderConfig.maxMergeVertexSignificance = 9.;
   }
 
   // Instantiate the finder
