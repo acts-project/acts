@@ -119,7 +119,8 @@ GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator++(int) {
 // Local Iterator
 template <typename T, class... Axes>
 Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
-    const Acts::Grid<T, Axes...>& grid, const std::array<std::size_t, DIM>& indexes)
+    const Acts::Grid<T, Axes...>& grid,
+    const std::array<std::size_t, DIM>& indexes)
     : m_grid(&grid),
       m_numLocalBins(grid.numLocalBins()),
       m_currentIndex(indexes) {
@@ -131,7 +132,8 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
 
 template <typename T, class... Axes>
 Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
-    const Acts::Grid<T, Axes...>& grid, const std::array<std::size_t, DIM>& indexes,
+    const Acts::Grid<T, Axes...>& grid,
+    const std::array<std::size_t, DIM>& indexes,
     std::array<std::vector<std::size_t>, DIM> navigation)
     : m_grid(&grid),
       m_numLocalBins(grid.numLocalBins()),
