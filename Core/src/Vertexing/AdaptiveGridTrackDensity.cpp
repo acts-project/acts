@@ -24,9 +24,6 @@ int AdaptiveGridTrackDensity::getBin(double value, double binExtent) {
 
 int AdaptiveGridTrackDensity::getTrkGridSize(double sigma, double trkSigmas,
                                              double binExtent) {
-  if (trkSigmas == 0) {
-    return 1;
-  }
   int size = static_cast<int>(std::ceil(2 * trkSigmas * sigma / binExtent));
   if (size % 2 == 0) {
     ++size;

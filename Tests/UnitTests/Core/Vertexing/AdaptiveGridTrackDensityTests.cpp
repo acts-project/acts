@@ -131,8 +131,6 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
 BOOST_AUTO_TEST_CASE(
     compare_to_analytical_solution_for_single_track_with_time) {
   // Number of bins in z- and t-direction
-  const unsigned int spatialTrkGridSize = 401;
-  const unsigned int temporalTrkGridSize = 401;
   // Bin extents
   const float spatialBinExtent = 3.1e-3;
   const float temporalBinExtent = 3.1e-3;
@@ -230,7 +228,6 @@ BOOST_AUTO_TEST_CASE(
 
 BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   // Dummy track grid size (not needed for this unit test)
-  const unsigned int spatialTrkGridSize = 1;
   float binExtent = 2.;
   AdaptiveGridTrackDensity::Config cfg;
   cfg.spatialBinExtent = binExtent;
@@ -326,9 +323,6 @@ BOOST_AUTO_TEST_CASE(track_adding) {
 }
 
 BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
-  const unsigned int spatialTrkGridSize = 29;
-  const unsigned int temporalTrkGridSize = 29;
-
   // spatial and temporal bin extent
   double binExtent = 0.05;
 
