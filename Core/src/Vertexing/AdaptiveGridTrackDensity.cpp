@@ -114,8 +114,6 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::addTrack(
       impactParams, centralBin, cov, spatialTrkGridSize, temporalTrkGridSize);
 
   for (const auto& [bin, trackDensity] : trackDensityMap) {
-    std::cout << "bin: " << bin.first << ", " << bin.second
-              << ", density: " << trackDensity << std::endl;
     mainDensityMap[bin] += trackDensity;
   }
 
