@@ -18,10 +18,10 @@
 
 namespace{
   static const std::map<int, std::string> stationDict{
-        {0, "BIL"}, {1, "BIS"}, {7, "BIR"},
-        {2, "BML"}, {3, "BMS"}, {8, "BMF"}, {53, "BME"}, {54, "BMG"}, {52, "BIM"},
-        {4, "BOL"}, {5, "BOS"}, {9, "BOF"}, {10, "BOG"},
-        {6, "BEE"}, {14, "EEL"}, {15, "EES"}, 
+        { 0, "BIL"}, { 1, "BIS"}, { 7, "BIR"},
+        { 2, "BML"}, { 3, "BMS"}, { 8, "BMF"}, {53, "BME"}, {54, "BMG"}, {52, "BIM"},
+        { 4, "BOL"}, { 5, "BOS"}, { 9, "BOF"}, {10, "BOG"},
+        { 6, "BEE"}, {14, "EEL"}, {15, "EES"}, 
         {13, "EIL"}, {49, "EIS"},
         {17, "EML"}, {18, "EMS"}, 
         {20, "EOL"}, {21, "EOS"}
@@ -60,11 +60,11 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
   auto gotSH = m_inputSimHits(ctx);
   auto gotDC = m_inputDriftCircles(ctx);
 
-  Acts::HoughTransformUtils::HoughPlane::Config planeCfg;
+  Acts::HoughTransformUtils::HoughPlaneConfig planeCfg;
   planeCfg.nBinsX = 1000;
   planeCfg.nBinsY = 1000;
 
-  Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMax::Config peakFinderCfg;
+  Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMaxConfig peakFinderCfg;
   peakFinderCfg.fractionCutoff = 0.6;
   peakFinderCfg.threshold = 3.; 
   
@@ -85,8 +85,8 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
 
   std::vector<PatternSeed> truePatterns; 
   
-  Acts::HoughTransformUtils::HoughPlane houghPlane(planeCfg); 
-  Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMax peakFinder(peakFinderCfg);
+  Acts::HoughTransformUtils::HoughPlane<Acts::GeometryIdentifier::Value> houghPlane(planeCfg); 
+  Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMax<Acts::GeometryIdentifier::Value> peakFinder(peakFinderCfg);
 
   for (auto & SH : gotSH){
     muonMdtIdentifierFields detailedInfo = ActsExamples::splitId(SH.geometryId().value()); 
@@ -94,7 +94,8 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
     truePatterns.emplace_back(SH.fourPosition().y(), SH.direction().y() / SH.direction().z()); 
     // auto ID = SH.
     // std::cout <<" saw a true sim hit in station "<<(int)detailedInfo.stationName<<", eta "<<(int)detailedInfo.stationEta<<", phi "<<(int)detailedInfo.stationPhi<<" @ y0,tantheta = "<<truePatterns.back().first<<", "<<truePatterns.back().second<<std::endl; 
-
+    /// pick out debug chamber 
+    // if (detailedInfo.stationName != 4 || detailedInfo.stationPhi != 8 || detailedInfo.stationEta != -6) continue;
     m_houghHist->Reset();
     houghPlane.reset();
 
@@ -169,22 +170,6 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
         markers.back()->Draw();
         std::cout <<"  --> at "<<max.x<<" , "<<max.y<<std::endl;
     }
-    m_outCanvas->SaveAs("HoughHistograms.pdf");
-
-    TH2D hJahred("jahred","hatAuchEinHough;x;y",planeCfg.nBinsY, axisRanges.yMin, axisRanges.yMax, planeCfg.nBinsX, axisRanges.xMin, axisRanges.xMax);
-     for (int bx = 0; bx < hJahred.GetXaxis()->GetNbins(); ++bx){
-      for (int by = 0; by < hJahred.GetYaxis()->GetNbins(); ++by){
-        hJahred.SetBinContent(by+1, bx+1, houghPlane.nHits(bx,by));
-      }
-     }
-     hJahred.Draw("COLZ"); 
-    for (auto & max : maxima){
-        markers.push_back(std::make_unique<TMarker>(max.y, max.x,kOpenCircle));
-        markers.back()->SetMarkerSize(1);
-        markers.back()->SetMarkerColor(kOrange-3);
-        markers.back()->Draw();
-    }
-    trueMarker->Draw();
     m_outCanvas->SaveAs("HoughHistograms.pdf");
 
   }

@@ -3,7 +3,6 @@ target_sources(
   PRIVATE
     CombinatorialKalmanFilterError.cpp
     MeasurementSelector.cpp
-    HoughTransformUtils.cpp
     FasTrackConnector.cpp
     RoiDescriptor.cpp
     AmbiguityTrackClustering.cpp
