@@ -110,6 +110,16 @@ class MultiTrajectoryTestsCommon {
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(predictedsAct.begin(), predictedsAct.end(),
                                   predicteds.begin(), predicteds.end());
+
+    {
+      trajectory_t t2 = m_factory.create();
+      auto ts = t2.makeTrackState(kMask);
+      BOOST_CHECK_EQUAL(t2.size(), 1);
+      auto ts2 = t2.makeTrackState(kMask, ts.index());
+      BOOST_CHECK_EQUAL(t2.size(), 2);
+      BOOST_CHECK_EQUAL(ts.previous(), MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_EQUAL(ts2.previous(), ts.index());
+    }
   }
 
   void testClear() {
