@@ -21,16 +21,16 @@ ActsExamples::SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(
       m_cfg(std::move(cfg)),
       m_seedClassifier(m_cfg.inputSeedFilterNN.c_str()) {
   if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing trajectories input collection");
+    throw std::invalid_argument("Missing track parameters input collection");
   }
   if (m_cfg.inputSimSeeds.empty()) {
-    throw std::invalid_argument("Missing trajectories input collection");
+    throw std::invalid_argument("Missing seed input collection");
   }
   if (m_cfg.outputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing trajectories output collection");
+    throw std::invalid_argument("Missing track parameters output collection");
   }
   if (m_cfg.outputSimSeeds.empty()) {
-    throw std::invalid_argument("Missing trajectories output collection");
+    throw std::invalid_argument("Missing seed output collection");
   }
   m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_inputSimSeeds.initialize(m_cfg.inputSimSeeds);
@@ -80,7 +80,7 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
       clusteringParams, m_cfg.epsilonDBScan, m_cfg.minPointsDBScan);
 
   // Select the ID of the track we want to keep
-  std::vector<int> goodSeed = m_seedClassifier.solveAmbiguity(
+  std::vector<std::size_t> goodSeed = m_seedClassifier.solveAmbiguity(
       cluster, networkInput, m_cfg.minSeedScore);
 
   // Create the output seed collection

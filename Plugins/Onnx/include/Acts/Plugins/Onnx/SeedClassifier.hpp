@@ -44,23 +44,24 @@ class SeedClassifier {
   /// @param outputTensor is the score vector obtained from inferScores.
   /// @param minSeedScore is the minimum score a seed need to be selected
   /// @return a vector of seedID corresponding tho the good seeds
-  std::vector<int> seedSelection(std::vector<std::vector<int>>& clusters,
-                                 std::vector<std::vector<float>>& outputTensor,
-                                 float minSeedScore = 0.1) const {
-    std::vector<int> goodSeeds;
+  std::vector<std::size_t> seedSelection(
+      std::vector<std::vector<std::size_t>>& clusters,
+      std::vector<std::vector<float>>& outputTensor,
+      float minSeedScore = 0.1) const {
+    std::vector<std::size_t> goodSeeds;
     // Loop over all the cluster and only keep the seed with the highest score
     // in each cluster
     for (const auto& cluster : clusters) {
-      int bestSeedID = 0;
+      std::size_t bestseedID = 0;
       float bestSeedScore = 0;
       for (const auto& seed : cluster) {
         if (outputTensor[seed][0] > bestSeedScore) {
           bestSeedScore = outputTensor[seed][0];
-          bestSeedID = seed;
+          bestseedID = seed;
         }
       }
       if (bestSeedScore >= minSeedScore) {
-        goodSeeds.push_back(bestSeedID);
+        goodSeeds.push_back(bestseedID);
       }
     }
     return goodSeeds;
@@ -72,11 +73,11 @@ class SeedClassifier {
   /// @param networkInput input of the network
   /// @param minSeedScore is the minimum score a seed need to be selected
   /// @return a vector of seedID corresponding the the good seeds
-  std::vector<int> solveAmbiguity(std::vector<std::vector<int>>& clusters,
-                                  Acts::NetworkBatchInput& networkInput,
-                                  float minSeedScore = 0.1) const {
+  std::vector<std::size_t> solveAmbiguity(
+      std::vector<std::vector<std::size_t>>& clusters,
+      Acts::NetworkBatchInput& networkInput, float minSeedScore = 0.1) const {
     std::vector<std::vector<float>> outputTensor = inferScores(networkInput);
-    std::vector<int> goodSeeds =
+    std::vector<std::size_t> goodSeeds =
         seedSelection(clusters, outputTensor, minSeedScore);
     return goodSeeds;
   }

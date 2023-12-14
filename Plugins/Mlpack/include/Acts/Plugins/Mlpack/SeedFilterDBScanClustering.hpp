@@ -23,7 +23,7 @@ namespace Acts {
 /// @param epsilon : Maximum distance between 2 tracks to be clustered
 /// @param minPoints : Minimum number of tracks to create a cluster
 /// @return an unordered map representing the clusters, the keys the ID of the primary seed of each cluster and the stored value a vector of seed IDs.
-std::vector<std::vector<int>> dbscanSeedClustering(
+std::vector<std::vector<std::size_t>> dbscanSeedClustering(
     const std::vector<std::vector<double>>& input, float epsilon = 0.03,
     int minPoints = 2) {
   // DBSCAN algorithm from MLpack used in the seed clustering
@@ -46,11 +46,12 @@ std::vector<std::vector<int>> dbscanSeedClustering(
   std::size_t clusterNb = dbscan.Cluster(data, assignments);
 
   // Prepare the output
-  std::vector<std::vector<int>> cluster(clusterNb, std::vector<int>());
+  std::vector<std::vector<std::size_t>> cluster(clusterNb,
+                                                std::vector<std::size_t>());
   for (std::size_t iD = 0; iD < input.size(); iD++) {
-    int clusterID = assignments(iD);
+    std::size_t clusterID = assignments(iD);
     if (assignments(iD) == SIZE_MAX) {
-      cluster.push_back(std::vector<int>(1, iD));
+      cluster.push_back(std::vector<std::size_t>(1, iD));
     } else {
       cluster[clusterID].push_back(iD);
     }
