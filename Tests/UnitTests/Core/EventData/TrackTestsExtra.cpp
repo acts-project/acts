@@ -26,11 +26,19 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
   TrackContainer tc{vtc, mtj};
   tc.addColumn<std::size_t>("counter");
   tc.addColumn<bool>("odd");
+  mtj.addColumn<std::size_t>("ts_counter");
+  mtj.addColumn<bool>("ts_odd");
 
   TrackContainer tc2{VectorTrackContainer{}, VectorMultiTrajectory{}};
   // doesn't have the dynamic column
 
-  TrackContainer tc3{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  VectorTrackContainer vtc3{};
+  VectorMultiTrajectory mtj3{};
+  mtj3.addColumn<std::size_t>("ts_counter");
+  mtj3.addColumn<bool>("ts_odd");
+
+  TrackContainer tc3{vtc3, mtj3};
+
   tc3.addColumn<std::size_t>("counter");
   tc3.addColumn<bool>("odd");
 
@@ -38,13 +46,17 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     auto t = tc.getTrack(tc.addTrack());
     auto ts = t.appendTrackState();
     ts.predicted() = BoundVector::Ones();
+    ts.component<std::size_t, "ts_counter"_hash>() = i;
+
     ts = t.appendTrackState();
     ts.predicted().setOnes();
     ts.predicted() *= 2;
+    ts.component<std::size_t, "ts_counter"_hash>() = i + 1;
 
     ts = t.appendTrackState();
     ts.predicted().setOnes();
     ts.predicted() *= 3;
+    ts.component<std::size_t, "ts_counter"_hash>() = i + 2;
 
     t.template component<std::size_t>("counter") = i;
     t.template component<bool>("odd") = i % 2 == 0;
@@ -63,6 +75,13 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     for (auto [tsa, tsb] :
          zip(t.trackStatesReversed(), t3.trackStatesReversed())) {
       BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
+
+      BOOST_CHECK_EQUAL(
+          (tsa.template component<std::size_t, "ts_counter"_hash>()),
+          (tsb.template component<std::size_t, "ts_counter"_hash>()));
+
+      BOOST_CHECK_EQUAL((tsa.template component<bool, "ts_odd"_hash>()),
+                        (tsb.template component<bool, "ts_odd"_hash>()));
     }
 
     BOOST_CHECK_EQUAL(t.template component<std::size_t>("counter"),
@@ -77,7 +96,12 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
 
   BOOST_REQUIRE_EQUAL(tc4.trackStateContainer().size(), before);
 
-  TrackContainer tc5{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  VectorTrackContainer vtc5{};
+  VectorMultiTrajectory mtj5{};
+  mtj5.addColumn<std::size_t>("ts_counter");
+  mtj5.addColumn<bool>("ts_odd");
+
+  TrackContainer tc5{vtc5, mtj5};
   tc5.addColumn<std::size_t>("counter");
   tc5.addColumn<bool>("odd");
 
