@@ -59,6 +59,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   // Surfaces are prepared for creating the builder
   LayerStructureBuilder::Config lsbConfig;
   lsbConfig.auxiliary = "*** DD4hep auto-generated builder for: ";
+  lsbConfig.extent = fCache.sExtent;
   lsbConfig.auxiliary += options.name;
 
   // Patch the binning to the extent parameters
