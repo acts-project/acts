@@ -93,6 +93,11 @@ class vector2D {
     }
     return m_data.data() + (i * m_d2);
   }
+  std::vector<T>::iterator begin(){return m_data.begin();}
+  std::vector<T>::iterator end(){return m_data.end();}
+  std::vector<T>::const_iterator cbegin() const {return m_data.cbegin();}
+  std::vector<T>::const_iterator cend() const {return m_data.cend();}
+  
   void reset(const T& t){
     m_data.assign(m_data.size(),t);
   }

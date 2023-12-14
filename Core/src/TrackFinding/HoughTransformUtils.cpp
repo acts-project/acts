@@ -12,7 +12,8 @@ void HoughCell::fill(idType identifier, unsigned layer, yieldType weight) {
 }
 
 void HoughCell::reset() {
-  m_layers.clear();
+  if (m_nLayers > 0) m_layers.clear();
+  if (m_nHits > 0) m_hits.clear();
   m_hits.clear();
   m_nHits = 0;
   m_nLayers = 0;
@@ -37,7 +38,9 @@ void HoughPlane::fillBin(int binX, int binY, idType identifier, unsigned layer,
 }
 
 void HoughPlane::reset() {
-  m_houghHist.reset(HoughCell{});
+  for (auto & cell : m_houghHist){
+    cell.reset(); 
+  }
 }
 // NYI
 void HoughPlane::drawHoughHist(std::string const&) {}
@@ -51,7 +54,6 @@ std::vector<HoughPeakFinder_LayerGuidedCombinatoric::Maximum>
 HoughPeakFinder_LayerGuidedCombinatoric::findPeaks(
     const HoughPlane& plane) const {
   std::vector<HoughPeakFinder_LayerGuidedCombinatoric::Maximum> maxima;
-
   for (int y = 0; y < plane.nBinsY(); y++) {
     for (int x = 0; x < plane.nBinsX(); x++) {
       if (passThreshold(plane, x, y)) {
