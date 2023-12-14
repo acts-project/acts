@@ -171,7 +171,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
     const external_spacepoint_t& sp = **it;
-    const auto& [spPosition, variance] =
+    const auto& [spPosition, variance, spTime, varianceT] =
         toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
     float spX = spPosition[0];
@@ -191,7 +191,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     }
 
     auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        counter, sp, spPosition, options.beamPos, variance);
+        counter, sp, spPosition, options.beamPos, variance, spTime, varianceT);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     std::size_t rIndex =

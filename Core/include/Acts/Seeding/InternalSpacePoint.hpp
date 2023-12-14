@@ -17,6 +17,7 @@
 #include <optional>
 
 namespace Acts {
+
 template <typename SpacePoint>
 class InternalSpacePoint {
   /////////////////////////////////////////////////////////////////////////////////
@@ -28,11 +29,9 @@ class InternalSpacePoint {
   InternalSpacePoint(std::size_t index, const SpacePoint& sp,
                      const Acts::Vector3& globalPos,
                      const Acts::Vector2& offsetXY,
-                     const Acts::Vector2& variance);
-  InternalSpacePoint(std::size_t index, const SpacePoint& sp,
-                     const Acts::Vector4& globalPos,
-                     const Acts::Vector2& offsetXY,
-                     const Acts::Vector3& variance);
+                     const Acts::Vector2& variance,
+                     const std::optional<float>& globalTime,
+                     const std::optional<float>& varianceT);
 
   InternalSpacePoint(const InternalSpacePoint<SpacePoint>& sp);
   ~InternalSpacePoint() = default;
@@ -73,7 +72,9 @@ class InternalSpacePoint {
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
     std::size_t index, const SpacePoint& sp, const Acts::Vector3& globalPos,
-    const Acts::Vector2& offsetXY, const Acts::Vector2& variance)
+    const Acts::Vector2& offsetXY, const Acts::Vector2& variance,
+    const std::optional<float>& globalTime,
+    const std::optional<float>& varianceT)
     : m_index(index),
       m_x(globalPos.x() - offsetXY.x()),
       m_y(globalPos.y() - offsetXY.y()),
@@ -82,16 +83,9 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
       m_phi(std::atan2(m_y, m_x)),
       m_varianceR(variance.x()),
       m_varianceZ(variance.y()),
+      m_t(globalTime),
+      m_varianceT(varianceT),
       m_sp(sp) {}
-
-template <typename SpacePoint>
-inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
-    std::size_t index, const SpacePoint& sp, const Acts::Vector4& globalPos,
-    const Acts::Vector2& offsetXY, const Acts::Vector3& variance)
-    : InternalSpacePoint(index, sp, globalPos.head<3>(), offsetXY,
-                         variance.head<2>()),
-      m_t(globalPos[3]),
-      m_varianceT(variance[2]) {}
 
 /////////////////////////////////////////////////////////////////////////////////
 // Copy constructor

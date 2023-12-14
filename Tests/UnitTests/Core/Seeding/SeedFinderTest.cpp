@@ -70,7 +70,7 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
         }
 
         SpacePoint* sp = new SpacePoint{
-            x, y, z, t, r, layer, varianceR, varianceZ, varianceT};
+            x, y, z, r, layer, varianceR, varianceZ, t, varianceT};
         //     if(r < 200.){
         //       sp->setClusterList(1,0);
         //     }
@@ -178,11 +178,10 @@ int main(int argc, char** argv) {
   a = Acts::SeedFinder<SpacePoint>(config);
 
   // covariance tool, sets covariances per spacepoint as required
-  auto ct = [=](const SpacePoint& sp, float, float,
-                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto ct = [=](const SpacePoint& sp, float, float, float) {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
-    return std::make_pair(position, covariance);
+    return std::make_tuple(position, covariance, sp.t(), sp.varianceT);
   };
 
   // setup spacepoint grid config
