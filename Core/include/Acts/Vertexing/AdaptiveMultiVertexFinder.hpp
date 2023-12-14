@@ -145,9 +145,9 @@ class AdaptiveMultiVertexFinder {
     // Use seed vertex as a constraint for the fit
     bool useSeedConstraint = true;
 
-    // Diagonal constraint covariance entries in case
-    // no beamspot constraint is provided
-    double looseConstrValue = 1e+8;
+    // Variances of the 4D vertex position before the vertex fit if no beamspot
+    // constraint is provided
+    Vector4 initialVariances = Vector4::Constant(1e+8);
 
     // Default fitQuality for constraint vertex in case no beamspot
     // constraint is provided
