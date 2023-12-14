@@ -560,7 +560,8 @@ BOOST_AUTO_TEST_CASE(
 
   // Grid density used during vertex seed finding
   AdaptiveGridTrackDensity::Config gridDensityCfg;
-  gridDensityCfg.spatialBinExtent = 0.05_mm;
+  gridDensityCfg.spatialTrkGridSize = 55;
+  gridDensityCfg.spatialBinExtent = 0.05;
   AdaptiveGridTrackDensity gridDensity(gridDensityCfg);
 
   using SeedFinder = AdaptiveGridDensityVertexFinder<>;
@@ -639,7 +640,7 @@ BOOST_AUTO_TEST_CASE(
   auto verticesInfo = std::get<VerticesData>(csvData);
   const int expNRecoVertices = verticesInfo.size();
 
-  BOOST_CHECK_EQUAL(expNRecoVertices, allVertices.size());
+  BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
   std::vector<bool> vtxFound(expNRecoVertices, false);
 
   for (const auto& vtx : allVertices) {
@@ -661,7 +662,7 @@ BOOST_AUTO_TEST_CASE(
     }
   }
   for (bool found : vtxFound) {
-    BOOST_CHECK(found);
+    BOOST_CHECK_EQUAL(found, true);
   }
 }
 

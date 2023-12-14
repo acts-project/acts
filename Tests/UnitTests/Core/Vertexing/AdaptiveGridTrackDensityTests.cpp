@@ -35,26 +35,33 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-BoundSquareMatrix makeCovariance(double sigmaD0, double sigmaZ0,
-                                 double sigmaT) {
-  return (BoundVector() << sigmaD0, sigmaZ0, 0, 0, 0, sigmaT)
-      .finished()
-      .array()
-      .square()
-      .matrix()
-      .asDiagonal();
+using Covariance = BoundSquareMatrix;
+
+Covariance makeRandomCovariance(int seed = 31415) {
+  std::srand(seed);
+  Covariance randMat((Covariance::Random() + 1.5 * Covariance::Identity()) *
+                     0.05);
+
+  // symmetric covariance matrix
+  Covariance covMat = 0.5 * (randMat + randMat.transpose());
+
+  return covMat;
 }
 
 BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
+  using Vector2 = Eigen::Matrix<float, 2, 1>;
+  using Matrix2 = Eigen::Matrix<float, 2, 2>;
+  // Using a large track grid so we can choose a small bin size
+  const unsigned int spatialTrkGridSize = 4001;
   // Arbitrary (but small) bin size
-  const float spatialBinExtent = 15_um;
+  const float binExtent = 3.1e-4;
   // Arbitrary impact parameters
   const float d0 = 0.4;
   const float z0 = -0.2;
   Vector2 impactParameters{d0, z0};
 
-  BoundSquareMatrix covMat = makeCovariance(0.01, 0.01, 10);
-  SquareMatrix2 subCovMat = covMat.block<2, 2>(0, 0);
+  Covariance covMat = makeRandomCovariance();
+  Matrix2 subCovMat = covMat.block<2, 2>(0, 0).cast<float>();
   BoundVector paramVec;
   paramVec << d0, z0, 0, 0, 0, 0;
 
@@ -66,7 +73,8 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
                                ParticleHypothesis::pion());
 
   AdaptiveGridTrackDensity::Config cfg;
-  cfg.spatialBinExtent = spatialBinExtent;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
   // Empty map
@@ -79,18 +87,19 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   float small = 1e-5;
 
   auto gaussian2D = [&](const Vector2& args, const Vector2& mus,
-                        const SquareMatrix2& cov) {
+                        const Matrix2& sigmas) {
     Vector2 diffs = args - mus;
-    float coef = 1 / std::sqrt(cov.determinant());
-    float expo = -0.5 * diffs.transpose().dot(cov.inverse() * diffs);
+    float coef = 1 / std::sqrt(sigmas.determinant());
+    float expo = -0.5 * diffs.transpose().dot(sigmas.inverse() * diffs);
     return coef * std::exp(expo);
   };
 
-  for (auto const& [bin, density] : mainDensityMap) {
+  for (auto const& it : mainDensityMap) {
     // Extract variables for better readability
-    int zBin = bin.first;
+    int zBin = it.first.first;
+    float density = it.second;
     // Argument for 2D gaussian
-    Vector2 dzVec{0., grid.getBinCenter(zBin, spatialBinExtent)};
+    Vector2 dzVec{0., grid.getBinCenter(zBin, binExtent)};
     // Compute correct density...
     float correctDensity = gaussian2D(dzVec, impactParameters, subCovMat);
     // ... and check if our result is equivalent
@@ -125,9 +134,11 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
 BOOST_AUTO_TEST_CASE(
     compare_to_analytical_solution_for_single_track_with_time) {
   // Number of bins in z- and t-direction
+  const unsigned int spatialTrkGridSize = 401;
+  const unsigned int temporalTrkGridSize = 401;
   // Bin extents
-  const float spatialBinExtent = 15_um;
-  const float temporalBinExtent = 19_mm;
+  const float spatialBinExtent = 3.1e-3;
+  const float temporalBinExtent = 3.1e-3;
   // Arbitrary impact parameters
   const float d0 = -0.1;
   const float z0 = -0.2;
@@ -135,7 +146,8 @@ BOOST_AUTO_TEST_CASE(
   Vector3 impactParameters{d0, z0, t0};
 
   // symmetric covariance matrix
-  BoundSquareMatrix covMat = makeCovariance(0.01, 0.01, 10);
+  Covariance covMat = makeRandomCovariance();
+
   BoundVector paramVec;
   paramVec << d0, z0, 0, 0, 0, t0;
   // Create perigee surface
@@ -148,7 +160,9 @@ BOOST_AUTO_TEST_CASE(
   ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
 
   AdaptiveGridTrackDensity::Config cfg;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
   cfg.spatialBinExtent = spatialBinExtent;
+  cfg.temporalTrkGridSize = temporalTrkGridSize;
   cfg.temporalBinExtent = temporalBinExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
@@ -221,8 +235,10 @@ BOOST_AUTO_TEST_CASE(
 
 BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   // Dummy track grid size (not needed for this unit test)
+  const unsigned int spatialTrkGridSize = 1;
   float binExtent = 2.;
   AdaptiveGridTrackDensity::Config cfg;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
   cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
@@ -261,14 +277,14 @@ BOOST_AUTO_TEST_CASE(track_adding) {
   double binExtent = 0.1;  // mm
 
   AdaptiveGridTrackDensity::Config cfg;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
   cfg.spatialBinExtent = binExtent;
-  cfg.spatialTrkSigmas = 1;
   AdaptiveGridTrackDensity grid(cfg);
 
   // Create some test tracks in such a way that some tracks
   //  e.g. overlap and that certain tracks need to be inserted
   // between two other tracks
-  BoundSquareMatrix covMat = BoundSquareMatrix::Identity();
+  Covariance covMat(Covariance::Identity());
 
   BoundVector paramVec0;
   paramVec0 << 100.0, -0.4, 0, 0, 0, 0;
@@ -317,22 +333,28 @@ BOOST_AUTO_TEST_CASE(track_adding) {
 }
 
 BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
+  const unsigned int spatialTrkGridSize = 29;
+  const unsigned int temporalTrkGridSize = 29;
+
   // spatial and temporal bin extent
   double binExtent = 0.05;
 
   // 1D grid of z values
   AdaptiveGridTrackDensity::Config cfg1D;
+  cfg1D.spatialTrkGridSize = spatialTrkGridSize;
   cfg1D.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid1D(cfg1D);
 
   // 2D grid of z and t values
   AdaptiveGridTrackDensity::Config cfg2D;
+  cfg2D.spatialTrkGridSize = spatialTrkGridSize;
   cfg2D.spatialBinExtent = binExtent;
+  cfg2D.temporalTrkGridSize = temporalTrkGridSize;
   cfg2D.temporalBinExtent = binExtent;
   AdaptiveGridTrackDensity grid2D(cfg2D);
 
   // Create some test tracks
-  BoundSquareMatrix covMat = BoundSquareMatrix::Identity() * 0.005;
+  Covariance covMat(Covariance::Identity() * 0.005);
 
   float z0Trk1 = 0.25;
   float t0Trk1 = 0.05;
@@ -402,16 +424,19 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
 }
 
 BOOST_AUTO_TEST_CASE(highest_density_sum) {
+  const unsigned int spatialTrkGridSize = 29;
+
   double binExtent = 0.05;  // mm
 
   AdaptiveGridTrackDensity::Config cfg;
+  cfg.spatialTrkGridSize = spatialTrkGridSize;
   cfg.spatialBinExtent = binExtent;
   cfg.useHighestSumZPosition = true;
 
   AdaptiveGridTrackDensity grid(cfg);
 
   // Create some test tracks
-  BoundSquareMatrix covMat = BoundSquareMatrix::Identity() * 0.005;
+  Covariance covMat(Covariance::Identity() * 0.005);
 
   float z0Trk1 = 0.25;
   float z0Trk2 = -10.95;
@@ -472,20 +497,21 @@ BOOST_AUTO_TEST_CASE(track_removing) {
 
   // 1D grid
   AdaptiveGridTrackDensity::Config cfg1D;
+  cfg1D.spatialTrkGridSize = spatialTrkGridSize;
   cfg1D.spatialBinExtent = binExtent;
-  cfg1D.spatialTrkSigmas = 6;
   AdaptiveGridTrackDensity grid1D(cfg1D);
 
   // 2D grid
   AdaptiveGridTrackDensity::Config cfg2D;
+  cfg2D.spatialTrkGridSize = spatialTrkGridSize;
   cfg2D.spatialBinExtent = binExtent;
-  cfg1D.spatialTrkSigmas = 6;
+  cfg2D.temporalTrkGridSize = temporalTrkGridSize;
   cfg2D.temporalBinExtent = binExtent;
-  cfg1D.temporalTrkSigmas = 6;
   AdaptiveGridTrackDensity grid2D(cfg2D);
 
   // Create some test tracks
-  BoundSquareMatrix covMat = makeCovariance(0.01, 0.01, 10);
+  Covariance covMat = makeRandomCovariance();
+
   // Define z0 values for test tracks
   float z0Trk1 = -0.45;
   float t0Trk1 = -0.15;

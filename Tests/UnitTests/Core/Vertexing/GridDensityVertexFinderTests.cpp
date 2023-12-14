@@ -76,7 +76,7 @@ std::uniform_real_distribution<double> etaDist(-4., 4.);
 /// of track density values
 ///
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
-  bool debugMode = false;
+  bool debugMode = true;
 
   // Note that the AdaptiveGridTrackDensity and the GaussianGridTrackDensity
   // only furnish exactly the same results for uneven mainGridSize, where the
@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
+  adaptiveDensityConfig.spatialTrkGridSize = trkGridSize;
   adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
-  adaptiveDensityConfig.spatialTrkSigmas = 5.;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<>;
@@ -174,8 +174,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     BOOST_CHECK(!(*res1).empty());
     Vector3 result1 = (*res1).back().position();
     if (debugMode) {
-      std::cout << "Vertex position result 1: " << result1.transpose()
-                << std::endl;
+      std::cout << "Vertex position result 1: " << result1 << std::endl;
     }
     CHECK_CLOSE_ABS(result1[eZ], zVertexPos1, 1_mm);
     zResult1 = result1[eZ];
@@ -186,15 +185,14 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     BOOST_CHECK(!(*res2).empty());
     Vector3 result2 = (*res2).back().position();
     if (debugMode) {
-      std::cout << "Vertex position result 2: " << result2.transpose()
-                << std::endl;
+      std::cout << "Vertex position result 2: " << result2 << std::endl;
     }
     CHECK_CLOSE_ABS(result2[eZ], zVertexPos1, 1_mm);
     zResult2 = result2[eZ];
   }
 
   // Both finders should give same results
-  CHECK_CLOSE_ABS(zResult1, zResult2, 1e-4);
+  BOOST_CHECK_EQUAL(zResult1, zResult2);
 }
 
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
@@ -227,6 +225,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
+  adaptiveDensityConfig.spatialTrkGridSize = trkGridSize;
   adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
   adaptiveDensityConfig.useHighestSumZPosition = true;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
@@ -290,7 +289,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     BOOST_CHECK(!(*res1).empty());
     Vector3 result = (*res1).back().position();
     if (debugMode) {
-      std::cout << "Vertex position after first fill 1: " << result.transpose()
+      std::cout << "Vertex position after first fill 1: " << result
                 << std::endl;
     }
     CHECK_CLOSE_ABS(result[eZ], zVertexPos1, 1_mm);
@@ -305,14 +304,14 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     BOOST_CHECK(!(*res2).empty());
     Vector3 result = (*res2).back().position();
     if (debugMode) {
-      std::cout << "Vertex position after first fill 2: " << result.transpose()
+      std::cout << "Vertex position after first fill 2: " << result
                 << std::endl;
     }
     CHECK_CLOSE_ABS(result[eZ], zVertexPos1, 1_mm);
     zResult2 = result[eZ];
   }
 
-  CHECK_CLOSE_ABS(zResult1, zResult2, 1e-4);
+  BOOST_CHECK_EQUAL(zResult1, zResult2);
 
   int trkCount = 0;
   std::vector<const BoundTrackParameters*> removedTracks;
@@ -336,7 +335,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     if (debugMode) {
       std::cout
           << "Vertex position after removing tracks near first density peak 1: "
-          << result.transpose() << std::endl;
+          << result << std::endl;
     }
     CHECK_CLOSE_ABS(result[eZ], zVertexPos2, 1_mm);
     zResult1 = result[eZ];
@@ -352,13 +351,13 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     if (debugMode) {
       std::cout
           << "Vertex position after removing tracks near first density peak 2: "
-          << result.transpose() << std::endl;
+          << result << std::endl;
     }
     CHECK_CLOSE_ABS(result[eZ], zVertexPos2, 1_mm);
     zResult2 = result[eZ];
   }
 
-  CHECK_CLOSE_ABS(zResult1, zResult2, 1e-4);
+  BOOST_CHECK_EQUAL(zResult1, zResult2);
 }
 
 ///
@@ -392,9 +391,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
+  adaptiveDensityConfig.spatialTrkGridSize = trkGridSize;
   adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
-  adaptiveDensityConfig.spatialTrkSigmas =
-      1.1;  // tuned to obtain same seed width as Finder1
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<>;
