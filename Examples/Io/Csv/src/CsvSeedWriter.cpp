@@ -147,7 +147,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
 
     // track info
     SeedInfo toAdd;
-    toAdd.seedId = iparams;
+    toAdd.seedID = iparams;
     toAdd.particleId = majorityParticleId;
     toAdd.seedPt = std::abs(1.0 / params[Acts::eBoundQOverP]) *
                    std::sin(params[Acts::eBoundTheta]);
@@ -160,7 +160,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     toAdd.seedType = truthMatched ? "duplicate" : "fake";
     toAdd.measurementsID = ptrack;
 
-    infoMap[toAdd.seedId] = toAdd;
+    infoMap[toAdd.seedID] = toAdd;
   }
 
   mos << "seed_id,particleId,"
@@ -177,7 +177,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
       info.seedType = "good";
     }
     // write the track info
-    mos << info.seedId << ",";
+    mos << info.seedID << ",";
     mos << info.particleId << ",";
     mos << info.seedPt << ",";
     mos << info.seedEta << ",";

@@ -19,7 +19,6 @@ def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
     @param[in] CKS_files: DataFrame contain the data from each track files (1 file per events usually)
     @return: combined DataFrame containing all the track, ordered by events and then by truth particle ID in each event 
     """
-    globalindex = 0
     data = []
     for f in CKS_files:
         datafile = pd.read_csv(f)
