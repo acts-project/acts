@@ -216,7 +216,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                           1e-2);
           CHECK_CLOSE_ABS(estFullParams[eBoundQOverP], expParams[eBoundQOverP],
                           1e-2);
-          CHECK_CLOSE_ABS(estFullParams[eBoundTime], expParams[eBoundTime], 1.);
+          // time is not estimated so we check if it is default zero
+          CHECK_CLOSE_ABS(estFullParams[eBoundTime], 0, 1e-6);
         }
       }
     }
