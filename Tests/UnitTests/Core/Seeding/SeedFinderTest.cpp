@@ -52,6 +52,7 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
       ss >> linetype;
       if (linetype == "lxyz") {
         float x = 0, y = 0, z = 0, varianceR = 0, varianceZ = 0;
+        std::optional<float> t, varianceT;
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
         const float r = std::hypot(x, y);
 
@@ -68,8 +69,8 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
           varianceZ = .06;
         }
 
-        SpacePoint* sp =
-            new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
+        SpacePoint* sp = new SpacePoint{
+            x, y, z, t, r, layer, varianceR, varianceZ, varianceT};
         //     if(r < 200.){
         //       sp->setClusterList(1,0);
         //     }

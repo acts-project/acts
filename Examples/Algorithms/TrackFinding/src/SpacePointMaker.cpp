@@ -104,10 +104,11 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
           &m_slSurfaceAccessor.value());
 
   auto spConstructor =
-      [](const Acts::Vector3& pos, const Acts::Vector2& cov,
+      [](const Acts::Vector3& pos, std::optional<double> t,
+         const Acts::Vector2& cov, std::optional<double> varT,
          boost::container::static_vector<Acts::SourceLink, 2> slinks)
       -> SimSpacePoint {
-    return SimSpacePoint(pos, cov[0], cov[1], std::move(slinks));
+    return SimSpacePoint(pos, t, cov[0], cov[1], varT, std::move(slinks));
   };
 
   m_spacePointBuilder = Acts::SpacePointBuilder<SimSpacePoint>(

@@ -144,10 +144,12 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
             // zero since they are not important for the test)
             float r = std::hypot(globalPos.x(), globalPos.y());
             spacePoints.emplace(
-                layer, SpacePoint{static_cast<float>(globalPos.x()),
-                                  static_cast<float>(globalPos.y()),
-                                  static_cast<float>(globalPos.z()), r,
-                                  static_cast<int>(geoId.layer()), 0., 0.});
+                layer,
+                SpacePoint{static_cast<float>(globalPos.x()),
+                           static_cast<float>(globalPos.y()),
+                           static_cast<float>(globalPos.z()), std::nullopt, r,
+                           static_cast<int>(geoId.layer()), 0., 0.,
+                           std::nullopt});
             if (spacePoints.size() == 1) {
               bottomSurface = surface;
             }
