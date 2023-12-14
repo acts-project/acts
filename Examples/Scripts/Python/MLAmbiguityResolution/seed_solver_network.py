@@ -14,8 +14,11 @@ def prepareDataSet(data: pd.DataFrame) -> pd.DataFrame:
     @param[in] data: input DataFrame containing 1 event
     @return: Formatted DataFrame 
     """
+    print("TEST")
     data = data
+    print(data)
     data = data.sort_values("good/duplicate/fake", ascending=False)
+    print(data)
     # Sort by particle ID
     data = data.sort_values("particleId")
     # Set truth particle ID as index

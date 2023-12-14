@@ -222,14 +222,14 @@ def train(
     val_batch = int(len(batch) * (1 - validation))
     # Loop over all the epoch
     for epoch in range(epochs):
-        print("Epoch : ", epoch, " / ", epochs)
+        print("Epoch: ", epoch, " / ", epochs)
         loss = 0.0
         nb_part = 0.0
         nb_good_match = 0.0
 
         # Loop over all the network over the training batch
         nb_part, nb_good_match, loss = scoringBatch(batch[:val_batch], Optimiser=opt)
-        print("Loss/train : ", loss, " Eff/train : ", nb_good_match / nb_part)
+        print("Loss/train: ", loss, " Eff/train: ", nb_good_match / nb_part)
         writer.add_scalar("Loss/train", loss, epoch)
         writer.add_scalar("Eff/train", nb_good_match / nb_part, epoch)
 
@@ -238,7 +238,7 @@ def train(
             nb_part, nb_good_match, loss = scoringBatch(batch[val_batch:])
             writer.add_scalar("Loss/val", loss, epoch)
             writer.add_scalar("Eff/val", nb_good_match / nb_part, epoch)
-            print("Loss/val : ", loss, " Eff/val : ", nb_good_match / nb_part)
+            print("Loss/val: ", loss, " Eff/val: ", nb_good_match / nb_part)
 
     writer.close()
     return duplicateClassifier
@@ -329,6 +329,6 @@ nb_part += 1
 if max_match == 1:
     nb_good_match += 1
 
-print("nb particles : ", nb_part)
-print("nb good match : ", nb_good_match)
+print("nb particles: ", nb_part)
+print("nb good match: ", nb_good_match)
 print("Efficiency: ", 100 * nb_good_match / nb_part, " %")

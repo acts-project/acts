@@ -287,18 +287,18 @@ for clusteredEvent, cleanedEvent in zip(clusteredData, cleanedData):
 tend = time.time()
 
 print("===Initial efficiencies===")
-print("nb particles : ", nb_part)
-print("nb track : ", nb_track)
+print("nb particles: ", nb_part)
+print("nb track: ", nb_track)
 print("duplicate rate: ", 100 * nb_duplicate / nb_track, " %")
 print("Fake rate: ", 100 * nb_fake / nb_track, " %")
 
 print("===computed efficiencies===")
-print("nb particles : ", nb_part)
-print("nb good match : ", nb_good_match)
-print("nb particle reco : ", nb_reco_part)
-print("nb track reco : ", nb_reco_track)
-print("Efficiency (good track) : ", 100 * nb_good_match / nb_part, " %")
-print("Efficiency (particle reco) : ", 100 * nb_reco_part / nb_part, " %")
+print("nb particles: ", nb_part)
+print("nb good match: ", nb_good_match)
+print("nb particle reco: ", nb_reco_part)
+print("nb track reco: ", nb_reco_track)
+print("Efficiency (good track): ", 100 * nb_good_match / nb_part, " %")
+print("Efficiency (particle reco): ", 100 * nb_reco_part / nb_part, " %")
 print(
     "duplicate rate: ",
     100 * ((nb_good_match + nb_reco_duplicate) - nb_reco_part) / nb_reco_track,
@@ -307,12 +307,12 @@ print(
 print("Fake rate: ", 100 * nb_reco_fake / nb_reco_track, " %")
 
 print("===computed speed===")
-print("Load : ", (t1 - start) * 1000 / len(CKF_files), "ms")
-print("Clustering : ", (t2 - t1) * 1000 / len(CKF_files), "ms")
-print("Inference : ", (t4 - t3) * 1000 / len(CKF_files), "ms")
-print("Perf : ", (tend - t4) * 1000 / len(CKF_files), "ms")
-print("tot : ", (t4 - start) * 1000 / len(CKF_files), "ms")
-print("Seed filter : ", (t4 - t1) * 1000 / len(CKF_files), "ms")
+print("Load: ", (t1 - start) * 1000 / len(CKF_files), "ms")
+print("Clustering: ", (t2 - t1) * 1000 / len(CKF_files), "ms")
+print("Inference: ", (t4 - t3) * 1000 / len(CKF_files), "ms")
+print("Perf: ", (tend - t4) * 1000 / len(CKF_files), "ms")
+print("tot: ", (t4 - start) * 1000 / len(CKF_files), "ms")
+print("Seed filter: ", (t4 - t1) * 1000 / len(CKF_files), "ms")
 
 
 # ==================================================================

@@ -40,10 +40,10 @@ class SeedClassifier {
 
   /// Select the seed associated with each cluster based on the score vector
   ///
-  /// @param clusters is a vector of clusters, each cluster correspond to a vector of seed ID
+  /// @param clusters is a vector of clusters, each cluster corresponds to a vector of seedIDs
   /// @param outputTensor is the score vector obtained from inferScores.
-  /// @param minSeedScore is the minimum score a seed need to be selected
-  /// @return a vector of seedID corresponding tho the good seeds
+  /// @param minSeedScore is the minimum score a seed needs to be selected
+  /// @return a vector of seedIDs corresponding tho the good seeds
   std::vector<std::size_t> seedSelection(
       std::vector<std::vector<std::size_t>>& clusters,
       std::vector<std::vector<float>>& outputTensor,

@@ -250,7 +250,7 @@ def train(
     val_batch = int(len(batch) * (1 - validation))
     # Loop over all the epoch
     for epoch in range(epochs):
-        print("Epoch : ", epoch, " / ", epochs)
+        print("Epoch: ", epoch, " / ", epochs)
         loss = 0.0
         nb_part = 0.0
         nb_good_match = 0.0
@@ -260,11 +260,11 @@ def train(
             batch[:val_batch], Optimiser=opt
         )
         print(
-            "Loss/train : ",
+            "Loss/train: ",
             loss,
-            " Eff/train : ",
+            " Eff/train: ",
             nb_good_match / nb_part,
-            " Eff_best/train : ",
+            " Eff_best/train: ",
             nb_best_match / nb_part,
         )
         writer.add_scalar("Loss/train", loss, epoch)
@@ -280,11 +280,11 @@ def train(
             writer.add_scalar("Eff/val", nb_good_match / nb_part, epoch)
             writer.add_scalar("Eff_best/train", nb_best_match / nb_part, epoch)
             print(
-                "Loss/val : ",
+                "Loss/val: ",
                 loss,
-                " Eff/val : ",
+                " Eff/val: ",
                 nb_good_match / nb_part,
-                " Eff_best/val : ",
+                " Eff_best/val: ",
                 nb_best_match / nb_part,
             )
 
@@ -386,8 +386,8 @@ for index, pred, truth in zip(test.index, output_predict, y_test):
         max_score = pred
         max_match = truth
 
-print("nb particles : ", nb_part)
-print("nb good match : ", nb_good_match)
-print("nb best match : ", nb_best_match)
+print("nb particles: ", nb_part)
+print("nb good match: ", nb_good_match)
+print("nb best match: ", nb_best_match)
 print("Efficiency: ", 100 * nb_good_match / nb_part, " %")
 print("Efficiency_best: ", 100 * nb_best_match / nb_part, " %")
