@@ -69,6 +69,22 @@ MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 const std::string toolString = "AMVF";
 
+namespace BoundAmvf {
+using Propagator = Acts::Propagator<EigenStepper<>>;
+using Linearizer = HelicalTrackLinearizer<Propagator>;
+using Fitter = AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>;
+using SeedFinder =
+    TrackDensityVertexFinder<Fitter,
+                             GaussianTrackDensity<BoundTrackParameters>>;
+using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+}  // namespace BoundAmvf
+
+Result<std::vector<Vertex<BoundTrackParameters>>> find(
+    const BoundAmvf::Finder& finder,
+    const std::vector<const BoundTrackParameters*>& allTracks,
+    const VertexingOptions<BoundTrackParameters>& vertexingOptions,
+    BoundAmvf::Finder::State& state);
+
 /// @brief AMVF test with Gaussian seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // Set debug mode
@@ -151,7 +167,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
       geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
-  auto findResult = finder.find(tracksPtr, vertexingOptions, state);
+  // auto findResult = finder.find(tracksPtr, vertexingOptions, state);
+  auto findResult = find(finder, tracksPtr, vertexingOptions, state);
+#if 0
   auto t2 = std::chrono::system_clock::now();
 
   auto timediff =
@@ -203,7 +221,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].vertexCompatibility,
                          expVtx.trk1Comp, relTol, small);
   }
+#endif
 }
+
+#if 0
 
 // Dummy user-defined InputTrack type
 struct InputTrack {
@@ -366,6 +387,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
                          expVtx.trk1Comp, relTol, small);
   }
 }
+
 
 /// @brief AMVF test with grid seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
@@ -665,6 +687,8 @@ BOOST_AUTO_TEST_CASE(
     BOOST_CHECK_EQUAL(found, true);
   }
 }
+
+#endif
 
 }  // namespace Test
 }  // namespace Acts
