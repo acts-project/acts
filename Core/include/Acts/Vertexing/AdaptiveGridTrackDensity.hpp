@@ -49,14 +49,14 @@ class AdaptiveGridTrackDensity {
 
     /// Spatial extent of a bin in d0 and z0 direction, should always be set to
     /// a positive value
-    double spatialBinExtent = 0 * UnitConstants::mm;
+    double spatialBinExtent = 15 * UnitConstants::um;
 
     /// Number of sigmas to use for the spatial extent of the track
     double spatialTrkSigmas = 3.0;
 
     /// Temporal extent of a bin, should be set to 0 if time vertex seeding is
     /// disabled (i.e., if temporalTrkGridSize = 1)
-    double temporalBinExtent = 0 * UnitConstants::mm;
+    double temporalBinExtent = 19 * UnitConstants::mm;
 
     /// Number of sigmas to use for the temporal extent of the track
     double temporalTrkSigmas = 3.0;
