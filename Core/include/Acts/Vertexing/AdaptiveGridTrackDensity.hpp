@@ -44,9 +44,6 @@ class AdaptiveGridTrackDensity {
 
   /// The configuration struct
   struct Config {
-    /// Default constructor
-    Config() = default;
-
     /// Spatial extent of a bin in d0 and z0 direction, should always be set to
     /// a positive value
     double spatialBinExtent = 15 * UnitConstants::um;
@@ -65,8 +62,8 @@ class AdaptiveGridTrackDensity {
     std::pair<double, double> spatialWindow = {-250 * UnitConstants::mm,
                                                250 * UnitConstants::mm};
     /// Temporal window for filling the density map
-    std::pair<double, double> temporalWindow = {-1 * UnitConstants::ns,
-                                                1 * UnitConstants::ns};
+    std::pair<double, double> temporalWindow = {-10 * UnitConstants::ns,
+                                                10 * UnitConstants::ns};
 
     /// Do NOT use just the z-bin with the highest
     /// track density, but instead check (up to)
