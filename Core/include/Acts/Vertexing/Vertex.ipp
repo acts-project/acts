@@ -52,12 +52,22 @@ const Acts::Vector4& Acts::Vertex<input_track_t>::fullPosition() const {
 }
 
 template <typename input_track_t>
+Acts::Vector4& Acts::Vertex<input_track_t>::fullPosition() {
+  return m_position;
+}
+
+template <typename input_track_t>
 Acts::SquareMatrix3 Acts::Vertex<input_track_t>::covariance() const {
   return m_covariance.block<3, 3>(ePos0, ePos0);
 }
 
 template <typename input_track_t>
 const Acts::SquareMatrix4& Acts::Vertex<input_track_t>::fullCovariance() const {
+  return m_covariance;
+}
+
+template <typename input_track_t>
+Acts::SquareMatrix4& Acts::Vertex<input_track_t>::fullCovariance() {
   return m_covariance;
 }
 

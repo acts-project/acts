@@ -12,7 +12,7 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t, unsigned int nDimVertex>
-void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
+void Acts::KalmanVertexTrackUpdater::update(TrackAtVertexRef track,
                                             const Vertex<input_track_t>& vtx) {
   if constexpr (nDimVertex != 3 && nDimVertex != 4) {
     throw std::invalid_argument(
@@ -64,8 +64,8 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
   // Calculate the update of the vertex position when the track is removed. This
   // might be unintuitive, but it is needed to compute a symmetric chi2.
-  KalmanVertexUpdater::calculateUpdate<input_track_t>(
-      vtx, linTrack, track.trackWeight, -1, cache);
+  KalmanVertexUpdater::calculateUpdate(
+      vtx.fullPosition(), vtx.fullCovariance(), linTrack, track.trackWeight, -1, cache);
 
   // Refit track momentum with the final vertex position
   Vector3 newTrkMomentum = cache.wMat * momJac.transpose() * trkParamWeight *
