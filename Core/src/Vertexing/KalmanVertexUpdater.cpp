@@ -184,6 +184,7 @@ void update(Vector4& vtxPos, SquareMatrix4& vtxCov,
     vtxPos = cache.newVertexPos;
     vtxCov = cache.newVertexCov;
   }
+  fitQuality = {chi2, ndf};
 
   if (sign == 1) {
     // Update track
