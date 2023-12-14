@@ -16,8 +16,8 @@ from seed_solver_network import (
     Normalise,
 )
 
-avg_mean = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-avg_sdv = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+avg_mean = [0] * 14
+avg_sdv = [0] * 14
 events = 0
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

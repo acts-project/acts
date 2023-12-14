@@ -54,8 +54,6 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
   // Loop over the seed and parameters to fill the input for the clustering
   // and the NN
   for (std::size_t i = 0; i < seeds.size(); i++) {
-    // Keep track of the index of the seed in the original collection
-    std::size_t NNindex = i;
     // Compute the track parameters
     double pT = std::abs(1.0 / params[i].parameters()[Acts::eBoundQOverP]) *
                 std::sin(params[i].parameters()[Acts::eBoundTheta]);
@@ -67,8 +65,9 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
     clusteringParams.push_back(
         {phi / m_cfg.clusteringWeighPhi, eta / m_cfg.clusteringWeighEta,
          seeds[i].z() / m_cfg.clusteringWeighZ, pT / m_cfg.clusteringWeighPt});
+
     // Fill the NN input
-    networkInput.row(NNindex) << pT, eta, phi, seeds[i].sp()[0]->x(),
+    networkInput.row(i) << pT, eta, phi, seeds[i].sp()[0]->x(),
         seeds[i].sp()[0]->y(), seeds[i].sp()[0]->z(), seeds[i].sp()[1]->x(),
         seeds[i].sp()[1]->y(), seeds[i].sp()[1]->z(), seeds[i].sp()[2]->x(),
         seeds[i].sp()[2]->y(), seeds[i].sp()[2]->z(), seeds[i].z(),
@@ -91,7 +90,7 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
   TrackParametersContainer outputTrackParameters;
   outputTrackParameters.reserve(goodSeed.size());
 
-  for (auto&& i : goodSeed) {
+  for (auto i : goodSeed) {
     outputSeeds.push_back(seeds[i]);
     outputTrackParameters.push_back(params[i]);
   }

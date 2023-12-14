@@ -101,7 +101,7 @@ for trackEvent, resolvedEvent in zip(data_track, data_resolved):
     ].index.nunique()
     nb_reco_track += resolvedEvent.shape[0]
 
-# Compute the different efficiencies
+# Compute the different efficiencies for ML
 for trackEvent, resolvedEvent in zip(data_ML_track, data_ML_resolved):
     # Merge two dataFrames and add indicator column
     merged_ML = pd.merge(
@@ -154,11 +154,11 @@ print("duplicate rate: ", 100 * nb_reco_duplicate / nb_reco_track, " %")
 print("Fake rate: ", 100 * nb_reco_fake / nb_reco_track, " %")
 
 print("===computed efficiencies ML===")
-print("nb particles : ", nb_part)
-print("nb good match : ", nb_good_match_ML)
-print("nb particle reco : ", nb_reco_part_ML)
-print("nb track reco : ", nb_reco_track_ML)
-print("Efficiency (good track) : ", 100 * nb_good_match_ML / nb_part, " %")
-print("Efficiency (particle reco) : ", 100 * nb_reco_part_ML / nb_part, " %")
+print("nb particles: ", nb_part)
+print("nb good match: ", nb_good_match_ML)
+print("nb particle reco: ", nb_reco_part_ML)
+print("nb track reco: ", nb_reco_track_ML)
+print("Efficiency (good track): ", 100 * nb_good_match_ML / nb_part, " %")
+print("Efficiency (particle reco): ", 100 * nb_reco_part_ML / nb_part, " %")
 print("duplicate rate: ", 100 * nb_reco_duplicate_ML / nb_reco_track_ML, " %")
 print("Fake rate: ", 100 * nb_reco_fake_ML / nb_reco_track_ML, " %")
