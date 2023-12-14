@@ -37,8 +37,8 @@ namespace KalmanVertexTrackUpdater {
 ///
 /// @param track Track to update
 /// @param vtx Vertex `track` belongs to
-template <typename input_track_t, unsigned int nDimVertex>
-void update(TrackAtVertexRef track, const Vertex<input_track_t>& vtx);
+void update(TrackAtVertexRef track, const Vector4& vtxPosFull,
+            const SquareMatrix4& vtxCovFull, unsigned int nDimVertex);
 
 namespace detail {
 
@@ -62,5 +62,3 @@ inline BoundMatrix calculateTrackCovariance(
 
 }  // Namespace KalmanVertexTrackUpdater
 }  // Namespace Acts
-
-#include "Acts/Vertexing/KalmanVertexTrackUpdater.ipp"

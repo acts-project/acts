@@ -70,6 +70,11 @@ void updateVertexWithTrack(Vertex<input_track_t>& vtx,
                            TrackAtVertex<input_track_t>& trk);
 
 namespace detail {
+void updateVertexWithTrack(Vector4& vtxPos, SquareMatrix4& vtxCov,
+                           std::pair<double, double>& fitQuality,
+                           TrackAtVertexRef trk, int sign,
+                           unsigned int nDimVertex);
+
 // These two functions only exist so we can compile calculateUpdate in a
 // compilation unit
 void calculateUpdate3(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
@@ -115,54 +120,6 @@ void calculateUpdate(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
                              cache);
   }
 }
-
-namespace detail {
-
-/// @brief Calculates the update of the vertex position chi2 after
-/// adding/removing the track
-///
-/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
-/// fit its spatial coordinates) or 4 (if we also fit time).
-///
-/// @param oldVtx Vertex before the track was added/removed
-/// @param cache Cache containing updated vertex position
-///
-/// @return Chi2
-template <unsigned int nDimVertex>
-double vertexPositionChi2Update(const Vector4& oldVtx,
-                                const Cache<nDimVertex>& cache);
-
-/// @brief Calculates chi2 of refitted track parameters
-/// w.r.t. updated vertex
-///
-/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
-/// fit its spatial coordinates) or 4 (if we also fit time).
-///
-/// @param linTrack Linearized version of track
-/// @param cache Cache containing some quantities needed in
-/// this function
-///
-/// @return Chi2
-template <unsigned int nDimVertex>
-double trackParametersChi2(const LinearizedTrack& linTrack,
-                           const Cache<nDimVertex>& cache);
-
-/// @brief Adds or removes (depending on `sign`) tracks from vertex
-/// and updates the vertex
-///
-/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
-/// fit its spatial coordinates) or 4 (if we also fit time).
-///
-/// @param vtx Vertex to be updated
-/// @param trk Track to be added to/removed from vtx
-/// @param sign +1 (add track) or -1 (remove track)
-/// @note Tracks are removed during the smoothing procedure to compute
-/// the chi2 of the track wrt the updated vertex position
-template <unsigned int nDimVertex>
-void update(Vector4& vtxPos, SquareMatrix4& vtxCov,
-            std::pair<double, double>& fitQuality, TrackAtVertexRef trk,
-            int sign);
-}  // Namespace detail
 
 }  // Namespace KalmanVertexUpdater
 }  // Namespace Acts
