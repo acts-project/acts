@@ -64,12 +64,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
     // Set up track density used during vertex seeding
     Acts::AdaptiveGridTrackDensity::Config trkDensityCfg;
-    // Number of bins in z-direction
-    trkDensityCfg.spatialTrkGridSize = 9;
     // Bin extent in z-direction
     trkDensityCfg.spatialBinExtent = 0.015;
-    // Number of bins in t-direction
-    trkDensityCfg.temporalTrkGridSize = 5;
     // Bin extent in t-direction
     trkDensityCfg.temporalBinExtent = 19.;
     Acts::AdaptiveGridTrackDensity trkDensity(trkDensityCfg);

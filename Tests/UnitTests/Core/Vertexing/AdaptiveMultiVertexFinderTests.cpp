@@ -560,7 +560,6 @@ BOOST_AUTO_TEST_CASE(
 
   // Grid density used during vertex seed finding
   AdaptiveGridTrackDensity::Config gridDensityCfg;
-  gridDensityCfg.spatialTrkGridSize = 55;
   gridDensityCfg.spatialBinExtent = 0.05;
   AdaptiveGridTrackDensity gridDensity(gridDensityCfg);
 
