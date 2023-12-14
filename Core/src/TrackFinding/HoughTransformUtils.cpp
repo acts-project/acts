@@ -38,8 +38,10 @@ void HoughPlane::fillBin(int binX, int binY, idType identifier, unsigned layer,
 }
 
 void HoughPlane::reset() {
-  for (auto & cell : m_houghHist){
-    cell.reset(); 
+  for (size_t i =0; i < m_cfg.nBinsX; ++i){
+    for (size_t j =0; j < m_cfg.nBinsY;++j){
+      m_houghHist(i,j).reset();
+    }
   }
 }
 // NYI
@@ -54,6 +56,7 @@ std::vector<HoughPeakFinder_LayerGuidedCombinatoric::Maximum>
 HoughPeakFinder_LayerGuidedCombinatoric::findPeaks(
     const HoughPlane& plane) const {
   std::vector<HoughPeakFinder_LayerGuidedCombinatoric::Maximum> maxima;
+
   for (int y = 0; y < plane.nBinsY(); y++) {
     for (int x = 0; x < plane.nBinsX(); x++) {
       if (passThreshold(plane, x, y)) {
