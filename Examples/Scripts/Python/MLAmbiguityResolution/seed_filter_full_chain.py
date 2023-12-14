@@ -36,7 +36,6 @@ def prepareInferenceData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     # Remove truth and useless variable
     target_column = "good/duplicate/fake"
     # Separate the truth from the input variables
-
     y = LabelEncoder().fit(data[target_column]).transform(data[target_column])
     input = data.drop(
         columns=[
@@ -100,14 +99,14 @@ start = time.time()
 CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-1][0-9]-seed_matched.csv"))
 data = readDataSet(CKF_files)
 
-# Data of each events after clustering
+# Data of each event after clustering
 clusteredData = []
-# data of each events after ambiguity resolution
+# Data of each event after ambiguity resolution
 cleanedData = []
 
 t1 = time.time()
 
-# Cluster togather tracks belonging to the same particle
+# Cluster tracks belonging to the same particle
 for event in data:
     clustered = clusterSeed(event)
     clusteredData.append(clustered)
@@ -158,7 +157,7 @@ plt.clf()
 
 
 plotDF2 = pd.DataFrame()
-# Create histogram filled with the number of seed per cluster
+# Create histogram filled with the number of seeds per cluster
 for event in plotData:
     event["nb_seed"] = 0
     event["nb_fake"] = 0
@@ -170,19 +169,19 @@ for event in plotData:
     event["nb_seed_removed"] = 0
     event["particleId"] = event.index
     event["nb_seed"] = event.groupby(["cluster"])["cluster"].transform("size")
-    # Create histogram filled with the number of fake seed per cluster
+    # Create histogram filled with the number of fake seeds per cluster
     event.loc[event["good/duplicate/fake"] == "fake", "nb_fake"] = (
         event.loc[event["good/duplicate/fake"] == "fake"]
         .groupby(["cluster"])["cluster"]
         .transform("size")
     )
-    # Create histogram filled with the number of duplicate seed per cluster
+    # Create histogram filled with the number of duplicate seeds per cluster
     event.loc[event["good/duplicate/fake"] == "duplicate", "nb_duplicate"] = (
         event.loc[event["good/duplicate/fake"] == "duplicate"]
         .groupby(["cluster"])["cluster"]
         .transform("size")
     )
-    # Create histogram filled with the number of good seed per cluster
+    # Create histogram filled with the number of good seeds per cluster
     event.loc[event["good/duplicate/fake"] == "good", "nb_good"] = (
         event.loc[event["good/duplicate/fake"] == "good"]
         .groupby(["cluster"])["cluster"]
@@ -319,7 +318,7 @@ print("Seed filter : ", (t4 - t1) * 1000 / len(CKF_files), "ms")
 # ==================================================================
 # Plotting
 
-# Combine the events together to have a better statistics
+# Combine the events to have a better statistic
 clusteredDataPlots = pd.concat(clusteredData)
 
 cleanedDataPlots = pd.concat(cleanedData)
@@ -329,48 +328,19 @@ import matplotlib.pyplot as plt
 
 # Plot the average score distribution for each type of track
 plt.figure()
-weightsGood = np.ones_like(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "good"]["score"]
-) / len(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "good"]["score"]
-)
-plt.hist(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "good"]["score"],
-    bins=100,
-    weights=weightsGood,
-    alpha=0.65,
-    label="good",
-)
-weightsDuplicate = np.ones_like(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "duplicate"][
-        "score"
-    ]
-) / len(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "duplicate"][
-        "score"
-    ]
-)
-plt.hist(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "duplicate"][
-        "score"
-    ],
-    bins=100,
-    weights=weightsDuplicate,
-    alpha=0.65,
-    label="duplicate",
-)
-weightsFake = np.ones_like(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "fake"]["score"]
-) / len(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "fake"]["score"]
-)
-plt.hist(
-    cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == "fake"]["score"],
-    bins=100,
-    weights=weightsFake,
-    alpha=0.65,
-    label="fake",
-)
+for tag in ["good", "duplicate", "fake"]:
+    weights = np.ones_like(
+        cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == tag]["score"]
+    ) / len(
+        cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == tag]["score"]
+    )
+    plt.hist(
+        cleanedDataPlots.loc[cleanedDataPlots["good/duplicate/fake"] == tag]["score"],
+        bins=100,
+        weights=weights,
+        alpha=0.65,
+        label=tag,
+    )
 plt.legend()
 plt.xlabel("score")
 plt.ylabel("Fraction of good/duplicate/fake tracks")
