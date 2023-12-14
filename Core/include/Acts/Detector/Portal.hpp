@@ -132,8 +132,8 @@ class Portal {
   std::shared_ptr<RegularSurface> m_surface;
 
   /// The portal targets along/opposite the normal vector
-  DetectorVolumeUpdaters m_volumeUpdaters = {unconnectedUpdater(),
-                                             unconnectedUpdater()};
+  DetectorVolumeUpdaters m_volumeUpdaters = {DetectorVolumeUpdater{},
+                                             DetectorVolumeUpdater{}};
 
   /// The portal attaches to the following volumes
   AttachedDetectorVolumes m_attachedVolumes;

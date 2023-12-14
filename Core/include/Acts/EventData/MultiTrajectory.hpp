@@ -389,6 +389,8 @@ class TrackStateProxy {
     if (other.hasReferenceSurface()) {
       setReferenceSurface(other.referenceSurface().getSharedPtr());
     }
+
+    m_traj->copyDynamicFrom(m_istate, other.trajectory(), other.index());
   }
 
   /// Unset an optional track state component
@@ -950,11 +952,15 @@ class TrackStateProxy {
         component<TrackStateType::raw_type, hashString("typeFlags")>()};
   }
 
+  /// Get a mutable reference to the track state container backend
+  /// @return a mutable reference to the backend
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   MultiTrajectory<Trajectory>& trajectory() {
     return *m_traj;
   }
 
+  /// Get a const reference to the track state container backend
+  /// @return a const reference to the backend
   const MultiTrajectory<Trajectory>& trajectory() const { return *m_traj; }
 
  private:
@@ -1133,6 +1139,17 @@ class MultiTrajectory {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   TrackStateProxy getTrackState(IndexType istate) {
     return {*this, istate};
+  }
+
+  /// Add a track state to the container and return a track state proxy to it
+  /// This effectively calls @c addTrackState and @c getTrackState
+  /// @note Only available if the track state container is not read-only
+  /// @return a track state proxy to the newly added track state
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  TrackStateProxy makeTrackState(
+      TrackStatePropMask mask = TrackStatePropMask::All,
+      IndexType iprevious = kInvalid) {
+    return getTrackState(addTrackState(mask, iprevious));
   }
 
   /// Visit all previous states starting at a given endpoint.
@@ -1510,8 +1527,19 @@ class MultiTrajectory {
   }
 
  private:
+  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void copyDynamicFrom(IndexType dstIdx, const T& src, IndexType srcIdx) {
+    const auto& dynamicKeys = src.self().dynamicKeys_impl();
+    for (const auto key : dynamicKeys) {
+      std::any srcPtr = src.self().component_impl(key, srcIdx);
+      self().copyDynamicFrom_impl(dstIdx, key, srcPtr);
+    }
+  }
+
   friend class detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, true>;
   friend class detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, false>;
+  template <typename T>
+  friend class MultiTrajectory;
 };
 
 }  // namespace Acts
