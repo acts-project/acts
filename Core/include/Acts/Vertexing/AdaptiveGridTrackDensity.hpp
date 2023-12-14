@@ -59,7 +59,7 @@ class AdaptiveGridTrackDensity {
     double temporalBinExtent = 19 * UnitConstants::mm;
 
     /// Number of sigmas to use for the temporal extent of the track
-    double temporalTrkSigmas = 3.0;
+    double temporalTrkSigmas = 0;
 
     /// Spatial window for filling the density map
     std::pair<double, double> spatialWindow = {-250 * UnitConstants::mm,

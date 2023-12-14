@@ -101,16 +101,8 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::addTrack(
   ActsVector<3> impactParams = trk.impactParameters();
   ActsSquareMatrix<3> cov = trk.impactParameterCovariance().value();
 
-  int spatialTrkGridSize = getSpatialTrkGridSize(cov(1, 1));
-  int temporalTrkGridSize = getTemporalTrkGridSize(cov(2, 2));
-
-  // Calculate bin in d direction
-  int centralDBin = getBin(impactParams(0), m_cfg.spatialBinExtent);
-  // Check if current track affects grid density
-  if (std::abs(centralDBin) > (spatialTrkGridSize - 1) / 2.) {
-    // return an empty map
-    return {};
-  }
+  int spatialTrkGridSize = getSpatialTrkGridSize(std::sqrt(cov(1, 1)));
+  int temporalTrkGridSize = getTemporalTrkGridSize(std::sqrt(cov(2, 2)));
 
   // Calculate bin in z and t direction
   int centralZBin = getBin(impactParams(1), m_cfg.spatialBinExtent);
@@ -122,6 +114,8 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::addTrack(
       impactParams, centralBin, cov, spatialTrkGridSize, temporalTrkGridSize);
 
   for (const auto& [bin, trackDensity] : trackDensityMap) {
+    std::cout << "bin: " << bin.first << ", " << bin.second
+              << ", density: " << trackDensity << std::endl;
     mainDensityMap[bin] += trackDensity;
   }
 
