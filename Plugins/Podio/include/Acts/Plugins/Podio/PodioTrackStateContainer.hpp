@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioTrackContainer.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
@@ -77,6 +78,7 @@ class PodioTrackStateContainerBase {
       case "uncalibratedSourceLink"_hash:
         return data.uncalibratedIdentifier != PodioUtil::kNoIdentifier;
       case "previous"_hash:
+      case "next"_hash:
       case "measdim"_hash:
       case "referenceSurface"_hash:
       case "chi2"_hash:
@@ -111,6 +113,8 @@ class PodioTrackStateContainerBase {
     switch (key) {
       case "previous"_hash:
         return &data.previous;
+      case "next"_hash:
+        return &data.next;
       case "predicted"_hash:
         return &data.ipredicted;
       case "filtered"_hash:
@@ -151,6 +155,7 @@ class PodioTrackStateContainerBase {
       case "jacobian"_hash:
       case "projector"_hash:
       case "previous"_hash:
+      case "next"_hash:
       case "uncalibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
@@ -192,8 +197,15 @@ class ConstPodioTrackStateContainer final
         m_collection{&trackStates},
         m_params{&params},
         m_jacs{&jacs} {
+    // Not much we can do to recover dynamic columns here
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
+
+  /// Construct a const track state container from a mutable
+  /// @warning If the source mutable container is modified, this container
+  ///          will be corrupted, as surface buffer and dynamic column state can
+  ///          not be synchronized!
+  ConstPodioTrackStateContainer(const MutablePodioTrackStateContainer& other);
 
   ConstPodioTrackStateContainer(const PodioUtil::ConversionHelper& helper,
                                 const podio::Frame& frame,
@@ -237,6 +249,11 @@ class ConstPodioTrackStateContainer final
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
     podio_detail::recoverDynamicColumns(frame, trackStatesKey, m_dynamic);
+  }
+
+  detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
+  dynamicKeys_impl() const {
+    return {m_dynamic.begin(), m_dynamic.end()};
   }
 
  private:
@@ -553,8 +570,9 @@ class MutablePodioTrackStateContainer final
 
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
-    m_dynamic.insert({hashString(key),
-                      std::make_unique<podio_detail::DynamicColumn<T>>(key)});
+    HashedString hashedKey = hashString(key);
+    m_dynamic.insert(
+        {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
   }
 
   void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
@@ -604,6 +622,24 @@ class MutablePodioTrackStateContainer final
     for (const auto& [key, col] : m_dynamic) {
       col->releaseInto(frame, "trackStates" + s + "_extra__");
     }
+
+    m_dynamic.clear();
+  }
+
+  detail::DynamicKeyRange<podio_detail::DynamicColumnBase> dynamicKeys_impl()
+      const {
+    return {m_dynamic.begin(), m_dynamic.end()};
+  }
+
+  void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
+                            const std::any& srcPtr) {
+    auto it = m_dynamic.find(key);
+    if (it == m_dynamic.end()) {
+      throw std::invalid_argument{
+          "Destination container does not have matching dynamic column"};
+    }
+
+    it->second->copyFrom(dstIdx, srcPtr);
   }
 
  private:
@@ -631,30 +667,16 @@ static_assert(!MutablePodioTrackStateContainer::ReadOnly,
 ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend,
                           MutablePodioTrackStateContainer);
 
-// ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
-// MutablePodioTrackStateContainer&& other)
-// : m_helper{other.m_helper},
-// m_collection{std::move(other.m_collection)},
-// m_params{std::move(other.m_params)},
-// m_jacs{std::move(other.m_jacs)},
-// m_surfaces{std::move(other.m_surfaces)} {}
-
-// ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
-// const MutablePodioTrackStateContainer& other)
-// : m_helper{other.m_helper},
-// m_surfaces{other.m_surfaces.begin(), other.m_surfaces.end()} {
-// for (auto src : *other.m_collection) {
-// auto dst = m_collection->create();
-// dst = src.clone();
-// }
-// for (auto src : *other.m_params) {
-// auto dst = m_params->create();
-// dst = src.clone();
-// }
-// for (auto src : *other.m_jacs) {
-// auto dst = m_jacs->create();
-// dst = src.clone();
-// }
-// }
+ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
+    const MutablePodioTrackStateContainer& other)
+    : m_helper{other.m_helper},
+      m_collection{other.m_collection.get()},
+      m_params{other.m_params.get()},
+      m_jacs{other.m_jacs.get()},
+      m_surfaces{other.m_surfaces} {
+  for (const auto& [key, col] : other.m_dynamic) {
+    m_dynamic.insert({key, col->asConst()});
+  }
+}
 
 }  // namespace Acts
