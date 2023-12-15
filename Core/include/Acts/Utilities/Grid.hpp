@@ -21,6 +21,14 @@
 #include <vector>
 
 namespace Acts {
+template <typename T, class... Axes>
+class GridGlobalIterator;
+
+template <typename T, class... Axes>
+class GridLocalIterator;
+}  // namespace Acts
+
+namespace Acts {
 
 /// @brief class for describing a regular multi-dimensional grid
 ///
@@ -48,6 +56,10 @@ class Grid final {
   using point_t = std::array<ActsScalar, DIM>;
   /// index type using local bin indices along each axis
   using index_t = std::array<std::size_t, DIM>;
+  /// global iterator type
+  using global_iterator_t = Acts::GridGlobalIterator<T, Axes...>;
+  /// local iterator type
+  using local_iterator_t = Acts::GridLocalIterator<T, Axes...>;
 
   /// @brief default constructor
   ///
@@ -455,6 +467,25 @@ class Grid final {
 
   std::array<const IAxis*, DIM> axes() const {
     return detail::grid_helper::getAxes(m_axes);
+  }
+
+  global_iterator_t begin() const { return global_iterator_t(*this, 0); }
+
+  global_iterator_t end() const { return global_iterator_t(*this, size()); }
+
+  local_iterator_t begin(
+      const std::array<std::vector<std::size_t>, DIM>& navigator) const {
+    std::array<std::size_t, DIM> localBin{};
+    return local_iterator_t(*this, std::move(localBin), navigator);
+  }
+
+  local_iterator_t end(
+      const std::array<std::vector<std::size_t>, DIM>& navigator) const {
+    std::array<std::size_t, DIM> endline{};
+    for (std::size_t i(0ul); i < DIM; ++i) {
+      endline[i] = navigator[i].size();
+    }
+    return local_iterator_t(*this, std::move(endline), navigator);
   }
 
  private:
