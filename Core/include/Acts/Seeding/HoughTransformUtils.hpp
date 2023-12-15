@@ -77,7 +77,8 @@ int binIndex(double min, double max, unsigned nSteps, double val) {
 /// @return the parameter value at the lower bin edge.
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
-double lowerBinEdge(double min, double max, unsigned nSteps, size_t binIndex) {
+double lowerBinEdge(double min, double max, unsigned nSteps,
+                    std::size_t binIndex) {
   return min + (max - min) * binIndex / nSteps;
 }
 // Returns the lower bound of the bin specified by step
@@ -88,7 +89,8 @@ double lowerBinEdge(double min, double max, unsigned nSteps, size_t binIndex) {
 /// @return the parameter value at the bin center.
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
-double binCenter(double min, double max, unsigned nSteps, size_t binIndex) {
+double binCenter(double min, double max, unsigned nSteps,
+                 std::size_t binIndex) {
   return min + (max - min) * 0.5 * (2 * binIndex + 1) / nSteps;
 }
 
@@ -137,8 +139,8 @@ class HoughCell {
 /// (sub) detectors of different dimensions if the bin number
 /// remains applicable
 struct HoughPlaneConfig {
-  size_t nBinsX = 0;  // number of bins in the first coordinate
-  size_t nBinsY = 0;  // number of bins in the second coordinate
+  std::size_t nBinsX = 0;  // number of bins in the first coordinate
+  std::size_t nBinsY = 0;  // number of bins in the second coordinate
 };
 
 /// @brief Representation of the hough plane - the histogram used
@@ -182,7 +184,8 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the set of layer indices that have hits for this cell
-  const std::unordered_set<unsigned>& layers(size_t xBin, size_t yBin) const {
+  const std::unordered_set<unsigned>& layers(std::size_t xBin,
+                                             std::size_t yBin) const {
     return m_houghHist(xBin, yBin).layers();
   }
 
@@ -190,7 +193,7 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighed) number of layers that have hits for this cell
-  yieldType nLayers(size_t xBin, size_t yBin) const {
+  yieldType nLayers(std::size_t xBin, std::size_t yBin) const {
     return m_houghHist(xBin, yBin).nLayers();
   }
 
@@ -198,22 +201,22 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the set of identifiers of the hits for this cell
-  const std::unordered_set<identifier_t>& hitIds(size_t xBin,
-                                                 size_t yBin) const {
+  const std::unordered_set<identifier_t>& hitIds(std::size_t xBin,
+                                                 std::size_t yBin) const {
     return m_houghHist(xBin, yBin).hits();
   }
   /// @brief get the (weighted) number of hits in one cell of the histogram
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighted) number of hits for this cell
-  yieldType nHits(size_t xBin, size_t yBin) const {
+  yieldType nHits(std::size_t xBin, std::size_t yBin) const {
     return m_houghHist(xBin, yBin).nHits();
   }
 
   /// @brief get the number of bins on the first coordinate
-  size_t nBinsX() const { return m_cfg.nBinsX; }
+  std::size_t nBinsX() const { return m_cfg.nBinsX; }
   /// @brief get the number of bins on the second coordinate
-  size_t nBinsY() const { return m_cfg.nBinsY; }
+  std::size_t nBinsY() const { return m_cfg.nBinsY; }
 
   /// @brief get the maximum number of (weighted) hits seen in a single
   /// cell across the entire histrogram.
@@ -222,13 +225,15 @@ class HoughPlane {
   /// @brief get the list of cells with non-zero content.
   /// Useful for peak-finders in sparse data
   /// to avoid looping over all cells
-  const std::set<std::pair<size_t, size_t>>& getNonEmptyBins() const {
+  const std::set<std::pair<std::size_t, std::size_t>>& getNonEmptyBins() const {
     return m_touchedBins;
   }
 
   /// @brief get the bin indices of the cell containing the largest number
   /// of (weighted) hits across the entire histogram
-  std::pair<size_t, size_t> locMaxHits() const { return m_maxLocHits; }
+  std::pair<std::size_t, std::size_t> locMaxHits() const {
+    return m_maxLocHits;
+  }
 
   /// @brief get the maximum number of (weighted) layers with hits  seen
   /// in a single cell across the entire histrogram.
@@ -236,7 +241,9 @@ class HoughPlane {
 
   /// @brief get the bin indices of the cell containing the largest number
   /// of (weighted) layers with hits across the entire histogram
-  std::pair<size_t, size_t> locMaxLayers() const { return m_maxLocLayers; }
+  std::pair<std::size_t, std::size_t> locMaxLayers() const {
+    return m_maxLocLayers;
+  }
 
  private:
   /// @brief Helper method to fill a bin of the hough histogram.
@@ -246,16 +253,16 @@ class HoughPlane {
   /// @param identifier: hit identifier
   /// @param layer: layer index
   /// @param w: optional hit weight
-  void fillBin(size_t binX, size_t binY, const identifier_t& identifier,
-               unsigned layer, double w = 1.0f);
+  void fillBin(std::size_t binX, std::size_t binY,
+               const identifier_t& identifier, unsigned layer, double w = 1.0f);
 
   yieldType m_maxHits = 0.0f;    // track the maximum number of hits seen
   yieldType m_maxLayers = 0.0f;  // track the maximum number of layers seen
-  std::pair<size_t, size_t> m_maxLocHits = {
+  std::pair<std::size_t, std::size_t> m_maxLocHits = {
       0, 0};  // track the location of the maximum in hits
-  std::pair<size_t, size_t> m_maxLocLayers = {
+  std::pair<std::size_t, std::size_t> m_maxLocLayers = {
       0, 0};  // track the location of the maximum in layers
-  std::set<std::pair<size_t, size_t>> m_touchedBins =
+  std::set<std::pair<std::size_t, std::size_t>> m_touchedBins =
       {};                  // track the bins with non-trivial content
   HoughPlaneConfig m_cfg;  // the configuration object
   HoughHist m_houghHist;   // the histogram data object
@@ -299,8 +306,8 @@ class LayerGuidedCombinatoric {
   /// @param xBin: x bin index
   /// @param yBin: y bin index
   /// @return true if a maximum, false otherwise
-  bool passThreshold(const HoughPlane<identifier_t>& plane, size_t xBin,
-                     size_t yBin) const;  // did we pass extensions?
+  bool passThreshold(const HoughPlane<identifier_t>& plane, std::size_t xBin,
+                     std::size_t yBin) const;  // did we pass extensions?
 
   LayerGuidedCombinatoricConfig m_cfg;  // configuration data object
 };
@@ -352,10 +359,11 @@ class IslandsAroundMax {
   /// @param toExplore: List of neighbour cell candidates left to explore. Method will not do anything once this is empty
   /// @param threshold: the threshold to apply to check if a cell should be added to an island
   /// @param yieldMap: A map of the hit content of above-threshold cells. Used cells will be set to empty content to avoid re-use by subsequent calls
-  void extendMaximum(std::vector<std::pair<size_t, size_t>>& inMaximum,
-                     std::vector<std::pair<size_t, size_t>>& toExplore,
-                     yieldType threshold,
-                     std::map<std::pair<size_t, size_t>, yieldType>& yieldMap);
+  void extendMaximum(
+      std::vector<std::pair<std::size_t, std::size_t>>& inMaximum,
+      std::vector<std::pair<std::size_t, std::size_t>>& toExplore,
+      yieldType threshold,
+      std::map<std::pair<std::size_t, std::size_t>, yieldType>& yieldMap);
 
   IslandsAroundMaxConfig m_cfg;  // configuration data object
 

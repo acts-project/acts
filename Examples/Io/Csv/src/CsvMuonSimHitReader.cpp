@@ -46,8 +46,8 @@ std::string ActsExamples::CsvMuonSimHitReader::CsvMuonSimHitReader::name()
   return "CsvMuonSimHitReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::CsvMuonSimHitReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvMuonSimHitReader::availableEvents() const {
   return m_eventsRange;
 }
 

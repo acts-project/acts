@@ -14,7 +14,7 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fill(
     lineParametrisation<PointType> widthPar, const identifier_t& identifier,
     unsigned layer, yieldType weight) {
   // loop over all bins in the first coordinate to populate the line
-  for (size_t xBin = 0; xBin < m_cfg.nBinsX; xBin++) {
+  for (std::size_t xBin = 0; xBin < m_cfg.nBinsX; xBin++) {
     // get the x-coordinate for the given bin
     auto x = binCenter(axisRanges.xMin, axisRanges.xMax, m_cfg.nBinsX, xBin);
     // now evaluate the line equation provided by the user
@@ -68,8 +68,8 @@ Acts::HoughTransformUtils::HoughPlane<identifier_t>::HoughPlane(
 }
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
-    size_t binX, size_t binY, const identifier_t& identifier, unsigned layer,
-    double w) {
+    std::size_t binX, std::size_t binY, const identifier_t& identifier,
+    unsigned layer, double w) {
   // mark that this bin was filled with non trivial content
   m_touchedBins.insert({binX, binY});
   // add content to the cell
@@ -130,7 +130,7 @@ Acts::HoughTransformUtils::PeakFinders::LayerGuidedCombinatoric<
 template <class identifier_t>
 bool Acts::HoughTransformUtils::PeakFinders::LayerGuidedCombinatoric<
     identifier_t>::passThreshold(const HoughPlane<identifier_t>& plane,
-                                 size_t xBin, size_t yBin) const {
+                                 std::size_t xBin, std::size_t yBin) const {
   // Check if we have sufficient layers for a maximum
   if (plane.nLayers(xBin, yBin) < m_cfg.threshold)
     return false;
@@ -200,10 +200,10 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
   // and obtain the fraction of the max that is our cutoff for island formation
   yieldType min = std::max(m_cfg.threshold, m_cfg.fractionCutoff * max);
   // book a list for the candidates and the maxima
-  std::vector<std::pair<size_t, size_t>> candidates;
+  std::vector<std::pair<std::size_t, std::size_t>> candidates;
   std::vector<Maximum> maxima;
   // keep track of the yields in each non empty cell
-  std::map<std::pair<size_t, size_t>, yieldType> yieldMap;
+  std::map<std::pair<std::size_t, std::size_t>, yieldType> yieldMap;
 
   // now loop over all non empty bins
   for (auto [x, y] : plane.getNonEmptyBins()) {
@@ -217,16 +217,16 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
   }
   // sort the candidate cells descending in content
   std::sort(candidates.begin(), candidates.end(),
-            [&plane](const std::pair<size_t, size_t>& bin1,
-                     const std::pair<size_t, size_t>& bin2) {
+            [&plane](const std::pair<std::size_t, std::size_t>& bin1,
+                     const std::pair<std::size_t, std::size_t>& bin2) {
               return (plane.nHits(bin1.first, bin1.second) >
                       plane.nHits(bin2.first, bin2.second));
             });
 
   // now we build islands from the candidate cells, starting with the most
   // populated one
-  std::vector<std::pair<size_t, size_t>> toExplore;
-  std::vector<std::pair<size_t, size_t>> solution;
+  std::vector<std::pair<std::size_t, std::size_t>> toExplore;
+  std::vector<std::pair<std::size_t, std::size_t>> solution;
 
   // loop over candidate cells
   for (auto& cand : candidates) {
@@ -308,10 +308,11 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
 
 template <class identifier_t>
 void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
-    extendMaximum(std::vector<std::pair<size_t, size_t>>& inMaximum,
-                  std::vector<std::pair<size_t, size_t>>& toExplore,
-                  yieldType threshold,
-                  std::map<std::pair<size_t, size_t>, yieldType>& yieldMap) {
+    extendMaximum(
+        std::vector<std::pair<std::size_t, std::size_t>>& inMaximum,
+        std::vector<std::pair<std::size_t, std::size_t>>& toExplore,
+        yieldType threshold,
+        std::map<std::pair<std::size_t, std::size_t>, yieldType>& yieldMap) {
   // in this call, we explore the last element of the toExplore list.
   // Fetch it and pop it from the vector.
   auto nextCand = toExplore.back();
