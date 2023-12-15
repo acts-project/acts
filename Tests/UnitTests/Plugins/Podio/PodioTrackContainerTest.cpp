@@ -15,7 +15,9 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Podio/PodioTrackContainer.hpp"
 #include "Acts/Plugins/Podio/PodioTrackStateContainer.hpp"
@@ -38,6 +40,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Zip.hpp"
 #include "ActsPodioEdm/Surface.h"
 #include <ActsPodioEdm/TrackCollection.h>
 
@@ -50,7 +53,7 @@
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::HashedStringLiteral;
-BOOST_AUTO_TEST_SUITE(PodioTrackConversion)
+BOOST_AUTO_TEST_SUITE(PodioTrackContainerTest)
 
 class NullHelper : public PodioUtil::ConversionHelper {
  public:
@@ -137,6 +140,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
 
   podio::Frame frame;
 
+  ParticleHypothesis pHypo = ParticleHypothesis::pion();
+
   {
     Acts::MutablePodioTrackStateContainer tsc{helper};
     Acts::MutablePodioTrackContainer ptc{helper};
@@ -155,6 +160,9 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
 
     auto t = tc.getTrack(tc.addTrack());
     BOOST_CHECK_EQUAL(t.tipIndex(), MultiTrajectoryTraits::kInvalid);
+
+    t.setParticleHypothesis(pHypo);
+    BOOST_CHECK_EQUAL(t.particleHypothesis(), pHypo);
 
     BOOST_CHECK_EQUAL(tsc.size(), 0);
     auto ts1 = t.appendTrackState();
@@ -264,6 +272,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     // Not the exact same surface, it's recreated from values
     BOOST_CHECK_NE(free.get(), &freeRecreated);
 
+    BOOST_CHECK_EQUAL(t.particleHypothesis(), pHypo);
+
     BOOST_CHECK_EQUAL(t.nMeasurements(), 17);
 
     BOOST_CHECK_EQUAL(t.nHoles(), 34);
@@ -301,6 +311,81 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
   }
 }
 
-// @TODO: Add ensure dynamic columns
+BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
+  MapHelper helper;
+
+  podio::Frame frame;
+
+  // mutable source
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{vtc, mtj};
+  tc.addColumn<uint64_t>("counter");
+  tc.addColumn<uint8_t>("odd");
+  mtj.addColumn<uint64_t>("ts_counter");
+  mtj.addColumn<uint8_t>("ts_odd");
+
+  Acts::MutablePodioTrackStateContainer tsc2{helper};
+  Acts::MutablePodioTrackContainer ptc2{helper};
+  Acts::TrackContainer tc2{ptc2, tsc2};
+  // doesn't have the dynamic column
+
+  Acts::MutablePodioTrackStateContainer tsc3{helper};
+  Acts::MutablePodioTrackContainer ptc3{helper};
+  Acts::TrackContainer tc3{ptc3, tsc3};
+
+  tc3.addColumn<uint64_t>("counter");
+  tc3.addColumn<uint8_t>("odd");
+  tsc3.addColumn<uint64_t>("ts_counter");
+  tsc3.addColumn<uint8_t>("ts_odd");
+
+  for (std::size_t i = 0; i < 10; i++) {
+    auto t = tc.getTrack(tc.addTrack());
+    auto ts = t.appendTrackState();
+    ts.predicted() = BoundVector::Ones();
+    ts.component<uint64_t, "ts_counter"_hash>() = i;
+
+    ts = t.appendTrackState();
+    ts.predicted().setOnes();
+    ts.predicted() *= 2;
+    ts.component<uint64_t, "ts_counter"_hash>() = i + 1;
+
+    ts = t.appendTrackState();
+    ts.predicted().setOnes();
+    ts.predicted() *= 3;
+    ts.component<uint64_t, "ts_counter"_hash>() = i + 2;
+
+    t.template component<uint64_t>("counter") = i;
+    t.template component<uint8_t>("odd") = static_cast<uint8_t>(i % 2 == 0);
+
+    auto t2 = tc2.getTrack(tc2.addTrack());
+    BOOST_CHECK_THROW(t2.copyFrom(t),
+                      std::invalid_argument);  // this should fail
+
+    auto t3 = tc3.getTrack(tc3.addTrack());
+    t3.copyFrom(t);  // this should work
+
+    BOOST_CHECK_NE(t3.tipIndex(), MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_GT(t3.nTrackStates(), 0);
+    BOOST_REQUIRE_EQUAL(t.nTrackStates(), t3.nTrackStates());
+
+    for (auto [tsa, tsb] :
+         zip(t.trackStatesReversed(), t3.trackStatesReversed())) {
+      BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
+
+      BOOST_CHECK_EQUAL(
+          (tsa.template component<uint64_t, "ts_counter"_hash>()),
+          (tsb.template component<uint64_t, "ts_counter"_hash>()));
+
+      BOOST_CHECK_EQUAL((tsa.template component<uint8_t, "ts_odd"_hash>()),
+                        (tsb.template component<uint8_t, "ts_odd"_hash>()));
+    }
+
+    BOOST_CHECK_EQUAL(t.template component<uint64_t>("counter"),
+                      t3.template component<uint64_t>("counter"));
+    BOOST_CHECK_EQUAL(t.template component<uint8_t>("odd"),
+                      t3.template component<uint8_t>("odd"));
+  }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
