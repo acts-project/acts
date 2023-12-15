@@ -180,7 +180,7 @@ class HoughPlane {
 
   /// @brief get the layers with hits in one cell of the histogram
   /// @param xBin: bin index in the first coordinate
-  /// @param y: bin index in the second coordinate
+  /// @param yBin: bin index in the second coordinate
   /// @return the set of layer indices that have hits for this cell
   const std::unordered_set<unsigned>& layers(size_t xBin, size_t yBin) const {
     return m_houghHist(xBin, yBin).layers();
