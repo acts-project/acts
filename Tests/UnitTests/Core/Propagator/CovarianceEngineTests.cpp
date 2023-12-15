@@ -10,10 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -204,30 +206,13 @@ BOOST_AUTO_TEST_CASE(CovarianceConversionTest) {
           [&gctx, &bField](
               const auto& parIn, const auto& covIn, const auto& srfA,
               const auto& srfB) -> std::pair<BoundVector, BoundMatrix> {
-        Acts::FreeVector freePars =
-            Acts::detail::transformBoundToFreeParameters(srfA, gctx, parIn);
-        Acts::BoundVector parOut =
-            Acts::detail::transformFreeToBoundParameters(freePars, srfB, gctx)
-                .value();
+        Acts::BoundTrackParameters boundParamIn{
+            srfA.getSharedPtr(), parIn, covIn, ParticleHypothesis::pion()};
 
-        Acts::BoundToFreeMatrix boundToFreeJacobian =
-            srfA.boundToFreeJacobian(gctx, parIn);
-        Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
+        auto converted =
+            boundToBoundConversion(gctx, boundParamIn, srfB, bField).value();
 
-        FreeVector freeToPathDerivatives = FreeVector::Zero();
-        freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
-
-        freeToPathDerivatives.segment<3>(eFreeDir0) =
-            bField.cross(freePars.segment<3>(eFreeDir0));
-
-        BoundMatrix boundToBoundJac = detail::boundToBoundTransportJacobian(
-            gctx, freePars, boundToFreeJacobian, freeTransportJacobian,
-            freeToPathDerivatives, srfB);
-
-        Acts::BoundMatrix covOut =
-            boundToBoundJac * covIn * boundToBoundJac.transpose();
-
-        return {parOut, covOut};
+        return {converted.parameters(), converted.covariance().value()};
       };
 
       BoundMatrix covA;

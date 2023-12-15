@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -116,5 +117,18 @@ transportCovarianceToCurvilinear(const Vector3& direction,
 /// @param cCache [in,out] the covariance cache (to be modified)
 std::tuple<VariantCovariance, VariantTransportJacobian>
 transportCovarianceToFree(CovarianceCache& cCache);
+
+/// Convert bound track parameters to another bound surface.
+/// @pre The @p targetSurface must intersect with the surface attached to
+///      @p boundParameters, and the paremeters must be on-surface on the
+///      target surface.
+/// @param gctx The geometry context.
+/// @param boundParameters The bound track parameters to convert.
+/// @param targetSurface The target surface.
+/// @param bField The magnetic field at the target surface.
+/// @return The converted bound track parameters.
+Result<BoundTrackParameters> boundToBoundConversion(
+    const GeometryContext& gctx, const BoundTrackParameters& boundParameters,
+    const Surface& targetSurface, const Vector3& bField = Vector3::Zero());
 
 }  // namespace Acts
