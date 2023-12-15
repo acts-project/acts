@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
       tGeometry->lowestTrackingVolume(tgContext, Acts::Vector3(50., 0., 0.));
   if (pixelVolume != nullptr && pixelVolume->confinedLayers() != nullptr) {
     auto layers = pixelVolume->confinedLayers()->arrayObjects();
-    size_t il = 0;
+    std::size_t il = 0;
     for (const auto& layer : layers) {
       if (layer->surfaceArray() != nullptr) {
         Acts::Svg::LayerConverter::Options lOptions;

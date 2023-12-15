@@ -24,8 +24,8 @@ class GlobalChiSquareFitterErrorCategory : public std::error_category {
     using Acts::Experimental::GlobalChiSquareFitterError;
 
     switch (static_cast<GlobalChiSquareFitterError>(c)) {
-      case GlobalChiSquareFitterError::DetAIsZero:
-        return "Gx2f has det(a) == 0 during update.";
+      case GlobalChiSquareFitterError::AIsNotInvertible:
+        return "Gx2f: aMatrix is not invertible.";
       default:
         return "unknown";
     }

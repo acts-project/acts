@@ -44,9 +44,9 @@ void ActsExamples::Options::addParticleGunOptions(Description& desc) {
       "PDG number of the particle, will be adjusted for charge flip.");
   opt("gen-randomize-charge", bool_switch(),
       "Flip the charge and change the PDG number accordingly.");
-  opt("gen-nparticles", value<size_t>()->default_value(1u),
+  opt("gen-nparticles", value<std::size_t>()->default_value(1u),
       "Number of generated particles per vertex");
-  opt("gen-nvertices", value<size_t>()->default_value(1u),
+  opt("gen-nvertices", value<std::size_t>()->default_value(1u),
       "Number of generated vertices");
 }
 
@@ -84,14 +84,14 @@ ActsExamples::Options::readParticleGunOptions(const Variables& vars) {
   pgCfg.pdg =
       static_cast<Acts::PdgParticle>(vars["gen-pdg"].template as<int32_t>());
   pgCfg.randomizeCharge = vars["gen-randomize-charge"].template as<bool>();
-  pgCfg.numParticles = vars["gen-nparticles"].as<size_t>();
+  pgCfg.numParticles = vars["gen-nparticles"].as<std::size_t>();
 
   if (pgCfg.numParticles > std::pow(2, ActsFatras::Barcode::bits(2))) {
     throw std::runtime_error{
         "Too many particles per vertex requested for Fatras Barcode"};
   }
 
-  size_t nVertices = vars["gen-nvertices"].as<size_t>();
+  std::size_t nVertices = vars["gen-nvertices"].as<std::size_t>();
 
   if (nVertices > std::pow(2, ActsFatras::Barcode::bits(0))) {
     throw std::runtime_error{"Too many vertices requested for Fatras Barcode"};

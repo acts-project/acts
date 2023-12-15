@@ -14,9 +14,11 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -247,10 +249,19 @@ class DirectNavigator {
 
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish & update the surface status
+      // TODO we do not know the intersection index - passing the closer one
+      const auto& surface = **state.navigation.navSurfaceIter;
+      const auto index =
+          chooseIntersection(
+              state.geoContext, surface, stepper.position(state.stepping),
+              state.options.direction * stepper.direction(state.stepping),
+              BoundaryCheck(false), std::numeric_limits<double>::max(),
+              stepper.overstepLimit(state.stepping),
+              state.options.surfaceTolerance)
+              .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter,
-          state.options.direction, false, state.options.targetTolerance,
-          *m_logger);
+          state.stepping, surface, index, state.options.direction,
+          BoundaryCheck(false), state.options.surfaceTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::unreachable) {
         ACTS_VERBOSE(
             "Surface not reachable anymore, switching to next one in "
@@ -296,10 +307,19 @@ class DirectNavigator {
     // Check if we are on surface
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish the surface status
+      // TODO we do not know the intersection index - passing the closer one
+      const auto& surface = **state.navigation.navSurfaceIter;
+      const auto index =
+          chooseIntersection(
+              state.geoContext, surface, stepper.position(state.stepping),
+              state.options.direction * stepper.direction(state.stepping),
+              BoundaryCheck(false), std::numeric_limits<double>::max(),
+              stepper.overstepLimit(state.stepping),
+              state.options.surfaceTolerance)
+              .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter,
-          state.options.direction, false, state.options.targetTolerance,
-          *m_logger);
+          state.stepping, surface, index, state.options.direction,
+          BoundaryCheck(false), state.options.surfaceTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;
@@ -311,7 +331,6 @@ class DirectNavigator {
             state.navigation.navSurfaces.end()) {
           ACTS_VERBOSE("Next surface candidate is  "
                        << (*state.navigation.navSurfaceIter)->geometryId());
-          stepper.releaseStepSize(state.stepping);
         }
       } else if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE("Next surface reachable at distance  "
@@ -327,6 +346,26 @@ class DirectNavigator {
                 ? state.navigation.currentVolume->volumeName()
                 : "No Volume") +
            " | ";
+  }
+
+  ObjectIntersection<Surface> chooseIntersection(const GeometryContext& gctx,
+                                                 const Surface& surface,
+                                                 const Vector3& position,
+                                                 const Vector3& direction,
+                                                 const BoundaryCheck& bcheck,
+                                                 double pLimit, double oLimit,
+                                                 double tolerance) const {
+    auto intersections =
+        surface.intersect(gctx, position, direction, bcheck, tolerance);
+
+    for (auto& intersection : intersections.split()) {
+      if (detail::checkIntersection(intersection, pLimit, oLimit, tolerance,
+                                    logger())) {
+        return intersection;
+      }
+    }
+
+    return ObjectIntersection<Surface>::invalid();
   }
 
   const Logger& logger() const { return *m_logger; }

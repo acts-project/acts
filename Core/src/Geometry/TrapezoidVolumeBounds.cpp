@@ -172,7 +172,7 @@ Acts::Volume::BoundingBox Acts::TrapezoidVolumeBounds::boundingBox(
   Vector3 vmin = transform * vertices[0];
   Vector3 vmax = transform * vertices[0];
 
-  for (size_t i = 1; i < 8; i++) {
+  for (std::size_t i = 1; i < 8; i++) {
     const Vector3 vtx = transform * vertices[i];
     vmin = vmin.cwiseMin(vtx);
     vmax = vmax.cwiseMax(vtx);

@@ -52,8 +52,8 @@ void Acts::LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger) {
 
 Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-    size_t binsZ, std::optional<ProtoLayer> _protoLayer,
+    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
+    std::size_t binsZ, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
@@ -197,8 +197,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
 
 Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-    size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
+    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
+    std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
@@ -322,9 +322,10 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 
 Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-    size_t bins2, BinningValue bValue, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
+    std::size_t bins2, BinningValue bValue,
+    std::optional<ProtoLayer> _protoLayer, const Transform3& transform,
+    std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
@@ -428,12 +429,12 @@ bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
   std::vector<const Surface*> surfaces = sArray.surfaces();
   std::set<const Surface*> sensitiveSurfaces(surfaces.begin(), surfaces.end());
   std::set<const Surface*> accessibleSurfaces;
-  size_t nEmptyBins = 0;
-  size_t nBinsChecked = 0;
+  std::size_t nEmptyBins = 0;
+  std::size_t nBinsChecked = 0;
 
   // iterate over all bins
-  size_t size = sArray.size();
-  for (size_t b = 0; b < size; ++b) {
+  std::size_t size = sArray.size();
+  for (std::size_t b = 0; b < size; ++b) {
     std::vector<const Surface*> binContent = sArray.at(b);
     // we don't check under/overflow bins
     if (!sArray.isValidBin(b)) {

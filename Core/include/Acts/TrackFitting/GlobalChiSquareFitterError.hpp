@@ -16,7 +16,7 @@ namespace Experimental {
 
 enum class GlobalChiSquareFitterError {
   // ensure all values are non-zero
-  DetAIsZero = 1,
+  AIsNotInvertible = 1,
 };
 
 std::error_code make_error_code(

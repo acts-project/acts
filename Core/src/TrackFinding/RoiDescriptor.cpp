@@ -22,10 +22,21 @@ Acts::RoiDescriptor::RoiDescriptor(double eta, double etaMinus, double etaPlus,
       m_zed(zed),
       m_phiMinus(phiMinus),
       m_phiPlus(phiPlus),
-      m_etaMinus(etaMinus),
+      m_etaMinus(etaMinus),  //-4.5
       m_etaPlus(etaPlus),
       m_zedMinus(zedMinus),
-      m_zedPlus(zedPlus) {}
+      m_zedPlus(zedPlus) {
+  // catch in the athena roi code
+  //  if ( std::isnan(m_etaPlus)  ) throw std::invalid_argument( "RoiDescriptor:
+  //  etaPlus nan" ); if ( std::isnan(m_etaMinus) ) throw std::invalid_argument(
+  //  "RoiDescriptor: etaMinus nan" );
+
+  m_drdzMinus = std::tan(2 * std::atan(std::exp(-m_etaMinus)));  //-0.02
+  m_drdzPlus = std::tan(2 * std::atan(std::exp(-m_etaPlus)));    // 0.02
+
+  m_dzdrMinus = 1 / m_drdzMinus;  //-45
+  m_dzdrPlus = 1 / m_drdzPlus;    // 45
+}
 
 Acts::RoiDescriptor::~RoiDescriptor() = default;
 

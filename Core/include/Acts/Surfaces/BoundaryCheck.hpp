@@ -36,7 +36,7 @@ namespace Acts {
 class BoundaryCheck {
  public:
   /// Construct either hard cut in both dimensions or no cut at all.
-  BoundaryCheck(bool check);
+  explicit BoundaryCheck(bool check);
 
   /// Construct a tolerance based check.
   ///

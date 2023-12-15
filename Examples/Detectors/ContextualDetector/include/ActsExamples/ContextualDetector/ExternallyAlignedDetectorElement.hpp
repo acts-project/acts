@@ -44,7 +44,7 @@ class ExternallyAlignedDetectorElement
   struct AlignmentStore {
     // GenericDetector identifiers are sequential
     std::vector<Acts::Transform3> transforms;
-    size_t lastAccessed = 0;
+    std::size_t lastAccessed = 0;
   };
 
   /// @class ContextType

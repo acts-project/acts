@@ -14,7 +14,6 @@
 
 #include "DD4hepTestsHelper.hpp"
 
-using namespace std;
 using namespace dd4hep;
 
 /// Standard create_cylinder(...) create a simple cylinder
@@ -27,7 +26,7 @@ using namespace dd4hep;
 static Ref_t create_cylinder(Detector &dd, xml_h xml,
                              SensitiveDetector /*sens*/) {
   xml_det_t x_det = xml;
-  string detName = x_det.nameStr();
+  std::string detName = x_det.nameStr();
 
   // Make Volume
   xml_comp_t x_det_tubs = x_det.child(_U(tubs));
@@ -36,7 +35,7 @@ static Ref_t create_cylinder(Detector &dd, xml_h xml,
   DetElement cylinderElement(detName, x_det.id());
   dd4hep::xml::setDetectorTypeFlag(xml, cylinderElement);
 
-  string shapeName = x_det_tubs.nameStr();
+  std::string shapeName = x_det_tubs.nameStr();
   double phiMin = Acts::getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
   double phiMax = Acts::getAttrValueOr<double>(x_det_tubs, "phimax", 360.);
   Tube tubeShape(shapeName, x_det_tubs.rmin(), x_det_tubs.rmax(),
@@ -66,7 +65,7 @@ DECLARE_DETELEMENT(Cylinder, create_cylinder)
 /// @return a reference counted DetElement
 static Ref_t create_disc(Detector &dd, xml_h xml, SensitiveDetector /*sens*/) {
   xml_det_t x_det = xml;
-  string detName = x_det.nameStr();
+  std::string detName = x_det.nameStr();
 
   // Make Volume
   xml_comp_t x_det_tubs = x_det.child(_U(tubs));
@@ -75,7 +74,7 @@ static Ref_t create_disc(Detector &dd, xml_h xml, SensitiveDetector /*sens*/) {
   DetElement discElement(detName, x_det.id());
   dd4hep::xml::setDetectorTypeFlag(xml, discElement);
 
-  string shapeName = x_det_tubs.nameStr();
+  std::string shapeName = x_det_tubs.nameStr();
   double phiMin = Acts::getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
   double phiMax = Acts::getAttrValueOr<double>(x_det_tubs, "phimax", 360.);
 
@@ -108,7 +107,7 @@ DECLARE_DETELEMENT(Disc, create_disc)
 static Ref_t create_rectangle(Detector &dd, xml_h xml,
                               SensitiveDetector /*sens*/) {
   xml_det_t x_det = xml;
-  string detName = x_det.nameStr();
+  std::string detName = x_det.nameStr();
 
   // Make Volume
   xml_comp_t x_det_box = x_det.child(_U(box));
@@ -117,7 +116,7 @@ static Ref_t create_rectangle(Detector &dd, xml_h xml,
   DetElement rectElement(detName, x_det.id());
   dd4hep::xml::setDetectorTypeFlag(xml, rectElement);
 
-  string shapeName = x_det_box.nameStr();
+  std::string shapeName = x_det_box.nameStr();
   Box rectShape(shapeName, 0.5 * x_det_box.dx(), 0.5 * x_det_box.dy(),
                 0.5 * x_det_box.dz());
 
@@ -147,7 +146,7 @@ DECLARE_DETELEMENT(Rectangle, create_rectangle)
 static Ref_t create_trapezoid(Detector &dd, xml_h xml,
                               SensitiveDetector /*sens*/) {
   xml_det_t x_det = xml;
-  string detName = x_det.nameStr();
+  std::string detName = x_det.nameStr();
 
   // Make Volume
   xml_comp_t x_det_trap = x_det.child(_U(trap));
@@ -156,7 +155,7 @@ static Ref_t create_trapezoid(Detector &dd, xml_h xml,
   DetElement trapElement(detName, x_det.id());
   dd4hep::xml::setDetectorTypeFlag(xml, trapElement);
 
-  string shapeName = x_det_trap.nameStr();
+  std::string shapeName = x_det_trap.nameStr();
 
   // Due to convention this causes an axis flip on x
   Trapezoid trapShape(x_det_trap.x1(), x_det_trap.x2(), 0.5 * x_det_trap.dz(),

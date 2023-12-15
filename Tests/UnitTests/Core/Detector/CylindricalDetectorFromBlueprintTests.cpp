@@ -20,7 +20,7 @@
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
@@ -43,19 +43,19 @@ class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
     // Trivialities first: internal volumes
     std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
         internalVolumes = {};
-    Acts::Experimental::DetectorVolumeUpdator internalVolumeUpdator =
+    Acts::Experimental::DetectorVolumeUpdater internalVolumeUpdater =
         Acts::Experimental::tryNoVolumes();
 
     // Retrieve the layer surfaces
-    Acts::Experimental::SurfaceCandidatesUpdator internalCandidatesUpdator =
+    Acts::Experimental::SurfaceCandidatesUpdater internalCandidatesUpdater =
         Acts::Experimental::tryAllPortalsAndSurfaces();
 
     // Return the internal structure
     return Acts::Experimental::InternalStructure{
         {m_surface},
         internalVolumes,
-        std::move(internalCandidatesUpdator),
-        std::move(internalVolumeUpdator)};
+        std::move(internalCandidatesUpdater),
+        std::move(internalVolumeUpdater)};
   }
 
  private:
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
 
   auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
 
-  BOOST_CHECK(detector != nullptr);
+  BOOST_REQUIRE_NE(detector, nullptr);
 
   // There should be 14 volumes, and they should be built in order
   // beam_pipe
@@ -263,21 +263,21 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   // pixel_pec_layer
   // pixel_pec_gap_1
   // detector_gap_1
-  BOOST_CHECK(detector->volumes().size() == 14u);
-  BOOST_CHECK(detector->volumes()[0]->name() == "beam_pipe");
-  BOOST_CHECK(detector->volumes()[1]->name() == "detector_gap_0");
-  BOOST_CHECK(detector->volumes()[2]->name() == "pixel_nec_gap_0");
-  BOOST_CHECK(detector->volumes()[3]->name() == "pixel_nec_layer");
-  BOOST_CHECK(detector->volumes()[4]->name() == "pixel_nec_gap_1");
-  BOOST_CHECK(detector->volumes()[5]->name() == "pixel_barrel_gap_0");
-  BOOST_CHECK(detector->volumes()[6]->name() == "pixel_barrel_l0");
-  BOOST_CHECK(detector->volumes()[7]->name() == "pixel_barrel_gap_1");
-  BOOST_CHECK(detector->volumes()[8]->name() == "pixel_barrel_l1");
-  BOOST_CHECK(detector->volumes()[9]->name() == "pixel_barrel_gap_2");
-  BOOST_CHECK(detector->volumes()[10]->name() == "pixel_pec_gap_0");
-  BOOST_CHECK(detector->volumes()[11]->name() == "pixel_pec_layer");
-  BOOST_CHECK(detector->volumes()[12]->name() == "pixel_pec_gap_1");
-  BOOST_CHECK(detector->volumes()[13]->name() == "detector_gap_1");
+  BOOST_CHECK_EQUAL(detector->volumes().size(), 14u);
+  BOOST_CHECK_EQUAL(detector->volumes()[0]->name(), "beam_pipe");
+  BOOST_CHECK_EQUAL(detector->volumes()[1]->name(), "detector_gap_0");
+  BOOST_CHECK_EQUAL(detector->volumes()[2]->name(), "pixel_nec_gap_0");
+  BOOST_CHECK_EQUAL(detector->volumes()[3]->name(), "pixel_nec_layer");
+  BOOST_CHECK_EQUAL(detector->volumes()[4]->name(), "pixel_nec_gap_1");
+  BOOST_CHECK_EQUAL(detector->volumes()[5]->name(), "pixel_barrel_gap_0");
+  BOOST_CHECK_EQUAL(detector->volumes()[6]->name(), "pixel_barrel_l0");
+  BOOST_CHECK_EQUAL(detector->volumes()[7]->name(), "pixel_barrel_gap_1");
+  BOOST_CHECK_EQUAL(detector->volumes()[8]->name(), "pixel_barrel_l1");
+  BOOST_CHECK_EQUAL(detector->volumes()[9]->name(), "pixel_barrel_gap_2");
+  BOOST_CHECK_EQUAL(detector->volumes()[10]->name(), "pixel_pec_gap_0");
+  BOOST_CHECK_EQUAL(detector->volumes()[11]->name(), "pixel_pec_layer");
+  BOOST_CHECK_EQUAL(detector->volumes()[12]->name(), "pixel_pec_gap_1");
+  BOOST_CHECK_EQUAL(detector->volumes()[13]->name(), "detector_gap_1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -37,7 +37,7 @@ template <bool ascending, bool strict, typename T, T... values>
 struct are_sorted;
 template <typename T, T MIN, T MAX, T... values>
 struct are_within;
-template <typename T, size_t index, T... values>
+template <typename T, std::size_t index, T... values>
 struct at_index;
 }  // namespace detail
 
@@ -285,11 +285,11 @@ BOOST_AUTO_TEST_CASE(are_within_helper_tests) {
  */
 BOOST_AUTO_TEST_CASE(at_index_helper_tests) {
   using detail::at_index;
-  BOOST_CHECK((at_index<int, 0, 10, 1, 3, 7, 2>::value == 10));
-  BOOST_CHECK((at_index<int, 1, 10, 1, 3, 7, 2>::value == 1));
-  BOOST_CHECK((at_index<int, 2, 10, 1, 3, 7, 2>::value == 3));
-  BOOST_CHECK((at_index<int, 3, 10, 1, 3, 7, 2>::value == 7));
-  BOOST_CHECK((at_index<int, 4, 10, 1, 3, 7, 2>::value == 2));
+  BOOST_CHECK_EQUAL((at_index<int, 0, 10, 1, 3, 7, 2>::value), 10);
+  BOOST_CHECK_EQUAL((at_index<int, 1, 10, 1, 3, 7, 2>::value), 1);
+  BOOST_CHECK_EQUAL((at_index<int, 2, 10, 1, 3, 7, 2>::value), 3);
+  BOOST_CHECK_EQUAL((at_index<int, 3, 10, 1, 3, 7, 2>::value), 7);
+  BOOST_CHECK_EQUAL((at_index<int, 4, 10, 1, 3, 7, 2>::value), 2);
 }
 }  // namespace Test
 

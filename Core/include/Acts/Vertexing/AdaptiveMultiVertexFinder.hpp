@@ -58,12 +58,12 @@ class AdaptiveMultiVertexFinder {
     /// @param ipEst ImpactPointEstimator
     /// @param lin Track linearizer
     /// @param bIn Input magnetic field
-    Config(vfitter_t fitter, const sfinder_t& sfinder,
-           const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
+    Config(vfitter_t fitter, sfinder_t sfinder,
+           ImpactPointEstimator<InputTrack_t, Propagator_t> ipEst,
            Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
-          seedFinder(sfinder),
-          ipEstimator(ipEst),
+          seedFinder(std::move(sfinder)),
+          ipEstimator(std::move(ipEst)),
           linearizer(std::move(lin)),
           bField{std::move(bIn)} {}
 
@@ -94,8 +94,10 @@ class AdaptiveMultiVertexFinder {
     // consider a lot of tracks which just slow down the fit.
     double tracksMaxZinterval = 3. * Acts::UnitConstants::mm;
 
-    // Maximum allowed significance of track position to vertex seed
-    // to consider track as compatible track for vertex fit
+    // Maximum allowed significance of track position to vertex seed to consider
+    // track as compatible to vertex. If useTime is set to true, the time
+    // coordinate also contributes to the significance and tracksMaxSignificance
+    // needs to be increased.
     double tracksMaxSignificance = 5.;
 
     // Max chi2 value for which tracks are considered compatible with
@@ -143,9 +145,9 @@ class AdaptiveMultiVertexFinder {
     // Use seed vertex as a constraint for the fit
     bool useSeedConstraint = true;
 
-    // Diagonal constraint covariance entries in case
-    // no beamspot constraint is provided
-    double looseConstrValue = 1e+8;
+    // Variances of the 4D vertex position before the vertex fit if no beamspot
+    // constraint is provided
+    Vector4 initialVariances = Vector4::Constant(1e+8);
 
     // Default fitQuality for constraint vertex in case no beamspot
     // constraint is provided
@@ -157,6 +159,10 @@ class AdaptiveMultiVertexFinder {
     // So definitely consider setting this to true.
     bool useVertexCovForIPEstimation = false;
 
+    // Use time information when assigning tracks to vertices. If this is set to
+    // true, useTime of the vertex fitter configuration should also be set to
+    // true, and time seeding should be enabled.
+    bool useTime = false;
   };  // Config struct
 
   /// State struct for fulfilling interface
@@ -169,7 +175,7 @@ class AdaptiveMultiVertexFinder {
   template <
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFinder(Config& cfg,
+  AdaptiveMultiVertexFinder(Config cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFinder",
                                                  Logging::INFO))
@@ -185,7 +191,7 @@ class AdaptiveMultiVertexFinder {
   /// object
   /// @param logger The logging instance
   AdaptiveMultiVertexFinder(
-      Config& cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),

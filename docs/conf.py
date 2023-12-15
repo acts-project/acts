@@ -2,10 +2,12 @@
 
 import os
 import sys
+import re
 import subprocess
 from pathlib import Path
 import shutil
 import datetime
+from typing import List, Tuple
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
@@ -22,16 +24,22 @@ copyright = (
 
 # -- General ------------------------------------------------------------------
 
-sys.path.insert(0, str(Path(__file__).parent / "_extensions"))
+doc_dir = Path(__file__).parent
+
+sys.path.insert(0, str(doc_dir))
+sys.path.insert(0, str(doc_dir / "_extensions"))
 
 extensions = [
     "breathe",
     "myst_parser",
     "sphinx.ext.mathjax",
+    "sphinx.ext.todo",
     "warnings_filter",
 ]
 
-warnings_filter_config = str(Path(__file__).parent / "known-warnings.txt")
+todo_include_todos = True
+
+warnings_filter_config = str(doc_dir / "known-warnings.txt")
 warnings_filter_silent = True
 
 source_suffix = {
@@ -47,16 +55,18 @@ highlight_language = "cpp"
 smartquotes = True
 numfig = True
 
-myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
+myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath", "html_image"]
 myst_heading_anchors = 3
+myst_dmath_allow_labels = True
 
 linkcheck_retries = 5
 linkcheck_ignore = [
     r"https://doi.org/.*",
     r"https://cernvm.cern.ch/.*",
-    r"https://tavianator.com/.*",
     r"http://eigen.tuxfamily.org.*",
     r"https://pythia.org.*",
+    r"https://lcginfo.cern.ch/.*",
+    r"https://.*\.?intel.com/.*",
 ]
 
 # -- Options for HTML output --------------------------------------------------
@@ -97,40 +107,69 @@ breathe_default_members = (
     "undoc-members",
 )
 
+nitpicky = True
+nitpick_ignore = [
+    ("cpp:identifier", "Acts"),
+    ("cpp:identifier", "detail"),
+    ("cpp:identifier", "SIZE_MAX"),
+    ("cpp:identifier", "M_PI"),
+    ("cpp:identifier", "eSize"),
+    ("cpp:identifier", "eBoundSize"),
+    ("cpp:identifier", "eFreeSize"),
+    ("cpp:identifier", "open"),
+    ("cpp:identifier", "FreeToBoundCorrection"),
+]
+
+nitpick_ignore_regex = [
+    ("cpp:identifier", r"Eigen.*"),
+    ("cpp:identifier", r"boost.*"),
+    ("cpp:identifier", r"s_.*"),
+    ("cpp:identifier", r"detail::.*"),
+    ("cpp:identifier", ".*::Identity"),
+    ("cpp:identifier", ".*::Zero"),
+    # This blanket ignore only targets the doxygen/breathe auto-generated
+    # references. Explicit references should have specific types.
+    ("cpp:identifier", r".*"),
+]
+
 # -- Automatic API documentation ---------------------------------------------
 
 env = os.environ.copy()
 env["DOXYGEN_WARN_AS_ERROR"] = "NO"
-cwd = Path(__file__).parent
 
 if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
-    print("Executing doxygen in", cwd)
+    print("Executing doxygen in", doc_dir)
     print(
         "Doxygen version:",
         subprocess.check_output(["doxygen", "--version"], encoding="utf-8"),
     )
     sys.stdout.flush()
     subprocess.check_call(
-        ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
+        ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=doc_dir, env=env
     )
 
-api_index_target = cwd / "api/api.rst"
+api_index_target = doc_dir / "api/api.md"
 
-if on_readthedocs or tags.has("run_apidoc"):
-    print("Executing breathe apidoc in", cwd)
+if tags.has("run_apidoc"):
+    print("Executing breathe apidoc in", doc_dir)
     subprocess.check_call(
         [sys.executable, "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
         stdout=subprocess.DEVNULL,
-        cwd=cwd,
+        cwd=doc_dir,
         env=env,
     )
     if not api_index_target.exists():
-        shutil.copyfile(cwd / "api/api_index.rst", api_index_target)
+        shutil.copyfile(doc_dir / "api/api_index.rst", api_index_target)
     print("breathe apidoc completed")
-else:
-    if not api_index_target.exists():
-        shutil.copyfile(cwd / "api/api_stub.rst", api_index_target)
+
+if tags.has("lazy_autodoc") or on_readthedocs:
+    extensions += ["lazy_autodoc"]
+
+
+import white_papers
+
+white_papers.render()
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 

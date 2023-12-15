@@ -37,9 +37,6 @@ std::unique_ptr<const Logger> create_logger(const std::string& logger_name,
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
 
-std::string failure_msg(const std::string& expected, const std::string& found) {
-  return std::string("'") + expected + "' != '" + found + "'";
-}
 }  // namespace detail
 /// @endcond
 
@@ -97,7 +94,7 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
 
     // Check output
     std::ifstream infile(output_file, std::ios::in);
-    size_t i = 0;
+    std::size_t i = 0;
     for (std::string line; std::getline(infile, line); ++i) {
       BOOST_CHECK_EQUAL(line, lines.at(i));
     }

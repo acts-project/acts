@@ -31,8 +31,8 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -98,7 +98,7 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
   // Check if the volume has a proxy
   if (volumeMaterial != nullptr) {
     auto geoID = volume.geometryId();
-    size_t volumeID = geoID.volume();
+    std::size_t volumeID = geoID.volume();
     ACTS_DEBUG("Material volume found with volumeID " << volumeID);
     ACTS_DEBUG("       - ID is " << geoID);
 

@@ -132,10 +132,11 @@ Acts::Vector3 Acts::LineSurface::binningPosition(
   return center(gctx);
 }
 
-Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& /*gctx*/,
-                                        const Vector2& /*lpos*/) const {
-  throw std::runtime_error(
-      "LineSurface: normal is undefined without known direction");
+Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& gctx,
+                                        const Vector3& pos,
+                                        const Vector3& direction) const {
+  auto ref = referenceFrame(gctx, pos, direction);
+  return ref.col(2);
 }
 
 const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
@@ -225,6 +226,10 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
   jacToGlobal(eFreeDir2, eBoundTheta) = -sinTheta;
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
+
+  // For the derivative of global position with bound angles, refer the
+  // following white paper:
+  // https://acts.readthedocs.io/en/latest/white_papers/line-surface-jacobian.html
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));

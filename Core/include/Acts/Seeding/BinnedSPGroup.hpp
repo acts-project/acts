@@ -56,8 +56,8 @@ class BinnedSPGroupIterator {
   bool operator==(const BinnedSPGroupIterator& other) const;
   bool operator!=(const BinnedSPGroupIterator& other) const;
 
-  std::tuple<boost::container::small_vector<size_t, 9>, std::size_t,
-             boost::container::small_vector<size_t, 9>>
+  std::tuple<boost::container::small_vector<std::size_t, 9>, std::size_t,
+             boost::container::small_vector<std::size_t, 9>>
   operator*() const;
 
  private:
@@ -104,7 +104,7 @@ class BinnedSPGroup {
 
   ~BinnedSPGroup() = default;
 
-  size_t size() const;
+  std::size_t size() const;
 
   BinnedSPGroupIterator<external_spacepoint_t> begin();
   BinnedSPGroupIterator<external_spacepoint_t> end();
@@ -127,7 +127,7 @@ class BinnedSPGroup {
   std::shared_ptr<const BinFinder<external_spacepoint_t>> m_bottomBinFinder;
 
   // Order of z bins to loop over when searching for SPs
-  std::vector<size_t> m_bins;
+  std::vector<std::size_t> m_bins;
   // Number of Z bins to skip the search for middle SP
   std::size_t m_skipZMiddleBin;
 };

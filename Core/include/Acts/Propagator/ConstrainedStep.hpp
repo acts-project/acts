@@ -53,7 +53,7 @@ class ConstrainedStep {
 
   /// Number of iterations needed by the stepsize finder
   /// (e.g. Runge-Kutta) of the stepper.
-  size_t nStepTrials = std::numeric_limits<size_t>::max();
+  std::size_t nStepTrials = std::numeric_limits<std::size_t>::max();
 
   constexpr ConstrainedStep() = default;
 
@@ -97,8 +97,6 @@ class ConstrainedStep {
   constexpr Scalar value(Type type) const { return m_values[type]; }
 
   /// Access the accuracy value
-  ///
-  /// @param type is the requested parameter type
   constexpr Scalar accuracy() const { return m_accuracy; }
 
   /// release a certain constraint value
@@ -107,8 +105,6 @@ class ConstrainedStep {
   constexpr void release(Type type) { m_values[type] = kNotSet; }
 
   /// release accuracy
-  ///
-  /// @param type is the constraint type to be released
   constexpr void releaseAccuracy() { m_accuracy = kNotSet; }
 
   /// Update the step size of a certain type

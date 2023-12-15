@@ -17,12 +17,12 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/MultiTrajectoryTestsCommon.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 
 #include <algorithm>
 #include <array>
@@ -40,6 +40,7 @@ namespace {
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 namespace bd = boost::unit_test::data;
 
 using ParametersVector = BoundTrackParameters::ParametersVector;
@@ -160,6 +161,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   ct.testTrackStateProxyCopy(rng);
 }
 
+BOOST_AUTO_TEST_CASE(TrackStateCopyDynamicColumns) {
+  CommonTests ct;
+  ct.testTrackStateCopyDynamicColumns();
+}
+
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   CommonTests ct;
   ct.testTrackStateProxyCopyDiffMTJ();
@@ -202,7 +208,7 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
   stats.toStream(ss);
   std::string out = ss.str();
   BOOST_CHECK(!out.empty());
-  BOOST_CHECK(out.find("total") != std::string::npos);
+  BOOST_CHECK_NE(out.find("total"), std::string::npos);
 
   const auto& h = stats.hist;
 

@@ -36,8 +36,8 @@ class BinFinder {
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  boost::container::small_vector<size_t, 9> findBins(
-      size_t phiBin, size_t zBin,
+  boost::container::small_vector<std::size_t, 9> findBins(
+      std::size_t phiBin, std::size_t zBin,
       const SpacePointGrid<external_spacepoint_t>* binnedSP) const;
 
  private:

@@ -45,8 +45,8 @@ inline void calculateResiduals(BoundIndices size,
   assert((size <= measured.size()) && "Inconsistent measured size");
   assert((size <= residuals.size()) && "Inconsistent residuals size");
 
-  for (size_t i = 0; i < size; ++i) {
-    size_t fullIndex = indices[i];
+  for (std::size_t i = 0; i < size; ++i) {
+    std::size_t fullIndex = indices[i];
     // this is neither elegant nor smart but it is the simplest solution.
     //
     // only phi must be handled specially here. the theta limits can only be
@@ -88,7 +88,7 @@ inline void calculateResiduals(FreeIndices size,
   assert((size <= measured.size()) && "Inconsistent measured size");
   assert((size <= residuals.size()) && "Inconsistent residuals size");
 
-  for (size_t i = 0; i < size; ++i) {
+  for (std::size_t i = 0; i < size; ++i) {
     // all free parameters are unrestricted. no need to call parameter traits
     residuals[i] = measured[i] - reference[indices[i]];
   }

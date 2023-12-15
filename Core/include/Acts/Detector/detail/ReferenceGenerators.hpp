@@ -67,7 +67,7 @@ struct BinningValueReferenceGenerator {
 ///
 /// The grid filling then completes the empty bins in between and
 /// expands if necessary.
-template <size_t nSEGS = 1u, bool aBARY = true>
+template <std::size_t nSEGS = 1u, bool aBARY = true>
 struct PolyhedronReferenceGenerator {
   /// Helper to access the Center point of for filling the grid
   ///

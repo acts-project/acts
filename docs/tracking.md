@@ -130,8 +130,8 @@ called *particle propagation* or *extrapolation*, is used to predict a
 particle's properties after it has travelled a certain distance. In many cases,
 the projected intersection with various types of surfaces is desired. The
 trajectory of a charged particle is governed by the [magnetic
-field](core/magnetic_field.rst) through which it travels, as well as any
-[material effects](core/material.rst). In case of a homogeneous magnetic field,
+field](#magnetic-field-core) through which it travels, as well as any
+[material effects](#material-core). In case of a homogeneous magnetic field,
 and in the absence of material interaction, the particle follows a helical
 trajectory. Such a helix can be calculated purely analytically, although
 intersections require numerical methods nevertheless.
@@ -450,7 +450,7 @@ are candidates to receive a projection of the surrounding material.
 Additional artificial material layers can also be inserted to receive
 projected material.
 
-The projection procedure (see [](material_core) and [](material_howto_core)) works
+The projection procedure (see [](#material-core) and [](#material_mapping_howto_core)) works
 by extrapolating test particles using the fully detailed simulation geometry.
 During the extrapolation, the material properties of the geometry are sampled
 in small intervals. Subsequently, the same test particle is extrapolated

@@ -22,9 +22,9 @@
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <cmath>
+#include <random>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -81,19 +81,20 @@ MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
 
   return Acts::Test::microBenchmark(
       [&] {
-        return surface.intersect(tgContext, origin, direction, boundaryCheck);
+        return surface.intersect(tgContext, origin, direction,
+                                 BoundaryCheck(boundaryCheck));
       },
       nrepts);
 }
 
 BOOST_DATA_TEST_CASE(
     benchmark_surface_intersections,
-    bdata::random(
-        (bdata::seed = 21,
-         bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-0.3, 0.3))) ^
+                           std::uniform_real_distribution<double>(-0.3, 0.3))) ^
         bdata::xrange(ntests),
     phi, theta, index) {
   (void)index;

@@ -28,23 +28,24 @@ namespace Acts {
 /// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t>
-std::unordered_map<int, std::vector<int>> dbscanTrackClustering(
-    std::multimap<int, std::pair<int, std::vector<int>>>& trackMap,
+std::unordered_map<std::size_t, std::vector<std::size_t>> dbscanTrackClustering(
+    std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>&
+        trackMap,
     const Acts::TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     float epsilon = 0.07, int minPoints = 2) {
   // Unordered map associating a vector with all the track ID of a cluster to
   // the ID of the first track of the cluster
-  std::unordered_map<int, std::vector<int>> cluster;
+  std::unordered_map<std::size_t, std::vector<std::size_t>> cluster;
   // Unordered map associating hits to the ID of the first track of the
   // different clusters.
-  std::unordered_map<int, int> hitToTrack;
+  std::unordered_map<std::size_t, std::size_t> hitToTrack;
 
   // DBSCAN algorithm from MLpack used in the track clustering
   mlpack::DBSCAN dbscan(epsilon, minPoints);
 
   arma::mat data(2, trackMap.size());
-  int trackID = 0;
-  arma::Row<size_t> assignments;
+  std::size_t trackID = 0;
+  arma::Row<std::size_t> assignments;
 
   // Get the input feature of the network for all the tracks
   for (const auto& [key, val] : trackMap) {
@@ -53,16 +54,17 @@ std::unordered_map<int, std::vector<int>> dbscanTrackClustering(
     data(1, trackID) = Acts::VectorHelpers::phi(traj.momentum());
     trackID++;
   }
-  size_t clusterNb = dbscan.Cluster(data, assignments);
+  std::size_t clusterNb = dbscan.Cluster(data, assignments);
   trackID = 0;
 
   // Cluster track with DBScan
-  std::vector<std::multimap<int, std::pair<int, std::vector<int>>>>
+  std::vector<
+      std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>>
       dbscanClusters(clusterNb);
   for (const auto& [key, val] : trackMap) {
-    int clusterID = assignments(trackID);
+    std::size_t clusterID = assignments(trackID);
     if (assignments(trackID) == SIZE_MAX) {
-      cluster.emplace(val.first, std::vector<int>(1, val.first));
+      cluster.emplace(val.first, std::vector<std::size_t>(1, val.first));
     } else {
       dbscanClusters[clusterID].emplace(key, val);
     }

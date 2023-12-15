@@ -109,10 +109,10 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementCylinder) {
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10.);
   }
 
-  BOOST_CHECK(cylindricalElement != nullptr);
+  BOOST_REQUIRE_NE(cylindricalElement, nullptr);
 
   const auto& surface = cylindricalElement->surface();
-  BOOST_CHECK(surface.type() == Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Cylinder);
   BOOST_CHECK(
       surface.transform(tContext).isApprox(Acts::Transform3::Identity()));
   auto boundValues = surface.bounds().values();
@@ -142,10 +142,10 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralCylinder) {
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10.);
   }
 
-  BOOST_CHECK(cylindricalElement != nullptr);
+  BOOST_REQUIRE_NE(cylindricalElement, nullptr);
 
   const auto& surface = cylindricalElement->surface();
-  BOOST_CHECK(surface.type() == Acts::Surface::SurfaceType::Cylinder);
+  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Cylinder);
   BOOST_CHECK(
       surface.transform(tContext).isApprox(Acts::Transform3::Identity()));
   auto boundValues = surface.bounds().values();
@@ -177,10 +177,10 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementDisc) {
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10., true);
   }
 
-  BOOST_CHECK(discElement != nullptr);
+  BOOST_REQUIRE_NE(discElement, nullptr);
 
   const auto& surface = discElement->surface();
-  BOOST_CHECK(surface.type() == Acts::Surface::SurfaceType::Disc);
+  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Disc);
   BOOST_CHECK(
       surface.transform(tContext).isApprox(Acts::Transform3::Identity()));
   auto boundValues = surface.bounds().values();
@@ -210,10 +210,10 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralDisc) {
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10., true);
   }
 
-  BOOST_CHECK(discElement != nullptr);
+  BOOST_REQUIRE_NE(discElement, nullptr);
 
   const auto& surface = discElement->surface();
-  BOOST_CHECK(surface.type() == Acts::Surface::SurfaceType::Disc);
+  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Disc);
   BOOST_CHECK(
       surface.transform(tContext).isApprox(Acts::Transform3::Identity()));
   auto boundValues = surface.bounds().values();
@@ -246,16 +246,17 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
         std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10., true);
   }
 
-  BOOST_CHECK(rectangleElement != nullptr);
+  BOOST_REQUIRE_NE(rectangleElement, nullptr);
 
   const auto& surface = rectangleElement->surface();
-  BOOST_CHECK(surface.type() == Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Plane);
 
   auto sTransform = surface.transform(tContext);
   BOOST_CHECK(sTransform.translation().isApprox(Acts::Vector3(10., 20., 30.)));
 
   const auto& sBounds = surface.bounds();
-  BOOST_CHECK(sBounds.type() == Acts::SurfaceBounds::BoundsType::eRectangle);
+  BOOST_CHECK_EQUAL(sBounds.type(),
+                    Acts::SurfaceBounds::BoundsType::eRectangle);
 
   auto boundValues = sBounds.values();
 
@@ -288,16 +289,17 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
         std::make_shared<Acts::DD4hepDetectorElement>(child, "xZ", 10., true);
   }
 
-  BOOST_CHECK(trapezoidElement != nullptr);
+  BOOST_REQUIRE_NE(trapezoidElement, nullptr);
 
   const auto& surface = trapezoidElement->surface();
-  BOOST_CHECK(surface.type() == Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Plane);
 
   auto sTransform = surface.transform(tContext);
   BOOST_CHECK(sTransform.translation().isApprox(Acts::Vector3(20., 30., 40.)));
 
   const auto& sBounds = surface.bounds();
-  BOOST_CHECK(sBounds.type() == Acts::SurfaceBounds::BoundsType::eTrapezoid);
+  BOOST_CHECK_EQUAL(sBounds.type(),
+                    Acts::SurfaceBounds::BoundsType::eTrapezoid);
 
   auto boundValues = sBounds.values();
   CHECK_CLOSE_ABS(boundValues[0u], 100., 1e-10);

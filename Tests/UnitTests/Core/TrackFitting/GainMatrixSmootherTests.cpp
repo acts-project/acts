@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixSmoother)
 
 BOOST_AUTO_TEST_CASE(Smooth) {
   VectorMultiTrajectory traj;
-  size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
+  std::size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(ts_idx);
 
   // Make dummy track parameter

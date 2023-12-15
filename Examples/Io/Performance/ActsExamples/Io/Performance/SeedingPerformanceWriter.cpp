@@ -9,6 +9,7 @@
 #include "SeedingPerformanceWriter.hpp"
 
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -22,6 +23,9 @@
 #include <vector>
 
 #include <TFile.h>
+
+using Acts::VectorHelpers::eta;
+using Acts::VectorHelpers::phi;
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -110,12 +114,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
   const auto& particles = m_inputParticles(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
-  size_t nSeeds = seeds.size();
-  size_t nMatchedSeeds = 0;
+  std::size_t nSeeds = seeds.size();
+  std::size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
 
-  for (size_t itrack = 0; itrack < seeds.size(); ++itrack) {
+  for (std::size_t itrack = 0; itrack < seeds.size(); ++itrack) {
     const auto& seed = seeds[itrack];
     const auto track = seedToPrototrack(seed);
     std::vector<ParticleHitCount> particleHitCounts;
@@ -144,7 +148,23 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
         nDuplicatedParticles++;
       }
     }
-    m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
+    // Loop over all the other truth particle and find the distance to the
+    // closest one
+    double minDeltaR = -1;
+    for (const auto& closeParticle : particles) {
+      if (closeParticle.particleId() == particle.particleId()) {
+        continue;
+      }
+      double p_phi = phi(particle.direction());
+      double p_eta = eta(particle.direction());
+      double c_phi = phi(closeParticle.direction());
+      double c_eta = eta(closeParticle.direction());
+      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
+      if (minDeltaR == -1 || distance < minDeltaR) {
+        minDeltaR = distance;
+      }
+    }
+    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isMatched);
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedSeedsForParticle - 1);
   }

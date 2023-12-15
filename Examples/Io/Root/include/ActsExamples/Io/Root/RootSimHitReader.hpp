@@ -58,7 +58,7 @@ class RootSimHitReader : public IReader {
   std::string name() const override { return "RootSimHitReader"; }
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const override;
+  std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream
   ///

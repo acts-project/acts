@@ -62,10 +62,10 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   std::unordered_map<Acts::MultiTrajectoryTraits::IndexType, TrackInfo> infoMap;
 
   // Counter of truth-matched reco tracks
-  using RecoTrackInfo = std::pair<TrackInfo, size_t>;
+  using RecoTrackInfo = std::pair<TrackInfo, std::size_t>;
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
 
-  size_t trackId = 0;
+  std::size_t trackId = 0;
   for (const auto& track : tracks) {
     // Reco track selection
     //@TODO: add interface for applying others cuts on reco tracks:
@@ -100,7 +100,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     if (pT < m_cfg.ptMin) {
       continue;
     }
-    size_t nMajorityHits = 0;
+    std::size_t nMajorityHits = 0;
     ActsFatras::Barcode majorityParticleId;
     if (!particleHitCount.empty()) {
       // Get the majority particle counts
@@ -108,9 +108,18 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
       // n Majority hits
       nMajorityHits = particleHitCount.front().hitCount;
     }
+
+    static const Acts::ConstTrackAccessor<unsigned int> seedNumber(
+        "trackGroup");
+
     // track info
     TrackInfo toAdd;
     toAdd.trackId = trackId;
+    if (tracks.hasColumn(Acts::hashString("trackGroup"))) {
+      toAdd.seedID = seedNumber(track);
+    } else {
+      toAdd.seedID = 0;
+    }
     toAdd.particleId = majorityParticleId;
     toAdd.nStates = track.nTrackStates();
     toAdd.nMajorityHits = nMajorityHits;
@@ -146,7 +155,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   }
 
   // Find duplicates
-  std::unordered_set<size_t> listGoodTracks;
+  std::unordered_set<std::size_t> listGoodTracks;
   for (auto& [particleId, matchedTracks] : matched) {
     std::sort(matchedTracks.begin(), matchedTracks.end(),
               [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
@@ -166,7 +175,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   }
 
   // write csv header
-  mos << "track_id,particleId,"
+  mos << "track_id,seed_id,particleId,"
       << "nStates,nMajorityHits,nMeasurements,nOutliers,nHoles,nSharedHits,"
       << "chi2,ndf,chi2/ndf,"
       << "pT,eta,phi,"
@@ -190,6 +199,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
     // write the track info
     mos << trajState.trackId << ",";
+    mos << trajState.seedID << ",";
     mos << trajState.particleId << ",";
     mos << trajState.nStates << ",";
     mos << trajState.nMajorityHits << ",";

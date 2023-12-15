@@ -20,7 +20,6 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -195,9 +194,9 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       auto binUtility = segmentation.binUtility();
       Acts::Vector2 localPosition(localX, localY);
       // @todo remove unnecessary conversion
-      // size_t bin0 = binUtility.bin(localPosition, 0);
-      // size_t bin1 = binUtility.bin(localPosition, 1);
-      // size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
+      // std::size_t bin0 = binUtility.bin(localPosition, 0);
+      // std::size_t bin1 = binUtility.bin(localPosition, 1);
+      // std::size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
 
       // the covariance is currently set to some arbitrary value.
       Acts::SquareMatrix3 cov;

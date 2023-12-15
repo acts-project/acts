@@ -50,7 +50,7 @@ class CartesianSegmentation : public Segmentation {
   /// @param numCellsX is the number of cells in X
   /// @param numCellsY is the number of cells in Y
   CartesianSegmentation(const std::shared_ptr<const PlanarBounds>& mBounds,
-                        size_t numCellsX, size_t numCellsY = 1);
+                        std::size_t numCellsX, std::size_t numCellsY = 1);
 
   /// @todo constructor from BinUtilities for more complex readouts
   ///

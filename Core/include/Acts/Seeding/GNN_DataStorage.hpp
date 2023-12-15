@@ -18,8 +18,8 @@
 
 namespace Acts {
 
-constexpr size_t MAX_SEG_PER_NODE = 1000;  // was 30
-constexpr size_t N_SEG_CONNS = 6;          // was 6
+constexpr std::size_t MAX_SEG_PER_NODE = 1000;  // was 30
+constexpr std::size_t N_SEG_CONNS = 6;          // was 6
 
 // new sp struct
 template <typename space_point_t>
@@ -180,10 +180,6 @@ class TrigFTF_GNN_DataStorage {
       float max_tau = 100.0;
       // can't do this bit yet as dont have cluster width
       if (useClusterWidth) {
-        //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
-        //   const InDet::PixelCluster* pCL = dynamic_cast<const
-        //   InDet::PixelCluster*>(osp->clusterList().first);
-        //   float cluster_width = pCL->width().widthPhiRZ().y();
         float cluster_width = 1;  // temporary while cluster width not available
         min_tau = 6.7 * (cluster_width - 0.2);
         max_tau =
@@ -194,10 +190,6 @@ class TrigFTF_GNN_DataStorage {
           sp, min_tau, max_tau));  // adding ftf member to nodes
     } else {
       if (useClusterWidth) {
-        //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
-        //   const InDet::PixelCluster* pCL = dynamic_cast<const
-        //   InDet::PixelCluster*>(osp->clusterList().first);
-        //   float cluster_width = pCL->width().widthPhiRZ().y();
         float cluster_width = 1;  // temporary while cluster width not available
         if (cluster_width > 0.2) {
           return -3;

@@ -73,13 +73,13 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   auto endcapBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
 
-  auto [surfaces0, volumes0, surfacesUpdator0, volumeUpdator0] =
+  auto [surfaces0, volumes0, surfacesUpdater0, volumeUpdater0] =
       endcapBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces0.size() == 22u);
-  BOOST_CHECK(surfacesUpdator0.connected());
+  BOOST_CHECK_EQUAL(surfaces0.size(), 22u);
+  BOOST_CHECK(surfacesUpdater0.connected());
   BOOST_CHECK(volumes0.empty());
-  BOOST_CHECK(volumeUpdator0.connected());
+  BOOST_CHECK(volumeUpdater0.connected());
 
   using LayerSupport = Acts::Experimental::ProtoSupport;
 
@@ -89,14 +89,14 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   endcapBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
 
-  auto [surfaces1, volumes1, surfacesUpdator1, volumeUpdator1] =
+  auto [surfaces1, volumes1, surfacesUpdater1, volumeUpdater1] =
       endcapBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces1.size() == 22u + 1u);
-  BOOST_CHECK(surfaces1.back()->type() == Acts::Surface::SurfaceType::Disc);
-  BOOST_CHECK(surfacesUpdator1.connected());
+  BOOST_CHECK_EQUAL(surfaces1.size(), 22u + 1u);
+  BOOST_CHECK_EQUAL(surfaces1.back()->type(), Acts::Surface::SurfaceType::Disc);
+  BOOST_CHECK(surfacesUpdater1.connected());
   BOOST_CHECK(volumes1.empty());
-  BOOST_CHECK(volumeUpdator1.connected());
+  BOOST_CHECK(volumeUpdater1.connected());
 
   lsConfig.auxiliary =
       "*** Endcap with 22 surfaces + 1 support -> split into 11 planes ***";
@@ -107,14 +107,15 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   endcapBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
 
-  auto [surfaces2, volumes2, surfacesUpdator2, volumeUpdator2] =
+  auto [surfaces2, volumes2, surfacesUpdater2, volumeUpdater2] =
       endcapBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces2.size() == 22u + 11u);
-  BOOST_CHECK(surfaces2.back()->type() == Acts::Surface::SurfaceType::Plane);
-  BOOST_CHECK(surfacesUpdator2.connected());
+  BOOST_CHECK_EQUAL(surfaces2.size(), 22u + 11u);
+  BOOST_CHECK_EQUAL(surfaces2.back()->type(),
+                    Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK(surfacesUpdater2.connected());
   BOOST_CHECK(volumes2.empty());
-  BOOST_CHECK(volumeUpdator2.connected());
+  BOOST_CHECK(volumeUpdater2.connected());
 }
 
 // Test the creation of a cylindrical structure
@@ -140,13 +141,13 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   auto barrelBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));
 
-  auto [surfaces0, volumes0, surfacesUpdator0, volumeUpdator0] =
+  auto [surfaces0, volumes0, surfacesUpdater0, volumeUpdater0] =
       barrelBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces0.size() == 448u);
-  BOOST_CHECK(surfacesUpdator0.connected());
+  BOOST_CHECK_EQUAL(surfaces0.size(), 448u);
+  BOOST_CHECK(surfacesUpdater0.connected());
   BOOST_CHECK(volumes0.empty());
-  BOOST_CHECK(volumeUpdator0.connected());
+  BOOST_CHECK(volumeUpdater0.connected());
 
   using LayerSupport = Acts::Experimental::ProtoSupport;
 
@@ -158,13 +159,13 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   barrelBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));
 
-  auto [surfaces1, volumes1, surfacesUpdator1, volumeUpdator1] =
+  auto [surfaces1, volumes1, surfacesUpdater1, volumeUpdater1] =
       barrelBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces1.size() == 448u + 1u);
-  BOOST_CHECK(surfacesUpdator1.connected());
+  BOOST_CHECK_EQUAL(surfaces1.size(), 448u + 1u);
+  BOOST_CHECK(surfacesUpdater1.connected());
   BOOST_CHECK(volumes1.empty());
-  BOOST_CHECK(volumeUpdator1.connected());
+  BOOST_CHECK(volumeUpdater1.connected());
 
   lsConfig.auxiliary =
       "*** Barrel with 448 surfaces + 1 support -> split into 32 planes ***";
@@ -176,13 +177,13 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   barrelBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));
 
-  auto [surfaces2, volumes2, surfacesUpdator2, volumeUpdator2] =
+  auto [surfaces2, volumes2, surfacesUpdater2, volumeUpdater2] =
       barrelBuilder.construct(tContext);
 
-  BOOST_CHECK(surfaces2.size() == 448u + 32u);
-  BOOST_CHECK(surfacesUpdator2.connected());
+  BOOST_CHECK_EQUAL(surfaces2.size(), 448u + 32u);
+  BOOST_CHECK(surfacesUpdater2.connected());
   BOOST_CHECK(volumes2.empty());
-  BOOST_CHECK(volumeUpdator2.connected());
+  BOOST_CHECK(volumeUpdater2.connected());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

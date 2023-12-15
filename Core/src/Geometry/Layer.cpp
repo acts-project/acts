@@ -184,7 +184,7 @@ Acts::Layer::compatibleSurfaces(
     }
     // the surface intersection
     SurfaceMultiIntersection sfmi =
-        sf.intersect(gctx, position, direction, boundaryCheck);
+        sf.intersect(gctx, position, direction, BoundaryCheck(boundaryCheck));
     for (const auto& sfi : sfmi.split()) {
       // check if intersection is valid and pathLimit has not been exceeded
       if (sfi &&

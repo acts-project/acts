@@ -46,6 +46,10 @@ class TrackSelector {
     double ptMax = inf;
 
     std::size_t minMeasurements = 0;
+    std::size_t maxHoles = std::numeric_limits<std::size_t>::max();
+    std::size_t maxOutliers = std::numeric_limits<std::size_t>::max();
+    std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
+    double maxChi2 = inf;
 
     // Helper factory functions to produce a populated config object more
     // conveniently
@@ -269,6 +273,10 @@ inline std::ostream& operator<<(std::ostream& os,
   print("eta", cuts.etaMin, cuts.etaMax);
   print("absEta", cuts.absEtaMin, cuts.absEtaMax);
   print("pt", cuts.ptMin, cuts.ptMax);
+  print("nHoles", 0, cuts.maxHoles);
+  print("nOutliers", 0, cuts.maxOutliers);
+  print("nSharedHits", 0, cuts.maxSharedHits);
+  print("chi2", 0.0, cuts.maxChi2);
   os << " - " << cuts.minMeasurements << " <= nMeasurements\n";
 
   return os;
@@ -342,6 +350,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
 template <typename track_proxy_t>
 bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
   auto checkMin = [](auto x, auto min) { return min <= x; };
+  auto checkMax = [](auto x, auto max) { return x <= max; };
   auto within = [](double x, double min, double max) {
     return (min <= x) && (x < max);
   };
@@ -382,7 +391,11 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
          within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
          within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
          within(track.time(), cuts.timeMin, cuts.timeMax) &&
-         checkMin(track.nMeasurements(), cuts.minMeasurements);
+         checkMin(track.nMeasurements(), cuts.minMeasurements) &&
+         checkMax(track.nHoles(), cuts.maxHoles) &&
+         checkMax(track.nOutliers(), cuts.maxOutliers) &&
+         checkMax(track.nSharedHits(), cuts.maxSharedHits) &&
+         checkMax(track.chi2(), cuts.maxChi2);
 }
 
 inline TrackSelector::TrackSelector(

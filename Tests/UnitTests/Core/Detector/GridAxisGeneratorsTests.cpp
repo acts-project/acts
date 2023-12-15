@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <cmath>
 #include <tuple>
@@ -28,19 +28,19 @@ BOOST_AUTO_TEST_SUITE(Detector)
 BOOST_AUTO_TEST_CASE(Eq1D) {
   EqBound eqb{{-10, 10}, 10};
   auto axisTupleB = eqb();
-  BOOST_CHECK(std::tuple_size<decltype(axisTupleB)>{} == 1u);
+  BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTupleB)>{}, 1u);
   auto axisB = std::get<0u>(axisTupleB);
   BOOST_CHECK(axisB.getBoundaryType() == AxisBoundaryType::Bound);
 
   EqOpen eqo{{-10, 10}, 10};
   auto axisTupleO = eqo();
-  BOOST_CHECK(std::tuple_size<decltype(axisTupleO)>{} == 1u);
+  BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTupleO)>{}, 1u);
   auto axisO = std::get<0u>(axisTupleO);
   BOOST_CHECK(axisO.getBoundaryType() == AxisBoundaryType::Open);
 
   EqClosed eqc{{-10, 10}, 10};
   auto axisTupleC = eqc();
-  BOOST_CHECK(std::tuple_size<decltype(axisTupleC)>{} == 1u);
+  BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTupleC)>{}, 1u);
   auto axisC = std::get<0u>(axisTupleC);
   BOOST_CHECK(axisC.getBoundaryType() == AxisBoundaryType::Closed);
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(Eq1D) {
 BOOST_AUTO_TEST_CASE(EqEq2D) {
   EqOpenEqClosed eoec{{0, 10}, 10u, {-M_PI, M_PI}, 16u};
   auto axisTuple = eoec();
-  BOOST_CHECK(std::tuple_size<decltype(axisTuple)>{} == 2u);
+  BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTuple)>{}, 2u);
   auto axisVar = std::get<0u>(axisTuple);
   BOOST_CHECK(axisVar.getBoundaryType() == AxisBoundaryType::Open);
   BOOST_CHECK(axisVar.isEquidistant());
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(EqEq2D) {
 BOOST_AUTO_TEST_CASE(EqVar2D) {
   EqBoundVarOpen ebvo{{0, 10}, 10u, {10., 20, 30, 40}};
   auto axisTuple = ebvo();
-  BOOST_CHECK(std::tuple_size<decltype(axisTuple)>{} == 2u);
+  BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTuple)>{}, 2u);
   auto axisVar = std::get<0u>(axisTuple);
   BOOST_CHECK(axisVar.getBoundaryType() == AxisBoundaryType::Bound);
   BOOST_CHECK(axisVar.isEquidistant());
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(EqVar2D) {
 BOOST_AUTO_TEST_CASE(VarEq2D) {
   VarBoundEqClosed vbec{{10., 20, 30, 40}, {-M_PI, M_PI}, 12u};
   auto axisTuple = vbec();
-  BOOST_CHECK(std::tuple_size<decltype(axisTuple)>{} == 2u);
+  BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTuple)>{}, 2u);
   auto axisVar = std::get<0u>(axisTuple);
   BOOST_CHECK(axisVar.getBoundaryType() == AxisBoundaryType::Bound);
   BOOST_CHECK(axisVar.isVariable());
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(VarEq2D) {
 BOOST_AUTO_TEST_CASE(VarVar2D) {
   VarBoundVarBound vbvb{{10., 20, 30, 40}, {10., 20, 30, 40}};
   auto axisTuple = vbvb();
-  BOOST_CHECK(std::tuple_size<decltype(axisTuple)>{} == 2u);
+  BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTuple)>{}, 2u);
   auto axisVar = std::get<0u>(axisTuple);
   BOOST_CHECK(axisVar.getBoundaryType() == AxisBoundaryType::Bound);
   BOOST_CHECK(axisVar.isVariable());

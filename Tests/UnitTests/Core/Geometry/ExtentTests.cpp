@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   const auto& vHist = gExtHist.valueHistograms();
   auto xVals = vHist[binX];
 
-  BOOST_CHECK(xVals.size() == 6u);
+  BOOST_CHECK_EQUAL(xVals.size(), 6u);
   std::vector<ActsScalar> reference = {15_mm, 18_mm, 15_mm,
                                        15_mm, 18_mm, 15_mm};
   BOOST_CHECK(xVals == reference);

@@ -48,7 +48,7 @@ class EDM4hepTrackReader : public IReader {
   std::string name() const final;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final;
+  std::pair<std::size_t, std::size_t> availableEvents() const final;
 
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;

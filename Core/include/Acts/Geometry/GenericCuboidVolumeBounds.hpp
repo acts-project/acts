@@ -26,7 +26,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @brief  This struct helps to symmetrize with the
   /// the other volume bounds classes
   struct BoundValues {
-    static constexpr size_t eSize = 24;
+    static constexpr std::size_t eSize = 24;
   };
 
   GenericCuboidVolumeBounds() = delete;

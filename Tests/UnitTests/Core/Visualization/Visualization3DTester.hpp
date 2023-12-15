@@ -107,7 +107,7 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
 /// Ply element struct
 struct PlyElement {
   std::string name = "none";
-  size_t copies = 0;
+  std::size_t copies = 0;
   int properties = 0;  // -1 for list
 };
 
@@ -131,8 +131,8 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
   auto ss = std::stringstream{tString};
   bool inHeader = false;
 
-  size_t lNumber = 0;
-  size_t cElement = 0;
+  std::size_t lNumber = 0;
+  std::size_t cElement = 0;
   std::vector<PlyElement> elements;
   PlyElement currentElement;
 
@@ -209,7 +209,8 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
                                    std::to_string(lineSplit.size() - 1) +
                                    std::string("."));
           }
-        } else if (lineSplit.size() != size_t(elements[cElement].properties)) {
+        } else if (lineSplit.size() !=
+                   std::size_t(elements[cElement].properties)) {
           errorStrings.push_back(
               w + line + std::string(" ] Element expected ") +
               std::to_string(elements[cElement].properties) +

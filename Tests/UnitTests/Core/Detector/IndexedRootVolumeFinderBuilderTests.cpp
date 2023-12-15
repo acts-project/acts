@@ -15,8 +15,8 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 using namespace Acts;
@@ -75,18 +75,24 @@ BOOST_AUTO_TEST_CASE(IndexedRootVolumeFinderBuilderCylindrical) {
   auto detectorIndexed = Detector::makeShared("IndexedDetector", rootVolumes,
                                               std::move(rootVolumeFinder));
 
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {10., 0., 0.}) ==
-              innerV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {25., 0., -93.}) ==
-              middleLV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {35., 0., 0.}) ==
-              middleDV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {55., 0., 0.}) ==
-              middleUV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {40., 0., 92.}) ==
-              middleRV.get());
-  BOOST_CHECK(detectorIndexed->findDetectorVolume(tContext, {65., 0., 0.}) ==
-              outerV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {10., 0., 0.}),
+      innerV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {25., 0., -93.}),
+      middleLV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {35., 0., 0.}),
+      middleDV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {55., 0., 0.}),
+      middleUV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {40., 0., 92.}),
+      middleRV.get());
+  BOOST_CHECK_EQUAL(
+      detectorIndexed->findDetectorVolume(tContext, {65., 0., 0.}),
+      outerV.get());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -18,7 +18,6 @@
 
 #include "DD4hepTestsHelper.hpp"
 
-using namespace std;
 using namespace dd4hep;
 
 /// @brief  Helper method to add a layer to the detector
@@ -71,8 +70,8 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
     // Check if the cylinder has a surface binning instruction
     if (x_layer.hasChild(_Unicode(acts_surface_binning))) {
       xml_comp_t sfBinning = x_layer.child(_Unicode(acts_surface_binning));
-      Acts::decodeBinning(layerParams, sfBinning, "acts_surface_binning",
-                          {"z", "phi"});
+      DD4hepTestsHelper::decodeBinning(layerParams, sfBinning,
+                                       "acts_surface_binning", {"z", "phi"});
     }
     // Go through the sensors
     unsigned int sensorID = 1u;
@@ -189,8 +188,8 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
     // Check if the cylinder has a surface binning instruction
     if (x_layer.hasChild(_Unicode(acts_surface_binning))) {
       xml_comp_t sfBinning = x_layer.child(_Unicode(acts_surface_binning));
-      Acts::decodeBinning(layerParams, sfBinning, "acts_surface_binning",
-                          {"r", "phi"});
+      DD4hepTestsHelper::decodeBinning(layerParams, sfBinning,
+                                       "acts_surface_binning", {"r", "phi"});
     }
 
     // Loop over modules
@@ -274,7 +273,7 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
 static Ref_t create_barrel_detector(Detector &dd, xml_h xml,
                                     SensitiveDetector sens) {
   xml_det_t x_det = xml;
-  string detName = x_det.nameStr();
+  std::string detName = x_det.nameStr();
 
   // create the master detector element
   DetElement detectorElement(detName, x_det.id());
@@ -322,7 +321,7 @@ DECLARE_DETELEMENT(BarrelDetector, create_barrel_detector)
 static Ref_t create_endcap_detector(Detector &dd, xml_h xml,
                                     SensitiveDetector sens) {
   xml_det_t x_det = xml;
-  string detName = x_det.nameStr();
+  std::string detName = x_det.nameStr();
 
   // create the master detector element
   DetElement detectorElement(detName, x_det.id());

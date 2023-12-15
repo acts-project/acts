@@ -70,9 +70,10 @@ class TrackSummaryPlotTool {
   /// @param nOutliers number of outliers
   /// @param nHoles number of holes
   void fill(TrackSummaryPlotCache& trackSummaryPlotCache,
-            const Acts::BoundTrackParameters& fittedParameters, size_t nStates,
-            size_t nMeasurements, size_t Outliers, size_t nHoles,
-            size_t nSharedHits) const;
+            const Acts::BoundTrackParameters& fittedParameters,
+            std::size_t nStates, std::size_t nMeasurements,
+            std::size_t Outliers, std::size_t nHoles,
+            std::size_t nSharedHits) const;
 
   /// @brief write the track info plots to file
   ///

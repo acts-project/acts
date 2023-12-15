@@ -117,10 +117,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
+                              ipEstimator, std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -274,11 +274,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
+                              ipEstimator, std::move(linearizer), bField);
   Finder::State state;
 
-  Finder finder(finderConfig, extractParameters);
+  Finder finder(std::move(finderConfig), extractParameters);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -418,10 +418,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -558,18 +558,24 @@ BOOST_AUTO_TEST_CASE(
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = AdaptiveGridDensityVertexFinder<55>;
-  SeedFinder::Config seedFinderCfg(0.05);
+  // Grid density used during vertex seed finding
+  AdaptiveGridTrackDensity::Config gridDensityCfg;
+  gridDensityCfg.spatialTrkGridSize = 55;
+  gridDensityCfg.spatialBinExtent = 0.05;
+  AdaptiveGridTrackDensity gridDensity(gridDensityCfg);
+
+  using SeedFinder = AdaptiveGridDensityVertexFinder<>;
+  SeedFinder::Config seedFinderCfg(gridDensity);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
 
   SeedFinder seedFinder(seedFinderCfg);
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
