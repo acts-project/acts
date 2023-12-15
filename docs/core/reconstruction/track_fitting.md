@@ -376,4 +376,4 @@ This is a lot compared to the 2 propagations of the *KF*.
 However, since the *GX2F* is a global fitter, it can easier resolve left-right-ambiguous measurements, like in the TRT (Transition Radiation Tracker – straw tubes).
 
 [^billoir]: [https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf](https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf)
-[^cornelissen]: [https://cds.cern.ch/record/1005181/files/thesis-2006-072.pdf](https://cds.cern.ch/record/1005181/files/thesis-2006-072.pdf)
+[^cornelissen]: [https://cds.cern.ch/record/1005181/files/thesis-2006-072.pdf](https://cds.cern.ch/record/1005181/files/thesis-2006-072.pdf#page=80)
