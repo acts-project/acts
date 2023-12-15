@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Holders.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <variant>
 #include <vector>
@@ -35,9 +36,9 @@ class GridBinFinder {
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
   template <typename stored_t, class... Axes>
-  boost::container::small_vector<std::size_t, 9> findBins(
+  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)> findBins(
       const std::array<std::size_t, DIM>& locPosition,
-      const Acts::Grid<stored_t, Axes...>* grid) const;
+      const Acts::Grid<stored_t, Axes...>& grid) const;
 
  private:
   template <typename first_value_t, typename... vals>

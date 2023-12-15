@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -6,8 +5,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-#include <iostream>
 
 template <std::size_t DIM>
 template <typename... args>
@@ -52,12 +49,12 @@ std::array<std::pair<int, int>, DIM> Acts::GridBinFinder<DIM>::getSizePerAxis(
 
 template <std::size_t DIM>
 template <typename stored_t, class... Axes>
-boost::container::small_vector<std::size_t, 9>
+boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)>
 Acts::GridBinFinder<DIM>::findBins(
     const std::array<std::size_t, DIM>& locPosition,
-    const Acts::Grid<stored_t, Axes...>* binnedSP) const {
+    const Acts::Grid<stored_t, Axes...>& binnedSP) const {
   static_assert(sizeof...(Axes) == DIM);
   std::array<std::pair<int, int>, DIM> sizePerAxis =
       getSizePerAxis(locPosition);
-  return binnedSP->neighborHoodIndices(locPosition, sizePerAxis).collect();
+  return binnedSP.neighborHoodIndices(locPosition, sizePerAxis).collect();
 }
