@@ -10,29 +10,28 @@ from torch.utils.tensorboard import SummaryWriter
 
 from sklearn.preprocessing import LabelEncoder, StandardScaler, OrdinalEncoder
 
-from ambiguity_solver_network import prepareDataSet, DuplicateClassifier, Normalise
+from seed_solver_network import (
+    prepareDataSet,
+    DuplicateClassifier,
+    Normalise,
+)
 
-avg_mean = [0, 0, 0, 0, 0, 0, 0, 0]
-avg_sdv = [0, 0, 0, 0, 0, 0, 0, 0]
+avg_mean = [0] * 14
+avg_sdv = [0] * 14
 events = 0
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
-    """Read the dataset from the different files, remove the pure duplicate tracks and combine the datasets"""
+def readDataSet(Seed_files: list[str]) -> pd.DataFrame:
+    """Read the dataset from the different files, remove the particle with only fakes and combine the datasets"""
     """
-    @param[in] CKS_files: DataFrame contain the data from each track files (1 file per events usually)
-    @return: combined DataFrame containing all the track, ordered by events and then by truth particle ID in each events 
+    @param[in] Seed_files: DataFrame contain the data from each seed files (1 file per events usually)
+    @return: combined DataFrame containing all the seed, ordered by events and then by truth particle ID in each events 
     """
     data = pd.DataFrame()
-    for f in CKS_files:
+    for f in Seed_files:
         datafile = pd.read_csv(f)
-        # We at this point we don't make any difference between fake and duplicate
-        datafile.loc[
-            datafile["good/duplicate/fake"] == "fake", "good/duplicate/fake"
-        ] = "duplicate"
         datafile = prepareDataSet(datafile)
-        # Combine dataset
         data = pd.concat([data, datafile])
     return data
 
@@ -50,13 +49,8 @@ def prepareTrainingData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     input = data.drop(
         columns=[
             target_column,
-            "track_id",
-            "nMajorityHits",
-            "nSharedHits",
-            "truthMatchProbability",
+            "seed_id",
             "Hits_ID",
-            "chi2",
-            "pT",
         ]
     )
     # Compute the normalisation factors
@@ -76,7 +70,7 @@ def prepareTrainingData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
 
 
 def batchSplit(data: pd.DataFrame, batch_size: int) -> list[pd.DataFrame]:
-    """Split the data into batch each containing @batch_size truth particles (the number of corresponding tracks may vary)"""
+    """Split the data into batch each containing @batch_size truth particles (the number of corresponding seeds may vary)"""
     """
     @param[in] data: input DataFrame to be cut into batch
     @param[in] batch_size: Number of truth particles per batch
@@ -103,98 +97,132 @@ def batchSplit(data: pd.DataFrame, batch_size: int) -> list[pd.DataFrame]:
 def computeLoss(
     score_good: torch.Tensor,
     score_duplicate: list[torch.Tensor],
+    score_fake: list[torch.Tensor],
     batch_loss: torch.Tensor,
-    margin: float = 0.05,
+    margin_duplicate: float = 0.3,
+    margin_fake: float = 0.9,
 ) -> torch.Tensor:
-    """Compute one loss for each duplicate track associated with the particle"""
+    """Compute one loss for each duplicate seed associated with the particle"""
     """
-    @param[in] score_good: score return by the model for the good track associated with this particle 
-    @param[in] score_duplicate: list of the scores of all duplicate track associated with this particle
-    @param[in] margin: Margin used in the computation of the MarginRankingLoss
+    @param[in] score_good: score return by the model for the good seed associated with this particle 
+    @param[in] score_duplicate: list of the scores of all duplicate seed associated with this particle
+    @param[in] margin_duplicate: Margin used in the computation of the MarginRankingLoss for duplicate seeds
+    @param[in] margin_fake: Margin used in the computation of the MarginRankingLoss for fake seeds
     @return: return the updated loss
     """
-    # Compute the losses using the MarginRankingLoss with respect to the good track score
+    # Compute the losses using the MarginRankingLoss with respect to the good seed score
     batch_loss = batch_loss
     if score_duplicate:
         for s in score_duplicate:
-            batch_loss += F.relu(s - score_good + margin) / len(score_duplicate)
+            batch_loss += F.relu(s - score_good + margin_duplicate) / (
+                len(score_duplicate) + len(score_fake) + 1
+            )
+    if score_fake:
+        for s in score_fake:
+            batch_loss += F.relu(s - score_good + margin_fake) / (
+                len(score_duplicate) + len(score_fake) + 1
+            )
+    batch_loss += margin_fake / (len(score_duplicate) + len(score_fake) + 1)
+
     return batch_loss
 
 
 def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, float]:
-    """Run the MLP on a batch and compute the corresponding efficiency and loss. If an optimiser is specified train the MLP."""
+    """Run the MLP on a batch and compute the corresponding efficiency and loss. If an optimiser is specify train the MLP."""
     """
     @param[in] batch:  list of DataFrame, each element correspond to a batch 
     @param[in] Optimiser: Optimiser for the MLP, if one is specify the network will be train on batch. 
-    @return: array containing the number of particles, the number of particle where the good track was found and the loss
+    @return: array containing the number of particles, the number of particle where the good seed was found and the loss
     """
     # number of particles
     nb_part = 0
-    # number of particles associated with a good track
+    # number of particles associated with a good seed
     nb_good_match = 0
+    # number of particles associated with a best seed
+    nb_best_match = 0
     # loss for the batch
     loss = 0
-    # best track score for a particle
+    # best seed score for a particle
     max_score = 0
-    # is the best score associated with the good track
-    max_match = 0
+    # is the best score associated with the good seed
+    max_match = 1
     # loop over all the batch
     for b_data in batch:
-        # ID of the current particule
+        # ID of the current particle
         pid = b_data[0][0]
         # loss for the current batch
         batch_loss = 0
-        # score of the good track
-        score_good = 0
-        # score of the duplicate tracks
+        # score of the good seed
+        score_good = 1
+        # score of the duplicate seeds
         score_duplicate = []
+        # score of the fake seeds
+        score_fake = []
+
         if Optimiser:
             Optimiser.zero_grad()
         input = torch.tensor(b_data[1], dtype=torch.float32)
         input = input.to(device)
         prediction = duplicateClassifier(input)
-        # loop over all the track in the batch
+        # loop over all the seed in the batch
         for index, pred, truth in zip(b_data[0], prediction, b_data[2]):
-            # If we are changing particle uptade the loss
+            # If we are changing particle update the loss
             if index != pid:
                 # Starting a new particles, compute the loss for the previous one
-                if max_match == 1:
+                if max_match == 0 or max_match == 2:
                     nb_good_match += 1
+                if max_match == 2:
+                    nb_best_match += 1
                 batch_loss = computeLoss(
-                    score_good, score_duplicate, batch_loss, margin=0.05
+                    score_good,
+                    score_duplicate,
+                    score_fake,
+                    batch_loss,
+                    margin_duplicate=0.2,
+                    margin_fake=0.4,
                 )
                 nb_part += 1
                 # Reinitialise the variable for the next particle
                 pid = index
                 score_duplicate = []
-                score_good = 0
+                score_fake = []
+                score_good = 1
                 max_score = 0
-                max_match = 0
-            # Store track scores
-            if truth:
+                max_match = 1
+            # Store seed scores
+            if truth == 2:
                 score_good = pred
-            else:
+            elif truth == 0:
                 score_duplicate.append(pred)
-            # Prepare efficiency computtion
-            if pred == max_score:
-                max_match = 0
+            else:
+                score_fake.append(pred)
+            # Prepare efficiency computation
             if pred > max_score:
                 max_score = pred
                 max_match = truth
         # Compute the loss for the last particle when reaching the end of the batch
-        if max_match == 1:
+        if max_match == 0 or max_match == 2:
             nb_good_match += 1
-        batch_loss = computeLoss(score_good, score_duplicate, batch_loss, margin=0.05)
+        if max_score == 2:
+            nb_best_match += 1
+        batch_loss = computeLoss(
+            score_good,
+            score_duplicate,
+            score_fake,
+            batch_loss,
+            margin_duplicate=0.2,
+            margin_fake=0.4,
+        )
         nb_part += 1
         # Normalise the loss to the batch size
         batch_loss = batch_loss / len(b_data[0])
         loss += batch_loss.item()
-        # Perform the gradient descend if an optimiser was specified
+        # Perform the gradient descent if an optimiser was specified
         if Optimiser:
             batch_loss.backward()
             Optimiser.step()
     loss = loss / len(batch)
-    return nb_part, nb_good_match, loss
+    return nb_part, nb_good_match, nb_best_match, loss
 
 
 def train(
@@ -207,7 +235,7 @@ def train(
     """Training of the MLP"""
     """
     @param[in] duplicateClassifier: model to be trained.
-    @param[in] data: tuple containing three list. Each element of those list correspond to a given track and represent : the truth particle ID, the track parameters and the truth.
+    @param[in] data: tuple containing three list. Each element of those list correspond to a given seed and represent : the truth particle ID, the seed parameters and the truth.
     @param[in] epochs: number of epoch the model will be trained for.
     @param[in] batch: size of the batch used in the training
     @param[in] validation: Fraction of the batch used in training
@@ -228,17 +256,37 @@ def train(
         nb_good_match = 0.0
 
         # Loop over all the network over the training batch
-        nb_part, nb_good_match, loss = scoringBatch(batch[:val_batch], Optimiser=opt)
-        print("Loss/train: ", loss, " Eff/train: ", nb_good_match / nb_part)
+        nb_part, nb_good_match, nb_best_match, loss = scoringBatch(
+            batch[:val_batch], Optimiser=opt
+        )
+        print(
+            "Loss/train: ",
+            loss,
+            " Eff/train: ",
+            nb_good_match / nb_part,
+            " Eff_best/train: ",
+            nb_best_match / nb_part,
+        )
         writer.add_scalar("Loss/train", loss, epoch)
         writer.add_scalar("Eff/train", nb_good_match / nb_part, epoch)
+        writer.add_scalar("Eff_best/train", nb_best_match / nb_part, epoch)
 
         # If using validation, compute the efficiency and loss over the training batch
         if validation > 0.0:
-            nb_part, nb_good_match, loss = scoringBatch(batch[val_batch:])
+            nb_part, nb_good_match, nb_best_match, loss = scoringBatch(
+                batch[val_batch:]
+            )
             writer.add_scalar("Loss/val", loss, epoch)
             writer.add_scalar("Eff/val", nb_good_match / nb_part, epoch)
-            print("Loss/val: ", loss, " Eff/val: ", nb_good_match / nb_part)
+            writer.add_scalar("Eff_best/train", nb_best_match / nb_part, epoch)
+            print(
+                "Loss/val: ",
+                loss,
+                " Eff/val: ",
+                nb_good_match / nb_part,
+                " Eff_best/val: ",
+                nb_best_match / nb_part,
+            )
 
     writer.close()
     return duplicateClassifier
@@ -246,19 +294,20 @@ def train(
 
 # ==================================================================
 
-# ttbar events used as the training input, here we assume 1000 events are availables
-CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-7][0-9]-tracks_ckf.csv"))
+# ttbar events used as the training input, here we assume 1000 events are available
+CKF_files = sorted(
+    glob.glob("odd_output" + "/event000000[0-9][0-9][0-9]-seed_cleaned.csv")
+)
 data = readDataSet(CKF_files)
-
 # Prepare the data
 x_train, y_train = prepareTrainingData(data)
 
 avg_mean = [x / events for x in avg_mean]
 avg_sdv = [x / events for x in avg_sdv]
 
-# Create our model
+# Create our model and chose the layers sizes
 input_dim = np.shape(x_train)[1]
-layers_dim = [10, 15, 10]
+layers_dim = [80, 80, 100, 80, 80]
 
 duplicateClassifier = nn.Sequential(
     Normalise(avg_mean, avg_sdv), DuplicateClassifier(input_dim, layers_dim)
@@ -267,24 +316,31 @@ duplicateClassifier = duplicateClassifier.to(device)
 
 # Train the model and save it
 input = data.index, x_train, y_train
-train(duplicateClassifier, input, epochs=20, batch=128, validation=0.3)
+train(duplicateClassifier, input, epochs=30, batch=128, validation=0.3)
 duplicateClassifier.eval()
 input_test = torch.tensor(x_train, dtype=torch.float32)
-torch.save(duplicateClassifier, "duplicateClassifier.pt")
+torch.save(duplicateClassifier, "seedduplicateClassifier.pt")
 torch.onnx.export(
     duplicateClassifier,
-    input_test,
-    "duplicateClassifier.onnx",
+    input_test[0],
+    "seedduplicateClassifier.onnx",
     input_names=["x"],
     output_names=["y"],
     dynamic_axes={"x": {0: "batch_size"}, "y": {0: "batch_size"}},
 )
+
+del CKF_files
+del data
+del x_train, y_train
+del input, input_test
+del duplicateClassifier
 # ==================================================================
 
-# ttbar events for the test, here we assume 1000 events are availables
+# ttbar events for the test, here we assume 40 events are availables
 CKF_files_test = sorted(
-    glob.glob("odd_output" + "/event0000000[8-9][0-9]-tracks_ckf.csv")
+    glob.glob("odd_output" + "/event000001[0-0][0-9][0-9]-seed_cleaned.csv")
 )
+
 test = readDataSet(CKF_files_test)
 
 # Prepare the data
@@ -293,10 +349,12 @@ x_test, y_test = prepareTrainingData(test)
 # Write the network score to a list
 output_predict = []
 
+model = torch.load("seedduplicateClassifier.pt")
+
 x_test = torch.tensor(x_test, dtype=torch.float32)
 x_test = x_test.to(device)
 for x in x_test:
-    output_predict.append(duplicateClassifier(x))
+    output_predict.append(model(x))
 
 # For the first 100 particles print the ID, score and truth
 for sample_test, sample_predict, sample_true in zip(
@@ -306,29 +364,30 @@ for sample_test, sample_predict, sample_true in zip(
 
 id = 0
 pid = test.index[0]
-nb_part = 1
+nb_part = 0
 nb_good_match = 0
-max_match = 0
+nb_best_match = 0
+max_match = 1
 max_score = 0
 
 # Compute the efficiency
 for index, pred, truth in zip(test.index, output_predict, y_test):
     if index != pid:
-        if max_match == 1:
-            nb_good_match += 1
-        pid = index
         nb_part += 1
+        if max_match == 0 or max_match == 2:
+            nb_good_match += 1
+        if max_match == 2:
+            nb_best_match += 1
+        pid = index
+        max_match = 1
         max_score = 0
-        max_match = 0
-    if pred == max_score:
-        max_match = 0
+
     if pred > max_score:
         max_score = pred
         max_match = truth
-nb_part += 1
-if max_match == 1:
-    nb_good_match += 1
 
 print("nb particles: ", nb_part)
 print("nb good match: ", nb_good_match)
+print("nb best match: ", nb_best_match)
 print("Efficiency: ", 100 * nb_good_match / nb_part, " %")
+print("Efficiency_best: ", 100 * nb_best_match / nb_part, " %")
