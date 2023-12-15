@@ -20,9 +20,6 @@
 #include <string>
 #include <utility>
 
-
-
-
 namespace ActsExamples {
 struct AlgorithmContext;
 
@@ -72,7 +69,6 @@ class CsvMuonSimHitReader final : public IReader {
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 
   const Acts::Logger& logger() const { return *m_logger; }
-
 };
 
 }  // namespace ActsExamples

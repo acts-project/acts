@@ -66,7 +66,8 @@ class CsvDriftCircleReader final : public IReader {
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  WriteDataHandle<DriftCircleContainer> m_outputDriftCircles{this, "OutputDriftCircles"};
+  WriteDataHandle<DriftCircleContainer> m_outputDriftCircles{
+      this, "OutputDriftCircles"};
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

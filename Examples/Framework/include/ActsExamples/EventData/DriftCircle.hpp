@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -19,7 +18,6 @@
 #include <vector>
 
 #include <boost/container/static_vector.hpp>
-
 
 namespace ActsExamples {
 
@@ -39,16 +37,9 @@ class DriftCircle {
   /// @param multilayer multilayer index
   /// @param tubeLayer tube layer index
   /// @param tube tube index
-  DriftCircle(
-      const Acts::Vector3&& tubePos, 
-      float driftRadius, 
-      float driftRadiusError, 
-      int stationName,
-      int stationEta,
-      int stationPhi,
-      int multilayer,
-      int tubeLayer,
-      int tube)
+  DriftCircle(const Acts::Vector3&& tubePos, float driftRadius,
+              float driftRadiusError, int stationName, int stationEta,
+              int stationPhi, int multilayer, int tubeLayer, int tube)
       : m_x(tubePos[Acts::ePos0]),
         m_y(tubePos[Acts::ePos1]),
         m_z(tubePos[Acts::ePos2]),
@@ -59,20 +50,19 @@ class DriftCircle {
         m_stationPhi(stationPhi),
         m_multilayer(multilayer),
         m_tubeLayer(tubeLayer),
-        m_tube(tube){
-  }
+        m_tube(tube) {}
 
   constexpr Scalar x() const { return m_x; }
   constexpr Scalar y() const { return m_y; }
   constexpr Scalar z() const { return m_z; }
   constexpr Scalar rDrift() const { return m_rho; }
   constexpr Scalar rDriftError() const { return m_sigmaRho; }
-  constexpr int stationName() const {return m_stationName;}
-  constexpr int stationEta() const {return m_stationEta;}
-  constexpr int stationPhi() const {return m_stationPhi;}
-  constexpr int multilayer() const {return m_multilayer;}
-  constexpr int tubeLayer() const {return m_tubeLayer;}
-  constexpr int tube() const {return m_tube;}
+  constexpr int stationName() const { return m_stationName; }
+  constexpr int stationEta() const { return m_stationEta; }
+  constexpr int stationPhi() const { return m_stationPhi; }
+  constexpr int multilayer() const { return m_multilayer; }
+  constexpr int tubeLayer() const { return m_tubeLayer; }
+  constexpr int tube() const { return m_tube; }
 
  private:
   // Global position
@@ -90,17 +80,13 @@ class DriftCircle {
 };
 
 inline bool operator==(const DriftCircle& lhs, const DriftCircle& rhs) {
-
-  return (
-          lhs.stationName() == rhs.stationName() 
-          && lhs.stationEta() == rhs.stationEta() 
-          && lhs.stationPhi() == rhs.stationPhi() 
-          && lhs.multilayer() == rhs.multilayer() 
-          && lhs.tubeLayer() == rhs.tubeLayer() 
-          && lhs.tube() == rhs.tube() 
-          && std::abs(rhs.rDrift() - lhs.rDrift()) < 1.e-8
-          && std::abs(rhs.rDriftError() - lhs.rDriftError()) < 1.e-8
-  );
+  return (lhs.stationName() == rhs.stationName() &&
+          lhs.stationEta() == rhs.stationEta() &&
+          lhs.stationPhi() == rhs.stationPhi() &&
+          lhs.multilayer() == rhs.multilayer() &&
+          lhs.tubeLayer() == rhs.tubeLayer() && lhs.tube() == rhs.tube() &&
+          std::abs(rhs.rDrift() - lhs.rDrift()) < 1.e-8 &&
+          std::abs(rhs.rDriftError() - lhs.rDriftError()) < 1.e-8);
 }
 
 /// Container of space points.

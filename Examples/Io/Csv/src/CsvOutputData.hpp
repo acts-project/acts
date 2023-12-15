@@ -78,10 +78,13 @@ struct MuonSimHitData {
   int StationEta = 0;
   int StationPhi = 0;
   // True hit location in station frame, in mm.
-  float LocalPositionExtrx = 0.0f, LocalPositionExtry = 0.0f, LocalPositionExtrz = 0.0f;
+  float LocalPositionExtrx = 0.0f, LocalPositionExtry = 0.0f,
+        LocalPositionExtrz = 0.0f;
   /// True particle momentum in GeV before interaction.
   float LocalDirectionx = 0.0f, LocalDirectiony = 0.0f, LocalDirectionz = 0.0f;
-  DFE_NAMEDTUPLE(MuonSimHitData, pdgId, StationName, StationEta, StationPhi, LocalPositionExtrx, LocalPositionExtry, LocalPositionExtrz, LocalDirectionx,LocalDirectiony,LocalDirectionz);
+  DFE_NAMEDTUPLE(MuonSimHitData, pdgId, StationName, StationEta, StationPhi,
+                 LocalPositionExtrx, LocalPositionExtry, LocalPositionExtrz,
+                 LocalDirectionx, LocalDirectiony, LocalDirectionz);
 };
 
 // Write out muon simhits before digitization
@@ -89,7 +92,7 @@ struct MuonDriftCircleData {
   /// Drift radius, in mm.
   float driftRadius = 0.0f;
   /// Drift tube center location in the station frame
-  float tubePositionx = 0.0f, tubePositiony = 0.0f, tubePositionz = 0.0f; 
+  float tubePositionx = 0.0f, tubePositiony = 0.0f, tubePositionz = 0.0f;
   /// three components of the muon station identifier
   int stationName = 0;
   int stationEta = 0;
@@ -97,9 +100,11 @@ struct MuonDriftCircleData {
   // components of the tube identifier within the station
   int multilayer = 0;
   int tubelayer = 0;
-  int tube = 0; 
+  int tube = 0;
 
-  DFE_NAMEDTUPLE(MuonDriftCircleData, driftRadius,tubePositionx,tubePositiony,tubePositionz,stationName,stationEta,stationPhi,multilayer,tubelayer,tube);
+  DFE_NAMEDTUPLE(MuonDriftCircleData, driftRadius, tubePositionx, tubePositiony,
+                 tubePositionz, stationName, stationEta, stationPhi, multilayer,
+                 tubelayer, tube);
 };
 
 struct TruthHitData {

@@ -16,9 +16,9 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <array>
+#include <map>
 #include <optional>
 #include <set>
-#include <map>
 #include <unordered_set>
 
 #include "HoughVectors.hpp"
@@ -354,7 +354,8 @@ class IslandsAroundMax {
   /// @param yieldMap: A map of the hit content of above-threshold cells. Used cells will be set to empty content to avoid re-use by subsequent calls
   void extendMaximum(std::vector<std::pair<size_t, size_t>>& inMaximum,
                      std::vector<std::pair<size_t, size_t>>& toExplore,
-                     yieldType threshold, std::map<std::pair<size_t,size_t>, yieldType>& yieldMap);
+                     yieldType threshold,
+                     std::map<std::pair<size_t, size_t>, yieldType>& yieldMap);
 
   IslandsAroundMaxConfig m_cfg;  // configuration data object
 

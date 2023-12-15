@@ -286,10 +286,8 @@ void addTrackFinding(Context& ctx) {
       yMin, yMax, houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
       localMaxWindowSize, kA);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::MuonHoughSeeder, mex, "MuonHoughSeeder",
-      inSimHits, inDriftCircles);
-
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
+                                "MuonHoughSeeder", inSimHits, inDriftCircles);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,

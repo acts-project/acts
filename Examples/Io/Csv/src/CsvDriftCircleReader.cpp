@@ -41,7 +41,8 @@ ActsExamples::CsvDriftCircleReader::CsvDriftCircleReader(
   m_outputDriftCircles.initialize(m_cfg.outputDriftCircles);
 }
 
-std::string ActsExamples::CsvDriftCircleReader::CsvDriftCircleReader::name() const {
+std::string ActsExamples::CsvDriftCircleReader::CsvDriftCircleReader::name()
+    const {
   return "CsvDriftCircleReader";
 }
 
@@ -61,14 +62,15 @@ ActsExamples::ProcessCode ActsExamples::CsvDriftCircleReader::read(
   MuonDriftCircleData data;
 
   while (reader.read(data)) {
-
     ActsFatras::Hit::Vector3 tube_pos{
         data.tubePositionx * Acts::UnitConstants::mm,
         data.tubePositiony * Acts::UnitConstants::mm,
-        data.tubePositionz * Acts::UnitConstants::mm
-    };
+        data.tubePositionz * Acts::UnitConstants::mm};
 
-    DriftCircles.push_back(DriftCircle(std::move(tube_pos),data.driftRadius, 0.0f,data.stationName, data.stationEta, data.stationPhi, data.multilayer,data.tubelayer, data.tube));
+    DriftCircles.push_back(DriftCircle(std::move(tube_pos), data.driftRadius,
+                                       0.0f, data.stationName, data.stationEta,
+                                       data.stationPhi, data.multilayer,
+                                       data.tubelayer, data.tube));
   }
 
   // write the ordered data to the EventStore (according to geometry_id).
