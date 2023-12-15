@@ -116,9 +116,9 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
     TrackInfo toAdd;
     toAdd.trackId = trackId;
     if (tracks.hasColumn(Acts::hashString("trackGroup"))) {
-      toAdd.seedId = seedNumber(track);
+      toAdd.seedID = seedNumber(track);
     } else {
-      toAdd.seedId = 0;
+      toAdd.seedID = 0;
     }
     toAdd.particleId = majorityParticleId;
     toAdd.nStates = track.nTrackStates();
@@ -199,7 +199,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
     // write the track info
     mos << trajState.trackId << ",";
-    mos << trajState.seedId << ",";
+    mos << trajState.seedID << ",";
     mos << trajState.particleId << ",";
     mos << trajState.nStates << ",";
     mos << trajState.nMajorityHits << ",";
