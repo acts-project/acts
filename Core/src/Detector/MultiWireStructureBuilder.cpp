@@ -20,12 +20,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-<<<<<<< HEAD
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
-=======
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
->>>>>>> d47ca3f62 (sharing code, improving tests)
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
