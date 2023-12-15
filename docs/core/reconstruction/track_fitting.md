@@ -149,8 +149,8 @@ This chapter on the *GX2F* guides through:
 - Mathematical description of the base algorithm
 - Mathematical description of the multiple scattering
 - (coming soon) Mathematical description of the energy loss
-- Implementation in ACTS [wip]
-- Pros/Cons [wip]
+- Implementation in ACTS
+- Pros/Cons
 
 ### Mathematical description of the base algorithm
 
@@ -242,7 +242,7 @@ Since it only depends on the $[a_{kl}]$ of the last iteration, the *GX2F* does n
 
 ### Mathematical description of the multiple scattering
 
-To describe multiple scattering, the GX2F can fit the scattering angles as they were normal parameters.
+To describe multiple scattering, the *GX2F* can fit the scattering angles as they were normal parameters.
 Of course, fitting more parameters increases the dimensions of all matrices.
 This makes it computationally more expensive to.
 
@@ -303,7 +303,7 @@ The development work on the energy loss has not finished yet.
 
 The implementation is in some points similar to the KF, since the KF interface was chosen as a starting point.
 This makes it easier to replace both fitters with each other.
-The structure of the GX2F implementation follows coarsely the mathematical outline given above.
+The structure of the *GX2F* implementation follows coarsely the mathematical outline given above.
 It is best to start reading the implementation from `fit()`:
 1. Set up the fitter:
    - Actor
@@ -355,7 +355,7 @@ double relChi2changeCutOff = 1e-7;
 ```
 
 Common options like the geometry context or toggling of the energy loss are similar to the other fitters.
-For now there are three GX2F specific options:
+For now there are three *GX2F* specific options:
 1. `nUpdateMax` sets an abort condition for the parameter update as a maximum number of iterations allowed.
 We do not really want to use this condition, but it stops the fit in case of poor convergence.
 2. `zeroField` toggles the q/p-fit.
@@ -366,10 +366,14 @@ When this option is set to `true`, most of the matrices will omit the q/p-rows a
 We compare at each step of the iteration the current to the previous $\chi^2$.
 If the relative change is small enough, we finish the fit.
 
-### Pros/Cons [wip]
-:::{todo}
-Write *GX2F*: Pros/Cons
-:::
+### Pros/Cons
+
+There are some reasons for and against the *GX2F*.
+The biggest issue of the *GX2F* is its performance.
+Currently, the most expensive part is the propagation.
+Since we need to do a full propagation each iteration, we end up with at least 4-5 full propagation.
+This is a lot compared to the 2 propagations of the *KF*.
+However, since the *GX2F* is a global fitter, it can easier resolve left-right-ambiguous measurements, like in the TRT (Transition Radiation Tracker – straw tubes).
 
 [^billoir]: [https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf](https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf)
 [^cornelissen]: [https://cds.cern.ch/record/1005181/files/thesis-2006-072.pdf#page=80](https://cds.cern.ch/record/1005181/files/thesis-2006-072.pdf#page=80)
