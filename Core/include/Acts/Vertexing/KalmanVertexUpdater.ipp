@@ -14,6 +14,7 @@ template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::updateVertexWithTrack(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk) {
   std::pair<double, double> fitQuality = vtx.fitQuality();
-  detail::updateVertexWithTrack(vtx.fullPosition(), vtx.fullCovariance(), fitQuality, trk, 1, nDimVertex);
+  detail::updateVertexWithTrack(vtx.fullPosition(), vtx.fullCovariance(),
+                                fitQuality, trk, 1, nDimVertex);
   vtx.setFitQuality(fitQuality);
 }
