@@ -91,7 +91,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
     m_cfg.geoIdGenerator->assignGeometryId(cache, *dVolume);
   }
 
-  // Assign the proto material if congifured to do so
+  // Assign the proto material if configured to do so
   for (auto [ip, bDescription] : m_cfg.portalMaterialBinning) {
     if (portalContainer.find(ip) != portalContainer.end()) {
       auto bd = detail::ProtoMaterialHelper::attachProtoMaterial(
