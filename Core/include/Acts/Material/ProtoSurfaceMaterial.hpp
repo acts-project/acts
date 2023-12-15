@@ -34,7 +34,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   ProtoSurfaceMaterialT() = default;
 
   /// Constructor with BinningType
-  /// @param binningType a binning description for the material map binning
+  /// @param binning a binning description for the material map binning
   /// @param mappingType is the type of surface mapping associated to the surface
   ProtoSurfaceMaterialT(const BinningType& binning,
                         MappingType mappingType = MappingType::Default)
@@ -79,8 +79,6 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Return method for full material description of the Surface - from local
   /// coordinates
   ///
-  /// @param lp is local positioning vector
-  ///
   /// @return will return dummy material
   const MaterialSlab& materialSlab(const Vector2& /*unused*/) const final {
     return (m_materialSlab);
@@ -89,17 +87,12 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Return method for full material description of the Surface - from the
   /// global coordinates
   ///
-  /// @param gp is the global positioning vector
-  ///
   /// @return will return dummy material
   const MaterialSlab& materialSlab(const Vector3& /*unused*/) const final {
     return (m_materialSlab);
   }
 
   /// Direct access via bins to the MaterialSlab
-  ///
-  /// @param ib0 indicates the first bin
-  /// @param ib1 indicates the second bin
   ///
   /// @return will return dummy material
   const MaterialSlab& materialSlab(std::size_t /*unused*/,
@@ -108,6 +101,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes
+  ///
+  /// @param sl is the output stream
   std::ostream& toStream(std::ostream& sl) const final {
     sl << "Acts::ProtoSurfaceMaterial : " << std::endl;
     sl << m_binning.toString() << std::endl;
