@@ -147,7 +147,7 @@ But we can also use scattering angles, energy loss, ... as residuals.
 
 This chapter on the *GX2F* guides through:
 - Mathematical description of the base algorithm
-- Mathematical description of the multiple scattering [wip]
+- Mathematical description of the multiple scattering
 - (coming soon) Mathematical description of the energy loss
 - Implementation in ACTS [wip]
 - Pros/Cons [wip]
@@ -240,11 +240,54 @@ $$
 
 Since it only depends on the $[a_{kl}]$ of the last iteration, the *GX2F* does not need an initial estimate for the covariance.
 
-### Mathematical description of the multiple scattering [wip]
+### Mathematical description of the multiple scattering
 
-:::{todo}
-Write *GX2F*: Mathematical description of the multiple scattering
-:::
+To describe multiple scattering, the GX2F can fit the scattering angles as they were normal parameters.
+Of course, fitting more parameters increases the dimensions of all matrices.
+This makes it computationally more expensive to.
+
+But first shortly recap on multiple scattering.
+To describe scattering, on a surface, only the two angles $\theta$ and $\phi$ are needed, where:
+- $\theta$ is the angle between the extrapolation of the incoming trajectory and the scattered trajectory
+- $\phi$ is the rotation around the extrapolation of the incoming trajectory
+
+This description is only valid for thin materials.
+To model thicker materials, one could in theory add multiple thin materials together.
+It can be shown, that it is enough to two sets of $\theta$ and $\phi$ on both sides of the material.
+We could name them $\theta_{in}$, $\theta_{out}$, $\phi_{in}$, and $\phi_{out}$.
+But in the end they are just multiple parameters in our fit.
+That's why we will only look at $\theta$ and $\phi$ (like for thin materials).
+
+By defining residuals and covariances for the scattering angles, we can put them into our $\chi^2$ function.
+For the residuals we choose (since the expected angle is 0)
+
+$$
+r_s = \begin{cases}
+         0 - \theta_s(\vec\alpha) \\
+         0 - \sin(\theta_{loc})\phi_s(\vec\alpha)
+      \end{cases}
+$$
+
+and for the covariances we use the Highland form [^cornelissen] as
+
+$$
+\sigma_{scat} = \frac{13.6 \text{MeV}}{\beta c p} Z\prime \sqrt{\frac{x}{X_0}} \left( 1 + 0.038 \ln{\frac{x}{X_0}} \right)
+$$
+
+with
+- $x$ ... material layer with thickness
+- $X_0$ ... radiation length
+- $p$ ... particle momentum
+- $Z\prime$ ... charge number
+- $\beta c$ ... velocity
+
+Combining those terms we can write our $\chi^2$ function including multiple scattering as
+
+$$
+\chi^2 = \sum_{i=1}^N \frac{r_i^2}{\sigma_i^2} + \sum_{s}^S \left(\frac{\theta_s^2}{\sigma_s^2} + \frac{\sin^2{(\theta_{loc})}\phi_s^2}{\sigma_s^2}\right)
+$$
+
+with $\theta_{loc}$ the angle between incoming trajectory and normal of the surface. (We cannot have angle information $\phi$ if we are perpendicular.) Note, that both angles have the same covariance.
 
 ### (coming soon) Mathematical description of the energy loss [wip]
 
@@ -253,7 +296,6 @@ Write *GX2F*: Mathematical description of the energy loss
 
 The development work on the energy loss has not finished yet.
 :::
-
 
 ### Implementation in ACTS [wip]
 
@@ -266,4 +308,5 @@ Write *GX2F*: Implementation in ACTS
 Write *GX2F*: Pros/Cons
 :::
 
-[^billoir]: https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf
+[^billoir]: [https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf](https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf)
+[^cornelissen]: [https://cds.cern.ch/record/1005181/files/thesis-2006-072.pdf#page=80](https://cds.cern.ch/record/1005181/files/thesis-2006-072.pdf#page=80)
