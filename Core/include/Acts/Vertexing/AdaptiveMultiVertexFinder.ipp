@@ -185,8 +185,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     }
   } else {
     currentConstraint.setFullPosition(seedVertex.fullPosition());
-    currentConstraint.setFullCovariance(SquareMatrix4::Identity() *
-                                        m_cfg.looseConstrValue);
+    currentConstraint.setFullCovariance(m_cfg.initialVariances.asDiagonal());
     currentConstraint.setFitQuality(m_cfg.defaultConstrFitQuality);
   }
 }
@@ -208,17 +207,25 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
 
   auto estRes = m_cfg.ipEstimator.getImpactParameters(
       m_extractParameters(*track), newVtx, vertexingOptions.geoContext,
-      vertexingOptions.magFieldContext);
+      vertexingOptions.magFieldContext, m_cfg.useTime);
   if (!estRes.ok()) {
     return estRes.error();
   }
 
   ImpactParametersAndSigma ipas = *estRes;
 
+  // TODO: throw error when encountering negative standard deviations
+  double chi2Time = 0;
+  if (m_cfg.useTime) {
+    if (ipas.sigmaDeltaT.value() > 0) {
+      chi2Time = std::pow(ipas.deltaT.value() / ipas.sigmaDeltaT.value(), 2);
+    }
+  }
+
   double significance = 0.;
   if (ipas.sigmaD0 > 0 && ipas.sigmaZ0 > 0) {
     significance = std::sqrt(std::pow(ipas.d0 / ipas.sigmaD0, 2) +
-                             std::pow(ipas.z0 / ipas.sigmaZ0, 2));
+                             std::pow(ipas.z0 / ipas.sigmaZ0, 2) + chi2Time);
   }
 
   return significance;
@@ -507,8 +514,6 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const std::vector<Vertex<InputTrack_t>*>& allVertices) const -> bool {
   const Vector4& candidatePos = vtx.fullPosition();
   const SquareMatrix4& candidateCov = vtx.fullCovariance();
-  const double candidateZPos = candidatePos[eZ];
-  const double candidateZCov = candidateCov(eZ, eZ);
 
   for (const auto otherVtx : allVertices) {
     if (&vtx == otherVtx) {
@@ -516,30 +521,40 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     }
     const Vector4& otherPos = otherVtx->fullPosition();
     const SquareMatrix4& otherCov = otherVtx->fullCovariance();
-    const double otherZPos = otherPos[eZ];
-    const double otherZCov = otherCov(eZ, eZ);
-
-    const Vector4 deltaPos = otherPos - candidatePos;
-    const double deltaZPos = otherZPos - candidateZPos;
-    const double sumCovZ = otherZCov + candidateZCov;
 
     double significance = 0;
     if (!m_cfg.do3dSplitting) {
-      if (sumCovZ <= 0) {
+      const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
+      const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
+      if (sumVarZ <= 0) {
         // TODO FIXME this should never happen
         continue;
       }
       // Use only z significance
-      significance = std::abs(deltaZPos) / std::sqrt(sumCovZ);
+      significance = std::abs(deltaZPos) / std::sqrt(sumVarZ);
     } else {
-      // Use full 3d information for significance
-      SquareMatrix4 sumCov = candidateCov + otherCov;
-      auto sumCovInverse = safeInverse(sumCov);
-      if (!sumCovInverse) {
-        // TODO FIXME this should never happen
-        continue;
+      if (m_cfg.useTime) {
+        // Use 4D information for significance
+        const Vector4 deltaPos = otherPos - candidatePos;
+        SquareMatrix4 sumCov = candidateCov + otherCov;
+        auto sumCovInverse = safeInverse(sumCov);
+        if (!sumCovInverse) {
+          // TODO FIXME this should never happen
+          continue;
+        }
+        significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
+      } else {
+        // Use 3D information for significance
+        const Vector3 deltaPos = otherPos.head<3>() - candidatePos.head<3>();
+        SquareMatrix3 sumCov =
+            candidateCov.topLeftCorner<3, 3>() + otherCov.topLeftCorner<3, 3>();
+        auto sumCovInverse = safeInverse(sumCov);
+        if (!sumCovInverse) {
+          // TODO FIXME this should never happen
+          continue;
+        }
+        significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
       }
-      significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
     }
     if (significance < m_cfg.maxMergeVertexSignificance) {
       return true;
