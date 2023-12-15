@@ -186,7 +186,7 @@ endif()
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.35)
+set(_acts_actsvg_version 0.4.39)
 set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
