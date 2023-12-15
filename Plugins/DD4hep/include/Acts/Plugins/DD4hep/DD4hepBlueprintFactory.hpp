@@ -31,7 +31,7 @@
 namespace Acts {
 namespace Experimental {
 
-class DD4hepBlueprint {
+class DD4hepBlueprintFactory {
  public:
   /// @brief Nested config object
   struct Config {
@@ -48,9 +48,10 @@ class DD4hepBlueprint {
   ///
   /// @param cfg the config object
   /// @param mlogger the logging instance
-  DD4hepBlueprint(const Config& cfg,
-                  std::unique_ptr<const Logger> mlogger =
-                      getDefaultLogger("DD4hepBlueprint", Acts::Logging::INFO));
+  DD4hepBlueprintFactory(const Config& cfg,
+                         std::unique_ptr<const Logger> mlogger =
+                             getDefaultLogger("DD4hepBlueprintFactory",
+                                              Acts::Logging::INFO));
 
   /// @brief Create a blueprint from a DD4hep detector element
   ///
