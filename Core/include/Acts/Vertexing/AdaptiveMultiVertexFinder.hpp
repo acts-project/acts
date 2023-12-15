@@ -372,18 +372,19 @@ class AdaptiveMultiVertexFinder {
   /// @param fitterState The vertex fitter state
   ///
   /// @return Keep new vertex
-  bool keepNewVertex(Vertex<InputTrack_t>& vtx,
-                     const std::vector<Vertex<InputTrack_t>*>& allVertices,
-                     FitterState_t& fitterState) const;
+  Result<bool> keepNewVertex(
+      Vertex<InputTrack_t>& vtx,
+      const std::vector<Vertex<InputTrack_t>*>& allVertices,
+      FitterState_t& fitterState) const;
 
   /// @brief Method that evaluates if the new vertex candidate is
   /// merged with one of the previously found vertices
   ///
   /// @param vtx The vertex candidate
-  /// @param allVertices All so far found vertices
+  /// @param allVertices All vertices that were found so far
   ///
-  /// @return Vertex is merged
-  bool isMergedVertex(
+  /// @return Bool indicating whether the vertex is merged
+  Result<bool> isMergedVertex(
       const Vertex<InputTrack_t>& vtx,
       const std::vector<Vertex<InputTrack_t>*>& allVertices) const;
 

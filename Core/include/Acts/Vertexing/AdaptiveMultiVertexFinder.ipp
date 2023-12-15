@@ -118,9 +118,13 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       }
     }
     // MARK: fpeMaskBegin(FLTUND, 1, #2590)
-    bool keepVertex = isGoodVertex &&
-                      keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
+    auto keepNewVertexResult =
+        keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
     // MARK: fpeMaskEnd(FLTUND)
+    if (!keepNewVertexResult.ok()) {
+      return keepNewVertexResult.error();
+    }
+    bool keepVertex = isGoodVertex && *keepNewVertexResult;
     ACTS_DEBUG("New vertex will be saved: " << keepVertex);
 
     // Delete vertex from allVertices list again if it's not kept
@@ -483,7 +487,7 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
     Vertex<InputTrack_t>& vtx,
     const std::vector<Vertex<InputTrack_t>*>& allVertices,
-    FitterState_t& fitterState) const -> bool {
+    FitterState_t& fitterState) const -> Result<bool> {
   double contamination = 0.;
   double contaminationNum = 0;
   double contaminationDeNom = 0;
@@ -498,20 +502,26 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
     contamination = contaminationNum / contaminationDeNom;
   }
   if (contamination > m_cfg.maximumVertexContamination) {
-    return false;
+    return Result<bool>::success(false);
   }
 
-  if (isMergedVertex(vtx, allVertices)) {
-    return false;
+  auto isMergedVertexResult = isMergedVertex(vtx, allVertices);
+  if (!isMergedVertexResult.ok()) {
+    return Result<bool>::failure(isMergedVertexResult.error());
   }
 
-  return true;
+  if (*isMergedVertexResult) {
+    return Result<bool>::success(false);
+  }
+
+  return Result<bool>::success(true);
 }
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const Vertex<InputTrack_t>& vtx,
-    const std::vector<Vertex<InputTrack_t>*>& allVertices) const -> bool {
+    const std::vector<Vertex<InputTrack_t>*>& allVertices) const
+    -> Result<bool> {
   const Vector4& candidatePos = vtx.fullPosition();
   const SquareMatrix4& candidateCov = vtx.fullCovariance();
 
@@ -530,15 +540,16 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
                                  otherCov.bottomRightCorner<2, 2>();
         auto sumCovZTInverse = safeInverse(sumCovZT);
         if (!sumCovZTInverse) {
-          continue;
+          ACTS_ERROR("Vertex z-t covariance matrix is singular.");
+          return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         significance = std::sqrt(deltaZT.dot(*sumCovZTInverse * deltaZT));
       }
       const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
       const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
       if (sumVarZ <= 0) {
-        // TODO FIXME this should never happen
-        continue;
+        ACTS_ERROR("Variance of the vertex's z-coordinate is not positive.");
+        return Result<bool>::failure(VertexingError::SingularMatrix);
       }
       // Use only z significance
       significance = std::abs(deltaZPos) / std::sqrt(sumVarZ);
@@ -549,8 +560,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
         SquareMatrix4 sumCov = candidateCov + otherCov;
         auto sumCovInverse = safeInverse(sumCov);
         if (!sumCovInverse) {
-          // TODO FIXME this should never happen
-          continue;
+          ACTS_ERROR("Vertex 4D covariance matrix is singular.");
+          return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
       } else {
@@ -560,17 +571,20 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
             candidateCov.topLeftCorner<3, 3>() + otherCov.topLeftCorner<3, 3>();
         auto sumCovInverse = safeInverse(sumCov);
         if (!sumCovInverse) {
-          // TODO FIXME this should never happen
-          continue;
+          ACTS_ERROR("Vertex 3D covariance matrix is singular.");
+          return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
       }
     }
+    if (significance < 0.) {
+      return Result<bool>::failure(VertexingError::MatrixNotPositiveDefinite);
+    }
     if (significance < m_cfg.maxMergeVertexSignificance) {
-      return true;
+      return Result<bool>::success(true);
     }
   }
-  return false;
+  return Result<bool>::success(false);
 }
 
 template <typename vfitter_t, typename sfinder_t>
@@ -621,7 +635,7 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getVertexOutputList(
     const std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
     FitterState_t& fitterState) const
-    -> Acts::Result<std::vector<Vertex<InputTrack_t>>> {
+    -> Result<std::vector<Vertex<InputTrack_t>>> {
   std::vector<Vertex<InputTrack_t>> outputVec;
   for (auto vtx : allVerticesPtr) {
     auto& outVtx = *vtx;
