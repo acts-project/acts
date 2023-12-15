@@ -268,7 +268,9 @@ r_s = \begin{cases}
       \end{cases}
 $$
 
-and for the covariances we use the Highland form [^cornelissen] as
+with $\theta_{loc}$ the angle between incoming trajectory and normal of the surface.
+(We cannot have angle information $\phi$ if we are perpendicular.)
+For the covariances we use the Highland form [^cornelissen] as
 
 $$
 \sigma_{scat} = \frac{13.6 \text{MeV}}{\beta c p} Z\prime \sqrt{\frac{x}{X_0}} \left( 1 + 0.038 \ln{\frac{x}{X_0}} \right)
@@ -287,7 +289,7 @@ $$
 \chi^2 = \sum_{i=1}^N \frac{r_i^2}{\sigma_i^2} + \sum_{s}^S \left(\frac{\theta_s^2}{\sigma_s^2} + \frac{\sin^2{(\theta_{loc})}\phi_s^2}{\sigma_s^2}\right)
 $$
 
-with $\theta_{loc}$ the angle between incoming trajectory and normal of the surface. (We cannot have angle information $\phi$ if we are perpendicular.) Note, that both angles have the same covariance.
+Note, that both scattering angles have the same covariance.
 
 ### (coming soon) Mathematical description of the energy loss [wip]
 
@@ -297,11 +299,72 @@ Write *GX2F*: Mathematical description of the energy loss
 The development work on the energy loss has not finished yet.
 :::
 
-### Implementation in ACTS [wip]
+### Implementation in ACTS
 
-:::{todo}
-Write *GX2F*: Implementation in ACTS
-:::
+The implementation is in some points similar to the KF, since the KF interface was chosen as a starting point.
+This makes it easier to replace both fitters with each other.
+The structure of the GX2F implementation follows coarsely the mathematical outline given above.
+It is best to start reading the implementation from `fit()`:
+1. Set up the fitter:
+   - Actor
+   - Aborter
+   - Propagator
+   - Variables we need longer than one iteration
+2. Iterate
+   1. Update parameters
+   2. Propagate through geometry
+   3. Collect:
+       - Residuals
+       - Covariances
+       - Projected Jacobians
+   4. Loop over collection and calculate and sum over:
+       - $\chi^2$
+       - $[a_{kl}]$
+       - $\vec b$
+   5. Solve $[a_{kl}] \vec{\delta\alpha}_n = \vec b$
+   6. Check for convergence
+3. Calculate covariance of the final parameters
+4. Prepare and return the final track
+
+#### Configuration
+
+Here is a simplified example of the configuration of the fitter.
+
+```cpp
+template <typename traj_t>
+struct Gx2FitterOptions {
+Gx2FitterOptions( ... ) : ... {}
+
+Gx2FitterOptions() = delete;
+
+... 
+//common options:
+// geoContext, magFieldContext, calibrationContext, extensions,
+// propagatorPlainOptions, referenceSurface, multipleScattering,
+// energyLoss, freeToBoundCorrection
+
+/// Max number of iterations during the fit (abort condition)
+size_t nUpdateMax = 5;
+
+/// Disables the QoP fit in case of missing B-field
+bool zeroField = false;
+
+/// Check for convergence (abort condition). Set to 0 to skip.
+double relChi2changeCutOff = 1e-7;
+};
+```
+
+Common options like the geometry context or toggling of the energy loss are similar to the other fitters.
+For now there are three GX2F specific options:
+1. `nUpdateMax` sets an abort condition for the parameter update as a maximum number of iterations allowed.
+We do not really want to use this condition, but it stops the fit in case of poor convergence.
+2. `zeroField` toggles the q/p-fit.
+If there is no magnetic field, we get no q/p-information.
+This would crash the fitter when needing matrix inverses.
+When this option is set to `true`, most of the matrices will omit the q/p-rows and -columns.
+3. `relChi2changeCutOff` is the desired convergence criterion.
+We compare at each step of the iteration the current to the previous $\chi^2$.
+If the relative change is small enough, we finish the fit.
 
 ### Pros/Cons [wip]
 :::{todo}
