@@ -591,7 +591,7 @@ void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
     dd4hep::DetElement childDetElement = child.second;
     dd4hep::DetType type{childDetElement.typeFlag()};
     if (childDetElement.type() == "compound") {
-      // Check if the compound is exluded from assembly
+      // Check if the compound is excluded from assembly
       // This is needed to eventually exclude compounds of pixel, strip, etc.
       // from barrel / endcap parsing
       if (getParamOr<bool>("acts_legacy_assembly", childDetElement, true)) {
