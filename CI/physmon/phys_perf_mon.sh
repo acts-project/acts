@@ -173,7 +173,7 @@ function full_chain() {
         "AMVF ${suffix}" \
         amvf_${suffix}
 
-    if [ $suffix == seeded || $suffix == truth_smeared]; then
+    if [[ $suffix == seeded || $suffix == truth_smeared ]]; then
 	    Examples/Scripts/generic_plotter.py \
             $outdir/performance_amvf_gridseeder_${suffix}.root \
             vertexing \
