@@ -167,7 +167,7 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
              stationDict.at(detailedInfo.stationName).c_str(),
              (int)detailedInfo.stationEta, (int)detailedInfo.stationPhi));
     m_outCanvas->cd();
-    int maxHitsAsInt = static_cast<int>(houghPlane.maxHits()); 
+    int maxHitsAsInt = static_cast<int>(houghPlane.maxHits());
     houghHistoForPlot.SetContour(maxHitsAsInt + 1);
     for (int k = 0; k < maxHitsAsInt + 1; ++k) {
       houghHistoForPlot.SetContourLevel(k, k - 0.5);
