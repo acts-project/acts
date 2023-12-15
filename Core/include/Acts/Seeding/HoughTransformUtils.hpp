@@ -339,7 +339,7 @@ class IslandsAroundMax {
 
   /// @brief main peak finder method.
   /// @param plane: The filled hough plane to search
-  /// @ranges: The axis ranges used for mapping between parameter space and bins.
+  /// @param ranges: The axis ranges used for mapping between parameter space and bins.
   /// @return List of the found maxima
   std::vector<Maximum> findPeaks(const HoughPlane<identifier_t>& plane,
                                  const houghAxisRanges& ranges);
