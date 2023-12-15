@@ -26,5 +26,5 @@ if "__main__" == __name__:
 
     # Context and options
     geoContext = acts.GeometryContext()
-    cOptions = DD4hepDetectorOptions(logLevel=acts.logging.INFO, emulateToGraph="")
+    cOptions = DD4hepDetectorOptions(logLevel=acts.logging.VERBOSE, emulateToGraph="")
     [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
