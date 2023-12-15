@@ -84,7 +84,7 @@ def runGeometry(
             jmw = JsonMaterialWriter(
                 level=acts.logging.VERBOSE,
                 converterCfg=jmConverterCfg,
-                fileName=os.path.join(outputDir, "json/geometry-map"),
+                fileName=os.path.join(outputDir, "geometry-map"),
                 writeFormat=JsonFormat.Json,
             )
 
