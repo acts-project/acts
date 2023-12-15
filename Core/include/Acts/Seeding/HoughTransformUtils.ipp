@@ -9,17 +9,17 @@
 template <class identifier_t>
 template <class PointType>
 void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fill(
-    const PointType& measurement, const houghAxisRanges& axisRanges,
-    lineParametrisation<PointType> linePar,
-    lineParametrisation<PointType> widthPar, const identifier_t& identifier,
-    unsigned layer, yieldType weight) {
+    const PointType& measurement, const HoughAxisRanges& axisRanges,
+    LineParametrisation<PointType> linePar,
+    LineParametrisation<PointType> widthPar, const identifier_t& identifier,
+    unsigned layer, YieldType weight) {
   // loop over all bins in the first coordinate to populate the line
   for (std::size_t xBin = 0; xBin < m_cfg.nBinsX; xBin++) {
     // get the x-coordinate for the given bin
     auto x = binCenter(axisRanges.xMin, axisRanges.xMax, m_cfg.nBinsX, xBin);
     // now evaluate the line equation provided by the user
-    coordType y = linePar(x, measurement);
-    coordType dy = widthPar(x, measurement);
+    CoordType y = linePar(x, measurement);
+    CoordType dy = widthPar(x, measurement);
     // translate the y-coordinate range to a bin range
     int yBinDown =
         binIndex(axisRanges.yMin, axisRanges.yMax, m_cfg.nBinsY, y - dy);
@@ -37,7 +37,7 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fill(
 
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
-    const identifier_t& identifier, unsigned layer, yieldType weight) {
+    const identifier_t& identifier, unsigned layer, YieldType weight) {
   // add the hit to the list of hits in the cell
   if (m_hits.insert(identifier).second) {
     // if new, increment the weighted hit counter
@@ -75,8 +75,8 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
   // add content to the cell
   m_houghHist(binX, binY).fill(identifier, layer, w);
   // and update our cached maxima
-  yieldType nLayers = m_houghHist(binX, binY).nLayers();
-  yieldType nHits = m_houghHist(binX, binY).nHits();
+  YieldType nLayers = m_houghHist(binX, binY).nLayers();
+  YieldType nHits = m_houghHist(binX, binY).nHits();
   if (nLayers > m_maxLayers) {
     m_maxLayers = nLayers;
     m_maxLocLayers = {binX, binY};
@@ -194,16 +194,16 @@ std::vector<typename Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     identifier_t>::Maximum>
 Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     identifier_t>::findPeaks(const HoughPlane<identifier_t>& plane,
-                             const houghAxisRanges& ranges) {
+                             const HoughAxisRanges& ranges) {
   // check the global maximum hit count in the plane
-  yieldType max = plane.maxHits();
+  YieldType max = plane.maxHits();
   // and obtain the fraction of the max that is our cutoff for island formation
-  yieldType min = std::max(m_cfg.threshold, m_cfg.fractionCutoff * max);
+  YieldType min = std::max(m_cfg.threshold, m_cfg.fractionCutoff * max);
   // book a list for the candidates and the maxima
   std::vector<std::pair<std::size_t, std::size_t>> candidates;
   std::vector<Maximum> maxima;
   // keep track of the yields in each non empty cell
-  std::map<std::pair<std::size_t, std::size_t>, yieldType> yieldMap;
+  std::map<std::pair<std::size_t, std::size_t>, YieldType> yieldMap;
 
   // now loop over all non empty bins
   for (auto [x, y] : plane.getNonEmptyBins()) {
@@ -235,9 +235,9 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     if (yieldMap[cand] < min)
       continue;
     // translate to parameter space for overlap veto
-    coordType xCand =
+    CoordType xCand =
         binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), cand.first);
-    coordType yCand =
+    CoordType yCand =
         binCenter(ranges.yMin, ranges.yMax, plane.nBinsY(), cand.second);
     // check if we are too close to a previously found maximum
     bool goodSpacing = true;
@@ -265,24 +265,24 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
       continue;
     // We found an island
     Maximum maximum;
-    coordType max_x = 0;
-    coordType max_y = 0;
-    coordType pos_den = 0;
-    coordType ymax = -std::numeric_limits<coordType>::max();
-    coordType ymin = std::numeric_limits<coordType>::max();
-    coordType xmax = -std::numeric_limits<coordType>::max();
-    coordType xmin = std::numeric_limits<coordType>::max();
+    CoordType max_x = 0;
+    CoordType max_y = 0;
+    CoordType pos_den = 0;
+    CoordType ymax = -std::numeric_limits<CoordType>::max();
+    CoordType ymin = std::numeric_limits<CoordType>::max();
+    CoordType xmax = -std::numeric_limits<CoordType>::max();
+    CoordType xmin = std::numeric_limits<CoordType>::max();
     // loop over cells in the island and get the weighted mean position.
     // Also collect all hit identifiers in the island and the maximum
     // extent (within the count threshold!) of the island
     for (auto& [xBin, yBin] : solution) {
       const auto& hidIds = plane.hitIds(xBin, yBin);
       maximum.hitIdentifiers.insert(hidIds.cbegin(), hidIds.cend());
-      coordType xHit =
+      CoordType xHit =
           binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), xBin);
-      coordType yHit =
+      CoordType yHit =
           binCenter(ranges.yMin, ranges.yMax, plane.nBinsY(), yBin);
-      yieldType nHits = plane.nHits(xBin, yBin);
+      YieldType nHits = plane.nHits(xBin, yBin);
       max_x += xHit * nHits;
       max_y += yHit * nHits;
       pos_den += nHits;
@@ -311,8 +311,8 @@ void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
     extendMaximum(
         std::vector<std::pair<std::size_t, std::size_t>>& inMaximum,
         std::vector<std::pair<std::size_t, std::size_t>>& toExplore,
-        yieldType threshold,
-        std::map<std::pair<std::size_t, std::size_t>, yieldType>& yieldMap) {
+        YieldType threshold,
+        std::map<std::pair<std::size_t, std::size_t>, YieldType>& yieldMap) {
   // in this call, we explore the last element of the toExplore list.
   // Fetch it and pop it from the vector.
   auto nextCand = toExplore.back();

@@ -70,7 +70,7 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
 
   // and map the hough plane to parameter ranges.
   // The first coordinate is tan(theta), the second is z0 in mm
-  Acts::HoughTransformUtils::houghAxisRanges axisRanges{-3., 3., -2000., 2000.};
+  Acts::HoughTransformUtils::HoughAxisRanges axisRanges{-3., 3., -2000., 2000.};
 
   // create the functions parametrising the hough space lines for drift circles.
   // Note that there are two solutions for each drift circle and angle

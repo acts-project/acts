@@ -11,6 +11,8 @@
 // @brief Implements a set of tools to
 /// implement a hough transform.
 
+
+#pragma once
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -23,17 +25,15 @@
 
 #include "HoughVectors.hpp"
 
-#pragma once
-
 namespace Acts {
 namespace HoughTransformUtils {
 
 /// this type is responsible for encoding the parameters of our hough space
-using coordType = double;
+using CoordType = double;
 
 // this type is used to encode hit counts.
 // Floating point to allow hit weights to be applied
-using yieldType = float;
+using YieldType = float;
 
 /// @brief this function represents a mapping of a coordinate point in detector space to a line in
 /// hough space. Given the value of the first hough coordinate, it shall return
@@ -41,18 +41,18 @@ using yieldType = float;
 /// Should be implemented by the user.
 /// @tparam PointType: The class representing a point in detector space (can differ between implementations)
 template <class PointType>
-using lineParametrisation =
-    std::function<coordType(coordType, const PointType&)>;
+using LineParametrisation =
+    std::function<CoordType(CoordType, const PointType&)>;
 
 /// @brief struct to define the ranges of the hough histogram.
 /// Used to move between parameter and bin index coordinates.
 /// Disconnected from the hough plane binning to be able to re-use
 /// a plane with a given binning for several parameter ranges
-struct houghAxisRanges {
-  coordType xMin = 0.0f;  // minimum value of the first coordinate
-  coordType xMax = 0.0f;  // maximum value of the first coordinate
-  coordType yMin = 0.0f;  // minimum value of the second coordinate
-  coordType yMax = 0.0f;  // maximum value of the second coordinate
+struct HoughAxisRanges {
+  CoordType xMin = 0.0f;  // minimum value of the first coordinate
+  CoordType xMax = 0.0f;  // maximum value of the first coordinate
+  CoordType yMin = 0.0f;  // minimum value of the second coordinate
+  CoordType yMax = 0.0f;  // maximum value of the second coordinate
 };
 
 /// convenience functions to link bin indices to axis coordinates
@@ -109,11 +109,11 @@ class HoughCell {
   /// @param layer: Layer of the hit (used when counting layers)
   /// @param weight: Optional weight to assign to the hit
   void fill(const identifier_t& identifier, unsigned layer,
-            yieldType weight = 1.);
+            YieldType weight = 1.);
   /// @brief access the number of layers with hits compatible with this cell
-  yieldType nLayers() const { return m_nLayers; }
+  YieldType nLayers() const { return m_nLayers; }
   /// @brief access the number of unique hits compatible with this cell
-  yieldType nHits() const { return m_nHits; }
+  YieldType nHits() const { return m_nHits; }
   /// @brief access the set of layers compatible with this cell
   const std::unordered_set<unsigned>& layers() const { return m_layers; }
   /// @brief access the set of unique hits compatible with this cell
@@ -124,9 +124,9 @@ class HoughCell {
  private:
   /// data members
 
-  yieldType m_nLayers =
+  YieldType m_nLayers =
       0;                  // (weighted) number of layers with hits on this cell
-  yieldType m_nHits = 0;  // (weighted) number of unique hits on this cell
+  YieldType m_nHits = 0;  // (weighted) number of unique hits on this cell
   std::unordered_set<unsigned> m_layers =
       {};  // set of layers with hits on this cell
   std::unordered_set<identifier_t> m_hits =
@@ -169,11 +169,11 @@ class HoughPlane {
   /// @param layer: A layer index for this hit
   /// @param weight: An optional weight to assign to this hit
   template <class PointType>
-  void fill(const PointType& measurement, const houghAxisRanges& axisRanges,
-            lineParametrisation<PointType> linePar,
-            lineParametrisation<PointType> widthPar,
+  void fill(const PointType& measurement, const HoughAxisRanges& axisRanges,
+            LineParametrisation<PointType> linePar,
+            LineParametrisation<PointType> widthPar,
             const identifier_t& identifier, unsigned layer = 0,
-            yieldType weight = 1.0f);
+            YieldType weight = 1.0f);
   /// @brief resets the contents of the grid. Can be used to avoid reallocating the histogram
   /// when switching regions / (sub)detectors
   void reset();
@@ -193,7 +193,7 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighed) number of layers that have hits for this cell
-  yieldType nLayers(std::size_t xBin, std::size_t yBin) const {
+  YieldType nLayers(std::size_t xBin, std::size_t yBin) const {
     return m_houghHist(xBin, yBin).nLayers();
   }
 
@@ -209,7 +209,7 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighted) number of hits for this cell
-  yieldType nHits(std::size_t xBin, std::size_t yBin) const {
+  YieldType nHits(std::size_t xBin, std::size_t yBin) const {
     return m_houghHist(xBin, yBin).nHits();
   }
 
@@ -220,7 +220,7 @@ class HoughPlane {
 
   /// @brief get the maximum number of (weighted) hits seen in a single
   /// cell across the entire histrogram.
-  yieldType maxHits() const { return m_maxHits; }
+  YieldType maxHits() const { return m_maxHits; }
 
   /// @brief get the list of cells with non-zero content.
   /// Useful for peak-finders in sparse data
@@ -237,7 +237,7 @@ class HoughPlane {
 
   /// @brief get the maximum number of (weighted) layers with hits  seen
   /// in a single cell across the entire histrogram.
-  yieldType maxLayers() const { return m_maxLayers; }
+  YieldType maxLayers() const { return m_maxLayers; }
 
   /// @brief get the bin indices of the cell containing the largest number
   /// of (weighted) layers with hits across the entire histogram
@@ -256,8 +256,8 @@ class HoughPlane {
   void fillBin(std::size_t binX, std::size_t binY,
                const identifier_t& identifier, unsigned layer, double w = 1.0f);
 
-  yieldType m_maxHits = 0.0f;    // track the maximum number of hits seen
-  yieldType m_maxLayers = 0.0f;  // track the maximum number of layers seen
+  YieldType m_maxHits = 0.0f;    // track the maximum number of hits seen
+  YieldType m_maxLayers = 0.0f;  // track the maximum number of layers seen
   std::pair<std::size_t, std::size_t> m_maxLocHits = {
       0, 0};  // track the location of the maximum in hits
   std::pair<std::size_t, std::size_t> m_maxLocLayers = {
@@ -272,7 +272,7 @@ class HoughPlane {
 namespace PeakFinders {
 /// configuration for the LayerGuidedCombinatoric peak finder
 struct LayerGuidedCombinatoricConfig {
-  yieldType threshold = 3.0f;  // min number of layers to obtain a maximum
+  YieldType threshold = 3.0f;  // min number of layers to obtain a maximum
   int localMaxWindowSize = 0;  // Only create candidates from a local maximum
 };
 
@@ -313,11 +313,11 @@ class LayerGuidedCombinatoric {
 };
 /// @brief Configuration for the IslandsAroundMax peak finder
 struct IslandsAroundMaxConfig {
-  yieldType threshold =
+  YieldType threshold =
       3.0f;  // min number of weigted hits required in a maximum
-  yieldType fractionCutoff =
+  YieldType fractionCutoff =
       0;  // Fraction of the global maximum at which to cut off maxima
-  std::pair<coordType, coordType> minSpacingBetweenPeaks = {
+  std::pair<CoordType, CoordType> minSpacingBetweenPeaks = {
       0.0f, 0.0f};  // minimum distance of a new peak from existing peaks in
                     // parameter space
 };
@@ -333,10 +333,10 @@ class IslandsAroundMax {
   /// @brief data struct representing a local maximum.
   /// Comes with a position estimate and a list of hits within the island
   struct Maximum {
-    coordType x = 0;   // x value of the maximum
-    coordType y = 0;   // y value of the maximum
-    coordType wx = 0;  // x width of the maximum
-    coordType wy = 0;  // y width of the maximum
+    CoordType x = 0;   // x value of the maximum
+    CoordType y = 0;   // y value of the maximum
+    CoordType wx = 0;  // x width of the maximum
+    CoordType wy = 0;  // y width of the maximum
     std::unordered_set<identifier_t> hitIdentifiers =
         {};  // identifiers of contributing hits
   };
@@ -349,7 +349,7 @@ class IslandsAroundMax {
   /// @param ranges: The axis ranges used for mapping between parameter space and bins.
   /// @return List of the found maxima
   std::vector<Maximum> findPeaks(const HoughPlane<identifier_t>& plane,
-                                 const houghAxisRanges& ranges);
+                                 const HoughAxisRanges& ranges);
 
  private:
   /// @brief method to incrementally grow an island by adding adjacent cells
@@ -362,8 +362,8 @@ class IslandsAroundMax {
   void extendMaximum(
       std::vector<std::pair<std::size_t, std::size_t>>& inMaximum,
       std::vector<std::pair<std::size_t, std::size_t>>& toExplore,
-      yieldType threshold,
-      std::map<std::pair<std::size_t, std::size_t>, yieldType>& yieldMap);
+      YieldType threshold,
+      std::map<std::pair<std::size_t, std::size_t>, YieldType>& yieldMap);
 
   IslandsAroundMaxConfig m_cfg;  // configuration data object
 
