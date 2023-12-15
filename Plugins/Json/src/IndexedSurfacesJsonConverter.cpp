@@ -8,12 +8,7 @@
 
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
 
-<<<<<<< HEAD
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
-=======
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
->>>>>>> d47ca3f62 (sharing code, improving tests)
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
