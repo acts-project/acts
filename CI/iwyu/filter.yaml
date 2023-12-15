@@ -1,5 +1,5 @@
 remove_lines:
-  # ignore unexiting std
+  # ignore if not existing in std
   - "^#include <new>"
   - "^#include <bits/"
   - "^#include <ext/"
@@ -8,7 +8,7 @@ remove_lines:
   - "namespace Eigen {"
   # ignore boost
   - "^(- )?#include <boost/"
-  # don remove ipp
+  # don't remove ipp
   - "^- #include [<\"].*\\.ipp"
   # ignore pybind11
   - "^(- )?#include <pybind11/"
@@ -21,7 +21,7 @@ replace_lines:
   - "^#include <unistd\\.h>": "#include <cunistd>"
   - "^#include <stdint\\.h>": "#include <cstdint>"
   - "^#include <stdlib.h>": "#include <cstdlib>"
-  # don use ipp
+  # don't use ipp
   - "^#include ([<\"].*)\\.ipp": "#include \\1.hpp"
 
 ignore_files:

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/TypeList.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
 #include <array>
@@ -297,7 +298,30 @@ using VarClosedVarOpen = VarVar<Acts::detail::AxisBoundaryType::Closed,
 using VarClosedVarClosed = VarVar<Acts::detail::AxisBoundaryType::Closed,
                                   Acts::detail::AxisBoundaryType::Closed>;
 
+// Generate the possible axes in this case
+using PossibleAxes =
+    TypeList<EqBound, EqOpen, EqClosed,
+             // All 1D Var  options
+             VarBound, VarOpen, VarClosed,
+             // All 2D EqEq options
+             EqBoundEqBound, EqBoundEqOpen, EqBoundEqClosed, EqOpenEqBound,
+             EqOpenEqOpen, EqOpenEqClosed, EqClosedEqBound, EqClosedEqOpen,
+             EqClosedEqClosed,
+             // All 2D EqVar options
+             EqBoundVarBound, EqBoundVarOpen, EqBoundVarClosed, EqOpenVarBound,
+             EqOpenVarOpen, EqOpenVarClosed, EqClosedVarBound, EqClosedVarOpen,
+             EqClosedVarClosed,
+             // All 2D VarEq options
+             VarBoundEqBound, VarBoundEqOpen, VarBoundEqClosed, VarOpenEqBound,
+             VarOpenEqOpen, VarOpenEqClosed, VarClosedEqBound, VarClosedEqOpen,
+             VarClosedEqClosed,
+             // All 2D VarEq options
+             VarBoundVarBound, VarBoundVarOpen, VarBoundVarClosed,
+             VarOpenVarBound, VarOpenVarOpen, VarOpenVarClosed,
+             VarClosedVarBound, VarClosedVarOpen, VarClosedVarClosed>;
+
 }  // namespace GridAxisGenerators
 }  // namespace detail
+
 }  // namespace Experimental
 }  // namespace Acts

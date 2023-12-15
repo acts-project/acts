@@ -48,7 +48,7 @@ struct VertexInfo {
   // Vector of all tracks that are currently assigned to vertex
   std::vector<const input_track_t*> trackLinks;
 
-  std::map<const input_track_t*, BoundTrackParameters> impactParams3D;
+  std::map<const input_track_t*, const BoundTrackParameters> impactParams3D;
 };
 
 }  // namespace Acts

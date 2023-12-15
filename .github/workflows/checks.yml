@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - name: Install black
         run: pip install black==22.3.0
       - name: Run black format check
@@ -44,6 +44,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
           sudo apt-get install -y git
@@ -53,6 +55,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
           CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
@@ -68,6 +72,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
           CI/check_end_of_file.py . --exclude "thirdparty/*" --reject-multiple-newlines --github
@@ -77,7 +83,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - name: Check
         run: >
           CI/check_size_t.py . --exclude "thirdparty/*"
@@ -93,6 +99,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
           CI/check_smearing_config.py .
@@ -101,6 +109,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
       - name: Check
         run: >
           docs/parse_cmake_options.py CMakeLists.txt --write docs/getting_started.md --verify
@@ -109,6 +119,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
       - name: Install codespell
         run: >
           pip install codespell==2.2.5
@@ -130,9 +142,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
       - name: Install dependencies
         run: >
           pip install -r CI/requirements_fpe_masks.txt
       - name: Check
         run: >
           CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}
+  unused_files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - name: Check
+        run: >
+          CI/check_unused_files.py

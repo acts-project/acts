@@ -25,7 +25,6 @@ namespace Acts {
 class PlanarBounds;
 }  // namespace Acts
 
-using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
 
 namespace Acts {

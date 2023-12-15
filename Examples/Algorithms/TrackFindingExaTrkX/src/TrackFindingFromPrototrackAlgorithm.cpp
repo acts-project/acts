@@ -162,7 +162,9 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
     nTracksPerSeeds.push_back(tracksForSeed.size());
 
     for (auto& track : tracksForSeed) {
-      seedNumber(track) = nSeed;
+      // Set the seed number, this number decrease by 1 since the seed number
+      // has already been updated
+      seedNumber(track) = nSeed - 1;
     }
   }
 

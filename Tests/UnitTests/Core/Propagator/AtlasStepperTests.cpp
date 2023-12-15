@@ -561,11 +561,11 @@ BOOST_AUTO_TEST_CASE(StepSize) {
   // TODO figure out why this fails and what it should be
   // BOOST_CHECK_EQUAL(stepper.overstepLimit(state), tolerance);
 
-  stepper.setStepSize(state, -5_cm);
+  stepper.updateStepSize(state, -5_cm, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(state.stepSize.value(), -5_cm);
 
-  stepper.releaseStepSize(state);
+  stepper.releaseStepSize(state, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 

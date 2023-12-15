@@ -52,14 +52,11 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
     const std::vector<double>& moduleHalfLength) {
   // calculate the radii
   std::vector<double> radii;
-  // calculate the radial borders
-  std::vector<double> radialBoarders;
   // the radial span of the disc
   double deltaR = outerRadius - innerRadius;
   // quick exits
   if (discBinning.size() == 1) {
     radii.push_back(0.5 * (innerRadius + outerRadius));
-    radialBoarders = {innerRadius, outerRadius};
   } else {
     double totalLength = 0;
     // sum up the total length
@@ -72,8 +69,6 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
     double lastR = innerRadius;
     double lastHl = 0.;
     double lastOl = 0.;
-    // remember the radial boarders
-    radialBoarders.push_back(innerRadius);
     // now calculate
     for (auto& mhlength : moduleHalfLength) {
       // calculate the radius
@@ -81,8 +76,6 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
       lastR = radii[radii.size() - 1];
       lastOl = rOverlap;
       lastHl = mhlength;
-      // and register the radial boarder
-      radialBoarders.push_back(lastR + 2 * lastHl - 0.5 * lastOl);
     }
   }
   // now prepare the return method

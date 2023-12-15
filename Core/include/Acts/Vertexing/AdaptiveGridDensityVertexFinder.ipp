@@ -1,13 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <int trkGridSize, typename vfitter_t>
-auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
+template <typename vfitter_t>
+auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
@@ -56,7 +56,8 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
   }
 
   double z = 0;
-  double width = 0;
+  double t = 0;
+  double zWidth = 0;
   if (!state.mainDensityMap.empty()) {
     if (!m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
@@ -66,6 +67,7 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
         return maxZTRes.error();
       }
       z = (*maxZTRes).first;
+      t = (*maxZTRes).second;
     } else {
       // Get z value of highest density bin and width
       auto maxZTResAndWidth =
@@ -75,20 +77,22 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
         return maxZTResAndWidth.error();
       }
       z = (*maxZTResAndWidth).first.first;
-      width = (*maxZTResAndWidth).second;
+      t = (*maxZTResAndWidth).first.second;
+      zWidth = (*maxZTResAndWidth).second;
     }
   }
 
-  // Construct output vertex
-  Vector3 seedPos = vertexingOptions.constraint.position() + Vector3(0., 0., z);
+  // Construct output vertex, t will be 0 if temporalTrkGridSize == 1
+  Vector4 seedPos =
+      vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, t);
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
   SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
-  if (width != 0.) {
+  if (zWidth != 0.) {
     // Use z-constraint from seed width
-    seedCov(2, 2) = width * width;
+    seedCov(2, 2) = zWidth * zWidth;
   }
 
   returnVertex.setFullCovariance(seedCov);
@@ -98,9 +102,9 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
   return seedVec;
 }
 
-template <int trkGridSize, typename vfitter_t>
-auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::
-    doesPassTrackSelection(const BoundTrackParameters& trk) const -> bool {
+template <typename vfitter_t>
+auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::doesPassTrackSelection(
+    const BoundTrackParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];

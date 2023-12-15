@@ -1237,7 +1237,7 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
     //using Grid3Cl_t = Grid<double, EAxisClosed, EAxisClosed, EAxisClosed>;
     EAxisClosed   aCl(0.0, 1.0, 10u);
     EAxisClosed   bCl(0.0, 1.0, 5u);
-    EAxisClosed   cCl(0.0, 1.0, 3u);
+    // EAxisClosed   cCl(0.0, 1.0, 3u);
     Grid1Cl_t g1Cl(std::make_tuple(aCl));
     Grid2Cl_t g2Cl(std::make_tuple(std::move(aCl), std::move(bCl)));
 
@@ -1268,7 +1268,7 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
 
     EAxisOpen  aOp(0.0, 1.0, 10u);
     EAxisOpen  bOp(0.0, 1.0, 5u);
-    EAxisOpen  cOp(0.0, 1.0, 3u);
+    // EAxisOpen  cOp(0.0, 1.0, 3u);
     Grid1Op_t g1Op(std::make_tuple(aOp));
     Grid2Op_t g2Op(std::make_tuple(std::move(aOp), std::move(bOp)));
 

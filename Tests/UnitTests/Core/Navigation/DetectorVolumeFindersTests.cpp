@@ -16,7 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
   g.atPosition(std::array<Acts::ActsScalar, 1u>{50.}) = 1u;
   g.atPosition(std::array<Acts::ActsScalar, 1u>{150.}) = 2u;
 
-  Acts::Experimental::IndexedDetectorVolumeImpl<decltype(g)> idv(std::move(g),
-                                                                 {Acts::binR});
+  Acts::Experimental::IndexedDetectorVolumesImpl<decltype(g)> idv(std::move(g),
+                                                                  {Acts::binR});
 
   // Cylinder 0
   nState.position = Acts::Vector3(5., 0., 0.);

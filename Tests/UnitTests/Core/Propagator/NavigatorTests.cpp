@@ -50,8 +50,6 @@ class Layer;
 struct FreeToBoundCorrection;
 }  // namespace Acts
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
@@ -159,9 +157,9 @@ struct PropagatorState {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
-    void setStepSize(State& state, double stepSize,
-                     ConstrainedStep::Type stype = ConstrainedStep::actor,
-                     bool release = true) const {
+    void updateStepSize(State& state, double stepSize,
+                        ConstrainedStep::Type stype,
+                        bool release = true) const {
       state.previousStepSize = state.stepSize.value();
       state.stepSize.update(stepSize, stype, release);
     }
@@ -170,8 +168,8 @@ struct PropagatorState {
       return state.stepSize.value(stype);
     }
 
-    void releaseStepSize(State& state) const {
-      state.stepSize.release(ConstrainedStep::actor);
+    void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
+      state.stepSize.release(stype);
     }
 
     std::string outputStepSize(const State& state) const {
@@ -510,7 +508,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK_EQUAL(state.navigation.navLayerIndex, 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayer().position());
+  double beamPipeR = perp(state.navigation.navLayer().first.position());
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);

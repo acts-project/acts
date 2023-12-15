@@ -16,7 +16,7 @@ from rich.emoji import Emoji
 from rich.table import Table
 
 
-from item import Item, ItemCollection
+from item import ItemCollection
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
 
     data = []
     with args.report.open() as fh:
-        data = ItemCollection(__root__=json.load(fh)).__root__
+        data = ItemCollection(root=json.load(fh)).root
         for item in data:
             if args.strip_prefix_path and not item.path.is_absolute:
                 item.path = item.path.relative_to(args.strip_prefix_path)

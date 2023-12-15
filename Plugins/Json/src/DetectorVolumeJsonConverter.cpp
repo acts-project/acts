@@ -12,7 +12,7 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
@@ -62,7 +62,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
   jVolume["surfaces"] = jSurfaces;
   // And its surface navigation delegates
   nlohmann::json jSurfacesDelegate =
-      IndexedSurfacesJsonConverter::toJson(volume.surfaceCandidatesUpdator());
+      IndexedSurfacesJsonConverter::toJson(volume.surfaceCandidatesUpdater());
   jVolume["surface_navigation"] = jSurfacesDelegate;
 
   // Write the sub volumes
@@ -124,7 +124,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
   nlohmann::json jSurfaces;
   for (const auto& s : volume.surfaces()) {
     auto jSurface =
-        SurfaceJsonConverter::toJson(gctx, *s, options.surfaceOptions);
+        SurfaceJsonConverter::toJsonDetray(gctx, *s, options.surfaceOptions);
     DetrayJsonHelper::addVolumeLink(jSurface["mask"], vIndex);
     jSurfaces.push_back(jSurface);
   }

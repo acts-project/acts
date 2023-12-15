@@ -67,29 +67,33 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(1._GeV, 30._GeV);
+std::uniform_real_distribution<double> pTDist(1._GeV, 30._GeV);
 // Track phi distribution
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
 // Track theta distribution
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
-std::uniform_real_distribution<> qDist(-1, 1);
+std::uniform_real_distribution<double> qDist(-1, 1);
+// Distribution of track time (relative to vertex time). Values are unrealistic
+// and only used for testing purposes.
+std::uniform_real_distribution<double> relTDist(-4_ps, 4_ps);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100._um);
+std::uniform_real_distribution<double> resIPDist(0., 100._um);
 // Track angular distribution
-std::uniform_real_distribution<> resAngDist(0., 0.1);
+std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
-// Number of tracks distritbution
-std::uniform_int_distribution<> nTracksDist(3, 10);
+std::uniform_real_distribution<double> resQoPDist(-0.1, 0.1);
+// Track time resolution distribution. Values are unrealistic and only used for
+// testing purposes.
+std::uniform_real_distribution<double> resTDist(0_ps, 8_ps);
 
 /// @brief Unit test for AdaptiveMultiVertexFitter
 ///
@@ -316,6 +320,146 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
                                         << vtxList.at(2).fullPosition());
 }
 
+/// @brief Unit test for fitting a 4D vertex position
+///
+BOOST_AUTO_TEST_CASE(time_fitting) {
+  // Set up RNG
+  int mySeed = 31415;
+  std::mt19937 gen(mySeed);
+
+  // Set up constant B-Field
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
+
+  // Set up EigenStepper
+  EigenStepper<> stepper(bField);
+
+  // Set up propagator with void navigator
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
+                                                          magFieldContext);
+
+  // IP 3D Estimator
+  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
+
+  IPEstimator::Config ip3dEstCfg(bField, propagator);
+  IPEstimator ip3dEst(ip3dEstCfg);
+
+  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::Config fitterCfg(
+      ip3dEst);
+
+  // Linearizer for BoundTrackParameters type test
+  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer linearizer(ltConfig);
+
+  // Test smoothing
+  fitterCfg.doSmoothing = true;
+  // Do time fit
+  fitterCfg.useTime = true;
+
+  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(
+      std::move(fitterCfg));
+
+  // Vertex position
+  double trueVtxTime = 40.0_ps;
+  Vector3 trueVtxPos(-0.15_mm, -0.1_mm, -1.5_mm);
+
+  // Seed position of the vertex
+  Vector4 vtxSeedPos(0.0_mm, 0.0_mm, -1.4_mm, 0.0_ps);
+
+  Vertex<BoundTrackParameters> vtx(vtxSeedPos);
+  // Set initial covariance matrix to a large value
+  SquareMatrix4 initialCovariance(SquareMatrix4::Identity() * 1e+8);
+  vtx.setFullCovariance(initialCovariance);
+
+  // Vector of all tracks
+  std::vector<BoundTrackParameters> trks;
+
+  unsigned int nTracks = 4;
+  for (unsigned int _ = 0; _ < nTracks; _++) {
+    // Construct positive or negative charge randomly
+    double q = qDist(gen) < 0 ? -1. : 1.;
+
+    // Track resolution
+    double resD0 = resIPDist(gen);
+    double resZ0 = resIPDist(gen);
+    double resPh = resAngDist(gen);
+    double resTh = resAngDist(gen);
+    double resQp = resQoPDist(gen);
+    double resT = resTDist(gen);
+
+    // Random diagonal covariance matrix
+    Covariance covMat;
+
+    // clang-format off
+    covMat <<
+      resD0 * resD0, 0., 0., 0., 0., 0.,
+      0., resZ0 * resZ0, 0., 0., 0., 0.,
+      0., 0., resPh * resPh, 0., 0., 0.,
+      0., 0., 0., resTh * resTh, 0., 0.,
+      0., 0., 0., 0., resQp * resQp, 0.,
+      0., 0., 0., 0., 0., resT * resT;
+    // clang-format on
+
+    // Random track parameters
+    BoundTrackParameters::ParametersVector paramVec;
+    paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
+        q / pTDist(gen), trueVtxTime + relTDist(gen);
+
+    std::shared_ptr<PerigeeSurface> perigeeSurface =
+        Surface::makeShared<PerigeeSurface>(trueVtxPos);
+
+    trks.emplace_back(perigeeSurface, paramVec, std::move(covMat),
+                      ParticleHypothesis::pion());
+  }
+
+  std::vector<const BoundTrackParameters*> trksPtr;
+  for (const auto& trk : trks) {
+    trksPtr.push_back(&trk);
+  }
+
+  // Prepare fitter state
+  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
+      *bField, magFieldContext);
+
+  for (const auto& trk : trks) {
+    ACTS_DEBUG("Track parameters:\n" << trk);
+    // Index of current vertex
+    state.vtxInfoMap[&vtx].trackLinks.push_back(&trk);
+    state.tracksAtVerticesMap.insert(
+        std::make_pair(std::make_pair(&trk, &vtx),
+                       TrackAtVertex<BoundTrackParameters>(1., trk, &trk)));
+  }
+
+  state.addVertexToMultiMap(vtx);
+
+  auto res = fitter.addVtxToFit(state, vtx, linearizer, vertexingOptions);
+
+  BOOST_CHECK(res.ok());
+
+  ACTS_DEBUG("Truth vertex position:  " << trueVtxPos.transpose());
+  ACTS_DEBUG("Fitted vertex position: " << vtx.position().transpose());
+
+  ACTS_DEBUG("Truth vertex time:  " << trueVtxTime);
+  ACTS_DEBUG("Fitted vertex time: " << vtx.time());
+
+  // Check that true vertex position and time approximately recovered
+  CHECK_CLOSE_ABS(trueVtxPos, vtx.position(), 60_um);
+  CHECK_CLOSE_ABS(trueVtxTime, vtx.time(), 2_ps);
+
+  const SquareMatrix4& vtxCov = vtx.fullCovariance();
+
+  ACTS_DEBUG("Vertex 4D covariance after the fit:\n" << vtxCov);
+
+  // Check that variances of the vertex position/time are positive
+  for (std::size_t i = 0; i <= 3; i++) {
+    BOOST_CHECK_GT(vtxCov(i, i), 0.);
+  }
+
+  // Check that the covariance matrix is approximately symmetric
+  CHECK_CLOSE_ABS(vtxCov - vtxCov.transpose(), SquareMatrix4::Zero(), 1e-5);
+}
+
 /// @brief Unit test for AdaptiveMultiVertexFitter
 /// based on Athena unit test, i.e. same setting and
 /// test values are used here
@@ -442,7 +586,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
                                    covMat2, ParticleHypothesis::pion())
           .value(),
   };
-  std::vector<Vertex<BoundTrackParameters>*> vtxList;
 
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
       *bField, magFieldContext);
@@ -457,7 +600,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Vertex<BoundTrackParameters> vtx1(vtxPos1);
 
   // Add to vertex list
-  vtxList.push_back(&vtx1);
+  state.vertexCollection.push_back(&vtx1);
 
   // The constraint vtx for vtx1
   Vertex<BoundTrackParameters> vtx1Constr(vtxPos1);
@@ -484,7 +627,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Vertex<BoundTrackParameters> vtx2(vtxPos2);
 
   // Add to vertex list
-  vtxList.push_back(&vtx2);
+  state.vertexCollection.push_back(&vtx2);
 
   // The constraint vtx for vtx2
   Vertex<BoundTrackParameters> vtx2Constr(vtxPos2);
@@ -513,7 +656,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   state.addVertexToMultiMap(vtx2);
 
   // Fit vertices
-  fitter.fit(state, vtxList, linearizer, vertexingOptions);
+  fitter.fit(state, linearizer, vertexingOptions);
 
   auto vtx1Fitted = state.vertexCollection.at(0);
   auto vtx1PosFitted = vtx1Fitted->position();

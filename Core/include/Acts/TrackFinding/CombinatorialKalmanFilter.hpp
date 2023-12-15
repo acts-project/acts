@@ -29,6 +29,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
@@ -85,8 +86,8 @@ struct CombinatorialKalmanFilterExtensions {
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
           candidate_container_t& trackStates, bool&, const Logger&)>;
-  using BranchStopper =
-      Delegate<bool(const CombinatorialKalmanFilterTipState&)>;
+  using BranchStopper = Delegate<bool(const CombinatorialKalmanFilterTipState&,
+                                      typename traj_t::TrackStateProxy&)>;
 
   /// The Calibrator is a dedicated calibration algorithm that allows
   /// to calibrate measurements using track information, this could be
@@ -109,7 +110,7 @@ struct CombinatorialKalmanFilterExtensions {
     calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
     updater.template connect<&detail::voidFitterUpdater<traj_t>>();
     smoother.template connect<&detail::voidFitterSmoother<traj_t>>();
-    branchStopper.connect<voidBranchStopper>();
+    branchStopper.template connect<voidBranchStopper>();
     measurementSelector.template connect<voidMeasurementSelector>();
   }
 
@@ -133,8 +134,10 @@ struct CombinatorialKalmanFilterExtensions {
   /// @param tipState The tip state to decide whether to stop (unused)
   /// @return false
   static bool voidBranchStopper(
-      const CombinatorialKalmanFilterTipState& tipState) {
+      const CombinatorialKalmanFilterTipState& tipState,
+      typename traj_t::TrackStateProxy& trackState) {
     (void)tipState;
+    (void)trackState;
     return false;
   }
 };
@@ -345,11 +348,12 @@ class CombinatorialKalmanFilter {
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<traj_t>;
 
-    /// The filter target surface
-    const Surface* filterTargetSurface = nullptr;
+    /// The filter target surface aborter
+    SurfaceReached filterTargetReached{std::numeric_limits<double>::lowest()};
 
-    /// The smoothing target surface
-    const Surface* smoothingTargetSurface = nullptr;
+    /// The smoothing target surface aborter
+    SurfaceReached smoothingTargetReached{
+        std::numeric_limits<double>::lowest()};
 
     /// Strategy to propagate to reference surface
     CombinatorialKalmanFilterTargetSurfaceStrategy
@@ -391,11 +395,17 @@ class CombinatorialKalmanFilter {
 
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
-      if (!result.filtered && filterTargetSurface != nullptr &&
-          targetReached(state, stepper, navigator, *filterTargetSurface,
-                        logger())) {
+      // Initialize path limit reached aborter
+      if (result.pathLimitReached.internalLimit ==
+          std::numeric_limits<double>::max()) {
+        detail::setupLoopProtection(state, stepper, result.pathLimitReached,
+                                    true, logger());
+      }
+
+      if (!result.filtered &&
+          filterTargetReached(state, stepper, navigator, logger())) {
         navigator.navigationBreak(state.navigation, true);
-        stepper.releaseStepSize(state.stepping);
+        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       }
 
       // Update:
@@ -488,12 +498,19 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      if (endOfWorldReached(state, stepper, navigator, logger()) ||
-          result.pathLimitReached(state, stepper, navigator, logger())) {
-        navigator.targetReached(state.navigation, false);
-        if (result.activeTips.empty()) {
-          // we are already done
-        } else if (result.activeTips.size() == 1) {
+      bool isEndOfWorldReached =
+          endOfWorldReached(state, stepper, navigator, logger());
+      bool isPathLimitReached =
+          result.pathLimitReached(state, stepper, navigator, logger());
+      if (isEndOfWorldReached || isPathLimitReached) {
+        if (isEndOfWorldReached) {
+          ACTS_VERBOSE("End of world reached");
+        }
+        if (isPathLimitReached) {
+          ACTS_VERBOSE("Path limit reached");
+        }
+
+        if (result.activeTips.size() <= 1) {
           // this was the last track - we are done
           ACTS_VERBOSE("Kalman filtering finds "
                        << result.lastTrackIndices.size() << " tracks");
@@ -510,7 +527,7 @@ class CombinatorialKalmanFilter {
         // Return error if filtering finds no tracks
         if (result.lastTrackIndices.empty()) {
           // @TODO: Tracks like this should not be in the final output!
-          ACTS_WARNING("No tracks found");
+          ACTS_DEBUG("No tracks found");
           result.finished = true;
         } else {
           if (!smoothing) {
@@ -552,20 +569,18 @@ class CombinatorialKalmanFilter {
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
             bool isTargetReached =
-                (smoothingTargetSurface == nullptr) ||
-                targetReached(state, stepper, navigator,
-                              *smoothingTargetSurface, logger());
-            bool isPathLimitReached =
+                smoothingTargetReached(state, stepper, navigator, logger());
+            isPathLimitReached =
                 result.pathLimitReached(state, stepper, navigator, logger());
             if (result.smoothed && (isTargetReached || isPathLimitReached)) {
               ACTS_VERBOSE(
                   "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
 
-              if (smoothingTargetSurface != nullptr) {
+              if (smoothingTargetReached.surface != nullptr) {
                 // Transport & bind the parameter to the final surface
-                auto res =
-                    stepper.boundState(state.stepping, *smoothingTargetSurface);
+                auto res = stepper.boundState(state.stepping,
+                                              *smoothingTargetReached.surface);
                 if (!res.ok()) {
                   if (isPathLimitReached) {
                     ACTS_ERROR("Target surface not reached due to path limit: "
@@ -820,8 +835,11 @@ class CombinatorialKalmanFilter {
           currentTip = addNonSourcelinkState(stateMask, boundState, result,
                                              isSensitive, prevTip);
 
+          auto nonSourcelinkState =
+              result.fittedStates->getTrackState(currentTip);
+
           // Check the branch
-          if (!m_extensions.branchStopper(tipState)) {
+          if (!m_extensions.branchStopper(tipState, nonSourcelinkState)) {
             // Remember the active tip and its state
             result.activeTips.emplace_back(currentTip, tipState);
           } else {
@@ -1039,7 +1057,7 @@ class CombinatorialKalmanFilter {
         }
 
         // Check if need to stop this branch
-        if (!m_extensions.branchStopper(tipState)) {
+        if (!m_extensions.branchStopper(tipState, trackState)) {
           // Put tipstate back into active tips to continue with it
           result.activeTips.emplace_back(currentTip, tipState);
           // Record the number of branches on surface
@@ -1224,7 +1242,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Return in case no target surface
-      if (smoothingTargetSurface == nullptr) {
+      if (smoothingTargetReached.surface == nullptr) {
         return Result<void>::success();
       }
 
@@ -1236,7 +1254,7 @@ class CombinatorialKalmanFilter {
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
-        return smoothingTargetSurface
+        return smoothingTargetReached.surface
             ->intersect(
                 state.geoContext, freeVector.segment<3>(eFreePos0),
                 state.options.direction * freeVector.segment<3>(eFreeDir0),
@@ -1328,9 +1346,6 @@ class CombinatorialKalmanFilter {
     /// The source link accessor
     source_link_accessor_t m_sourcelinkAccessor;
 
-    /// The Surface being targeted
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
-
     /// End of world aborter
     EndOfWorldReached endOfWorldReached;
 
@@ -1358,6 +1373,20 @@ class CombinatorialKalmanFilter {
       if (result.finished) {
         return true;
       }
+      return false;
+    }
+  };
+
+  /// Void path limit reached aborter to replace the default since the path
+  /// limit is handled in the CKF actor internally.
+  struct StubPathLimitReached {
+    double internalLimit{};
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    bool operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
+                    const navigator_t& /*unused*/,
+                    const Logger& /*unused*/) const {
       return false;
     }
   };
@@ -1417,8 +1446,9 @@ class CombinatorialKalmanFilter {
     // Catch the actor
     auto& combKalmanActor =
         propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
-    combKalmanActor.filterTargetSurface = tfOptions.filterTargetSurface;
-    combKalmanActor.smoothingTargetSurface = tfOptions.smoothingTargetSurface;
+    combKalmanActor.filterTargetReached.surface = tfOptions.filterTargetSurface;
+    combKalmanActor.smoothingTargetReached.surface =
+        tfOptions.smoothingTargetSurface;
     combKalmanActor.smoothingTargetSurfaceStrategy =
         tfOptions.smoothingTargetSurfaceStrategy;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
@@ -1447,7 +1477,8 @@ class CombinatorialKalmanFilter {
     r.stateBuffer = stateBuffer;
     r.stateBuffer->clear();
 
-    auto result = m_propagator.template propagate(
+    auto result = m_propagator.template propagate<
+        start_parameters_t, decltype(propOptions), PathLimitReached>(
         initialParameters, propOptions, false, std::move(inputResult));
 
     if (!result.ok()) {

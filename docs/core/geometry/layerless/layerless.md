@@ -70,14 +70,14 @@ Illustration of a shared direct portal between two volumes, the arrows indicate 
 Illustration of a shared extended portal between several volumes, the arrows indicate the direction of attachment.
 :::
 
-The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitable `Acts::Experimental::DetectorVolumeUpdator` delegate.
+The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitable `Acts::Experimental::DetectorVolumeUpdater` delegate.
 
 ### The Detector volume object
 
 A detector volume has to contain:
 
 - a list of bounding portal objects (that can be shared with other volumes)
-- a navigation state updator as a `Acts::Experimental::SurfaceCandidatesUpdator` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
+- a navigation state updator as a `Acts::Experimental::SurfaceCandidatesUpdater` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
 - a unique name string
 
 :::{note}

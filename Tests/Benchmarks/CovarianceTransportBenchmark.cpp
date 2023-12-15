@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
       VectorHelpers::theta(direction), qop, time;
 
   std::minstd_rand rng;
-  std::uniform_real_distribution<> uniform(0.5, 0.95);
+  std::uniform_real_distribution<double> uniform(0.5, 0.95);
 
   unsigned int sillyCounter = 0;
 

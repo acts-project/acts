@@ -50,7 +50,6 @@ class Logger;
 }  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 using Acts::VectorHelpers::perp;
@@ -130,9 +129,6 @@ struct SurfaceObserver {
 };
 
 // Global definitions
-// The path limit abort
-using path_limit = PathLimitReached;
-
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
@@ -167,21 +163,24 @@ BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
 
 BOOST_DATA_TEST_CASE(
     cylinder_passage_observer_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.4_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 2,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 4,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_ns,
+                                                                  1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
@@ -226,21 +225,24 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_DATA_TEST_CASE(
     curvilinear_additive_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.4_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 2,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 4,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_ns,
+                                                                  1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
@@ -303,21 +305,24 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_DATA_TEST_CASE(
     cylinder_additive_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.4_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 2,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 4,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_ns,
+                                                                  1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;

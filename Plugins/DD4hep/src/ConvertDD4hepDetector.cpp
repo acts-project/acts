@@ -101,7 +101,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     auto volBuilder = volumeBuilder_dd4hep(
         subDetector, logger, bTypePhi, bTypeR, bTypeZ, layerEnvelopeR,
         layerEnvelopeZ, defaultLayerThickness);
-    if (volBuilder) {
+    if (volBuilder != nullptr) {
       // distinguish beam pipe
       if (volBuilder->getConfiguration().buildToRadiusZero) {
         // check if beam pipe is already present
@@ -122,7 +122,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     }
   }
   // Finally add the beam pipe
-  if (beamPipeVolumeBuilder) {
+  if (beamPipeVolumeBuilder != nullptr) {
     volumeBuilders.push_back(beamPipeVolumeBuilder);
   }
 

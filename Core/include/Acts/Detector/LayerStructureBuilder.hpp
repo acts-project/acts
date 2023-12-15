@@ -86,8 +86,16 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
     std::vector<ProtoBinning> binnings = {};
+    /// Optional extent (if already parsed), will trigger binning autorange
+    /// check
+    std::optional<Extent> extent = std::nullopt;
+    /// Minimum number of surfaces to build an internal structure
+    /// - otherwise the tryAll options is used
+    unsigned int nMinimalSurfaces = 4u;
     /// Polyhedron approximations
     unsigned int nSegments = 1u;
+    /// Full closed phi binning
+    bool fullPhiBinning = true;
     /// Extra information, mainly for screen output
     std::string auxiliary = "";
   };
@@ -104,17 +112,23 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   ///
   /// @param gctx the geometry context at the creation of the internal structure
   ///
+  /// This will take the surfaces from the surfaces provider and use the binning
+  /// description to create an internal indexed surface structure.
+  ///
+  /// @note if the configuration provides an extent, the range of the binning
+  ///      will be checked againstit and adapted if necessary
+  ///
   /// @return a consistent set of detector volume internals
   InternalStructure construct(const GeometryContext& gctx) const final;
 
  private:
-  /// configuration object
+  /// Configuration object
   Config m_cfg;
 
   /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
-  /// logging instance
+  /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 };
 

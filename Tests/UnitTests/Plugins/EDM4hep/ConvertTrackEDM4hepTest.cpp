@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   std::normal_distribution<double> gauss(0., 1.);
   std::uniform_real_distribution<double> f(-1, 1);
   std::uniform_real_distribution<double> r(0, 1);
-  std::uniform_int_distribution<unsigned int> nTracks(2, 20);
-  std::uniform_int_distribution<unsigned int> nTs(1, 20);
+  std::uniform_int_distribution<std::uint32_t> nTracks(2, 20);
+  std::uniform_int_distribution<std::uint32_t> nTs(1, 20);
   std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
   std::uniform_real_distribution<double> etaDist(-4, 4);
   std::uniform_real_distribution<double> ptDist(1_MeV, 10_GeV);
@@ -251,8 +251,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     return {par, cov};
   };
 
-  std::size_t numT = nTracks(rng);
-  for (std::size_t t = 0; t < numT; t++) {
+  std::uint32_t numT = nTracks(rng);
+  for (std::uint32_t t = 0; t < numT; t++) {
     auto track = tracks.getTrack(tracks.addTrack());
     {
       auto [par, cov] = genParams();
@@ -262,8 +262,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     track.setReferenceSurface(
         Acts::Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
 
-    std::size_t numTs = nTs(rng);
-    for (std::size_t i = 0; i < numTs; i++) {
+    std::uint32_t numTs = nTs(rng);
+    for (std::uint32_t i = 0; i < numTs; i++) {
       auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
       double crit = r(rng);
       if (crit < 0.1) {
