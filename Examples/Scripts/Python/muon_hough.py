@@ -5,11 +5,8 @@ import tempfile
 
 import pathlib, acts
 
-from acts.examples import (
-    CsvMuonSimHitReader,
-    CsvDriftCircleReader,
-    MuonHoughSeeder
-)
+from acts.examples import CsvMuonSimHitReader, CsvDriftCircleReader, MuonHoughSeeder
+
 # from acts.examples.reconstruction import (
 #     addSeeding,
 #     addStandardSeeding,
@@ -21,9 +18,8 @@ from acts.examples import (
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
 
- 
-def runHoughFromCsv(inDir,outputDir):
 
+def runHoughFromCsv(inDir, outputDir):
     # create temporary file with pixel SPs and run the seeding
 
     s = acts.examples.Sequencer(events=8, numThreads=1, logLevel=acts.logging.VERBOSE)
@@ -33,21 +29,21 @@ def runHoughFromCsv(inDir,outputDir):
         inputStem="MuonSimHit",
         inputDir=os.path.dirname(inDir),
         outputSimHits="MuonSimHits",
-        level=acts.logging.VERBOSE
-    )   
+        level=acts.logging.VERBOSE,
+    )
     dcReader = CsvDriftCircleReader(
         inputStem="MuonDriftCircle",
         inputDir=os.path.dirname(inDir),
         outputDriftCircles="MuonDriftCircles",
-        level=acts.logging.VERBOSE
+        level=acts.logging.VERBOSE,
     )
     # add csv reader
     s.addReader(evReader)
     s.addReader(dcReader)
     seeder = MuonHoughSeeder(
-        inSimHits = evReader.config.outputSimHits,
-        inDriftCircles = dcReader.config.outputDriftCircles,
-        level=acts.logging.VERBOSE
+        inSimHits=evReader.config.outputSimHits,
+        inDriftCircles=dcReader.config.outputDriftCircles,
+        level=acts.logging.VERBOSE,
     )
     s.addAlgorithm(seeder)
     s.run()
