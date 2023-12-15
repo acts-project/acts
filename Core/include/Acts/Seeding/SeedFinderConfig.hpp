@@ -45,11 +45,6 @@ struct SeedFinderConfig {
   /// Vector containing the z-bin edges for non equidistant binning in z
   std::vector<float> zBinEdges;
 
-  /// Number of z bins to skip during the search for middle space-points. This
-  /// is useful for removing the outermost bins and speeding up seeding. Should
-  /// be used in conjunction with zBinsCustomLooping (skipZMiddleBinSearch
-  /// determines the first N bins in zBinsCustomLooping to be avoided).
-  std::size_t skipZMiddleBinSearch = 0;
   /// Order of z bins to loop over when searching for SPs
   std::vector<std::size_t> zBinsCustomLooping = {};
 
