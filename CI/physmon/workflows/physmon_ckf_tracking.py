@@ -178,7 +178,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         # Use the adaptive grid vertex seeder in combination with the AMVF
         # To avoid having too many physmon cases, we only do this for the label
         # "seeded"
-        if label == "seeded":
+        if label in ["truth_smeared", "seeded"]:
             addVertexFitting(
                 s,
                 setup.field,
@@ -214,7 +214,11 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 "performance_ivf",
                 "performance_amvf",
             ]
-            + (["performance_amvf_gridseeder"] if label == "seeded" else [])
+            + (
+                ["performance_amvf_gridseeder"]
+                if label in ["truth_smeared", "seeded"]
+                else []
+            )
             + (
                 ["performance_seeding", "performance_ambi"]
                 if label in ["seeded", "orthogonal"]
