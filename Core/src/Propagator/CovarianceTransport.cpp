@@ -146,10 +146,10 @@ Acts::Result<Acts::BoundTrackParameters> Acts::boundToBoundConversion(
     Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
 
     FreeVector freeToPathDerivatives = FreeVector::Zero();
-    freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
+    // freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
 
-    freeToPathDerivatives.segment<3>(eFreeDir0) =
-        bField.cross(freePars.segment<3>(eFreeDir0));
+    // freeToPathDerivatives.segment<3>(eFreeDir0) =
+    // bField.cross(freePars.segment<3>(eFreeDir0));
 
     BoundMatrix boundToBoundJac = detail::boundToBoundTransportJacobian(
         gctx, freePars, boundToFreeJacobian, freeTransportJacobian,
