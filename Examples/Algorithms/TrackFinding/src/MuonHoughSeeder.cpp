@@ -167,13 +167,14 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
              stationDict.at(detailedInfo.stationName).c_str(),
              (int)detailedInfo.stationEta, (int)detailedInfo.stationPhi));
     m_outCanvas->cd();
-    houghHistoForPlot.SetContour(houghPlane.maxHits() + 1);
-    for (size_t k = 0; k < houghPlane.maxHits() + 1; ++k) {
+    int maxHitsAsInt = static_cast<int>(houghPlane.maxHits()); 
+    houghHistoForPlot.SetContour(maxHitsAsInt + 1);
+    for (int k = 0; k < maxHitsAsInt + 1; ++k) {
       houghHistoForPlot.SetContourLevel(k, k - 0.5);
     }
     std::vector<std::unique_ptr<TMarker>> markers;
     std::vector<std::unique_ptr<TBox>> boxes;
-    houghHistoForPlot.SetContourLevel(houghHistoForPlot.GetMaximum() + 1,
+    houghHistoForPlot.SetContourLevel(maxHitsAsInt + 1,
                                       houghHistoForPlot.GetMaximum() + 0.5);
     houghHistoForPlot.Draw("COLZ");
     // mark the true parameters
