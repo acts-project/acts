@@ -82,8 +82,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMuonSimHitReader::read(
     f.stationPhi = data.StationPhi;
     f.stationName = data.StationName;
 
-    unordered.push_back(
-        std::move(SimHit(compressId(f), data.pdgId, pos, mom, mom, -1)));
+    unordered.push_back(SimHit(compressId(f), data.pdgId, pos, mom, mom, -1));
   }
   SimHitContainer simHits;
   simHits.insert(unordered.begin(), unordered.end());
