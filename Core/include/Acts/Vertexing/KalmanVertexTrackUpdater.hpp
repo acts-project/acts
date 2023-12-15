@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
+#include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -35,9 +37,8 @@ namespace KalmanVertexTrackUpdater {
 ///
 /// @param track Track to update
 /// @param vtx Vertex `track` belongs to
-template <typename input_track_t, unsigned int nDimVertex>
-void update(TrackAtVertex<input_track_t>& track,
-            const Vertex<input_track_t>& vtx);
+void update(TrackAtVertexRef track, const Vector4& vtxPosFull,
+            const SquareMatrix4& vtxCovFull, unsigned int nDimVertex);
 
 namespace detail {
 
@@ -61,5 +62,3 @@ inline BoundMatrix calculateTrackCovariance(
 
 }  // Namespace KalmanVertexTrackUpdater
 }  // Namespace Acts
-
-#include "Acts/Vertexing/KalmanVertexTrackUpdater.ipp"
