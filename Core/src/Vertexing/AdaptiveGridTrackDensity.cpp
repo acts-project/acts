@@ -145,10 +145,6 @@ AdaptiveGridTrackDensity::getMaxZTPosition(DensityMap& densityMap) const {
   double maxZ = getSpatialBinCenter(bin.first);
   double maxT = getTemporalBinCenter(bin.second);
 
-  std::cout << "maxZ: " << maxZ << ", maxT: " << maxT << ", density: "
-            << densityMap.scaled(bin) * safeExp(-densityMap.exponentOffset)
-            << std::endl;
-
   return std::make_pair(maxZ, maxT);
 }
 
