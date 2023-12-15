@@ -578,6 +578,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
       }
     }
     if (significance < 0.) {
+      ACTS_ERROR(
+          "Found a negative significance (i.e., a negative chi2) when checking "
+          "if vertices are merged. This should never happen since the vertex "
+          "covariance should be positive definite, and thus its inverse "
+          "should be positive definite as well.");
       return Result<bool>::failure(VertexingError::MatrixNotPositiveDefinite);
     }
     if (significance < m_cfg.maxMergeVertexSignificance) {
