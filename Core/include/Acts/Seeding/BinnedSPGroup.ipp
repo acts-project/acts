@@ -54,10 +54,10 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
   std::size_t global_index =
       m_group->m_grid->globalBinFromLocalBins(localPosition);
 
-  boost::container::small_vector<std::size_t, 9> bottoms =
+  auto bottoms =
       m_group->m_bottomBinFinder->findBins(localPosition,
                                            *m_group->m_grid.get());
-  boost::container::small_vector<std::size_t, 9> tops =
+  auto tops =
       m_group->m_topBinFinder->findBins(localPosition,
                                         *m_group->m_grid.get());
 
