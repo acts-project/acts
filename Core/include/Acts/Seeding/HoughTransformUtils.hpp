@@ -50,7 +50,7 @@ using lineParametrisation =
 /// a plane with a given binning for several parameter ranges
 struct houghAxisRanges {
   coordType xMin = 0.0f;  // minimum value of the first coordinate
-  coordType xMax = 0.0f;  // maximim value of the first coordinate
+  coordType xMax = 0.0f;  // maximum value of the first coordinate
   coordType yMin = 0.0f;  // minimum value of the second coordinate
   coordType yMax = 0.0f;  // maximum value of the second coordinate
 };
