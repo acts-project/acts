@@ -20,11 +20,11 @@
 
 // Acts include(s).
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 
 // System include(s).
 #include <cassert>
@@ -61,9 +61,9 @@ int main(int argc, char* argv[]) {
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   // Create binned groups of these spacepoints.
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
+  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<TestSpacePoint>>(
       zBinNeighborsBottom, numPhiNeighbors);
-  auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<TestSpacePoint>>(
       zBinNeighborsTop, numPhiNeighbors);
 
   // Set up the seedFinder configuration.

@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
@@ -27,7 +27,7 @@ template <typename external_spacepoint_t>
 class BinnedSPGroup;
 
 /// @c BinnedSPGroupIterator Allows to iterate over all groups of bins
-/// a provided BinFinder can generate for each bin of a provided SPGrid
+/// a provided GridBinFinder can generate for each bin of a provided SPGrid
 
 /// SpacePointGrid is a very specific structure.
 /// We know it is 2D and what it contains
@@ -79,7 +79,7 @@ class BinnedSPGroupIterator {
 };
 
 /// @c BinnedSPGroup Provides access to begin and end BinnedSPGroupIterator
-/// for given BinFinders and SpacePointGrid.
+/// for given GridBinFinders and SpacePointGrid.
 /// Fulfills the range_expression interface.
 template <typename external_spacepoint_t>
 class BinnedSPGroup {
@@ -96,9 +96,9 @@ class BinnedSPGroup {
   BinnedSPGroup(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
       callable_t&& toGlobal,
-      std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>>
+      std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>>
           botBinFinder,
-      std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> tBinFinder,
+      std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
       Acts::Extent& rRangeSPExtent,
       const SeedFinderConfig<external_spacepoint_t>& _config,
@@ -129,11 +129,11 @@ class BinnedSPGroup {
   // grid with ownership of all InternalSpacePoint
   std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_grid{nullptr};
 
-  // BinFinder must return std::vector<Acts::Seeding::Bin> with content of
+  // GridBinFinder must return std::vector<Acts::Seeding::Bin> with content of
   // each bin sorted in r (ascending)
-  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_topBinFinder{
+  std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>> m_topBinFinder{
       nullptr};
-  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_bottomBinFinder{
+  std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>> m_bottomBinFinder{
       nullptr};
 
   // Order of z bins to loop over when searching for SPs

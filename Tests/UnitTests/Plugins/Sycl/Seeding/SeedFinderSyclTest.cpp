@@ -9,7 +9,6 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <chrono>
@@ -159,10 +159,10 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
+  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<SpacePoint>>(
+      Acts::GridBinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<SpacePoint>>(
+      Acts::GridBinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
   auto config = setupSeedFinderConfiguration<SpacePoint>();
   config = config.toInternalUnits().calculateDerivedQuantities();
   auto options = setupSeedFinderOptions();

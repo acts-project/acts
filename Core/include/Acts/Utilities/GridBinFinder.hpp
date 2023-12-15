@@ -23,13 +23,10 @@ namespace Acts {
 /// be top bins, which are assumed to be the same bins. Does not take
 /// interaction region into account to limit z-bins.
 template <typename external_spacepoint_t>
-class BinFinder {
+class GridBinFinder {
  public:
-  /// constructor
-  BinFinder() = delete;
-
-  BinFinder(const std::vector<std::pair<int, int>>& zBinNeighbors,
-            int numPhiNeighbors);
+  GridBinFinder(const std::vector<std::pair<int, int>>& zBinNeighbors,
+		int numPhiNeighbors);
 
   /// Return all bins that could contain space points that can be used with the
   /// space points in the bin with the provided indices to create seeds.
@@ -48,4 +45,4 @@ class BinFinder {
   int m_numPhiNeighbors = 1;
 };
 }  // namespace Acts
-#include "Acts/Seeding/BinFinder.ipp"
+#include "Acts/Utilities/GridBinFinder.ipp"

@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"

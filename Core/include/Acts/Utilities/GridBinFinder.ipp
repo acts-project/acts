@@ -7,13 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename external_spacepoint_t>
-Acts::BinFinder<external_spacepoint_t>::BinFinder(
+Acts::GridBinFinder<external_spacepoint_t>::GridBinFinder(
     const std::vector<std::pair<int, int>>& zBinNeighbors, int numPhiNeighbors)
     : m_zBinNeighbors(zBinNeighbors), m_numPhiNeighbors(numPhiNeighbors) {}
 
 template <typename external_spacepoint_t>
 boost::container::small_vector<std::size_t, 9>
-Acts::BinFinder<external_spacepoint_t>::findBins(
+Acts::GridBinFinder<external_spacepoint_t>::findBins(
     std::size_t phiBin, std::size_t zBin,
     const Acts::SpacePointGrid<external_spacepoint_t>* binnedSP) const {
   // if zBinNeighbors is not defined, get the indices using

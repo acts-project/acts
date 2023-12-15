@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -29,7 +29,7 @@
 
 namespace Acts {
 template <typename external_spacepoint_t>
-class BinFinder;
+class GridBinFinder;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -83,8 +83,8 @@ class SeedingAlgorithm final : public IAlgorithm {
 
  private:
   Acts::SeedFinder<SimSpacePoint> m_seedFinder;
-  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_bottomBinFinder;
-  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_topBinFinder;
+  std::shared_ptr<const Acts::GridBinFinder<SimSpacePoint>> m_bottomBinFinder;
+  std::shared_ptr<const Acts::GridBinFinder<SimSpacePoint>> m_topBinFinder;
   Config m_cfg;
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
