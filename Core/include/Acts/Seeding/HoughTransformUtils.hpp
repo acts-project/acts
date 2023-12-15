@@ -11,7 +11,6 @@
 // @brief Implements a set of tools to
 /// implement a hough transform.
 
-
 #pragma once
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -150,7 +149,7 @@ template <class identifier_t>
 class HoughPlane {
  public:
   /// @brief hough histogram representation as a 2D-indexable vector of hough cells
-  using HoughHist = vector2D<HoughCell<identifier_t>>;
+  using HoughHist = MultiIndexedVector2D<HoughCell<identifier_t>>;
 
   /// @brief instantiate the (empty) hough plane
   /// @param cfg: configuration

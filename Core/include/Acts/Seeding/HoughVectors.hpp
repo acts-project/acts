@@ -15,7 +15,7 @@
 #include <vector>
 
 template <typename T>
-class vector2D {
+class MultiIndexedVector2D {
  private:
   std::size_t m_d1, m_d2;
   std::vector<T> m_data;
@@ -27,11 +27,11 @@ class vector2D {
   std::unique_ptr<const Acts::Logger> m_logger;
 
  public:
-  vector2D() : m_d1(0), m_d2(0) {
+  MultiIndexedVector2D() : m_d1(0), m_d2(0) {
     m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
   }
 
-  vector2D(std::size_t d1, std::size_t d2, T const& t = T())
+  MultiIndexedVector2D(std::size_t d1, std::size_t d2, T const& t = T())
       : m_d1(d1), m_d2(d2), m_data(d1 * d2, t) {
     m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
   }
@@ -43,7 +43,7 @@ class vector2D {
     if (dim == 1) {
       return m_d2;
     } else {
-      ACTS_ERROR("vector2D: Argument to size() must be 0 or 1");
+      ACTS_ERROR("MultiIndexedVector2D: Argument to size() must be 0 or 1");
       return 0;
     }
   }
@@ -57,8 +57,8 @@ class vector2D {
   T& operator()(std::size_t i, std::size_t j) {
     if (i >= m_d1 || j >= m_d2) {
       std::stringstream s;
-      s << "vector2D out of bounds: request (" << i << "," << j << ") size ("
-        << m_d1 << "," << m_d2 << ")";
+      s << "MultiIndexedVector2D out of bounds: request (" << i << "," << j
+        << ") size (" << m_d1 << "," << m_d2 << ")";
       ACTS_ERROR(s.str());
     }
     return m_data[i * m_d2 + j];
@@ -70,8 +70,8 @@ class vector2D {
   T const& operator()(std::size_t i, std::size_t j) const {
     if (i >= m_d1 || j >= m_d2) {
       std::stringstream s;
-      s << "vector2D out of bounds: request (" << i << "," << j << ") size ("
-        << m_d1 << "," << m_d2 << ")";
+      s << "MultiIndexedVector2D out of bounds: request (" << i << "," << j
+        << ") size (" << m_d1 << "," << m_d2 << ")";
       ACTS_ERROR(s.str());
     }
     return m_data[i * m_d2 + j];
@@ -84,8 +84,8 @@ class vector2D {
   T* operator[](std::size_t i) {
     if (i >= m_d1) {
       std::stringstream s;
-      s << "vector2D out of bounds: request " << i << " size (" << m_d1 << ","
-        << m_d2 << ")";
+      s << "MultiIndexedVector2D out of bounds: request " << i << " size ("
+        << m_d1 << "," << m_d2 << ")";
       ACTS_ERROR(s.str());
     }
     return m_data.data() + (i * m_d2);
@@ -94,8 +94,8 @@ class vector2D {
   const T* operator[](std::size_t i) const {
     if (i >= m_d1) {
       std::stringstream s;
-      s << "vector2D out of bounds: request " << i << " size (" << m_d1 << ","
-        << m_d2 << ")";
+      s << "MultiIndexedVector2D out of bounds: request " << i << " size ("
+        << m_d1 << "," << m_d2 << ")";
       ACTS_ERROR(s.str());
     }
     return m_data.data() + (i * m_d2);
@@ -109,7 +109,7 @@ class vector2D {
 };
 
 template <typename T>
-class vector3D {
+class MultiIndexedVector3D {
  private:
   std::size_t m_d1, m_d2, m_d3;
   std::vector<T> m_data;
@@ -120,11 +120,12 @@ class vector3D {
   std::unique_ptr<const Acts::Logger> m_logger;
 
  public:
-  vector3D() : m_d1(0), m_d2(0), m_d3(0) {
+  MultiIndexedVector3D() : m_d1(0), m_d2(0), m_d3(0) {
     m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
   }
 
-  vector3D(std::size_t d1, std::size_t d2, std::size_t d3, T const& t = T())
+  MultiIndexedVector3D(std::size_t d1, std::size_t d2, std::size_t d3,
+                       T const& t = T())
       : m_d1(d1), m_d2(d2), m_d3(d3), m_data(d1 * d2 * d3, t) {
     m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
   }
@@ -132,8 +133,8 @@ class vector3D {
   T& operator()(std::size_t i, std::size_t j, std::size_t k) {
     if (i >= m_d1 || j >= m_d2 || k >= m_d3) {
       std::stringstream s;
-      s << "vector3D out of bounds: request (" << i << "," << j << "," << k
-        << ") size (" << m_d1 << "," << m_d2 << "," << m_d3 << ")";
+      s << "MultiIndexedVector3D out of bounds: request (" << i << "," << j
+        << "," << k << ") size (" << m_d1 << "," << m_d2 << "," << m_d3 << ")";
       ACTS_ERROR(s.str());
     }
     return m_data[i * m_d2 * m_d3 + j * m_d3 + k];
@@ -142,8 +143,8 @@ class vector3D {
   T const& operator()(std::size_t i, std::size_t j, std::size_t k) const {
     if (i >= m_d1 || j >= m_d2 || k >= m_d3) {
       std::stringstream s;
-      s << "vector3D out of bounds: request (" << i << "," << j << "," << k
-        << ") size (" << m_d1 << "," << m_d2 << "," << m_d3 << ")";
+      s << "MultiIndexedVector3D out of bounds: request (" << i << "," << j
+        << "," << k << ") size (" << m_d1 << "," << m_d2 << "," << m_d3 << ")";
       ACTS_ERROR(s.str());
     }
     return m_data[i * m_d2 * m_d3 + j * m_d3 + k];

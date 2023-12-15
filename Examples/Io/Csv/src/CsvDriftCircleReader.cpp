@@ -46,8 +46,8 @@ std::string ActsExamples::CsvDriftCircleReader::CsvDriftCircleReader::name()
   return "CsvDriftCircleReader";
 }
 
-std::pair<std::size_t, std::size_t> ActsExamples::CsvDriftCircleReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvDriftCircleReader::availableEvents() const {
   return m_eventsRange;
 }
 
