@@ -9,11 +9,8 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-<<<<<<< HEAD
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
-=======
->>>>>>> d47ca3f62 (sharing code, improving tests)
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Detector/detail/SupportHelper.hpp"
