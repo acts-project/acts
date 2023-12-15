@@ -1,51 +1,72 @@
 
-template <class identifier_t> template <class PointType>
+template <class identifier_t>
+template <class PointType>
 void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fill(
     const PointType& measurement, const houghAxisRanges& axisRanges,
     lineParametrisation<PointType> linePar,
-    lineParametrisation<PointType> widthPar, const identifier_t & identifier, unsigned layer,
-    yieldType weight) {
-  for (int xBin = 0; xBin < m_cfg.nBinsX; xBin++) {
+    lineParametrisation<PointType> widthPar, const identifier_t& identifier,
+    unsigned layer, yieldType weight) {
+  // loop over all bins in the first coordinate to populate the line 
+  for (size_t xBin = 0; xBin < m_cfg.nBinsX; xBin++) {
+    // get the x-coordinate for the given bin
     auto x = binCenter(axisRanges.xMin, axisRanges.xMax, m_cfg.nBinsX, xBin);
     // now evaluate the line equation provided by the user
     coordType y = linePar(x, measurement);
     coordType dy = widthPar(x, measurement);
-    auto yBinDown =
-        binIndex(axisRanges.yMin, axisRanges.yMax, m_cfg.nBinsY, y - dy);
-    auto yBinUp =
+    // translate the y-coordinate range to a bin range
+    int yBinDown = binIndex(axisRanges.yMin, axisRanges.yMax, m_cfg.nBinsY, y - dy);
+    int yBinUp =
         binIndex(axisRanges.yMin, axisRanges.yMax, m_cfg.nBinsY, y + dy);
+    // now we can loop over the bin range to fill the corresponding cells
     for (int yBin = yBinDown; yBin <= yBinUp; ++yBin) {
-      if (yBin >= m_cfg.nBinsY || yBin < 0)
-        continue;  // out of bounds
+      // skip 'out of bounds' cases
+      if (yBin >= static_cast<int>(m_cfg.nBinsY) || yBin < 0)
+        continue;  
       fillBin(xBin, yBin, identifier, layer, weight);
     }
   }
 }
 
-
-template <class identifier_t> void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(const identifier_t & identifier, unsigned layer, yieldType weight) {
+template <class identifier_t>
+void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
+    const identifier_t& identifier, unsigned layer, yieldType weight) {
+  // add the hit to the list of hits in the cell
   if (m_hits.insert(identifier).second) {
+    // if new, increment the weighted hit counter
     m_nHits += weight;
   }
+  // and to the same for layer counts
   if (m_layers.insert(layer).second) {
     m_nLayers += weight;
   }
 }
-template <class identifier_t> 
+template <class identifier_t>
 void Acts::HoughTransformUtils::HoughCell<identifier_t>::reset() {
-  if (m_nLayers > 0) m_layers.clear();
-  if (m_nHits > 0) m_hits.clear();
-  m_hits.clear();
+  // avoid expensive clear calls on empty cells
+  if (m_nLayers > 0)
+    m_layers.clear();
+  if (m_nHits > 0)
+    m_hits.clear();
   m_nHits = 0;
   m_nLayers = 0;
 }
 
-template <class identifier_t> Acts::HoughTransformUtils::HoughPlane<identifier_t>::HoughPlane(const HoughPlaneConfig& cfg) : m_cfg(cfg) {
+template <class identifier_t>
+Acts::HoughTransformUtils::HoughPlane<identifier_t>::HoughPlane(
+    const HoughPlaneConfig& cfg)
+    : m_cfg(cfg) {
+  // instantiate our histogram. 
   m_houghHist = HoughHist(m_cfg.nBinsX, m_cfg.nBinsY);
 }
-template <class identifier_t> void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(int binX, int binY, const identifier_t & identifier, unsigned layer,
-                         double w) {
+template <class identifier_t>
+void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
+    size_t binX, size_t binY, const identifier_t& identifier, unsigned layer,
+    double w) {
+  // mark that this bin was filled with non trivial content 
+  m_touchedBins.insert({binX, binY});
+  // add content to the cell
   m_houghHist(binX, binY).fill(identifier, layer, w);
+  // and update our cached maxima
   yieldType nLayers = m_houghHist(binX, binY).nLayers();
   yieldType nHits = m_houghHist(binX, binY).nHits();
   if (nLayers > m_maxLayers) {
@@ -58,171 +79,203 @@ template <class identifier_t> void Acts::HoughTransformUtils::HoughPlane<identif
   }
 }
 
-template <class identifier_t> void Acts::HoughTransformUtils::HoughPlane<identifier_t>::reset() {
-  for (size_t i =0; i < m_cfg.nBinsX; ++i){
-    for (size_t j =0; j < m_cfg.nBinsY;++j){
-      m_houghHist(i,j).reset();
-    }
+template <class identifier_t>
+void Acts::HoughTransformUtils::HoughPlane<identifier_t>::reset() {
+  // reset all bins that were previously filled 
+  // avoid calling this on empty cells to save time
+  for (auto bin : m_touchedBins) {
+    m_houghHist(bin).reset();
   }
+  // don't forget to reset our cached maxima
   m_maxHits = 0.;
   m_maxLayers = 0.;
+  // and reset the list of nontrivial bins
+  m_touchedBins.clear();
 }
-// NYI
-template <class identifier_t> void Acts::HoughTransformUtils::HoughPlane<identifier_t>::drawHoughHist(std::string const&) {}
 
-template <class identifier_t> Acts::HoughTransformUtils::HoughPeakFinder_LayerGuidedCombinatoric<identifier_t>::
-    HoughPeakFinder_LayerGuidedCombinatoric(
-        const HoughPeakFinder_LayerGuidedCombinatoricConfig& cfg)
+template <class identifier_t>
+Acts::HoughTransformUtils::PeakFinders::LayerGuidedCombinatoric<identifier_t>::
+    LayerGuidedCombinatoric(const LayerGuidedCombinatoricConfig& cfg)
     : m_cfg(cfg) {}
 
-template <class identifier_t> std::vector<typename Acts::HoughTransformUtils::HoughPeakFinder_LayerGuidedCombinatoric<identifier_t>::Maximum>
-Acts::HoughTransformUtils::HoughPeakFinder_LayerGuidedCombinatoric<identifier_t>::findPeaks(
-    const HoughPlane<identifier_t>& plane) const {
-  std::vector<HoughPeakFinder_LayerGuidedCombinatoric<identifier_t>::Maximum> maxima;
-
-  for (int y = 0; y < plane.nBinsY(); y++) {
-    for (int x = 0; x < plane.nBinsX(); x++) {
-      if (passThreshold(plane, x, y)) {
-        Maximum max;
-        max.hitIdentifiers = plane.hitIds(x, y);
-        maxima.push_back(max);
-      }
+template <class identifier_t>
+std::vector<typename Acts::HoughTransformUtils::PeakFinders::
+                LayerGuidedCombinatoric<identifier_t>::Maximum>
+Acts::HoughTransformUtils::PeakFinders::LayerGuidedCombinatoric<
+    identifier_t>::findPeaks(const HoughPlane<identifier_t>& plane) const {
+  // book the vector for the maxima
+  std::vector<PeakFinders::LayerGuidedCombinatoric<identifier_t>::Maximum>
+      maxima;
+  // loop over the non empty bins 
+  for (auto [x, y] : plane.getNonEmptyBins()) {
+    // and look for the ones that represent a maximum 
+    if (passThreshold(plane, x, y)) {
+      // write out a maximum
+      Maximum max;
+      max.hitIdentifiers = plane.hitIds(x, y);
+      maxima.push_back(max);
     }
   }
   return maxima;
 }
 
-template <class identifier_t> bool Acts::HoughTransformUtils::HoughPeakFinder_LayerGuidedCombinatoric<identifier_t>::passThreshold(
-    const HoughPlane<identifier_t>& plane, int xBin, int yBin) const {
-  // Pass window threshold
+template <class identifier_t>
+bool Acts::HoughTransformUtils::PeakFinders::LayerGuidedCombinatoric<
+    identifier_t>::passThreshold(const HoughPlane<identifier_t>& plane,
+                                 size_t xBin, size_t yBin) const {
+  // Check if we have sufficient layers for a maximum
   if (plane.nLayers(xBin, yBin) < m_cfg.threshold)
     return false;
-
+  
+  // if no local maximum is required, this is enough to classify as a max 
   if (m_cfg.localMaxWindowSize == 0)
     return true;
 
-  // Pass local-maximum check, if used
-  for (int j = -m_cfg.localMaxWindowSize; j <= m_cfg.localMaxWindowSize; j++) {
-    for (int i = -m_cfg.localMaxWindowSize; i <= m_cfg.localMaxWindowSize;
-         i++) {
-      if (i == 0 && j == 0) {
+  // otherwise, check for local maxima by looking at the surrounding cells 
+
+  /// loop over neighbours
+  for (int dXbin = -m_cfg.localMaxWindowSize; dXbin <= m_cfg.localMaxWindowSize;
+       dXbin++) {
+    for (int dYbin = -m_cfg.localMaxWindowSize;
+         dYbin <= m_cfg.localMaxWindowSize; dYbin++) {
+      // exclude the candidate itself
+      if (dYbin == 0 && dXbin == 0) {
         continue;
       }
       // out of bounds -> no need to test this bin
-      if (xBin + j >= plane.nBinsX() || yBin + i >= plane.nBinsY())
+      if (static_cast<int>(xBin) + dXbin < 0 ||
+          static_cast<int>(yBin) + dYbin < 0)
         continue;
-      // we are not in a minimum
-      if (plane.nLayers(xBin + j, yBin + i) > plane.nLayers(xBin, yBin)) {
+      if (xBin + dXbin >= plane.nBinsX() || yBin + dYbin >= plane.nBinsY())
+        continue;
+      // if a neighbour with more layers exist, this is not a minimum
+      if (plane.nLayers(xBin + dXbin, yBin + dYbin) >
+          plane.nLayers(xBin, yBin)) {
         return false;
       }
-      if (plane.nLayers(xBin + j, yBin + i) < plane.nLayers(xBin, yBin)) {
-        continue;  // this neighbour has fewer hits -> safe to ignore
+      // if the neighbour has fewer hits, we can move to the next neighbour 
+      if (plane.nLayers(xBin + dXbin, yBin + dYbin) <
+          plane.nLayers(xBin, yBin)) {
+        continue;  
       }
 
       // we can still be in a plateau. In this case, resolve by counting hits
 
-      // if the other bin with the same hit count has seen more clusters (==
+      // if the other bin with the same hit count has seen more clusters (
       // double hits in one layer), keep that one and reject the current
-      if (plane.nHits(xBin + j, yBin + i) > plane.nHits(xBin, yBin)) {
+      if (plane.nHits(xBin + dXbin, yBin + dYbin) > plane.nHits(xBin, yBin)) {
         return false;
       }
-      // and if we have completely identical points, bias the minimum towards
-      // the bottom (left)
-      if (plane.nHits(xBin + j, yBin + i) == plane.nHits(xBin, yBin) &&
-          (i < 0 || (i == 0 && j < 0))) {
+      // and if we have completely identical hit and layer count, prefer bins in
+      // the bottom (left) direction
+      if (plane.nHits(xBin + dXbin, yBin + dYbin) == plane.nHits(xBin, yBin) &&
+          (dYbin < 0 || (dYbin == 0 && dXbin < 0))) {
         return false;
       }
     }
   }
   return true;
 }
-template <class identifier_t> std::vector<std::vector<int>>
-Acts::HoughTransformUtils::HoughPeakFinder_LayerGuidedCombinatoric<identifier_t>::getComboIndices(
-    std::vector<size_t>& sizes) const {
-  size_t nCombs = 1;
-  std::vector<size_t> nCombs_prior(sizes.size());
-  std::vector<int> temp(sizes.size(), 0);
-
-  for (size_t i = 0; i < sizes.size(); i++) {
-    if (sizes[i] > 0) {
-      nCombs_prior[i] = nCombs;
-      nCombs *= sizes[i];
-    } else {
-      temp[i] = -1;
-    }
-  }
-
-  std::vector<std::vector<int>> combos(nCombs, temp);
-
-  for (size_t icomb = 0; icomb < nCombs; icomb++) {
-    size_t index = icomb;
-    for (size_t isize = sizes.size() - 1; isize < sizes.size(); isize--) {
-      if (sizes[isize] == 0) {
-        continue;
-      }
-      combos[icomb][isize] = static_cast<int>(index / nCombs_prior[isize]);
-      index = index % nCombs_prior[isize];
-    }
-  }
-
-  return combos;
-}
-
-template <class identifier_t> Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMax<identifier_t>::HoughPeakFinder_IslandsAroundMax(
-    const HoughPeakFinder_IslandsAroundMaxConfig& cfg)
+template <class identifier_t>
+Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
+    identifier_t>::IslandsAroundMax(const IslandsAroundMaxConfig& cfg)
     : m_cfg(cfg) {}
 
-template <class identifier_t> std::vector<typename Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMax<identifier_t>::Maximum>
-Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMax<identifier_t>::findPeaks(const HoughPlane<identifier_t>& plane, const houghAxisRanges & ranges) {
+template <class identifier_t>
+std::vector<typename Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
+    identifier_t>::Maximum>
+Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
+    identifier_t>::findPeaks(const HoughPlane<identifier_t>& plane,
+                             const houghAxisRanges& ranges) {
+  // check the global maximum hit count in the plane
   yieldType max = plane.maxHits();
-  yieldType min = m_cfg.fractionCutoff * max;
-  std::vector<std::pair<int, int>> candidates;
+  // and obtain the fraction of the max that is our cutoff for island formation
+  yieldType min = std::max(m_cfg.threshold, m_cfg.fractionCutoff * max);
+  // book a list for the candidates and the maxima 
+  std::vector<std::pair<size_t, size_t>> candidates;
   std::vector<Maximum> maxima;
-  vector2D<yieldType> yieldMap(plane.nBinsX(), plane.nBinsY());
-  for (int x = 0; x < plane.nBinsX(); ++x) {
-    for (int y = 0; y < plane.nBinsY(); ++y) {
-      if (plane.nHits(x, y) > min) {
-        candidates.push_back({x, y});
-        yieldMap(x, y) = plane.nHits(x, y);
-      }
+  // keep track of the yields in each non empty cell
+  std::map<std::pair<size_t,size_t>, yieldType> yieldMap;
+
+  // now loop over all non empty bins 
+  for (auto [x, y] : plane.getNonEmptyBins()) {
+    // we only consider cells above threshold from now on. 
+    // each is a potential candidate to seed or join an island
+    // We also add each to our yield map 
+    if (plane.nHits(x, y) > min) {
+      candidates.push_back({x, y});
+      yieldMap[{x, y}] = plane.nHits(x, y);
     }
   }
+  // sort the candidate cells descending in content
   std::sort(candidates.begin(), candidates.end(),
-            [&plane](const std::pair<int, int>& bin1,
-                     const std::pair<int, int>& bin2) {
+            [&plane](const std::pair<size_t, size_t>& bin1,
+                     const std::pair<size_t, size_t>& bin2) {
               return (plane.nHits(bin1.first, bin1.second) >
                       plane.nHits(bin2.first, bin2.second));
   });
-  std::vector<std::pair<int, int>> toExplore;
-  std::vector<std::pair<int, int>> solution;
+
+  // now we build islands from the candidate cells, starting with the most populated one
+  std::vector<std::pair<size_t, size_t>> toExplore;
+  std::vector<std::pair<size_t, size_t>> solution;
+
+  // loop over candidate cells 
   for (auto& cand : candidates) {
-    if (yieldMap(cand.first, cand.second) < min)
+    // check the content again (if used in a previous island, this will now report empty)
+    if (yieldMap[cand] < min)
       continue;
+    // translate to parameter space for overlap veto 
+    coordType xCand =
+        binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), cand.first);
+    coordType yCand =
+        binCenter(ranges.yMin, ranges.yMax, plane.nBinsY(), cand.second);
+    // check if we are too close to a previously found maximum
+    bool goodSpacing = true;
+    for (auto& found : maxima) {
+      if (std::abs(xCand - found.x) < m_cfg.minSpacingBetweenPeaks.first ||
+          std::abs(yCand - found.y) < m_cfg.minSpacingBetweenPeaks.second) {
+        goodSpacing = false;
+        break;
+      }
+    }
+    if (!goodSpacing)
+      continue;
+    // now we can extend the candidate into an island
     toExplore.clear();
     solution.clear();
+    // initially, pass the candidate into the list of "neighbours" to explore around an empty island
     toExplore.push_back(cand);
+    // and incrementally add neighbours, filling the solution vector 
     while (!toExplore.empty()) {
       extendMaximum(solution, toExplore, min, yieldMap);
     }
+    // nothing found? Next candidate! 
     if (solution.empty())
       continue;
+    // We found an island 
     Maximum maximum;
     coordType max_x = 0;
     coordType max_y = 0;
     coordType pos_den = 0;
-    coordType ymax = 0;
+    coordType ymax = - std::numeric_limits<coordType>::max();
     coordType ymin = std::numeric_limits<coordType>::max();
-    coordType xmax = 0;
+    coordType xmax = - std::numeric_limits<coordType>::max();
     coordType xmin = std::numeric_limits<coordType>::max();
-    for (auto& s : solution) {
-      std::cout <<" adding a SP with x,y bins "<<s.first<<" "<<s.second<<std::endl;
-      maximum.hitIdentifiers.insert(plane.hitIds(s.first, s.second).cbegin(),
-                                plane.hitIds(s.first, s.second).cend());
-      coordType xHit = binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), s.first);
-      coordType yHit = binCenter(ranges.yMin, ranges.yMax, plane.nBinsY(), s.second);
-      max_x += xHit * plane.nHits(s.first, s.second);
-      max_y += yHit * plane.nHits(s.first, s.second);
-      pos_den += plane.nHits(s.first, s.second);
+    // loop over cells in the island and get the weighted mean position. 
+    // Also collect all hit identifiers in the island and the maximum 
+    // extent (within the count threshold!) of the island 
+    for (auto& [xBin, yBin] : solution) {
+      const auto & hidIds = plane.hitIds(xBin, yBin); 
+      maximum.hitIdentifiers.insert(hidIds.cbegin(),
+                                    hidIds.cend());
+      coordType xHit =
+          binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), xBin);
+      coordType yHit =
+          binCenter(ranges.yMin, ranges.yMax, plane.nBinsY(), yBin);
+      yieldType nHits = plane.nHits(xBin, yBin); 
+      max_x += xHit * nHits;
+      max_y += yHit * nHits;
+      pos_den += nHits;
       if (xHit > xmax)
         xmax = xHit;
       if (yHit > ymax)
@@ -232,8 +285,10 @@ Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMax<identifier_t>::findP
       if (yHit < ymin)
         ymin = yHit;
     }
+    // calculate mean position
     maximum.x = max_x / pos_den;
     maximum.y = max_y / pos_den;
+    // calculate width as symmetrised band 
     maximum.wx = 0.5 * (xmax - xmin);
     maximum.wy = 0.5 * (ymax - ymin);
     maxima.push_back(maximum);
@@ -241,28 +296,33 @@ Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMax<identifier_t>::findP
   return maxima;
 }
 
-template <class identifier_t> void Acts::HoughTransformUtils::HoughPeakFinder_IslandsAroundMax<identifier_t>::extendMaximum(
-    std::vector<std::pair<int, int>>& inMaximum,
-    std::vector<std::pair<int, int>>& toExplore, yieldType threshold,
-    vector2D<yieldType>& yieldMap) {
-  /// check the next candidate
+template <class identifier_t>
+void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
+    extendMaximum(std::vector<std::pair<size_t, size_t>>& inMaximum,
+                  std::vector<std::pair<size_t, size_t>>& toExplore,
+                  yieldType threshold, std::map<std::pair<size_t, size_t>, yieldType>& yieldMap) {
+  // in this call, we explore the last element of the toExplore list.
+  // Fetch it and pop it from the vector. 
   auto nextCand = toExplore.back();
   toExplore.pop_back();
-  if (yieldMap(nextCand.first, nextCand.second) < threshold)
+  // check if we are above threshold. Don't add this cell to the island if not
+  if (yieldMap[nextCand] < threshold)
     return;
-  // try to extend our candidate using neighbouring bins
+  // This candidate is above threshold and should go on the island! 
+
+  // add it to the cell list for the island 
   inMaximum.push_back(nextCand);
-  // this hit is now listed as "used" - reset it on the yield map
-  yieldMap(nextCand.first, nextCand.second) = -1.0f;
-  for (auto& step : m_stepDirections) {
-    int xnew = nextCand.first + step.first; 
-    int ynew = nextCand.second + step.second;
-    if ((xnew < 0 || xnew >=  (int)yieldMap.size(0)) 
-        || (ynew < 0 || ynew >= (int) yieldMap.size(1))) continue; 
-    if (yieldMap(xnew, ynew) >
-        threshold) {
-      toExplore.push_back(
-          {xnew, ynew});
+  // and "veto" the hit for further use via the yield map 
+  yieldMap[nextCand] = -1.0f;
+
+  // now we have to collect the non empty neighbours of this cell and check them as well 
+  for (auto step : m_stepDirections) {
+    auto newCand = std::make_pair(nextCand.first + step.first, nextCand.second + step.second); 
+    // no need for bounds-checking, as the map structure will default to "empty" yields for OOB
+
+    // if the cell is above threshold, add it to our list of neighbours to explore
+    if (yieldMap[newCand] > threshold) {
+      toExplore.push_back(newCand);
     }
   }
 }

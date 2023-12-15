@@ -1,3 +1,10 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -27,13 +34,21 @@
 
 namespace ActsExamples {
 struct AlgorithmContext;
-}  // namespace ActsExamples
+} 
 
 
 namespace ActsExamples {
-    
+
+/// @brief Example implementation of a muon hough transform seeder 
+/// Uses the hough tools from the ACTS Core repo 
+/// Reads CSV files with muon sim hits (= true trajectories) 
+/// and drift circles (= measurements), performs 
+/// a hough transform to the drift circles in each station, 
+/// and compares to the true parameters of the sim hit in the 
+/// given station. 
 class MuonHoughSeeder final : public IAlgorithm {
  public:
+  /// config
   struct Config {
     std::string inSimHits;
     std::string inDriftCircles;
@@ -43,7 +58,7 @@ class MuonHoughSeeder final : public IAlgorithm {
 
   /// Run the seeding algorithm.
   ///
-  /// @param txt is the algorithm context with event information
+  /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
   ProcessCode initialize() final;
@@ -62,8 +77,8 @@ class MuonHoughSeeder final : public IAlgorithm {
                                                            "InputSimHits"};
   ReadDataHandle<DriftCircleContainer> m_inputDriftCircles{this,
                                                            "InputDriftCircles"};
+  /// use ROOT for visualisation 
   std::unique_ptr<TCanvas> m_outCanvas;
-  std::unique_ptr<TH2D> m_houghHist;
 };
 
 }  // namespace ActsExamples

@@ -63,6 +63,9 @@ class vector2D {
     }
     return m_data[i * m_d2 + j];
   }
+  inline T& operator()(std::pair<size_t, size_t> indices) {
+    return operator()(indices.first, indices.second);
+  }
 
   T const& operator()(size_t i, size_t j) const {
     if (i >= m_d1 || j >= m_d2) {
@@ -72,6 +75,9 @@ class vector2D {
       ACTS_ERROR(s.str());
     }
     return m_data[i * m_d2 + j];
+  }
+  inline T const& operator()(std::pair<size_t, size_t> indices) const {
+    return operator()(indices.first, indices.second);
   }
 
   T* operator[](size_t i) {
@@ -94,9 +100,7 @@ class vector2D {
     return m_data.data() + (i * m_d2);
   }
 
-  void reset(const T& t){
-    m_data.assign(m_data.size(),t);
-  }
+  void reset(const T& t) { m_data.assign(m_data.size(), t); }
 
   T* data() { return m_data.data(); }
 
