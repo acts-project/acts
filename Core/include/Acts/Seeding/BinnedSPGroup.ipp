@@ -55,12 +55,10 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
       m_group->m_grid->globalBinFromLocalBins(localPosition);
 
   boost::container::small_vector<std::size_t, 9> bottoms =
-      m_group->m_bottomBinFinder->findBins(localPosition[INDEX::PHI],
-                                           localPosition[INDEX::Z],
+      m_group->m_bottomBinFinder->findBins(localPosition,
                                            m_group->m_grid.get());
   boost::container::small_vector<std::size_t, 9> tops =
-      m_group->m_topBinFinder->findBins(localPosition[INDEX::PHI],
-                                        localPosition[INDEX::Z],
+      m_group->m_topBinFinder->findBins(localPosition,
                                         m_group->m_grid.get());
 
   // GCC12+ in Release throws an overread warning here due to the move.
@@ -95,8 +93,8 @@ template <typename spacepoint_iterator_t, typename callable_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
     callable_t&& toGlobal,
-    std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>> botBinFinder,
-    std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>> tBinFinder,
+    std::shared_ptr<const Acts::GridBinFinder<2ul>> botBinFinder,
+    std::shared_ptr<const Acts::GridBinFinder<2ul>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
     Acts::Extent& rRangeSPExtent,
     const SeedFinderConfig<external_spacepoint_t>& config,

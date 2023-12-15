@@ -96,9 +96,9 @@ class BinnedSPGroup {
   BinnedSPGroup(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
       callable_t&& toGlobal,
-      std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>>
+      std::shared_ptr<const Acts::GridBinFinder<2ul>>
           botBinFinder,
-      std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>> tBinFinder,
+      std::shared_ptr<const Acts::GridBinFinder<2ul>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
       Acts::Extent& rRangeSPExtent,
       const SeedFinderConfig<external_spacepoint_t>& _config,
@@ -131,9 +131,9 @@ class BinnedSPGroup {
 
   // GridBinFinder must return std::vector<Acts::Seeding::Bin> with content of
   // each bin sorted in r (ascending)
-  std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>> m_topBinFinder{
+  std::shared_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder{
       nullptr};
-  std::shared_ptr<const Acts::GridBinFinder<external_spacepoint_t>> m_bottomBinFinder{
+  std::shared_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder{
       nullptr};
 
   // Order of z bins to loop over when searching for SPs

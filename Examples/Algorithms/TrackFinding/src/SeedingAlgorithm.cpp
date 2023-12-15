@@ -205,10 +205,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
-  m_bottomBinFinder = std::make_shared<const Acts::GridBinFinder<SimSpacePoint>>(
-      m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors);
-  m_topBinFinder = std::make_shared<const Acts::GridBinFinder<SimSpacePoint>>(
-      m_cfg.zBinNeighborsTop, m_cfg.numPhiNeighbors);
+  m_bottomBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+								       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
+  m_topBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+								    m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
 
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
