@@ -20,8 +20,6 @@
 #include <cmath>
 #include <memory>
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
 namespace Test {
 

@@ -168,6 +168,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
+    trkAtVtx.isLinearized = true;
 
     // Copy parameters for later comparison of old and new version
     auto fittedParamsCopy = trkAtVtx.fittedParams;
@@ -177,7 +178,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     Vertex<BoundTrackParameters> vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexTrackUpdater::update<BoundTrackParameters>(trkAtVtx, vtx);
+    KalmanVertexTrackUpdater::update(trkAtVtx, vtx.fullPosition(),
+                                     vtx.fullCovariance(), 3);
 
     // The old distance
     double oldDistance =

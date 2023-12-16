@@ -15,6 +15,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -23,7 +24,6 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -125,7 +125,8 @@ struct FitterTester {
   CubicTrackingGeometry geometryStore{geoCtx};
   std::shared_ptr<const Acts::TrackingGeometry> geometry = geometryStore();
 
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
+  Acts::detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor{
+      *geometry};
 
   // expected number of measurements for the given detector
   constexpr static std::size_t nMeasurements = 6u;
@@ -147,7 +148,7 @@ struct FitterTester {
       makeStraightPropagator(geometry);
 
   static std::vector<Acts::SourceLink> prepareSourceLinks(
-      const std::vector<TestSourceLink>& sourceLinks) {
+      const std::vector<Acts::detail::Test::TestSourceLink>& sourceLinks) {
     std::vector<Acts::SourceLink> result;
     std::transform(sourceLinks.begin(), sourceLinks.end(),
                    std::back_inserter(result),

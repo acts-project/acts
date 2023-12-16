@@ -9,10 +9,12 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
+#include "ActsPodioEdm/ParticleHypothesis.h"
 #include "ActsPodioEdm/Track.h"
 #include "ActsPodioEdm/TrackCollection.h"
 #include "ActsPodioEdm/TrackInfo.h"
@@ -79,6 +81,8 @@ class PodioTrackContainerBase {
     switch (key) {
       case "tipIndex"_hash:
         return &data.tipIndex;
+      case "stemIndex"_hash:
+        return &data.stemIndex;
       case "params"_hash:
         return data.parameters.data();
       case "cov"_hash:
@@ -108,6 +112,23 @@ class PodioTrackContainerBase {
         assert(col && "Dynamic column is null");
         return col->get(itrack);
     }
+  }
+
+  template <typename T>
+  static auto dynamicKeys_impl(T& instance) {
+    using column_type =
+        typename decltype(instance.m_dynamic)::mapped_type::element_type;
+    return detail::DynamicKeyRange<column_type>{instance.m_dynamic.begin(),
+                                                instance.m_dynamic.end()};
+  }
+
+  template <typename T>
+  static ParticleHypothesis particleHypothesis_impl(T& instance,
+                                                    IndexType itrack) {
+    auto track = instance.m_collection->at(itrack);
+    const auto& src = track.getParticleHypothesis();
+    return ParticleHypothesis{static_cast<PdgParticle>(src.absPdg), src.mass,
+                              src.absQ};
   }
 
   static void populateSurfaceBuffer(
@@ -171,6 +192,10 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     return m_surfaces.at(itrack).get();
   }
 
+  ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
+    return PodioTrackContainerBase::particleHypothesis_impl(*this, itrack);
+  }
+
   void setReferenceSurface_impl(IndexType itrack,
                                 std::shared_ptr<const Surface> surface) {
     auto track = m_collection->at(itrack);
@@ -196,8 +221,9 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
 
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
-    m_dynamic.insert({hashString(key),
-                      std::make_unique<podio_detail::DynamicColumn<T>>(key)});
+    Acts::HashedString hashedKey = hashString(key);
+    m_dynamic.insert(
+        {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
   }
 
   Parameters parameters(IndexType itrack) {
@@ -218,10 +244,16 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
         m_collection->at(itrack).getData().covariance.data()};
   }
 
-  // @TODO What's the equivalent of this?
-  void copyDynamicFrom_impl(IndexType dstIdx,
-                            const MutablePodioTrackContainer& src,
-                            IndexType srcIdx);
+  void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
+                            const std::any& srcPtr) {
+    auto it = m_dynamic.find(key);
+    if (it == m_dynamic.end()) {
+      throw std::invalid_argument{
+          "Destination container does not have matching dynamic column"};
+    }
+
+    it->second->copyFrom(dstIdx, srcPtr);
+  }
 
   void ensureDynamicColumns_impl(const MutablePodioTrackContainer& other);
 
@@ -242,6 +274,20 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
     }
   }
 
+  detail::DynamicKeyRange<podio_detail::DynamicColumnBase> dynamicKeys_impl()
+      const {
+    return PodioTrackContainerBase::dynamicKeys_impl(*this);
+  }
+
+  void setParticleHypothesis_impl(
+      IndexType itrack, const ParticleHypothesis& particleHypothesis) {
+    ActsPodioEdm::ParticleHypothesis pHypo;
+    pHypo.absPdg = particleHypothesis.absolutePdg();
+    pHypo.mass = particleHypothesis.mass();
+    pHypo.absQ = particleHypothesis.absoluteCharge();
+    m_collection->at(itrack).setParticleHypothesis(pHypo);
+  }
+
   // END INTERFACE
 
  private:
@@ -260,6 +306,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   ConstPodioTrackContainer(const PodioUtil::ConversionHelper& helper,
                            const ActsPodioEdm::TrackCollection& collection)
       : PodioTrackContainerBase{helper}, m_collection{&collection} {
+    // Not much we can do to recover dynamic columns here
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
@@ -289,48 +336,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
-    // let's find dynamic columns
-    using types =
-        std::tuple<int32_t, int64_t, uint32_t, uint64_t, float, double>;
-
-    for (const auto& col : available) {
-      std::string prefix = tracksKey + "_extra__";
-      std::size_t p = col.find(prefix);
-      if (p == std::string::npos) {
-        continue;
-      }
-      std::string dynName = col.substr(prefix.size());
-      const podio::CollectionBase* coll = frame.get(col);
-
-      std::unique_ptr<podio_detail::ConstDynamicColumnBase> up;
-
-      std::apply(
-          [&](auto... args) {
-            auto inner = [&](auto arg) {
-              if (up) {
-                return;
-              }
-              using T = decltype(arg);
-              const auto* dyn =
-                  dynamic_cast<const podio::UserDataCollection<T>*>(coll);
-              if (dyn == nullptr) {
-                return;
-              }
-              up = std::make_unique<podio_detail::ConstDynamicColumn<T>>(
-                  dynName, *dyn);
-            };
-
-            ((inner(args)), ...);
-          },
-          types{});
-
-      if (!up) {
-        throw std::runtime_error{"Dynamic column '" + dynName +
-                                 "' is not of allowed type"};
-      }
-
-      m_dynamic.insert({hashString(dynName), std::move(up)});
-    }
+    podio_detail::recoverDynamicColumns(frame, tracksKey, m_dynamic);
   }
 
   std::any component_impl(HashedString key, IndexType itrack) const {
@@ -347,6 +353,10 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
     return m_surfaces.at(itrack).get();
   }
 
+  ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
+    return PodioTrackContainerBase::particleHypothesis_impl(*this, itrack);
+  }
+
   ConstParameters parameters(IndexType itrack) const {
     return ConstParameters{
         m_collection->at(itrack).getData().parameters.data()};
@@ -359,6 +369,11 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
   const ActsPodioEdm::TrackCollection& trackCollection() {
     return *m_collection;
+  }
+
+  detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
+  dynamicKeys_impl() const {
+    return PodioTrackContainerBase::dynamicKeys_impl(*this);
   }
 
  private:

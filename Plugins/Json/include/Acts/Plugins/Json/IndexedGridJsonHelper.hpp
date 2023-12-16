@@ -22,9 +22,17 @@ using namespace Experimental::detail::GridAxisGenerators;
 namespace IndexedGridJsonHelper {
 
 /// @brief The actual conversion method
+///
+/// @param indexGrid is the index grid to be written
+/// @param detray is a flag indicating detray writout
+/// @param checkSwap is a flag indicating if the axes should be swapped
 template <typename index_grid>
-nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false) {
+nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false,
+                           bool checkSwap = false) {
   nlohmann::json jIndexedGrid;
+
+  // Axis swapping (detray version)
+  bool swapAxes = checkSwap;
 
   // Fill the casts
   nlohmann::json jCasts;
@@ -36,12 +44,15 @@ nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false) {
   if constexpr (index_grid::grid_type::DIM == 2u) {
     jCasts.push_back(indexGrid.casts[0u]);
     jCasts.push_back(indexGrid.casts[1u]);
+    // Check for axis swap (detray version)
+    swapAxes = checkSwap &&
+               (indexGrid.casts[0u] == binZ && indexGrid.casts[1u] == binPhi);
   }
   jIndexedGrid["casts"] = jCasts;
   jIndexedGrid["transform"] =
       Transform3JsonConverter::toJson(indexGrid.transform);
   if (detray) {
-    jIndexedGrid = GridJsonConverter::toJsonDetray(indexGrid.grid);
+    jIndexedGrid = GridJsonConverter::toJsonDetray(indexGrid.grid, swapAxes);
   } else {
     jIndexedGrid["grid"] = GridJsonConverter::toJson(indexGrid.grid);
   }
@@ -54,12 +65,12 @@ nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false) {
 /// @tparam updator_type
 /// @tparam generator_type
 ///
-/// @param jUpdator The corresponding json object
+/// @param jUpdater The corresponding json object
 /// @param jIndicator the string indicator which one it is
 ///
 /// @return the updator type
 template <typename updator_type, typename generator_type>
-updator_type generateFromJson(const nlohmann::json& jUpdator,
+updator_type generateFromJson(const nlohmann::json& jUpdater,
                               const std::string& jIndicator) {
   generator_type generator;
 
@@ -81,12 +92,12 @@ updator_type generateFromJson(const nlohmann::json& jUpdator,
   };
 
   // Peek into the json object to understand what to do
-  if (jUpdator["type"] == jIndicator) {
-    if (jUpdator.find("grid") != jUpdator.end()) {
+  if (jUpdater["type"] == jIndicator) {
+    if (jUpdater.find("grid") != jUpdater.end()) {
       Transform3 transform =
-          Transform3JsonConverter::fromJson(jUpdator["transform"]);
-      auto jGrid = jUpdator["grid"];
-      auto jCasts = jUpdator["casts"].get<std::vector<BinningValue>>();
+          Transform3JsonConverter::fromJson(jUpdater["transform"]);
+      auto jGrid = jUpdater["grid"];
+      auto jCasts = jUpdater["casts"].get<std::vector<BinningValue>>();
       auto jAxes = jGrid["axes"];
 
       // 1D cases
@@ -104,13 +115,13 @@ updator_type generateFromJson(const nlohmann::json& jUpdator,
             EqClosed ecAG{range, bins};
             auto grid =
                 GridJsonConverter::fromJson<EqClosed, ValueType>(jGrid, ecAG);
-            return generator.createUpdator(std::move(grid), {bValue},
+            return generator.createUpdater(std::move(grid), {bValue},
                                            transform);
           } else {
             EqBound ebAG{range, bins};
             auto grid =
                 GridJsonConverter::fromJson<EqBound, ValueType>(jGrid, ebAG);
-            return generator.createUpdator(std::move(grid), {bValue},
+            return generator.createUpdater(std::move(grid), {bValue},
                                            transform);
           }
         } else {
@@ -119,13 +130,13 @@ updator_type generateFromJson(const nlohmann::json& jUpdator,
             VarClosed vcAG{vExtractor(jAxis)};
             auto grid =
                 GridJsonConverter::fromJson<VarClosed, ValueType>(jGrid, vcAG);
-            return generator.createUpdator(std::move(grid), {bValue},
+            return generator.createUpdater(std::move(grid), {bValue},
                                            transform);
           } else {
             VarBound vbAG{vExtractor(jAxis)};
             auto grid =
                 GridJsonConverter::fromJson<VarBound, ValueType>(jGrid, vbAG);
-            return generator.createUpdator(std::move(grid), {bValue},
+            return generator.createUpdater(std::move(grid), {bValue},
                                            transform);
           }
         }
@@ -152,14 +163,14 @@ updator_type generateFromJson(const nlohmann::json& jUpdator,
               auto grid =
                   GridJsonConverter::fromJson<EqBoundEqBound, ValueType>(
                       jGrid, ebebAG);
-              return generator.createUpdator(std::move(grid),
+              return generator.createUpdater(std::move(grid),
                                              {bValueA, bValueB}, transform);
             } else {
               EqBoundVarBound ebvbAG{rangeA, binsA, vExtractor(jAxisB)};
               auto grid =
                   GridJsonConverter::fromJson<EqBoundVarBound, ValueType>(
                       jGrid, ebvbAG);
-              return generator.createUpdator(std::move(grid),
+              return generator.createUpdater(std::move(grid),
                                              {bValueA, bValueB}, transform);
             }
           } else {
@@ -169,14 +180,14 @@ updator_type generateFromJson(const nlohmann::json& jUpdator,
               auto grid =
                   GridJsonConverter::fromJson<VarBoundEqBound, ValueType>(
                       jGrid, vbebAG);
-              return generator.createUpdator(std::move(grid),
+              return generator.createUpdater(std::move(grid),
                                              {bValueA, bValueB}, transform);
             } else {
               VarBoundVarBound vbvbAG{vExtractor(jAxisA), vExtractor(jAxisB)};
               auto grid =
                   GridJsonConverter::fromJson<VarBoundVarBound, ValueType>(
                       jGrid, vbvbAG);
-              return generator.createUpdator(std::move(grid),
+              return generator.createUpdater(std::move(grid),
                                              {bValueA, bValueB}, transform);
             }
           }
@@ -190,14 +201,14 @@ updator_type generateFromJson(const nlohmann::json& jUpdator,
               auto grid =
                   GridJsonConverter::fromJson<EqBoundEqClosed, ValueType>(
                       jGrid, ebecAG);
-              return generator.createUpdator(std::move(grid),
+              return generator.createUpdater(std::move(grid),
                                              {bValueA, bValueB}, transform);
             } else {
               EqBoundVarClosed ebvcAG{rangeA, binsA, vExtractor(jAxisB)};
               auto grid =
                   GridJsonConverter::fromJson<EqBoundVarClosed, ValueType>(
                       jGrid, ebvcAG);
-              return generator.createUpdator(std::move(grid),
+              return generator.createUpdater(std::move(grid),
                                              {bValueA, bValueB}, transform);
             }
           } else {
@@ -207,14 +218,14 @@ updator_type generateFromJson(const nlohmann::json& jUpdator,
               auto grid =
                   GridJsonConverter::fromJson<VarBoundEqClosed, ValueType>(
                       jGrid, vbecAG);
-              return generator.createUpdator(std::move(grid),
+              return generator.createUpdater(std::move(grid),
                                              {bValueA, bValueB}, transform);
             } else {
               VarBoundVarClosed vbvcAG{vExtractor(jAxisA), vExtractor(jAxisB)};
               auto grid =
                   GridJsonConverter::fromJson<VarBoundVarClosed, ValueType>(
                       jGrid, vbvcAG);
-              return generator.createUpdator(std::move(grid),
+              return generator.createUpdater(std::move(grid),
                                              {bValueA, bValueB}, transform);
             }
           }

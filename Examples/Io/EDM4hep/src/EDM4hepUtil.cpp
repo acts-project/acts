@@ -152,7 +152,8 @@ Measurement EDM4hepUtil::readMeasurement(
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  IndexSourceLink sourceLink{geometryId, from.id()};
+  IndexSourceLink sourceLink{
+      geometryId, static_cast<Index>(podioObjectIDToInteger(from.id()))};
 
   auto pos = from.getPosition();
   auto cov = from.getCovMatrix();

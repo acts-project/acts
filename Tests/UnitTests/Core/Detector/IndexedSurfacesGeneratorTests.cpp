@@ -15,8 +15,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -69,9 +69,9 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
 
   BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
-  const auto& chainedUpdators = castedDelegate->updators;
+  const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdators);
+      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Check that surfaces 10, 11, 12 build the bins at phi == 0
@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
 
   BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
-  const auto& chainedUpdators = castedDelegate->updators;
+  const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdators);
+      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Check that surfaces 10, 11, 12 build the bins at phi == 0
@@ -163,9 +163,9 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
 
   BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
-  const auto& chainedUpdators = castedDelegate->updators;
+  const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdators);
+      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Check that now two rows of surfaces are given
@@ -210,9 +210,9 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
 
   BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
-  const auto& chainedUpdators = castedDelegate->updators;
+  const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdators);
+      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Fine binning created fewer candidates
@@ -255,9 +255,9 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
 
   BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
-  const auto& chainedUpdators = castedDelegate->updators;
+  const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdators);
+      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Bin expansion created again more elements
@@ -289,9 +289,9 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
 
   BOOST_REQUIRE_NE(castedDelegate, nullptr);
 
-  const auto& chainedUpdators = castedDelegate->updators;
+  const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdators);
+      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Bin expansion created again more elements

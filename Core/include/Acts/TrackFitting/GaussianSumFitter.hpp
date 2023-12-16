@@ -305,7 +305,7 @@ struct GaussianSumFitter {
       return return_error_or_abort(fwdResult.error());
     }
 
-    auto& fwdGsfResult =
+    const auto& fwdGsfResult =
         fwdResult->template get<typename GsfActor::result_type>();
 
     if (!fwdGsfResult.result.ok()) {
@@ -321,8 +321,8 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("- processed states: " << fwdGsfResult.processedStates);
     ACTS_VERBOSE("- measurement states: " << fwdGsfResult.measurementStates);
 
-    std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler;
-    double maxPathXOverX0 = fwdGsfResult.maxPathXOverX0;
+    std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler.val();
+    double maxPathXOverX0 = fwdGsfResult.maxPathXOverX0.val();
 
     //////////////////
     // Backward pass
@@ -408,8 +408,14 @@ struct GaussianSumFitter {
           GsfError::NoMeasurementStatesCreatedBackward);
     }
 
-    nInvalidBetheHeitler += bwdGsfResult.nInvalidBetheHeitler;
-    maxPathXOverX0 = std::max(maxPathXOverX0, bwdGsfResult.maxPathXOverX0);
+    // For the backward pass we want the counters at in end (= at the
+    // interaction point) and not at the last measurement surface
+    bwdGsfResult.nInvalidBetheHeitler.update();
+    bwdGsfResult.maxPathXOverX0.update();
+    bwdGsfResult.sumPathXOverX0.update();
+    nInvalidBetheHeitler += bwdGsfResult.nInvalidBetheHeitler.val();
+    maxPathXOverX0 =
+        std::max(maxPathXOverX0, bwdGsfResult.maxPathXOverX0.val());
 
     if (nInvalidBetheHeitler > 0) {
       ACTS_WARNING("Encountered " << nInvalidBetheHeitler
@@ -479,10 +485,21 @@ struct GaussianSumFitter {
 
       if (trackContainer.hasColumn(
               hashString(GsfConstants::kFinalMultiComponentStateColumn))) {
-        ACTS_DEBUG("Add final multi-component state to track")
+        ACTS_DEBUG("Add final multi-component state to track");
         track.template component<GsfConstants::FinalMultiComponentState>(
             GsfConstants::kFinalMultiComponentStateColumn) = std::move(params);
       }
+    }
+
+    if (trackContainer.hasColumn(
+            hashString(GsfConstants::kFwdMaxMaterialXOverX0))) {
+      track.template component<double>(GsfConstants::kFwdMaxMaterialXOverX0) =
+          fwdGsfResult.maxPathXOverX0.val();
+    }
+    if (trackContainer.hasColumn(
+            hashString(GsfConstants::kFwdSumMaterialXOverX0))) {
+      track.template component<double>(GsfConstants::kFwdSumMaterialXOverX0) =
+          fwdGsfResult.sumPathXOverX0.val();
     }
 
     calculateTrackQuantities(track);

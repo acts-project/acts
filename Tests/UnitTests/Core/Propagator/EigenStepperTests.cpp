@@ -72,7 +72,6 @@ class ISurfaceMaterial;
 class Logger;
 }  // namespace Acts
 
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 

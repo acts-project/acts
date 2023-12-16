@@ -55,7 +55,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::
   }
 }
 
-Acts::Experimental::DetectorVolumeUpdator
+Acts::Experimental::DetectorVolumeUpdater
 Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes) const {
@@ -78,7 +78,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
   fillGridIndices2D(gctx, grid, rootVolumes, boundaries, casts);
 
   using IndexedDetectorVolumesImpl =
-      IndexedUpdatorImpl<GridType, IndexedDetectorVolumeExtractor,
+      IndexedUpdaterImpl<GridType, IndexedDetectorVolumeExtractor,
                          DetectorVolumeFiller>;
 
   auto indexedDetectorVolumeImpl =
@@ -86,7 +86,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
                                                          casts);
 
   // Return the root volume finder
-  DetectorVolumeUpdator rootVolumeFinder;
+  DetectorVolumeUpdater rootVolumeFinder;
   rootVolumeFinder.connect<&IndexedDetectorVolumesImpl::update>(
       std::move(indexedDetectorVolumeImpl));
   return rootVolumeFinder;

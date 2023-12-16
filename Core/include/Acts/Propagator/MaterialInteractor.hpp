@@ -31,6 +31,8 @@ struct MaterialInteractor {
   bool energyLoss = true;
   /// Whether to record all material interactions.
   bool recordInteractions = false;
+  /// Whether to add or remove noise.
+  NoiseUpdateMode noiseUpdateMode = NoiseUpdateMode::addNoise;
 
   using result_type = RecordedMaterial;
 
@@ -100,12 +102,8 @@ struct MaterialInteractor {
         if (interaction.performCovarianceTransport) {
           stepper.transportCovarianceToCurvilinear(state.stepping);
         }
-        // Change the noise updater depending on the navigation direction
-        NoiseUpdateMode mode = (state.options.direction == Direction::Forward)
-                                   ? addNoise
-                                   : removeNoise;
         // Apply the material interactions
-        interaction.updateState(state, stepper, mode);
+        interaction.updateState(state, stepper, noiseUpdateMode);
 
         // Record the result
         recordResult(interaction, result);

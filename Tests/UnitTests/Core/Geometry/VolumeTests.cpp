@@ -21,10 +21,7 @@
 #include <memory>
 #include <utility>
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 BOOST_AUTO_TEST_CASE(VolumeTest) {
@@ -78,5 +75,6 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   GeometryContext gctx;
   BOOST_CHECK_EQUAL(volume.binningPosition(gctx, binX), volume.center());
 }
+
 }  // namespace Test
 }  // namespace Acts

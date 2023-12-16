@@ -145,9 +145,26 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   for (const auto [iv, volume] : enumerate(volumes)) {
     // And its surface navigation delegates
     nlohmann::json jSurfacesDelegate = IndexedSurfacesJsonConverter::toJson(
-        volume->surfaceCandidatesUpdator(), true);
+        volume->surfaceCandidatesUpdater(), true);
     if (jSurfacesDelegate.is_null()) {
       continue;
+    }
+    // Patch axes for cylindrical grid surfaces, axes are swapped
+    // at this point
+    auto jAccLink = jSurfacesDelegate["acc_link"];
+    std::size_t accLinkType = jAccLink["type"];
+    if (accLinkType == 4u) {
+      // Radial value to transfer phi to rphi
+      std::vector<ActsScalar> bValues = volume->volumeBounds().values();
+      ActsScalar rRef = 0.5 * (bValues[1] + bValues[0]);
+      // Get the axes
+      auto& jAxes = jSurfacesDelegate["axes"];
+      // r*phi axis is the first one
+      std::vector<ActsScalar> jAxesEdges = jAxes[0u]["edges"];
+      std::for_each(jAxesEdges.begin(), jAxesEdges.end(),
+                    [rRef](ActsScalar& phi) { phi *= rRef; });
+      // Write back the patches axis edges
+      jSurfacesDelegate["axes"][0u]["edges"] = jAxesEdges;
     }
     // Colplete the grid json for detray usage
     jSurfacesDelegate["volume_link"] = iv;

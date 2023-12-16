@@ -9,12 +9,13 @@
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/detail/ProtoMaterialHelper.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <iterator>
@@ -63,7 +64,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   } else {
     // Internal structure is present
     ACTS_VERBOSE("Internal structure is being built.")
-    auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
+    auto [surfaces, volumes, surfacesUpdater, volumeUpdater] =
         m_cfg.internalsBuilder->construct(gctx);
 
     // Add the internally created volumes as root volumes
@@ -75,8 +76,8 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
     // Construct the DetectorVolume
     dVolume = DetectorVolumeFactory::construct(
         portalGenerator, gctx, m_cfg.name, transform, std::move(bounds),
-        surfaces, volumes, std::move(volumeUpdator),
-        std::move(surfacesUpdator));
+        surfaces, volumes, std::move(volumeUpdater),
+        std::move(surfacesUpdater));
   }
   // All portals are defined and build the current shell
   for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {
@@ -88,6 +89,16 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
     ACTS_DEBUG("Assigning geometry ids to the detector volume");
     auto cache = m_cfg.geoIdGenerator->generateCache();
     m_cfg.geoIdGenerator->assignGeometryId(cache, *dVolume);
+  }
+
+  // Assign the proto material if configured to do so
+  for (auto [ip, bDescription] : m_cfg.portalMaterialBinning) {
+    if (portalContainer.find(ip) != portalContainer.end()) {
+      auto bd = detail::ProtoMaterialHelper::attachProtoMaterial(
+          gctx, portalContainer[ip]->surface(), bDescription);
+      ACTS_VERBOSE("-> Assigning proto material to portal " << ip << " with "
+                                                            << bd.toString());
+    }
   }
 
   // Add to the root volume collection if configured

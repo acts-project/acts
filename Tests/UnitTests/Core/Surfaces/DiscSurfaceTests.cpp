@@ -38,14 +38,10 @@
 #include <string>
 #include <utility>
 
-namespace utf = boost::unit_test;
-namespace tt = boost::test_tools;
-
 namespace Acts {
 class AssertionFailureException;
 
 namespace Test {
-// using boost::test_tools::output_test_stream;
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 

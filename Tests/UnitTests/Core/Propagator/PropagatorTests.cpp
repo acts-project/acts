@@ -50,7 +50,6 @@ class Logger;
 }  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 using Acts::VectorHelpers::perp;
@@ -130,9 +129,6 @@ struct SurfaceObserver {
 };
 
 // Global definitions
-// The path limit abort
-using path_limit = PathLimitReached;
-
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType>;

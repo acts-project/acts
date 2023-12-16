@@ -14,10 +14,8 @@
 #include <utility>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 
 namespace Acts {
-
 namespace Test {
 
 /// Unit test for testing the wraps() function of the CylinderVolumeBuilder
@@ -370,5 +368,4 @@ BOOST_DATA_TEST_CASE(
 }
 
 }  // namespace Test
-
 }  // namespace Acts

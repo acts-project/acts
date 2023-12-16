@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
   BOOST_CHECK(beamPipeExt == std::nullopt);
 
   // Build the internal volume structure
-  auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
+  auto [surfaces, volumes, surfacesUpdater, volumeUpdater] =
       beamPipeInternalsBuilder->construct(tContext);
 
   // All surfaces are filled
@@ -118,16 +118,16 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
   // No volumes are added
   BOOST_CHECK(volumes.empty());
   // The surface updator is connected
-  BOOST_CHECK(surfacesUpdator.connected());
+  BOOST_CHECK(surfacesUpdater.connected());
   // The volume updator is connected
-  BOOST_CHECK(volumeUpdator.connected());
+  BOOST_CHECK(volumeUpdater.connected());
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();
 }
 
 // This test creates DD4hep xml compact files for cylindrical
-// layer structures and then converts them into IndexedSurfacesUpdator
+// layer structures and then converts them into IndexedSurfacesUpdater
 // and other additional components needed for Internal DetectorVolume
 // structure.
 //
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
         barrelStructure.builder(dd4hepStore, tContext, world, lsOptions);
 
     // Build the internal volume structure
-    auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
+    auto [surfaces, volumes, surfacesUpdater, volumeUpdater] =
         barrelInternalsBuilder->construct(tContext);
 
     // All surfaces are filled
@@ -236,9 +236,9 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     // No volumes are added
     BOOST_CHECK(volumes.empty());
     // The surface updator is connected
-    BOOST_CHECK(surfacesUpdator.connected());
+    BOOST_CHECK(surfacesUpdater.connected());
     // The volume updator is connected
-    BOOST_CHECK(volumeUpdator.connected());
+    BOOST_CHECK(volumeUpdater.connected());
 
     // Kill that instance before going into the next test
     lcdd->destroyInstance();

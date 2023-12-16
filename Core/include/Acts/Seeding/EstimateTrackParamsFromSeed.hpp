@@ -214,24 +214,32 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   Vector3 local1 = transform.inverse() * spGlobalPositions[1];
   Vector3 local2 = transform.inverse() * spGlobalPositions[2];
 
-  // Lambda to transform the coordinates to the (u, v) space
-  auto uvTransform = [](const Vector3& local) -> Vector2 {
-    Vector2 uv;
-    ActsScalar denominator = local.x() * local.x() + local.y() * local.y();
-    uv.x() = local.x() / denominator;
-    uv.y() = local.y() / denominator;
-    return uv;
-  };
-  // The uv1.y() should be zero
-  Vector2 uv1 = uvTransform(local1);
-  Vector2 uv2 = uvTransform(local2);
+  // In the new frame the bottom sp is at the origin, while the middle
+  // sp in along the x axis. As such, the x-coordinate of the circle is
+  // at: x-middle / 2.
+  // The y coordinate can be found by using the straight line passing
+  // between the mid point between the middle and top sp and perpendicular to
+  // the line connecting them
+  Vector2 circleCenter;
+  circleCenter(0) = 0.5 * local1(0);
 
-  // A,B are slope and intercept of the straight line in the u,v plane
-  // connecting the three points
-  ActsScalar A = (uv2.y() - uv1.y()) / (uv2.x() - uv1.x());
-  ActsScalar B = uv2.y() - A * uv2.x();
-  // Curvature (with a sign) estimate
-  ActsScalar rho = -2.0 * B / std::hypot(1., A);
+  ActsScalar deltaX21 = local2(0) - local1(0);
+  ActsScalar sumX21 = local2(0) + local1(0);
+  // straight line connecting the two points
+  // y = a * x + c (we don't care about c right now)
+  // we simply need the slope
+  ActsScalar a = local2(1) / deltaX21;
+  // Perpendicular line is then y = -1/a *x + b
+  // we can evaluate b given we know a already by imposing
+  // the line passes through P = (0.5 * (x2 + x1), 0.5 * y2)
+  ActsScalar b = 0.5 * (local2(1) + 1. / a * sumX21);
+  circleCenter(1) = -1. / a * circleCenter(0) + b;
+  // Radius is distance between circleCenter and first sp, which is at (0, 0) in
+  // the new frame
+  // Sign depends on the slope a (positive vs negative)
+  int sign = a > 0 ? -1 : 1;
+  ActsScalar rho = sign / circleCenter.norm();
+
   // The projection of the top space point on the transverse plane of the new
   // frame
   ActsScalar rn = local2.x() * local2.x() + local2.y() * local2.y();
@@ -241,6 +249,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
       local2.z() * std::sqrt(1. / rn) / (1. + G * rho * rho * rn);
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
+  ActsScalar A = -circleCenter(0) / circleCenter(1);
   Vector3 transDirection(1., A, std::hypot(1, A) * invTanTheta);
   // Transform it back to the original frame
   Vector3 direction = rotation * transDirection.normalized();

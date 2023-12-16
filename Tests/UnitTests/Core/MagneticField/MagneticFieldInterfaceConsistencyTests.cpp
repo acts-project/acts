@@ -20,11 +20,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -93,5 +89,4 @@ BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
 }
 
 }  // namespace Test
-
 }  // namespace Acts
