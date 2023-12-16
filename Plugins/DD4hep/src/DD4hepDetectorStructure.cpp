@@ -12,7 +12,7 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepBlueprint.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 
@@ -44,19 +44,19 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
       getDefaultLogger("DD4hepLayerStructure", options.logLevel));
 
   // Draw the blue print from the dd4hep detector element tree
-  DD4hepBlueprint::Config bpdCfg{layerStructure};
-  DD4hepBlueprint::Cache bpdCache;
+  DD4hepBlueprintFactory::Config bpdCfg{layerStructure};
+  DD4hepBlueprintFactory::Cache bpdCache;
 
-  DD4hepBlueprint dd4hepBlueprintDrawer(
-      bpdCfg, getDefaultLogger("DD4hepBlueprint", options.logLevel));
+  DD4hepBlueprintFactory dd4hepBlueprintDrawer(
+      bpdCfg, getDefaultLogger("DD4hepBlueprintFactory", options.logLevel));
   auto dd4hepBlueprint =
       dd4hepBlueprintDrawer.create(bpdCache, gctx, dd4hepElement);
   detectorStore = bpdCache.dd4hepStore;
 
   // Draw the raw graph
-  if (options.blueprintDot) {
+  if (!options.emulateToGraph.empty()) {
     ACTS_DEBUG("Writing the initial bluepring to file before gap filling.")
-    std::ofstream bpi(dd4hepBlueprint->name + "_initial.dot");
+    std::ofstream bpi(options.emulateToGraph + "_initial.dot");
     detail::BlueprintDrawer::dotStream(bpi, *dd4hepBlueprint);
     bpi.close();
   }
@@ -68,11 +68,13 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
     detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
 
     // Draw the synchronized graph
-    if (options.blueprintDot) {
+    if (!options.emulateToGraph.empty()) {
       ACTS_DEBUG("Writing the final bluepring to file.")
-      std::ofstream bpf(dd4hepBlueprint->name + "_final.dot");
+      std::ofstream bpf(options.emulateToGraph + "_final.dot");
       detail::BlueprintDrawer::dotStream(bpf, *dd4hepBlueprint);
       bpf.close();
+      // Return without building
+      return std::tie(detector, detectorStore);
     }
 
     // Create a Cylindrical detector builder from this blueprint
