@@ -127,6 +127,15 @@ class TrackContainer {
     return track.index();
   }
 
+  /// Add a track to the container and return a track proxy to it
+  /// This effectively calls @c addTrack and @c getTrack
+  /// @note Only available if the track container is not read-only
+  /// @return a track proxy to the newly added track
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  TrackProxy makeTrack() {
+    return getTrack(addTrack());
+  }
+
   /// Remove a track at index @p itrack from the container
   /// @note This invalidates all track proxies!
   /// @param itrack The index of the track to remove
