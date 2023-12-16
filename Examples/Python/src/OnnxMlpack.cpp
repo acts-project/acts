@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLDBScanAlgorithm.hpp"
+#include "ActsExamples/TrackFindingML/SeedFilterMLAlgorithm.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -27,5 +28,11 @@ void addOnnxMlpack(Context& ctx) {
       ActsExamples::AmbiguityResolutionMLDBScanAlgorithm, mlpack,
       "AmbiguityResolutionMLDBScanAlgorithm", inputTracks, inputDuplicateNN,
       outputTracks, nMeasurementsMin, epsilonDBScan, minPointsDBScan);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedFilterMLAlgorithm, mlpack,
+                                "SeedFilterMLAlgorithm", inputTrackParameters,
+                                inputSimSeeds, inputSeedFilterNN,
+                                outputTrackParameters, outputSimSeeds,
+                                epsilonDBScan, minPointsDBScan, minSeedScore);
 }
 }  // namespace Acts::Python

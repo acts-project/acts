@@ -17,7 +17,7 @@ def prepareDataSet(data: pd.DataFrame) -> pd.DataFrame:
     data = data
     # Remove tracks with less than 7 measurements
     data = data[data["nMeasurements"] > 6]
-    data = data.sort_values("good/duplicate/fake", ascending=False)
+    # data = data.sort_values("good/duplicate/fake", ascending=False)
     # Remove pure duplicate (tracks purely identical) keep the ones good one if among them.
     data = data.drop_duplicates(
         subset=[
@@ -30,7 +30,7 @@ def prepareDataSet(data: pd.DataFrame) -> pd.DataFrame:
         ],
         keep="first",
     )
-    data = data.sort_values("particleId")
+    # data = data.sort_values("particleId")
     # Set truth particle ID as index
     data = data.set_index("particleId")
     # Transform the hit list from a string to an actual list
