@@ -34,3 +34,12 @@ pdf_url = "https://github.com/felix-russo/billoir-covariances/releases/download/
 authors = [ "Felix Russo",]
 title = "Cross-Covariance Matrices in the Billoir Vertex Fit"
 description = "In this white paper we derive\n\\begin{itemize}\n    \\item the 4x4 covariance matrix of the vertex position,\n    \\item the 4x3 cross-covariance matrix between the vertex position and the $i$-th particle momentum,\n    \\item and the 3x3 cross-covariance matrix between the $i$-th and the $j$-th particle momentum.\n\\end{itemize}"
+[[white_papers]]
+repository = "https://github.com/beomki-yeo/line_surface"
+slug = "line-surface-jacobian"
+pdf_url = "https://github.com/beomki-yeo/line_surface/releases/download/v7.0/main.pdf"
+
+[white_papers.metadata]
+authors = [ "Beomki Yeo",]
+title = "Line Surface Jacobian"
+description = "Line surface used for wire measurements or perigee surface is an unique type of surface where the intersections of a track is not defined on a physical plane. Due to this trait, the underlying mathematics gets quite complicated especially with coordinate transform jacobian whose reference was missing in the source code. (Please let the authors know if anyone finds it). In this white paper, thus we attempt to derive the jacobians for both local-to-global and global-to-local transforms."

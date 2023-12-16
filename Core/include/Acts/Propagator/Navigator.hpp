@@ -201,44 +201,6 @@ class Navigator {
     return result;
   }
 
-  /// Reset state
-  ///
-  /// @param state is the state
-  /// @param geoContext is the geometry context
-  /// @param pos is the global position
-  /// @param dir is the direction of navigation
-  /// @param ssurface is the new starting surface
-  /// @param tsurface is the target surface
-  void resetState(State& state, const GeometryContext& geoContext,
-                  const Vector3& pos, const Vector3& dir,
-                  const Surface* ssurface, const Surface* tsurface) const {
-    // Reset everything first
-    state = State();
-
-    // Set the start, current and target objects
-    state.startSurface = ssurface;
-    if (ssurface->associatedLayer() != nullptr) {
-      state.startLayer = ssurface->associatedLayer();
-    }
-    if (state.startLayer->trackingVolume() != nullptr) {
-      state.startVolume = state.startLayer->trackingVolume();
-    }
-    state.currentSurface = state.startSurface;
-    state.currentVolume = state.startVolume;
-    state.targetSurface = tsurface;
-
-    // Get the compatible layers (including the current layer)
-    NavigationOptions<Layer> navOpts;
-    navOpts.resolveSensitive = true;
-    navOpts.resolveMaterial = true;
-    navOpts.resolvePassive = true;
-    state.navLayers =
-        state.currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
-
-    // Set the index to the first
-    state.navLayerIndex = 0;
-  }
-
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
