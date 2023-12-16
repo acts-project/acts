@@ -61,7 +61,8 @@ void rescaleDensityMap(AdaptiveGridTrackDensity::DensityMap& densityMap,
 
 }  // namespace
 
-double AdaptiveGridTrackDensity::getBinCenter(int bin, double binExtent) {
+double AdaptiveGridTrackDensity::getBinCenter(std::int32_t bin,
+                                              double binExtent) {
   return bin * binExtent;
 }
 
@@ -69,51 +70,86 @@ int AdaptiveGridTrackDensity::getBin(double value, double binExtent) {
   return static_cast<int>(std::floor(value / binExtent - 0.5) + 1);
 }
 
-int AdaptiveGridTrackDensity::getTrkGridSize(double sigma, double trkSigmas,
-                                             double binExtent) {
-  int size = static_cast<int>(std::ceil(2 * trkSigmas * sigma / binExtent));
+std::uint32_t AdaptiveGridTrackDensity::getTrkGridSize(
+    double sigma, double nTrkSigmas, double binExtent,
+    const GridSizeRange& trkGridSizeRange) {
+  std::uint32_t size =
+      static_cast<std::uint32_t>(std::ceil(2 * nTrkSigmas * sigma / binExtent));
+  // Make sure the grid size is odd
   if (size % 2 == 0) {
     ++size;
+  }
+  // Make sure the grid size is within the allowed range
+  if (trkGridSizeRange.first && size < trkGridSizeRange.first.value()) {
+    size = trkGridSizeRange.first.value();
+  }
+  if (trkGridSizeRange.second && size > trkGridSizeRange.second.value()) {
+    size = trkGridSizeRange.second.value();
   }
   return size;
 }
 
-int AdaptiveGridTrackDensity::getSpatialBin(double value) const {
+std::int32_t AdaptiveGridTrackDensity::getSpatialBin(double value) const {
   return getBin(value, m_cfg.spatialBinExtent);
 }
 
-int AdaptiveGridTrackDensity::getTemporalBin(double value) const {
+std::int32_t AdaptiveGridTrackDensity::getTemporalBin(double value) const {
   if (!m_cfg.useTime) {
     return 0;
   }
   return getBin(value, m_cfg.temporalBinExtent);
 }
 
-double AdaptiveGridTrackDensity::getSpatialBinCenter(int bin) const {
+double AdaptiveGridTrackDensity::getSpatialBinCenter(std::int32_t bin) const {
   return getBinCenter(bin, m_cfg.spatialBinExtent);
 }
 
-double AdaptiveGridTrackDensity::getTemporalBinCenter(int bin) const {
+double AdaptiveGridTrackDensity::getTemporalBinCenter(std::int32_t bin) const {
   if (!m_cfg.useTime) {
     return 0.;
   }
   return getBinCenter(bin, m_cfg.temporalBinExtent);
 }
 
-int AdaptiveGridTrackDensity::getSpatialTrkGridSize(double sigma) const {
-  return getTrkGridSize(sigma, m_cfg.spatialTrkSigmas, m_cfg.spatialBinExtent);
+std::uint32_t AdaptiveGridTrackDensity::getSpatialTrkGridSize(
+    double sigma) const {
+  return getTrkGridSize(sigma, m_cfg.nSpatialTrkSigmas, m_cfg.spatialBinExtent,
+                        m_cfg.spatialTrkGridSizeRange);
 }
 
-int AdaptiveGridTrackDensity::getTemporalTrkGridSize(double sigma) const {
+std::uint32_t AdaptiveGridTrackDensity::getTemporalTrkGridSize(
+    double sigma) const {
   if (!m_cfg.useTime) {
     return 1;
   }
-  return getTrkGridSize(sigma, m_cfg.temporalTrkSigmas,
-                        m_cfg.temporalBinExtent);
+  return getTrkGridSize(sigma, m_cfg.nTemporalTrkSigmas,
+                        m_cfg.temporalBinExtent,
+                        m_cfg.temporalTrkGridSizeRange);
 }
 
 AdaptiveGridTrackDensity::AdaptiveGridTrackDensity(const Config& cfg)
-    : m_cfg(cfg) {}
+    : m_cfg(cfg) {
+  if (m_cfg.spatialTrkGridSizeRange.first &&
+      m_cfg.spatialTrkGridSizeRange.first.value() % 2 == 0) {
+    throw std::invalid_argument(
+        "AdaptiveGridTrackDensity: nSpatialBinRange.first must be odd");
+  }
+  if (m_cfg.spatialTrkGridSizeRange.second &&
+      m_cfg.spatialTrkGridSizeRange.second.value() % 2 == 0) {
+    throw std::invalid_argument(
+        "AdaptiveGridTrackDensity: nSpatialBinRange.second must be odd");
+  }
+  if (m_cfg.temporalTrkGridSizeRange.first &&
+      m_cfg.temporalTrkGridSizeRange.first.value() % 2 == 0) {
+    throw std::invalid_argument(
+        "AdaptiveGridTrackDensity: nTemporalBinRange.first must be odd");
+  }
+  if (m_cfg.temporalTrkGridSizeRange.second &&
+      m_cfg.temporalTrkGridSizeRange.second.value() % 2 == 0) {
+    throw std::invalid_argument(
+        "AdaptiveGridTrackDensity: nTemporalBinRange.second must be odd");
+  }
+}
 
 AdaptiveGridTrackDensity::SparseDensityMap::const_iterator
 AdaptiveGridTrackDensity::highestDensityEntry(

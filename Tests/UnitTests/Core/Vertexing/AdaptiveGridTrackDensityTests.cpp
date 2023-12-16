@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
                                ParticleHypothesis::pion());
 
   AdaptiveGridTrackDensity::Config cfg;
-  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
@@ -94,10 +95,10 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
     return coef * std::exp(expo);
   };
 
-  for (auto const& it : mainDensityMap) {
+  for (const auto& [bin, _] : mainDensityMap.scaledMap) {
     // Extract variables for better readability
-    int zBin = it.first.first;
-    float density = it.second;
+    int zBin = bin.first;
+    double density = mainDensityMap.at(bin);
     // Argument for 2D gaussian
     Vector2 dzVec{0., grid.getBinCenter(zBin, binExtent)};
     // Compute correct density...
@@ -160,9 +161,9 @@ BOOST_AUTO_TEST_CASE(
   ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
 
   AdaptiveGridTrackDensity::Config cfg;
-  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = spatialBinExtent;
-  cfg.temporalTrkGridSize = temporalTrkGridSize;
+  cfg.temporalTrkGridSizeRange = {temporalTrkGridSize, temporalTrkGridSize};
   cfg.temporalBinExtent = temporalBinExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
@@ -183,11 +184,11 @@ BOOST_AUTO_TEST_CASE(
     return coef * std::exp(expo);
   };
 
-  for (auto const& it : mainDensityMap) {
+  for (const auto& [bin, _] : mainDensityMap.scaledMap) {
     // Extract variables for better readability
-    float z = grid.getBinCenter(it.first.first, spatialBinExtent);
-    float t = grid.getBinCenter(it.first.second, temporalBinExtent);
-    float density = it.second;
+    float z = grid.getBinCenter(bin.first, spatialBinExtent);
+    float t = grid.getBinCenter(bin.second, temporalBinExtent);
+    float density = mainDensityMap.at(bin);
     // Argument for 3D gaussian
     Vector3 dztVec{0., z, t};
 
@@ -238,7 +239,7 @@ BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   const unsigned int spatialTrkGridSize = 1;
   float binExtent = 2.;
   AdaptiveGridTrackDensity::Config cfg;
-  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
@@ -248,12 +249,13 @@ BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   // z-position of the maximum density
   float correctMaxZ = -2.;
 
+  mainDensityMap.exponentOffset = 0;
   // Fill map with a triangular track density.
   // We use an isoscele triangle with a maximum density value of 1 and a width
   // of 20 mm. The linear approximation we use during the seed width estimation
   // should be exact in this case.
   for (int i = -6; i <= 4; i++) {
-    mainDensityMap[std::make_pair(i, 0)] =
+    mainDensityMap.scaledMap[{i, 0}] =
         1.0 - 0.1 * std::abs(correctMaxZ - grid.getBinCenter(i, binExtent));
   }
 
@@ -277,7 +279,7 @@ BOOST_AUTO_TEST_CASE(track_adding) {
   double binExtent = 0.1;  // mm
 
   AdaptiveGridTrackDensity::Config cfg;
-  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
 
@@ -341,15 +343,15 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
 
   // 1D grid of z values
   AdaptiveGridTrackDensity::Config cfg1D;
-  cfg1D.spatialTrkGridSize = spatialTrkGridSize;
+  cfg1D.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg1D.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid1D(cfg1D);
 
   // 2D grid of z and t values
   AdaptiveGridTrackDensity::Config cfg2D;
-  cfg2D.spatialTrkGridSize = spatialTrkGridSize;
+  cfg2D.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg2D.spatialBinExtent = binExtent;
-  cfg2D.temporalTrkGridSize = temporalTrkGridSize;
+  cfg2D.temporalTrkGridSizeRange = {temporalTrkGridSize, temporalTrkGridSize};
   cfg2D.temporalBinExtent = binExtent;
   AdaptiveGridTrackDensity grid2D(cfg2D);
 
@@ -429,7 +431,7 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
   double binExtent = 0.05;  // mm
 
   AdaptiveGridTrackDensity::Config cfg;
-  cfg.spatialTrkGridSize = spatialTrkGridSize;
+  cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = binExtent;
   cfg.useHighestSumZPosition = true;
 
@@ -474,9 +476,9 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
   BOOST_CHECK_EQUAL((*res2).first, z0Trk2);
 
   // Add small density values around the maximum of track 1
-  const float densityToAdd = 0.5;
-  mainDensityMap.at(std::make_pair(4, 0)) += densityToAdd;
-  mainDensityMap.at(std::make_pair(6, 0)) += densityToAdd;
+  const float scaledDensityToAdd = 0.5 * safeExp(mainDensityMap.exponentOffset);
+  mainDensityMap.scaled({4, 0}) += scaledDensityToAdd;
+  mainDensityMap.scaled({6, 0}) += scaledDensityToAdd;
 
   auto res3 = grid.getMaxZTPosition(mainDensityMap);
   BOOST_CHECK(res3.ok());
@@ -497,15 +499,15 @@ BOOST_AUTO_TEST_CASE(track_removing) {
 
   // 1D grid
   AdaptiveGridTrackDensity::Config cfg1D;
-  cfg1D.spatialTrkGridSize = spatialTrkGridSize;
+  cfg1D.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg1D.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid1D(cfg1D);
 
   // 2D grid
   AdaptiveGridTrackDensity::Config cfg2D;
-  cfg2D.spatialTrkGridSize = spatialTrkGridSize;
+  cfg2D.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg2D.spatialBinExtent = binExtent;
-  cfg2D.temporalTrkGridSize = temporalTrkGridSize;
+  cfg2D.temporalTrkGridSizeRange = {temporalTrkGridSize, temporalTrkGridSize};
   cfg2D.temporalBinExtent = binExtent;
   AdaptiveGridTrackDensity grid2D(cfg2D);
 
@@ -539,8 +541,8 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Lambda for calculating total density
   auto densitySum = [](const auto& densityMap) {
     float sum = 0.;
-    for (auto it = densityMap.begin(); it != densityMap.end(); it++) {
-      sum += it->second;
+    for (const auto& [bin, _] : densityMap.scaledMap) {
+      sum += densityMap.at(bin);
     }
     return sum;
   };

@@ -9,6 +9,7 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
@@ -32,15 +33,18 @@ namespace Acts {
 /// grows adaptively when tracks densities are added to the grid.
 class AdaptiveGridTrackDensity {
  public:
-  // The first (second) integer indicates the bin's z (t) position
+  /// The first (second) integer indicates the bin's z (t) position
   using Bin = std::pair<int, int>;
-  // Mapping between bins and track densities
+  /// Mapping between bins and track densities
   using SparseDensityMap = std::unordered_map<Bin, double, boost::hash<Bin>>;
-  // Coordinates in the z-t plane; the t value will be set to 0 if time
-  // vertex seeding is disabled
+  /// Coordinates in the z-t plane; the t value will be set to 0 if time
+  //& vertex seeding is disabled
   using ZTPosition = std::pair<double, double>;
-  // z-t position of a maximum and its width
+  /// z-t position of a maximum and its width
   using ZTPositionAndWidth = std::pair<ZTPosition, double>;
+  /// Optional grid size range
+  using GridSizeRange =
+      std::pair<std::optional<std::uint32_t>, std::optional<std::uint32_t>>;
 
   struct DensityMap {
     double exponentOffset = std::numeric_limits<double>::infinity();
@@ -57,6 +61,10 @@ class AdaptiveGridTrackDensity {
       return 0.;
     }
     double& scaled(const Bin& bin) { return scaledMap[bin]; }
+
+    double at(const Bin& bin) const {
+      return scaled(bin) * safeExp(-exponentOffset);
+    }
   };
 
   /// The configuration struct
@@ -66,14 +74,14 @@ class AdaptiveGridTrackDensity {
     double spatialBinExtent = 15 * UnitConstants::um;
 
     /// Number of sigmas to use for the spatial extent of the track
-    double spatialTrkSigmas = 3.0;
+    double nSpatialTrkSigmas = 3.0;
 
     /// Temporal extent of a bin, should be set to 0 if time vertex seeding is
     /// disabled (i.e., if temporalTrkGridSize = 1)
     double temporalBinExtent = 19 * UnitConstants::mm;
 
     /// Number of sigmas to use for the temporal extent of the track
-    double temporalTrkSigmas = 3.0;
+    double nTemporalTrkSigmas = 3.0;
 
     /// Spatial window for filling the density map
     std::pair<double, double> spatialWindow = {-250 * UnitConstants::mm,
@@ -81,6 +89,9 @@ class AdaptiveGridTrackDensity {
     /// Temporal window for filling the density map
     std::pair<double, double> temporalWindow = {-10 * UnitConstants::ns,
                                                 10 * UnitConstants::ns};
+
+    GridSizeRange spatialTrkGridSizeRange = {std::nullopt, std::nullopt};
+    GridSizeRange temporalTrkGridSizeRange = {std::nullopt, std::nullopt};
 
     bool useTime = true;
 
@@ -140,6 +151,13 @@ class AdaptiveGridTrackDensity {
   void subtractTrack(const DensityMap& trackDensityMap,
                      DensityMap& mainDensityMap) const;
 
+  // TODO this should not be public
+  /// @brief Calculates the bin center from the bin number
+  /// @param bin Bin number
+  /// @param binExtent Bin extent
+  /// @return Bin center
+  static double getBinCenter(std::int32_t bin, double binExtent);
+
  private:
   Config m_cfg;
 
@@ -147,24 +165,20 @@ class AdaptiveGridTrackDensity {
   /// @param value d, z, or time value
   /// @param binExtent Bin extent
   /// @return Bin number
-  static int getBin(double value, double binExtent);
+  static std::int32_t getBin(double value, double binExtent);
 
-  /// @brief Calculates the bin center from the bin number
-  /// @param bin Bin number
-  /// @param binExtent Bin extent
-  /// @return Bin center
-  static double getBinCenter(int bin, double binExtent);
+  static std::uint32_t getTrkGridSize(double sigma, double trkSigmas,
+                                      double binExtent,
+                                      const GridSizeRange& trkGridSizeRange);
 
-  static int getTrkGridSize(double sigma, double trkSigmas, double binExtent);
+  std::int32_t getSpatialBin(double value) const;
+  std::int32_t getTemporalBin(double value) const;
 
-  int getSpatialBin(double value) const;
-  int getTemporalBin(double value) const;
+  double getSpatialBinCenter(std::int32_t bin) const;
+  double getTemporalBinCenter(std::int32_t bin) const;
 
-  double getSpatialBinCenter(int bin) const;
-  double getTemporalBinCenter(int bin) const;
-
-  int getSpatialTrkGridSize(double sigma) const;
-  int getTemporalTrkGridSize(double sigma) const;
+  std::uint32_t getSpatialTrkGridSize(double sigma) const;
+  std::uint32_t getTemporalTrkGridSize(double sigma) const;
 
   /// @brief Finds the maximum density of a DensityMap
   /// @param densityMap Map between bins and corresponding density
