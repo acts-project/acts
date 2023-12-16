@@ -166,9 +166,9 @@ int main(int argc, char** argv) {
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
-      Acts::GridBinFinder<2ul>(zBinNeighborsBottom, numPhiNeighbors));
+								    Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
   auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
-      Acts::GridBinFinder<2ul>(zBinNeighborsTop, numPhiNeighbors));
+								 Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
