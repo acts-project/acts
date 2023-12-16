@@ -7,14 +7,8 @@ Currently implemented is clang-tidy warnings.
 
 import argparse
 import re
-from collections import namedtuple
-from itertools import groupby
 import os
-import html
 from fnmatch import fnmatch
-import json
-import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 from item import Item, ItemCollection
@@ -148,7 +142,7 @@ def main():
 
     print("Write to", args.output)
     with open(args.output, "w+") as jf:
-        jf.write(ItemCollection(__root__=items).json(indent=2))
+        jf.write(ItemCollection(root=items).model_dump_json(indent=2))
 
 
 if "__main__" == __name__:
