@@ -97,8 +97,8 @@ struct CombinatorialKalmanFilterExtensions {
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
           candidate_container_t& trackStates, bool&, const Logger&)>;
-  using BranchStopper =
-      Delegate<bool(const CombinatorialKalmanFilterTipState&)>;
+  using BranchStopper = Delegate<bool(const CombinatorialKalmanFilterTipState&,
+                                      typename traj_t::TrackStateProxy&)>;
 
   /// The source link accessor
   SourceLinkAccessor sourcelinkAccessor;
@@ -139,8 +139,10 @@ struct CombinatorialKalmanFilterExtensions {
   /// @param tipState The tip state to decide whether to stop (unused)
   /// @return false
   static bool voidBranchStopper(
-      const CombinatorialKalmanFilterTipState& tipState) {
+      const CombinatorialKalmanFilterTipState& tipState,
+      typename traj_t::TrackStateProxy& trackState) {
     (void)tipState;
+    (void)trackState;
     return false;
   }
 };
@@ -684,8 +686,11 @@ class CombinatorialKalmanFilter {
           currentTip = addNonSourcelinkState(stateMask, boundState, result,
                                              isSensitive, prevTip);
 
+          auto nonSourcelinkState =
+              result.fittedStates->getTrackState(currentTip);
+
           // Check the branch
-          if (!m_extensions.branchStopper(tipState)) {
+          if (!m_extensions.branchStopper(tipState, nonSourcelinkState)) {
             // Remember the active tip and its state
             result.activeTips.emplace_back(currentTip, tipState);
           } else {
@@ -904,7 +909,7 @@ class CombinatorialKalmanFilter {
         }
 
         // Check if need to stop this branch
-        if (!m_extensions.branchStopper(tipState)) {
+        if (!m_extensions.branchStopper(tipState, trackState)) {
           // Put tipstate back into active tips to continue with it
           result.activeTips.emplace_back(currentTip, tipState);
           // Record the number of branches on surface

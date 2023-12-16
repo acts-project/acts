@@ -185,8 +185,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     }
   } else {
     currentConstraint.setFullPosition(seedVertex.fullPosition());
-    currentConstraint.setFullCovariance(SquareMatrix4::Identity() *
-                                        m_cfg.looseConstrValue);
+    currentConstraint.setFullCovariance(m_cfg.initialVariances.asDiagonal());
     currentConstraint.setFitQuality(m_cfg.defaultConstrFitQuality);
   }
 }
