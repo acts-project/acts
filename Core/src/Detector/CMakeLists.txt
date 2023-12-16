@@ -7,6 +7,7 @@ target_sources(
     detail/CylindricalDetectorHelper.cpp
     detail/DetectorVolumeConsistency.cpp
     detail/PortalHelper.cpp
+    detail/ProtoMaterialHelper.cpp
     detail/SupportHelper.cpp
     detail/IndexedGridFiller.cpp
     CylindricalContainerBuilder.cpp

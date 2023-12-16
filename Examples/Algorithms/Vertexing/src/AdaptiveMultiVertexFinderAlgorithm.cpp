@@ -125,7 +125,10 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   typename Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
                                        ipEstimator, std::move(linearizer),
                                        m_cfg.bField);
-  finderConfig.looseConstrValue = 1e2;
+  // Set the initial variance of the 4D vertex position. Since time is on a
+  // numerical scale, we have to provide a greater value in the corresponding
+  // dimension.
+  finderConfig.initialVariances << 1e+2, 1e+2, 1e+2, 1e+7;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;
