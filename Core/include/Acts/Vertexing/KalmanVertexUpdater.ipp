@@ -6,13 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Vertexing/VertexingError.hpp"
-
 #include <algorithm>
 
 template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::updateVertexWithTrack(
-    Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk) {
+    Vertex<input_track_t>& vtx, TrackAtVertex& trk) {
   std::pair<double, double> fitQuality = vtx.fitQuality();
   detail::updateVertexWithTrack(vtx.fullPosition(), vtx.fullCovariance(),
                                 fitQuality, trk, 1, nDimVertex);

@@ -100,10 +100,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
           .value();
 
   // Vectors of track parameters in different orders
-  std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b,
-                                                   &params1c};
-  std::vector<const BoundTrackParameters*> vec2 = {&params1c, &params1a,
-                                                   &params1b};
+  std::vector<InputTrack> vec1 = {InputTrack{&params1a}, InputTrack{&params1b},
+                                  InputTrack{&params1c}};
+  std::vector<InputTrack> vec2 = {InputTrack{&params1c}, InputTrack{&params1a},
+                                  InputTrack{&params1b}};
 
   auto res1 = finder.find(vec1, vertexingOptions, state);
   auto res2 = finder.find(vec2, vertexingOptions, state);
@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
           .value();
 
   // Vector of track parameters
-  std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b,
-                                                   &params1c};
+  std::vector<InputTrack> vec1 = {InputTrack{&params1a}, InputTrack{&params1b},
+                                  InputTrack{&params1c}};
 
   auto res = finder.find(vec1, vertexingOptions, state);
 
@@ -271,12 +271,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
                            .value());
   }
 
-  std::vector<const BoundTrackParameters*> trackPtrVec;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : trackVec) {
-    trackPtrVec.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
-  auto res3 = finder.find(trackPtrVec, vertexingOptions, state);
+  auto res3 = finder.find(inputTracks, vertexingOptions, state);
   if (!res3.ok()) {
     std::cout << res3.error().message() << std::endl;
   }
@@ -288,9 +288,9 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   }
 }
 
-// Dummy user-defined InputTrack type
-struct InputTrack {
-  InputTrack(const BoundTrackParameters& params) : m_parameters(params) {}
+// Dummy user-defined InputTrackStub type
+struct InputTrackStub {
+  InputTrackStub(const BoundTrackParameters& params) : m_parameters(params) {}
 
   const BoundTrackParameters& parameters() const { return m_parameters; }
 
@@ -321,18 +321,20 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SquareMatrix3 constrCov = SquareMatrix3::Identity();
 
-  Vertex<InputTrack> constraint(constraintPos);
+  Vertex<InputTrackStub> constraint(constraintPos);
   constraint.setCovariance(constrCov);
 
   // Finder options
-  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
-                                                constraint);
+  VertexingOptions<InputTrackStub> vertexingOptions(geoContext, magFieldContext,
+                                                    constraint);
 
-  std::function<BoundTrackParameters(InputTrack)> extractParameters =
-      [](const InputTrack& params) { return params.parameters(); };
+  std::function<BoundTrackParameters(const InputTrack&)> extractParameters =
+      [](const InputTrack& params) {
+        return params.as<InputTrackStub>()->parameters();
+      };
 
-  using Finder = TrackDensityVertexFinder<DummyVertexFitter<InputTrack>,
-                                          GaussianTrackDensity<InputTrack>>;
+  using Finder = TrackDensityVertexFinder<DummyVertexFitter<InputTrackStub>,
+                                          GaussianTrackDensity<InputTrackStub>>;
 
   Finder finder(extractParameters);
   Finder::State state;
@@ -343,24 +345,25 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  InputTrack params1a(BoundTrackParameters::create(perigeeSurface, geoContext,
-                                                   makeVector4(pos1a, 0), mom1a,
-                                                   1_e / mom1a.norm(), covMat,
-                                                   ParticleHypothesis::pion())
-                          .value());
-  InputTrack params1b(BoundTrackParameters::create(perigeeSurface, geoContext,
-                                                   makeVector4(pos1b, 0), mom1b,
-                                                   -1_e / mom1b.norm(), covMat,
-                                                   ParticleHypothesis::pion())
-                          .value());
-  InputTrack params1c(BoundTrackParameters::create(perigeeSurface, geoContext,
-                                                   makeVector4(pos1c, 0), mom1c,
-                                                   -1_e / mom1c.norm(), covMat,
-                                                   ParticleHypothesis::pion())
-                          .value());
+  InputTrackStub params1a(BoundTrackParameters::create(
+                              perigeeSurface, geoContext, makeVector4(pos1a, 0),
+                              mom1a, 1_e / mom1a.norm(), covMat,
+                              ParticleHypothesis::pion())
+                              .value());
+  InputTrackStub params1b(BoundTrackParameters::create(
+                              perigeeSurface, geoContext, makeVector4(pos1b, 0),
+                              mom1b, -1_e / mom1b.norm(), covMat,
+                              ParticleHypothesis::pion())
+                              .value());
+  InputTrackStub params1c(BoundTrackParameters::create(
+                              perigeeSurface, geoContext, makeVector4(pos1c, 0),
+                              mom1c, -1_e / mom1c.norm(), covMat,
+                              ParticleHypothesis::pion())
+                              .value());
 
   // Vector of track parameters
-  std::vector<const InputTrack*> vec1 = {&params1a, &params1b, &params1c};
+  std::vector<InputTrack> vec1 = {InputTrack{&params1a}, InputTrack{&params1b},
+                                  InputTrack{&params1c}};
 
   auto res = finder.find(vec1, vertexingOptions, state);
 
