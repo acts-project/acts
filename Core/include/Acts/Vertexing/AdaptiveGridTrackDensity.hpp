@@ -11,8 +11,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <unordered_map>
-
+#include <boost/container/flat_map.hpp>  // TODO use flat unordered map
 #include <boost/functional/hash.hpp>
 
 namespace Acts {
@@ -33,7 +32,7 @@ class AdaptiveGridTrackDensity {
   /// The first (second) integer indicates the bin's z (t) position
   using Bin = std::pair<std::int32_t, std::int32_t>;
   /// Mapping between bins and track densities
-  using DensityMap = std::unordered_map<Bin, float, boost::hash<Bin>>;
+  using DensityMap = boost::container::flat_map<Bin, float>;
   /// Coordinates in the z-t plane; the t value will be set to 0 if time
   /// vertex seeding is disabled
   using ZTPosition = std::pair<double, double>;
