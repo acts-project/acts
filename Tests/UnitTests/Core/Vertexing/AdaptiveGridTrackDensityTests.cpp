@@ -66,6 +66,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
                                ParticleHypothesis::pion());
 
   AdaptiveGridTrackDensity::Config cfg;
+  // force track to have exactly spatialTrkGridSize spatial bins for testing purposes
   cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
@@ -154,8 +155,10 @@ BOOST_AUTO_TEST_CASE(
   ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
 
   AdaptiveGridTrackDensity::Config cfg;
+ // force track to have exactly spatialTrkGridSize spatial bins for testing purposes
   cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = spatialBinExtent;
+ // force track to have exactly temporalTrkGridSize temporal bins for testing purposes
   cfg.temporalTrkGridSizeRange = {temporalTrkGridSize, temporalTrkGridSize};
   cfg.temporalBinExtent = temporalBinExtent;
   cfg.useTime = true;
@@ -178,11 +181,10 @@ BOOST_AUTO_TEST_CASE(
     return coef * std::exp(expo);
   };
 
-  for (const auto& [bin, _] : mainDensityMap) {
+  for (const auto& [bin, density] : mainDensityMap) {
     // Extract variables for better readability
     double z = grid.getBinCenter(bin.first, spatialBinExtent);
     double t = grid.getBinCenter(bin.second, temporalBinExtent);
-    float density = mainDensityMap.at(bin);
     // Argument for 3D gaussian
     Vector3 dztVec{0., z, t};
 
@@ -535,8 +537,8 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Lambda for calculating total density
   auto densitySum = [](const auto& densityMap) {
     double sum = 0.;
-    for (const auto& [bin, _] : densityMap) {
-      sum += densityMap.at(bin);
+    for (const auto& [_, density] : densityMap) {
+      sum += density;
     }
     return sum;
   };
