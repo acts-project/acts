@@ -77,7 +77,7 @@ class AdaptiveGridTrackDensity {
     double nSpatialTrkSigmas = 3.0;
 
     /// Temporal extent of a bin, should be set to 0 if time vertex seeding is
-    /// disabled (i.e., if temporalTrkGridSize = 1)
+    /// disabled 
     double temporalBinExtent = 19 * UnitConstants::mm;
 
     /// Number of standard deviations that the grid covers in t direction
