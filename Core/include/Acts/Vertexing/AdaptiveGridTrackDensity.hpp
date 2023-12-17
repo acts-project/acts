@@ -80,7 +80,7 @@ class AdaptiveGridTrackDensity {
     /// disabled (i.e., if temporalTrkGridSize = 1)
     double temporalBinExtent = 19 * UnitConstants::mm;
 
-    /// Number of sigmas to use for the temporal extent of the track
+    /// Number of standard deviations that the grid covers in t direction
     double nTemporalTrkSigmas = 3.0;
 
     /// Spatial window for filling the density map
