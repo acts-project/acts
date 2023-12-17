@@ -188,6 +188,14 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::addTrack(
   std::uint32_t temporalTrkGridSize =
       getTemporalTrkGridSize(std::sqrt(cov(2, 2)));
 
+  // Calculate bin in d direction
+  std::int32_t centralDBin = getBin(impactParams(0), m_cfg.spatialBinExtent);
+  // Check if current track affects grid density
+  if (std::abs(centralDBin) > (spatialTrkGridSize - 1) / 2.) {
+    // Return empty map
+    return {};
+  }
+
   // Calculate bin in z and t direction
   std::int32_t centralZBin = getSpatialBin(impactParams(1));
   std::int32_t centralTBin = getTemporalBin(impactParams(2));

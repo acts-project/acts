@@ -42,7 +42,6 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
   }
 
   if (state.mainDensityMap.empty()) {
-    std::cout << "Density map is empty" << std::endl;
     // No tracks passed selection
     // Return empty seed, i.e. vertex at constraint position
     // (Note: Upstream finder should check for this break condition)
@@ -59,7 +58,6 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
     auto maxZTRes = m_cfg.gridDensity.getMaxZTPosition(state.mainDensityMap);
 
     if (!maxZTRes.ok()) {
-      std::cout << "Max z-t failed" << std::endl;
       return maxZTRes.error();
     }
     z = (*maxZTRes).first;
@@ -70,7 +68,6 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
         m_cfg.gridDensity.getMaxZTPositionAndWidth(state.mainDensityMap);
 
     if (!maxZTResAndWidth.ok()) {
-      std::cout << "Max z-t-width failed" << std::endl;
       return maxZTResAndWidth.error();
     }
     z = (*maxZTResAndWidth).first.first;
