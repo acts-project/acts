@@ -66,7 +66,8 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
                                ParticleHypothesis::pion());
 
   AdaptiveGridTrackDensity::Config cfg;
-  // force track to have exactly spatialTrkGridSize spatial bins for testing purposes
+  // force track to have exactly spatialTrkGridSize spatial bins for testing
+  // purposes
   cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = binExtent;
   AdaptiveGridTrackDensity grid(cfg);
@@ -155,10 +156,12 @@ BOOST_AUTO_TEST_CASE(
   ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
 
   AdaptiveGridTrackDensity::Config cfg;
- // force track to have exactly spatialTrkGridSize spatial bins for testing purposes
+  // force track to have exactly spatialTrkGridSize spatial bins for testing
+  // purposes
   cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = spatialBinExtent;
- // force track to have exactly temporalTrkGridSize temporal bins for testing purposes
+  // force track to have exactly temporalTrkGridSize temporal bins for testing
+  // purposes
   cfg.temporalTrkGridSizeRange = {temporalTrkGridSize, temporalTrkGridSize};
   cfg.temporalBinExtent = temporalBinExtent;
   cfg.useTime = true;
