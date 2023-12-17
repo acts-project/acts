@@ -108,22 +108,23 @@ AdaptiveGridTrackDensity::AdaptiveGridTrackDensity(const Config& cfg)
   if (m_cfg.spatialTrkGridSizeRange.first &&
       m_cfg.spatialTrkGridSizeRange.first.value() % 2 == 0) {
     throw std::invalid_argument(
-        "AdaptiveGridTrackDensity: nSpatialBinRange.first must be odd");
+        "AdaptiveGridTrackDensity: spatialTrkGridSizeRange.first must be odd");
   }
   if (m_cfg.spatialTrkGridSizeRange.second &&
       m_cfg.spatialTrkGridSizeRange.second.value() % 2 == 0) {
     throw std::invalid_argument(
-        "AdaptiveGridTrackDensity: nSpatialBinRange.second must be odd");
+        "AdaptiveGridTrackDensity: spatialTrkGridSizeRange.second must be odd");
   }
   if (m_cfg.temporalTrkGridSizeRange.first &&
       m_cfg.temporalTrkGridSizeRange.first.value() % 2 == 0) {
     throw std::invalid_argument(
-        "AdaptiveGridTrackDensity: nTemporalBinRange.first must be odd");
+        "AdaptiveGridTrackDensity: temporalTrkGridSizeRange.first must be odd");
   }
   if (m_cfg.temporalTrkGridSizeRange.second &&
       m_cfg.temporalTrkGridSizeRange.second.value() % 2 == 0) {
     throw std::invalid_argument(
-        "AdaptiveGridTrackDensity: nTemporalBinRange.second must be odd");
+        "AdaptiveGridTrackDensity: temporalTrkGridSizeRange.second must be "
+        "odd");
   }
 }
 
@@ -225,8 +226,6 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::createTrackGrid(
     std::uint32_t temporalTrkGridSize) const {
   DensityMap trackDensityMap;
 
-  Vector3 maxParams(impactParams[0], 0, 0);
-
   std::uint32_t halfSpatialTrkGridSize = (spatialTrkGridSize - 1) / 2;
   std::int32_t firstZBin = centralBin.first - halfSpatialTrkGridSize;
 
@@ -259,6 +258,7 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::createTrackGrid(
         density = multivariateGaussian<2>(binCoords.head<2>(),
                                           cov.topLeftCorner<2, 2>());
       }
+      // Only add density if it is positive (otherwise it is 0)
       if (density > 0) {
         trackDensityMap[bin] = density;
       }
@@ -386,11 +386,18 @@ AdaptiveGridTrackDensity::Bin AdaptiveGridTrackDensity::highestDensitySumBin(
 
 double AdaptiveGridTrackDensity::getDensitySum(const DensityMap& densityMap,
                                                const Bin& bin) const {
+  auto valueOrZero = [&densityMap](const Bin& bin) {
+    if (auto it = densityMap.find(bin); it != densityMap.end()) {
+      return it->second;
+    }
+    return 0.0;
+  };
+
   // Add density from the bin.
   // Check if neighboring bins are part of the densityMap and add them (if they
   // are not part of the map, we assume them to be 0).
-  return densityMap.at(bin) + densityMap.at({bin.first - 1, bin.second}) +
-         densityMap.at({bin.first + 1, bin.second});
+  return valueOrZero(bin) + valueOrZero({bin.first - 1, bin.second}) +
+         valueOrZero({bin.first + 1, bin.second});
 }
 
 }  // namespace Acts
