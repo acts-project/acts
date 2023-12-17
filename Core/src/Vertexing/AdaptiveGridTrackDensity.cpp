@@ -66,7 +66,7 @@ double AdaptiveGridTrackDensity::getBinCenter(std::int32_t bin,
   return bin * binExtent;
 }
 
-int AdaptiveGridTrackDensity::getBin(double value, double binExtent) {
+std::int32_t AdaptiveGridTrackDensity::getBin(double value, double binExtent) {
   return static_cast<int>(std::floor(value / binExtent - 0.5) + 1);
 }
 
@@ -209,19 +209,21 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::addTrack(
   ActsVector<3> impactParams = trk.impactParameters();
   ActsSquareMatrix<3> cov = trk.impactParameterCovariance().value();
 
-  int spatialTrkGridSize = getSpatialTrkGridSize(std::sqrt(cov(1, 1)));
-  int temporalTrkGridSize = getTemporalTrkGridSize(std::sqrt(cov(2, 2)));
+  std::uint32_t spatialTrkGridSize =
+      getSpatialTrkGridSize(std::sqrt(cov(1, 1)));
+  std::uint32_t temporalTrkGridSize =
+      getTemporalTrkGridSize(std::sqrt(cov(2, 2)));
 
   // Calculate bin in z and t direction
-  int centralZBin = getSpatialBin(impactParams(1));
-  int centralTBin = getTemporalBin(impactParams(2));
+  std::int32_t centralZBin = getSpatialBin(impactParams(1));
+  std::int32_t centralTBin = getTemporalBin(impactParams(2));
 
   Bin centralBin = {centralZBin, centralTBin};
 
   DensityMap trackDensityMap = createTrackGrid(
       impactParams, centralBin, cov, spatialTrkGridSize, temporalTrkGridSize);
 
-  if (mainDensityMap.exponentOffset < trackDensityMap.exponentOffset) {
+  if (mainDensityMap.exponentOffset <= trackDensityMap.exponentOffset) {
     double rescaleFactor = rescaleDensityMapFactor(
         trackDensityMap.exponentOffset, mainDensityMap.exponentOffset);
 
@@ -251,8 +253,8 @@ void AdaptiveGridTrackDensity::subtractTrack(const DensityMap& trackDensityMap,
 
 AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::createTrackGrid(
     const Vector3& impactParams, const Bin& centralBin,
-    const SquareMatrix3& cov, int spatialTrkGridSize,
-    int temporalTrkGridSize) const {
+    const SquareMatrix3& cov, std::uint32_t spatialTrkGridSize,
+    std::uint32_t temporalTrkGridSize) const {
   DensityMap trackDensityMap;
 
   Vector3 maxParams(impactParams[0], 0, 0);
@@ -263,24 +265,25 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::createTrackGrid(
     exponentOffset -= multivariateGaussianExponent<2>(
         maxParams.head<2>(), cov.topLeftCorner<2, 2>());
   }
+  exponentOffset = 0;
   trackDensityMap.exponentOffset = exponentOffset;
 
-  int halfSpatialTrkGridSize = (spatialTrkGridSize - 1) / 2;
-  int firstZBin = centralBin.first - halfSpatialTrkGridSize;
+  std::uint32_t halfSpatialTrkGridSize = (spatialTrkGridSize - 1) / 2;
+  std::int32_t firstZBin = centralBin.first - halfSpatialTrkGridSize;
 
   // If we don't do time vertex seeding, firstTBin will be 0.
-  int halfTemporalTrkGridSize = (temporalTrkGridSize - 1) / 2;
-  int firstTBin = centralBin.second - halfTemporalTrkGridSize;
+  std::uint32_t halfTemporalTrkGridSize = (temporalTrkGridSize - 1) / 2;
+  std::int32_t firstTBin = centralBin.second - halfTemporalTrkGridSize;
 
   // Loop over bins
-  for (int i = 0; i < temporalTrkGridSize; i++) {
-    int tBin = firstTBin + i;
+  for (std::uint32_t i = 0; i < temporalTrkGridSize; i++) {
+    std::int32_t tBin = firstTBin + i;
     double t = getTemporalBinCenter(tBin);
     if (t < m_cfg.temporalWindow.first || t > m_cfg.temporalWindow.second) {
       continue;
     }
-    for (int j = 0; j < spatialTrkGridSize; j++) {
-      int zBin = firstZBin + j;
+    for (std::uint32_t j = 0; j < spatialTrkGridSize; j++) {
+      std::int32_t zBin = firstZBin + j;
       double z = getSpatialBinCenter(zBin);
       if (z < m_cfg.spatialWindow.first || z > m_cfg.spatialWindow.second) {
         continue;
@@ -313,11 +316,11 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   }
 
   // Get z and t bin of max density
-  int zMaxBin = getBin(maxZT.first, m_cfg.spatialBinExtent);
-  int tMaxBin = getBin(maxZT.second, m_cfg.temporalBinExtent);
+  std::int32_t zMaxBin = getBin(maxZT.first, m_cfg.spatialBinExtent);
+  std::int32_t tMaxBin = getBin(maxZT.second, m_cfg.temporalBinExtent);
   double maxValue = densityMap.scaled({zMaxBin, tMaxBin});
 
-  int rhmBin = zMaxBin;
+  std::int32_t rhmBin = zMaxBin;
   double gridValue = maxValue;
   // Boolean indicating whether we find a filled bin that has a densityValue <=
   // maxValue/2
@@ -341,7 +344,7 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   double deltaZ1 = m_cfg.spatialBinExtent * (maxValue / 2 - leftDensity) /
                    (rightDensity - leftDensity);
 
-  int lhmBin = zMaxBin;
+  std::int32_t lhmBin = zMaxBin;
   gridValue = maxValue;
   binFilled = true;
   while (gridValue > maxValue / 2) {
@@ -367,9 +370,9 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   double fwhm = (rhmBin - lhmBin) * m_cfg.spatialBinExtent - deltaZ1 - deltaZ2;
 
   // FWHM = 2.355 * sigma
-  double width = fwhm / 2.355f;
+  double width = fwhm / 2.355;
 
-  return std::isnormal(width) ? width : 0.0f;
+  return std::isnormal(width) ? width : 0.0;
 }
 
 AdaptiveGridTrackDensity::Bin AdaptiveGridTrackDensity::highestDensitySumBin(
@@ -428,8 +431,8 @@ double AdaptiveGridTrackDensity::getDensitySum(const DensityMap& densityMap,
   // Check if neighboring bins are part of the densityMap and add them (if they
   // are not part of the map, we assume them to be 0).
   return densityMap.scaled(bin) +
-         densityMap.scaled({bin.first, bin.second - 1}) +
-         densityMap.scaled({bin.first, bin.second + 1});
+         densityMap.scaled({bin.first - 1, bin.second}) +
+         densityMap.scaled({bin.first + 1, bin.second});
 }
 
 }  // namespace Acts

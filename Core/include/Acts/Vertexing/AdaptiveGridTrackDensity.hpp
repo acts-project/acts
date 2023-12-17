@@ -34,7 +34,7 @@ namespace Acts {
 class AdaptiveGridTrackDensity {
  public:
   /// The first (second) integer indicates the bin's z (t) position
-  using Bin = std::pair<int, int>;
+  using Bin = std::pair<std::int32_t, std::int32_t>;
   /// Mapping between bins and track densities
   using SparseDensityMap = std::unordered_map<Bin, double, boost::hash<Bin>>;
   /// Coordinates in the z-t plane; the t value will be set to 0 if time
@@ -55,7 +55,7 @@ class AdaptiveGridTrackDensity {
     bool contains(const Bin& bin) const { return scaledMap.count(bin) != 0; }
 
     double scaled(const Bin& bin) const {
-      if (auto it = scaledMap.find(bin); it == scaledMap.end()) {
+      if (auto it = scaledMap.find(bin); it != scaledMap.end()) {
         return it->second;
       }
       return 0.;
@@ -93,7 +93,7 @@ class AdaptiveGridTrackDensity {
     GridSizeRange spatialTrkGridSizeRange = {std::nullopt, std::nullopt};
     GridSizeRange temporalTrkGridSizeRange = {std::nullopt, std::nullopt};
 
-    bool useTime = true;
+    bool useTime = false;
 
     /// Do NOT use just the z-bin with the highest
     /// track density, but instead check (up to)
@@ -197,8 +197,8 @@ class AdaptiveGridTrackDensity {
   DensityMap createTrackGrid(const Acts::Vector3& impactParams,
                              const Bin& centralBin,
                              const Acts::SquareMatrix3& cov,
-                             int spatialTrkGridSize,
-                             int temporalTrkGridSize) const;
+                             std::uint32_t spatialTrkGridSize,
+                             std::uint32_t temporalTrkGridSize) const;
 
   /// @brief Function that estimates the seed width in z direction based
   /// on the full width at half maximum (FWHM) of the maximum density peak
