@@ -386,8 +386,8 @@ AdaptiveGridTrackDensity::Bin AdaptiveGridTrackDensity::highestDensitySumBin(
 
 double AdaptiveGridTrackDensity::getDensitySum(const DensityMap& densityMap,
                                                const Bin& bin) const {
-  auto valueOrZero = [&densityMap](const Bin& bin) {
-    if (auto it = densityMap.find(bin); it != densityMap.end()) {
+  auto valueOrZero = [&densityMap](const Bin& b) {
+    if (auto it = densityMap.find(b); it != densityMap.end()) {
       return it->second;
     }
     return 0.0f;
