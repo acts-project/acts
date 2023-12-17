@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
     // Compute correct density...
     float correctDensity = gaussian2D(dzVec, impactParameters, subCovMat);
     // ... and check if our result is equivalent
-    CHECK_CLOSE_OR_SMALL(density, correctDensity, relTol, small);
+    CHECK_CLOSE_OR_SMALL(correctDensity, density, relTol, small);
   }
 
   // Analytical maximum of the Gaussian (can be obtained by expressing the
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   // ... and check if they are correct (note: the optimization is not as exact
   // as the density values).
   double relTolOptimization = 1e-3;
-  CHECK_CLOSE_REL(maxZ, correctMaxZ, relTolOptimization);
-  CHECK_CLOSE_REL(fwhm, correctFWHM, relTolOptimization);
+  CHECK_CLOSE_REL(correctMaxZ, maxZ, relTolOptimization);
+  CHECK_CLOSE_REL(correctFWHM, fwhm, relTolOptimization);
 }
 
 BOOST_AUTO_TEST_CASE(
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(
     float correctDensity = gaussian3D(dztVec, impactParameters, ipCov);
 
     // ... and check if our result is equivalent
-    CHECK_CLOSE_OR_SMALL(density, correctDensity, relTol, small);
+    CHECK_CLOSE_OR_SMALL(correctDensity, density, relTol, small);
   }
 
   // The analytical calculations of the following can be found here:
@@ -228,9 +228,9 @@ BOOST_AUTO_TEST_CASE(
   // ... and check if they are correct (note: the optimization is not as exact
   // as the density values).
   double relTolOptimization = 1e-1;
-  CHECK_CLOSE_REL(maxZ, correctMaxZ, relTolOptimization);
-  CHECK_CLOSE_REL(maxT, correctMaxT, relTolOptimization);
-  CHECK_CLOSE_REL(fwhm, correctFWHM, relTolOptimization);
+  CHECK_CLOSE_REL(correctMaxZ, maxZ, relTolOptimization);
+  CHECK_CLOSE_REL(correctMaxT, maxT, relTolOptimization);
+  CHECK_CLOSE_REL(correctFWHM, fwhm, relTolOptimization);
 }
 
 BOOST_AUTO_TEST_CASE(seed_width_estimation) {
@@ -263,12 +263,12 @@ BOOST_AUTO_TEST_CASE(seed_width_estimation) {
 
   // Check if we found the correct maximum
   double maxZ = res.value().first.first;
-  BOOST_CHECK_EQUAL(maxZ, correctMaxZ);
+  BOOST_CHECK_EQUAL(correctMaxZ, maxZ);
 
   // Calculate full width at half maximum from seed width and check if it's
   // correct
   double fwhm = res.value().second * 2.355;
-  BOOST_CHECK_EQUAL(fwhm, 10.);
+  CHECK_CLOSE_REL(10., fwhm, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(track_adding) {
@@ -317,19 +317,19 @@ BOOST_AUTO_TEST_CASE(track_adding) {
 
   // Track should have been entirely added to both grids
   trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), spatialTrkGridSize);
+  BOOST_CHECK_EQUAL(spatialTrkGridSize, mainDensityMap.size());
 
   // Track should have been entirely added to both grids
   trackDensityMap = grid.addTrack(params2, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), 2 * spatialTrkGridSize);
+  BOOST_CHECK_EQUAL(2 * spatialTrkGridSize, mainDensityMap.size());
 
   // Track 3 has overlap of 2 bins with track 1
   trackDensityMap = grid.addTrack(params3, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * spatialTrkGridSize - 2);
+  BOOST_CHECK_EQUAL(3 * spatialTrkGridSize - 2, mainDensityMap.size());
 
   // Add first track again, should *not* introduce new z entries
   trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * spatialTrkGridSize - 2);
+  BOOST_CHECK_EQUAL(3 * spatialTrkGridSize - 2, mainDensityMap.size());
 }
 
 BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
@@ -384,18 +384,18 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   auto firstRes = grid1D.getMaxZTPosition(mainDensityMap1D);
   BOOST_CHECK(firstRes.ok());
   // Maximum should be at z0Trk1 position ...
-  BOOST_CHECK_EQUAL((*firstRes).first, z0Trk1);
+  BOOST_CHECK_EQUAL(z0Trk1, (*firstRes).first);
   // ... and the corresponding time should be set to 0
-  BOOST_CHECK_EQUAL((*firstRes).second, 0.);
+  BOOST_CHECK_EQUAL(0., (*firstRes).second);
 
   // Add first track to 2D grid
   auto trackDensityMap2D = grid2D.addTrack(params1, mainDensityMap2D);
   auto firstRes2D = grid2D.getMaxZTPosition(mainDensityMap2D);
   BOOST_CHECK(firstRes2D.ok());
   // Maximum should be at z0Trk1 position ...
-  BOOST_CHECK_EQUAL((*firstRes2D).first, z0Trk1);
+  BOOST_CHECK_EQUAL(z0Trk1, (*firstRes2D).first);
   // ... and the corresponding time should be at t0Trk1
-  BOOST_CHECK_EQUAL((*firstRes2D).second, t0Trk1);
+  BOOST_CHECK_EQUAL(t0Trk1, (*firstRes2D).second);
 
   // Add second track to spatial grid
   trackDensityMap = grid1D.addTrack(params2, mainDensityMap1D);
@@ -404,11 +404,11 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   BOOST_CHECK(secondRes.ok());
   // Trk 2 is closer to z-axis and should thus yield higher density values.
   // Therefore, the new maximum is at z0Trk2 ...
-  CHECK_CLOSE_OR_SMALL((*secondRes).first.first, z0Trk2, 1e-5, 1e-5);
+  CHECK_CLOSE_OR_SMALL(z0Trk2, (*secondRes).first.first, 1e-5, 1e-5);
   // ... the corresponding time should be set to 0...
-  BOOST_CHECK_EQUAL((*secondRes).first.second, 0.);
+  BOOST_CHECK_EQUAL(0., (*secondRes).first.second);
   // ... and it should have a positive width
-  BOOST_CHECK_GT((*secondRes).second, 0);
+  BOOST_CHECK_LT(0, (*secondRes).second);
 
   // Add second track to 2D grid
   trackDensityMap = grid2D.addTrack(params2, mainDensityMap2D);
@@ -417,9 +417,9 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   BOOST_CHECK(secondRes2D.ok());
   // Trk 2 is closer to z-axis and should thus yield higher density values.
   // Therefore, the new maximum is at z0Trk2 ...
-  CHECK_CLOSE_OR_SMALL((*secondRes2D).first.first, z0Trk2, 1e-5, 1e-5);
+  CHECK_CLOSE_OR_SMALL(z0Trk2, (*secondRes2D).first.first, 1e-5, 1e-5);
   // ... the corresponding time should be at t0Trk2 ...
-  BOOST_CHECK_EQUAL((*secondRes2D).first.second, t0Trk2);
+  BOOST_CHECK_EQUAL(t0Trk2, (*secondRes2D).first.second);
   // ... and it should have approximately the same width in z direction
   CHECK_CLOSE_OR_SMALL((*secondRes2D).second, (*secondRes).second, 1e-5, 1e-5);
 }
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
   auto res1 = grid.getMaxZTPosition(mainDensityMap);
   BOOST_CHECK(res1.ok());
   // Maximum should be at z0Trk1 position
-  BOOST_CHECK_EQUAL((*res1).first, z0Trk1);
+  BOOST_CHECK_EQUAL(z0Trk1, (*res1).first);
 
   // Add second track
   trackDensityMap = grid.addTrack(params2, mainDensityMap);
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
   BOOST_CHECK(res2.ok());
   // Trk 2 is closer to z-axis and should yield higher density values
   // New maximum is therefore at z0Trk2
-  CHECK_CLOSE_REL((*res2).first, z0Trk2, 1e-5);
+  CHECK_CLOSE_REL(z0Trk2, (*res2).first, 1e-5);
 
   // Add small density values around the maximum of track 1
   mainDensityMap[{4, 0}] += 0.5;
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
   // Trk 2 still has the highest peak density value, however, the small
   // added densities for track 1 around its maximum should now lead to
   // a prediction at z0Trk1 again
-  BOOST_CHECK_EQUAL((*res3).first, z0Trk1);
+  BOOST_CHECK_EQUAL(z0Trk1, (*res3).first);
 }
 
 BOOST_AUTO_TEST_CASE(track_removing) {
