@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 
@@ -88,7 +87,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
     return coef * std::exp(expo);
   };
 
-  for (const auto& [bin, _] : mainDensityMap.scaledMap) {
+  for (const auto& [bin, _] : mainDensityMap) {
     // Extract variables for better readability
     std::int32_t zBin = bin.first;
     float density = mainDensityMap.at(bin);
@@ -179,7 +178,7 @@ BOOST_AUTO_TEST_CASE(
     return coef * std::exp(expo);
   };
 
-  for (const auto& [bin, _] : mainDensityMap.scaledMap) {
+  for (const auto& [bin, _] : mainDensityMap) {
     // Extract variables for better readability
     double z = grid.getBinCenter(bin.first, spatialBinExtent);
     double t = grid.getBinCenter(bin.second, temporalBinExtent);
@@ -244,13 +243,12 @@ BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   // z-position of the maximum density
   double correctMaxZ = -2.;
 
-  mainDensityMap.exponentOffset = 0;
   // Fill map with a triangular track density.
   // We use an isoscele triangle with a maximum density value of 1 and a width
   // of 20 mm. The linear approximation we use during the seed width estimation
   // should be exact in this case.
   for (std::int32_t i = -6; i <= 4; i++) {
-    mainDensityMap.scaledMap[{i, 0}] =
+    mainDensityMap[{i, 0}] =
         1.0 - 0.1 * std::abs(correctMaxZ - grid.getBinCenter(i, binExtent));
   }
 
@@ -472,10 +470,8 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
   CHECK_CLOSE_REL((*res2).first, z0Trk2, 1e-5);
 
   // Add small density values around the maximum of track 1
-  const double scaledDensityToAdd =
-      0.5 * safeExp(mainDensityMap.exponentOffset);
-  mainDensityMap.scaled({4, 0}) += scaledDensityToAdd;
-  mainDensityMap.scaled({6, 0}) += scaledDensityToAdd;
+  mainDensityMap[{4, 0}] += 0.5;
+  mainDensityMap[{6, 0}] += 0.5;
 
   auto res3 = grid.getMaxZTPosition(mainDensityMap);
   BOOST_CHECK(res3.ok());
@@ -539,7 +535,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Lambda for calculating total density
   auto densitySum = [](const auto& densityMap) {
     double sum = 0.;
-    for (const auto& [bin, _] : densityMap.scaledMap) {
+    for (const auto& [bin, _] : densityMap) {
       sum += densityMap.at(bin);
     }
     return sum;

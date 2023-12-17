@@ -9,11 +9,8 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cstddef>
-#include <limits>
 #include <unordered_map>
 
 #include <boost/functional/hash.hpp>
@@ -36,7 +33,7 @@ class AdaptiveGridTrackDensity {
   /// The first (second) integer indicates the bin's z (t) position
   using Bin = std::pair<std::int32_t, std::int32_t>;
   /// Mapping between bins and track densities
-  using SparseDensityMap = std::unordered_map<Bin, double, boost::hash<Bin>>;
+  using DensityMap = std::unordered_map<Bin, double, boost::hash<Bin>>;
   /// Coordinates in the z-t plane; the t value will be set to 0 if time
   //& vertex seeding is disabled
   using ZTPosition = std::pair<double, double>;
@@ -45,27 +42,6 @@ class AdaptiveGridTrackDensity {
   /// Optional grid size range
   using GridSizeRange =
       std::pair<std::optional<std::uint32_t>, std::optional<std::uint32_t>>;
-
-  struct DensityMap {
-    double exponentOffset = std::numeric_limits<double>::infinity();
-    SparseDensityMap scaledMap;
-
-    std::size_t size() const { return scaledMap.size(); }
-    bool empty() const { return scaledMap.empty(); }
-    bool contains(const Bin& bin) const { return scaledMap.count(bin) != 0; }
-
-    double scaled(const Bin& bin) const {
-      if (auto it = scaledMap.find(bin); it != scaledMap.end()) {
-        return it->second;
-      }
-      return 0.;
-    }
-    double& scaled(const Bin& bin) { return scaledMap[bin]; }
-
-    double at(const Bin& bin) const {
-      return scaled(bin) * safeExp(-exponentOffset);
-    }
-  };
 
   /// The configuration struct
   struct Config {
@@ -77,7 +53,7 @@ class AdaptiveGridTrackDensity {
     double nSpatialTrkSigmas = 3.0;
 
     /// Temporal extent of a bin, should be set to 0 if time vertex seeding is
-    /// disabled 
+    /// disabled
     double temporalBinExtent = 19 * UnitConstants::mm;
 
     /// Number of standard deviations that the grid covers in t direction
@@ -184,7 +160,7 @@ class AdaptiveGridTrackDensity {
   /// @param densityMap Map between bins and corresponding density
   /// values
   /// @return Iterator of the map entry with the highest density
-  SparseDensityMap::const_iterator highestDensityEntry(
+  DensityMap::const_iterator highestDensityEntry(
       const DensityMap& densityMap) const;
 
   /// @brief Function that creates a track density map, i.e., a map from bins
