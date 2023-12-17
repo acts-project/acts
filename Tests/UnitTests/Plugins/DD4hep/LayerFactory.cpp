@@ -70,8 +70,8 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
     // Check if the cylinder has a surface binning instruction
     if (x_layer.hasChild(_Unicode(acts_surface_binning))) {
       xml_comp_t sfBinning = x_layer.child(_Unicode(acts_surface_binning));
-      Acts::decodeBinning(layerParams, sfBinning, "acts_surface_binning",
-                          {"z", "phi"});
+      DD4hepTestsHelper::decodeBinning(layerParams, sfBinning,
+                                       "acts_surface_binning", {"z", "phi"});
     }
     // Go through the sensors
     unsigned int sensorID = 1u;
@@ -188,8 +188,8 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
     // Check if the cylinder has a surface binning instruction
     if (x_layer.hasChild(_Unicode(acts_surface_binning))) {
       xml_comp_t sfBinning = x_layer.child(_Unicode(acts_surface_binning));
-      Acts::decodeBinning(layerParams, sfBinning, "acts_surface_binning",
-                          {"r", "phi"});
+      DD4hepTestsHelper::decodeBinning(layerParams, sfBinning,
+                                       "acts_surface_binning", {"r", "phi"});
     }
 
     // Loop over modules
