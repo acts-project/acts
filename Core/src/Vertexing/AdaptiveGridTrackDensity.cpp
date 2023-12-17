@@ -390,7 +390,7 @@ double AdaptiveGridTrackDensity::getDensitySum(const DensityMap& densityMap,
     if (auto it = densityMap.find(bin); it != densityMap.end()) {
       return it->second;
     }
-    return 0.0;
+    return 0.0f;
   };
 
   // Add density from the bin.

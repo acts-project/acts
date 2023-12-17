@@ -33,7 +33,7 @@ class AdaptiveGridTrackDensity {
   /// The first (second) integer indicates the bin's z (t) position
   using Bin = std::pair<std::int32_t, std::int32_t>;
   /// Mapping between bins and track densities
-  using DensityMap = std::unordered_map<Bin, double, boost::hash<Bin>>;
+  using DensityMap = std::unordered_map<Bin, float, boost::hash<Bin>>;
   /// Coordinates in the z-t plane; the t value will be set to 0 if time
   /// vertex seeding is disabled
   using ZTPosition = std::pair<double, double>;
