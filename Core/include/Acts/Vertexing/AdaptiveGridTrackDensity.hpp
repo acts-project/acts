@@ -73,7 +73,7 @@ class AdaptiveGridTrackDensity {
     /// a positive value
     double spatialBinExtent = 15 * UnitConstants::um;
 
-    /// Number of sigmas to use for the spatial extent of the track
+    /// Number of standard deviations that the grid covers in z direction
     double nSpatialTrkSigmas = 3.0;
 
     /// Temporal extent of a bin, should be set to 0 if time vertex seeding is
