@@ -218,9 +218,9 @@ class TrackStateProxy {
   /// @c TrackStateProxy that does not have the @c read_only template parameter set to
   /// @c true, even if you hold it as an lvalue.
   ///
-  /// The track states each have an index in the track state container. The sequence
-  /// of track states is implemented as a one or two-way linked list, which
-  /// uses indices into the same container.
+  /// The track states each have an index in the track state container. The
+  /// sequence of track states is implemented as a one or two-way linked list,
+  /// which uses indices into the same container.
   ///
   /// Each track state has a @c previous index, which points at the track state
   /// immediately preceding. A track state with a @c previous index of @c

@@ -182,7 +182,7 @@ class TrackProxy {
 
   /// Alias for an associated mutable track state proxy, with the same backends
   using TrackStateProxy = typename Trajectory::TrackStateProxy;
- 
+
   /// Alias for an associated const track state proxy, with the same backends
   using ConstTrackStateProxy = typename Trajectory::ConstTrackStateProxy;
 
@@ -754,7 +754,8 @@ class TrackProxy {
   ///
   /// A number of overloads exist, where you can either supply the
   /// @ref HashedString @c key as a template parameter or a runtime argument.  The
-  /// former has the advantage of being guaranteed to be evaluated at compile-time.
+  /// former has the advantage of being guaranteed to be evaluated at
+  /// compile-time.
   ///
   /// @{
 
