@@ -25,7 +25,7 @@ void Acts::GridBinFinder<DIM>::storeValue(first_value_t&& fv,
   constexpr std::size_t N = sizeof...(vals);
   static_assert(N < DIM);
   /// Check the fist value is reasonable
-  using decayed_value_t = typename std::decay(first_value_t)::type;
+  using decayed_value_t = typename std::decay<first_value_t>::type;
   if constexpr (std::is_same<int, decayed_value_t>::value) {
     /// if int -> value is positive
     assert(fv >= 0);
@@ -54,6 +54,7 @@ std::array<std::pair<int, int>, DIM> Acts::GridBinFinder<DIM>::getSizePerAxis(
             assert(locPosition.size() > i);
             assert(locPosition[i] > 0ul);
             assert(val.size() <= locPosition[i]);
+	    assert(val[locPosition[i] - 1ul].first <= val[locPosition[i] - 1ul].second);
             return val[locPosition[i] - 1ul];
           }
         },
