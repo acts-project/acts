@@ -6,6 +6,7 @@ set(SOURCES
 if(ACTS_BUILD_PLUGIN_MLPACK)
   list(APPEND SOURCES 
     src/AmbiguityResolutionMLDBScanAlgorithm.cpp   
+    src/SeedFilterMLAlgorithm.cpp
   )
 endif()
 
