@@ -72,6 +72,7 @@ def run() -> None:
         "Acts::FreeToBoundMatrix",
         "Acts::FreeSquareMatrix",
         "Acts::FreeToPathMatrix",
+        "Acts::HashedString",
     }
 
     role_instances["struct"] |= {
@@ -116,6 +117,8 @@ def run() -> None:
         "Acts::Logging::TimedOutputDecorator",
         "Acts::Logging::DefaultFilterPolicy",
         "Acts::Logging::DefaultPrintPolicy",
+        "Acts::Measurement",
+        "Acts::SourceLink",
     }
 
     role_instances["func"] = {
@@ -135,6 +138,7 @@ def run() -> None:
         "Acts::BoundIndices",
         "Acts::FreeIndices",
         "Acts::MagneticFieldError",
+        "Acts::TrackStatePropMask",
     }
 
     role_ex = re.compile(r"[{:](" + "|".join(roles) + r")[}:]`(.+?)`")
