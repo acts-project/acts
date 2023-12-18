@@ -210,10 +210,9 @@ class AdaptiveMultiVertexFinder {
   /// @param state State for fulfilling interfaces
   ///
   /// @return Vector of all reconstructed vertices
-  Result<std::vector<Vertex>> find(
-      const std::vector<InputTrack>& allTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& allTracks,
+                                   const VertexingOptions& vertexingOptions,
+                                   State& state) const;
 
  private:
   /// Configuration object
@@ -245,7 +244,7 @@ class AdaptiveMultiVertexFinder {
   /// @return The seed vertex
   Result<Vertex> doSeeding(
       const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
+      const VertexingOptions& vertexingOptions,
       SeedFinderState_t& seedFinderState,
       const std::vector<InputTrack>& removedSeedTracks) const;
 
@@ -267,7 +266,7 @@ class AdaptiveMultiVertexFinder {
   /// @return The IP significance
   Result<double> getIPSignificance(
       const InputTrack& track, const Vertex& vtx,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Adds compatible track to vertex candidate
   ///
@@ -278,7 +277,7 @@ class AdaptiveMultiVertexFinder {
   Result<void> addCompatibleTracksToVertex(
       const std::vector<InputTrack>& tracks, Vertex& vtx,
       FitterState_t& fitterState,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Method that tries to recover from cases where no tracks
   /// were added to the vertex candidate after seeding
@@ -296,7 +295,7 @@ class AdaptiveMultiVertexFinder {
       const std::vector<InputTrack>& allTracks,
       const std::vector<InputTrack>& seedTracks, Vertex& vtx,
       const Vertex& currentConstraint, FitterState_t& fitterState,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Method that tries to prepare the vertex for the fit
   ///
@@ -313,7 +312,7 @@ class AdaptiveMultiVertexFinder {
       const std::vector<InputTrack>& allTracks,
       const std::vector<InputTrack>& seedTracks, Vertex& vtx,
       const Vertex& currentConstraint, FitterState_t& fitterState,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Method that checks if vertex is a good vertex and if
   /// compatible tracks are available
@@ -390,7 +389,7 @@ class AdaptiveMultiVertexFinder {
   Result<void> deleteLastVertex(
       Vertex& vtx, std::vector<std::unique_ptr<Vertex>>& allVertices,
       std::vector<Vertex*>& allVerticesPtr, FitterState_t& fitterState,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Prepares the output vector of vertices
   ///

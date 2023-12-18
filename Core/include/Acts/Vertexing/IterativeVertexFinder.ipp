@@ -9,7 +9,7 @@
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
+    const VertexingOptions& vertexingOptions, State& state) const
     -> Result<std::vector<Vertex>> {
   // Original tracks
   const std::vector<InputTrack>& origTracks = trackVector;
@@ -158,7 +158,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
     const std::vector<InputTrack>& seedTracks,
-    const VertexingOptions<InputTrack_t>& vertexingOptions) const
+    const VertexingOptions& vertexingOptions) const
     -> Result<Vertex> {
   typename sfinder_t::State finderState;
   auto res = m_cfg.seedFinder.find(seedTracks, vertexingOptions, finderState);
@@ -216,7 +216,7 @@ Acts::Result<double>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
     const BoundTrackParameters& params, const Vertex& vertex,
     const Surface& perigeeSurface,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    const VertexingOptions& vertexingOptions,
     State& state) const {
   // Linearize track
   auto result = m_cfg.linearizer.linearizeTrack(
@@ -254,7 +254,7 @@ Acts::Result<void>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     Vertex& vertex, std::vector<InputTrack>& tracksToFit,
     std::vector<InputTrack>& seedTracks,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    const VertexingOptions& vertexingOptions,
     State& state) const {
   std::vector<TrackAtVertex> tracksAtVertex = vertex.tracks();
 
@@ -349,7 +349,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
     const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
     std::vector<InputTrack>& tracksToFitOut,
     std::vector<InputTrack>& tracksToFitSplitVertexOut,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    const VertexingOptions& vertexingOptions,
     State& state) const {
   int numberOfTracks = seedTracks.size();
 
@@ -423,7 +423,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
     std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
     const std::vector<InputTrack>& /* origTracks */,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    const VertexingOptions& vertexingOptions,
     State& state) const {
   int numberOfAddedTracks = 0;
 

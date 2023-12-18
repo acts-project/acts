@@ -173,10 +173,9 @@ class IterativeVertexFinder {
   /// @param state State for fulfilling interfaces
   ///
   /// @return Collection of vertices found by finder
-  Result<std::vector<Vertex>> find(
-      const std::vector<InputTrack>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
+                                   const VertexingOptions& vertexingOptions,
+                                   State& state) const;
 
  private:
   /// Configuration object
@@ -197,9 +196,8 @@ class IterativeVertexFinder {
   ///
   /// @param seedTracks Seeding tracks
   /// @param vertexingOptions Vertexing options
-  Result<Vertex> getVertexSeed(
-      const std::vector<InputTrack>& seedTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+  Result<Vertex> getVertexSeed(const std::vector<InputTrack>& seedTracks,
+                               const VertexingOptions& vertexingOptions) const;
 
   /// @brief Removes all tracks in tracksToRemove from seedTracks
   ///
@@ -216,11 +214,11 @@ class IterativeVertexFinder {
   /// @param perigeeSurface The perigee surface at vertex position
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
-  Result<double> getCompatibility(
-      const BoundTrackParameters& params, const Vertex& vertex,
-      const Surface& perigeeSurface,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<double> getCompatibility(const BoundTrackParameters& params,
+                                  const Vertex& vertex,
+                                  const Surface& perigeeSurface,
+                                  const VertexingOptions& vertexingOptions,
+                                  State& state) const;
 
   /// @brief Function that removes used tracks compatible with
   /// current vertex (`vertex`) from `tracksToFit` and `seedTracks`
@@ -234,8 +232,7 @@ class IterativeVertexFinder {
   Result<void> removeUsedCompatibleTracks(
       Vertex& vertex, std::vector<InputTrack>& tracksToFit,
       std::vector<InputTrack>& seedTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+      const VertexingOptions& vertexingOptions, State& state) const;
 
   /// @brief Function that fills vector with tracks compatible with seed vertex
   ///
@@ -249,8 +246,7 @@ class IterativeVertexFinder {
       const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
       std::vector<InputTrack>& tracksToFitOut,
       std::vector<InputTrack>& tracksToFitSplitVertexOut,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+      const VertexingOptions& vertexingOptions, State& state) const;
 
   /// @brief Function that reassigns tracks from other vertices
   ///        to the current vertex if they are more compatible
@@ -268,8 +264,7 @@ class IterativeVertexFinder {
       std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
       std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
       const std::vector<InputTrack>& origTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+      const VertexingOptions& vertexingOptions, State& state) const;
 
   /// @brief Counts all tracks that are significant for a vertex
   ///

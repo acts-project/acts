@@ -111,8 +111,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
@@ -335,8 +334,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
@@ -473,8 +471,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
