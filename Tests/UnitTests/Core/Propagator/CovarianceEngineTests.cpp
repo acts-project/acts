@@ -496,9 +496,6 @@ BOOST_DATA_TEST_CASE(CovarianceConversionPerigee,
   auto prop = makePropagator(bField);
   BoundMatrix J = directJacobian(prop, parA, *planeSurfaceA, *perigee);
   BoundMatrix covC = J * covA * J.transpose();
-  CHECK_CLOSE_ABS((covB.template topLeftCorner<2, 2>()),
-                  (covC.template topLeftCorner<2, 2>()), 1e-7);
-  CHECK_CLOSE_ABS(covB.diagonal(), covC.diagonal(), 1e-7);
   CHECK_CLOSE_ABS(covB, covC, 1e-7);
 }
 
