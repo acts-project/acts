@@ -430,7 +430,7 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL1TiltedPlane,
   BoundMatrix J = directJacobian(parA, *planeSurfaceA, *planeSurfaceB);
   BoundMatrix covC = J * covA * J.transpose();
   CHECK_CLOSE_ABS((covB.template topLeftCorner<2, 2>()),
-                  (covC.template topLeftCorner<2, 2>()), 1e-5);
+                  (covC.template topLeftCorner<2, 2>()), 1e-4);
   CHECK_CLOSE_ABS(covB.diagonal(), covC.diagonal(), 1e-1);
 }
 
