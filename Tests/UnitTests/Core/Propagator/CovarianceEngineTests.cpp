@@ -16,8 +16,13 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -37,6 +42,7 @@ namespace Acts {
 namespace Test {
 
 Acts::GeometryContext gctx;
+Acts::MagneticFieldContext mctx;
 
 using namespace Acts::UnitLiterals;
 
@@ -192,26 +198,35 @@ std::pair<BoundVector, BoundMatrix> boundToBound(const BoundVector& parIn,
   return {converted.parameters(), converted.covariance().value()};
 }
 
-BoundVector localToLocal(const BoundVector& local, const Surface& src,
-                         const Surface& dst) {
-  Acts::FreeVector freePars =
-      Acts::detail::transformBoundToFreeParameters(src, gctx, local);
+using propagator_t = Propagator<EigenStepper<>, detail::VoidNavigator>;
 
-  Acts::Vector3 direction = freePars.segment<3>(Acts::eFreeDir0);
-  Acts::Vector3 position = freePars.segment<3>(Acts::eFreePos0);
+BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
+                         const Surface& src, const Surface& dst) {
+  PropagatorOptions<> options{gctx, mctx};
+  options.stepTolerance = 1e-10;
+  options.surfaceTolerance = 1e-10;
 
-  auto mix = dst.intersect(gctx, position, direction);
-  auto ix = mix.closest();
+  BoundTrackParameters start{src.getSharedPtr(), local, std::nullopt,
+                             ParticleHypothesis::pion()};
 
-  freePars.segment<3>(Acts::eFreePos0) = ix.position();
+  auto res = prop.propagate(start, dst, options).value();
+  auto endParameters = res.endParameters.value();
 
-  return Acts::detail::transformFreeToBoundParameters(freePars, dst, gctx)
-      .value();
+  BOOST_CHECK_EQUAL(&endParameters.referenceSurface(), &dst);
+
+  BoundVector out = endParameters.parameters();
+  out[eBoundTime] = local[eBoundTime];
+  return out;
 }
 
-BoundMatrix directJacobian(const BoundVector& parA, const Surface& srfA,
-                           const Surface& srfB) {
-  double h = 1e-6;
+propagator_t makePropagator(const Vector3& bField) {
+  return propagator_t{EigenStepper<>{std::make_shared<ConstantBField>(bField)},
+                      detail::VoidNavigator{}};
+}
+
+BoundMatrix directJacobian(const propagator_t& prop, const BoundVector& parA,
+                           const Surface& srfA, const Surface& srfB) {
+  double h = 1e-4;
   BoundMatrix J;
   for (std::size_t i = 0; i < 6; i++) {
     for (std::size_t j = 0; j < 6; j++) {
@@ -219,8 +234,8 @@ BoundMatrix directJacobian(const BoundVector& parA, const Surface& srfA,
       BoundVector parInitial2 = parA;
       parInitial1[i] -= h;
       parInitial2[i] += h;
-      BoundVector parFinal1 = localToLocal(parInitial1, srfA, srfB);
-      BoundVector parFinal2 = localToLocal(parInitial2, srfA, srfB);
+      BoundVector parFinal1 = localToLocal(prop, parInitial1, srfA, srfB);
+      BoundVector parFinal2 = localToLocal(prop, parInitial2, srfA, srfB);
 
       J(j, i) = (parFinal2[j] - parFinal1[j]) / (2 * h);
     }
@@ -288,7 +303,9 @@ BOOST_DATA_TEST_CASE(CovarianceConversionSamePlane,
   CHECK_CLOSE_ABS(parA, parA2, 1e-9);
   CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-9);
 
-  BoundMatrix J = directJacobian(parA, *planeSurfaceA, *planeSurfaceB);
+  auto prop = makePropagator(bField);
+
+  BoundMatrix J = directJacobian(prop, parA, *planeSurfaceA, *planeSurfaceB);
   BoundMatrix covC = J * covA * J.transpose();
   CHECK_CLOSE_COVARIANCE(covB, covC, 1e-6);
 }
@@ -335,7 +352,8 @@ BOOST_DATA_TEST_CASE(CovarianceConversionRotatedPlane,
   CHECK_CLOSE_ABS(parA, parA2, 1e-9);
   CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-9);
 
-  BoundMatrix J = directJacobian(parA, *planeSurfaceA, *planeSurfaceB);
+  auto prop = makePropagator(bField);
+  BoundMatrix J = directJacobian(prop, parA, *planeSurfaceA, *planeSurfaceB);
   BoundMatrix covC = J * covA * J.transpose();
   CHECK_CLOSE_COVARIANCE(covB, covC, 1e-6);
 }
@@ -380,11 +398,12 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL0TiltedPlane,
   CHECK_CLOSE_ABS(parA, parA2, 1e-9);
   CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-7);
 
-  BoundMatrix J = directJacobian(parA, *planeSurfaceA, *planeSurfaceB);
+  auto prop = makePropagator(bField);
+  BoundMatrix J = directJacobian(prop, parA, *planeSurfaceA, *planeSurfaceB);
   BoundMatrix covC = J * covA * J.transpose();
-  CHECK_CLOSE_ABS((covB.template topLeftCorner<2, 2>()),
-                  (covC.template topLeftCorner<2, 2>()), 1e-5);
-  CHECK_CLOSE_ABS(covB.diagonal(), covC.diagonal(), 1e-4);
+  CHECK_CLOSE_OR_SMALL((covB.template topLeftCorner<2, 2>()),
+                       (covC.template topLeftCorner<2, 2>()), 1e-7, 1e-9);
+  CHECK_CLOSE_OR_SMALL(covB.diagonal(), covC.diagonal(), 1e-7, 1e-9);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceConversionL1TiltedPlane,
@@ -427,11 +446,12 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL1TiltedPlane,
   // tolerance is a bit higher here
   CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-6);
 
-  BoundMatrix J = directJacobian(parA, *planeSurfaceA, *planeSurfaceB);
+  auto prop = makePropagator(bField);
+  BoundMatrix J = directJacobian(prop, parA, *planeSurfaceA, *planeSurfaceB);
   BoundMatrix covC = J * covA * J.transpose();
-  CHECK_CLOSE_ABS((covB.template topLeftCorner<2, 2>()),
-                  (covC.template topLeftCorner<2, 2>()), 1e-4);
-  CHECK_CLOSE_ABS(covB.diagonal(), covC.diagonal(), 1e-1);
+  CHECK_CLOSE_OR_SMALL((covB.template topLeftCorner<2, 2>()),
+                       (covC.template topLeftCorner<2, 2>()), 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(covB.diagonal(), covC.diagonal(), 1e-6, 1e-9);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceConversionPerigee,
@@ -473,12 +493,13 @@ BOOST_DATA_TEST_CASE(CovarianceConversionPerigee,
   CHECK_CLOSE_ABS(parA, parA2, 1e-9);
   CHECK_CLOSE_COVARIANCE(covA, covA2, 1e-9);
 
-  BoundMatrix J = directJacobian(parA, *planeSurfaceA, *perigee);
+  auto prop = makePropagator(bField);
+  BoundMatrix J = directJacobian(prop, parA, *planeSurfaceA, *perigee);
   BoundMatrix covC = J * covA * J.transpose();
   CHECK_CLOSE_ABS((covB.template topLeftCorner<2, 2>()),
-                  (covC.template topLeftCorner<2, 2>()), 1e-6);
-  CHECK_CLOSE_ABS(covB.diagonal(), covC.diagonal(), 1e-4);
-  CHECK_CLOSE_ABS(covB, covC, 1e-1);
+                  (covC.template topLeftCorner<2, 2>()), 1e-7);
+  CHECK_CLOSE_ABS(covB.diagonal(), covC.diagonal(), 1e-7);
+  CHECK_CLOSE_ABS(covB, covC, 1e-7);
 }
 
 }  // namespace Test
