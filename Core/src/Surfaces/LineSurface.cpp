@@ -220,6 +220,10 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
       sphericalToFreeDirectionJacobian(direction);
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
 
+  // For the derivative of global position with bound angles, refer the
+  // following white paper:
+  // https://acts.readthedocs.io/en/latest/white_papers/line-surface-jacobian.html
+
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
   // build the cross product of d(D)/d(eBoundPhi) components with y axis
