@@ -140,7 +140,7 @@ void transportCovarianceToCurvilinear(BoundSquareMatrix& boundCovariance,
 
 /// Convert bound track parameters to another bound surface.
 /// @pre The @p targetSurface must intersect with the surface attached to
-///      @p boundParameters, and the paremeters must be on-surface on the
+///      @p boundParameters, and the parameters must be on-surface on the
 ///      target surface.
 /// @param gctx The geometry context.
 /// @param boundParameters The bound track parameters to convert.
