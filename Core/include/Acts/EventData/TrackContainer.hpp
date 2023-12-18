@@ -44,7 +44,8 @@ class TrackContainer {
   static constexpr bool ReadOnly =
       IsReadOnlyTrackContainer<track_container_t>::value;
 
-  /// Indicates it the track state container is read-only, or if it can be
+  /// Indicates if the track state container is read-only, or if it can be
+  /// modified
   static constexpr bool TrackStateReadOnly =
       IsReadOnlyMultiTrajectory<traj_t>::value;
 
@@ -77,7 +78,7 @@ class TrackContainer {
   /// @name TrackContainer construction
   ///
   /// Constructors for the track container by using a set of backends
-  /// (track+track state).  The container can either take ownership of the
+  /// (track + track state). The container can either take ownership of the
   /// backends or just hold references to them. This is driven by the @c
   /// holder_t template parameter, where you can also supply a custom holder
   /// type. Template deduction is used to try to guess the correct holder type.

@@ -218,7 +218,7 @@ class TrackStateProxy {
   /// @c TrackStateProxy that does not have the @c read_only template parameter set to
   /// @c true, even if you hold it as an lvalue.
   ///
-  /// The track states each have an in the track state container. The sequence
+  /// The track states each have an index in the track state container. The sequence
   /// of track states is implemented as a one or two-way linked list, which
   /// uses indices into the same container.
   ///
@@ -230,8 +230,7 @@ class TrackStateProxy {
   /// During track finding and fitting, track states are usually appended to the
   /// sequence, populating the @c previous index of the new track state. Combinatorial
   /// track finding can produce track states which fork in this way, by having
-  /// more than
-  /// one track state with the same @c previous index.
+  /// more than one track state with the same @c previous index.
   ///
   /// The track states have static, optional and dynamic properties. Static
   /// properties are always present, and can always be retrieved. Optional

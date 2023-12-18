@@ -236,7 +236,7 @@ class MultiTrajectory {
   /// of the track state are initialized/allocated can be controlled via @p mask
   /// @note Only available if the MultiTrajectory is not read-only
   /// @param mask The bitmask that instructs which components to allocate and
-  /// which to leave invalid
+  ///       which to leave invalid
   /// @param iprevious index of the previous state, kInvalid if first
   /// @return Index of the newly added track state
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
