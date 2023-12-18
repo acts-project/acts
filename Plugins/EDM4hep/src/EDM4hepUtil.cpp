@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -144,25 +145,9 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
 
   // Only run covariance conversion if we have a covariance input
   if (params.covariance()) {
-    auto boundToFree =
-        refSurface->boundToFreeJacobian(gctx, params.parameters());
-    Acts::FreeMatrix freeCov =
-        boundToFree * params.covariance().value() * boundToFree.transpose();
-
-    // ensure we have free pars
-    if (!freePars.has_value()) {
-      freePars = makeFreePars();
-    }
-
-    Acts::CovarianceCache covCache{freePars.value(), freeCov};
-    auto [varNewCov, varNewJac] = Acts::transportCovarianceToBound(
-        gctx, *refSurface, freePars.value(), covCache);
-    auto targetCov = std::get<Acts::BoundSquareMatrix>(varNewCov);
-
     Acts::ActsSquareMatrix<6> J = jacobianToEdm4hep(
         targetPars[eBoundTheta], targetPars[eBoundQOverP], Bz);
-    Acts::ActsSquareMatrix<6> cIn = targetCov.template topLeftCorner<6, 6>();
-    result.covariance = J * cIn * J.transpose();
+    result.covariance = J * params.covariance().value() * J.transpose();
   }
 
   result.values[0] = targetPars[Acts::eBoundLoc0];
