@@ -53,7 +53,7 @@ std::array<std::pair<int, int>, DIM> Acts::GridBinFinder<DIM>::getSizePerAxis(
           } else {
             assert(locPosition.size() > i);
             assert(locPosition[i] > 0ul);
-            assert(val.size() <= locPosition[i]);
+            assert(val.size() >= locPosition[i]);
 	    assert(val[locPosition[i] - 1ul].first <= val[locPosition[i] - 1ul].second);
             return val[locPosition[i] - 1ul];
           }
