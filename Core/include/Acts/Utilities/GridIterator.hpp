@@ -19,7 +19,7 @@ namespace Acts {
 /// Grid iterator using the global position. This iterates on all
 /// the bins in the grid, including under- and over-flows
 /// @tparam T The type stored in the grid bins
-/// @tparam Axes ... The types of the axes in the grid 
+/// @tparam Axes ... The types of the axes in the grid
 template <typename T, class... Axes>
 class GridGlobalIterator {
  public:
@@ -142,7 +142,7 @@ class GridGlobalIterator {
   /// @brief Retrieve the local position
   /// @return The current local position in the grid
   std::array<std::size_t, DIM> localPosition() const;
-  
+
  private:
   /// @brief The grid on which we are iterating
   ///
@@ -159,7 +159,7 @@ class GridGlobalIterator {
 /// local bins in the grid, and can exclude under- and over-flows
 /// Can also allow for custom navigation pattern along axes
 /// @tparam T The type stored in the grid bins
-/// @tparam Axes ... The types of the axes in the grid 
+/// @tparam Axes ... The types of the axes in the grid
 template <typename T, class... Axes>
 class GridLocalIterator {
  public:
@@ -201,8 +201,8 @@ class GridLocalIterator {
   /// @param [in] navigation The custom navigation pattern for each axis
   ///
   /// @pre The local bins representing the local bins must be a valid local position in the grid.
-  /// The navigation pattern must be consistent with the local bins (i.e. size <= num bins in the axis)
-  /// in the grid and have no repetitions.
+  /// The navigation pattern must be consistent with the local bins (i.e. size
+  /// <= num bins in the axis) in the grid and have no repetitions.
   ///
   /// @pre None of the navigation vectors is allowed to be an empty vector
   GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
@@ -210,7 +210,7 @@ class GridLocalIterator {
                     std::array<std::vector<std::size_t>, DIM> navigation);
 
   /// @brief Copy constructor
-  /// @param [in] other The GridLocalIterator to be copied  
+  /// @param [in] other The GridLocalIterator to be copied
   GridLocalIterator(const GridLocalIterator<T, Axes...>& other) = default;
   /// @brief Copy assignemnt operator
   /// @param [in] other The GridLocalIterator to be copied
@@ -246,7 +246,7 @@ class GridLocalIterator {
   /// @brief Return stored value at given local position
   /// @return The stored value in the grid from that given local position
   const value_type& operator*() const;
- 
+
   /// @brief Increment operator (pre)
   /// @return The local iterator after the increment
   ///
@@ -255,7 +255,7 @@ class GridLocalIterator {
   /// @brief Increment operator (post)
   /// @return The local iterator before the increment
   ///
-  /// This will increase the local position by one  
+  /// This will increase the local position by one
   GridLocalIterator<T, Axes...> operator++(int);
 
   /// @brief Retrieve the global position
