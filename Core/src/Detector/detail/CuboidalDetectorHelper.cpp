@@ -162,7 +162,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
 
     // Create the new RectangleBounds
     // - there are conventions involved, regarding the bounds orientation
-    // - This is an anticyclic swap
+    // - this is an anticyclic swap
     bool mergedInX = true;
     switch (bValue) {
       case binZ: {
@@ -208,6 +208,10 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
                             stitchBoundaries, (mergedInX ? binX : binY)));
     }
   }
+
+  // Attach the new volume updaters
+  PortalHelper::attachDetectorVolumeUpdaters(gctx, volumes, pReplacements);
+
   // Return proto container
   DetectorComponent::PortalContainer dShell;
 
@@ -216,10 +220,6 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   for (auto& iv : volumes) {
     ACTS_VERBOSE("- update portals of volume '" << iv->name() << "'.");
     for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
-      (void)dir;
-      (void)boundaries;
-      (void)binning;
-
       // Fill the map
       dShell[i] = p;
       ACTS_VERBOSE("-- update portal with index " << i);
@@ -235,7 +235,7 @@ Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CuboidalDetectorHelper::connect(
     const GeometryContext& gctx,
     const std::vector<DetectorComponent::PortalContainer>& containers,
-    BinningValue bValue, const std::vector<unsigned int>& selectedOnly,
+    BinningValue bValue, const std::vector<unsigned int>& /*unused */,
     Acts::Logging::Level logLevel) noexcept(false) {
   // The local logger
   ACTS_LOCAL_LOGGER(getDefaultLogger("CuboidalDetectorHelper", logLevel));
@@ -304,20 +304,6 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
     if (sVals != bValue) {
       sidePortals.push_back(portalSets[sVals][0]);
       sidePortals.push_back(portalSets[sVals][1]);
-    }
-  }
-
-  // Strip the side volumes
-  auto sideVolumes =
-      PortalHelper::stripSideVolumes(containers, sidePortals, selectedOnly);
-
-  ACTS_VERBOSE("There remain " << sideVolumes.size()
-                               << " side volume packs to be connected");
-  for (auto [s, volumes] : sideVolumes) {
-    ACTS_VERBOSE(" - connect " << volumes.size() << " at selected side " << s);
-    auto pR = connect(gctx, volumes, bValue, {s}, logLevel);
-    if (pR.find(s) != pR.end()) {
-      dShell[s] = pR.find(s)->second;
     }
   }
 
