@@ -74,7 +74,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
       stepper, Acts::VoidNavigator{}, logger().cloneWithSuffix("Propagator"));
   // Setup the vertex fitter
   Fitter::Config vertexFitterCfg;
-  Fitter vertexFitter(vertexFitterCfg,
+  Fitter vertexFitter(vertexFitterCfg, Acts::InputTrack::extractParameters,
                       logger().cloneWithSuffix("FullBilloirVertexFitter"));
   // Setup the track linearizer
   Linearizer::Config linearizerCfg(m_cfg.bField, propagator);
@@ -89,7 +89,8 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
                            std::move(seeder), ipEst);
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = false;
-  Finder finder(std::move(finderCfg), logger().clone());
+  Finder finder(std::move(finderCfg), Acts::InputTrack::extractParameters,
+                logger().clone());
   Finder::State state(*m_cfg.bField, ctx.magFieldContext);
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);
 

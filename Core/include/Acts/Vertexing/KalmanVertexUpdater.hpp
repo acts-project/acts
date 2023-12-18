@@ -59,7 +59,6 @@ struct Cache {
 /// However, it does not add the track to the TrackAtVertex list. This to be
 /// done manually after calling the method.
 ///
-/// @tparam input_track_t Track object type
 /// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
 /// fit its spatial coordinates) or 4 (if we also fit time).
 ///

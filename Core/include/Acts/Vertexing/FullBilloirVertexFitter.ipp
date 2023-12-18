@@ -54,9 +54,9 @@ struct BilloirVertex {
 
 }  // namespace Acts::detail
 
-template <typename input_track_t, typename linearizer_t>
+template < typename linearizer_t>
 Acts::Result<Acts::Vertex>
-Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
+Acts::FullBilloirVertexFitter<linearizer_t>::fit(
     const std::vector<InputTrack>& paramVector, const linearizer_t& linearizer,
     const VertexingOptions& vertexingOptions, State& state) const {
   unsigned int nTracks = paramVector.size();

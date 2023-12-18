@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   SeedFinder::Config seedFinderCfg(250);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
 
-  SeedFinder seedFinder(seedFinderCfg);
+  SeedFinder seedFinder(seedFinderCfg, InputTrack::extractParameters);
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 

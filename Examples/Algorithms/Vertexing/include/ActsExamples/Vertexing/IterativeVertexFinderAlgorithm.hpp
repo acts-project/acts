@@ -54,8 +54,7 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
   using IPEstimator = Acts::ImpactPointEstimator<Propagator>;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using Fitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+  using Fitter = Acts::FullBilloirVertexFitter<Linearizer>;
   using Seeder =
       Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity>;
   using Finder = Acts::IterativeVertexFinder<Fitter, Seeder>;
