@@ -70,36 +70,36 @@ class GridGlobalIterator {
   ~GridGlobalIterator() = default;
 
   /// @brief Equality operator
-  /// @param [in] other The other GridGlobalIterator to be compared agains this one
+  /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator==(const GridGlobalIterator<T, Axes...>& other) const;
   /// @brief (In-)Equality operator
-  /// @param [in] other The other GridGlobalIterator to be compared agains this one
+  /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator!=(const GridGlobalIterator<T, Axes...>& other) const;
 
   /// @brief Comparison (<) opetator
-  /// @param [in] other The other GridGlobalIterator to be compared agains this one
+  /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator<(const GridGlobalIterator<T, Axes...>& other) const;
   /// @brief Comparison (>) opetator
-  /// @param [in] other The other GridGlobalIterator to be compared agains this one
+  /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator>(const GridGlobalIterator<T, Axes...>& other) const;
   /// @brief Comparison (<=) opetator
-  /// @param [in] other The other GridGlobalIterator to be compared agains this one
+  /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator<=(const GridGlobalIterator<T, Axes...>& other) const;
   /// @brief Comparison (>=) opetator
-  /// @param [in] other The other GridGlobalIterator to be compared agains this one
+  /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator>=(const GridGlobalIterator<T, Axes...>& other) const;
 
-  /// @brief Increment this interator with an offset
+  /// @brief Increment this iterator with an offset
   /// @param [in] offset The increment value
   /// @return The incremented iterator
   GridGlobalIterator<T, Axes...>& operator+=(const std::size_t offset);
-  /// @brief Decrement this interator with an offset
+  /// @brief Decrement this iterator with an offset
   /// @param [in] offset The decrement value
   /// @return The decremented iterator
   GridGlobalIterator<T, Axes...>& operator-=(const std::size_t offset);
@@ -150,7 +150,7 @@ class GridGlobalIterator {
   /// invalidated (e.g. in a move operation) we can get undefined behaviours
   /// if the iterator gets used after being invalidated
   Acts::detail::RefHolder<const Acts::Grid<T, Axes...>> m_grid{nullptr};
-  /// @brief The interation index, corresponding to the global bin in the grid
+  /// @brief The iteration index, corresponding to the global bin in the grid
   std::size_t m_idx{0ul};
 };
 
@@ -212,7 +212,7 @@ class GridLocalIterator {
   /// @brief Copy constructor
   /// @param [in] other The GridLocalIterator to be copied
   GridLocalIterator(const GridLocalIterator<T, Axes...>& other) = default;
-  /// @brief Copy assignemnt operator
+  /// @brief Copy assignment operator
   /// @param [in] other The GridLocalIterator to be copied
   /// @return The copied GridLocalIterator
   GridLocalIterator<T, Axes...>& operator=(
@@ -235,11 +235,11 @@ class GridLocalIterator {
   ~GridLocalIterator() = default;
 
   /// @brief Equality operator
-  /// @param [in] other The other GridLocalIterator to be compared agains this one
+  /// @param [in] other The other GridLocalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator==(const Acts::GridLocalIterator<T, Axes...>& other) const;
   /// @brief (In-)Equality operator
-  /// @param [in] other The other GridLocalIterator to be compared agains this one
+  /// @param [in] other The other GridLocalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator!=(const Acts::GridLocalIterator<T, Axes...>& other) const;
 
