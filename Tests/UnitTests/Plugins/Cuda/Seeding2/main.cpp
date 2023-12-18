@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
   // Create binned groups of these spacepoints.
   auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
 								    numPhiNeighbors, zBinNeighborsBottom);
-  auto topBinFinder = std::make_shared<Acts::GridBinFinder<TestSpacePoint>>(
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
 									    numPhiNeighbors, zBinNeighborsTop);
 
   // Set up the seedFinder configuration.
