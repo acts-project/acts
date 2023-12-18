@@ -7,6 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
+#include <ROOT/RDataFrame.hxx> // Plots
+#include <ROOT/RVec.hxx> // plots
+#include <TCanvas.h>  // plots
+#include <TH1F.h>  // plots
+#include <TArrow.h> // plots
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -238,6 +243,30 @@ const MeasurementResolutionMap resolutions = {
     {GeometryIdentifier(), resPixel},
 };
 
+
+// Define function AlignmentResiduals
+
+void AlignmentResiduals (const AlignmentResidual& alignResult)
+{
+
+    const auto& trajectories = alignResult.getTrajectories();
+    // 1D residuals (assuming only one direction -  X axis)
+    std::vector <double> x_residuals; 
+    for (std::size_t i=0; i < trajectories.size(); ++i) {
+      x_residuals.push_back(trajectories)[i].parameters().position().x());
+    }
+
+    TH1F* histoResX = new TH1F("histoResX", "Residuals - x axis", 100, -1.0, 1.0);
+    for (const auto& residual : x_residuals) {
+       histoResX->Fill(residual);
+    }
+
+    TCanvas* canvas = new TCanvas("alignment_residuals", "Alignment Residuals", 800, 600);
+
+    histoResX->Draw();
+
+    canvas->SaveAs("alignment_residuals.png");
+}
 struct KalmanFitterInputTrajectory {
   // The source links
   std::vector<TestSourceLink> sourcelinks;
@@ -271,6 +300,43 @@ std::vector<KalmanFitterInputTrajectory> createTrajectories(
   }
   return trajectories;
 }
+
+// Function for plotting alignment shift 
+void misalignmentPlot(const Acts::AlignmentResidual& alignResult) {
+
+    const auto& alignmentShifts = alignResult.getAlignmentShifts();
+
+    TCanvas* canvasMis = new TCanvas("canvasMis", "misalignment_shift", 850, 650);
+
+    // TODO: is there a better way then TArrow 
+    for (const auto& shift : alignmentShifts) {
+        TArrow* arrow = new TArrow(shift.first.x(), shift.first.y(),
+                                    shift.first.x() + shift.second.x(),
+                                    shift.first.y() + shift.second.y(), 0.02, "|>");
+        arrow->SetLineColor(kRed);
+        arrow->Draw();
+    }
+    canvasMisalignment->SaveAs("misalignment_shift.png");
+}
+
+ // Function for plotting 1D residuals in x direction 
+void alignmentResiduals(const Acts::AlignmentResidual& alignResult) {
+    
+    TH1F* histoResX = new TH1F("histoResX", "Residuals_x_axis", 100, -1.0, 1.0);
+    for (const auto& residual : x_residuals) {
+       histoResX->Fill(residual);
+    }
+
+    TCanvas* canvas = new TCanvas("alignment_residuals", "Alignment Residuals", 800, 600);
+
+    histoResX->Draw();
+    canvas->SaveAs("Residuals_x_axis.png");
+
+    misalignmentPlot(alignResult);
+}
+
+
+
 }  // namespace
 
 ///
@@ -499,4 +565,7 @@ return std::make_shared<const Acts::TrackingGeometry> (trackingVolume);
       alignZero.align(trajCollection, sParametersCollection, alignOptions);
 
   // BOOST_CHECK(alignRes.ok());
+
+  // Alignment residuals - plot
+  AlignmentResiduals(alignResiduals);
 }
