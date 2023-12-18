@@ -514,9 +514,8 @@ Acts::TrackingVolume::compatibleBoundaries(
 
       ACTS_VERBOSE("Check intersection with surface "
                    << bSurface->surfaceRepresentation().geometryId());
-      if (detail::checkIntersection<decltype(sIntersection.intersection()),
-                                    decltype(logger)>(
-              sIntersection.intersection(), nearLimit, farLimit, logger)) {
+      if (detail::checkIntersection(sIntersection.intersection(), nearLimit,
+                                    farLimit, logger)) {
         return BoundaryIntersection(sIntersection, bSurface);
       }
     }
