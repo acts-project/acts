@@ -8,14 +8,12 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/detail/AnyIntersection.hpp"
+#include "Acts/Propagator/detail/NavigationHelpers.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -23,8 +21,6 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <cstddef>
-#include <iomanip>
-#include <iterator>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -106,27 +102,7 @@ class Navigator {
     bool reinitializeOnLayerHit = false;
   };
 
-  /// Composes an intersection and a bounds check into an intersection
-  /// candidate. This is used to consistently update intersections after
-  /// creation.
-  struct IntersectionCandidate {
-    detail::AnyIntersection intersection;
-    BoundaryCheck boundaryCheck;
-
-    IntersectionCandidate(detail::AnyIntersection _intersection,
-                          BoundaryCheck _boundaryCheck)
-        : intersection(std::move(_intersection)),
-          boundaryCheck(std::move(_boundaryCheck)) {}
-
-    static bool forwardOrder(const IntersectionCandidate& aCandidate,
-                             const IntersectionCandidate& bCandidate) {
-      return Intersection3D::forwardOrder(
-          aCandidate.intersection.intersection(),
-          bCandidate.intersection.intersection());
-    }
-  };
-
-  using IntersectionCandidates = std::vector<IntersectionCandidate>;
+  using IntersectionCandidates = std::vector<detail::IntersectionCandidate>;
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
 
@@ -141,7 +117,7 @@ class Navigator {
     std::size_t candidateIndex = 0;
 
     /// Provides easy access to the active navigation candidate
-    const IntersectionCandidate& candidate() const {
+    const detail::IntersectionCandidate& candidate() const {
       return candidates.at(candidateIndex);
     }
 
@@ -360,7 +336,7 @@ class Navigator {
 
       const auto& candidate = state.navigation.candidate();
       const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.representation();
+      const Surface& surface = *intersection.object();
       BoundaryCheck boundaryCheck = candidate.boundaryCheck;
 
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
@@ -392,7 +368,7 @@ class Navigator {
       // Handle an unreachable candidates. This can happen for sensitive
       // surfaces as we may not encounter them. If this happens for layers or
       // boundaries we have to reinitialize the navigation.
-      if (intersection.template checkType<SurfaceIntersection>()) {
+      if (candidate.template checkType<Surface>()) {
         // Skip if this is an ordinary surface
         ACTS_VERBOSE(volInfo(state) << "Surface unreachable, skip.");
         ++state.navigation.candidateIndex;
@@ -459,7 +435,7 @@ class Navigator {
 
     const auto& candidate = state.navigation.candidate();
     const auto& intersection = candidate.intersection;
-    const Surface& surface = *intersection.representation();
+    const Surface& surface = *intersection.object();
 
     // Determine the surface status without boundary check.
     // TODO This will also update the step length which is unnecessary
@@ -503,7 +479,7 @@ class Navigator {
 
     // Depending on what kind of surface we intersected we need to update the
     // navigation state further.
-    if (intersection.template checkType<SurfaceIntersection>()) {
+    if (candidate.template checkType<Surface>()) {
       // In case of a surface we are done already
 
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
@@ -511,15 +487,14 @@ class Navigator {
       assert(state.navigation.candidateIndex !=
                  state.navigation.candidates.size() &&
              "No more candidates.");
-    } else if (intersection.template checkType<LayerIntersection>()) {
+    } else if (candidate.template checkType<Layer>()) {
       // In case of a layer we need to update our navigation candidates with the
       // surfaces we might hit in the layer
 
       ACTS_VERBOSE(volInfo(state)
                    << "This is a layer. Initialize layer candidates");
 
-      state.navigation.currentLayer =
-          intersection.template object<LayerIntersection>();
+      state.navigation.currentLayer = candidate.template object<Layer>();
 
       if (m_cfg.reinitializeOnLayerHit) {
         reinitializeCandidates(state, stepper);
@@ -532,16 +507,15 @@ class Navigator {
         std::sort(state.navigation.candidates.begin() +
                       state.navigation.candidateIndex,
                   state.navigation.candidates.end(),
-                  IntersectionCandidate::forwardOrder);
+                  detail::IntersectionCandidate::forwardOrder);
       }
-    } else if (intersection.template checkType<BoundaryIntersection>()) {
+    } else if (candidate.template checkType<BoundarySurface>()) {
       // In case of a boundary we need to switch volume and reinitialize
 
       ACTS_VERBOSE(volInfo(state)
                    << "This is a boundary. Reinitialize navigation");
 
-      const auto* boundary =
-          intersection.template object<BoundaryIntersection>();
+      const auto* boundary = candidate.template object<BoundarySurface>();
 
       state.navigation.currentLayer = nullptr;
       state.navigation.currentVolume = boundary->attachedVolume(
@@ -596,15 +570,15 @@ class Navigator {
       std::ostringstream oss;
       oss << boundaries.size();
       oss << " boundary candidates found at path(s): ";
-      for (const auto& boundary : boundaries) {
+      for (const auto& [boundary, _] : boundaries) {
         oss << boundary.pathLength() << "  ";
       }
       ACTS_VERBOSE(oss.str());
     }
 
-    for (const auto& boundary : boundaries) {
-      state.navigation.candidates.emplace_back(
-          detail::AnyIntersection(boundary), BoundaryCheck(true));
+    for (const auto& [boundary, object] : boundaries) {
+      state.navigation.candidates.emplace_back(boundary, object,
+                                               BoundaryCheck(true));
     }
   }
 
@@ -642,14 +616,14 @@ class Navigator {
       std::ostringstream oss;
       oss << layers.size();
       oss << " layer candidates found at path(s): ";
-      for (const auto& layer : layers) {
+      for (const auto& [layer, _] : layers) {
         oss << layer.pathLength() << "  ";
       }
       ACTS_VERBOSE(oss.str());
     }
 
-    for (const auto& layer : layers) {
-      state.navigation.candidates.emplace_back(detail::AnyIntersection(layer),
+    for (const auto& [layer, object] : layers) {
+      state.navigation.candidates.emplace_back(layer, object,
                                                BoundaryCheck(true));
     }
   }
@@ -704,7 +678,7 @@ class Navigator {
 
     for (const auto& surface : surfaces) {
       state.navigation.candidates.emplace_back(
-          detail::AnyIntersection(surface), m_cfg.boundaryCheckSurfaceApproach);
+          surface, surface.object(), m_cfg.boundaryCheckSurfaceApproach);
     }
   }
 
@@ -724,7 +698,7 @@ class Navigator {
 
     std::sort(state.navigation.candidates.begin(),
               state.navigation.candidates.end(),
-              IntersectionCandidate::forwardOrder);
+              detail::IntersectionCandidate::forwardOrder);
   }
 
   /// Checks if a navigation break had been triggered or navigator is

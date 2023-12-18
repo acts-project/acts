@@ -9,27 +9,20 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/AnyIntersection.hpp"
-#include "Acts/Propagator/detail/NavigationObjectCandidate.hpp"
+#include "Acts/Propagator/detail/NavigationHelpers.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
-#include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <limits>
 #include <memory>
-#include <variant>
 #include <vector>
 
 namespace Acts {
@@ -61,25 +54,6 @@ class TryAllNavigator {
     BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
   };
 
-  /// Composes an intersection and a bounds check into a navigation candidate.
-  /// This is used to consistently update intersections after creation.
-  struct IntersectionCandidate {
-    detail::AnyIntersection intersection;
-    BoundaryCheck boundaryCheck;
-
-    IntersectionCandidate(detail::AnyIntersection _intersection,
-                          BoundaryCheck _boundaryCheck)
-        : intersection(std::move(_intersection)),
-          boundaryCheck(std::move(_boundaryCheck)) {}
-
-    static bool forwardOrder(const IntersectionCandidate& aCandidate,
-                             const IntersectionCandidate& bCandidate) {
-      return Intersection3D::forwardOrder(
-          aCandidate.intersection.intersection(),
-          bCandidate.intersection.intersection());
-    }
-  };
-
   /// @brief Nested State struct
   ///
   /// It acts as an internal state which is created for every propagation and
@@ -104,7 +78,7 @@ class TryAllNavigator {
     /// The vector of navigation candidates to work through
     std::vector<detail::NavigationObjectCandidate> navigationCandidates;
     /// The vector of intersection candidates to work through
-    std::vector<IntersectionCandidate> intersectionCandidates;
+    std::vector<detail::IntersectionCandidate> intersectionCandidates;
 
     /// Indicator if the target is reached
     bool targetReached = false;
@@ -256,11 +230,10 @@ class TryAllNavigator {
 
     // handle overstepping
     if (!state.navigation.intersectionCandidates.empty()) {
-      const IntersectionCandidate& previousIntersection =
+      const detail::IntersectionCandidate& previousIntersection =
           state.navigation.intersectionCandidates.front();
 
-      const Surface& surface =
-          *previousIntersection.intersection.representation();
+      const Surface& surface = *previousIntersection.intersection.object();
       std::uint8_t index = previousIntersection.intersection.index();
       BoundaryCheck boundaryCheck = previousIntersection.boundaryCheck;
 
@@ -277,14 +250,14 @@ class TryAllNavigator {
       }
     }
 
-    std::vector<IntersectionCandidate> intersectionCandidates;
+    std::vector<detail::IntersectionCandidate> intersectionCandidates;
 
     // Find intersections with all candidates
     for (const auto& candidate : state.navigation.navigationCandidates) {
       auto intersections =
           candidate.intersect(state.geoContext, position, direction,
                               state.options.surfaceTolerance);
-      for (const auto& intersection : intersections.split()) {
+      for (const auto& intersection : intersections.first.split()) {
         // exclude invalid intersections
         if (!intersection) {
           continue;
@@ -295,20 +268,20 @@ class TryAllNavigator {
           continue;
         }
         // store candidate
-        intersectionCandidates.emplace_back(intersection,
+        intersectionCandidates.emplace_back(intersection, intersections.second,
                                             candidate.boundaryCheck);
       }
     }
 
     std::sort(intersectionCandidates.begin(), intersectionCandidates.end(),
-              IntersectionCandidate::forwardOrder);
+              detail::IntersectionCandidate::forwardOrder);
 
     ACTS_VERBOSE(volInfo(state) << "found " << intersectionCandidates.size()
                                 << " intersections");
 
     for (const auto& candidate : intersectionCandidates) {
       const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.representation();
+      const Surface& surface = *intersection.object();
       BoundaryCheck boundaryCheck = candidate.boundaryCheck;
 
       auto surfaceStatus = stepper.updateSurfaceStatus(
@@ -367,11 +340,11 @@ class TryAllNavigator {
       return true;
     }
 
-    std::vector<IntersectionCandidate> hitCandidates;
+    std::vector<detail::IntersectionCandidate> hitCandidates;
 
     for (const auto& candidate : state.navigation.intersectionCandidates) {
       const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.representation();
+      const Surface& surface = *intersection.object();
 
       Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
@@ -396,11 +369,11 @@ class TryAllNavigator {
                  << "Found " << hitCandidates.size()
                  << " intersections on surface without bounds check.");
 
-    std::vector<IntersectionCandidate> trueHitCandidates;
+    std::vector<detail::IntersectionCandidate> trueHitCandidates;
 
     for (const auto& candidate : hitCandidates) {
       const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.representation();
+      const Surface& surface = *intersection.object();
 
       Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
@@ -429,8 +402,9 @@ class TryAllNavigator {
                    << "Only using first intersection within bounds.");
     }
 
-    const auto& intersection = trueHitCandidates.front().intersection;
-    const Surface& surface = *intersection.representation();
+    const auto& candidate = trueHitCandidates.front();
+    const auto& intersection = candidate.intersection;
+    const Surface& surface = *intersection.object();
 
     ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
     // Set in navigation state, so actors and aborters can access it
@@ -440,16 +414,15 @@ class TryAllNavigator {
                                   << surface.geometryId());
     }
 
-    if (intersection.template checkType<SurfaceIntersection>()) {
+    if (candidate.template checkType<Surface>()) {
       ACTS_VERBOSE(volInfo(state) << "This is a surface");
-    } else if (intersection.template checkType<LayerIntersection>()) {
+    } else if (candidate.template checkType<Layer>()) {
       ACTS_VERBOSE(volInfo(state) << "This is a layer");
-    } else if (intersection.template checkType<BoundaryIntersection>()) {
+    } else if (candidate.template checkType<BoundarySurface>()) {
       ACTS_VERBOSE(volInfo(state)
                    << "This is a boundary. Reinitialize navigation");
 
-      const auto& boundary =
-          *intersection.template object<BoundaryIntersection>();
+      const auto& boundary = *candidate.template object<BoundarySurface>();
 
       state.navigation.currentVolume = boundary.attachedVolume(
           state.geoContext, stepper.position(state.stepping),

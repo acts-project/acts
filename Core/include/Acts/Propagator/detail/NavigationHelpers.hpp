@@ -8,60 +8,85 @@
 
 #pragma once
 
-#include "Acts/Propagator/detail/AnyIntersection.hpp"
+#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 #include <variant>
 
 namespace Acts {
 namespace detail {
 
-/// @brief A candidate object for navigation
-///
-/// TODO if the intersection would carry a `std::any` we would not need this
-/// class
-struct NavigationObjectCandidate {
-  using SurfaceObject = const Surface*;
-  using LayerObject = const Layer*;
-  using BoundaryObject = const BoundarySurfaceT<TrackingVolume>*;
-  using AnyObject = std::variant<SurfaceObject, LayerObject, BoundaryObject>;
+using AnyIntersectionObject =
+    std::variant<const Surface*, const Layer*, const BoundarySurface*>;
 
-  AnyObject object;
+/// @brief A candidate object for navigation
+struct NavigationObjectCandidate {
+  AnyIntersectionObject object;
   const Surface* representation = nullptr;
   BoundaryCheck boundaryCheck;
 
-  NavigationObjectCandidate(AnyObject _object, const Surface* _representation,
+  NavigationObjectCandidate(AnyIntersectionObject _object,
+                            const Surface* _representation,
                             BoundaryCheck _boundaryCheck)
       : object(_object),
         representation(_representation),
         boundaryCheck(std::move(_boundaryCheck)) {}
 
-  AnyMultiIntersection intersect(const GeometryContext& gctx,
-                                 const Vector3& position,
-                                 const Vector3& direction,
-                                 ActsScalar tolerance) const {
-    if (std::holds_alternative<SurfaceObject>(object)) {
-      const auto& surface = std::get<SurfaceObject>(object);
+  std::pair<SurfaceMultiIntersection, AnyIntersectionObject> intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, ActsScalar tolerance) const {
+    if (std::holds_alternative<const Surface*>(object)) {
+      const auto& surface = std::get<const Surface*>(object);
       auto intersection = representation->intersect(gctx, position, direction,
                                                     boundaryCheck, tolerance);
-      return AnyMultiIntersection(SurfaceMultiIntersection(
-          intersection.intersections(), surface, representation));
+      return {intersection, surface};
     }
-    if (std::holds_alternative<LayerObject>(object)) {
-      const auto& layer = std::get<LayerObject>(object);
+    if (std::holds_alternative<const Layer*>(object)) {
+      const auto& layer = std::get<const Layer*>(object);
       auto intersection = representation->intersect(gctx, position, direction,
                                                     boundaryCheck, tolerance);
-      return AnyMultiIntersection(LayerMultiIntersection(
-          intersection.intersections(), layer, representation));
+      return {intersection, layer};
     }
-    if (std::holds_alternative<BoundaryObject>(object)) {
-      const auto& boundary = std::get<BoundaryObject>(object);
+    if (std::holds_alternative<const BoundarySurface*>(object)) {
+      const auto& boundary = std::get<const BoundarySurface*>(object);
       auto intersection = representation->intersect(gctx, position, direction,
                                                     boundaryCheck, tolerance);
-      return AnyMultiIntersection(BoundaryMultiIntersection(
-          intersection.intersections(), boundary, representation));
+      return {intersection, boundary};
     }
     throw std::runtime_error("unknown type");
+  }
+};
+
+/// Composes an intersection and a bounds check into a navigation candidate.
+/// This is used to consistently update intersections after creation.
+struct IntersectionCandidate {
+  SurfaceIntersection intersection;
+  detail::AnyIntersectionObject anyObject;
+  BoundaryCheck boundaryCheck;
+
+  IntersectionCandidate(SurfaceIntersection _intersection,
+                        detail::AnyIntersectionObject _anyObject,
+                        BoundaryCheck _boundaryCheck)
+      : intersection(std::move(_intersection)),
+        anyObject(std::move(_anyObject)),
+        boundaryCheck(std::move(_boundaryCheck)) {}
+
+  template <typename object_t>
+  bool checkType() const {
+    return std::holds_alternative<const object_t*>(anyObject);
+  }
+
+  template <typename object_t>
+  const object_t* object() const {
+    return std::get<const object_t*>(anyObject);
+  }
+
+  static bool forwardOrder(const IntersectionCandidate& aCandidate,
+                           const IntersectionCandidate& bCandidate) {
+    return Intersection3D::forwardOrder(aCandidate.intersection.intersection(),
+                                        bCandidate.intersection.intersection());
   }
 };
 
@@ -71,7 +96,7 @@ inline void emplaceAllVolumeCandidates(
     const TrackingVolume& volume, bool resolveSensitive, bool resolveMaterial,
     bool resolvePassive, BoundaryCheck boundaryCheckSurfaceApproach,
     const Logger& logger) {
-  auto addCandidate = [&](detail::NavigationObjectCandidate::AnyObject object,
+  auto addCandidate = [&](AnyIntersectionObject object,
                           const Surface* representation,
                           BoundaryCheck boundaryCheck) {
     candidates.emplace_back(object, representation, boundaryCheck);

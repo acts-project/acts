@@ -9,14 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/AnyIntersection.hpp"
-#include "Acts/Propagator/detail/NavigationObjectCandidate.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/NavigationHelpers.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -24,10 +21,7 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <iterator>
-#include <limits>
 #include <memory>
-#include <variant>
 #include <vector>
 
 namespace Acts {
@@ -64,25 +58,6 @@ class TryAllOverstepNavigator {
     BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
   };
 
-  /// Composes an intersection and a bounds check into a navigation candidate.
-  /// This is used to consistently update intersections after creation.
-  struct IntersectionCandidate {
-    detail::AnyIntersection intersection;
-    BoundaryCheck boundaryCheck;
-
-    IntersectionCandidate(detail::AnyIntersection _intersection,
-                          BoundaryCheck _boundaryCheck)
-        : intersection(std::move(_intersection)),
-          boundaryCheck(std::move(_boundaryCheck)) {}
-
-    static bool forwardOrder(const IntersectionCandidate& aCandidate,
-                             const IntersectionCandidate& bCandidate) {
-      return Intersection3D::forwardOrder(
-          aCandidate.intersection.intersection(),
-          bCandidate.intersection.intersection());
-    }
-  };
-
   /// @brief Nested State struct
   ///
   /// It acts as an internal state which is created for every propagation and
@@ -107,14 +82,14 @@ class TryAllOverstepNavigator {
     /// The vector of navigation candidates to work through
     std::vector<detail::NavigationObjectCandidate> navigationCandidates;
     /// The vector of active intersection candidates to work through
-    std::vector<IntersectionCandidate> activeCandidates;
+    std::vector<detail::IntersectionCandidate> activeCandidates;
     /// The current active candidate index of the navigation state
     std::size_t activeCandidateIndex = 0;
 
     /// The position before the last step
     std::optional<Vector3> lastPosition;
     /// The last intersection used to avoid rehitting the same surface
-    std::optional<detail::AnyIntersection> lastIntersection;
+    std::optional<SurfaceIntersection> lastIntersection;
 
     /// Indicator if the target is reached
     bool targetReached = false;
@@ -122,7 +97,7 @@ class TryAllOverstepNavigator {
     bool navigationBreak = false;
 
     /// Provides easy access to the active intersection candidate
-    const IntersectionCandidate& activeCandidate() const {
+    const detail::IntersectionCandidate& activeCandidate() const {
       return activeCandidates.at(activeCandidateIndex);
     }
   };
@@ -236,13 +211,13 @@ class TryAllOverstepNavigator {
                      << "Current surface set to start surface "
                      << state.navigation.currentSurface->geometryId());
 
-        state.navigation.lastIntersection = detail::AnyIntersection(
+        state.navigation.lastIntersection =
             state.navigation.currentSurface
                 ->intersect(
                     state.geoContext, stepper.position(state.stepping),
                     state.options.direction * stepper.direction(state.stepping),
                     BoundaryCheck(false), state.options.surfaceTolerance)
-                .closest());
+                .closest();
       } else {
         ACTS_VERBOSE(volInfo(state) << "No start surface set.");
       }
@@ -286,7 +261,7 @@ class TryAllOverstepNavigator {
 
       const auto& candidate = state.navigation.activeCandidate();
       const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.representation();
+      const Surface& surface = *intersection.object();
       BoundaryCheck boundaryCheck = candidate.boundaryCheck;
 
       // Screen output which surface you are on
@@ -378,7 +353,7 @@ class TryAllOverstepNavigator {
       for (const auto& candidate : state.navigation.navigationCandidates) {
         auto intersections = candidate.intersect(
             state.geoContext, end, direction, state.options.surfaceTolerance);
-        for (const auto& intersection : intersections.split()) {
+        for (const auto& intersection : intersections.first.split()) {
           // exclude invalid intersections
           if (!intersection) {
             continue;
@@ -390,21 +365,21 @@ class TryAllOverstepNavigator {
           }
           // exclude last candidate
           if (state.navigation.lastIntersection.has_value() &&
-              state.navigation.lastIntersection->representation() ==
-                  intersection.representation() &&
+              state.navigation.lastIntersection->object() ==
+                  intersection.object() &&
               state.navigation.lastIntersection->index() ==
                   intersection.index()) {
             continue;
           }
           // store candidate
           state.navigation.activeCandidates.emplace_back(
-              intersection, candidate.boundaryCheck);
+              intersection, intersections.second, candidate.boundaryCheck);
         }
       }
 
       std::sort(state.navigation.activeCandidates.begin(),
                 state.navigation.activeCandidates.end(),
-                IntersectionCandidate::forwardOrder);
+                detail::IntersectionCandidate::forwardOrder);
 
       state.navigation.activeCandidateIndex = 0;
 
@@ -420,13 +395,13 @@ class TryAllOverstepNavigator {
         state.navigation.activeCandidates.size()) {
       ACTS_VERBOSE(volInfo(state) << "handle active candidates");
 
-      std::vector<IntersectionCandidate> hitCandidates;
+      std::vector<detail::IntersectionCandidate> hitCandidates;
 
       while (state.navigation.activeCandidateIndex !=
              state.navigation.activeCandidates.size()) {
         const auto& candidate = state.navigation.activeCandidate();
         const auto& intersection = candidate.intersection;
-        const Surface& surface = *intersection.representation();
+        const Surface& surface = *intersection.object();
 
         Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
@@ -450,11 +425,11 @@ class TryAllOverstepNavigator {
       result = true;
       state.navigation.lastIntersection.reset();
 
-      std::vector<IntersectionCandidate> trueHitCandidates;
+      std::vector<detail::IntersectionCandidate> trueHitCandidates;
 
       for (const auto& candidate : hitCandidates) {
         const auto& intersection = candidate.intersection;
-        const Surface& surface = *intersection.representation();
+        const Surface& surface = *intersection.object();
 
         Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
@@ -483,8 +458,9 @@ class TryAllOverstepNavigator {
                      << "Only using first intersection within bounds.");
       }
 
-      const auto& intersection = trueHitCandidates.front().intersection;
-      const Surface& surface = *intersection.representation();
+      const auto& candidate = trueHitCandidates.front();
+      const auto& intersection = candidate.intersection;
+      const Surface& surface = *intersection.object();
 
       state.navigation.lastIntersection = intersection;
 
@@ -496,16 +472,15 @@ class TryAllOverstepNavigator {
                                     << surface.geometryId());
       }
 
-      if (intersection.template checkType<SurfaceIntersection>()) {
+      if (candidate.template checkType<Surface>()) {
         ACTS_VERBOSE(volInfo(state) << "This is a surface");
-      } else if (intersection.template checkType<LayerIntersection>()) {
+      } else if (candidate.template checkType<Layer>()) {
         ACTS_VERBOSE(volInfo(state) << "This is a layer");
-      } else if (intersection.template checkType<BoundaryIntersection>()) {
+      } else if (candidate.template checkType<BoundarySurface>()) {
         ACTS_VERBOSE(volInfo(state)
                      << "This is a boundary. Reinitialize navigation");
 
-        const auto& boundary =
-            *intersection.template object<BoundaryIntersection>();
+        const auto& boundary = *candidate.template object<BoundarySurface>();
 
         state.navigation.currentVolume = boundary.attachedVolume(
             state.geoContext, stepper.position(state.stepping),

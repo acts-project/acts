@@ -9,7 +9,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -25,12 +24,8 @@
 #include "Acts/Utilities/Ray.hpp"
 
 #include <algorithm>
-#include <array>
-#include <functional>
 #include <ostream>
 #include <string>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 
 namespace Acts {
@@ -489,14 +484,12 @@ Acts::TrackingVolume::compatibleBoundaries(
       if (sIntersection && detail::checkIntersection(
                                sIntersection.intersection(), options.nearLimit,
                                options.farLimit, logger)) {
-        return BoundaryIntersection(sIntersection.intersection(), boundary,
-                                    sIntersection.object(),
-                                    sIntersection.index());
+        return BoundaryIntersection(sIntersection, boundary);
       }
     }
 
     ACTS_VERBOSE("No intersection accepted");
-    return BoundaryIntersection::invalid();
+    return BoundaryIntersection(SurfaceIntersection::invalid(), nullptr);
   };
 
   /// Helper function to process boundary surfaces
@@ -515,7 +508,7 @@ Acts::TrackingVolume::compatibleBoundaries(
           surface.intersect(gctx, position, direction, options.boundaryCheck);
       // Intersect and continue
       auto intersection = checkIntersection(candidates, boundary.get());
-      if (intersection) {
+      if (intersection.first) {
         ACTS_VERBOSE(" - Proceed with surface");
         intersections.push_back(intersection);
       } else {
@@ -572,9 +565,7 @@ Acts::TrackingVolume::compatibleLayers(
       // Intersection is ok - take it (move to surface on approach)
       if (atIntersection) {
         // create a layer intersection
-        lIntersections.push_back(
-            LayerIntersection(atIntersection.intersection(), tLayer,
-                              atIntersection.object(), atIntersection.index()));
+        lIntersections.push_back(LayerIntersection(atIntersection, tLayer));
       }
     }
     // move to next one or break because you reached the end layer
