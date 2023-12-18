@@ -49,7 +49,7 @@ class TrackSelector {
     std::size_t maxHoles = std::numeric_limits<std::size_t>::max();
     std::size_t maxOutliers = std::numeric_limits<std::size_t>::max();
     std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
-    float maxChi2 = std::numeric_limits<float>::max();
+    double maxChi2 = inf;
 
     // Helper factory functions to produce a populated config object more
     // conveniently
@@ -273,6 +273,10 @@ inline std::ostream& operator<<(std::ostream& os,
   print("eta", cuts.etaMin, cuts.etaMax);
   print("absEta", cuts.absEtaMin, cuts.absEtaMax);
   print("pt", cuts.ptMin, cuts.ptMax);
+  print("nHoles", 0, cuts.maxHoles);
+  print("nOutliers", 0, cuts.maxOutliers);
+  print("nSharedHits", 0, cuts.maxSharedHits);
+  print("chi2", 0.0, cuts.maxChi2);
   os << " - " << cuts.minMeasurements << " <= nMeasurements\n";
 
   return os;

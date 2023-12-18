@@ -229,8 +229,8 @@ class TrigFTF_GNN_TrackingFilter {
     const float weight_x = 0.5;
     const float weight_y = 0.5;
 
-    const float maxDChi2_x = 60.0;  // 35.0;
-    const float maxDChi2_y = 60.0;  // 31.0;
+    const float maxDChi2_x = 60.0;  // was 35.0;
+    const float maxDChi2_y = 60.0;  // was 31.0;
 
     const float add_hit = 14.0;
 
@@ -306,7 +306,6 @@ class TrigFTF_GNN_TrackingFilter {
     Cy[1][1] = ts.m_Cy[1][1];
 
     // chi2 test
-
     float resid_x = mx - X[0];
     float resid_y = my - Y[0];
 
@@ -317,7 +316,7 @@ class TrigFTF_GNN_TrackingFilter {
 
     int type = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
 
-    if (type == 0) {  // barrel TO-DO: split into barrel Pixel and barrel SCT
+    if (type == 0) {  // barrel TODO: split into barrel Pixel and barrel SCT
       sigma_rz = sigma_y * sigma_y;
     } else {
       sigma_rz = sigma_y * ts.m_Y[1];
@@ -338,7 +337,6 @@ class TrigFTF_GNN_TrackingFilter {
     ts.m_J += add_hit - dchi2_x * weight_x - dchi2_y * weight_y;
 
     // state update
-
     float Kx[3] = {Dx * Cx[0][0], Dx * Cx[0][1], Dx * Cx[0][2]};
     float Ky[2] = {Dy * Cy[0][0], Dy * Cy[0][1]};
 
@@ -360,6 +358,7 @@ class TrigFTF_GNN_TrackingFilter {
         ts.m_Cy[i][j] = Cy[i][j] - Ky[i] * CHy[j];
       }
     }
+
     ts.m_refX = refX;
     ts.m_refY = refY;
     return true;
@@ -371,7 +370,7 @@ class TrigFTF_GNN_TrackingFilter {
     });  // iterator to vector member with this id
     int index = std::distance(m_geo.begin(), iterator);
 
-    return m_geo.at(index).m_type;
+    return m_geo.at(index).m_type;  // needs to be 0, 2, or -2
   }
 
   const std::vector<Acts::TrigInDetSiLayer>& m_geo;
