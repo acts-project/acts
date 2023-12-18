@@ -54,25 +54,7 @@ struct Cache {
   SquareMatrix3 wMat = SquareMatrix3::Zero();
 };
 
-/// @brief Updates vertex with knowledge of new track
-/// @note KalmanVertexUpdater updates the vertex when trk is added to the fit.
-/// However, it does not add the track to the TrackAtVertex list. This to be
-/// done manually after calling the method.
-///
-/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
-/// fit its spatial coordinates) or 4 (if we also fit time).
-///
-/// @param vtx Vertex to be updated
-/// @param trk Track to be used for updating the vertex
-template <unsigned int nDimVertex>
-void updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk);
-
 namespace detail {
-void updateVertexWithTrack(Vector4& vtxPos, SquareMatrix4& vtxCov,
-                           std::pair<double, double>& fitQuality,
-                           TrackAtVertexRef trk, int sign,
-                           unsigned int nDimVertex);
-
 // These two functions only exist so we can compile calculateUpdate in a
 // compilation unit
 void calculateUpdate3(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
@@ -85,6 +67,19 @@ void calculateUpdate4(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
                       const double trackWeight, const int sign,
                       Cache<4>& cache);
 }  // namespace detail
+
+/// @brief Updates vertex with knowledge of new track
+/// @note KalmanVertexUpdater updates the vertex when trk is added to the fit.
+/// However, it does not add the track to the TrackAtVertex list. This to be
+/// done manually after calling the method.
+///
+///
+/// @param vtx Vertex to be updated
+/// @param trk Track to be used for updating the vertex
+/// @param nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+void updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
+                           unsigned int nDimVertex);
 
 /// @brief Calculates updated vertex position and covariance as well as the
 /// updated track momentum when adding/removing linTrack. Saves the result in
@@ -119,7 +114,5 @@ void calculateUpdate(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
   }
 }
 
-}  // Namespace KalmanVertexUpdater
-}  // Namespace Acts
-
-#include "KalmanVertexUpdater.ipp"
+}  // namespace KalmanVertexUpdater
+}  // namespace Acts

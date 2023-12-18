@@ -291,11 +291,7 @@ inline Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
         // Update the vertex with the new track. The second template argument
         // corresponds to the number of fitted vertex dimensions (i.e., 3 if we
         // only fit spatial coordinates and 4 if we also fit time).
-        if (m_cfg.useTime) {
-          KalmanVertexUpdater::updateVertexWithTrack<4>(*vtx, trkAtVtx);
-        } else {
-          KalmanVertexUpdater::updateVertexWithTrack<3>(*vtx, trkAtVtx);
-        }
+        KalmanVertexUpdater::updateVertexWithTrack(*vtx, trkAtVtx, m_cfg.useTime ? 4 : 3);
       } else {
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }

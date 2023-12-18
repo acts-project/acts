@@ -13,6 +13,21 @@
 
 namespace Acts {
 namespace {
+
+/// @brief Calculates updated vertex position and covariance as well as the
+/// updated track momentum when adding/removing linTrack. Saves the result in
+/// cache.
+///
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+///
+/// @param vtx Vertex
+/// @param linTrack Linearized track to be added or removed
+/// @param trackWeight Track weight
+/// @param sign +1 (add track) or -1 (remove track)
+/// @note Tracks are removed during the smoothing procedure to compute
+/// the chi2 of the track wrt the updated vertex position
+/// @param[out] cache A cache to store the results of this function
 template <unsigned int nDimVertex>
 void calculateUpdateImpl(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
                          const Acts::LinearizedTrack& linTrack,
@@ -145,8 +160,14 @@ void update(Vector4& vtxPos, SquareMatrix4& vtxCov,
   KalmanVertexUpdater::Cache<nDimVertex> cache;
 
   // Calculate update and save result in cache
-  calculateUpdate(vtxPos, vtxCov, trk.linearizedState, trackWeight, sign,
-                  cache);
+
+  if constexpr (nDimVertex == 3) {
+    calculateUpdateImpl(vtxPos, vtxCov, trk.linearizedState, trackWeight, sign,
+                        cache);
+  } else if constexpr (nDimVertex == 4) {
+    calculateUpdateImpl(vtxPos, vtxCov, trk.linearizedState, trackWeight, sign,
+                        cache);
+  }
 
   // Get fit quality parameters wrt to old vertex
   double chi2 = 0.;
@@ -206,19 +227,20 @@ void KalmanVertexUpdater::detail::calculateUpdate4(
   calculateUpdateImpl<4>(vtxPos, vtxCov, linTrack, trackWeight, sign, cache);
 }
 
-void KalmanVertexUpdater::detail::updateVertexWithTrack(
-    Vector4& vtxPos, SquareMatrix4& vtxCov,
-    std::pair<double, double>& fitQuality, TrackAtVertexRef trk, int sign,
-    unsigned int nDimVertex) {
+void KalmanVertexUpdater::updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
+                                                unsigned int nDimVertex) {
+  std::pair<double, double> fitQuality = vtx.fitQuality();
+
   if (nDimVertex == 3) {
-    update<3>(vtxPos, vtxCov, fitQuality, trk, sign);
+    update<3>(vtx.fullPosition(), vtx.fullCovariance(), fitQuality, trk, 1);
   } else if (nDimVertex == 4) {
-    update<4>(vtxPos, vtxCov, fitQuality, trk, sign);
+    update<4>(vtx.fullPosition(), vtx.fullCovariance(), fitQuality, trk, 1);
   } else {
     throw std::invalid_argument(
         "The vertex dimension must either be 3 (when fitting the spatial "
         "coordinates) or 4 (when fitting the spatial coordinates + time).");
   }
+  vtx.setFitQuality(fitQuality);
 }
 
 }  // namespace Acts
