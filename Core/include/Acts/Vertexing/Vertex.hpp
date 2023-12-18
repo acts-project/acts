@@ -59,12 +59,14 @@ class Vertex {
 
   /// @return Returns 4-position
   const Vector4& fullPosition() const;
+  Vector4& fullPosition();
 
   /// @return Returns position covariance
   SquareMatrix3 covariance() const;
 
   /// @return Returns 4x4 covariance
   const SquareMatrix4& fullCovariance() const;
+  SquareMatrix4& fullCovariance();
 
   /// @return Returns vector of tracks associated with the vertex
   const std::vector<TrackAtVertex<input_track_t>>& tracks() const;

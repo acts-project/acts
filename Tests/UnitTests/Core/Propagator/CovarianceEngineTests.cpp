@@ -16,7 +16,6 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -188,7 +187,7 @@ std::pair<BoundVector, BoundMatrix> boundToBound(const BoundVector& parIn,
                                           ParticleHypothesis::pion()};
 
   auto converted =
-      boundToBoundConversion(gctx, boundParamIn, srfB, bField).value();
+      detail::boundToBoundConversion(gctx, boundParamIn, srfB, bField).value();
 
   return {converted.parameters(), converted.covariance().value()};
 }
