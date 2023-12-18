@@ -119,14 +119,10 @@ double trackParametersChi2(
                       (trkParams - constTerm - posJacVtxPos);
 
   // Correct phi and theta for possible periodicity changes
-  // Commented out because of broken ATHENA tests.
-  // TODO: uncomment
-  /*
   const auto correctedPhiTheta =
       Acts::detail::normalizePhiTheta(newTrkMom(0), newTrkMom(1));
   newTrkMom(0) = correctedPhiTheta.first;   // phi
   newTrkMom(1) = correctedPhiTheta.second;  // theta
-  */
 
   // \tilde{p_k}
   ParameterVector linearizedTrackParameters =
