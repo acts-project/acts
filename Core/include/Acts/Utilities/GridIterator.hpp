@@ -60,6 +60,9 @@ class GridGlobalIterator {
   GridGlobalIterator<T, Axes...>& operator++();
   GridGlobalIterator<T, Axes...> operator++(int);
 
+  std::size_t globalPosition() const;
+  std::array<std::size_t, DIM> localPosition() const;
+  
  private:
   Acts::detail::RefHolder<const Acts::Grid<T, Axes...>> m_grid{nullptr};
   std::size_t m_idx{0ul};
@@ -109,6 +112,7 @@ class GridLocalIterator {
   GridLocalIterator<T, Axes...>& operator++();
   GridLocalIterator<T, Axes...> operator++(int);
 
+  std::size_t globalPosition() const;
   std::array<std::size_t, DIM> localPosition() const;
 
  private:

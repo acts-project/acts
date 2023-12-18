@@ -154,7 +154,10 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
   Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridStop =
       grid.end();
   std::size_t numIterations = 0ul;
-  for (; gridStart != gridStop; ++gridStart) {
+  for (; gridStart != gridStop; gridStart++) {
+    BOOST_CHECK_EQUAL(gridStart.globalPosition(), numIterations);
+    const std::array<std::size_t, 1ul> locPosition = gridStart.localPosition();
+    BOOST_CHECK_EQUAL(numIterations, locPosition[0ul]);
     ++numIterations;
   }
   BOOST_CHECK_EQUAL(numIterations, grid.size(true));
@@ -184,6 +187,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global) {
       gridStop = grid.end();
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
+    BOOST_CHECK_EQUAL(gridStart.globalPosition(), numIterations);
     ++numIterations;
   }
   BOOST_CHECK_EQUAL(numIterations, grid.size(true));
@@ -220,6 +224,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_global) {
       gridStop = grid.end();
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
+    BOOST_CHECK_EQUAL(gridStart.globalPosition(), numIterations);
     ++numIterations;
   }
   BOOST_CHECK_EQUAL(numIterations, grid.size(true));
@@ -266,6 +271,9 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_operators) {
   [[maybe_unused]] double value = *gridStart;
   std::array<std::size_t, 1ul> locPos = gridStart.localPosition();
   BOOST_CHECK_EQUAL(locPos[0ul], 3ul);
+
+  std::size_t globPos = gridStart.globalPosition();
+  BOOST_CHECK_EQUAL(globPos, 3ul);
 
   Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridDefault;
   Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridDummy(
@@ -430,7 +438,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local) {
                           Acts::detail::EquidistantAxis>
       gridStop = grid.end(navigation);
   std::size_t numIterations = 0ul;
-  for (; gridStart != gridStop; ++gridStart) {
+  for (; gridStart != gridStop; gridStart++) {
     ++numIterations;
   }
   BOOST_CHECK_EQUAL(numIterations, grid.size(false));
