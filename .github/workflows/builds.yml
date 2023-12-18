@@ -162,7 +162,7 @@ jobs:
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
           && pip3 install pytest-md-report
-          && pytest -rFv -k "not exatrkx" -v
+          && pytest -rFsv -k "not exatrkx" -v -s
           && cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
