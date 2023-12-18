@@ -39,22 +39,5 @@ namespace KalmanVertexTrackUpdater {
 void update(TrackAtVertexRef track, const Vector4& vtxPosFull,
             const SquareMatrix4& vtxCovFull, unsigned int nDimVertex);
 
-namespace detail {
-
-/// @brief Calculates a covariance matrix for the refitted track parameters
-///
-/// @param wMat W_k matrix from Ref. (1)
-/// @param crossCovVP Cross-covariance matrix between vertex position and track
-/// momentum
-/// @param vtxCov Vertex covariance matrix
-/// @param newTrkParams Refitted track parameters
-template <unsigned int nDimVertex>
-inline BoundMatrix calculateTrackCovariance(
-    const SquareMatrix3& wMat, const ActsMatrix<nDimVertex, 3>& crossCovVP,
-    const ActsSquareMatrix<nDimVertex>& vtxCov,
-    const BoundVector& newTrkParams);
-
-}  // Namespace detail
-
 }  // Namespace KalmanVertexTrackUpdater
 }  // Namespace Acts

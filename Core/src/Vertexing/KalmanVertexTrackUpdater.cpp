@@ -18,6 +18,16 @@ namespace Acts {
 
 namespace {
 
+/// @brief Calculates a covariance matrix for the refitted track parameters
+///
+/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+///
+/// @param wMat W_k matrix from Ref. (1)
+/// @param crossCovVP Cross-covariance matrix between vertex position and track
+/// momentum
+/// @param vtxCov Vertex covariance matrix
+/// @param newTrkParams Refitted track parameters
 template <unsigned int nDimVertex>
 Acts::BoundMatrix calculateTrackCovariance(
     const SquareMatrix3& wMat, const ActsMatrix<nDimVertex, 3>& crossCovVP,
