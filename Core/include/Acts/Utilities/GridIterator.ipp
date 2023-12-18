@@ -32,8 +32,8 @@ bool GridGlobalIterator<T, Axes...>::operator==(
     const GridGlobalIterator<T, Axes...>& other) const {
   /// This will always return false if we are comparing two iterators from
   /// different grids.
-  /// As such a loop from itrStart (from grid A) to itrStop (from grid B) will never complete since
-  /// itrStop will not be reachable from itrStart
+  /// As such a loop from itrStart (from grid A) to itrStop (from grid B) will
+  /// never complete since itrStop will not be reachable from itrStart
   return (m_grid.ptr == other.m_grid.ptr) && m_idx == other.m_idx;
 }
 
@@ -127,18 +127,16 @@ GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator++(int) {
 }
 
 template <typename T, class... Axes>
-std::size_t GridGlobalIterator<T, Axes...>::globalPosition() const
-{
+std::size_t GridGlobalIterator<T, Axes...>::globalPosition() const {
   return m_idx;
 }
 
 template <typename T, class... Axes>
 std::array<std::size_t, GridGlobalIterator<T, Axes...>::DIM>
-GridGlobalIterator<T, Axes...>::localPosition() const
-{
+GridGlobalIterator<T, Axes...>::localPosition() const {
   return m_grid->localBinsFromGlobalBin(m_idx);
 }
-  
+
 // Local Iterator
 template <typename T, class... Axes>
 Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
@@ -147,9 +145,9 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
     : m_grid(&grid),
       m_numLocalBins(grid.numLocalBins()),
       m_currentIndex(indexes) {
-  /// Since the user has not defined a custom navigation pattern, we tell the iterator
-  /// we want to iterate on all the local bins in ascending order from 1ul to numLocalBin for
-  /// that specific axis.
+  /// Since the user has not defined a custom navigation pattern, we tell the
+  /// iterator we want to iterate on all the local bins in ascending order from
+  /// 1ul to numLocalBin for that specific axis.
   for (std::size_t i(0); i < DIM; ++i) {
     m_navigationIndex[i].resize(m_numLocalBins[i]);
     std::iota(m_navigationIndex[i].begin(), m_navigationIndex[i].end(), 1ul);
@@ -210,8 +208,8 @@ bool Acts::GridLocalIterator<T, Axes...>::operator==(
     const Acts::GridLocalIterator<T, Axes...>& other) const {
   /// This will always return false if we are comparing two iterators from
   /// different grids.
-  /// As such a loop from itrStart (from grid A) to itrStop (from grid B) will never complete since
-  /// itrStop will not be reachable from itrStart
+  /// As such a loop from itrStart (from grid A) to itrStop (from grid B) will
+  /// never complete since itrStop will not be reachable from itrStart
   if (m_grid.ptr != other.m_grid.ptr) {
     return false;
   }
@@ -257,12 +255,13 @@ GridLocalIterator<T, Axes...> GridLocalIterator<T, Axes...>::operator++(int) {
 template <typename T, class... Axes>
 template <std::size_t N>
 void GridLocalIterator<T, Axes...>::increment() {
-  /// Check if the current local bin can be incremented, or we reached the end of bins in the axis 
+  /// Check if the current local bin can be incremented, or we reached the end
+  /// of bins in the axis
   if (++m_currentIndex[N] < m_numLocalBins[N]) {
     return;
   }
-  /// We have reached the last bin in the axis, we set the position to 0ul and try to increment
-  /// another axis
+  /// We have reached the last bin in the axis, we set the position to 0ul and
+  /// try to increment another axis
   if constexpr (N != 0) {
     m_currentIndex[N] = 0;
     increment<N - 1>();
@@ -272,8 +271,7 @@ void GridLocalIterator<T, Axes...>::increment() {
 }
 
 template <typename T, class... Axes>
-std::size_t GridLocalIterator<T, Axes...>::globalPosition() const
-{
+std::size_t GridLocalIterator<T, Axes...>::globalPosition() const {
   return m_grid->globalBinFromLocalBins(localPosition());
 }
 
