@@ -259,12 +259,7 @@ class TryAllNavigator {
                               state.options.surfaceTolerance);
       for (const auto& intersection : intersections.first.split()) {
         // exclude invalid intersections
-        if (!intersection) {
-          continue;
-        }
-        // exclude intersection outside of step
-        if (intersection.pathLength() < nearLimit ||
-            intersection.pathLength() > farLimit) {
+        if (!detail::checkIntersection(intersection, nearLimit, farLimit)) {
           continue;
         }
         // store candidate

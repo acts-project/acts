@@ -99,7 +99,7 @@ class Navigator {
 
     /// Whether to reinitialize the navigation candidates on layer hit.
     /// This improves navigation for bended tracks but is more expensive.
-    bool reinitializeOnLayerHit = false;
+    bool reinitializeOnLayerHit = true;
   };
 
   using IntersectionCandidates = std::vector<detail::IntersectionCandidate>;
