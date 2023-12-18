@@ -35,8 +35,8 @@ class GridBinFinder {
   /// @param [in] vals The input parameters that define how many neighbour we need to find
   ///
   /// @pre The provided paramers must be of time 'int' or 'std::vector<std::pair<int, int>>'
-  /// no other type is allowed. The order of these parameters must correspond to the same
-  /// ordering of the axes in the grid
+  /// no other type is allowed. The order of these parameters must correspond to
+  /// the same ordering of the axes in the grid
   template <typename... args>
   GridBinFinder(args&&... vals);
 
@@ -47,16 +47,16 @@ class GridBinFinder {
   ///
   /// @tparam stored_t The type of elements stored in the Grid
   /// @tpatam Axes ... The type of the axes of the grid
-  /// 
+  ///
   /// @param [in] locPosition The N-dimentional local position in the grid
   /// @param [in] grid The grid
   /// @output The list of neighbouring bins
   ///
   /// @pre The provided local positionmust be a valid local bins configuration in the grid
   template <typename stored_t, class... Axes>
-  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)> findBins(
-      const std::array<std::size_t, DIM>& locPosition,
-      const Acts::Grid<stored_t, Axes...>& grid) const;
+  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)>
+  findBins(const std::array<std::size_t, DIM>& locPosition,
+           const Acts::Grid<stored_t, Axes...>& grid) const;
 
  private:
   /// @brief Store the values provided by the user for each axis in the grid
@@ -67,8 +67,8 @@ class GridBinFinder {
   /// @param [in] others The remaining values in the list
   ///
   /// @pre both first_value_t and vals ... can be only int or std::vector<std::pair<int, int>>
-  /// In the second case, the number of entries of the vector of pairs MUST be equal to the number
-  /// of bins in that specific axis
+  /// In the second case, the number of entries of the vector of pairs MUST be
+  /// equal to the number of bins in that specific axis
   template <typename first_value_t, typename... vals>
   void storeValue(first_value_t&& fv, vals&&... others);
 
@@ -92,13 +92,14 @@ class GridBinFinder {
   /// @return If the GridBinFinder is compatible with the grid
   template <typename stored_t, class... Axes>
   bool isGridCompatible(const Acts::Grid<stored_t, Axes...>& grid) const;
-  
+
  private:
   using stored_values_t = std::variant<int, std::vector<std::pair<int, int>>>;
   /// @brief the instructions for retrieving the nieghbouring bins for each given axis in the grid
-  /// These values are provided by the user and an be wither ints or a vector of pair of ints.
-  /// In the first case, the neighbours will be +/- bins from the given local bin
-  /// In the second case, the user defines how many bins in both directions should be provided
+  /// These values are provided by the user and an be wither ints or a vector of
+  /// pair of ints. In the first case, the neighbours will be +/- bins from the
+  /// given local bin In the second case, the user defines how many bins in both
+  /// directions should be provided
   ///
   /// @pre The list of entries of the vector of pairs MUST be equal to the number of bins in that specific
   /// axis

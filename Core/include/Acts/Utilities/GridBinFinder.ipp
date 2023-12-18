@@ -38,12 +38,12 @@ std::array<std::pair<int, int>, DIM> Acts::GridBinFinder<DIM>::getSizePerAxis(
         [&locPosition, i](const auto& val) -> std::pair<int, int> {
           using value_t = typename std::decay<decltype(val)>::type;
           if constexpr (std::is_same<int, value_t>::value) {
-	    assert(val >= 0);
+            assert(val >= 0);
             return std::make_pair(-val, val);
           } else {
-	    assert(locPosition.size() > i);
-	    assert(locPosition[i] > 0ul);
-	    assert(val.size() <= locPosition[i]);
+            assert(locPosition.size() > i);
+            assert(locPosition[i] > 0ul);
+            assert(val.size() <= locPosition[i]);
             return val[locPosition[i] - 1ul];
           }
         },
@@ -67,21 +67,21 @@ Acts::GridBinFinder<DIM>::findBins(
 
 template <std::size_t DIM>
 template <typename stored_t, class... Axes>
-bool Acts::GridBinFinder<DIM>::isGridCompatible(const Acts::Grid<stored_t, Axes...>& grid) const
-{
+bool Acts::GridBinFinder<DIM>::isGridCompatible(
+    const Acts::Grid<stored_t, Axes...>& grid) const {
   const std::array<std::size_t, DIM> nLocBins = grid.numLocalBins();
-  for (std::size_t i(0ul); i<DIM; ++i) {
+  for (std::size_t i(0ul); i < DIM; ++i) {
     std::size_t nBins = nLocBins[i];
-    bool isCompabile = std::visit([nBins] (const auto& val) -> bool
-    {
-      using value_t = typename std::decay<decltype(val)>::type;
-      if constexpr (std::is_same<int, value_t>::value) {
-	return true;
-      } else {
-	return val.size() == nBins;
-      }
-    },
-      m_values[i]);
+    bool isCompabile = std::visit(
+        [nBins](const auto& val) -> bool {
+          using value_t = typename std::decay<decltype(val)>::type;
+          if constexpr (std::is_same<int, value_t>::value) {
+            return true;
+          } else {
+            return val.size() == nBins;
+          }
+        },
+        m_values[i]);
     if (not isCompabile) {
       return false;
     }
