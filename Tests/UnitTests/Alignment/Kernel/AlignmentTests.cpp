@@ -45,6 +45,7 @@
 #include <cmath>
 #include <random>
 #include <string>
+#include <unordered_set>
 
 namespace {
 using namespace Acts;
@@ -346,13 +347,30 @@ else  {
     return EXIT_FAILURE;
 }
 
-// misalignment shift 
+// Apply constant shift as misalignment 
 
-/*Acts::Vector3 misalignmentShift (0.2_mm, 0.5_mm, 0.8_mm); 
-// preform misalignment shift to the surface 
-Acts::Surface modifiedSurface =*surfaceToAlign; 
-modifiedSurface.applyAlignmentCorrections(misalignmentShift); 
-*/
+Acts::Vector3 misalignmentShift (0.4_mm, 0.6_mm, 0.9_mm); 
+
+// Define the set of modules that need to be shifted 
+std::unordered_set<unsigned int> shiftedModules = {1, 3, 5};
+
+// Looping over elements && check if the specific layer has to be shifted
+
+for (auto& det : detector.detectorStore) {
+    const auto& surface = det -> surface(); 
+
+    // shift of the specific layer 
+    if (shiftThisLayer.count(surface.geometryId().layer()) > 0) {
+        Acts::Surface modifiedSurface = surface;   // misalign surface 
+        modifiedSurface.applyAlignmentCorrections(misalignmentShift);}
+}
+    
+    // Check if the module needs to be shifted
+    if (shiftModules.count(surface.geometryId().layer()) > 0) {
+        Acts::Surface modifiedSurface = surface;   // Misalign surface 
+        modifiedSurface.applyAlignmentCorrections(misalignmentShift);
+    }
+
 
  // Test Clyinder Geometry
   TestCylinderDetector testCylinderDetector; 
