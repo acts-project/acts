@@ -21,6 +21,7 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -162,33 +163,14 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   CHECK_CLOSE_ABS(roundtripPar.covariance().value()(4, 4), 1, 1e-6);
   BOOST_CHECK_EQUAL(roundtripPar.covariance().value()(5, 5), 25_ns);
 
-  Acts::FreeVector roundtripFreePars =
-      Acts::detail::transformBoundToFreeParameters(
-          roundtripPar.referenceSurface(), gctx, roundtripPar.parameters());
-  Acts::BoundVector roundtripPlaneParams =
-      Acts::detail::transformFreeToBoundParameters(roundtripFreePars,
-                                                   *planeSurface, gctx)
+  auto roundtripPlaneBoundParams =
+      Acts::detail::boundToBoundConversion(gctx, roundtripPar, *planeSurface)
           .value();
 
-  Acts::BoundToFreeMatrix boundToFreeJacobian =
-      roundtripPar.referenceSurface().boundToFreeJacobian(
-          gctx, roundtripPar.parameters());
-  Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
+  BOOST_CHECK(roundtripPlaneBoundParams.parameters().isApprox(par));
 
-  FreeVector freeToPathDerivatives = FreeVector::Zero();
-  freeToPathDerivatives.head<3>() = roundtripFreePars.segment<3>(eFreeDir0);
-
-  BoundMatrix boundToBound = detail::boundToBoundTransportJacobian(
-      gctx, roundtripFreePars, boundToFreeJacobian, freeTransportJacobian,
-      freeToPathDerivatives, *planeSurface);
-
-  Acts::BoundMatrix roundtripPlaneCov = boundToBound *
-                                        roundtripPar.covariance().value() *
-                                        boundToBound.transpose();
-
-  BOOST_CHECK(roundtripPlaneParams.isApprox(par));
-
-  BOOST_CHECK(roundtripPlaneCov.isApprox(planePar.covariance().value()));
+  BOOST_CHECK(roundtripPlaneBoundParams.covariance().value().isApprox(
+      planePar.covariance().value()));
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {

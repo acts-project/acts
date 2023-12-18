@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 
 #include "edm4hep/TrackState.h"
@@ -129,29 +130,12 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
     // We need to convert to the target parameters
     // Keep the free parameters around we might need them for the covariance
     // conversion
-    Acts::FreeVector freePars = Acts::detail::transformBoundToFreeParameters(
-        params.referenceSurface(), gctx, params.parameters());
-    targetPars = Acts::detail::transformFreeToBoundParameters(freePars,
-                                                              *refSurface, gctx)
-                     .value();
 
-    if (targetCov) {
-      // We need to convert the covariance as well
-      Acts::BoundToFreeMatrix boundToFreeJacobian =
-          params.referenceSurface().boundToFreeJacobian(gctx,
-                                                        params.parameters());
-
-      FreeVector freeToPathDerivatives = FreeVector::Zero();
-      freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
-
-      const Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
-
-      BoundMatrix boundToBound = Acts::detail::boundToBoundTransportJacobian(
-          gctx, freePars, boundToFreeJacobian, freeTransportJacobian,
-          freeToPathDerivatives, *refSurface);
-
-      targetCov = boundToBound * targetCov.value() * boundToBound.transpose();
-    }
+    auto perigeeParams = Acts::detail::boundToBoundConversion(
+                             gctx, params, *refSurface, Vector3{0, 0, Bz})
+                             .value();
+    targetPars = perigeeParams.parameters();
+    targetCov = perigeeParams.covariance();
   }
 
   Parameters result;
