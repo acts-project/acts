@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -23,6 +24,22 @@ void Acts::GridBinFinder<DIM>::storeValue(first_value_t&& fv,
                                           vals&&... others) {
   constexpr std::size_t N = sizeof...(vals);
   static_assert(N < DIM);
+  /// Check the fist value is reasonable
+  /// That means that if int -> value is positive
+  /// If vector of pairs -> it is not an empty vector
+  using decayed_value_t = typename std::decay(first_value_t)::type;
+  if constexpr (std::is_same<int, decayed_value_t>::value) {
+    if (fv >= 0) {
+      throw std::invalid_argument(
+          "Provided value [int] for GridBinFinder must be a positive integer");
+    }
+  } else {
+    if (fv.empty()) {
+      throw std::invalid_arguemnt(
+          "Provided value [vector of pairs] for GridBinFinder must not be "
+          "empty.");
+    }
+  }
   m_values[DIM - N - 1ul] = std::forward<first_value_t>(fv);
   if constexpr (N != 0ul) {
     storeValue(std::forward<vals>(others)...);
