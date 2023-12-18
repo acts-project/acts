@@ -20,9 +20,9 @@
 namespace Acts {
 
 /// @brief  This is an accessor for cases where the material is directly stored
-/// in the grid, it simply forwards teh grid entry in const and non-const way.
+/// in the grid, it simply forwards the grid entry in const and non-const way.
 struct GridMaterialAccessor {
-  /// @brief  Direct const access to the material slap sotred in the grid
+  /// @brief  Direct const access to the material slap sorted in the grid
   /// @tparam grid_type the type of the grid, also defines the point type
   /// @param grid the grid
   /// @param point the lookup point (already casted from global, or filled from local)
@@ -53,7 +53,7 @@ struct GridMaterialAccessor {
 struct IndexedMaterialAccessor {
   /// @brief The internal storage of the material
   std::vector<MaterialSlab> material;
-  /// @brief  Direct const access to the material slap sotred in the grid
+  /// @brief  Direct const access to the material slap sorted in the grid
   /// @tparam grid_type the type of the grid, also defines the point type
   /// @param grid the grid
   /// @param point the lookup point (already casted from global, or filled from local)

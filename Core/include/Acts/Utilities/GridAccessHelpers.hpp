@@ -35,7 +35,7 @@ void fillCasts(const Vector3& position, const cast_container& globalCasts,
 ///
 /// This method allows to transform a global position into a grid position
 /// that is specified by binning values. It casts the global position info
-/// into a format sutable for the grid.
+/// into a format suitable for the grid.
 ///
 /// @tparam cast_container is the container type of cast objects
 /// @tparam Array is the array type to be filled
