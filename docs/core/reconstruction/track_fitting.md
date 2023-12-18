@@ -144,6 +144,7 @@ Even in the context of track fitting, we are quite free on how to use the *GX2F*
 Especially the residuals $r_i$ can have many interpretations.
 Most of the time we will see them as the distance between a measurement and our prediction.
 But we can also use scattering angles, energy loss, ... as residuals.
+Therefore, the subscript $i$ stands most of the time for a measurement surface, since we want to go over all of them.
 
 This chapter on the *GX2F* guides through:
 - Mathematical description of the base algorithm
@@ -210,7 +211,7 @@ $$
 a_{kl} = \sum_{i=1}^N \frac{1}{\sigma_i^2} \frac{\partial f_i^m(\vec\alpha)}{\partial \alpha_k}\frac{\partial f_i^m(\vec\alpha)}{\partial \alpha_l}\\
 $$
 
-and
+(where we omitted second order derivatives) and
 
 $$
 b_k = \sum_{i=1}^N \frac{r_i}{\sigma_i^2} \frac{\partial f_i^m(\vec\alpha)}{\partial \alpha_k}.
