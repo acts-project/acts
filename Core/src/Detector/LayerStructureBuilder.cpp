@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Detector/detail/SupportHelper.hpp"
