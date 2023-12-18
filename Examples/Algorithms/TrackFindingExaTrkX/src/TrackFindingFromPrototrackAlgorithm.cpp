@@ -8,9 +8,9 @@
 
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
-#include "Acts/EventData/ProxyAccessor.hpp"
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics.hpp>
