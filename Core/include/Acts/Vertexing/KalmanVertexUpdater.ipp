@@ -10,7 +10,7 @@
 
 template <typename input_track_t, unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::updateVertexWithTrack(
-    Vertex<input_track_t>& vtx, TrackAtVertex& trk) {
+    Vertex& vtx, TrackAtVertex& trk) {
   std::pair<double, double> fitQuality = vtx.fitQuality();
   detail::updateVertexWithTrack(vtx.fullPosition(), vtx.fullCovariance(),
                                 fitQuality, trk, 1, nDimVertex);

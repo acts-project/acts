@@ -377,7 +377,7 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<Acts::ImpactParametersAndSigma>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getImpactParameters(const BoundTrackParameters& track,
-                        const Vertex<input_track_t>& vtx,
+                        const Vertex& vtx,
                         const GeometryContext& gctx,
                         const Acts::MagneticFieldContext& mctx,
                         bool calculateTimeIP) const {
@@ -464,7 +464,7 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<std::pair<double, double>>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getLifetimeSignOfTrack(const BoundTrackParameters& track,
-                           const Vertex<input_track_t>& vtx,
+                           const Vertex& vtx,
                            const Acts::Vector3& direction,
                            const GeometryContext& gctx,
                            const MagneticFieldContext& mctx) const {
@@ -508,7 +508,7 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     get3DLifetimeSignOfTrack(const BoundTrackParameters& track,
-                             const Vertex<input_track_t>& vtx,
+                             const Vertex& vtx,
                              const Acts::Vector3& direction,
                              const GeometryContext& gctx,
                              const MagneticFieldContext& mctx) const {

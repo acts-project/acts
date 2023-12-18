@@ -46,7 +46,7 @@ inline std::vector<Acts::InputTrack> makeInputTracks(
 /// case the behaviour is undefined.
 inline ProtoVertexContainer makeProtoVertices(
     const std::vector<Acts::InputTrack>& inputTracks,
-    const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
+    const std::vector<Acts::Vertex>& vertices) {
   ProtoVertexContainer protoVertices;
   protoVertices.reserve(vertices.size());
 

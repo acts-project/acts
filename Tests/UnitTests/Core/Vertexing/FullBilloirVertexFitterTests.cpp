@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   Linearizer linearizer(ltConfig);
 
   // Constraint for vertex fit
-  Vertex<BoundTrackParameters> constraint;
-  Vertex<InputTrackStub> customConstraint;
+  Vertex constraint;
+  Vertex customConstraint;
   // Some arbitrary values
   SquareMatrix4 covMatVtx = SquareMatrix4::Zero();
   double ns2 = Acts::UnitConstants::ns * Acts::UnitConstants::ns;
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     const std::vector<InputTrack> emptyVectorInput;
 
     // Without constraint
-    Vertex<BoundTrackParameters> fittedVertex =
+    Vertex fittedVertex =
         billoirFitter.fit(emptyVectorInput, linearizer, vfOptions, state)
             .value();
 

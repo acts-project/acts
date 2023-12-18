@@ -34,9 +34,8 @@ class DummyVertexFitter {
   DummyVertexFitter() = delete;
 
   /// @brief Dummy fit method
-  Result<Vertex<input_track_t>> fit(
-      const std::vector<input_track_t>&, const linearizer_t&,
-      const VertexingOptions<input_track_t>&) const;
+  Result<Vertex> fit(const std::vector<input_track_t>&, const linearizer_t&,
+                     const VertexingOptions<input_track_t>&) const;
 };
 
 }  // namespace Acts

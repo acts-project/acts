@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // Create a vertex
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
-    Vertex<BoundTrackParameters> vtx(vtxPos);
+    Vertex vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexTrackUpdater::update(trkAtVtx, vtx.fullPosition(),

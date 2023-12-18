@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   }
 
   // TODO: test without using beam spot constraint
-  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  Vertex bsConstr = std::get<BeamSpotData>(csvData);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, bsConstr);
 
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   BOOST_CHECK(findResult.ok());
 
-  std::vector<Vertex<BoundTrackParameters>> allVertices = *findResult;
+  std::vector<Vertex> allVertices = *findResult;
 
   if (debugMode) {
     std::cout << "Time needed: " << timediff << " ms." << std::endl;
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     userInputTracks.emplace_back(&trk);
   }
 
-  Vertex<InputTrackStub> constraintVtx;
+  Vertex constraintVtx;
   constraintVtx.setPosition(std::get<BeamSpotData>(csvData).position());
   constraintVtx.setCovariance(std::get<BeamSpotData>(csvData).covariance());
 
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   BOOST_CHECK(findResult.ok());
 
-  std::vector<Vertex<InputTrackStub>> allVertices = *findResult;
+  std::vector<Vertex> allVertices = *findResult;
 
   if (debugMode) {
     std::cout << "Number of vertices reconstructed: " << allVertices.size()
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   }
 
   // TODO: test using beam spot constraint
-  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  Vertex bsConstr = std::get<BeamSpotData>(csvData);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, bsConstr);
 
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   BOOST_CHECK(findResult.ok());
 
-  std::vector<Vertex<BoundTrackParameters>> allVertices = *findResult;
+  std::vector<Vertex> allVertices = *findResult;
 
   if (debugMode) {
     std::cout << "Time needed: " << timediff << " ms." << std::endl;
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(
     inputTracks.emplace_back(&trk);
   }
 
-  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  Vertex bsConstr = std::get<BeamSpotData>(csvData);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
       geoContext, magFieldContext, bsConstr);
 
@@ -621,7 +621,7 @@ BOOST_AUTO_TEST_CASE(
 
   BOOST_CHECK(findResult.ok());
 
-  std::vector<Vertex<BoundTrackParameters>> allVertices = *findResult;
+  std::vector<Vertex> allVertices = *findResult;
 
   if (debugMode) {
     std::cout << "Time needed: " << timediff << " ms." << std::endl;
