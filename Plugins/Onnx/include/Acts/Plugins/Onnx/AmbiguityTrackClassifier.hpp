@@ -39,7 +39,7 @@ class AmbiguityTrackClassifier {
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
   std::vector<std::vector<float>> inferScores(
-      std::unordered_map<int, std::vector<int>>& clusters,
+      std::unordered_map<std::size_t, std::vector<std::size_t>>& clusters,
       const Acts::TrackContainer<track_container_t, traj_t, holder_t>& tracks)
       const {
     // Compute the number of entry (since it is smaller than the number of
@@ -50,7 +50,7 @@ class AmbiguityTrackClassifier {
     }
     // Input of the neural network
     Acts::NetworkBatchInput networkInput(trackNb, 8);
-    int inputID = 0;
+    std::size_t inputID = 0;
     // Get the input feature of the network for all the tracks
     for (const auto& [key, val] : clusters) {
       for (const auto& trackID : val) {
@@ -80,15 +80,15 @@ class AmbiguityTrackClassifier {
   /// @param clusters is a map of clusters, each cluster correspond to a vector of track ID
   /// @param outputTensor is the score vector obtained from inferScores.
   /// @return a vector of trackID corresponding tho the good tracks
-  std::vector<int> trackSelection(
-      std::unordered_map<int, std::vector<int>>& clusters,
+  std::vector<std::size_t> trackSelection(
+      std::unordered_map<std::size_t, std::vector<std::size_t>>& clusters,
       std::vector<std::vector<float>>& outputTensor) const {
-    std::vector<int> goodTracks;
-    int iOut = 0;
+    std::vector<std::size_t> goodTracks;
+    std::size_t iOut = 0;
     // Loop over all the cluster and only keep the track with the highest score
     // in each cluster
     for (const auto& [key, val] : clusters) {
-      int bestTrackID = 0;
+      std::size_t bestTrackID = 0;
       float bestTrackScore = 0;
       for (const auto& track : val) {
         if (outputTensor[iOut][0] > bestTrackScore) {
@@ -109,13 +109,14 @@ class AmbiguityTrackClassifier {
   /// @return a vector of trackID corresponding tho the good tracks
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t>
-  std::vector<int> solveAmbuguity(
-      std::unordered_map<int, std::vector<int>>& clusters,
+  std::vector<std::size_t> solveAmbiguity(
+      std::unordered_map<std::size_t, std::vector<std::size_t>>& clusters,
       const Acts::TrackContainer<track_container_t, traj_t, holder_t>& tracks)
       const {
     std::vector<std::vector<float>> outputTensor =
         inferScores(clusters, tracks);
-    std::vector<int> goodTracks = trackSelection(clusters, outputTensor);
+    std::vector<std::size_t> goodTracks =
+        trackSelection(clusters, outputTensor);
 
     return goodTracks;
   }

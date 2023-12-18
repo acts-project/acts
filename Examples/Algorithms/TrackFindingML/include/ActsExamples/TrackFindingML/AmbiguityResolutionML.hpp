@@ -33,15 +33,16 @@ class AmbiguityResolutionML : public IAlgorithm {
   /// @param tracks is the input track container
   /// @param nMeasurementsMin minimum number of measurement per track
   /// @return an ordered list containing pairs of track ID and associated measurement ID
-  std::multimap<int, std::pair<int, std::vector<int>>> mapTrackHits(
-      const ConstTrackContainer& tracks, int nMeasurementsMin) const;
+  std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
+  mapTrackHits(const ConstTrackContainer& tracks, int nMeasurementsMin) const;
 
   /// Prepare the output track container to be written
   ///
   /// @param tracks is the input track container
   /// @param goodTracks is list of the IDs of all the tracks we want to keep
-  ConstTrackContainer prepareOutputTrack(const ConstTrackContainer& tracks,
-                                         std::vector<int>& goodTracks) const;
+  ConstTrackContainer prepareOutputTrack(
+      const ConstTrackContainer& tracks,
+      std::vector<std::size_t>& goodTracks) const;
 };
 
 }  // namespace ActsExamples
