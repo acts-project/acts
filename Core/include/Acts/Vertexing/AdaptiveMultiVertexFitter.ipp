@@ -208,7 +208,7 @@ Acts::AdaptiveMultiVertexFitter<linearizer_t>::prepareVertexForFit(
   for (const auto& trk : vtxInfo.trackLinks) {
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-        m_extractParameters(trk), seedPos, state.ipState);
+        m_cfg.extractParameters(trk), seedPos, state.ipState);
     if (!res.ok()) {
       return res.error();
     }
@@ -233,7 +233,7 @@ Acts::AdaptiveMultiVertexFitter<linearizer_t>::setAllVertexCompatibilities(
     if (vtxInfo.impactParams3D.find(trk) == vtxInfo.impactParams3D.end()) {
       auto res = m_cfg.ipEst.estimate3DImpactParameters(
           vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-          m_extractParameters(trk), VectorHelpers::position(vtxInfo.linPoint),
+          m_cfg.extractParameters(trk), VectorHelpers::position(vtxInfo.linPoint),
           state.ipState);
       if (!res.ok()) {
         return res.error();
@@ -289,7 +289,7 @@ Acts::AdaptiveMultiVertexFitter<linearizer_t>::setWeightsAndUpdate(
         // relinearize
         if (!trkAtVtx.isLinearized || vtxInfo.relinearize) {
           auto result = linearizer.linearizeTrack(
-              m_extractParameters(trk), vtxInfo.linPoint[3], *vtxPerigeeSurface,
+              m_cfg.extractParameters(trk), vtxInfo.linPoint[3], *vtxPerigeeSurface,
               vertexingOptions.geoContext, vertexingOptions.magFieldContext,
               state.linearizerState);
           if (!result.ok()) {
@@ -393,7 +393,7 @@ void Acts::AdaptiveMultiVertexFitter<linearizer_t>::logDebugData(
     for (std::size_t trkInd = 0; trkInd < trks.size(); ++trkInd) {
       const auto& trkAtVtx =
           state.tracksAtVerticesMap.at(std::make_pair(trks[trkInd], vtx));
-      const auto& trkParams = m_extractParameters(trkAtVtx.originalParams);
+      const auto& trkParams = m_cfg.extractParameters(trkAtVtx.originalParams);
       ACTS_DEBUG(trkInd << ". track parameters:\n" << trkParams.parameters());
       ACTS_DEBUG(trkInd << ". track covariance matrix:\n"
                         << trkParams.covariance().value());
