@@ -49,7 +49,7 @@ class DirectNavigator {
     /// The Surface sequence
     SurfaceSequence navSurfaces = {};
 
-    /// Actor state
+    /// Actor result / state
     struct this_result {
       bool initialized = false;
     };

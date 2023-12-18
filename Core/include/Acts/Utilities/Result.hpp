@@ -29,8 +29,6 @@ class Result {
   Result(std::variant<T, E>&& var) : m_var(std::move(var)) {}
 
  public:
-  using value_type = T;
-
   /// Default construction is disallowed.
   Result() = delete;
 
