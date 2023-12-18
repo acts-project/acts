@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtx1Constr.setFitQuality(0, -3);
 
   // Prepare vtx info for fitter
-  VertexInfo<BoundTrackParameters> vtxInfo1;
+  VertexInfo vtxInfo1;
   vtxInfo1.seedPosition = vtxInfo1.linPoint;
   vtxInfo1.linPoint.setZero();
   vtxInfo1.linPoint.head<3>() = vtxPos1;
@@ -634,7 +634,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtx2Constr.setFitQuality(0, -3);
 
   // Prepare vtx info for fitter
-  VertexInfo<BoundTrackParameters> vtxInfo2;
+  VertexInfo vtxInfo2;
   vtxInfo2.linPoint.setZero();
   vtxInfo2.linPoint.head<3>() = vtxPos2;
   vtxInfo2.constraint = std::move(vtx2Constr);

@@ -292,7 +292,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 
       // Update vertex info for current vertex
       fitterState.vtxInfoMap[&vtx] =
-          VertexInfo<InputTrack_t>(currentConstraint, vtx.fullPosition());
+          VertexInfo(currentConstraint, vtx.fullPosition());
 
       // Try to add compatible track with adapted vertex position
       auto res = addCompatibleTracksToVertex(allTracks, vtx, fitterState,
@@ -327,7 +327,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     -> Result<bool> {
   // Add vertex info to fitter state
   fitterState.vtxInfoMap[&vtx] =
-      VertexInfo<InputTrack_t>(currentConstraint, vtx.fullPosition());
+      VertexInfo(currentConstraint, vtx.fullPosition());
 
   // Add all compatible tracks to vertex
   auto resComp = addCompatibleTracksToVertex(allTracks, vtx, fitterState,

@@ -70,7 +70,7 @@ class AdaptiveMultiVertexFitter {
 
     // Map to store vertices information
     // @TODO Does this have to be a mutable pointer?
-    std::map<Vertex*, VertexInfo<InputTrack_t>> vtxInfoMap;
+    std::map<Vertex*, VertexInfo> vtxInfoMap;
 
     std::multimap<InputTrack, Vertex*> trackToVerticesMultiMap;
 

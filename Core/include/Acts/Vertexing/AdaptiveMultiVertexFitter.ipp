@@ -33,7 +33,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
     for (auto vtx : state.vertexCollection) {
-      VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
+      VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
       vtxInfo.relinearize = false;
       // Store old position of vertex, i.e. seed position
       // in case of first iteration or position determined
@@ -227,7 +227,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(
         State& state, Vertex* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
-  VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
+  VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
 
   // Loop over all tracks that are associated with vtx and estimate their
   // compatibility
@@ -271,7 +271,7 @@ Acts::Result<void> Acts::
         State& state, const linearizer_t& linearizer,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
-    VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
+    VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
 
     if (vtxInfo.relinearize) {
       vtxInfo.linPoint = vtxInfo.oldPosition;
