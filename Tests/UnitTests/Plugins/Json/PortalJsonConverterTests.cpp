@@ -38,7 +38,8 @@ BOOST_AUTO_TEST_CASE(PortalUnconnected) {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
 
-  auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
+  auto portal =
+      std::make_shared<Acts::Experimental::Portal>(std::move(surface));
 
   BOOST_CHECK_NE(portal, nullptr);
 
@@ -70,7 +71,8 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
 
-  auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
+  auto portal =
+      std::make_shared<Acts::Experimental::Portal>(std::move(surface));
   BOOST_CHECK_NE(portal, nullptr);
   // Attaching the portals
   Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
@@ -115,7 +117,8 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
 
-  auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
+  auto portal =
+      std::make_shared<Acts::Experimental::Portal>(std::move(surface));
   BOOST_CHECK_NE(portal, nullptr);
 
   // Attaching the portals

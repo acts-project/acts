@@ -43,7 +43,7 @@ void convert(nlohmann::json& jIndexedVolumes,
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
   if (castedDelegate != nullptr) {
     jIndexedVolumes = IndexedGridJsonHelper::convertImpl<DelegateType>(
-        *castedDelegate, detray);
+        *castedDelegate, detray, false);
     if (detray) {
       jIndexedVolumes["volume_link"] = 1;
       nlohmann::json jAccLink;

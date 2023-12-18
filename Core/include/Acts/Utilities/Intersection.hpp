@@ -117,41 +117,17 @@ using MultiIntersection3D =
     boost::container::static_vector<Intersection3D,
                                     s_maximumNumberOfIntersections>;
 
-/// @brief class extensions to return also the object and a representation
-template <typename object_t, typename representation_t = object_t>
+template <typename object_t>
 class ObjectIntersection {
  public:
-  using Object = object_t;
-  using Representation = representation_t;
-
-  /// Object intersection - symmetric setup
-  ///
-  /// @param intersection is the intersection
-  /// @param object is the object to be instersected
-  /// @param index is the intersection index
-  template <typename T = representation_t,
-            std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
-  constexpr ObjectIntersection(const Intersection3D& intersection,
-                               const object_t* object, std::uint8_t index = 0)
-      : m_intersection(intersection),
-        m_object(object),
-        m_representation(object),
-        m_index(index) {}
-
   /// Object intersection
   ///
   /// @param intersection is the intersection
   /// @param object is the object to be instersected
-  /// @param representation is the object representation
   /// @param index is the intersection index
   constexpr ObjectIntersection(const Intersection3D& intersection,
-                               const object_t* object,
-                               const representation_t* representation,
-                               std::uint8_t index = 0)
-      : m_intersection(intersection),
-        m_object(object),
-        m_representation(representation),
-        m_index(index) {}
+                               const object_t* object, std::uint8_t index = 0)
+      : m_intersection(intersection), m_object(object), m_index(index) {}
 
   /// Returns whether the intersection was successful or not
   constexpr explicit operator bool() const {
@@ -176,10 +152,6 @@ class ObjectIntersection {
 
   constexpr const object_t* object() const { return m_object; }
 
-  constexpr const representation_t* representation() const {
-    return m_representation;
-  }
-
   constexpr std::uint8_t index() const { return m_index; }
 
   constexpr static ObjectIntersection invalid() { return ObjectIntersection(); }
@@ -201,49 +173,29 @@ class ObjectIntersection {
   Intersection3D m_intersection = Intersection3D::invalid();
   /// The object that was (tried to be) intersected
   const object_t* m_object = nullptr;
-  /// The representation of this object
-  const representation_t* m_representation = nullptr;
   /// The intersection index
   std::uint8_t m_index = 0;
 
   constexpr ObjectIntersection() = default;
 };
 
-/// @brief class extensions to return also the object and a representation
-template <typename object_t, typename representation_t = object_t>
+template <typename object_t>
 class ObjectMultiIntersection {
  public:
-  using SplitIntersections = boost::container::static_vector<
-      ObjectIntersection<object_t, representation_t>,
-      s_maximumNumberOfIntersections>;
-
-  /// Object intersection - symmetric setup
-  ///
-  /// @param intersections are the intersections
-  /// @param object is the object to be instersected
-  template <typename T = representation_t,
-            std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
-  constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                                    const object_t* object)
-      : m_intersections(intersections),
-        m_object(object),
-        m_representation(object) {}
+  using SplitIntersections =
+      boost::container::static_vector<ObjectIntersection<object_t>,
+                                      s_maximumNumberOfIntersections>;
 
   /// Object intersection
   ///
   /// @param intersections are the intersections
   /// @param object is the object to be instersected
-  /// @param representation is the object representation
   constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                                    const object_t* object,
-                                    const representation_t* representation)
-      : m_intersections(intersections),
-        m_object(object),
-        m_representation(representation) {}
+                                    const object_t* object)
+      : m_intersections(intersections), m_object(object) {}
 
-  constexpr ObjectIntersection<object_t, representation_t> operator[](
-      std::uint8_t index) const {
-    return {m_intersections[index], m_object, m_representation, index};
+  constexpr ObjectIntersection<object_t> operator[](std::uint8_t index) const {
+    return {m_intersections[index], m_object, index};
   }
 
   constexpr const MultiIntersection3D& intersections() const {
@@ -254,10 +206,6 @@ class ObjectMultiIntersection {
 
   constexpr const object_t* object() const { return m_object; }
 
-  constexpr const representation_t* representation() const {
-    return m_representation;
-  }
-
   constexpr SplitIntersections split() const {
     SplitIntersections result;
     for (std::size_t i = 0; i < size(); ++i) {
@@ -266,11 +214,11 @@ class ObjectMultiIntersection {
     return result;
   }
 
-  constexpr ObjectIntersection<object_t, representation_t> closest() const {
+  constexpr ObjectIntersection<object_t> closest() const {
     auto splitIntersections = split();
-    return *std::min_element(
-        splitIntersections.begin(), splitIntersections.end(),
-        ObjectIntersection<object_t, representation_t>::closestOrder);
+    return *std::min_element(splitIntersections.begin(),
+                             splitIntersections.end(),
+                             ObjectIntersection<object_t>::closestOrder);
   }
 
  private:
@@ -278,8 +226,6 @@ class ObjectMultiIntersection {
   MultiIntersection3D m_intersections;
   /// The object that was (tried to be) intersected
   const object_t* m_object = nullptr;
-  /// The representation of this object
-  const representation_t* m_representation = nullptr;
 };
 
 namespace detail {

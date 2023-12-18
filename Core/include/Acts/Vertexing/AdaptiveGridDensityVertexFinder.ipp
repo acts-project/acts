@@ -6,12 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <int spatialTrkGridSize, int temporalTrkGridSize, typename vfitter_t>
-auto Acts::AdaptiveGridDensityVertexFinder<
-    spatialTrkGridSize, temporalTrkGridSize,
-    vfitter_t>::find(const std::vector<const InputTrack_t*>& trackVector,
-                     const VertexingOptions<InputTrack_t>& vertexingOptions,
-                     State& state) const
+template <typename vfitter_t>
+auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
+    const std::vector<const InputTrack_t*>& trackVector,
+    const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
@@ -104,11 +102,9 @@ auto Acts::AdaptiveGridDensityVertexFinder<
   return seedVec;
 }
 
-template <int spatialTrkGridSize, int temporalTrkGridSize, typename vfitter_t>
-auto Acts::AdaptiveGridDensityVertexFinder<
-    spatialTrkGridSize, temporalTrkGridSize,
-    vfitter_t>::doesPassTrackSelection(const BoundTrackParameters& trk) const
-    -> bool {
+template <typename vfitter_t>
+auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::doesPassTrackSelection(
+    const BoundTrackParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];

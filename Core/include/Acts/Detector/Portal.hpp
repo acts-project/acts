@@ -41,14 +41,13 @@ struct NavigationState;
 /// The surface can carry material to allow mapping onto
 /// portal positions if required.
 ///
-class Portal : public std::enable_shared_from_this<Portal> {
- protected:
+class Portal {
+ public:
   /// Constructor from surface w/o portal links
   ///
   /// @param surface is the representing surface
   Portal(std::shared_ptr<RegularSurface> surface);
 
- public:
   /// The volume links forward/backward with respect to the surface normal
   using DetectorVolumeUpdaters = std::array<DetectorVolumeUpdater, 2u>;
 
@@ -60,34 +59,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// Declare the DetectorVolume friend for portal setting
   friend class DetectorVolume;
 
-  /// Factory for producing memory managed instances of Portal.
-  static std::shared_ptr<Portal> makeShared(
-      std::shared_ptr<RegularSurface> surface);
-
-  /// Retrieve a @c std::shared_ptr for this surface (non-const version)
-  ///
-  /// @note Will error if this was not created through the @c makeShared factory
-  ///       since it needs access to the original reference. In C++14 this is
-  ///       undefined behavior (but most likely implemented as a @c bad_weak_ptr
-  ///       exception), in C++17 it is defined as that exception.
-  /// @note Only call this if you need shared ownership of this object.
-  ///
-  /// @return The shared pointer
-  std::shared_ptr<Portal> getSharedPtr();
-
-  /// Retrieve a @c std::shared_ptr for this surface (const version)
-  ///
-  /// @note Will error if this was not created through the @c makeShared factory
-  ///       since it needs access to the original reference. In C++14 this is
-  ///       undefined behavior, but most likely implemented as a @c bad_weak_ptr
-  ///       exception, in C++17 it is defined as that exception.
-  /// @note Only call this if you need shared ownership of this object.
-  ///
-  /// @return The shared pointer
-  std::shared_ptr<const Portal> getSharedPtr() const;
-
   Portal() = delete;
-  virtual ~Portal() = default;
 
   /// Const access to the surface representation
   const RegularSurface& surface() const;
@@ -110,18 +82,22 @@ class Portal : public std::enable_shared_from_this<Portal> {
 
   /// Fuse with another portal, this one is kept
   ///
-  /// @param other is the portal that will be fused
+  /// @param aPortal is the first portal to fuse
+  /// @param bPortal is the second portal to fuse
   ///
-  /// @note this will move the portal links from the other
-  /// into this volume, it will throw an exception if the
+  /// @note this will combine the portal links from the both
+  /// portals into a new one, it will throw an exception if the
   /// portals are not fusable
   ///
   /// @note if one portal carries material, it will be kept,
   /// however, if both portals carry material, an exception
   /// will be thrown and the portals are not fusable
   ///
-  /// @note that other will be overwritten to point to this
-  void fuse(std::shared_ptr<Portal>& other) noexcept(false);
+  /// @note Both input portals become invalid, in that their update
+  /// delegates and attached volumes are reset
+  static std::shared_ptr<Portal> fuse(
+      std::shared_ptr<Portal>& aPortal,
+      std::shared_ptr<Portal>& bPortal) noexcept(false);
 
   /// Update the volume link
   ///
@@ -156,8 +132,8 @@ class Portal : public std::enable_shared_from_this<Portal> {
   std::shared_ptr<RegularSurface> m_surface;
 
   /// The portal targets along/opposite the normal vector
-  DetectorVolumeUpdaters m_volumeUpdaters = {unconnectedUpdater(),
-                                             unconnectedUpdater()};
+  DetectorVolumeUpdaters m_volumeUpdaters = {DetectorVolumeUpdater{},
+                                             DetectorVolumeUpdater{}};
 
   /// The portal attaches to the following volumes
   AttachedDetectorVolumes m_attachedVolumes;

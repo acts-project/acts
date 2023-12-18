@@ -176,8 +176,8 @@ auto surfaceC = Acts::Surface::makeShared<Acts::SurfaceStub>();
 
 auto pSurfaceA = Acts::Surface::makeShared<Acts::SurfaceStub>();
 auto pSurfaceB = Acts::Surface::makeShared<Acts::SurfaceStub>();
-auto portalA = Acts::Experimental::Portal::makeShared(pSurfaceA);
-auto portalB = Acts::Experimental::Portal::makeShared(pSurfaceB);
+auto portalA = std::make_shared<Acts::Experimental::Portal>(pSurfaceA);
+auto portalB = std::make_shared<Acts::Experimental::Portal>(pSurfaceB);
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 

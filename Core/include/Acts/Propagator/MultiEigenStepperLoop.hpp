@@ -662,7 +662,7 @@ class MultiEigenStepperLoop
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       Direction direction, bool release = true) const {
-    const Surface& surface = *oIntersection.representation();
+    const Surface& surface = *oIntersection.object();
 
     for (auto& component : state.components) {
       auto intersection = surface.intersect(

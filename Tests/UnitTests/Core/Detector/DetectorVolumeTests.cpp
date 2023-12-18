@@ -131,7 +131,8 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
   auto cylinderSurface =
       Acts::Surface::makeShared<Acts::CylinderSurface>(nominal, 10., 100.);
 
-  auto cylinderPortal = Acts::Experimental::Portal::makeShared(cylinderSurface);
+  auto cylinderPortal =
+      std::make_shared<Acts::Experimental::Portal>(cylinderSurface);
 
   fullCylinderVolume->updatePortal(cylinderPortal, 2u);
 
