@@ -65,7 +65,7 @@ class IterativeVertexFinder {
 
  public:
   using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
+  using IPEstimator = ImpactPointEstimator<Propagator_t>;
 
   /// Configuration struct
   struct Config {

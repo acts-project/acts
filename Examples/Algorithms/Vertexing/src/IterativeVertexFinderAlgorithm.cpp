@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -82,7 +83,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   // Setup the seed finder
   IPEstimator::Config ipEstCfg(m_cfg.bField, propagator);
   IPEstimator ipEst(ipEstCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
-  Seeder seeder;
+  Seeder seeder{{}, Acts::InputTrack::extractParameters};
   // Set up the actual vertex finder
   Finder::Config finderCfg(std::move(vertexFitter), std::move(linearizer),
                            std::move(seeder), ipEst);

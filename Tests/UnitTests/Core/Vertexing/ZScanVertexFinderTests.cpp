@@ -169,14 +169,14 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
                   "Vertex finder does not fulfill vertex finder concept.");
 
     // Impact point estimator
-    using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
+    using IPEstimator = ImpactPointEstimator<Propagator>;
 
     IPEstimator::Config ipEstimatorCfg(bField, propagator);
     IPEstimator ipEstimator(ipEstimatorCfg);
 
     VertexFinder::Config cfg(ipEstimator);
 
-    VertexFinder finder(cfg);
+    VertexFinder finder(cfg, Acts::InputTrack::extractParameters);
 
     VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
                   "Vertex finder does not fulfill vertex finder concept.");
 
     // Impact point estimator
-    using IPEstimator = ImpactPointEstimator<InputTrackStub, Propagator>;
+    using IPEstimator = ImpactPointEstimator<Propagator>;
 
     IPEstimator::Config ipEstimatorCfg(bField, propagator);
     IPEstimator ipEstimator(ipEstimatorCfg);
