@@ -231,15 +231,13 @@ namespace detail {
 /// path-limit and overstep-limit
 ///
 /// @tparam intersection_t Type of the intersection object
-/// @tparam logger_t The logger type, which defaults to std::false_type
-///         to prevent the generation of logging code
 ///
 /// @param intersection The intersection to check
 /// @param nearLimit The minimum distance for an intersection to be considered
 /// @param farLimit The maximum distance for an intersection to be considered
 /// @param logger A optionally supplied logger which prints out a lot of infos
 ///               at VERBOSE level
-template <typename intersection_t, typename logger_t = std::false_type>
+template <typename intersection_t>
 bool checkIntersection(const intersection_t& intersection, double nearLimit,
                        double farLimit,
                        const Logger& logger = getDummyLogger()) {
