@@ -233,7 +233,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
 
 Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-    const GeometryContext& gctx,
+    const GeometryContext& /*gctx*/,
     const std::vector<DetectorComponent::PortalContainer>& containers,
     BinningValue bValue, const std::vector<unsigned int>& /*unused */,
     Acts::Logging::Level logLevel) noexcept(false) {
