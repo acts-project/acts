@@ -66,14 +66,12 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   ProtoSurfaceMaterialT<BinningType>& operator=(
       ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
 
-  /// Scale operator
-  ///
-  /// @param scale The value to scale this material by
+  /// Scale operator - unused
   ProtoSurfaceMaterialT<BinningType>& operator*=(double /*unused*/) final {
     return (*this);
   }
 
-  /// Return the BinUtility
+  /// Return the binning description
   const BinningType& binning() const { return (m_binning); }
 
   /// Return method for full material description of the Surface - from local
