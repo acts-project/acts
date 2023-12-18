@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2016-2023 CERN for the benefit of the Acts project
@@ -114,6 +115,19 @@ GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator++(int) {
   return output;
 }
 
+template <typename T, class... Axes>
+std::size_t GridGlobalIterator<T, Axes...>::globalPosition() const
+{
+  return m_idx;
+}
+
+template <typename T, class... Axes>
+std::array<std::size_t, GridGlobalIterator<T, Axes...>::DIM>
+GridGlobalIterator<T, Axes...>::localPosition() const
+{
+  return m_grid->localBinsFromGlobalBin(m_idx);
+}
+  
 // Local Iterator
 template <typename T, class... Axes>
 Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
@@ -234,6 +248,12 @@ void GridLocalIterator<T, Axes...>::increment() {
   } else {
     m_currentIndex = m_numLocalBins;
   }
+}
+
+template <typename T, class... Axes>
+std::size_t GridLocalIterator<T, Axes...>::globalPosition() const
+{
+  return m_grid->globalBinFromLocalBins(localPosition());
 }
 
 template <typename T, class... Axes>
