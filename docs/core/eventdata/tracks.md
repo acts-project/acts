@@ -221,7 +221,7 @@ state is going to be: it is ambiguous!
 
 However, when track finding has concluded, and the trajectories identified by
 {term}`tip states<tip state>` $S_7$ and $S_8$ have been discarded or are being
-copied into an output cotainer, it is possible to *forward link* the track
+copied into an output container, it is possible to *forward link* the track
 state sequences. This is possible **if** the trajectory does not branch
 anymore! {func}`Acts::TrackProxy::copyFrom` will implicitly forward link the
 track states, as it is guaranteed to not branch after copying.
@@ -270,7 +270,7 @@ S12 -> S3 -> S6;
 :::
 
 This now includes both forward and backward links, which allows iteration from
-$S_1$/$S_2$ to $S_6$/$S_7$ and the othe other way around.
+$S_1$/$S_2$ to $S_6$/$S_7$ and the other way around.
 
 Forward iteration can then be achieved like this:
 
@@ -382,7 +382,7 @@ using namespace Acts::HashedStringLiterals;
 
 The components are accessed by a hash of the name of the component. This hash
 can be calculated from a string at compile-time, if the string is known at
-compile time.  The difference between the two component acccess signatures is
+compile time.  The difference between the two component access signatures is
 that in the first case, the hash of the component is guaranteed to be evaluated
 at compile-time, since it is given to the `component` function as a template
 argument. A third option is available to access components: see
