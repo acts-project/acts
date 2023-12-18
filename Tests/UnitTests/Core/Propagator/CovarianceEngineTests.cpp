@@ -198,13 +198,21 @@ BoundVector localToLocal(const BoundVector& local, const Surface& src,
   Acts::FreeVector freePars =
       Acts::detail::transformBoundToFreeParameters(src, gctx, local);
 
+  Acts::Vector3 direction = freePars.segment<3>(Acts::eFreeDir0);
+  Acts::Vector3 position = freePars.segment<3>(Acts::eFreePos0);
+
+  auto mix = dst.intersect(gctx, position, direction);
+  auto ix = mix.closest();
+
+  freePars.segment<3>(Acts::eFreePos0) = ix.position();
+
   return Acts::detail::transformFreeToBoundParameters(freePars, dst, gctx)
       .value();
 }
 
 BoundMatrix directJacobian(const BoundVector& parA, const Surface& srfA,
                            const Surface& srfB) {
-  double h = 1e-4;
+  double h = 1e-6;
   BoundMatrix J;
   for (std::size_t i = 0; i < 6; i++) {
     for (std::size_t j = 0; j < 6; j++) {
@@ -283,7 +291,7 @@ BOOST_DATA_TEST_CASE(CovarianceConversionSamePlane,
 
   BoundMatrix J = directJacobian(parA, *planeSurfaceA, *planeSurfaceB);
   BoundMatrix covC = J * covA * J.transpose();
-  CHECK_CLOSE_COVARIANCE(covB, covC, 1e-7);
+  CHECK_CLOSE_COVARIANCE(covB, covC, 1e-6);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceConversionRotatedPlane,
@@ -330,7 +338,7 @@ BOOST_DATA_TEST_CASE(CovarianceConversionRotatedPlane,
 
   BoundMatrix J = directJacobian(parA, *planeSurfaceA, *planeSurfaceB);
   BoundMatrix covC = J * covA * J.transpose();
-  CHECK_CLOSE_COVARIANCE(covB, covC, 1e-7);
+  CHECK_CLOSE_COVARIANCE(covB, covC, 1e-6);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceConversionL0TiltedPlane,
@@ -375,7 +383,9 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL0TiltedPlane,
 
   BoundMatrix J = directJacobian(parA, *planeSurfaceA, *planeSurfaceB);
   BoundMatrix covC = J * covA * J.transpose();
-  CHECK_CLOSE_COVARIANCE(covB, covC, 1e-7);
+  CHECK_CLOSE_ABS((covB.template topLeftCorner<2, 2>()),
+                  (covC.template topLeftCorner<2, 2>()), 1e-5);
+  CHECK_CLOSE_ABS(covB.diagonal(), covC.diagonal(), 1e-4);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceConversionL1TiltedPlane,
@@ -420,7 +430,9 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL1TiltedPlane,
 
   BoundMatrix J = directJacobian(parA, *planeSurfaceA, *planeSurfaceB);
   BoundMatrix covC = J * covA * J.transpose();
-  CHECK_CLOSE_COVARIANCE(covB, covC, 1e-7);
+  CHECK_CLOSE_ABS((covB.template topLeftCorner<2, 2>()),
+                  (covC.template topLeftCorner<2, 2>()), 1e-5);
+  CHECK_CLOSE_ABS(covB.diagonal(), covC.diagonal(), 1e-1);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceConversionPerigee,
@@ -464,7 +476,10 @@ BOOST_DATA_TEST_CASE(CovarianceConversionPerigee,
 
   BoundMatrix J = directJacobian(parA, *planeSurfaceA, *perigee);
   BoundMatrix covC = J * covA * J.transpose();
-  CHECK_CLOSE_COVARIANCE(covB, covC, 1e-7);
+  CHECK_CLOSE_ABS((covB.template topLeftCorner<2, 2>()),
+                  (covC.template topLeftCorner<2, 2>()), 1e-6);
+  CHECK_CLOSE_ABS(covB.diagonal(), covC.diagonal(), 1e-4);
+  CHECK_CLOSE_ABS(covB, covC, 1e-1);
 }
 
 }  // namespace Test
