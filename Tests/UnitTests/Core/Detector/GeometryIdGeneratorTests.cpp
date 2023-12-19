@@ -117,7 +117,7 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*unused*/,
                         Surface& surface) const final {
     auto sgid = surface.geometryId();
-    if (sgid.sensitive()) {
+    if (sgid.sensitive() != 0u){
       sgid.setSensitive(sgid.sensitive() + 1);
     } else {
       sgid.setPassive(sgid.passive() + 1);
