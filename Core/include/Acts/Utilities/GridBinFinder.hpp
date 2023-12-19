@@ -68,7 +68,9 @@ class GridBinFinder {
   ///
   /// @pre both first_value_t and vals ... can be only int or std::vector<std::pair<int, int>>
   /// In the second case, the number of entries of the vector of pairs MUST be
-  /// equal to the number of bins in that specific axis
+  /// equal to the number of bins in that specific axis. Empty vectors are also allowed
+  /// but in this case the value will be replaced with a 1 (integer), thus instructing the code
+  /// to look for neighbours in the range {-1 ,1}
   template <typename first_value_t, typename... vals>
   void storeValue(first_value_t&& fv, vals&&... others);
 
@@ -102,7 +104,8 @@ class GridBinFinder {
   /// directions should be provided
   ///
   /// @pre The list of entries of the vector of pairs MUST be equal to the number of bins in that specific
-  /// axis
+  /// axis. Empty vectors are also allowed  but in this case the value will be replaced with a 1 (integer),
+  /// thus instructing the code to look for neighbours in the range {-1 ,1}
   std::array<stored_values_t, DIM> m_values{};
 };
 
