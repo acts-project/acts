@@ -228,8 +228,10 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
       // Check if the extent should be measured
       auto interenalsMeasure = Acts::getParamOr<std::string>(
           baseName + "_internals_measure", dd4hepElement, "");
-      auto internalsClearance = Acts::getParamOr<ActsScalar>(
-          baseName + "_internals_clearance", dd4hepElement, 0.);
+      auto internalsClearance =
+          unitLength *
+          Acts::getParamOr<ActsScalar>(baseName + "_internals_clearance",
+                                       dd4hepElement, 0.);
       auto internalBinningValues = stringToBinningValues(interenalsMeasure);
       if (!internalBinningValues.empty()) {
         ACTS_VERBOSE(" - internals extent measurement requested");
@@ -238,6 +240,7 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
         for (const auto& bv : internalBinningValues) {
           ACTS_VERBOSE("   -> measuring extent for "
                        << binningValueNames()[bv]);
+          ACTS_VERBOSE("   -> with clearance :" << internalsClearance);
           clearance[bv] = {internalsClearance, internalsClearance};
         }
         internalsExtent.setEnvelope(clearance);
