@@ -7,8 +7,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <iostream>
-
 template <std::size_t DIM>
 template <typename... args>
 Acts::GridBinFinder<DIM>::GridBinFinder(args&&... vals) {
@@ -31,7 +29,7 @@ void Acts::GridBinFinder<DIM>::storeValue(first_value_t&& fv,
   if constexpr (std::is_same<int, decayed_value_t>::value) {
     /// if int -> value is positive
     assert(fv >= 0);
-    m_values[DIM - N - 1ul] = std::forward<first_value_t>(fv);
+    m_values[DIM - N - 1ul] = fv;
   } else {
     /// If vector of pairs -> also allow for empty vectors
     if (not fv.empty()) {
@@ -79,11 +77,6 @@ Acts::GridBinFinder<DIM>::findBins(
   assert(isGridCompatible(binnedSP));
   std::array<std::pair<int, int>, DIM> sizePerAxis =
       getSizePerAxis(locPosition);
-  std::cout << "using sizePerAxis = [ ";
-  for (std::size_t i(0ul); i<DIM; ++i) {
-    std::cout << "{" << sizePerAxis[i].first << ", " << sizePerAxis[i].second << "} ";
-  }
-  std::cout << "]" << std::endl;
   return binnedSP.neighborHoodIndices(locPosition, sizePerAxis).collect();
 }
 

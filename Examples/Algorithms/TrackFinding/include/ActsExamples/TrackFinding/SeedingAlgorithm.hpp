@@ -63,7 +63,7 @@ class SeedingAlgorithm final : public IAlgorithm {
     std::vector<std::pair<int, int>> zBinNeighborsBottom;
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
-    int numPhiNeighbors = 0;
+    int numPhiNeighbors = 1;
   };
 
   /// Construct the seeding algorithm.
