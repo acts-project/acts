@@ -73,7 +73,7 @@ std::shared_ptr<Portal> Portal::fuse(std::shared_ptr<Portal>& aPortal,
   }
 
   // @TODO: There's no safety against fusing portals with different surfaces
-  // We model the fused portal after the portal a
+  // We model the fused portal after the aPortal
   std::shared_ptr<Portal> fused = std::make_shared<Portal>(aPortal->m_surface);
 
   // Get the connection directions
