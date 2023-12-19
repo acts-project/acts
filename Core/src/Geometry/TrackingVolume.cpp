@@ -574,7 +574,18 @@ Acts::TrackingVolume::compatibleLayers(
                  : tLayer->nextLayer(gctx, position, direction);
   }
 
-  // and return
+  // In case of cylindrical layers we might resolve far intersection solutions
+  // which are not valid for navigation. These are discarded here by checking
+  // against the minimum path length.
+  auto min = std::min_element(
+      lIntersections.begin(), lIntersections.end(),
+      [](const LayerIntersection& a, const LayerIntersection& b) {
+        return a.first.pathLength() < b.first.pathLength();
+      });
+  std::rotate(lIntersections.begin(), min, lIntersections.end());
+  lIntersections.resize(std::distance(min, lIntersections.end()),
+                        {SurfaceIntersection::invalid(), nullptr});
+
   return lIntersections;
 }
 

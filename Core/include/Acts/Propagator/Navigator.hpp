@@ -336,22 +336,36 @@ class Navigator {
 
       const auto& candidate = state.navigation.candidate();
       const auto& intersection = candidate.intersection;
-      const Surface& surface = *intersection.object();
+      const Surface* surface = intersection.object();
       BoundaryCheck boundaryCheck = candidate.boundaryCheck;
 
+      // check if this is a flag
+      if (surface == nullptr) {
+        ACTS_VERBOSE(volInfo(state) << "Navigation flag found");
+        if (candidate.renavigationFlag) {
+          ACTS_VERBOSE(volInfo(state) << "Renavigate");
+          reinitializeCandidates(state, stepper);
+        } else {
+          ACTS_ERROR(volInfo(state)
+                     << "Invalid navigation flag found. Good luck.");
+          ++state.navigation.candidateIndex;
+        }
+        continue;
+      }
+
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
-                                  << surface.geometryId());
+                                  << surface->geometryId());
 
       // Determine the surface status and set the step length accordingly
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, surface, intersection.index(),
+          state.stepping, *surface, intersection.index(),
           state.options.direction, boundaryCheck,
           state.options.surfaceTolerance, logger());
 
       // We should never be on surface before we actually targeted a surface
       if (surfaceStatus == IntersectionStatus::onSurface) {
         ACTS_ERROR(volInfo(state)
-                   << "We are on surface " << surface.geometryId()
+                   << "We are on surface " << surface->geometryId()
                    << " before trying to reach it. This should not happen. "
                       "Good luck.");
         ++state.navigation.candidateIndex;
@@ -437,7 +451,6 @@ class Navigator {
     const auto& intersection = candidate.intersection;
     const Surface& surface = *intersection.object();
 
-    // Determine the surface status without boundary check.
     // TODO This will also update the step length which is unnecessary
     Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, surface, intersection.index(), state.options.direction,
@@ -452,21 +465,6 @@ class Navigator {
     // We are on surface and switch already to the next candidate which is
     // necessary for the next `preStep` call.
     ++state.navigation.candidateIndex;
-
-    /*
-    // Determine the surface status with boundary check.
-    // TODO second intersection should not be necessary
-    surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, surface, intersection.index(), state.options.direction,
-        BoundaryCheck(true), state.options.surfaceTolerance, logger());
-
-    // Check if we are still on surface, otherwise we are out of bounds.
-    if (surfaceStatus != IntersectionStatus::onSurface) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Surface successfully hit, but outside bounds.");
-      return true;
-    }
-    */
 
     ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
     // Update navigation state, so actors and aborters can access it
@@ -496,25 +494,29 @@ class Navigator {
 
       state.navigation.currentLayer = candidate.template object<Layer>();
 
-      if (m_cfg.reinitializeOnLayerHit) {
-        reinitializeCandidates(state, stepper);
-      } else {
-        // A re-intersection would be better but is costly. Due to this
-        // optimization the lengths are not measured from the same reference
-        // point.
-        for (std::size_t i = state.navigation.candidateIndex;
-             i < state.navigation.candidates.size(); ++i) {
-          state.navigation.candidates[i].intersection.pathLength() -=
-              intersection.pathLength();
-        }
-
-        initializeLayerSurfaceCandidates(state, stepper);
-
-        std::sort(state.navigation.candidates.begin() +
-                      state.navigation.candidateIndex,
-                  state.navigation.candidates.end(),
-                  detail::IntersectionCandidate::forwardOrder);
+      // A re-intersection would be better but is costly. Due to this
+      // optimization the lengths are not measured from the same reference
+      // point.
+      for (std::size_t i = state.navigation.candidateIndex;
+           i < state.navigation.candidates.size(); ++i) {
+        state.navigation.candidates[i].intersection.pathLength() -=
+            intersection.pathLength();
       }
+
+      initializeLayerSurfaceCandidates(state, stepper);
+
+      if (candidate.renavigationFlag) {
+        state.navigation.candidates.emplace_back(
+            SurfaceIntersection(
+                state.navigation.candidates.back().intersection.intersection(),
+                nullptr),
+            (const Surface*)nullptr, BoundaryCheck(false), true);
+      }
+
+      std::sort(
+          state.navigation.candidates.begin() + state.navigation.candidateIndex,
+          state.navigation.candidates.end(),
+          detail::IntersectionCandidate::forwardOrder);
     } else if (candidate.template checkType<BoundarySurface>()) {
       // In case of a boundary we need to switch volume and reinitialize
 
@@ -628,9 +630,12 @@ class Navigator {
       ACTS_VERBOSE(oss.str());
     }
 
-    for (const auto& [layer, object] : layers) {
-      state.navigation.candidates.emplace_back(layer, object,
-                                               BoundaryCheck(true));
+    for (std::size_t i = 0; i < layers.size(); ++i) {
+      const auto& [layer, object] = layers[i];
+      bool renavigationFlag =
+          m_cfg.reinitializeOnLayerHit || (i == layers.size() - 1);
+      state.navigation.candidates.emplace_back(
+          layer, object, BoundaryCheck(true), renavigationFlag);
     }
   }
 

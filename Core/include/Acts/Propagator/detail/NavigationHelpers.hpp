@@ -65,13 +65,16 @@ struct IntersectionCandidate {
   SurfaceIntersection intersection;
   detail::AnyIntersectionObject anyObject;
   BoundaryCheck boundaryCheck;
+  bool renavigationFlag{};
 
   IntersectionCandidate(SurfaceIntersection _intersection,
                         detail::AnyIntersectionObject _anyObject,
-                        BoundaryCheck _boundaryCheck)
+                        BoundaryCheck _boundaryCheck,
+                        bool _renavigationFlag = false)
       : intersection(std::move(_intersection)),
-        anyObject(std::move(_anyObject)),
-        boundaryCheck(std::move(_boundaryCheck)) {}
+        anyObject(_anyObject),
+        boundaryCheck(std::move(_boundaryCheck)),
+        renavigationFlag(_renavigationFlag) {}
 
   template <typename object_t>
   bool checkType() const {

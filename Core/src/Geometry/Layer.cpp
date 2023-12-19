@@ -163,15 +163,13 @@ Acts::Layer::compatibleSurfaces(
       boundaryCheck = false;
     }
     // the surface intersection
-    SurfaceMultiIntersection sfmi =
-        sf.intersect(gctx, position, direction, BoundaryCheck(boundaryCheck));
-    for (const auto& sfi : sfmi.split()) {
-      // check if intersection is valid and limits are not exceeded
-      if (sfi &&
-          detail::checkIntersection(sfi.intersection(), nearLimit, farLimit) &&
-          isUnique(sfi)) {
-        sIntersections.push_back(sfi);
-      }
+    SurfaceIntersection sfi =
+        sf.intersect(gctx, position, direction, BoundaryCheck(boundaryCheck))
+            .closest();
+    if (sfi &&
+        detail::checkIntersection(sfi.intersection(), nearLimit, farLimit) &&
+        isUnique(sfi)) {
+      sIntersections.push_back(sfi);
     }
   };
 
