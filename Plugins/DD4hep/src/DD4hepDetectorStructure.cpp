@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
@@ -87,7 +88,11 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
         "*** DD4hep : auto generated cylindrical detector builder  ***";
     dCfg.name = "Cylindrical detector from DD4hep blueprint";
     dCfg.builder = detectorBuilder;
-    dCfg.geoIdGenerator = dd4hepBlueprint->geoIdGenerator;
+    if (options.geoIdGenerator != nullptr) {
+      dCfg.geoIdGenerator = options.geoIdGenerator;
+    } else {
+      dCfg.geoIdGenerator = dd4hepBlueprint->geoIdGenerator;
+    }
     detector = DetectorBuilder(dCfg, getDefaultLogger("DD4hepDetectorBuilder",
                                                       options.logLevel))
                    .construct(gctx);

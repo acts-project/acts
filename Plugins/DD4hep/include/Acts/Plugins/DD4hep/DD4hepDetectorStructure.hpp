@@ -42,6 +42,9 @@ class DD4hepDetectorStructure {
     /// If this string is not empty, the detector is not built, but only
     /// a building graph is generated as `.dot` file with the given name
     std::string emulateToGraph = "";
+    /// A Top level geometry id generator, if the blueprint also has a
+    /// geometry id generator defined, this one will be pre-pended
+    std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
   };
 
   /// Constructor with from file name
