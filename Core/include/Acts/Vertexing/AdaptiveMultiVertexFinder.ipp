@@ -89,7 +89,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
     // Perform the fit
     auto fitResult = m_cfg.vertexFitter.addVtxToFit(
-        fitterState, vtxCandidate, m_cfg.linearizer, vertexingOptions);
+        fitterState, vtxCandidate,  vertexingOptions);
     if (!fitResult.ok()) {
       return fitResult.error();
     }
@@ -583,7 +583,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
 
   // Do the fit with removed vertex
   auto fitResult =
-      m_cfg.vertexFitter.fit(fitterState, m_cfg.linearizer, vertexingOptions);
+      m_cfg.vertexFitter.fit(fitterState,  vertexingOptions);
   if (!fitResult.ok()) {
     return fitResult.error();
   }

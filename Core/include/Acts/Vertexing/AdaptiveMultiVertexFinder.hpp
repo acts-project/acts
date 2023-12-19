@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <type_traits>
@@ -33,7 +34,6 @@ namespace Acts {
 /// @tparam sfinder_t Seed finder type
 template <typename vfitter_t, typename sfinder_t>
 class AdaptiveMultiVertexFinder {
-  using Linearizer_t = typename vfitter_t::Linearizer_t;
   using FitterState_t = typename vfitter_t::State;
   using SeedFinderState_t = typename sfinder_t::State;
 
@@ -54,14 +54,12 @@ class AdaptiveMultiVertexFinder {
     /// @param fitter The vertex fitter
     /// @param sfinder The seed finder
     /// @param ipEst ImpactPointEstimator
-    /// @param lin Track linearizer
     /// @param bIn Input magnetic field
     Config(vfitter_t fitter, sfinder_t sfinder, ImpactPointEstimator ipEst,
-           Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
+           std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEstimator(std::move(ipEst)),
-          linearizer(std::move(lin)),
           bField{std::move(bIn)} {}
 
     // Vertex fitter
@@ -72,9 +70,6 @@ class AdaptiveMultiVertexFinder {
 
     // ImpactPointEstimator
     ImpactPointEstimator ipEstimator;
-
-    // Track linearizer
-    Linearizer_t linearizer;
 
     std::shared_ptr<const MagneticFieldProvider> bField;
 
