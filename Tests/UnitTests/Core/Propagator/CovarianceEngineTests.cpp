@@ -16,13 +16,11 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Propagator/detail/JacobianEngine.hpp"
-#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -30,7 +28,6 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
-#include <memory>
 #include <optional>
 #include <random>
 #include <tuple>
@@ -198,7 +195,7 @@ std::pair<BoundVector, BoundMatrix> boundToBound(const BoundVector& parIn,
   return {converted.parameters(), converted.covariance().value()};
 }
 
-using propagator_t = Propagator<EigenStepper<>, detail::VoidNavigator>;
+using propagator_t = Propagator<EigenStepper<>, VoidNavigator>;
 
 BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
                          const Surface& src, const Surface& dst) {
