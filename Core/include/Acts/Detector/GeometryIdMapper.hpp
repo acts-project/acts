@@ -25,7 +25,7 @@ namespace Experimental {
 /// @tparam SourceIdentifier is the type of the source identifier
 /// @tparam SourceCapture is the type of the source capture function/struct
 ///
-/// The source capture function/struct is a callable object/funciton that
+/// The source capture function/struct is a callable object/function that
 /// can navigate from the provided surface to the source identifier. Usually
 /// this would happen via the associated detector element.
 ///

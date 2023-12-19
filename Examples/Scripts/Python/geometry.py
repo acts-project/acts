@@ -31,7 +31,6 @@ def runGeometry(
     outputJson=True,
     outputRoot=True,
 ):
-
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
         ialg = 0
@@ -44,8 +43,8 @@ def runGeometry(
                 raise RuntimeError("Failed to decorate event context")
 
         if outputCsv:
-            if not os.path.isdir(outputDir+"/csv"):
-                os.makedirs(outputDir+"/csv")
+            if not os.path.isdir(outputDir + "/csv"):
+                os.makedirs(outputDir + "/csv")
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -61,8 +60,8 @@ def runGeometry(
             writer.write(context, trackingGeometry)
 
         if outputJson:
-            if not os.path.isdir(outputDir+"/json"):
-                os.makedirs(outputDir+"/json")
+            if not os.path.isdir(outputDir + "/json"):
+                os.makedirs(outputDir + "/json")
             writer = JsonSurfacesWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -95,7 +94,9 @@ def runGeometry(
 if "__main__" == __name__:
     # detector, trackingGeometry, decorators = AlignedDetector.create()
     # detector, trackingGeometry, decorators = GenericDetector.create()
-    detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
 
@@ -104,7 +105,6 @@ if "__main__" == __name__:
     # dd4hepIdGeoIdValueMap = {}
     # for key, value in dd4hepIdGeoIdMap.items():
     #     dd4hepIdGeoIdValueMap[key] = value.value()
-    
+
     # with open('odd-dd4hep-geoid-mapping.json', 'w') as outfile:
     #    json.dump(dd4hepIdGeoIdValueMap, outfile)
-
