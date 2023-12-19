@@ -16,6 +16,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -28,6 +29,7 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
+#include <memory>
 #include <optional>
 #include <random>
 #include <tuple>
@@ -218,7 +220,7 @@ BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
 
 propagator_t makePropagator(const Vector3& bField) {
   return propagator_t{EigenStepper<>{std::make_shared<ConstantBField>(bField)},
-                      detail::VoidNavigator{}};
+                      VoidNavigator{}};
 }
 
 BoundMatrix numericalBoundToBoundJacobian(const propagator_t& prop,
