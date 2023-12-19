@@ -482,8 +482,8 @@ Acts::TrackingVolume::compatibleBoundaries(
   boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
   // The Limits: current, path & overstepping
-  double pLimit = options.pathLimit;
-  double oLimit = 0;
+  double nearLimit = 0;
+  double farLimit = options.farLimit;
 
   // Helper function to test intersection
   auto checkIntersection =
@@ -496,28 +496,26 @@ Acts::TrackingVolume::compatibleBoundaries(
 
       if (options.forceIntersectBoundaries) {
         const bool coCriterion =
-            std::abs(sIntersection.pathLength()) < std::abs(oLimit);
+            std::abs(sIntersection.pathLength()) < std::abs(nearLimit);
         ACTS_VERBOSE("Forcing intersection with surface "
                      << bSurface->surfaceRepresentation().geometryId());
         if (coCriterion) {
           ACTS_VERBOSE("Intersection forced successfully ");
           ACTS_VERBOSE("- intersection path length "
                        << std::abs(sIntersection.pathLength())
-                       << " < overstep limit " << std::abs(oLimit));
+                       << " < overstep limit " << std::abs(nearLimit));
           return BoundaryIntersection(sIntersection, bSurface);
         }
         ACTS_VERBOSE("Can't force intersection: ");
         ACTS_VERBOSE("- intersection path length "
                      << std::abs(sIntersection.pathLength())
-                     << " > overstep limit " << std::abs(oLimit));
+                     << " > overstep limit " << std::abs(nearLimit));
       }
 
       ACTS_VERBOSE("Check intersection with surface "
                    << bSurface->surfaceRepresentation().geometryId());
-      if (detail::checkIntersection<decltype(sIntersection.intersection()),
-                                    decltype(logger)>(
-              sIntersection.intersection(), pLimit, oLimit,
-              s_onSurfaceTolerance, logger)) {
+      if (detail::checkIntersection(sIntersection.intersection(), nearLimit,
+                                    farLimit, logger)) {
         return BoundaryIntersection(sIntersection, bSurface);
       }
     }
@@ -614,10 +612,9 @@ Acts::TrackingVolume::compatibleLayers(
         auto atIntersection =
             tLayer->surfaceOnApproach(gctx, position, direction, options);
         auto path = atIntersection.pathLength();
-        bool withinLimit = std::abs(path) <= std::abs(options.pathLimit);
+        bool withinLimit = std::abs(path) <= std::abs(options.farLimit);
         // Intersection is ok - take it (move to surface on approach)
-        if (atIntersection &&
-            (atIntersection.object() != options.targetSurface) && withinLimit) {
+        if (atIntersection && withinLimit) {
           // create a layer intersection
           lIntersections.push_back(LayerIntersection(atIntersection, tLayer));
         }
@@ -676,8 +673,8 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
   sIntersections.reserve(20);  // arbitrary
 
   // The limits for this navigation step
-  double pLimit = options.pathLimit;
-  double oLimit = options.overstepLimit;
+  double nearLimit = options.nearLimit;
+  double farLimit = options.farLimit;
 
   if (m_bvhTop == nullptr) {
     return sIntersections;
@@ -703,7 +700,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
       auto sfmi =
           srf.intersect(gctx, position, direction, BoundaryCheck(false));
       for (const auto& sfi : sfmi.split()) {
-        if (sfi && sfi.pathLength() > oLimit && sfi.pathLength() <= pLimit) {
+        if (sfi && detail::checkIntersection(sfi, nearLimit, farLimit)) {
           sIntersections.push_back(sfi);
         }
       }
