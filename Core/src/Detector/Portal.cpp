@@ -98,7 +98,7 @@ std::shared_ptr<Portal> Portal::fuse(std::shared_ptr<Portal>& aPortal,
         "Portal: both surfaces have surface material, fusing will lead to "
         "information loss.");
   } else if (aSurface.surfaceMaterial() != nullptr) {
-    // We keep portal A modelling
+    // We keep the aPortal modelling
     fused->m_surface = aPortal->m_surface;
   } else if (bSurface.surfaceMaterial() != nullptr) {
     fused->m_surface = bPortal->m_surface;
