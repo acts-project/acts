@@ -628,6 +628,10 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
   std::vector<SurfaceIntersection> sIntersections;
   sIntersections.reserve(20);  // arbitrary
 
+  // The limits for this navigation step
+  double nearLimit = options.nearLimit;
+  double farLimit = options.farLimit;
+
   if (m_bvhTop == nullptr) {
     return sIntersections;
   }
@@ -652,8 +656,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
       auto sfmi =
           srf.intersect(gctx, position, direction, BoundaryCheck(false));
       for (const auto& sfi : sfmi.split()) {
-        if (sfi && detail::checkIntersection(sfi, options.farLimit,
-                                             options.nearLimit)) {
+        if (sfi && detail::checkIntersection(sfi, nearLimit, farLimit)) {
           sIntersections.push_back(sfi);
         }
       }

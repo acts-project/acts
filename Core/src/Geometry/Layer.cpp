@@ -229,12 +229,16 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
                    (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
                     (surfaceRepresentation().surfaceMaterial() != nullptr));
 
+  // The Limits
+  double nearLimit = options.nearLimit;
+  double farLimit = options.farLimit;
+
   // Helper function to find valid intersection
   auto findValidIntersection =
       [&](const SurfaceMultiIntersection& sfmi) -> SurfaceIntersection {
     for (const auto& sfi : sfmi.split()) {
-      if (sfi && detail::checkIntersection(
-                     sfi.intersection(), options.nearLimit, options.farLimit)) {
+      if (sfi &&
+          detail::checkIntersection(sfi.intersection(), nearLimit, farLimit)) {
         return sfi;
       }
     }
@@ -246,8 +250,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   // Approach descriptor present and resolving is necessary
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
-        gctx, position, direction, options.boundaryCheck, options.nearLimit,
-        options.farLimit);
+        gctx, position, direction, options.boundaryCheck, nearLimit, farLimit);
     return aSurface;
   }
 

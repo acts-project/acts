@@ -423,15 +423,6 @@ BOOST_AUTO_TEST_CASE(Navigator_postStep) {
   navCfg.resolvePassive = false;
   Navigator navigator{navCfg};
 
-  // create a navigator for the Bounding Volume Hierarchy test
-  CubicBVHTrackingGeometry grid(20, 1000, 5);
-  Navigator::Config bvhNavCfg;
-  bvhNavCfg.trackingGeometry = grid.trackingGeometry;
-  bvhNavCfg.resolveSensitive = true;
-  bvhNavCfg.resolveMaterial = true;
-  bvhNavCfg.resolvePassive = false;
-  Navigator BVHNavigator{bvhNavCfg};
-
   // position and direction vector
   Vector4 position4(0., 0., 0, 0);
   Vector3 momentum(1., 1., 0);

@@ -67,7 +67,7 @@ struct PathLimitReached {
   }
 };
 
-/// This is the condition that the Surface has been reached it then triggers an
+/// This is the condition that the Surface has been reached it then triggers a
 /// propagation abort
 struct SurfaceReached {
   const Surface* surface = nullptr;
