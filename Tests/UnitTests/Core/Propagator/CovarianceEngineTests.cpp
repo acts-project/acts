@@ -20,9 +20,8 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Propagator/detail/JacobianEngine.hpp"
-#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -198,7 +197,7 @@ std::pair<BoundVector, BoundMatrix> boundToBound(const BoundVector& parIn,
   return {converted.parameters(), converted.covariance().value()};
 }
 
-using propagator_t = Propagator<EigenStepper<>, detail::VoidNavigator>;
+using propagator_t = Propagator<EigenStepper<>, VoidNavigator>;
 
 BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
                          const Surface& src, const Surface& dst) {
@@ -221,7 +220,7 @@ BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
 
 propagator_t makePropagator(const Vector3& bField) {
   return propagator_t{EigenStepper<>{std::make_shared<ConstantBField>(bField)},
-                      detail::VoidNavigator{}};
+                      VoidNavigator{}};
 }
 
 BoundMatrix numericalBoundToBoundJacobian(const propagator_t& prop,
