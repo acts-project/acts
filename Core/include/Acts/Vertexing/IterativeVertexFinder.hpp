@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
@@ -60,11 +61,10 @@ template <typename vfitter_t, typename sfinder_t>
 class IterativeVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
-  using Propagator_t = typename vfitter_t::Propagator_t;
   using Linearizer_t = typename vfitter_t::Linearizer_t;
 
  public:
-  using IPEstimator = ImpactPointEstimator<Propagator_t>;
+  using IPEstimator = ImpactPointEstimator;
 
   /// Configuration struct
   struct Config {
@@ -127,14 +127,14 @@ class IterativeVertexFinder {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
         : ipState(field.makeCache(magContext)),
-          linearizerState(field.makeCache(magContext)),
-          fitterState(field.makeCache(magContext)) {}
+          fitterState(field.makeCache(magContext)),
+          fieldCache(field.makeCache(magContext)) {}
     /// The IP estimator state
     typename IPEstimator::State ipState;
-    /// The inearizer state
-    typename Linearizer_t::State linearizerState;
     /// The fitter state
     typename vfitter_t::State fitterState;
+
+    MagneticFieldProvider::Cache fieldCache;
   };
 
   /// @brief Constructor for user-defined InputTrack type

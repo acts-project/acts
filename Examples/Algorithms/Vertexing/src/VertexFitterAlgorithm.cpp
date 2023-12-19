@@ -55,7 +55,9 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   VertexFitter vertexFitter(vertexFitterCfg);
   VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
   // Setup the linearizer
-  Linearizer::Config ltConfig(m_cfg.bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = m_cfg.bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");

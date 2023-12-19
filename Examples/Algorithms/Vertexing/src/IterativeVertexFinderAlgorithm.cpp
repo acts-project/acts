@@ -79,7 +79,9 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Fitter vertexFitter(vertexFitterCfg,
                       logger().cloneWithSuffix("FullBilloirVertexFitter"));
   // Setup the track linearizer
-  Linearizer::Config linearizerCfg(m_cfg.bField, propagator);
+  Linearizer::Config linearizerCfg;
+  linearizerCfg.bField = m_cfg.bField;
+  linearizerCfg.propagator = propagator;
   Linearizer linearizer(linearizerCfg,
                         logger().cloneWithSuffix("HelicalTrackLinearizer"));
   // Setup the seed finder

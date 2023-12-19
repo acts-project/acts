@@ -55,7 +55,7 @@ namespace Test {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
-using Linearizer_t = HelicalTrackLinearizer<Propagator>;
+using Linearizer_t = HelicalTrackLinearizer;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
                   "Vertex finder does not fulfill vertex finder concept.");
 
     // Impact point estimator
-    using IPEstimator = ImpactPointEstimator<Propagator>;
+    using IPEstimator = ImpactPointEstimator;
 
     IPEstimator::Config ipEstimatorCfg(bField, propagator);
     IPEstimator ipEstimator(ipEstimatorCfg);
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
                   "Vertex finder does not fulfill vertex finder concept.");
 
     // Impact point estimator
-    using IPEstimator = ImpactPointEstimator<Propagator>;
+    using IPEstimator = ImpactPointEstimator;
 
     IPEstimator::Config ipEstimatorCfg(bField, propagator);
     IPEstimator ipEstimator(ipEstimatorCfg);

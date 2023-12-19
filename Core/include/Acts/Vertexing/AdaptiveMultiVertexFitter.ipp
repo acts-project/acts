@@ -289,9 +289,9 @@ Acts::AdaptiveMultiVertexFitter<linearizer_t>::setWeightsAndUpdate(
         // relinearize
         if (!trkAtVtx.isLinearized || vtxInfo.relinearize) {
           auto result = linearizer.linearizeTrack(
-              m_cfg.extractParameters(trk), vtxInfo.linPoint[3],
-              *vtxPerigeeSurface, vertexingOptions.geoContext,
-              vertexingOptions.magFieldContext, state.linearizerState);
+              m_cfg.extractParameters(trk), vtxInfo.linPoint[3], *vtxPerigeeSurface,
+              vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+              state.fieldCache);
           if (!result.ok()) {
             return result.error();
           }

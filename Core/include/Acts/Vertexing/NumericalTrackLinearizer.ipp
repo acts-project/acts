@@ -10,16 +10,16 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
-template <typename propagator_t, typename propagator_options_t>
+inline
 Acts::Result<Acts::LinearizedTrack>
-Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
+Acts::NumericalTrackLinearizer::
     linearizeTrack(const BoundTrackParameters& params, double linPointTime,
                    const Surface& perigeeSurface,
                    const Acts::GeometryContext& gctx,
                    const Acts::MagneticFieldContext& mctx,
-                   State& /*state*/) const {
+                   MagneticFieldProvider::Cache& /*fieldCache*/) const {
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -48,7 +48,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   }
 
   // Extracting the Perigee representation of the track wrt the reference point
-  auto endParams = *result->endParameters;
+  auto endParams = *result;
   BoundVector perigeeParams = endParams.parameters();
 
   // Covariance and weight matrix at the PCA to the reference point
@@ -129,7 +129,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     if (!newResult.ok()) {
       return newResult.error();
     }
-    newPerigeeParams = (*newResult->endParameters).parameters();
+    newPerigeeParams = (*newResult).parameters();
 
     // Computing the numerical derivatives and filling the Jacobian
     completeJacobian.array().col(i) =

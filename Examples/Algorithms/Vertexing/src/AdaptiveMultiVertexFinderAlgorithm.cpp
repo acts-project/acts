@@ -109,7 +109,9 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
                           logger().cloneWithSuffix("ImpactPointEstimator"));
 
   // Set up the helical track linearizer
-  Linearizer::Config ltConfig(m_cfg.bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = m_cfg.bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig,
                         logger().cloneWithSuffix("HelicalTrackLinearizer"));
 

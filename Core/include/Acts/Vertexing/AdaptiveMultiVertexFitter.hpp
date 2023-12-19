@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -41,11 +42,10 @@ class AdaptiveMultiVertexFitter {
                 "Linearizer does not fulfill linearizer concept.");
 
  public:
-  using Propagator_t = typename linearizer_t::Propagator_t;
   using Linearizer_t = linearizer_t;
 
  private:
-  using IPEstimator = ImpactPointEstimator<Propagator_t>;
+  using IPEstimator = ImpactPointEstimator;
 
  public:
   /// @brief The fitter state
@@ -53,7 +53,7 @@ class AdaptiveMultiVertexFitter {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
         : ipState(field.makeCache(magContext)),
-          linearizerState(field.makeCache(magContext)) {}
+          fieldCache(field.makeCache(magContext)) {}
     // Vertex collection to be fitted
     std::vector<Vertex*> vertexCollection;
 
@@ -63,8 +63,7 @@ class AdaptiveMultiVertexFitter {
     // IPEstimator state
     typename IPEstimator::State ipState;
 
-    // Linearizer state
-    typename Linearizer_t::State linearizerState;
+    MagneticFieldProvider::Cache fieldCache;
 
     // Map to store vertices information
     // @TODO Does this have to be a mutable pointer?

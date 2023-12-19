@@ -60,7 +60,7 @@ ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AMVFitterTests", Acts::Logging::INFO))
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
-using Linearizer = HelicalTrackLinearizer<Propagator>;
+using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<Propagator>;
+  using IPEstimator = ImpactPointEstimator;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
@@ -122,7 +122,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   AdaptiveMultiVertexFitter<Linearizer>::Config fitterCfg(ip3dEst);
 
   // Linearizer for BoundTrackParameters type test
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
@@ -335,7 +337,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<Propagator>;
+  using IPEstimator = ImpactPointEstimator;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
@@ -343,7 +345,9 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   AdaptiveMultiVertexFitter<Linearizer>::Config fitterCfg(ip3dEst);
 
   // Linearizer for BoundTrackParameters type test
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
@@ -470,7 +474,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<Propagator>;
+  using IPEstimator = ImpactPointEstimator;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
@@ -486,7 +490,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
   // Linearizer for BoundTrackParameters type test
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
