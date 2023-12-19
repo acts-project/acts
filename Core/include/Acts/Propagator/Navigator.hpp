@@ -25,6 +25,8 @@
 #include <sstream>
 #include <string>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 
 /// @brief struct for the Navigation options that are forwarded to
@@ -102,7 +104,8 @@ class Navigator {
     bool reinitializeOnLayerHit = false;
   };
 
-  using IntersectionCandidates = std::vector<detail::IntersectionCandidate>;
+  using IntersectionCandidates =
+      boost::container::small_vector<detail::IntersectionCandidate, 24>;
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
 
@@ -346,8 +349,23 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state) << "Navigation flag found");
         if (candidate.renavigationFlag) {
           ACTS_VERBOSE(volInfo(state) << "Renavigate");
+          ++state.navigation.candidateIndex;
+
           state.navigation.currentLayer = nullptr;
-          reinitializeCandidates(state, stepper);
+
+          // A re-intersection would be better but is costly. Due to this
+          // optimization the lengths are not measured from the same reference
+          // point.
+          for (auto& c : state.navigation.candidates) {
+            c.intersection.pathLength() -= intersection.pathLength();
+          }
+
+          initializeVolumeBoundaryCandidates(state, stepper);
+
+          std::sort(state.navigation.candidates.begin() +
+                        state.navigation.candidateIndex,
+                    state.navigation.candidates.end(),
+                    detail::IntersectionCandidate::forwardOrder);
         } else {
           ACTS_ERROR(volInfo(state)
                      << "Invalid navigation flag found. Good luck.");
