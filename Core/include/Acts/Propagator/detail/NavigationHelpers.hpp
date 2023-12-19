@@ -12,6 +12,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <variant>
 
@@ -66,6 +67,11 @@ struct IntersectionCandidate {
   detail::AnyIntersectionObject anyObject;
   BoundaryCheck boundaryCheck;
   bool renavigationFlag{};
+
+  static IntersectionCandidate createFlag(Intersection3D intersection) {
+    return {SurfaceIntersection(intersection, nullptr), (const Surface*)nullptr,
+            BoundaryCheck(false), true};
+  }
 
   IntersectionCandidate(SurfaceIntersection _intersection,
                         detail::AnyIntersectionObject _anyObject,

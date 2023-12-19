@@ -146,6 +146,8 @@ class Navigator {
     bool targetReached = false;
     /// If a break has been detected
     bool navigationBreak = false;
+
+    State() { candidates.reserve(24); }
   };
 
   /// Constructor with configuration object
@@ -344,6 +346,7 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state) << "Navigation flag found");
         if (candidate.renavigationFlag) {
           ACTS_VERBOSE(volInfo(state) << "Renavigate");
+          state.navigation.currentLayer = nullptr;
           reinitializeCandidates(state, stepper);
         } else {
           ACTS_ERROR(volInfo(state)
@@ -503,14 +506,16 @@ class Navigator {
             intersection.pathLength();
       }
 
-      initializeLayerSurfaceCandidates(state, stepper);
+      std::size_t surfaces = initializeLayerSurfaceCandidates(state, stepper);
 
       if (candidate.renavigationFlag) {
+        Intersection3D intersection3D = intersection.intersection();
+        if (surfaces > 0) {
+          intersection3D =
+              state.navigation.candidates.back().intersection.intersection();
+        }
         state.navigation.candidates.emplace_back(
-            SurfaceIntersection(
-                state.navigation.candidates.back().intersection.intersection(),
-                nullptr),
-            (const Surface*)nullptr, BoundaryCheck(false), true);
+            detail::IntersectionCandidate::createFlag(intersection3D));
       }
 
       std::sort(
@@ -544,15 +549,15 @@ class Navigator {
   /// Helper method to initialize navigation candidates for the current volume
   /// boundaries.
   template <typename propagator_state_t, typename stepper_t>
-  void initializeVolumeBoundaryCandidates(propagator_state_t& state,
-                                          const stepper_t& stepper) const {
+  std::size_t initializeVolumeBoundaryCandidates(
+      propagator_state_t& state, const stepper_t& stepper) const {
     const TrackingVolume* volume = state.navigation.currentVolume;
     ACTS_VERBOSE(volInfo(state) << "Initialize volume boundaries");
 
     if (volume == nullptr) {
       state.navigation.navigationBreak = true;
       ACTS_VERBOSE(volInfo(state) << "No volume set. Good luck.");
-      return;
+      return 0;
     }
 
     // The navigation options
@@ -588,20 +593,22 @@ class Navigator {
       state.navigation.candidates.emplace_back(boundary, object,
                                                BoundaryCheck(true));
     }
+
+    return boundaries.size();
   }
 
   /// Helper method to initialize navigation candidates for the current volume
   /// layers.
   template <typename propagator_state_t, typename stepper_t>
-  void initializeVolumeLayerCandidates(propagator_state_t& state,
-                                       const stepper_t& stepper) const {
+  std::size_t initializeVolumeLayerCandidates(propagator_state_t& state,
+                                              const stepper_t& stepper) const {
     const TrackingVolume* volume = state.navigation.currentVolume;
     ACTS_VERBOSE(volInfo(state) << "Initialize volume layers");
 
     if (volume == nullptr) {
       state.navigation.navigationBreak = true;
       ACTS_VERBOSE(volInfo(state) << "No volume set. Good luck.");
-      return;
+      return 0;
     }
 
     // Create the navigation options
@@ -637,12 +644,14 @@ class Navigator {
       state.navigation.candidates.emplace_back(
           layer, object, BoundaryCheck(true), renavigationFlag);
     }
+
+    return layers.size();
   }
 
   /// Helper method to initialize navigation candidates for the current layer.
   template <typename propagator_state_t, typename stepper_t>
-  void initializeLayerSurfaceCandidates(propagator_state_t& state,
-                                        const stepper_t& stepper) const {
+  std::size_t initializeLayerSurfaceCandidates(propagator_state_t& state,
+                                               const stepper_t& stepper) const {
     const Layer* layer = state.navigation.currentLayer;
     assert(layer != nullptr && "Current layer must be set.");
 
@@ -691,6 +700,8 @@ class Navigator {
       state.navigation.candidates.emplace_back(
           surface, surface.object(), m_cfg.boundaryCheckSurfaceApproach);
     }
+
+    return surfaces.size();
   }
 
   /// Helper method to reset and reinitialize the navigation candidates.
@@ -704,8 +715,10 @@ class Navigator {
       initializeLayerSurfaceCandidates(state, stepper);
     }
 
-    initializeVolumeLayerCandidates(state, stepper);
-    initializeVolumeBoundaryCandidates(state, stepper);
+    std::size_t layers = initializeVolumeLayerCandidates(state, stepper);
+    if (layers == 0) {
+      initializeVolumeBoundaryCandidates(state, stepper);
+    }
 
     std::sort(state.navigation.candidates.begin(),
               state.navigation.candidates.end(),
