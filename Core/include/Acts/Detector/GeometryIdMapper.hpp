@@ -23,7 +23,7 @@ namespace Experimental {
 /// assign predefined geometry ids to objects
 ///
 /// The only requirement is that the source identifier can be established
-/// from the object that recieves the target geomety id itself.
+/// from the object that receives the target geometry id itself.
 template <typename SourceIdentifier, typename SourceCapture>
 class GeometryIdMapper final : public IGeometryIdGenerator {
  public:
