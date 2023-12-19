@@ -49,4 +49,4 @@ if "__main__" == __name__:
     geoContext = acts.GeometryContext()
     [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
-    acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray.json")
+    # acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray.json")

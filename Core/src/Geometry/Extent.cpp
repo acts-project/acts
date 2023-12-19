@@ -84,7 +84,7 @@ void Acts::Extent::addConstrain(const Acts::Extent& rhs,
   for (const auto& bValue : s_binningValues) {
     if (rhs.constrains(bValue) && !constrains(bValue)) {
       const auto& cRange = rhs.range(bValue);
-      m_range[bValue].setMin(cRange.min() + envelope[bValue][0u]);
+      m_range[bValue].setMin(cRange.min() - envelope[bValue][0u]);
       m_range[bValue].setMax(cRange.max() + envelope[bValue][1u]);
       m_constrains.set(bValue);
     }

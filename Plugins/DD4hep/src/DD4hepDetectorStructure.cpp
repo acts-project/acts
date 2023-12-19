@@ -88,11 +88,9 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
         "*** DD4hep : auto generated cylindrical detector builder  ***";
     dCfg.name = "Cylindrical detector from DD4hep blueprint";
     dCfg.builder = detectorBuilder;
-    if (options.geoIdGenerator != nullptr) {
-      dCfg.geoIdGenerator = options.geoIdGenerator;
-    } else {
-      dCfg.geoIdGenerator = dd4hepBlueprint->geoIdGenerator;
-    }
+    dCfg.geoIdGenerator = options.geoIdGenerator != nullptr
+                              ? options.geoIdGenerator
+                              : dd4hepBlueprint->geoIdGenerator;
     detector = DetectorBuilder(dCfg, getDefaultLogger("DD4hepDetectorBuilder",
                                                       options.logLevel))
                    .construct(gctx);

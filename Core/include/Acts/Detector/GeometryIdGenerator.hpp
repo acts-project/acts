@@ -77,8 +77,8 @@ class GeometryIdGenerator final : public IGeometryIdGenerator {
 
   ~GeometryIdGenerator() override = default;
 
-  /// @brief Interface method to generata a geometry id cache
-  /// @return a geometry id cache decorated in a std::any object
+  /// @brief Interface method to generate a geometry id cache
+  /// @return a geometry id cache wrapped in a std::any object
   IGeometryIdGenerator::GeoIdCache generateCache() const final;
 
   /// @brief Method for assigning a geometry id to a detector volume
@@ -122,10 +122,9 @@ class GeometryIdGenerator final : public IGeometryIdGenerator {
 };
 
 /// This is a chained tgeometry id generator that will be in seuqnce
-/// @tparam generators_t the gnernerators that will be called in sequence
+/// @tparam generators_t the generators that will be called in sequence
 ///
-/// @note the generators are expected to be move constructable
-/// and of pointer type
+/// @note the generators are expected to be of pointer type
 template <typename... generators_t>
 class ChainedGeometryIdGenerator : public IGeometryIdGenerator {
  public:
@@ -149,8 +148,8 @@ class ChainedGeometryIdGenerator : public IGeometryIdGenerator {
                                                   Logging::INFO))
       : generators(std::move(gens)), m_logger(std::move(mlogger)) {}
 
-  /// @brief Interface method to generata a geometry id cache
-  /// @return a geometry id cache decorated in a std::any object
+  /// @brief Interface method to generate a geometry id cache
+  /// @return a geometry id cache wrapped in a std::any object
   IGeometryIdGenerator::GeoIdCache generateCache() const final {
     // Unfold the tuple and add the attachers
     Cache cache;

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,6 +22,13 @@ namespace Experimental {
 /// @brief This is a mapper of geometry ids, which can be used to
 /// assign predefined geometry ids to objects
 ///
+/// @tparam SourceIdentifier is the type of the source identifier
+/// @tparam SourceCapture is the type of the source capture function/struct
+///
+/// The source capture function/struct is a callable object/funciton that
+/// can navigate from the provided surface to the source identifier. Usually
+/// this would happen via the associated detector element.
+///
 /// The only requirement is that the source identifier can be established
 /// from the object that receives the target geometry id itself.
 template <typename SourceIdentifier, typename SourceCapture>
@@ -37,9 +44,9 @@ class GeometryIdMapper final : public IGeometryIdGenerator {
 
   /// @brief Cache object
   struct Cache {
-    unsigned int volumeCounter = 0;
-    unsigned int portalCounter = 0;
-    unsigned int surfaceCounter = 0;
+    unsigned int volumeCounter = 0u;
+    unsigned int portalCounter = 0u;
+    unsigned int surfaceCounter = 0u;
   };
 
   /// @brief Constructor with config
@@ -53,10 +60,10 @@ class GeometryIdMapper final : public IGeometryIdGenerator {
 
   ~GeometryIdMapper() override = default;
 
-  /// @brief Interface method to generata a geometry id cache
-  /// @return a geometry id cache decorated in a std::any object
+  /// @brief Interface method to generate a geometry id cache
+  /// @return a geometry id cache wrapped in a std::any object
   IGeometryIdGenerator::GeoIdCache generateCache() const final {
-    return Cache{0};
+    return Cache{0u, 0u, 0u};
   }
 
   /// @brief Method for assigning a geometry id to a detector volume

@@ -81,8 +81,8 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
 struct GeoIdIncrementer : public IGeometryIdGenerator {
   struct Cache {};
 
-  /// @brief Interface method to generata a geometry id cache
-  /// @return a geometry id cache decorated in a std::any object
+  /// @brief Interface method to generate a geometry id cache
+  /// @return a geometry id cache wrapped in a std::any object
   IGeometryIdGenerator::GeoIdCache generateCache() const final {
     // Unfold the tuple and add the attachers
     return Cache{};
@@ -117,7 +117,7 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*unused*/,
                         Surface& surface) const final {
     auto sgid = surface.geometryId();
-    if (sgid.sensitive() != 0u){
+    if (sgid.sensitive() != 0u) {
       sgid.setSensitive(sgid.sensitive() + 1);
     } else {
       sgid.setPassive(sgid.passive() + 1);
