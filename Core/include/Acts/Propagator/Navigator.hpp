@@ -500,10 +500,8 @@ class Navigator {
       // A re-intersection would be better but is costly. Due to this
       // optimization the lengths are not measured from the same reference
       // point.
-      for (std::size_t i = state.navigation.candidateIndex;
-           i < state.navigation.candidates.size(); ++i) {
-        state.navigation.candidates[i].intersection.pathLength() -=
-            intersection.pathLength();
+      for (auto& c : state.navigation.candidates) {
+        c.intersection.pathLength() -= intersection.pathLength();
       }
 
       std::size_t surfaces = initializeLayerSurfaceCandidates(state, stepper);
