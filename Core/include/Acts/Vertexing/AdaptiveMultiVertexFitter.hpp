@@ -44,10 +44,6 @@ class AdaptiveMultiVertexFitter {
  public:
   using Linearizer_t = linearizer_t;
 
- private:
-  using IPEstimator = ImpactPointEstimator;
-
- public:
   /// @brief The fitter state
   struct State {
     State(const MagneticFieldProvider& field,
@@ -60,8 +56,7 @@ class AdaptiveMultiVertexFitter {
     // Annealing state
     AnnealingUtility::State annealingState;
 
-    // IPEstimator state
-    typename IPEstimator::State ipState;
+    ImpactPointEstimator::State ipState;
 
     MagneticFieldProvider::Cache fieldCache;
 
@@ -114,10 +109,10 @@ class AdaptiveMultiVertexFitter {
     /// @brief Config constructor
     ///
     /// @param est ImpactPointEstimator
-    Config(IPEstimator est) : ipEst(std::move(est)) {}
+    Config(ImpactPointEstimator est) : ipEst(std::move(est)) {}
 
     // ImpactPointEstimator
-    IPEstimator ipEst;
+    ImpactPointEstimator ipEst;
 
     /// Annealing tool used for a thermodynamic annealing scheme for the
     /// track weight factors in such a way that with high temperature values
