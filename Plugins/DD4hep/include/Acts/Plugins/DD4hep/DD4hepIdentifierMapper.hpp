@@ -23,14 +23,14 @@ using DD4hepIdentifier = DD4hepDetectorElement::DD4hepVolumeID;
 ///
 /// It can be used for mapping/assigning geometry ids to surfaces
 struct DD4hepIdentifierCapture {
-  /// @brief Return an invalid identifier for volumes as they are not direclty translated
+  /// @brief Return an invalid identifier for volumes as they are not directly translated
   /// @return maximum value
   DD4hepIdentifier operator()(
       const Acts::Experimental::DetectorVolume& /*unused*/) const {
     return std::numeric_limits<DD4hepIdentifier>::max();
   }
 
-  /// @brief Return an invalid identifier for portal objects as they are not direclty translated
+  /// @brief Return an invalid identifier for portal objects as they are not directly translated
   /// @return maximum value
   DD4hepIdentifier operator()(
       const Acts::Experimental::Portal& /*unused*/) const {
