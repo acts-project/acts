@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   VectorMultiTrajectory t;
   auto i0 = t.addTrackState();
 
-  BOOST_CHECK(!t.ReadOnly);
+  BOOST_CHECK(!IsReadOnlyMultiTrajectory<decltype(t)>::value);
 
   {
     VectorMultiTrajectory::TrackStateProxy tsp = t.getTrackState(i0);
