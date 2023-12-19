@@ -95,7 +95,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
 
   Acts::GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
-  Seeder seeder{{{densityCfg}}};
+  auto seeder = std::make_shared<Seeder>(Seeder::Config{{densityCfg}});
   // Set up the actual vertex finder
   Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
   finderCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);

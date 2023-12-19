@@ -112,13 +112,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
+  using SeedFinder = TrackDensityVertexFinder<GaussianTrackDensity>;
 
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  SeedFinder seedFinder{{densityCfg}};
+  auto seedFinder =
+      std::make_shared<SeedFinder>(SeedFinder::Config{densityCfg});
 
-  using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+  using Finder = AdaptiveMultiVertexFinder<Fitter>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
                               bField);
@@ -273,13 +274,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
+  using SeedFinder = TrackDensityVertexFinder<GaussianTrackDensity>;
 
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect(extractParameters);
-  SeedFinder seedFinder({densityCfg});
+  auto seedFinder =
+      std::make_shared<SeedFinder>(SeedFinder::Config{densityCfg});
 
-  using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+  using Finder = AdaptiveMultiVertexFinder<Fitter>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
                               bField);
@@ -424,9 +426,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
   seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  SeedFinder seedFinder(seedFinderCfg);
+  auto seedFinder = std::make_shared<SeedFinder>(seedFinderCfg);
 
-  using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+  using Finder = AdaptiveMultiVertexFinder<Fitter>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               bField);
@@ -578,14 +580,14 @@ BOOST_AUTO_TEST_CASE(
   gridDensityCfg.spatialBinExtent = 0.05;
   AdaptiveGridTrackDensity gridDensity(gridDensityCfg);
 
-  using SeedFinder = AdaptiveGridDensityVertexFinder<>;
+  using SeedFinder = AdaptiveGridDensityVertexFinder;
   SeedFinder::Config seedFinderCfg(gridDensity);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
   seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  SeedFinder seedFinder(seedFinderCfg);
+  auto seedFinder = std::make_shared<SeedFinder>(seedFinderCfg);
 
-  using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+  using Finder = AdaptiveMultiVertexFinder<Fitter>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               bField);

@@ -58,8 +58,7 @@ namespace Acts {
 ////////////////////////////////////////////////////////////
 ///
 /// @tparam vfitter_t Vertex fitter type
-/// @tparam sfinder_t Seed finder type
-template <typename vfitter_t, typename sfinder_t>
+template <typename vfitter_t>
 class IterativeVertexFinder final : public IVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
@@ -73,7 +72,8 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(vfitter_t fitter, sfinder_t sfinder, ImpactPointEstimator est)
+    Config(vfitter_t fitter, std::shared_ptr<IVertexFinder> sfinder,
+           ImpactPointEstimator est)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEst(std::move(est)) {}
@@ -85,7 +85,7 @@ class IterativeVertexFinder final : public IVertexFinder {
     TrackLinearizer trackLinearizer;
 
     /// Vertex seed finder
-    sfinder_t seedFinder;
+    std::shared_ptr<IVertexFinder> seedFinder;
 
     /// ImpactPointEstimator
     ImpactPointEstimator ipEst;
@@ -155,7 +155,13 @@ class IterativeVertexFinder final : public IVertexFinder {
           "No track linearizer provided.");
     }
 
-    if (!m_cfg.seedFinder.hasTrivialState()) {
+    if (!m_cfg.seedFinder) {
+      throw std::invalid_argument(
+          "IterativeVertexFinder: "
+          "No seed finder provided.");
+    }
+
+    if (!m_cfg.seedFinder->hasTrivialState()) {
       throw std::invalid_argument(
           "IterativeVertexFinder: "
           "Seed finder must have trivial state.");

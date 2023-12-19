@@ -31,11 +31,7 @@ namespace Acts {
 /// 2. If no constraint is given, returns (0,0, z0_mode) as vertex position
 /// 3. If vertex constraint is given with x=x_constr and y=y_constr,
 ///    the returned vertex position will be (x_constr, y_constr, z0_mode).
-template <typename vfitter_t>
 class ZScanVertexFinder final : public IVertexFinder {
-  static_assert(VertexFitterConcept<vfitter_t>,
-                "Vertex fitter does not fulfill vertex fitter concept.");
-
  public:
   /// Configuration struct
   struct Config {

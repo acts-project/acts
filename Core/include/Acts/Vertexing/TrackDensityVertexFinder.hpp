@@ -30,16 +30,9 @@ namespace Acts {
 ///
 /// Ref. (1): https://cds.cern.ch/record/2670380
 ///
-/// @tparam vfitter_t The vertex fitter type (needed to fulfill concept)
 /// @tparam track_density_t The track density type
-template <typename vfitter_t, typename track_density_t = GaussianTrackDensity>
+template <typename track_density_t = GaussianTrackDensity>
 class TrackDensityVertexFinder final : public IVertexFinder {
-  // Provided vertex fitter type should comply with the VertexFitterConcept
-  // to ensure providing an input track type InputTrack_t
-
-  // static_assert(VertexFitterConcept<vfitter_t>,
-  //              "Vertex fitter does not fulfill vertex fitter concept.");
-
  public:
   /// @brief The Config struct
   struct Config {

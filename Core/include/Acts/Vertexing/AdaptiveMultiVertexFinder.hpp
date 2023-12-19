@@ -33,19 +33,9 @@ namespace Acts {
 ///
 /// @tparam vfitter_t Vertex fitter type
 /// @tparam sfinder_t Seed finder type
-template <typename vfitter_t, typename sfinder_t>
+template <typename vfitter_t>
 class AdaptiveMultiVertexFinder final : public IVertexFinder {
   using FitterState_t = typename vfitter_t::State;
-  using SeedFinderState_t = typename sfinder_t::State;
-
-  template <typename T, typename = int>
-  struct NeedsRemovedTracks : std::false_type {};
-
-#ifndef DOXYGEN
-  template <typename T>
-  struct NeedsRemovedTracks<T, decltype((void)T::tracksToRemove, 0)>
-      : std::true_type {};
-#endif
 
  public:
   /// Configuration struct
@@ -56,7 +46,8 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     /// @param sfinder The seed finder
     /// @param ipEst ImpactPointEstimator
     /// @param bIn Input magnetic field
-    Config(vfitter_t fitter, sfinder_t sfinder, ImpactPointEstimator ipEst,
+    Config(vfitter_t fitter, std::shared_ptr<const IVertexFinder> sfinder,
+           ImpactPointEstimator ipEst,
            std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
@@ -67,7 +58,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     vfitter_t vertexFitter;
 
     // Vertex seed finder
-    sfinder_t seedFinder;
+    std::shared_ptr<const IVertexFinder> seedFinder;
 
     // ImpactPointEstimator
     ImpactPointEstimator ipEstimator;
@@ -181,7 +172,13 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
           "from InputTrack provided.");
     }
 
-    if (!m_cfg.seedFinder.hasTrivialState()) {
+    if (!m_cfg.seedFinder) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFinder: "
+          "No vertex fitter provided.");
+    }
+
+    if (!m_cfg.seedFinder->hasTrivialState()) {
       throw std::invalid_argument(
           "AdaptiveMultiVertexFinder: "
           "Seed finder state must be trivial.");
@@ -206,9 +203,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     return IVertexFinder::State{State{}};
   }
 
-  bool hasTrivialState() const override {
-    return true;
-  }
+  bool hasTrivialState() const override { return true; }
 
  private:
   /// Configuration object

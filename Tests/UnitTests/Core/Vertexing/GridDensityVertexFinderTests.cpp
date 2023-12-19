@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder<>;
+  using Finder2 = AdaptiveGridDensityVertexFinder;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = false;
   cfg2.extractParameters.connect<&InputTrack::extractParameters>();
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   adaptiveDensityConfig.useHighestSumZPosition = true;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder<>;
+  using Finder2 = AdaptiveGridDensityVertexFinder;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = true;
   cfg2.extractParameters.connect<&InputTrack::extractParameters>();
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder<>;
+  using Finder2 = AdaptiveGridDensityVertexFinder;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = false;
   cfg2.estimateSeedWidth = true;

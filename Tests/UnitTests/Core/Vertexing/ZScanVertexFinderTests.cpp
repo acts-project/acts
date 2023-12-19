@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
       inputTracks.emplace_back(&trk);
     }
 
-    using VertexFinder = ZScanVertexFinder<BilloirFitter>;
+    using VertexFinder = ZScanVertexFinder;
 
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
       inputTracks.emplace_back(&trk);
     }
 
-    using VertexFinder = ZScanVertexFinder<BilloirFitter>;
+    using VertexFinder = ZScanVertexFinder;
 
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
