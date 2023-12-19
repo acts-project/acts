@@ -31,7 +31,7 @@ void Acts::GridBinFinder<DIM>::storeValue(first_value_t&& fv,
     m_values[DIM - N - 1ul] = fv;
   } else {
     /// If vector of pairs -> also allow for empty vectors
-    if (not fv.empty()) {
+    if (!fv.empty()) {
       m_values[DIM - N - 1ul] = std::forward<first_value_t>(fv);
     } else {
       m_values[DIM - N - 1ul] = 1;
@@ -72,12 +72,12 @@ template <typename stored_t, class... Axes>
 boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)>
 Acts::GridBinFinder<DIM>::findBins(
     const std::array<std::size_t, DIM>& locPosition,
-    const Acts::Grid<stored_t, Axes...>& binnedSP) const {
+    const Acts::Grid<stored_t, Axes...>& grid) const {
   static_assert(sizeof...(Axes) == DIM);
-  assert(isGridCompatible(binnedSP));
+  assert(isGridCompatible(grid));
   std::array<std::pair<int, int>, DIM> sizePerAxis =
       getSizePerAxis(locPosition);
-  return binnedSP.neighborHoodIndices(locPosition, sizePerAxis).collect();
+  return grid.neighborHoodIndices(locPosition, sizePerAxis).collect();
 }
 
 template <std::size_t DIM>
@@ -97,7 +97,7 @@ bool Acts::GridBinFinder<DIM>::isGridCompatible(
           }
         },
         m_values[i]);
-    if (not isCompabile) {
+    if (!isCompabile) {
       return false;
     }
   }

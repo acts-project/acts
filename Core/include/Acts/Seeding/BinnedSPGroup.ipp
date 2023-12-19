@@ -97,7 +97,10 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
     Acts::Extent& rRangeSPExtent,
     const SeedFinderConfig<external_spacepoint_t>& config,
-    const SeedFinderOptions& options) {
+    const SeedFinderOptions& options)
+    : m_grid(std::move(grid)),
+      m_topBinFinder(std::move(tBinFinder)),
+      m_bottomBinFinder(std::move(botBinFinder)) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
@@ -168,20 +171,20 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     // fill rbins into grid
     Acts::Vector2 spLocation(isp->phi(), isp->z());
     std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-        rbin = grid->atPosition(spLocation);
+        rbin = m_grid->atPosition(spLocation);
     rbin.push_back(std::move(isp));
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
     if (rbin.size() > 1) {
-      rBinsIndex.insert(grid->globalBinFromPosition(spLocation));
+      rBinsIndex.insert(m_grid->globalBinFromPosition(spLocation));
     }
   }
 
   // sort SPs in R for each filled (z, phi) bin
   for (auto& binIndex : rBinsIndex) {
     std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-        rbin = grid->atPosition(binIndex);
+        rbin = m_grid->atPosition(binIndex);
     std::sort(
         rbin.begin(), rbin.end(),
         [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
@@ -189,10 +192,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
           return a->radius() < b->radius();
         });
   }
-
-  m_grid = std::move(grid);
-  m_bottomBinFinder = botBinFinder;
-  m_topBinFinder = tBinFinder;
 
   m_skipZMiddleBin = config.skipZMiddleBinSearch;
 
