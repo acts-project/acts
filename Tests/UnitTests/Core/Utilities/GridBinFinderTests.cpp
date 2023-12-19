@@ -235,6 +235,37 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pattern) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_empty_pattern) {
+  const std::size_t nBinsX = 5ul;
+  const std::size_t nBinsY = 3ul;
+  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
+  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
+  Acts::Grid<double, Acts::detail::EquidistantAxis,
+             Acts::detail::EquidistantAxis>
+      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+
+  std::array<std::vector<std::size_t>, 2ul> navigation;
+  navigation[0ul].resize(nBinsX);
+  navigation[1ul].resize(nBinsY);
+  std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
+  std::iota(navigation[1ul].begin(), navigation[1ul].end(), 1ul);
+
+  std::vector<std::pair<int, int>> neighboursX;
+  std::vector<std::pair<int, int>> neighboursY;
+
+  auto startGrid = grid.begin(navigation);
+  auto stopGrid = grid.end(navigation);
+
+  Acts::GridBinFinder<2ul> binFinder(std::move(neighboursX),
+                                     std::move(neighboursY));
+
+  for (; startGrid != stopGrid; startGrid++) {
+    std::array<std::size_t, 2ul> locPosition = startGrid.localPosition();
+    auto all_neigh = binFinder.findBins(locPosition, grid);
+    BOOST_CHECK_EQUAL(all_neigh.size(), 9ul);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_mixed) {
   const std::size_t nBinsX = 5ul;
   const std::size_t nBinsY = 3ul;
