@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/DummyVertexFitter.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
@@ -31,7 +32,7 @@ namespace Acts {
 ///
 /// @tparam vfitter_t Vertex fitter type
 template <typename vfitter_t = DummyVertexFitter<>>
-class AdaptiveGridDensityVertexFinder {
+class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   using GridDensity = AdaptiveGridTrackDensity;
 
  public:
@@ -95,7 +96,13 @@ class AdaptiveGridDensityVertexFinder {
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+                                   IVertexFinder::State& state) const override;
+
+  IVertexFinder::State makeState() const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  bool hasTrivialState() const override { return true; }
 
   /// @brief Constructor for user-defined InputTrack type
   ///

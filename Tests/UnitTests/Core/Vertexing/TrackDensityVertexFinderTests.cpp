@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   Finder finder{{{densityCfg}}};
-  Finder::State state;
+  auto state = finder.makeState();
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   Finder finder{{{densityCfg}}};
-  Finder::State state;
+  auto state = finder.makeState();
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   Finder finder{{{densityCfg}}};
-  Finder::State state;
+  auto state = finder.makeState();
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect(extractParameters);
   Finder finder{{{densityCfg}}};
-  Finder::State state;
+  auto state = finder.makeState();
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();

@@ -32,6 +32,7 @@
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
   Finder finder(std::move(finderConfig));
-  Finder::State state;
+  IVertexFinder::State state = finder.makeState();
 
   auto csvData = readTracksAndVertexCSV(toolString);
   std::vector<BoundTrackParameters> tracks = std::get<TracksData>(csvData);
@@ -283,9 +284,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
                               bField);
   finderConfig.extractParameters.connect(extractParameters);
-  Finder::State state;
 
   Finder finder(std::move(finderConfig));
+  IVertexFinder::State state = finder.makeState();
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -432,7 +433,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
   Finder finder(std::move(finderConfig));
-  Finder::State state;
+  IVertexFinder::State state = finder.makeState();
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -591,7 +592,7 @@ BOOST_AUTO_TEST_CASE(
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
   Finder finder(std::move(finderConfig));
-  Finder::State state;
+  IVertexFinder::State state = finder.makeState();
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);

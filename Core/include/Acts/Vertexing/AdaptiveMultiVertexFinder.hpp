@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -33,7 +34,7 @@ namespace Acts {
 /// @tparam vfitter_t Vertex fitter type
 /// @tparam sfinder_t Seed finder type
 template <typename vfitter_t, typename sfinder_t>
-class AdaptiveMultiVertexFinder {
+class AdaptiveMultiVertexFinder final : public IVertexFinder {
   using FitterState_t = typename vfitter_t::State;
   using SeedFinderState_t = typename sfinder_t::State;
 
@@ -179,6 +180,12 @@ class AdaptiveMultiVertexFinder {
           "No function to extract parameters "
           "from InputTrack provided.");
     }
+
+    if (!m_cfg.seedFinder.hasTrivialState()) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFinder: "
+          "Seed finder state must be trivial.");
+    }
   }
 
   AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
@@ -193,7 +200,15 @@ class AdaptiveMultiVertexFinder {
   /// @return Vector of all reconstructed vertices
   Result<std::vector<Vertex>> find(const std::vector<InputTrack>& allTracks,
                                    const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+                                   IVertexFinder::State& state) const override;
+
+  IVertexFinder::State makeState() const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  bool hasTrivialState() const override {
+    return true;
+  }
 
  private:
   /// Configuration object
@@ -221,7 +236,7 @@ class AdaptiveMultiVertexFinder {
   Result<Vertex> doSeeding(
       const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
       const VertexingOptions& vertexingOptions,
-      SeedFinderState_t& seedFinderState,
+      IVertexFinder::State& seedFinderState,
       const std::vector<InputTrack>& removedSeedTracks) const;
 
   /// @brief Sets constraint vertex after seeding

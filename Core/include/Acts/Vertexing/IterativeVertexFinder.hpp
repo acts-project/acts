@@ -16,6 +16,7 @@
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -59,7 +60,7 @@ namespace Acts {
 /// @tparam vfitter_t Vertex fitter type
 /// @tparam sfinder_t Seed finder type
 template <typename vfitter_t, typename sfinder_t>
-class IterativeVertexFinder {
+class IterativeVertexFinder final : public IVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
 
@@ -153,6 +154,12 @@ class IterativeVertexFinder {
           "IterativeVertexFinder: "
           "No track linearizer provided.");
     }
+
+    if (!m_cfg.seedFinder.hasTrivialState()) {
+      throw std::invalid_argument(
+          "IterativeVertexFinder: "
+          "Seed finder must have trivial state.");
+    }
   }
 
   /// @brief Finds vertices corresponding to input trackVector
@@ -164,7 +171,14 @@ class IterativeVertexFinder {
   /// @return Collection of vertices found by finder
   Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+                                   IVertexFinder::State& state) const override;
+
+  IVertexFinder::State makeState() const override {
+    // @TODO: This is not great
+    throw std::runtime_error("Not implemented");
+  }
+
+  bool hasTrivialState() const override { return false; }
 
  private:
   /// Configuration object

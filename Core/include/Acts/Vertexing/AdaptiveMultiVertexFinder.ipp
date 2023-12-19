@@ -12,12 +12,13 @@
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     const std::vector<InputTrack>& allTracks,
-    const VertexingOptions& vertexingOptions, State& /*state*/) const
-    -> Result<std::vector<Vertex>> {
+    const VertexingOptions& vertexingOptions,
+    IVertexFinder::State& /*state*/) const -> Result<std::vector<Vertex>> {
   if (allTracks.empty()) {
     ACTS_ERROR("Empty track collection handed to find method");
     return VertexingError::EmptyInput;
   }
+
   // Original tracks
   const std::vector<InputTrack>& origTracks = allTracks;
 
@@ -25,7 +26,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   std::vector<InputTrack> seedTracks = allTracks;
 
   FitterState_t fitterState(*m_cfg.bField, vertexingOptions.magFieldContext);
-  SeedFinderState_t seedFinderState;
+  auto seedFinderState = m_cfg.seedFinder.makeState();
 
   std::vector<std::unique_ptr<Vertex>> allVertices;
 
@@ -141,13 +142,13 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
     const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
     const VertexingOptions& vertexingOptions,
-    SeedFinderState_t& seedFinderState,
+    IVertexFinder::State& seedFinderState,
     const std::vector<InputTrack>& removedSeedTracks) const -> Result<Vertex> {
   VertexingOptions seedOptions = vertexingOptions;
   seedOptions.constraint = currentConstraint;
 
   if constexpr (NeedsRemovedTracks<typename sfinder_t::State>::value) {
-    seedFinderState.tracksToRemove = removedSeedTracks;
+    m_cfg.seedFinder.setTrackToRemove(seedFinderState, removedSeedTracks);
   }
 
   // Run seed finder
