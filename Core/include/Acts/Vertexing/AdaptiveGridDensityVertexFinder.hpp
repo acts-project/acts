@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
@@ -74,9 +73,6 @@ class AdaptiveGridDensityVertexFinder {
 
     // Map from input track to corresponding track density map
     std::unordered_map<const InputTrack_t*, DensityMap> trackDensities;
-
-    // Map to store bool if track has passed track selection or not
-    std::unordered_map<const InputTrack_t*, bool> trackSelectionMap;
 
     // Store tracks that have been removed from track collection. These
     // tracks will be removed from the main grid
