@@ -18,6 +18,22 @@
 
 namespace Acts::Test {
 
+BOOST_AUTO_TEST_CASE(grid_binfinder_constructor) {
+  using list_t = std::vector<std::pair<int, int>>;
+  Acts::GridBinFinder<1ul> binFinder_1d_1(1);
+  Acts::GridBinFinder<1ul> binFinder_1d_2(list_t({}));
+  Acts::GridBinFinder<1ul> binFinder_1d_3(list_t({{0, 2}, {-1, 1}}));
+
+  Acts::GridBinFinder<2ul> binFinder_2d_1(1, 5);
+  Acts::GridBinFinder<2ul> binFinder_2d_2(list_t({}),
+                                          list_t({{0, 2}, {-1, 1}}));
+  Acts::GridBinFinder<2ul> binFinder_2d_3(list_t({}), 2);
+
+  Acts::GridBinFinder<3ul> binFinder_3d_1(1, 1, 5);
+
+  Acts::GridBinFinder<10ul> binFinder_10d_1(1, 1, 5, 0, 4, 2, 3, 1, 1, 9);
+}
+
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_ints) {
   const std::size_t nBins = 10ul;
   Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
