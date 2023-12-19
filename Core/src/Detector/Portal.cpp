@@ -88,7 +88,7 @@ std::shared_ptr<Portal> Portal::fuse(std::shared_ptr<Portal>& aPortal,
   Direction setA = getA;
   Direction setB = setA.invert();
 
-  // Checkif material is associated
+  // Check if material is associated
   const auto& aSurface = aPortal->surface();
   const auto& bSurface = bPortal->surface();
 
