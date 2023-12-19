@@ -70,8 +70,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
-  using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  using Finder = TrackDensityVertexFinder<GaussianTrackDensity>;
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   Finder finder{{{densityCfg}}};
@@ -151,8 +150,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // Finder options
   VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
-  using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  using Finder = TrackDensityVertexFinder<GaussianTrackDensity>;
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   Finder finder{{{densityCfg}}};
@@ -229,8 +227,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
-  using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  using Finder = TrackDensityVertexFinder<GaussianTrackDensity>;
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   Finder finder{{{densityCfg}}};
@@ -331,8 +328,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
     return params.as<InputTrackStub>()->parameters();
   };
 
-  using Finder = TrackDensityVertexFinder<DummyVertexFitter<InputTrackStub>,
-                                          GaussianTrackDensity>;
+  using Finder = TrackDensityVertexFinder<GaussianTrackDensity>;
 
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect(extractParameters);

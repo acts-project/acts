@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename vfitter_t, typename sfinder_t>
-auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
+template <typename vfitter_t>
+auto Acts::IterativeVertexFinder<vfitter_t>::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions, IVertexFinder::State& state) const
     -> Result<std::vector<Vertex>> {
@@ -156,12 +156,12 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
   return vertexCollection;
 }
 
-template <typename vfitter_t, typename sfinder_t>
-auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
+template <typename vfitter_t>
+auto Acts::IterativeVertexFinder<vfitter_t>::getVertexSeed(
     const std::vector<InputTrack>& seedTracks,
     const VertexingOptions& vertexingOptions) const -> Result<Vertex> {
-  auto finderState = m_cfg.seedFinder.makeState();
-  auto res = m_cfg.seedFinder.find(seedTracks, vertexingOptions, finderState);
+  auto finderState = m_cfg.seedFinder->makeState();
+  auto res = m_cfg.seedFinder->find(seedTracks, vertexingOptions, finderState);
 
   if (!res.ok()) {
     ACTS_ERROR("Internal seeding error. Number of input tracks: "
@@ -190,8 +190,8 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
   return seedVertex;
 }
 
-template <typename vfitter_t, typename sfinder_t>
-void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeTracks(
+template <typename vfitter_t>
+void Acts::IterativeVertexFinder<vfitter_t>::removeTracks(
     const std::vector<InputTrack>& tracksToRemove,
     std::vector<InputTrack>& seedTracks) const {
   for (const auto& trk : tracksToRemove) {
@@ -211,9 +211,8 @@ void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeTracks(
   }
 }
 
-template <typename vfitter_t, typename sfinder_t>
-Acts::Result<double>
-Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
+template <typename vfitter_t>
+Acts::Result<double> Acts::IterativeVertexFinder<vfitter_t>::getCompatibility(
     const BoundTrackParameters& params, const Vertex& vertex,
     const Surface& perigeeSurface, const VertexingOptions& vertexingOptions,
     State& state) const {
@@ -248,9 +247,9 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
   return compatibility;
 }
 
-template <typename vfitter_t, typename sfinder_t>
+template <typename vfitter_t>
 Acts::Result<void>
-Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
+Acts::IterativeVertexFinder<vfitter_t>::removeUsedCompatibleTracks(
     Vertex& vertex, std::vector<InputTrack>& tracksToFit,
     std::vector<InputTrack>& seedTracks,
     const VertexingOptions& vertexingOptions, State& state) const {
@@ -341,9 +340,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
   return {};
 }
 
-template <typename vfitter_t, typename sfinder_t>
-Acts::Result<void>
-Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
+template <typename vfitter_t>
+Acts::Result<void> Acts::IterativeVertexFinder<vfitter_t>::fillTracksToFit(
     const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
     std::vector<InputTrack>& tracksToFitOut,
     std::vector<InputTrack>& tracksToFitSplitVertexOut,
@@ -415,9 +413,9 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
   return {};
 }
 
-template <typename vfitter_t, typename sfinder_t>
+template <typename vfitter_t>
 Acts::Result<bool>
-Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
+Acts::IterativeVertexFinder<vfitter_t>::reassignTracksToNewVertex(
     std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
     std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
     const std::vector<InputTrack>& /* origTracks */,
@@ -549,8 +547,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
   return Result<bool>::success(isGoodVertex);
 }
 
-template <typename vfitter_t, typename sfinder_t>
-int Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::countSignificantTracks(
+template <typename vfitter_t>
+int Acts::IterativeVertexFinder<vfitter_t>::countSignificantTracks(
     const Vertex& vtx) const {
   return std::count_if(vtx.tracks().begin(), vtx.tracks().end(),
                        [this](const TrackAtVertex& trk) {

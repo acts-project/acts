@@ -153,15 +153,15 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-    using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
+    using ZScanSeedFinder = ZScanVertexFinder;
 
     ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
     seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-    ZScanSeedFinder sFinder(seedFinderCfg);
+    auto sFinder = std::make_shared<ZScanSeedFinder>(seedFinderCfg);
 
     // Vertex Finder
-    using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
+    using VertexFinder = IterativeVertexFinder<BilloirFitter>;
 
     VertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
                              ipEstimator);
@@ -375,14 +375,14 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-    using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
+    using ZScanSeedFinder = ZScanVertexFinder;
     ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
     seedFinderCfg.extractParameters.connect(extractParameters);
 
-    ZScanSeedFinder sFinder(seedFinderCfg);
+    auto sFinder = std::make_shared<ZScanSeedFinder>(seedFinderCfg);
 
     // Vertex Finder
-    using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
+    using VertexFinder = IterativeVertexFinder<BilloirFitter>;
     VertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
                              ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
@@ -577,15 +577,15 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-  using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
+  using ZScanSeedFinder = ZScanVertexFinder;
 
   ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
   seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  ZScanSeedFinder sFinder(seedFinderCfg);
+  auto sFinder = std::make_shared<ZScanSeedFinder>(seedFinderCfg);
 
   // Vertex Finder
-  using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
+  using VertexFinder = IterativeVertexFinder<BilloirFitter>;
 
   VertexFinder::Config cfg(std::move(bFitter), std::move(sFinder), ipEstimator);
   cfg.maxVertices = 200;

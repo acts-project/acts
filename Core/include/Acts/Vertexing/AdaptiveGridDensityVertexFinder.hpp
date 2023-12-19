@@ -29,9 +29,6 @@ namespace Acts {
 /// with the highest track density is returned as a vertex candidate.
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
-///
-/// @tparam vfitter_t Vertex fitter type
-template <typename vfitter_t = DummyVertexFitter<>>
 class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   using GridDensity = AdaptiveGridTrackDensity;
 
