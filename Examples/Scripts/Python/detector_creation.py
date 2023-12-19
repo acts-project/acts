@@ -25,21 +25,25 @@ if "__main__" == __name__:
     dd4hepGeometryService = DD4hepGeometryService(dd4hepConfig)
     dd4hepDetector = DD4hepDetector(dd4hepGeometryService)
 
-
     cOptions = DD4hepDetectorOptions(logLevel=acts.logging.VERBOSE, emulateToGraph="")
 
     # Uncomment if you want to use the geometry id mapping
     # This map can be produced with the 'geometry.py' script
-    geoIdMappingFile = None # 'odd-dd4hep-geoid-mapping.json'
+    geoIdMappingFile = None  # 'odd-dd4hep-geoid-mapping.json'
     if geoIdMappingFile is not None:
         # Load the geometry id mapping json file
         with open(geoIdMappingFile) as f:
-          # load the file as is
-          geometry_id_mapping = json.load(f)
-          # create a dictionary with GeometryIdentifier as value
-          geometry_id_mapping_patched = {int(k): acts.GeometryIdentifier(int(v)) for k, v in geometry_id_mapping.items()}
-          # patch the options struct
-          acts.examples.dd4hep.attachDD4hepGeoIdMapper(cOptions, geometry_id_mapping_patched)
+            # load the file as is
+            geometry_id_mapping = json.load(f)
+            # create a dictionary with GeometryIdentifier as value
+            geometry_id_mapping_patched = {
+                int(k): acts.GeometryIdentifier(int(v))
+                for k, v in geometry_id_mapping.items()
+            }
+            # patch the options struct
+            acts.examples.dd4hep.attachDD4hepGeoIdMapper(
+                cOptions, geometry_id_mapping_patched
+            )
 
     # Context and options
     geoContext = acts.GeometryContext()
