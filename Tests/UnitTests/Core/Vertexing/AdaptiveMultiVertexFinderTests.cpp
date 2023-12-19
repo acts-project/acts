@@ -558,8 +558,16 @@ BOOST_AUTO_TEST_CASE(
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = AdaptiveGridDensityVertexFinder<55>;
-  SeedFinder::Config seedFinderCfg(0.05);
+  // Grid density used during vertex seed finding
+  AdaptiveGridTrackDensity::Config gridDensityCfg;
+  // force track to have exactly spatialTrkGridSize spatial bins for testing
+  // purposes
+  gridDensityCfg.spatialTrkGridSizeRange = {55, 55};
+  gridDensityCfg.spatialBinExtent = 0.05;
+  AdaptiveGridTrackDensity gridDensity(gridDensityCfg);
+
+  using SeedFinder = AdaptiveGridDensityVertexFinder<>;
+  SeedFinder::Config seedFinderCfg(gridDensity);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
 
   SeedFinder seedFinder(seedFinderCfg);

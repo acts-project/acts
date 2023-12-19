@@ -244,4 +244,16 @@ void VectorMultiTrajectory::reserve(std::size_t n) {
   }
 }
 
+void VectorMultiTrajectory::copyDynamicFrom_impl(IndexType dstIdx,
+                                                 HashedString key,
+                                                 const std::any& srcPtr) {
+  auto it = m_dynamic.find(key);
+  if (it == m_dynamic.end()) {
+    throw std::invalid_argument{
+        "Destination container does not have matching dynamic column"};
+  }
+
+  it->second->copyFrom(dstIdx, srcPtr);
+}
+
 }  // namespace Acts

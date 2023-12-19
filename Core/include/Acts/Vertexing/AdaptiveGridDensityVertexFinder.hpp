@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
@@ -30,34 +29,17 @@ namespace Acts {
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
 ///
-/// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
-/// a single track is modelled as a (trkGridSize x trkGridSize) grid
-/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-template <int spatialTrkGridSize = 15, int temporalTrkGridSize = 1,
-          typename vfitter_t = DummyVertexFitter<>>
+/// @tparam vfitter_t Vertex fitter type
+template <typename vfitter_t = DummyVertexFitter<>>
 class AdaptiveGridDensityVertexFinder {
-  // Assert odd grid sizes
-  static_assert(spatialTrkGridSize % 2);
-  static_assert(temporalTrkGridSize % 2);
-
   using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using GridDensity =
-      AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>;
+  using GridDensity = AdaptiveGridTrackDensity;
 
  public:
   using DensityMap = typename GridDensity::DensityMap;
 
   /// @brief The Config struct
   struct Config {
-    /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    Config(float spatialBinExtent = 0.1)
-        : gridDensity(typename GridDensity::Config(spatialBinExtent)) {}
-    /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    /// @param temporalBinExtent_ The temporal extent of a bin in mm
-    /// @note The speed of light is set to 1, hence the unit.
-    Config(float spatialBinExtent, float temporalBinExtent)
-        : gridDensity(typename GridDensity::Config(spatialBinExtent,
-                                                   temporalBinExtent)) {}
     ///@param gDensity The grid density
     Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
 
@@ -91,9 +73,6 @@ class AdaptiveGridDensityVertexFinder {
 
     // Map from input track to corresponding track density map
     std::unordered_map<const InputTrack_t*, DensityMap> trackDensities;
-
-    // Map to store bool if track has passed track selection or not
-    std::unordered_map<const InputTrack_t*, bool> trackSelectionMap;
 
     // Store tracks that have been removed from track collection. These
     // tracks will be removed from the main grid

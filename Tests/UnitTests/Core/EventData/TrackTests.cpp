@@ -13,17 +13,18 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
-#include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -45,7 +46,8 @@ using namespace Acts::UnitLiterals;
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
-using namespace Acts::Test;
+using namespace Acts::detail::Test;
+
 using MultiTrajectoryTraits::IndexType;
 namespace bd = boost::unit_test::data;
 
@@ -205,6 +207,21 @@ BOOST_AUTO_TEST_CASE(BuildSharedPtr) {
   BOOST_CHECK_EQUAL(vtc.get(), &copy.container());
 }
 
+BOOST_AUTO_TEST_CASE(BuildConvenience) {
+  VectorMultiTrajectory mtj{};
+  VectorTrackContainer vtc{};
+  TrackContainer tc{vtc, mtj};
+
+  BOOST_CHECK_EQUAL(tc.size(), 0);
+  auto track1 = tc.makeTrack();
+  BOOST_CHECK_EQUAL(tc.size(), 1);
+  auto track2 = tc.makeTrack();
+  BOOST_CHECK_EQUAL(tc.size(), 2);
+
+  BOOST_CHECK_EQUAL(track1.index(), 0);
+  BOOST_CHECK_EQUAL(track2.index(), 1);
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   factory_t factory;
 
@@ -244,8 +261,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t.setReferenceSurface(surface);
   BOOST_CHECK_EQUAL(surface.get(), &t.referenceSurface());
 
-  TrackAccessor<unsigned int> accNMeasuements("nMeasurements");
-  ConstTrackAccessor<unsigned int> caccNMeasuements("nMeasurements");
+  ProxyAccessor<unsigned int> accNMeasuements("nMeasurements");
+  ConstProxyAccessor<unsigned int> caccNMeasuements("nMeasurements");
 
   t.nMeasurements() = 42;
   BOOST_CHECK_EQUAL(t2.nMeasurements(), 42);

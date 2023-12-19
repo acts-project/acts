@@ -22,6 +22,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -35,7 +36,6 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
@@ -71,6 +71,7 @@ class TrackingGeometry;
 namespace {
 
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 static const auto pion = Acts::ParticleHypothesis::pion();
