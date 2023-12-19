@@ -48,7 +48,7 @@ class VertexFitterAlgorithm final : public IAlgorithm {
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
   using PropagatorOptions = Acts::PropagatorOptions<>;
   using Linearizer = Acts::HelicalTrackLinearizer;
-  using VertexFitter = Acts::FullBilloirVertexFitter<Linearizer>;
+  using VertexFitter = Acts::FullBilloirVertexFitter;
   using VertexFitterOptions = Acts::VertexingOptions;
 
   using VertexCollection = std::vector<Acts::Vertex>;
