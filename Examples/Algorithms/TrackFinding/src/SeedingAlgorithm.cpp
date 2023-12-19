@@ -205,17 +205,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
-  if (m_cfg.zBinNeighborsBottom.empty()) {
-      m_bottomBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(m_cfg.numPhiNeighbors, 1);
-  } else {
-       m_bottomBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
-  }
-
-  if (m_cfg.zBinNeighborsTop.empty()) {
-     m_topBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(m_cfg.numPhiNeighbors, 1);
-  } else {
-	m_topBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
-  }
+  
+  m_bottomBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
+  m_topBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
 
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
