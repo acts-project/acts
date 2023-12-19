@@ -476,14 +476,18 @@ Acts::TrackingVolume::compatibleBoundaries(
 
   boost::container::small_vector<Acts::BoundaryIntersection, 4> intersections;
 
+  // The limits for this navigation step
+  double nearLimit = options.nearLimit;
+  double farLimit = options.farLimit;
+
   // Helper function to test intersection
   auto checkIntersection =
       [&](SurfaceMultiIntersection& candidates,
           const BoundarySurface* boundary) -> BoundaryIntersection {
     for (const auto& sIntersection : candidates.split()) {
-      if (sIntersection && detail::checkIntersection(
-                               sIntersection.intersection(), options.nearLimit,
-                               options.farLimit, logger)) {
+      if (sIntersection &&
+          detail::checkIntersection(sIntersection.intersection(), nearLimit,
+                                    farLimit, logger)) {
         return BoundaryIntersection(sIntersection, boundary);
       }
     }
