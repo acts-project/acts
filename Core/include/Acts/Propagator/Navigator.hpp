@@ -91,11 +91,11 @@ class Navigator {
     ///       overlap with other surfaces
     bool resolvePassive = false;
 
-    /// Which boundary checks to perform for surface approach
-    BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
     /// Whether to perform boundary checks for layer resolving (improves
     /// navigation for bended tracks)
     BoundaryCheck boundaryCheckLayerResolving = BoundaryCheck(true);
+    /// Which boundary checks to perform for surface approach
+    BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
 
     /// Whether to reinitialize the navigation candidates on layer hit.
     /// This improves navigation for bended tracks but is more expensive.
@@ -511,8 +511,15 @@ class Navigator {
       if (candidate.renavigationFlag) {
         Intersection3D intersection3D = intersection.intersection();
         if (surfaces > 0) {
-          intersection3D =
-              state.navigation.candidates.back().intersection.intersection();
+          auto max =
+              std::max_element(state.navigation.candidates.end() - surfaces,
+                               state.navigation.candidates.end(),
+                               [](const detail::IntersectionCandidate& a,
+                                  const detail::IntersectionCandidate& b) {
+                                 return a.intersection.pathLength() <
+                                        b.intersection.pathLength();
+                               });
+          intersection3D = max->intersection.intersection();
         }
         state.navigation.candidates.emplace_back(
             detail::IntersectionCandidate::createFlag(intersection3D));

@@ -355,7 +355,8 @@ class TryAllOverstepNavigator {
             state.geoContext, end, direction, state.options.surfaceTolerance);
         for (const auto& intersection : intersections.first.split()) {
           // exclude invalid intersections
-          if (!detail::checkIntersection(intersection, nearLimit, farLimit)) {
+          if (!intersection ||
+              !detail::checkIntersection(intersection, nearLimit, farLimit)) {
             continue;
           }
           // exclude last candidate
@@ -379,7 +380,7 @@ class TryAllOverstepNavigator {
       state.navigation.activeCandidateIndex = 0;
 
       ACTS_VERBOSE(volInfo(state)
-                   << "found " << state.navigation.activeCandidates.size()
+                   << "Found " << state.navigation.activeCandidates.size()
                    << " intersections")
 
       result = state.navigation.activeCandidateIndex ==
