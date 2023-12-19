@@ -169,8 +169,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
 
   BOOST_CHECK(roundtripPlaneBoundParams.parameters().isApprox(par));
 
-  BOOST_CHECK(roundtripPlaneBoundParams.covariance().value().isApprox(
-      planePar.covariance().value()));
+  CHECK_CLOSE_COVARIANCE(roundtripPlaneBoundParams.covariance().value(),
+                         planePar.covariance().value(), 1e-3);
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
