@@ -99,7 +99,7 @@ class Navigator {
 
     /// Whether to reinitialize the navigation candidates on layer hit.
     /// This improves navigation for bended tracks but is more expensive.
-    bool reinitializeOnLayerHit = true;
+    bool reinitializeOnLayerHit = false;
   };
 
   using IntersectionCandidates = std::vector<detail::IntersectionCandidate>;
@@ -499,8 +499,14 @@ class Navigator {
       if (m_cfg.reinitializeOnLayerHit) {
         reinitializeCandidates(state, stepper);
       } else {
-        // Note that this is hacky as we do not reintersect the existing
-        // candidates.
+        // A re-intersection would be better but is costly. Due to this
+        // optimization the lengths are not measured from the same reference
+        // point.
+        for (std::size_t i = state.navigation.candidateIndex;
+             i < state.navigation.candidates.size(); ++i) {
+          state.navigation.candidates[i].intersection.pathLength() -=
+              intersection.pathLength();
+        }
 
         initializeLayerSurfaceCandidates(state, stepper);
 
