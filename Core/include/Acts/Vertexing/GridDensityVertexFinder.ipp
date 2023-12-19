@@ -9,22 +9,24 @@
 template <int mainGridSize, int trkGridSize, typename vfitter_t>
 auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions, State& state) const
+    const VertexingOptions& vertexingOptions, IVertexFinder::State& state) const
     -> Result<std::vector<Vertex>> {
+
+    auto& thisState = state.as<State>();
   // Remove density contributions from tracks removed from track collection
-  if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
-      !state.tracksToRemove.empty()) {
+  if (m_cfg.cacheGridStateForTrackRemoval && thisState.isInitialized &&
+      !thisState.tracksToRemove.empty()) {
     // Bool to check if removable tracks, that pass selection, still exist
     bool couldRemoveTracks = false;
-    for (auto trk : state.tracksToRemove) {
-      if (!state.trackSelectionMap.at(trk)) {
+    for (auto trk : thisState.tracksToRemove) {
+      if (!thisState.trackSelectionMap.at(trk)) {
         // Track was never added to grid, so cannot remove it
         continue;
       }
       couldRemoveTracks = true;
-      auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
+      auto binAndTrackGrid = thisState.binAndTrackGridMap.at(trk);
       m_cfg.gridDensity.removeTrackGridFromMainGrid(
-          binAndTrackGrid.first, binAndTrackGrid.second, state.mainGrid);
+          binAndTrackGrid.first, binAndTrackGrid.second, thisState.mainGrid);
     }
     if (!couldRemoveTracks) {
       // No tracks were removed anymore
@@ -34,34 +36,34 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
       return seedVec;
     }
   } else {
-    state.mainGrid = MainGridVector::Zero();
+    thisState.mainGrid = MainGridVector::Zero();
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_cfg.extractParameters(trk);
       // Take only tracks that fulfill selection criteria
       if (!doesPassTrackSelection(trkParams)) {
         if (m_cfg.cacheGridStateForTrackRemoval) {
-          state.trackSelectionMap[trk] = false;
+          thisState.trackSelectionMap[trk] = false;
         }
         continue;
       }
       auto binAndTrackGrid =
-          m_cfg.gridDensity.addTrack(trkParams, state.mainGrid);
+          m_cfg.gridDensity.addTrack(trkParams, thisState.mainGrid);
       // Cache track density contribution to main grid if enabled
       if (m_cfg.cacheGridStateForTrackRemoval) {
-        state.binAndTrackGridMap[trk] = binAndTrackGrid;
-        state.trackSelectionMap[trk] = true;
+        thisState.binAndTrackGridMap[trk] = binAndTrackGrid;
+        thisState.trackSelectionMap[trk] = true;
       }
     }
-    state.isInitialized = true;
+    thisState.isInitialized = true;
   }
 
   double z = 0;
   double width = 0;
-  if (state.mainGrid != MainGridVector::Zero()) {
+  if (thisState.mainGrid != MainGridVector::Zero()) {
     if (!m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
-      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);
+      auto maxZres = m_cfg.gridDensity.getMaxZPosition(thisState.mainGrid);
 
       if (!maxZres.ok()) {
         return maxZres.error();
@@ -69,7 +71,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
       z = *maxZres;
     } else {
       // Get z value of highest density bin and width
-      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(state.mainGrid);
+      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(thisState.mainGrid);
 
       if (!maxZres.ok()) {
         return maxZres.error();

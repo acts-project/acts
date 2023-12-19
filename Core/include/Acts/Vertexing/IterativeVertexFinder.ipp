@@ -9,8 +9,9 @@
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions, State& state) const
+    const VertexingOptions& vertexingOptions, IVertexFinder::State& state) const
     -> Result<std::vector<Vertex>> {
+  auto& thisState = state.as<State>();
   // Original tracks
   const std::vector<InputTrack>& origTracks = trackVector;
   // Tracks for seeding
@@ -44,8 +45,9 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     std::vector<InputTrack> tracksToFitSplitVertex;
 
     // Fill vector with tracks to fit, only compatible with seed:
-    auto res = fillTracksToFit(seedTracks, seedVertex, tracksToFit,
-                               tracksToFitSplitVertex, vertexingOptions, state);
+    auto res =
+        fillTracksToFit(seedTracks, seedVertex, tracksToFit,
+                        tracksToFitSplitVertex, vertexingOptions, thisState);
 
     if (!res.ok()) {
       return res.error();
@@ -59,7 +61,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
 
     if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
       auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              state.fitterState);
+                                              thisState.fitterState);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -67,7 +69,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
       }
     } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
       auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              state.fitterState);
+                                              thisState.fitterState);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -76,7 +78,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     }
     if (m_cfg.createSplitVertices && tracksToFitSplitVertex.size() > 1) {
       auto fitResult = m_cfg.vertexFitter.fit(
-          tracksToFitSplitVertex, vertexingOptions, state.fitterState);
+          tracksToFitSplitVertex, vertexingOptions, thisState.fitterState);
       if (fitResult.ok()) {
         currentSplitVertex = std::move(*fitResult);
       } else {
@@ -109,7 +111,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
 
         auto result = reassignTracksToNewVertex(
             vertexCollection, currentVertex, tracksToFit, seedTracks,
-            origTracks, vertexingOptions, state);
+            origTracks, vertexingOptions, thisState);
         if (!result.ok()) {
           return result.error();
         }
@@ -119,7 +121,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
          // still good vertex? might have changed in the meanwhile
       if (isGoodVertex) {
         removeUsedCompatibleTracks(currentVertex, tracksToFit, seedTracks,
-                                   vertexingOptions, state);
+                                   vertexingOptions, thisState);
 
         ACTS_DEBUG(
             "Number of seed tracks after removal of compatible tracks "
@@ -137,7 +139,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
         removeTracks(tracksToFitSplitVertex, seedTracks);
       } else {
         removeUsedCompatibleTracks(currentSplitVertex, tracksToFitSplitVertex,
-                                   seedTracks, vertexingOptions, state);
+                                   seedTracks, vertexingOptions, thisState);
       }
     }
     // Now fill vertex collection with vertex
@@ -158,7 +160,7 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
     const std::vector<InputTrack>& seedTracks,
     const VertexingOptions& vertexingOptions) const -> Result<Vertex> {
-  typename sfinder_t::State finderState;
+  auto finderState = m_cfg.seedFinder.makeState();
   auto res = m_cfg.seedFinder.find(seedTracks, vertexingOptions, finderState);
 
   if (!res.ok()) {

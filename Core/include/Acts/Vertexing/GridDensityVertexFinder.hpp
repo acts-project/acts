@@ -13,12 +13,17 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/DummyVertexFitter.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <map>
 
 namespace Acts {
+
+// namespace detail {
+// template <typename derived_t>
+// }
 
 /// @class GridDensityVertexFinder
 /// @brief Vertex finder that makes use of a track density grid.
@@ -33,7 +38,7 @@ namespace Acts {
 /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
 template <int mainGridSize = 2000, int trkGridSize = 15,
           typename vfitter_t = DummyVertexFitter<>>
-class GridDensityVertexFinder {
+class GridDensityVertexFinder final : public IVertexFinder {
   // Assert odd trkGridSize
   static_assert(trkGridSize % 2);
   // Assert bigger main grid than track grid
@@ -109,7 +114,13 @@ class GridDensityVertexFinder {
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+                                   IVertexFinder::State& state) const override;
+
+  IVertexFinder::State makeState() const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  bool hasTrivialState() const override { return true; }
 
   /// @brief Constructor for user-defined InputTrack type
   ///

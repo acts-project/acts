@@ -12,6 +12,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -32,7 +33,7 @@ namespace Acts {
 /// @tparam vfitter_t The vertex fitter type (needed to fulfill concept)
 /// @tparam track_density_t The track density type
 template <typename vfitter_t, typename track_density_t = GaussianTrackDensity>
-class TrackDensityVertexFinder {
+class TrackDensityVertexFinder final : public IVertexFinder {
   // Provided vertex fitter type should comply with the VertexFitterConcept
   // to ensure providing an input track type InputTrack_t
 
@@ -59,7 +60,13 @@ class TrackDensityVertexFinder {
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+                                   IVertexFinder::State& state) const override;
+
+  IVertexFinder::State makeState() const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  bool hasTrivialState() const override { return true; }
 
   /// @brief Constructor for user-defined InputTrack type
   ///

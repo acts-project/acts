@@ -29,7 +29,6 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
@@ -164,9 +163,6 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     using VertexFinder = ZScanVertexFinder<BilloirFitter>;
 
-    static_assert(VertexFinderConcept<VertexFinder>,
-                  "Vertex finder does not fulfill vertex finder concept.");
-
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
@@ -177,7 +173,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
-    VertexFinder::State state;
+    auto state = finder.makeState();
     auto res = finder.find(inputTracks, vertexingOptions, state);
 
     BOOST_CHECK(res.ok());
@@ -285,9 +281,6 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     using VertexFinder = ZScanVertexFinder<BilloirFitter>;
 
-    static_assert(VertexFinderConcept<VertexFinder>,
-                  "Vertex finder does not fulfill vertex finder concept.");
-
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
@@ -301,7 +294,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     cfg.extractParameters.connect(extractParameters);
     VertexFinder finder(cfg);
-    VertexFinder::State state;
+    auto state = finder.makeState();
 
     VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
