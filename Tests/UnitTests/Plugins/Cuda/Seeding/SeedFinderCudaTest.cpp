@@ -214,9 +214,9 @@ int main(int argc, char** argv) {
 
   // binfinder
   auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
-								    Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
   auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
-								 Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(

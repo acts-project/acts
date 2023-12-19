@@ -58,8 +58,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
       m_group->m_bottomBinFinder->findBins(localPosition,
                                            *m_group->m_grid.get());
   boost::container::small_vector<std::size_t, 9> tops =
-      m_group->m_topBinFinder->findBins(localPosition,
-                                        *m_group->m_grid.get());
+      m_group->m_topBinFinder->findBins(localPosition, *m_group->m_grid.get());
 
   // GCC12+ in Release throws an overread warning here due to the move.
   // This is from inside boost code, so best we can do is to suppress it.

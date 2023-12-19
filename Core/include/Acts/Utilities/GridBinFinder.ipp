@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -58,7 +57,8 @@ std::array<std::pair<int, int>, DIM> Acts::GridBinFinder<DIM>::getSizePerAxis(
             assert(locPosition.size() > i);
             assert(locPosition[i] > 0ul);
             assert(val.size() >= locPosition[i]);
-	    assert(val[locPosition[i] - 1ul].first <= val[locPosition[i] - 1ul].second);
+            assert(val[locPosition[i] - 1ul].first <=
+                   val[locPosition[i] - 1ul].second);
             return val[locPosition[i] - 1ul];
           }
         },

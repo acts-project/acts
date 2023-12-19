@@ -160,9 +160,9 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
-								    Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
   auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
-								 Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   auto config = setupSeedFinderConfiguration<SpacePoint>();
   config = config.toInternalUnits().calculateDerivedQuantities();
   auto options = setupSeedFinderOptions();
