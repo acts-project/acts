@@ -463,7 +463,7 @@ class MultiTrajectoryTestsCommon {
     }
 
     BOOST_CHECK(ts.hasProjector());
-    ActsMatrix<trajectory_t::MeasurementSizeMax, eBoundSize> fullProj;
+    ActsMatrix<MultiTrajectoryTraits::MeasurementSizeMax, eBoundSize> fullProj;
     fullProj.setZero();
     {
       Acts::GeometryContext gctx;
