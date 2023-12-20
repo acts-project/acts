@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -27,7 +28,7 @@ namespace ActsExamples {
 class AlignmentGroup {
 
 public:
-    AlignmentGroup(const std::string& name, const std::vector<GeometryIdentifier>& geoIds)
+    AlignmentGroup(const std::string& name, const std::vector<Acts::GeometryIdentifier>& geoIds)
         : m_name(name), m_map(constructHierarchyMap(geoIds)) {
     }
 
@@ -38,14 +39,14 @@ public:
 
 private:
     std::string m_name;  //  storing the name in the class
-    GeometryHierarchyMap<bool> m_map;
+    Acts::GeometryHierarchyMap<bool> m_map;
 
-    GeometryHierarchyMap<bool> constructHierarchyMap(const std::vector<GeometryIdentifier>& geoIds) {
-        std::vector<GeometryHierarchyMap<bool>::InputElement> ies;
+    Acts::GeometryHierarchyMap<bool> constructHierarchyMap(const std::vector<Acts::GeometryIdentifier>& geoIds) {
+        std::vector<Acts::GeometryHierarchyMap<bool>::InputElement> ies;
         for (const auto& geoId : geoIds) {
             ies.emplace_back(geoId, true);
         }
-        return GeometryHierarchyMap<bool>(ies);
+        return Acts::GeometryHierarchyMap<bool>(ies);
     }
 };
 
