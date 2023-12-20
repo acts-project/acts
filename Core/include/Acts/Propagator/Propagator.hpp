@@ -16,11 +16,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
@@ -178,6 +180,38 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
 };
 
+class PropagatorStub {};
+
+class BasePropagator {
+ public:
+  using Options = PropagatorOptions<>;
+
+  virtual Result<BoundTrackParameters> propagate(
+      const BoundTrackParameters& start, const Surface& target,
+      const Options& options) const = 0;
+};
+
+template <typename derived_t>
+class BasePropagatorHelper : public BasePropagator {
+ public:
+  Result<BoundTrackParameters> propagate(
+      const BoundTrackParameters& start, const Surface& target,
+      const Options& options) const override {
+    auto res =
+        static_cast<const derived_t*>(this)
+            ->template propagate<BoundTrackParameters, PropagatorOptions<>,
+                                 SurfaceReached, PathLimitReached>(
+                start, target, options);
+
+    if (res.ok()) {
+      // @TODO: Return optional?
+      return std::move((*res).endParameters.value());
+    } else {
+      return res.error();
+    }
+  }
+};
+
 /// @brief Propagator for particles (optionally in a magnetic field)
 ///
 /// The Propagator works with a state objects given at function call
@@ -204,7 +238,11 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 ///   surface type) -> type of internal state object
 ///
 template <typename stepper_t, typename navigator_t = VoidNavigator>
-class Propagator final {
+class Propagator final
+    : public std::conditional_t<
+          supportsBoundParameters_v<stepper_t, navigator_t>,
+          BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
+          PropagatorStub> {
   /// Re-define bound track parameters dependent on the stepper
   using StepperBoundTrackParameters =
       detail::stepper_bound_parameters_type_t<stepper_t>;
