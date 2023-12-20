@@ -176,7 +176,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
           if (boundaries[ib - 1] >= clipRange[1u]) {
             break;
           }
-          if (highEdge <= clipRange[0u] or
+          if (highEdge <= clipRange[0u] ||
               std::abs(highEdge - clipRange[0u]) < 1e-5) {
             continue;
           }
