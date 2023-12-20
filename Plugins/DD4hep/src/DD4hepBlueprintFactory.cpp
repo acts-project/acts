@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepBlueprint.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepBlueprintFactory.hpp"
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
@@ -17,14 +17,14 @@
 
 #include <sstream>
 
-Acts::Experimental::DD4hepBlueprint::DD4hepBlueprint(
+Acts::Experimental::DD4hepBlueprintFactory::DD4hepBlueprintFactory(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {
   ACTS_DEBUG("UnitLength conversion factor (DD4hep -> Acts): " << unitLength);
 }
 
 std::unique_ptr<Acts::Experimental::Blueprint::Node>
-Acts::Experimental::DD4hepBlueprint::create(
+Acts::Experimental::DD4hepBlueprintFactory::create(
     Cache& cache, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement) const {
   ACTS_DEBUG("Drawing a blueprint from the DD4hep element '"
@@ -43,7 +43,7 @@ Acts::Experimental::DD4hepBlueprint::create(
   return root;
 }
 
-void Acts::Experimental::DD4hepBlueprint::recursiveParse(
+void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
     Cache& cache, Blueprint::Node& mother, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, unsigned int hiearchyLevel) const {
   // This will allow to skip empty hierarchy levels
@@ -135,7 +135,7 @@ void Acts::Experimental::DD4hepBlueprint::recursiveParse(
 std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType,
            std::vector<Acts::ActsScalar>, std::vector<Acts::BinningValue>,
            std::string>
-Acts::Experimental::DD4hepBlueprint::extractExternals(
+Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     [[maybe_unused]] const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const std::string& baseName,
     const std::optional<Extent>& extOpt) const {
@@ -198,7 +198,7 @@ std::tuple<std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
            std::shared_ptr<const Acts::Experimental::IRootVolumeFinderBuilder>,
            std::shared_ptr<const Acts::Experimental::IGeometryIdGenerator>,
            std::array<std::string, 3u>, std::optional<Acts::Extent>>
-Acts::Experimental::DD4hepBlueprint::extractInternals(
+Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
     Acts::DD4hepDetectorElement::Store& dd4hepStore,
     const GeometryContext& gctx, const dd4hep::DetElement& dd4hepElement,
     const std::string& baseName) const {
@@ -228,14 +228,19 @@ Acts::Experimental::DD4hepBlueprint::extractInternals(
       // Check if the extent should be measured
       auto interenalsMeasure = Acts::getParamOr<std::string>(
           baseName + "_internals_measure", dd4hepElement, "");
-      auto internalsClearance = Acts::getParamOr<ActsScalar>(
-          baseName + "_internals_clearance", dd4hepElement, 0.);
+      auto internalsClearance =
+          unitLength *
+          Acts::getParamOr<ActsScalar>(baseName + "_internals_clearance",
+                                       dd4hepElement, 0.);
       auto internalBinningValues = stringToBinningValues(interenalsMeasure);
       if (!internalBinningValues.empty()) {
         ACTS_VERBOSE(" - internals extent measurement requested");
         Extent internalsExtent;
         ExtentEnvelope clearance = zeroEnvelopes;
         for (const auto& bv : internalBinningValues) {
+          ACTS_VERBOSE("   -> measuring extent for "
+                       << binningValueNames()[bv]);
+          ACTS_VERBOSE("   -> with clearance :" << internalsClearance);
           clearance[bv] = {internalsClearance, internalsClearance};
         }
         internalsExtent.setEnvelope(clearance);
