@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -26,34 +26,32 @@
 namespace ActsExamples {
 
 class AlignmentGroup {
+ public:
+  AlignmentGroup(const std::string& name,
+                 const std::vector<Acts::GeometryIdentifier>& geoIds)
+      : m_name(name), m_map(constructHierarchyMap(geoIds)) {}
 
-public:
-    AlignmentGroup(const std::string& name, const std::vector<Acts::GeometryIdentifier>& geoIds)
-        : m_name(name), m_map(constructHierarchyMap(geoIds)) {
+  // Access the name of the group
+  std::string getNameOfGroup() const { return m_name; }
+
+  // Useful for testing
+  bool has(Acts::GeometryIdentifier geoId) {
+    auto it = m_map.find(geoId);
+    return (it == m_map.end()) ? false : *it;
+  }
+
+ private:
+  std::string m_name;  //  storing the name in the class
+  Acts::GeometryHierarchyMap<bool> m_map;
+
+  Acts::GeometryHierarchyMap<bool> constructHierarchyMap(
+      const std::vector<Acts::GeometryIdentifier>& geoIds) {
+    std::vector<Acts::GeometryHierarchyMap<bool>::InputElement> ies;
+    for (const auto& geoId : geoIds) {
+      ies.emplace_back(geoId, true);
     }
-
-    // Access the name of the group
-    std::string getNameOfGroup() const {
-        return m_name;
-    }
-
-    // Useful for testing
-    bool has(Acts::GeometryIdentifier geoId) {
-	auto it =  m_map.find(geoId);
-	return (it == m_map.end()) ? false : *it;
-    }
-
-private:
-    std::string m_name;  //  storing the name in the class
-    Acts::GeometryHierarchyMap<bool> m_map;
-
-    Acts::GeometryHierarchyMap<bool> constructHierarchyMap(const std::vector<Acts::GeometryIdentifier>& geoIds) {
-        std::vector<Acts::GeometryHierarchyMap<bool>::InputElement> ies;
-        for (const auto& geoId : geoIds) {
-            ies.emplace_back(geoId, true);
-        }
-        return Acts::GeometryHierarchyMap<bool>(ies);
-    }
+    return Acts::GeometryHierarchyMap<bool>(ies);
+  }
 };
 
 class AlignmentAlgorithm final : public IAlgorithm {
