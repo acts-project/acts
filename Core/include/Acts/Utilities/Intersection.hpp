@@ -65,10 +65,13 @@ class Intersection {
   }
 
   constexpr const Position& position() const { return m_position; }
+  constexpr Position& position() { return m_position; }
 
   constexpr ActsScalar pathLength() const { return m_pathLength; }
+  constexpr ActsScalar& pathLength() { return m_pathLength; }
 
   constexpr Status status() const { return m_status; }
+  constexpr Status& status() { return m_status; }
 
   constexpr static Intersection invalid() { return Intersection(); }
 
@@ -138,22 +141,30 @@ class ObjectIntersection {
   constexpr const Intersection3D& intersection() const {
     return m_intersection;
   }
+  constexpr Intersection3D& intersection() { return m_intersection; }
 
   constexpr const Intersection3D::Position& position() const {
+    return m_intersection.position();
+  }
+  constexpr Intersection3D::Position& position() {
     return m_intersection.position();
   }
 
   constexpr ActsScalar pathLength() const {
     return m_intersection.pathLength();
   }
+  constexpr ActsScalar& pathLength() { return m_intersection.pathLength(); }
 
   constexpr Intersection3D::Status status() const {
     return m_intersection.status();
   }
+  constexpr Intersection3D::Status& status() { return m_intersection.status(); }
 
   constexpr const object_t* object() const { return m_object; }
+  constexpr const object_t*& object() { return m_object; }
 
   constexpr std::uint8_t index() const { return m_index; }
+  constexpr std::uint8_t& index() { return m_index; }
 
   constexpr static ObjectIntersection invalid() { return ObjectIntersection(); }
 
@@ -197,6 +208,10 @@ class ObjectMultiIntersection {
 
   constexpr ObjectIntersection<object_t> operator[](std::uint8_t index) const {
     return {m_intersections[index], m_object, index};
+  }
+
+  constexpr const MultiIntersection3D& intersections() const {
+    return m_intersections;
   }
 
   constexpr std::size_t size() const { return m_intersections.size(); }
@@ -249,7 +264,7 @@ bool checkIntersection(const intersection_t& intersection, double nearLimit,
                << nearLimit << ", " << farLimit << ", " << distance);
 
   const bool coCriterion = distance > nearLimit;
-  const bool cpCriterion = std::abs(distance) < std::abs(farLimit) + tolerance;
+  const bool cpCriterion = distance < farLimit + tolerance;
 
   const bool accept = coCriterion && cpCriterion;
 
@@ -263,9 +278,9 @@ bool checkIntersection(const intersection_t& intersection, double nearLimit,
     }
     if (!cpCriterion) {
       ACTS_VERBOSE("- intersection path length "
-                   << std::abs(distance) << " is over the far limit "
-                   << (std::abs(farLimit) + tolerance)
-                   << " (including tolerance of " << tolerance << ")");
+                   << distance << " is over the far limit "
+                   << (farLimit + tolerance) << " (including tolerance of "
+                   << tolerance << ")");
     }
   }
 

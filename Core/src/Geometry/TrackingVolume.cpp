@@ -9,7 +9,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -21,15 +20,12 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
 #include <algorithm>
-#include <array>
-#include <functional>
 #include <ostream>
 #include <string>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 
 namespace Acts {
@@ -477,114 +473,93 @@ Acts::TrackingVolume::compatibleBoundaries(
     const Vector3& direction, const NavigationOptions<Surface>& options,
     const Logger& logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
-  // Loop over boundarySurfaces and calculate the intersection
-  auto excludeObject = options.startObject;
-  boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
-  // The Limits: current, path & overstepping
-  double nearLimit = 0;
+  boost::container::small_vector<Acts::BoundaryIntersection, 4> intersections;
+
+  // The limits for this navigation step
+  double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
 
   // Helper function to test intersection
   auto checkIntersection =
-      [&](SurfaceMultiIntersection& smIntersection,
-          const BoundarySurface* bSurface) -> BoundaryIntersection {
-    for (const auto& sIntersection : smIntersection.split()) {
-      if (!sIntersection) {
+      [&](SurfaceMultiIntersection& candidates,
+          const BoundarySurface* boundary) -> BoundaryIntersection {
+    for (const auto& intersection : candidates.split()) {
+      if (!intersection) {
         continue;
       }
 
       if (options.forceIntersectBoundaries) {
         const bool coCriterion =
-            std::abs(sIntersection.pathLength()) < std::abs(nearLimit);
+            std::abs(intersection.pathLength()) < std::abs(nearLimit);
         ACTS_VERBOSE("Forcing intersection with surface "
-                     << bSurface->surfaceRepresentation().geometryId());
+                     << boundary->surfaceRepresentation().geometryId());
         if (coCriterion) {
           ACTS_VERBOSE("Intersection forced successfully ");
           ACTS_VERBOSE("- intersection path length "
-                       << std::abs(sIntersection.pathLength())
+                       << std::abs(intersection.pathLength())
                        << " < overstep limit " << std::abs(nearLimit));
-          return BoundaryIntersection(sIntersection, bSurface);
+          return BoundaryIntersection(intersection, boundary);
         }
         ACTS_VERBOSE("Can't force intersection: ");
         ACTS_VERBOSE("- intersection path length "
-                     << std::abs(sIntersection.pathLength())
+                     << std::abs(intersection.pathLength())
                      << " > overstep limit " << std::abs(nearLimit));
       }
 
       ACTS_VERBOSE("Check intersection with surface "
-                   << bSurface->surfaceRepresentation().geometryId());
-      if (detail::checkIntersection(sIntersection.intersection(), nearLimit,
+                   << boundary->surfaceRepresentation().geometryId());
+      if (detail::checkIntersection(intersection.intersection(), nearLimit,
                                     farLimit, logger)) {
-        return BoundaryIntersection(sIntersection, bSurface);
+        return BoundaryIntersection(intersection, boundary);
       }
     }
 
     ACTS_VERBOSE("No intersection accepted");
-    return BoundaryIntersection(SurfaceIntersection::invalid(), bSurface);
+    return BoundaryIntersection(SurfaceIntersection::invalid(), nullptr);
   };
 
   /// Helper function to process boundary surfaces
   auto processBoundaries =
-      [&](const TrackingVolumeBoundaries& bSurfaces) -> void {
-    ACTS_VERBOSE("Processing boundaries");
+      [&](const TrackingVolumeBoundaries& boundaries) -> void {
     // Loop over the boundary surfaces
-    for (auto& bsIter : bSurfaces) {
+    for (auto& boundary : boundaries) {
       // Get the boundary surface pointer
-      const auto& bSurfaceRep = bsIter->surfaceRepresentation();
-      ACTS_VERBOSE("Consider boundary surface " << bSurfaceRep.geometryId()
-                                                << " :\n"
-                                                << std::tie(bSurfaceRep, gctx));
+      const auto& surface = boundary->surfaceRepresentation();
+      ACTS_VERBOSE("Consider boundary surface " << surface.geometryId());
 
-      // Exclude the boundary where you are on
-      if (excludeObject != &bSurfaceRep) {
-        auto bCandidate = bSurfaceRep.intersect(gctx, position, direction,
-                                                options.boundaryCheck);
-        // Intersect and continue
-        auto bIntersection = checkIntersection(bCandidate, bsIter.get());
-        if (bIntersection.first) {
-          ACTS_VERBOSE(" - Proceed with surface");
-          bIntersections.push_back(bIntersection);
-        } else {
-          ACTS_VERBOSE(" - Surface intersecion invalid");
-        }
+      // we don't exclude the start object because we might exit via the same
+      // boundary (e.g. cylinder)
+
+      auto candidates =
+          surface.intersect(gctx, position, direction, options.boundaryCheck);
+      // Intersect and continue
+      auto intersection = checkIntersection(candidates, boundary.get());
+      if (intersection.first) {
+        ACTS_VERBOSE(" - Proceed with surface");
+        intersections.push_back(intersection);
       } else {
-        ACTS_VERBOSE(" - Surface is excluded surface");
+        ACTS_VERBOSE(" - Surface intersecion invalid");
       }
     }
   };
 
   // Process the boundaries of the current volume
-  auto& bSurfaces = boundarySurfaces();
-  ACTS_VERBOSE("Volume reports " << bSurfaces.size() << " boundary surfaces");
-  processBoundaries(bSurfaces);
+  const auto& surfaces = boundarySurfaces();
+  ACTS_VERBOSE("Volume reports " << surfaces.size() << " boundary surfaces");
+  processBoundaries(surfaces);
 
   // Process potential boundaries of contained volumes
   auto confinedDenseVolumes = denseVolumes();
   ACTS_VERBOSE("Volume reports " << confinedDenseVolumes.size()
                                  << " confined dense volumes");
-  for (const auto& dv : confinedDenseVolumes) {
-    auto& bSurfacesConfined = dv->boundarySurfaces();
-    ACTS_VERBOSE(" -> " << bSurfacesConfined.size() << " boundary surfaces");
-    processBoundaries(bSurfacesConfined);
+  for (const auto& volume : confinedDenseVolumes) {
+    const auto& surfacesConfined = volume->boundarySurfaces();
+    ACTS_VERBOSE(" -> " << surfacesConfined.size() << " boundary surfaces");
+    processBoundaries(surfacesConfined);
   }
 
-  auto comparator = [](double a, double b) {
-    // sign function would be nice but ...
-    if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
-      return a < b;
-    }
-    if (a > 0) {  // b < 0
-      return true;
-    }
-    return false;
-  };
-
-  std::sort(bIntersections.begin(), bIntersections.end(),
-            [&](const BoundaryIntersection& a, const BoundaryIntersection& b) {
-              return comparator(a.first.pathLength(), b.first.pathLength());
-            });
-  return bIntersections;
+  return intersections;
 }
 
 boost::container::small_vector<Acts::LayerIntersection, 10>
@@ -595,41 +570,49 @@ Acts::TrackingVolume::compatibleLayers(
   boost::container::small_vector<Acts::LayerIntersection, 10> lIntersections;
 
   // the confinedLayers
-  if (m_confinedLayers != nullptr) {
-    // start layer given or not - test layer
-    const Layer* tLayer = options.startObject != nullptr
-                              ? options.startObject
-                              : associatedLayer(gctx, position);
-    while (tLayer != nullptr) {
-      // check if the layer needs resolving
-      // - resolveSensitive -> always take layer if it has a surface array
-      // - resolveMaterial -> always take layer if it has material
-      // - resolvePassive -> always take, unless it's a navigation layer
-      // skip the start object
-      if (tLayer != options.startObject && tLayer->resolve(options)) {
-        // if it's a resolveable start layer, you are by definition on it
-        // layer on approach intersection
-        auto atIntersection =
-            tLayer->surfaceOnApproach(gctx, position, direction, options);
-        auto path = atIntersection.pathLength();
-        bool withinLimit = std::abs(path) <= std::abs(options.farLimit);
-        // Intersection is ok - take it (move to surface on approach)
-        if (atIntersection && withinLimit) {
-          // create a layer intersection
-          lIntersections.push_back(LayerIntersection(atIntersection, tLayer));
-        }
-      }
-      // move to next one or break because you reached the end layer
-      tLayer = (tLayer == options.endObject)
-                   ? nullptr
-                   : tLayer->nextLayer(gctx, position, direction);
-    }
-    std::sort(lIntersections.begin(), lIntersections.end(),
-              [](const LayerIntersection& a, const LayerIntersection& b) {
-                return SurfaceIntersection::forwardOrder(a.first, b.first);
-              });
+  if (m_confinedLayers == nullptr) {
+    return {};
   }
-  // and return
+
+  // start layer given or not - test layer
+  const Layer* tLayer = options.startObject != nullptr
+                            ? options.startObject
+                            : associatedLayer(gctx, position);
+  while (tLayer != nullptr) {
+    // check if the layer needs resolving
+    // - resolveSensitive -> always take layer if it has a surface array
+    // - resolveMaterial -> always take layer if it has material
+    // - resolvePassive -> always take, unless it's a navigation layer
+    // skip the start object
+    if (tLayer != options.startObject && tLayer->resolve(options)) {
+      // if it's a resolveable start layer, you are by definition on it
+      // layer on approach intersection
+      auto atIntersection =
+          tLayer->surfaceOnApproach(gctx, position, direction, options);
+      // Intersection is ok - take it (move to surface on approach)
+      if (atIntersection) {
+        // create a layer intersection
+        lIntersections.push_back(LayerIntersection(atIntersection, tLayer));
+      }
+    }
+    // move to next one or break because you reached the end layer
+    tLayer = (tLayer == options.endObject)
+                 ? nullptr
+                 : tLayer->nextLayer(gctx, position, direction);
+  }
+
+  // In case of cylindrical layers we might resolve far intersection solutions
+  // which are not valid for navigation. These are discarded here by checking
+  // against the minimum path length.
+  auto min = std::min_element(
+      lIntersections.begin(), lIntersections.end(),
+      [](const LayerIntersection& a, const LayerIntersection& b) {
+        return a.first.pathLength() < b.first.pathLength();
+      });
+  std::rotate(lIntersections.begin(), min, lIntersections.end());
+  lIntersections.resize(std::distance(min, lIntersections.end()),
+                        {SurfaceIntersection::invalid(), nullptr});
+
   return lIntersections;
 }
 

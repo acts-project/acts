@@ -77,10 +77,10 @@ struct SurfaceReached {
   /// Distance limit to discard intersections "behind us"
   /// @note this is only necessary because some surfaces have more than one
   ///       intersection
-  std::optional<double> overrideNearLimit;
+  double nearLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
-  SurfaceReached(double nearLimit) : overrideNearLimit(nearLimit) {}
+  SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -106,14 +106,11 @@ struct SurfaceReached {
       return true;
     }
 
-    // not blindly using the stepper overstep limit here because it does not
-    // always work for perigee surfaces.
+    // not using the stepper overstep limit here because it does not always work
+    // for perigee surfaces
     // note: the near limit is necessary for surfaces with more than one
-    // intersections in order to discard the ones which are behind us.
-    const double nearLimit =
-        overrideNearLimit.value_or(stepper.overstepLimit(state.stepping));
-    const double farLimit =
-        state.stepping.stepSize.value(ConstrainedStep::aborter);
+    // intersections in order to discard the ones which are behind us
+    const double farLimit = std::numeric_limits<double>::max();
     const double tolerance = state.options.surfaceTolerance;
 
     const auto sIntersection = surface->intersect(

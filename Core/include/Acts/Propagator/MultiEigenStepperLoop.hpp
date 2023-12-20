@@ -726,14 +726,6 @@ class MultiEigenStepperLoop
     return ss.str();
   }
 
-  /// Overstep limit
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
-  double overstepLimit(const State& state) const {
-    // A dynamic overstep limit could sit here
-    return SingleStepper::overstepLimit(state.components.front().state);
-  }
-
   /// Create and return the bound state at the current position
   ///
   /// @brief This transports (if necessary) the covariance
