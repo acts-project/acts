@@ -112,7 +112,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter<linearizer_t>::fit(
       auto result = linearizer.linearizeTrack(
           trackParams, linPoint[3], *perigeeSurface,
           vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-          state.linearizerState);
+          state.fieldCache);
       if (!result.ok()) {
         return result.error();
       }
