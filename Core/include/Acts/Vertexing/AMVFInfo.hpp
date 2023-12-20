@@ -20,6 +20,10 @@ namespace Acts {
 /// @brief Helper struct for storing vertex related information
 struct VertexInfo {
   VertexInfo() = default;
+  VertexInfo(const VertexInfo& other) = default;
+  VertexInfo(VertexInfo&& other) = default;
+  VertexInfo& operator=(VertexInfo&& other) = default;
+  VertexInfo& operator=(const VertexInfo& other) = default;
 
   VertexInfo(const Acts::Vertex& constr, const Acts::Vector4& pos)
       : constraint(constr),
@@ -47,7 +51,7 @@ struct VertexInfo {
   // Vector of all tracks that are currently assigned to vertex
   std::vector<InputTrack> trackLinks;
 
-  std::map<InputTrack, const BoundTrackParameters> impactParams3D;
+  std::map<InputTrack, BoundTrackParameters> impactParams3D;
 };
 
 }  // namespace Acts
