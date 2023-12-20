@@ -468,10 +468,11 @@ void Acts::TrackingVolume::closeGeometry(
 
 // Returns the boundary surfaces ordered in probability to hit them based on
 boost::container::small_vector<Acts::BoundaryIntersection, 4>
-Acts::TrackingVolume::compatibleBoundaries(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const NavigationOptions<Surface>& options,
-    const Logger& logger) const {
+Acts::TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
+                                           const Vector3& position,
+                                           const Vector3& direction,
+                                           const NavigationOptions& options,
+                                           const Logger& logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
 
   boost::container::small_vector<Acts::BoundaryIntersection, 4> intersections;
@@ -528,8 +529,13 @@ Acts::TrackingVolume::compatibleBoundaries(
       const auto& surface = boundary->surfaceRepresentation();
       ACTS_VERBOSE("Consider boundary surface " << surface.geometryId());
 
-      // we don't exclude the start object because we might exit via the same
-      // boundary (e.g. cylinder)
+      // Exclude the boundary where you are on
+      // TODO this is not optimal as we might exit via the same boundary (e.g.
+      // cylinder)
+      if (&surface == options.startObject) {
+        ACTS_VERBOSE(" - Surface is excluded surface");
+        continue;
+      }
 
       auto candidates =
           surface.intersect(gctx, position, direction, options.boundaryCheck);
@@ -563,9 +569,10 @@ Acts::TrackingVolume::compatibleBoundaries(
 }
 
 boost::container::small_vector<Acts::LayerIntersection, 10>
-Acts::TrackingVolume::compatibleLayers(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const NavigationOptions<Layer>& options) const {
+Acts::TrackingVolume::compatibleLayers(const GeometryContext& gctx,
+                                       const Vector3& position,
+                                       const Vector3& direction,
+                                       const NavigationOptions& options) const {
   // the layer intersections which are valid
   boost::container::small_vector<Acts::LayerIntersection, 10> lIntersections;
 
@@ -576,7 +583,7 @@ Acts::TrackingVolume::compatibleLayers(
 
   // start layer given or not - test layer
   const Layer* tLayer = options.startObject != nullptr
-                            ? options.startObject
+                            ? static_cast<const Layer*>(options.startObject)
                             : associatedLayer(gctx, position);
   while (tLayer != nullptr) {
     // check if the layer needs resolving
@@ -651,7 +658,7 @@ std::vector<Acts::SurfaceIntersection>
 Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, double angle,
-    const NavigationOptions<Surface>& options) const {
+    const NavigationOptions& options) const {
   std::vector<SurfaceIntersection> sIntersections;
   sIntersections.reserve(20);  // arbitrary
 

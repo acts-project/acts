@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -19,8 +18,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-#include <iomanip>
-#include <iterator>
 #include <sstream>
 #include <string>
 
@@ -30,10 +27,6 @@ namespace Acts {
 
 /// @brief struct for the Navigation options that are forwarded to
 ///        the geometry
-///
-/// @tparam propagator_state_t Type of the object for navigation state
-/// @tparam object_t Type of the object for navigation to check against
-template <typename object_t>
 struct NavigationOptions {
   /// The boundary check directive
   BoundaryCheck boundaryCheck = BoundaryCheck(true);
@@ -46,10 +39,10 @@ struct NavigationOptions {
   /// always look for passive
   bool resolvePassive = false;
 
-  /// object to check against: at start
-  const object_t* startObject = nullptr;
-  /// object to check against: at end
-  const object_t* endObject = nullptr;
+  /// Hint for start object
+  const void* startObject = nullptr;
+  /// Hint for end object
+  const void* endObject = nullptr;
 
   /// External surface identifier for which the boundary check is ignored
   std::vector<GeometryIdentifier> externalSurfaces = {};
@@ -726,11 +719,10 @@ class Navigator {
       // check if current volume has BVH, or layers
       if (state.navigation.currentVolume->hasBoundingVolumeHierarchy()) {
         // has hierarchy, use that, skip layer resolution
-        NavigationOptions<Surface> navOpts;
+        NavigationOptions navOpts;
         navOpts.resolveSensitive = m_cfg.resolveSensitive;
         navOpts.resolveMaterial = m_cfg.resolveMaterial;
         navOpts.resolvePassive = m_cfg.resolvePassive;
-        navOpts.endObject = state.navigation.targetSurface;
         navOpts.nearLimit = state.options.surfaceTolerance;
         double opening_angle = 0;
 
@@ -913,12 +905,10 @@ class Navigator {
     // Helper function to find boundaries
     auto findBoundaries = [&]() -> bool {
       // The navigation options
-      NavigationOptions<Surface> navOpts;
+      NavigationOptions navOpts;
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
       navOpts.nearLimit = state.options.surfaceTolerance;
-      navOpts.farLimit =
-          stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
       navOpts.forceIntersectBoundaries =
           state.navigation.forceIntersectBoundaries;
 
@@ -1110,12 +1100,11 @@ class Navigator {
     bool onStart = (navLayer == state.navigation.startLayer);
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
     // Use navigation parameters and NavigationOptions
-    NavigationOptions<Surface> navOpts;
+    NavigationOptions navOpts;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
     navOpts.startObject = startSurface;
-    navOpts.endObject = state.navigation.targetSurface;
 
     std::vector<GeometryIdentifier> externalSurfaces;
     if (!state.navigation.externalSurfaces.empty()) {
@@ -1130,8 +1119,6 @@ class Navigator {
       }
     }
     navOpts.nearLimit = state.options.surfaceTolerance;
-    navOpts.farLimit =
-        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
 
     // get the surfaces
     state.navigation.navSurfaces = navLayer->compatibleSurfaces(
@@ -1195,15 +1182,13 @@ class Navigator {
             : nullptr;
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
-    NavigationOptions<Layer> navOpts;
+    NavigationOptions navOpts;
     navOpts.boundaryCheck = m_cfg.boundaryCheckLayerResolving;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
     navOpts.startObject = startLayer;
     navOpts.nearLimit = state.options.surfaceTolerance;
-    navOpts.farLimit =
-        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
 
     // Request the compatible layers
     state.navigation.navLayers =
