@@ -724,6 +724,8 @@ class Navigator {
         navOpts.resolveMaterial = m_cfg.resolveMaterial;
         navOpts.resolvePassive = m_cfg.resolvePassive;
         navOpts.nearLimit = state.options.surfaceTolerance;
+        navOpts.farLimit =
+            stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
         double opening_angle = 0;
 
         // Preliminary version of the frustum opening angle estimation.
@@ -909,6 +911,8 @@ class Navigator {
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
       navOpts.nearLimit = state.options.surfaceTolerance;
+      navOpts.farLimit =
+          stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
       navOpts.forceIntersectBoundaries =
           state.navigation.forceIntersectBoundaries;
 
@@ -1119,6 +1123,8 @@ class Navigator {
       }
     }
     navOpts.nearLimit = state.options.surfaceTolerance;
+    navOpts.farLimit =
+        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
 
     // get the surfaces
     state.navigation.navSurfaces = navLayer->compatibleSurfaces(
@@ -1189,6 +1195,8 @@ class Navigator {
     navOpts.resolvePassive = m_cfg.resolvePassive;
     navOpts.startObject = startLayer;
     navOpts.nearLimit = state.options.surfaceTolerance;
+    navOpts.farLimit =
+        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
 
     // Request the compatible layers
     state.navigation.navLayers =
