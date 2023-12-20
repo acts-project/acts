@@ -147,7 +147,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t>::doSeeding(
   VertexingOptions seedOptions = vertexingOptions;
   seedOptions.constraint = currentConstraint;
 
-  m_cfg.seedFinder->setTrackToRemove(seedFinderState, removedSeedTracks);
+  m_cfg.seedFinder->setTracksToRemove(seedFinderState, removedSeedTracks);
 
   // Run seed finder
   auto seedResult =
