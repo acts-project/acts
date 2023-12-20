@@ -43,8 +43,8 @@ def runGeometry(
                 raise RuntimeError("Failed to decorate event context")
 
         if outputCsv:
-            if not os.path.isdir(outputDir + "/csv"):
-                os.makedirs(outputDir + "/csv")
+            # if not os.path.isdir(outputDir + "/csv"):
+            #    os.makedirs(outputDir + "/csv")
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -60,8 +60,8 @@ def runGeometry(
             writer.write(context, trackingGeometry)
 
         if outputJson:
-            if not os.path.isdir(outputDir + "/json"):
-                os.makedirs(outputDir + "/json")
+            # if not os.path.isdir(outputDir + "/json"):
+            #    os.makedirs(outputDir + "/json")
             writer = JsonSurfacesWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -84,7 +84,7 @@ def runGeometry(
             jmw = JsonMaterialWriter(
                 level=acts.logging.VERBOSE,
                 converterCfg=jmConverterCfg,
-                fileName=os.path.join(outputDir, "json/geometry-map"),
+                fileName=os.path.join(outputDir, "geometry-map"),
                 writeFormat=JsonFormat.Json,
             )
 
@@ -92,11 +92,11 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    # detector, trackingGeometry, decorators = AlignedDetector.create()
+    detector, trackingGeometry, decorators = AlignedDetector.create()
     # detector, trackingGeometry, decorators = GenericDetector.create()
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )
+    # detector, trackingGeometry, decorators = getOpenDataDetector(
+    #    getOpenDataDetectorDirectory()
+    # )
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
 
