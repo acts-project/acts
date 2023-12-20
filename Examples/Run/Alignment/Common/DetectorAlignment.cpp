@@ -80,9 +80,6 @@ int runDetectorAlignment(
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
-  
-// feed the alignment group to config
-  cfg.alignmentGroups = alignmentAlgorithm.getAlignmentGroups();
 
   Sequencer sequencer(Options::readSequencerConfig(vm));
 

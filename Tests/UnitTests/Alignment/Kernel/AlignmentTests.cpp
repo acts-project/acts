@@ -45,7 +45,6 @@
 #include <cmath>
 #include <random>
 #include <string>
-#include <unordered_set>
 
 namespace {
 using namespace Acts;
@@ -313,69 +312,18 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
       kfOptions, voidAlignUpdater);
   alignOptions.maxIterations = 1;
 
-
-  // manually configured alignmeny group with a geo_id (specified for the alignment group)
-
-
   // Set the surfaces to be aligned (fix the layer 8)
   unsigned int iSurface = 0;
   std::unordered_map<const Surface*, std::size_t> idxedAlignSurfaces;
   // Loop over the detector elements
   for (auto& det : detector.detectorStore) {
     const auto& surface = det->surface();
-    //if (surface.geometryId().layer() != 8) {
-     // alignOptions.alignedDetElements.push_back(det.get());
-     // idxedAlignSurfaces.emplace(&surface, iSurface);
-     // iSurface++;
-       if (surface.geometryId() = geoIdToAlign){
-          surfacetoALign = & surface; 
-          break; 
-          }
+    if (surface.geometryId().layer() != 8) {
+      alignOptions.alignedDetElements.push_back(det.get());
+      idxedAlignSurfaces.emplace(&surface, iSurface);
+      iSurface++;
     }
   }
-
-// Check 2 cases: geo_id - found or geo_id is not found
-
-// case 1: geo_id is found
-if (surfaceToAlign){
-    alignOptions.alignedDetElements.push_back(surfaceToAlign -> associatedDetectorElement());
-    idxedAlignSurfaces.emplace(surfaceToAlign, iSurface); 
-    iSurface++; 
-// case 2: geo_id is not found
-else  {  
-    std::cerr <<"Surface_ " << geoIdToAlign << "can't be found!" <<std::endl; 
-    return EXIT_FAILURE;
-}
-
-// Apply constant shift as misalignment 
-
-Acts::Vector3 misalignmentShift (0.4_mm, 0.6_mm, 0.9_mm); 
-
-// Define the set of modules that need to be shifted 
-std::unordered_set<unsigned int> shiftedModules = {1, 3, 5};
-
-// Looping over elements && check if the specific layer has to be shifted
-
-for (auto& det : detector.detectorStore) {
-    const auto& surface = det -> surface(); 
-
-    // shift of the specific layer 
-    if (shiftThisLayer.count(surface.geometryId().layer()) > 0) {
-        Acts::Surface modifiedSurface = surface;   // misalign surface 
-        modifiedSurface.applyAlignmentCorrections(misalignmentShift);}
-}
-    
-    // Check if the module needs to be shifted
-    if (shiftModules.count(surface.geometryId().layer()) > 0) {
-        Acts::Surface modifiedSurface = surface;   // Misalign surface 
-        modifiedSurface.applyAlignmentCorrections(misalignmentShift);
-    }
-
-
- // Test Clyinder Geometry
-  TestCylinderDetector testCylinderDetector; 
-  const auto geometry = testCylinderDetector(); 
-}
 
   // Test the method to evaluate alignment state for a single track
   const auto& inputTraj = trajectories.front();
@@ -421,70 +369,6 @@ for (auto& det : detector.detectorStore) {
   // Check the chi2 derivative
   BOOST_CHECK_EQUAL(alignState.alignmentToChi2Derivative.size(), 30);
   BOOST_CHECK_EQUAL(alignState.alignmentToChi2SecondDerivative.rows(), 30);
-
-// Unit tests that test makeAlignmentGroup functionality 
-
-struct DetectorAlignment::Config {
-  std::string alignmentGroupsFile;
-};
-
-int DetectorAlignment::runDetectorAlignment(
-    int argc, char* argv[],
-    const std::shared_ptr<ActsExamples::IBaseDetector>& detector,
-    ActsAlignment::AlignedTransformUpdater alignedTransformUpdater,
-    const AlignedDetElementGetter& alignedDetElementsGetter) {
-
-// replace json file with test cylinder geometry 
-
-struct TestCylinderDetector {
-    std::shared_ptr<const TrackingGeometry> operator()() const {
-    using namespace Acts::UnitLiterals; 
-    auto cylinderRadius = 100_mm; 
-    auto cylinderLength = 500_mm;
-    
-// cylinder layer 
-
-auto cylinderLayer = Acts::CylinderLayer::create(
-    Acts::Transform3::Identity(), cylinderRadius, -cylinderLength/2, cylinderLenghth / 2, cylinderSurface); 
-    
-
-// cylinder surface 
-auto cylinderSurface = Acts::Surface::makeShared<Acts::CylinderSurface> (Acts::Transform3::Identity(), cylinderRadius, -cylinderLength / 2, cylinderLength / 2); 
-
-
-auto trackingVolume = Acts::TrackingVolume::create(
-    Acts::Transform3::Identity(), nullptr, nullptr, 
-    Acts::LayerArray::create(cylinderLayer), nullptr, {}, "Cylinder_testing"); 
-
-
-return std::make_shared<const Acts::TrackingGeometry> (trackingVolume); 
-  }
-};
-
- 
-
-    int DetectorAlignment::runDetectorAlignment(
-    int argc, char* argv[],
-    const std::shared_ptr<ActsExamples::IBaseDetector>& detector,
-    ActsAlignment::AlignedTransformUpdater alignedTransformUpdater,
-    const AlignedDetElementGetter& alignedDetElementsGetter) {
-
-  std::string alignmentGroupsFile = vm["name-alignment-groups-file"].as<std::string>();
-
-  // Unit test: Check if the alignmentGroupsFile is empty
-  if (alignmentGroupsFile.empty()) {
-    std::cout << "Unit Test: Alignment groups file is empty." << std::endl;
-    return EXIT_SUCCESS;
-  }
-
-  // Separate function for reading and parsing JSON
-  //std::vector<AlignmentAlgorithm::AlignmentParameters> alignmentParameters =
-   //   readJsonFile(alignmentGroupsFile);
-
-    // makeAlignmentGroup creates alignment groups
-    alignmentAlgorithm.makeAlignmentGroup(alignmentParameters);
-  }
-
 
   // Test the align method
   std::vector<std::vector<TestSourceLink>> trajCollection;
