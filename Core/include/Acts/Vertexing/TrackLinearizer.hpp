@@ -22,4 +22,4 @@ using TrackLinearizer = Acts::Delegate<Result<LinearizedTrack>(
     const BoundTrackParameters&, double, const Surface& perigeeSurface,
     const Acts::GeometryContext&, const Acts::MagneticFieldContext&,
     MagneticFieldProvider::Cache&)>;
-};  // namespace Acts
+}  // namespace Acts
