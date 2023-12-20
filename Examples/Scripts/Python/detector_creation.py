@@ -25,11 +25,11 @@ if "__main__" == __name__:
     dd4hepGeometryService = DD4hepGeometryService(dd4hepConfig)
     dd4hepDetector = DD4hepDetector(dd4hepGeometryService)
 
-    cOptions = DD4hepDetectorOptions(logLevel=acts.logging.VERBOSE, emulateToGraph="")
+    cOptions = DD4hepDetectorOptions(logLevel=acts.logging.INFO, emulateToGraph="")
 
     # Uncomment if you want to use the geometry id mapping
     # This map can be produced with the 'geometry.py' script
-    geoIdMappingFile = None  # 'odd-dd4hep-geoid-mapping.json'
+    geoIdMappingFile = 'odd-dd4hep-geoid-mapping.json'
     if geoIdMappingFile is not None:
         # Load the geometry id mapping json file
         with open(geoIdMappingFile) as f:
@@ -49,4 +49,4 @@ if "__main__" == __name__:
     geoContext = acts.GeometryContext()
     [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
-    # acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray.json")
+    acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
