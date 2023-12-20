@@ -205,6 +205,12 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 
   bool hasTrivialState() const override { return true; }
 
+  void setTracksToRemove(
+      IVertexFinder::State& /*state*/,
+      const std::vector<InputTrack>& /*removedTracks*/) const override {
+    // Nothing to do here
+  }
+
  private:
   /// Configuration object
   Config m_cfg;

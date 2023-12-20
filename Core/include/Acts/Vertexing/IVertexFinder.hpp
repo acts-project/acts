@@ -22,7 +22,7 @@ struct VertexingOptions;
 
 class IVertexFinder {
  public:
-  using State = Acts::Any;
+  using State = Acts::AnyBase<128>;
 
   virtual Result<std::vector<Vertex>> find(
       const std::vector<InputTrack>& trackVector,
@@ -32,8 +32,7 @@ class IVertexFinder {
 
   virtual bool hasTrivialState() const = 0;
 
-  virtual void setTrackToRemove(
-      State& /*state*/,
-      const std::vector<InputTrack>& /*removedTracks*/) const {}
+  virtual void setTracksToRemove(
+      State& state, const std::vector<InputTrack>& removedTracks) const = 0;
 };
 }  // namespace Acts

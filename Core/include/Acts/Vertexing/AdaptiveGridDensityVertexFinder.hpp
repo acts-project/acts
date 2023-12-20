@@ -101,6 +101,13 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
 
   bool hasTrivialState() const override { return true; }
 
+  void setTracksToRemove(
+      IVertexFinder::State& state,
+      const std::vector<InputTrack>& removedTracks) const override {
+    auto& thisState = state.template as<State>();
+    thisState.tracksToRemove = removedTracks;
+  }
+
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object

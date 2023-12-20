@@ -59,6 +59,12 @@ class TrackDensityVertexFinder final : public IVertexFinder {
     return IVertexFinder::State{State{}};
   }
 
+  void setTracksToRemove(
+      IVertexFinder::State& /*state*/,
+      const std::vector<InputTrack>& /*removedTracks*/) const override {
+    // Nothing to do here
+  }
+
   bool hasTrivialState() const override { return true; }
 
   /// @brief Constructor for user-defined InputTrack type
