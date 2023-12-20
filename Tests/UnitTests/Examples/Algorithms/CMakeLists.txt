@@ -1,1 +1,2 @@
+add_subdirectory(Alignment)
 add_subdirectory(Digitization)

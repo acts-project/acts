@@ -37,6 +37,12 @@ public:
         return m_name;
     }
 
+    // Useful for testing
+    bool has(Acts::GeometryIdentifier geoId) {
+	auto it =  m_map.find(geoId);
+	return (it == m_map.end()) ? false : *it;
+    }
+
 private:
     std::string m_name;  //  storing the name in the class
     Acts::GeometryHierarchyMap<bool> m_map;
