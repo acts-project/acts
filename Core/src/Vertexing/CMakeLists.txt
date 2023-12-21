@@ -10,4 +10,5 @@ target_sources(
     AdaptiveGridDensityVertexFinder.cpp
     ZScanVertexFinder.cpp
     HelicalTrackLinearizer.cpp
+    FullBilloirVertexFitter.cpp
 )

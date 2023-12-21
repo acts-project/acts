@@ -105,5 +105,3 @@ class FullBilloirVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "FullBilloirVertexFitter.ipp"
