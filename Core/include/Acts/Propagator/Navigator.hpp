@@ -51,42 +51,34 @@ struct NavigationOptions {
   /// object to check against: at end
   const object_t* endObject = nullptr;
 
-  /// Target surface to exclude
-  const Surface* targetSurface = nullptr;
   /// External surface identifier for which the boundary check is ignored
   std::vector<GeometryIdentifier> externalSurfaces = {};
 
-  /// The maximum path limit for this navigation step
-  double pathLimit = std::numeric_limits<double>::max();
-
-  /// The overstep tolerance for this navigation step
-  double overstepLimit = 0;
+  /// The minimum distance for a surface to be considered
+  double nearLimit = 0;
+  /// The maximum distance for a surface to be considered
+  double farLimit = std::numeric_limits<double>::max();
 
   /// Force intersection with boundaries
   bool forceIntersectBoundaries = false;
 };
 
-/// Navigator class
+/// @brief Steers the propagation through the geometry by adjusting the step
+///        size and providing the next surface to be targeted.
 ///
-/// This is an Actor to be added to the ActorList in order to navigate
-/// through the static tracking geometry setup.
+/// The Navigator is part of the propagation and responsible for steering
+/// the step size in order to encounter all the relevant surfaces which are
+/// intersected by the trajectory.
 ///
 /// The current navigation stage is cached in the state struct and updated
-/// when necessary. If any surface in the extrapolation  flow is hit, it is
-/// set to the propagation satate, such that other actors can deal with it.
-/// This navigation actor thus always needs to run first!
-/// It does two things: it figures out the order of volumes, layers and
-/// surfaces.
+/// when necessary. If any surface in the extrapolation flow is hit, it is
+/// set to the navigation state, such that other actors can deal with it.
 ///
-/// The current target surface is the surface pointed to by of the index
-/// for the surfaces, layers or volume boundaries.
-/// If a surface is found, the state.navigation.currentSurface
-/// pointer is set. This  enables subsequent actors to react. Secondly, this
-/// actor uses the ordered indices to figure out which surface, layer or
-/// volume boundary is _supposed_ to be hit next. It then sets the maximum
-/// step size to the path length found out by straight line intersection. If
-/// the state is not on surface, it also  re-computes the step size, to make
-/// sure we end up at the desired surface.
+/// The current target surface is referenced by an index which points into
+/// the navigation candidates. The navigation candidates are ordered by the
+/// path length to the surface. If a surface is hit, the
+/// `state.navigation.currentSurface` pointer is set. This actors to observe
+/// that we are on a surface.
 ///
 class Navigator {
  public:
@@ -115,7 +107,6 @@ class Navigator {
     /// Tracking Geometry for this Navigator
     std::shared_ptr<const TrackingGeometry> trackingGeometry{nullptr};
 
-    /// Configuration for this Navigator
     /// stop at every sensitive surface (whether it has material or not)
     bool resolveSensitive = true;
     /// stop at every material surface (whether it is passive or not)
@@ -128,11 +119,10 @@ class Navigator {
     BoundaryCheck boundaryCheckLayerResolving = BoundaryCheck(true);
   };
 
-  /// Nested State struct
+  /// @brief Nested State struct
   ///
-  /// It acts as an internal state which is
-  /// created for every propagation/extrapolation step
-  /// and keep thread-local navigation information
+  /// It acts as an internal state which is created for every propagation and
+  /// meant to keep thread-local navigation information.
   struct State {
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
@@ -261,15 +251,13 @@ class Navigator {
         std::pair<uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
   }
 
-  /// @brief Initialize call - start of propagation
+  /// @brief Initialize call - start of navigation
   ///
   /// @tparam propagator_state_t The state type of the propagator
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
   /// @param [in] stepper Stepper in use
-  ///
-  /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
     // Call the navigation helper prior to actual navigation
@@ -389,7 +377,7 @@ class Navigator {
     state.navigation.currentSurface = nullptr;
   }
 
-  /// @brief Navigator post step call, will be called in two modes
+  /// @brief Navigator post step call
   ///
   /// (a) It initializes the Navigation stream if start volume is
   ///     not yet defined:
@@ -490,7 +478,7 @@ class Navigator {
         auto boundary = state.navigation.navBoundary().second;
         state.navigation.currentVolume = boundary->attachedVolume(
             state.geoContext, stepper.position(state.stepping),
-            stepper.direction(state.stepping), state.options.direction);
+            state.options.direction * stepper.direction(state.stepping));
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           ACTS_VERBOSE(
@@ -743,7 +731,7 @@ class Navigator {
         navOpts.resolveMaterial = m_cfg.resolveMaterial;
         navOpts.resolvePassive = m_cfg.resolvePassive;
         navOpts.endObject = state.navigation.targetSurface;
-        navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
+        navOpts.nearLimit = stepper.overstepLimit(state.stepping);
         double opening_angle = 0;
 
         // Preliminary version of the frustum opening angle estimation.
@@ -928,9 +916,9 @@ class Navigator {
       NavigationOptions<Surface> navOpts;
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
-      navOpts.pathLimit =
+      navOpts.nearLimit = stepper.overstepLimit(state.stepping);
+      navOpts.farLimit =
           stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
-      navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
       navOpts.forceIntersectBoundaries =
           state.navigation.forceIntersectBoundaries;
 
@@ -1134,13 +1122,13 @@ class Navigator {
         navOpts.externalSurfaces.push_back(itSurface->second);
       }
     }
-    // Check the limit
-    navOpts.pathLimit =
-        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
     // No overstepping on start layer, otherwise ask the stepper
-    navOpts.overstepLimit = (cLayer != nullptr)
-                                ? state.options.surfaceTolerance
-                                : stepper.overstepLimit(state.stepping);
+    navOpts.nearLimit = (cLayer != nullptr)
+                            ? state.options.surfaceTolerance
+                            : stepper.overstepLimit(state.stepping);
+    // Check the limit
+    navOpts.farLimit =
+        stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
 
     // get the surfaces
     state.navigation.navSurfaces = navLayer->compatibleSurfaces(
@@ -1204,11 +1192,9 @@ class Navigator {
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
     navOpts.startObject = startLayer;
-    // Set also the target surface
-    navOpts.targetSurface = state.navigation.targetSurface;
-    navOpts.pathLimit =
+    navOpts.nearLimit = stepper.overstepLimit(state.stepping);
+    navOpts.farLimit =
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
-    navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
     // Request the compatible layers
     state.navigation.navLayers =
         state.navigation.currentVolume->compatibleLayers(

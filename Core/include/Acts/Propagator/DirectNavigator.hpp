@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,13 +24,11 @@
 
 namespace Acts {
 
-/// DirectNavigator class
+/// This is a fully guided navigator that progresses through a pre-given
+/// sequence of surfaces.
 ///
-/// This is a fully guided navigator that progresses through
-/// a pre-given sequence of surfaces.
-///
-/// This can either be used as a validation tool, for truth
-/// tracking, or track refitting
+/// This can either be used as a validation tool, for truth tracking, or track
+/// refitting.
 class DirectNavigator {
  public:
   /// The sequentially crossed surfaces
@@ -41,10 +39,9 @@ class DirectNavigator {
                       getDefaultLogger("DirectNavigator", Logging::INFO))
       : m_logger{std::move(_logger)} {}
 
-  /// Nested Actor struct, called Initializer
+  /// @brief Nested Actor struct, called Initializer
   ///
-  /// This is needed for the initialization of the
-  /// surface sequence
+  /// This is needed for the initialization of the surface sequence.
   struct Initializer {
     /// The Surface sequence
     SurfaceSequence navSurfaces = {};
@@ -94,14 +91,13 @@ class DirectNavigator {
     }
   };
 
-  /// Nested State struct
+  /// @brief Nested State struct
   ///
-  /// It acts as an internal state which is
-  /// created for every propagation/extrapolation step
-  /// and keep thread-local navigation information
+  /// It acts as an internal state which is created for every
+  /// propagation/extrapolation step and keep thread-local navigation
+  /// information
   struct State {
-    /// Externally provided surfaces - expected to be ordered
-    /// along the path
+    /// Externally provided surfaces - expected to be ordered along the path
     SurfaceSequence navSurfaces = {};
 
     /// Iterator the next surface
@@ -194,8 +190,7 @@ class DirectNavigator {
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
     (void)stepper;
 
-    // Call the navigation helper prior to actual navigation
-    ACTS_VERBOSE(volInfo(state) << "Initialization.");
+    ACTS_VERBOSE(volInfo(state) << "initialize");
 
     // We set the current surface to the start surface
     state.navigation.currentSurface = state.navigation.startSurface;
@@ -215,8 +210,7 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void preStep(propagator_state_t& state, const stepper_t& stepper) const {
-    // Screen output
-    ACTS_VERBOSE("Entering navigator::target.");
+    ACTS_VERBOSE(volInfo(state) << "pre step");
 
     // Navigator target always resets the current surface
     state.navigation.currentSurface = nullptr;
@@ -230,12 +224,12 @@ class DirectNavigator {
       // Establish & update the surface status
       // TODO we do not know the intersection index - passing the closer one
       const auto& surface = **state.navigation.navSurfaceIter;
+      const double farLimit = std::numeric_limits<double>::max();
       const auto index =
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              BoundaryCheck(false), std::numeric_limits<double>::max(),
-              stepper.overstepLimit(state.stepping),
+              BoundaryCheck(false), m_nearLimit, farLimit,
               state.options.surfaceTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
@@ -272,8 +266,7 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void postStep(propagator_state_t& state, const stepper_t& stepper) const {
-    // Screen output
-    ACTS_VERBOSE("Entering navigator::postStep.");
+    ACTS_VERBOSE(volInfo(state) << "post step");
 
     // Navigator post step always resets the current surface
     state.navigation.currentSurface = nullptr;
@@ -288,12 +281,12 @@ class DirectNavigator {
       // Establish the surface status
       // TODO we do not know the intersection index - passing the closer one
       const auto& surface = **state.navigation.navSurfaceIter;
+      const double farLimit = std::numeric_limits<double>::max();
       const auto index =
           chooseIntersection(
               state.geoContext, surface, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
-              BoundaryCheck(false), std::numeric_limits<double>::max(),
-              stepper.overstepLimit(state.stepping),
+              BoundaryCheck(false), m_nearLimit, farLimit,
               state.options.surfaceTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
@@ -321,24 +314,22 @@ class DirectNavigator {
  private:
   template <typename propagator_state_t>
   std::string volInfo(const propagator_state_t& state) const {
-    return (state.navigation.currentVolume
+    return (state.navigation.currentVolume != nullptr
                 ? state.navigation.currentVolume->volumeName()
                 : "No Volume") +
            " | ";
   }
 
-  ObjectIntersection<Surface> chooseIntersection(const GeometryContext& gctx,
-                                                 const Surface& surface,
-                                                 const Vector3& position,
-                                                 const Vector3& direction,
-                                                 const BoundaryCheck& bcheck,
-                                                 double pLimit, double oLimit,
-                                                 double tolerance) const {
+  ObjectIntersection<Surface> chooseIntersection(
+      const GeometryContext& gctx, const Surface& surface,
+      const Vector3& position, const Vector3& direction,
+      const BoundaryCheck& bcheck, double nearLimit, double farLimit,
+      double tolerance) const {
     auto intersections =
         surface.intersect(gctx, position, direction, bcheck, tolerance);
 
     for (auto& intersection : intersections.split()) {
-      if (detail::checkIntersection(intersection, pLimit, oLimit, tolerance,
+      if (detail::checkIntersection(intersection, nearLimit, farLimit,
                                     logger())) {
         return intersection;
       }
@@ -350,6 +341,12 @@ class DirectNavigator {
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;
+
+  // TODO https://github.com/acts-project/acts/issues/2738
+  /// Distance limit to discard intersections "behind us"
+  /// @note this is only necessary because some surfaces have more than one
+  ///       intersection
+  double m_nearLimit = -100 * UnitConstants::um;
 };
 
 }  // namespace Acts
