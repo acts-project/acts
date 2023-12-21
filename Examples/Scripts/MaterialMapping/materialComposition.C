@@ -191,7 +191,7 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
 #endif
 
       // Accumulate the material per track
-      size_t steps = stepLength->size();
+      std::size_t steps = stepLength->size();
       for (unsigned int is = 0; is < steps; ++is) {
         float x = stepX->at(is);
         float y = stepY->at(is);

@@ -99,4 +99,17 @@ addSeeding(
     outputDirRoot=outputDir,
 )
 
+addCKFTracks(
+    s,
+    trackingGeometry,
+    field,
+    TrackSelectorConfig(
+        pt=(1.0 * u.GeV if ttbar_pu200 else 0.0, None),
+        absEta=(None, 4.0),
+        nMeasurementsMin=6,
+    ),
+    outputDirRoot=outputDir,
+)
+
+
 s.run()

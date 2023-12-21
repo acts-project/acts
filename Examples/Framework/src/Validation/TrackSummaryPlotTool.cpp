@@ -89,9 +89,9 @@ void ActsExamples::TrackSummaryPlotTool::write(
 
 void ActsExamples::TrackSummaryPlotTool::fill(
     TrackSummaryPlotTool::TrackSummaryPlotCache& trackSummaryPlotCache,
-    const Acts::BoundTrackParameters& fittedParameters, size_t nStates,
-    size_t nMeasurements, size_t nOutliers, size_t nHoles,
-    size_t nSharedHits) const {
+    const Acts::BoundTrackParameters& fittedParameters, std::size_t nStates,
+    std::size_t nMeasurements, std::size_t nOutliers, std::size_t nHoles,
+    std::size_t nSharedHits) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   const auto momentum = fittedParameters.momentum();

@@ -45,8 +45,8 @@ std::string ActsExamples::CsvSpacePointReader::CsvSpacePointReader::name()
   return "CsvSpacePointReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::CsvSpacePointReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvSpacePointReader::availableEvents() const {
   return m_eventsRange;
 }
 

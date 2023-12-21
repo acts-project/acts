@@ -14,6 +14,8 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
@@ -57,12 +59,16 @@ class SurfaceStub : public RegularSurface {
     return Vector3(0., 0., 0.);
   }
 
+  using RegularSurface::localToGlobal;
+
   /// Global to local transformation
   Result<Vector2> globalToLocal(const GeometryContext& /*cxt*/,
                                 const Vector3& /*gpos*/,
                                 double /*tolerance*/) const final {
     return Result<Vector2>::success(Vector2{20., 20.});
   }
+
+  using RegularSurface::globalToLocal;
 
   /// Calculation of the path correction for incident
   double pathCorrection(const GeometryContext& /*cxt*/, const Vector3& /*gpos*/,
@@ -96,10 +102,10 @@ class SurfaceStub : public RegularSurface {
 
   /// Return a Polyhedron for the surfaces
   Polyhedron polyhedronRepresentation(const GeometryContext& /*gctx*/,
-                                      size_t /*lseg */) const final {
+                                      std::size_t /*lseg */) const final {
     std::vector<Vector3> vertices;
-    std::vector<std::vector<size_t>> faces;
-    std::vector<std::vector<size_t>> triangularMesh;
+    std::vector<std::vector<std::size_t>> faces;
+    std::vector<std::vector<std::size_t>> triangularMesh;
 
     return Polyhedron(vertices, faces, triangularMesh);
   }
@@ -115,4 +121,7 @@ class SurfaceStub : public RegularSurface {
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, SurfaceStub);
+
 }  // namespace Acts

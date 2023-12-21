@@ -72,7 +72,6 @@ class ISurfaceMaterial;
 class Logger;
 }  // namespace Acts
 
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
@@ -267,11 +266,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
-  es.setStepSize(esState, -1337.);
+  es.updateStepSize(esState, -1337., ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(esState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), -1337.);
 
-  es.releaseStepSize(esState);
+  es.releaseStepSize(esState, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 

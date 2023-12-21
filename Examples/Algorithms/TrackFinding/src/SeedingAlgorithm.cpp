@@ -162,7 +162,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
     // check if zBinsCustomLooping contains numbers from 1 to the total number
     // of bin in zBinEdges
-    for (size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
+    for (std::size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
       if (std::find(m_cfg.seedFinderConfig.zBinsCustomLooping.begin(),
                     m_cfg.seedFinderConfig.zBinsCustomLooping.end(),
                     i) == m_cfg.seedFinderConfig.zBinsCustomLooping.end()) {
@@ -220,7 +220,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
-  size_t nSpacePoints = 0;
+  std::size_t nSpacePoints = 0;
   for (const auto& isp : m_inputSpacePoints) {
     nSpacePoints += (*isp)(ctx).size();
   }
@@ -276,11 +276,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    for (size_t grid_glob_bin(0);
+    for (std::size_t grid_glob_bin(0);
          grid_glob_bin < spacePointsGrouping.grid().size(); ++grid_glob_bin) {
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
-        size_t index = sp->index();
+        std::size_t index = sp->index();
 
         const float topHalfStripLength =
             m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp());

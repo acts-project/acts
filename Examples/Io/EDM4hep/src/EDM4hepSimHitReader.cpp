@@ -36,7 +36,8 @@ std::string EDM4hepSimHitReader::EDM4hepSimHitReader::name() const {
   return "EDM4hepSimHitReader";
 }
 
-std::pair<size_t, size_t> EDM4hepSimHitReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> EDM4hepSimHitReader::availableEvents()
+    const {
   return m_eventsRange;
 }
 
@@ -53,8 +54,7 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
       auto particle = EDM4hepUtil::readParticle(
           mcParticle, [](const edm4hep::MCParticle& p) {
             ActsFatras::Barcode result;
-            // TODO dont use podio internal id
-            result.setParticle(p.id());
+            result.setParticle(EDM4hepUtil::podioObjectIDToInteger(p.id()));
             return result;
           });
       unordered.push_back(particle);
@@ -77,8 +77,8 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
           simTrackerHit,
           [](const edm4hep::MCParticle& particle) {
             ActsFatras::Barcode result;
-            // TODO dont use podio internal id
-            result.setParticle(particle.id());
+            result.setParticle(
+                EDM4hepUtil::podioObjectIDToInteger(particle.id()));
             return result;
           },
           [&](std::uint64_t cellId) {

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 
 #include <memory>
 #include <vector>
@@ -32,7 +32,7 @@ class IRootVolumeFinderBuilder {
   /// @param rootVolumes the root volumes to be used for the search
   ///
   /// @return a shared detector object
-  virtual DetectorVolumeUpdator construct(
+  virtual DetectorVolumeUpdater construct(
       const GeometryContext& gctx,
       const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes)
       const = 0;

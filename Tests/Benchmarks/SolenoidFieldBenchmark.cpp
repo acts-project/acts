@@ -23,9 +23,9 @@
 using namespace Acts::UnitLiterals;
 
 int main(int argc, char* argv[]) {
-  size_t iters_map = 5e2;
-  size_t iters_solenoid = 3;
-  size_t runs_solenoid = 1000;
+  std::size_t iters_map = 5e2;
+  std::size_t iters_solenoid = 3;
+  std::size_t runs_solenoid = 1000;
   if (argc >= 2) {
     iters_map = std::stoi(argv[1]);
   }
@@ -38,10 +38,10 @@ int main(int argc, char* argv[]) {
 
   const double L = 5.8_m;
   const double R = (2.56 + 2.46) * 0.5 * 0.5_m;
-  const size_t nCoils = 1154;
+  const std::size_t nCoils = 1154;
   const double bMagCenter = 2_T;
-  const size_t nBinsR = 150;
-  const size_t nBinsZ = 200;
+  const std::size_t nBinsR = 150;
+  const std::size_t nBinsZ = 200;
 
   double rMin = -0.1;
   double rMax = R * 2.;
@@ -55,9 +55,9 @@ int main(int argc, char* argv[]) {
   Acts::MagneticFieldContext mctx{};
 
   std::minstd_rand rng;
-  std::uniform_real_distribution<> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
-  std::uniform_real_distribution<> rDist(0, R * 1.5);
-  std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+  std::uniform_real_distribution<double> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
+  std::uniform_real_distribution<double> rDist(0, R * 1.5);
+  std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
   auto genPos = [&]() -> Acts::Vector3 {
     const double z = zDist(rng), r = rDist(rng), phi = phiDist(rng);
     return {r * std::cos(phi), r * std::sin(phi), z};
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
     double h = 1e-3;
     std::vector<Acts::Vector3> steps;
     steps.reserve(iters_map);
-    for (size_t i = 0; i < iters_map; i++) {
+    for (std::size_t i = 0; i < iters_map; i++) {
       pos += dir * h;
       double z = pos[Acts::eFreePos2];
       if (Acts::VectorHelpers::perp(pos) > rMax || z >= zMax || z < zMin) {

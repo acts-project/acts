@@ -40,6 +40,7 @@ Acts::Experimental::DetectorBuilder::construct(
     ACTS_DEBUG("Assigning geometry ids to the detector");
     auto cache = m_cfg.geoIdGenerator->generateCache();
     std::for_each(roots.volumes.begin(), roots.volumes.end(), [&](auto& v) {
+      ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
     });
   }

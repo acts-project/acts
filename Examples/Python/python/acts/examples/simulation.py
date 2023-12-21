@@ -492,11 +492,11 @@ def addFatras(
     addSimWriters(
         s,
         alg.config.outputSimHits,
+        particlesInitial,
+        particlesFinal,
         outputDirCsv,
         outputDirRoot,
-        logLevel=logLevel,
-        particlesInitial=particlesInitial,
-        particlesFinal=particlesFinal,
+        logLevel,
     )
 
     return s
@@ -504,12 +504,12 @@ def addFatras(
 
 def addSimWriters(
     s: acts.examples.Sequencer,
-    inputSimHits: Optional[str] = None,
+    simHits: Optional[str] = None,
+    particlesInitial="particles_initial",
+    particlesFinal="particles_final",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
-    particlesInitial="particles_initial",
-    particlesFinal="particles_final",
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -536,7 +536,7 @@ def addSimWriters(
         s.addWriter(
             acts.examples.CsvSimHitWriter(
                 level=customLogLevel(),
-                inputSimHits=inputSimHits,
+                inputSimHits=simHits,
                 outputDir=str(outputDirCsv),
                 outputStem="hits",
             )
@@ -550,20 +550,15 @@ def addSimWriters(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=particlesInitial,
-                filePath=str(outputDirRoot / "particles_initial.root"),
-            )
-        )
-        s.addWriter(
-            acts.examples.RootParticleWriter(
-                level=customLogLevel(),
-                inputParticles=particlesFinal,
-                filePath=str(outputDirRoot / "particles_final.root"),
+                inputFinalParticles=particlesFinal,
+                inputSimHits=simHits,
+                filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
         s.addWriter(
             acts.examples.RootSimHitWriter(
                 level=customLogLevel(),
-                inputSimHits=inputSimHits,
+                inputSimHits=simHits,
                 filePath=str(outputDirRoot / "hits.root"),
             )
         )
@@ -605,7 +600,7 @@ def addGeant4(
     rnd: acts.examples.RandomNumbers,
     g4DetectorConstructionFactory: Optional[Any] = None,
     volumeMappings: List[str] = [],
-    materialMappings: List[str] = [],
+    materialMappings: List[str] = ["Silicon"],
     inputParticles: str = "particles_input",
     outputParticlesInitial: str = "particles_initial",
     outputParticlesFinal: str = "particles_final",
@@ -680,9 +675,9 @@ def addGeant4(
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
         inputParticles=particles_selected,
-        outputSimHits=outputSimHits,
         outputParticlesInitial=outputParticlesInitial,
         outputParticlesFinal=outputParticlesFinal,
+        outputSimHits=outputSimHits,
         trackingGeometry=trackingGeometry,
         magneticField=field,
         physicsList=physicsList,
@@ -728,11 +723,11 @@ def addGeant4(
     addSimWriters(
         s,
         alg.config.outputSimHits,
+        particlesInitial,
+        particlesFinal,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,
-        particlesInitial=particlesInitial,
-        particlesFinal=particlesFinal,
     )
 
     return s

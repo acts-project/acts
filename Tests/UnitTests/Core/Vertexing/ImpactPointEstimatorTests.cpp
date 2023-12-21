@@ -26,7 +26,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -98,7 +98,7 @@ Estimator makeEstimator(double bZ) {
   Stepper stepper(field);
   Estimator::Config cfg(field,
                         std::make_shared<Propagator>(
-                            std::move(stepper), detail::VoidNavigator(),
+                            std::move(stepper), VoidNavigator(),
                             getDefaultLogger("Prop", Logging::Level::WARNING)));
   return Estimator(cfg);
 }
@@ -127,9 +127,9 @@ Acts::SquareMatrix4 makeVertexCovariance() {
 }
 
 // random value between 0 and 1
-std::uniform_real_distribution<> uniformDist(0.0, 1.0);
+std::uniform_real_distribution<double> uniformDist(0.0, 1.0);
 // random sign
-std::uniform_real_distribution<> signDist(-1, 1);
+std::uniform_real_distribution<double> signDist(-1, 1);
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)

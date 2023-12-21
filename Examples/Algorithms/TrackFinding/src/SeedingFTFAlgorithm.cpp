@@ -64,6 +64,8 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
 
   m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
 
+  m_inputClusters.initialize(m_cfg.inputClusters);
+
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
@@ -92,6 +94,17 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   std::vector<Acts::FTF_SP<SimSpacePoint>> FTF_spacePoints =
       Make_FTF_spacePoints(ctx, m_cfg.ACTS_FTF_Map);
 
+  // cluster width
+  //  const ClusterContainer* clusters = &m_inputClusters(ctx) ;
+
+  // for (const auto& sp : FTF_spacePoints){
+  //   const auto& sl = sp.SP->sourceLinks().front().get<IndexSourceLink>() ;
+  //   const auto& cluster = clusters->at(sl.index()) ;
+  //   std::cout << "testing 0: " << cluster.sizeLoc0 << " 1: " <<
+  //   cluster.sizeLoc1 << std::endl ;
+
+  // }
+
   for (auto sp : FTF_spacePoints) {
     ACTS_DEBUG("FTF space points: "
                << " FTF_id: " << sp.FTF_ID << " z: " << sp.SP->z()
@@ -119,14 +132,15 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
   finder.loadSpacePoints(FTF_spacePoints);
 
+  // trigFTF file :
   Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0,
                                   150.0);
+  // ROI file:
+  //  Acts::RoiDescriptor internalRoi(0, -5, 5, 0, -M_PI, M_PI, 0, -225.0,
+  //                                  225.0);
 
-  finder.createSeeds(internalRoi, *mGNNgeo);
-
-  // still to develop
-  SimSeedContainer seeds = finder.createSeeds_old(
-      m_cfg.seedFinderOptions, FTF_spacePoints, create_coordinates);
+  // new version returns seeds
+  SimSeedContainer seeds = finder.createSeeds(internalRoi, *mGNNgeo);
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -249,7 +263,7 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
 std::vector<Acts::TrigInDetSiLayer>
 ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
   std::vector<Acts::TrigInDetSiLayer> input_vector;
-  std::vector<size_t> count_vector;
+  std::vector<std::size_t> count_vector;
 
   m_cfg.trackingGeometry->visitSurfaces([this, &input_vector, &count_vector](
                                             const Acts::Surface *surface) {
@@ -286,7 +300,8 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
         std::make_pair(ACTS_joint_id,
                        0);  // here the key needs to be pair of(vol*100+lay, 0)
     auto Find = m_cfg.ACTS_FTF_Map.find(key);
-    int FTF_id = Find->second.first;  // new map, item is pair want first
+    int FTF_id = 0;               // initialise first to avoid FLTUND later
+    FTF_id = Find->second.first;  // new map, item is pair want first
     if (Find ==
         m_cfg.ACTS_FTF_Map
             .end()) {  // if end then make new key of (vol*100+lay, modid)
@@ -337,7 +352,7 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
         find_if(input_vector.begin(), input_vector.end(),
                 [combined_id](auto n) { return n.m_subdet == combined_id; });
     if (current_index != input_vector.end()) {  // not end so does exist
-      size_t index = std::distance(input_vector.begin(), current_index);
+      std::size_t index = std::distance(input_vector.begin(), current_index);
       input_vector[index].m_refCoord += rc;
       input_vector[index].m_minBound += minBound;
       input_vector[index].m_maxBound += maxBound;

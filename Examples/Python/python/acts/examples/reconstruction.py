@@ -144,6 +144,12 @@ AmbiguityResolutionMLDBScanConfig = namedtuple(
     defaults=[None] * 3,
 )
 
+SeedFilterMLDBScanConfig = namedtuple(
+    "SeedFilterMLDBScanConfig",
+    ["epsilonDBScan", "minPointsDBScan", "minSeedScore"],
+    defaults=[None] * 3,
+)
+
 
 class VertexFinder(Enum):
     Truth = (1,)
@@ -187,6 +193,7 @@ def addSeeding(
     ] = acts.ParticleHypothesis.pion,
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> None:
@@ -367,6 +374,24 @@ def addSeeding(
                 parEstimateAlg.config.outputTrackParameters,
                 logLevel,
             )
+
+        if outputDirCsv is not None:
+            outputDirCsv = Path(outputDirCsv)
+
+            if not outputDirCsv.exists():
+                outputDirCsv.mkdir()
+
+            CsvSeedWriter = acts.examples.CsvSeedWriter(
+                level=logLevel,
+                inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
+                inputSimSeeds=seeds,
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                outputDir=str(outputDirCsv),
+                fileName=str(f"seed.csv"),
+            )
+            s.addWriter(CsvSeedWriter)
 
     return s
 
@@ -866,6 +891,7 @@ def addFTFSeeding(
         inputSourceLinks="sourcelinks",
         trackingGeometry=trackingGeometry,
         fill_module_csv=False,
+        inputClusters="clusters",
     )
 
     sequence.addAlgorithm(seedingAlg)
@@ -911,6 +937,86 @@ def addSeedPerformanceWriters(
             treeName="estimatedparams",
         )
     )
+
+
+acts.examples.NamedTypeArgs(
+    config=SeedFilterMLDBScanConfig,
+)
+
+
+def addSeedFilterML(
+    s,
+    config: SeedFilterMLDBScanConfig = SeedFilterMLDBScanConfig(),
+    onnxModelFile: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+) -> None:
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)()
+    from acts.examples.onnx.mlpack import SeedFilterMLAlgorithm
+
+    inputParticles = "particles"
+    selectedParticles = "truth_seeds_selected"
+    seeds = "seeds"
+    estParams = "estimatedparameters"
+
+    filterML = SeedFilterMLAlgorithm(
+        level=customLogLevel,
+        inputTrackParameters="estimatedparameters",
+        inputSimSeeds="seeds",
+        inputSeedFilterNN=onnxModelFile,
+        outputTrackParameters="filtered-parameters",
+        outputSimSeeds="filtered-seeds",
+        **acts.examples.defaultKWArgs(
+            epsilonDBScan=config.epsilonDBScan,
+            minPointsDBScan=config.minPointsDBScan,
+            minSeedScore=config.minSeedScore,
+        ),
+    )
+    s.addAlgorithm(filterML)
+    s.addWhiteboardAlias(seeds, "filtered-seeds")
+    s.addWhiteboardAlias("estimatedparameters", "filtered-parameters")
+
+    prototracks = "seed-prototracks-ML"
+    s.addAlgorithm(
+        acts.examples.SeedsToPrototracks(
+            level=customLogLevel,
+            inputSeeds=seeds,
+            outputProtoTracks=prototracks,
+        )
+    )
+
+    if outputDirRoot is not None:
+        addSeedPerformanceWriters(
+            s,
+            outputDirRoot,
+            seeds,
+            prototracks,
+            selectedParticles,
+            inputParticles,
+            estParams,
+            customLogLevel,
+        )
+
+    if outputDirCsv is not None:
+        outputDirCsv = Path(outputDirCsv)
+
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
+
+        CsvSeedWriter = acts.examples.CsvSeedWriter(
+            level=customLogLevel,
+            inputTrackParameters=estParams,
+            inputSimSeeds=seeds,
+            inputSimHits="simhits",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            outputDir=str(outputDirCsv),
+            fileName=str(f"seed.csv"),
+        )
+        s.addWriter(CsvSeedWriter)
+
+    return s
 
 
 def addKalmanTracks(
@@ -1113,10 +1219,12 @@ def addGx2fTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    # directNavigation: bool = False,
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = False,
     energyLoss: bool = False,
+    nUpdateMax: int = 5,
+    zeroField: bool = False,
+    relChi2changeCutOff: float = 1e-7,
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
@@ -1127,6 +1235,9 @@ def addGx2fTracks(
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
+        "nUpdateMax": nUpdateMax,
+        "zeroField": zeroField,
+        "relChi2changeCutOff": relChi2changeCutOff,
         "level": customLogLevel(),
     }
 
@@ -1584,6 +1695,7 @@ def addVertexFitting(
     outputVertices: str = "fittedVertices",
     seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     vertexFinder: VertexFinder = VertexFinder.Truth,
+    useTime: Optional[bool] = False,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1593,16 +1705,22 @@ def addVertexFitting(
     Parameters
     ----------
     s: Sequencer
-        the sequencer module to which we add the Seeding steps (returned from addVertexFitting)
+        the sequencer module to which we add the Seeding steps (returned from
+        addVertexFitting)
     field : magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     associatedParticles : str, "associatedTruthParticles"
         VertexPerformanceWriter.inputAssociatedTruthParticles
     seeder : enum member
-        determines vertex seeder, can be acts.seeder.GaussianSeeder or acts.seeder.AdaptiveGridSeeder
+        determines vertex seeder for AMVF, can be acts.seeder.GaussianSeeder or
+        acts.seeder.AdaptiveGridSeeder
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
+    useTime : bool
+        determines whether time information is used in vertex seeder, finder,
+        and fitter
+        only implemented for the AMVF and the AdaptiveGridSeeder
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     """
@@ -1668,8 +1786,9 @@ def addVertexFitting(
     elif vertexFinder == VertexFinder.AMVF:
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
-            bField=field,
             seedFinder=seeder,
+            useTime=useTime,
+            bField=field,
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,

@@ -74,7 +74,7 @@ const auto particleHypothesis = ParticleHypothesis::pion();
 struct Options {
   double stepTolerance = 1e-4;
   double stepSizeCutOff = 0.0;
-  size_t maxRungeKuttaStepTrials = 10;
+  std::size_t maxRungeKuttaStepTrials = 10;
   Direction direction = defaultNDir;
   const Acts::Logger &logger = Acts::getDummyLogger();
 };
@@ -107,7 +107,7 @@ using components_t = typename T::components;
 // Makes random bound parameters and covariance and a plane surface at {0,0,0}
 // with normal {1,0,0}. Optionally some external fixed bound parameters can be
 // supplied
-auto makeDefaultBoundPars(bool cov = true, size_t n = 4,
+auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
                           std::optional<BoundVector> ext_pars = std::nullopt) {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps;
@@ -138,7 +138,7 @@ void test_multi_stepper_state() {
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
-  constexpr size_t N = 4;
+  constexpr std::size_t N = 4;
   const auto multi_pars = makeDefaultBoundPars(Cov, N, BoundVector::Ones());
 
   MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize);

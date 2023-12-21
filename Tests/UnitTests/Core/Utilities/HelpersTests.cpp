@@ -157,15 +157,15 @@ BOOST_AUTO_TEST_CASE(VectorHelpersPosition) {
   BOOST_CHECK_EQUAL(position(params), Vector3(1, 2, 3));
 }
 
-template <size_t I>
+template <std::size_t I>
 struct functor {
-  static constexpr size_t invoke() { return I * I * I; }
+  static constexpr std::size_t invoke() { return I * I * I; }
 };
 
 BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {
-  constexpr size_t imax = 20;
-  for (size_t i = 0; i < imax; i++) {
-    size_t val = template_switch<functor, 0, imax>(i);
+  constexpr std::size_t imax = 20;
+  for (std::size_t i = 0; i < imax; i++) {
+    std::size_t val = template_switch<functor, 0, imax>(i);
     BOOST_CHECK_EQUAL(val, i * i * i);
   }
 }
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
   using B = typename Matrices::second_type;
   using C = ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime>;
 
-  for (size_t i = 0; i < 100; ++i) {
+  for (std::size_t i = 0; i < 100; ++i) {
     A a = A::Random();
     B b = B::Random();
 
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
   RotationMatrix3 ref = RotationMatrix3::Identity();
 
   // Right angle in both planes
-  for (size_t i = 0; i < 3; i++) {
+  for (std::size_t i = 0; i < 3; i++) {
     Vector3 dir = Vector3::Zero();
     dir[i] = 1;
     std::pair<double, double> angles = incidentAngles(dir, ref);

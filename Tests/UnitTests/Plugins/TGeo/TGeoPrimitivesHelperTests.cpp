@@ -14,11 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 /// @brief Unit test checking the match probability

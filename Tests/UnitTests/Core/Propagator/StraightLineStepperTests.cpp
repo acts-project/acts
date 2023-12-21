@@ -36,14 +36,12 @@
 #include <tuple>
 #include <utility>
 
-namespace tt = boost::test_tools;
 using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace Test {
 
 using Covariance = BoundSquareMatrix;
-using Jacobian = BoundMatrix;
 
 /// @brief Simplified propagator state
 struct PropState {
@@ -158,11 +156,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
 
-  sls.setStepSize(slsState, -1337.);
+  sls.updateStepSize(slsState, -1337., ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(slsState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), -1337.);
 
-  sls.releaseStepSize(slsState);
+  sls.releaseStepSize(slsState, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(sls.outputStepSize(slsState), originalStepSize);
 

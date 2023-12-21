@@ -40,8 +40,8 @@ GeometryContext geoContext = GeometryContext();
 
 BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   // Define the size of the grids
-  constexpr size_t mainGridSize = 400;
-  constexpr size_t trkGridSize = 15;
+  constexpr std::size_t mainGridSize = 400;
+  constexpr std::size_t trkGridSize = 15;
 
   using Grid = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 

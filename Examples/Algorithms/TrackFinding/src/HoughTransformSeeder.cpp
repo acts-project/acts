@@ -184,7 +184,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
 
           std::vector<std::vector<std::vector<Index>>> hitIndicesAll(
               m_cfg.nLayers);  // [layer,vector<Index]
-          std::vector<size_t> nHitsPerLayer(m_cfg.nLayers);
+          std::vector<std::size_t> nHitsPerLayer(m_cfg.nLayers);
           for (auto measurementIndex : m_houghHist(y, x).second) {
             HoughMeasurementStruct* meas =
                 houghMeasurementStructs[measurementIndex].get();
@@ -364,7 +364,7 @@ double ActsExamples::HoughTransformSeeder::yToX(double y, double r,
 // Note this assumes yToX is monotonic. Returns {0, 0} if hit lies out of
 // bounds.
 std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(
-    size_t yBin_min, size_t yBin_max, double r, double phi,
+    std::size_t yBin_min, std::size_t yBin_max, double r, double phi,
     unsigned layer) const {
   double x_min = yToX(m_bins_y[yBin_min], r, phi);
   double x_max = yToX(m_bins_y[yBin_max], r, phi);
@@ -434,12 +434,12 @@ unsigned ActsExamples::HoughTransformSeeder::getExtension(
  */
 std::vector<std::vector<int>>
 ActsExamples::HoughTransformSeeder::getComboIndices(
-    std::vector<size_t>& sizes) const {
-  size_t nCombs = 1;
-  std::vector<size_t> nCombs_prior(sizes.size());
+    std::vector<std::size_t>& sizes) const {
+  std::size_t nCombs = 1;
+  std::vector<std::size_t> nCombs_prior(sizes.size());
   std::vector<int> temp(sizes.size(), 0);
 
-  for (size_t i = 0; i < sizes.size(); i++) {
+  for (std::size_t i = 0; i < sizes.size(); i++) {
     if (sizes[i] > 0) {
       nCombs_prior[i] = nCombs;
       nCombs *= sizes[i];
@@ -450,9 +450,9 @@ ActsExamples::HoughTransformSeeder::getComboIndices(
 
   std::vector<std::vector<int>> combos(nCombs, temp);
 
-  for (size_t icomb = 0; icomb < nCombs; icomb++) {
-    size_t index = icomb;
-    for (size_t isize = sizes.size() - 1; isize < sizes.size(); isize--) {
+  for (std::size_t icomb = 0; icomb < nCombs; icomb++) {
+    std::size_t index = icomb;
+    for (std::size_t isize = sizes.size() - 1; isize < sizes.size(); isize--) {
       if (sizes[isize] == 0) {
         continue;
       }

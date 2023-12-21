@@ -64,7 +64,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
   // Setup ROOT I/O
   m_inputFile = TFile::Open(m_cfg.fileName.c_str());
   if (m_inputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.fileName);
+    throw std::ios_base::failure("Could not open '" + m_cfg.fileName + "'");
   }
 
   // Get the list of keys from the file
@@ -182,7 +182,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           // Now reconstruct the bin untilities
           Acts::BinUtility bUtility;
           for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
-            size_t nbins = size_t(n->GetBinContent(ib));
+            std::size_t nbins = std::size_t(n->GetBinContent(ib));
             Acts::BinningValue val = Acts::BinningValue(v->GetBinContent(ib));
             Acts::BinningOption opt = Acts::BinningOption(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);
@@ -265,7 +265,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           // Now reconstruct the bin untilities
           Acts::BinUtility bUtility;
           for (int ib = 1; ib < dim + 1; ++ib) {
-            size_t nbins = size_t(n->GetBinContent(ib));
+            std::size_t nbins = std::size_t(n->GetBinContent(ib));
             Acts::BinningValue val = Acts::BinningValue(v->GetBinContent(ib));
             Acts::BinningOption opt = Acts::BinningOption(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);

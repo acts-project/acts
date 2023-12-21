@@ -76,6 +76,8 @@ class VertexPerformanceWriter final
     double truthMatchProbMin = 0.5;
     /// Whether information about tracks is available
     bool useTracks = true;
+    /// minimum track weight for track to be considered as part of the fit
+    double minTrkWeight = 0.1;
   };
 
   /// Constructor
@@ -183,6 +185,10 @@ class VertexPerformanceWriter final
   std::vector<std::vector<double>> m_pullThetaFitted;
   std::vector<std::vector<double>> m_pullQOverP;
   std::vector<std::vector<double>> m_pullQOverPFitted;
+
+  // Track weights from vertex fit, will be set to 1 if we do unweighted vertex
+  // fitting
+  std::vector<std::vector<double>> m_trkWeight;
 
   // Number of tracks associated with truth/reconstructed vertex
   std::vector<int> m_nTracksOnTruthVertex;

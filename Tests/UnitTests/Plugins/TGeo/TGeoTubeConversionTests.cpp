@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
       gGeoManager->MakeTubs("Tube", med, rmin, rmax, hz, phimin, phimax);
   gGeoManager->CloseGeometry();
 
-  size_t icyl = 0;
+  std::size_t icyl = 0;
   for (const auto &axes : allowedAxes) {
     auto [cylinder, thickness] = TGeoSurfaceConverter::toSurface(
         *vol->GetShape(), *gGeoIdentity, axes, 1);
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
       gGeoManager->MakeTubs("Tube", med, rmin, rmax, hz, phimin, phimax);
   gGeoManager->CloseGeometry();
 
-  size_t idisc = 0;
+  std::size_t idisc = 0;
   for (const auto &axes : allowedAxes) {
     auto [disc, thickness] = TGeoSurfaceConverter::toSurface(
         *vol->GetShape(), *gGeoIdentity, axes, 1);

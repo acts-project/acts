@@ -69,7 +69,7 @@ struct TGeoDetector {
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<Acts::GeometryIdentifierHook>();
 
-    enum SubVolume : size_t { Negative = 0, Central, Positive };
+    enum SubVolume : std::size_t { Negative = 0, Central, Positive };
 
     template <typename T>
     struct LayerTriplet {

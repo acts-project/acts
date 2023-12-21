@@ -44,7 +44,7 @@ ActsExamples::DigitizationConfig::getBoundIndices() const {
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
       bIndexInput;
 
-  for (size_t ibi = 0; ibi < digitizationConfigs.size(); ++ibi) {
+  for (std::size_t ibi = 0; ibi < digitizationConfigs.size(); ++ibi) {
     Acts::GeometryIdentifier geoID = digitizationConfigs.idAt(ibi);
     const auto dCfg = digitizationConfigs.valueAt(ibi);
     std::vector<Acts::BoundIndices> boundIndices;

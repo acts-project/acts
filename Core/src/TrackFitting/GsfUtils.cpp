@@ -19,14 +19,11 @@ using TrackStateTraits =
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>;
 
 ActsScalar calculateDeterminant(
-    const double* fullCalibrated, const double* fullCalibratedCovariance,
+    const double* fullCalibratedCovariance,
     TrackStateTraits::Covariance predictedCovariance,
     TrackStateTraits::Projector projector, unsigned int calibratedSize) {
   return visit_measurement(calibratedSize, [&](auto N) {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
-
-    typename Acts::TrackStateTraits<kMeasurementSize, true>::Measurement
-        calibrated{fullCalibrated};
 
     typename Acts::TrackStateTraits<
         kMeasurementSize, true>::MeasurementCovariance calibratedCovariance{

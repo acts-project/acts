@@ -170,7 +170,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
           }
 
           std::vector<std::pair<Vector2, Vector2>> boundLines;
-          for (size_t i = 0; i < vertices.size(); ++i) {
+          for (std::size_t i = 0; i < vertices.size(); ++i) {
             Vector2 a = vertices.at(i);
             Vector2 b = vertices.at((i + 1) % vertices.size());
             Vector2 ab = b - a;

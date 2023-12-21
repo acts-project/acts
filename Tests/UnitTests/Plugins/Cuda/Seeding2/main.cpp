@@ -133,13 +133,13 @@ int main(int argc, char* argv[]) {
 
   // Allocate memory on the selected CUDA device.
   if (Acts::Cuda::Info::instance().devices().size() <=
-      static_cast<size_t>(cmdl.cudaDevice)) {
+      static_cast<std::size_t>(cmdl.cudaDevice)) {
     std::cerr << "Invalid CUDA device (" << cmdl.cudaDevice << ") requested"
               << std::endl;
     return 1;
   }
-  static constexpr size_t MEGABYTES = 1024l * 1024l;
-  size_t deviceMemoryAllocation = cmdl.cudaDeviceMemory * MEGABYTES;
+  static constexpr std::size_t MEGABYTES = 1024l * 1024l;
+  std::size_t deviceMemoryAllocation = cmdl.cudaDeviceMemory * MEGABYTES;
   if (deviceMemoryAllocation == 0) {
     deviceMemoryAllocation =
         Acts::Cuda::Info::instance().devices()[cmdl.cudaDevice].totalMemory *
@@ -174,11 +174,20 @@ int main(int argc, char* argv[]) {
   // Create the result object.
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_host;
 
+  std::array<std::vector<std::size_t>, 2ul> navigation;
+  navigation[0ul].resize(spGroup.grid().numLocalBins()[0ul]);
+  navigation[1ul].resize(spGroup.grid().numLocalBins()[1ul]);
+  std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
+  std::iota(navigation[1ul].begin(), navigation[1ul].end(), 1ul);
+
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
     decltype(seedFinder_host)::SeedingState state;
-    for (size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-      auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+    for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
+      std::array<std::size_t, 2ul> localPosition =
+          spGroup.grid().localBinsFromGlobalBin(i);
+      auto spGroup_itr =
+          Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
       }
@@ -213,8 +222,11 @@ int main(int argc, char* argv[]) {
   spacePointData.resize(spView.size());
 
   // Perform the seed finding.
-  for (size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-    auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+  for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
+    std::array<std::size_t, 2ul> localPosition =
+        spGroup.grid().localBinsFromGlobalBin(i);
+    auto spGroup_itr =
+        Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;
     }
@@ -236,7 +248,7 @@ int main(int argc, char* argv[]) {
   //
 
   // Count the total number of reconstructed seeds.
-  size_t nSeeds_host = 0, nSeeds_device = 0;
+  std::size_t nSeeds_host = 0, nSeeds_device = 0;
   for (const auto& seeds : seeds_host) {
     nSeeds_host += seeds.size();
   }
@@ -246,11 +258,11 @@ int main(int argc, char* argv[]) {
 
   // Count how many seeds, reconstructed on the host, can be matched with seeds
   // reconstructed on the accelerator.
-  size_t nMatch = 0;
+  std::size_t nMatch = 0;
   double matchPercentage = 0.0;
   if (!cmdl.onlyGPU) {
     assert(seeds_host.size() == seeds_device.size());
-    for (size_t i = 0; i < seeds_host.size(); i++) {
+    for (std::size_t i = 0; i < seeds_host.size(); i++) {
       // Access the seeds for this region.
       const auto& seeds_in_host_region = seeds_host[i];
       const auto& seeds_in_device_region = seeds_device[i];

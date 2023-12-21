@@ -36,7 +36,7 @@ namespace Kernels {
 /// @param[out] dubletCounts 1-D array of @c Acts::Cuda::Details::DubletCounts
 ///             objects for each execution block
 ///
-__global__ void countDublets(size_t nMiddleSPs,
+__global__ void countDublets(std::size_t nMiddleSPs,
                              const unsigned int* middleBottomCounts,
                              const unsigned int* middleTopCounts,
                              Details::DubletCounts* dubletCounts) {
@@ -101,7 +101,7 @@ __global__ void countDublets(size_t nMiddleSPs,
 namespace Details {
 
 DubletCounts countDublets(
-    size_t maxBlockSize, size_t nMiddleSP,
+    std::size_t maxBlockSize, std::size_t nMiddleSP,
     const device_array<unsigned int>& middleBottomCountArray,
     const device_array<unsigned int>& middleTopCountArray) {
   // Calculate the parallelisation for the dublet counting.

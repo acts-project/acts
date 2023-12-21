@@ -24,29 +24,41 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
   VectorTrackContainer vtc{};
   VectorMultiTrajectory mtj{};
   TrackContainer tc{vtc, mtj};
-  tc.addColumn<size_t>("counter");
+  tc.addColumn<std::size_t>("counter");
   tc.addColumn<bool>("odd");
+  mtj.addColumn<std::size_t>("ts_counter");
+  mtj.addColumn<bool>("ts_odd");
 
   TrackContainer tc2{VectorTrackContainer{}, VectorMultiTrajectory{}};
   // doesn't have the dynamic column
 
-  TrackContainer tc3{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  tc3.addColumn<size_t>("counter");
+  VectorTrackContainer vtc3{};
+  VectorMultiTrajectory mtj3{};
+  mtj3.addColumn<std::size_t>("ts_counter");
+  mtj3.addColumn<bool>("ts_odd");
+
+  TrackContainer tc3{vtc3, mtj3};
+
+  tc3.addColumn<std::size_t>("counter");
   tc3.addColumn<bool>("odd");
 
-  for (size_t i = 0; i < 10; i++) {
+  for (std::size_t i = 0; i < 10; i++) {
     auto t = tc.getTrack(tc.addTrack());
     auto ts = t.appendTrackState();
     ts.predicted() = BoundVector::Ones();
+    ts.component<std::size_t, "ts_counter"_hash>() = i;
+
     ts = t.appendTrackState();
     ts.predicted().setOnes();
     ts.predicted() *= 2;
+    ts.component<std::size_t, "ts_counter"_hash>() = i + 1;
 
     ts = t.appendTrackState();
     ts.predicted().setOnes();
     ts.predicted() *= 3;
+    ts.component<std::size_t, "ts_counter"_hash>() = i + 2;
 
-    t.template component<size_t>("counter") = i;
+    t.template component<std::size_t>("counter") = i;
     t.template component<bool>("odd") = i % 2 == 0;
 
     auto t2 = tc2.getTrack(tc2.addTrack());
@@ -63,25 +75,37 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     for (auto [tsa, tsb] :
          zip(t.trackStatesReversed(), t3.trackStatesReversed())) {
       BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
+
+      BOOST_CHECK_EQUAL(
+          (tsa.template component<std::size_t, "ts_counter"_hash>()),
+          (tsb.template component<std::size_t, "ts_counter"_hash>()));
+
+      BOOST_CHECK_EQUAL((tsa.template component<bool, "ts_odd"_hash>()),
+                        (tsb.template component<bool, "ts_odd"_hash>()));
     }
 
-    BOOST_CHECK_EQUAL(t.template component<size_t>("counter"),
-                      t3.template component<size_t>("counter"));
+    BOOST_CHECK_EQUAL(t.template component<std::size_t>("counter"),
+                      t3.template component<std::size_t>("counter"));
     BOOST_CHECK_EQUAL(t.template component<bool>("odd"),
                       t3.template component<bool>("odd"));
   }
 
-  size_t before = mtj.size();
+  std::size_t before = mtj.size();
   TrackContainer tc4{ConstVectorTrackContainer{vtc},
                      ConstVectorMultiTrajectory{mtj}};
 
   BOOST_REQUIRE_EQUAL(tc4.trackStateContainer().size(), before);
 
-  TrackContainer tc5{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  tc5.addColumn<size_t>("counter");
+  VectorTrackContainer vtc5{};
+  VectorMultiTrajectory mtj5{};
+  mtj5.addColumn<std::size_t>("ts_counter");
+  mtj5.addColumn<bool>("ts_odd");
+
+  TrackContainer tc5{vtc5, mtj5};
+  tc5.addColumn<std::size_t>("counter");
   tc5.addColumn<bool>("odd");
 
-  for (size_t i = 0; i < 10; i++) {
+  for (std::size_t i = 0; i < 10; i++) {
     auto t4 = tc4.getTrack(i);  // const source!
     BOOST_CHECK_NE(t4.nTrackStates(), 0);
 
@@ -97,8 +121,8 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
       BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
     }
 
-    BOOST_CHECK_EQUAL(t4.template component<size_t>("counter"),
-                      t5.template component<size_t>("counter"));
+    BOOST_CHECK_EQUAL(t4.template component<std::size_t>("counter"),
+                      t5.template component<std::size_t>("counter"));
     BOOST_CHECK_EQUAL(t4.template component<bool>("odd"),
                       t5.template component<bool>("odd"));
   }
@@ -111,7 +135,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
 
   auto t = tc.getTrack(tc.addTrack());
 
-  for (size_t i = 0; i < 4; i++) {
+  for (std::size_t i = 0; i < 4; i++) {
     auto ts = t.appendTrackState();
     ts.jacobian() = Acts::BoundMatrix::Identity() * i;
   }
