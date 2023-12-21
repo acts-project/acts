@@ -1,20 +1,22 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
+
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
+namespace Acts {
 
-template <int mainGridSize, int trkGridSize>
-Acts::Result<float>
-Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
+Result<float> GaussianGridTrackDensity::getMaxZPosition(
     MainGridVector& mainGrid) const {
-  if (mainGrid == MainGridVector::Zero()) {
+  if (mainGrid.isZero(0)) {
     return VertexingError::EmptyInput;
   }
 
@@ -29,13 +31,12 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
   }
 
   // Derive corresponding z value
-  return (zbin - mainGridSize / 2.0f + 0.5f) * m_cfg.binSize;
+  return (zbin - m_cfg.mainGridSize / 2.0f + 0.5f) * m_cfg.binSize;
 }
 
-template <int mainGridSize, int trkGridSize>
-Acts::Result<std::pair<float, float>> Acts::GaussianGridTrackDensity<
-    mainGridSize, trkGridSize>::getMaxZPositionAndWidth(MainGridVector&
-                                                            mainGrid) const {
+Result<std::pair<float, float>>
+GaussianGridTrackDensity::getMaxZPositionAndWidth(
+    MainGridVector& mainGrid) const {
   // Get z maximum value
   auto maxZRes = getMaxZPosition(mainGrid);
   if (!maxZRes.ok()) {
@@ -53,11 +54,9 @@ Acts::Result<std::pair<float, float>> Acts::GaussianGridTrackDensity<
   return returnPair;
 }
 
-template <int mainGridSize, int trkGridSize>
-std::pair<int, typename Acts::GaussianGridTrackDensity<
-                   mainGridSize, trkGridSize>::TrackGridVector>
-Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
-    const Acts::BoundTrackParameters& trk, MainGridVector& mainGrid) const {
+std::pair<int, GaussianGridTrackDensity::TrackGridVector>
+GaussianGridTrackDensity::addTrack(const BoundTrackParameters& trk,
+                                   MainGridVector& mainGrid) const {
   SquareMatrix2 cov = trk.spatialImpactParameterCovariance().value();
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
@@ -66,17 +65,17 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   int dOffset = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
   // Check if current track does affect grid density
   // in central bins at z-axis
-  if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
+  if (std::abs(dOffset) > (m_cfg.trkGridSize - 1) / 2.) {
     // Current track is too far away to contribute
     // to track density at z-axis bins
-    return {-1, TrackGridVector::Zero()};
+    return {-1, TrackGridVector::Zero(m_cfg.trkGridSize)};
   }
 
   // Calculate bin in z
-  int zBin = int(z0 / m_cfg.binSize + mainGridSize / 2.);
+  int zBin = int(z0 / m_cfg.binSize + m_cfg.mainGridSize / 2.);
 
-  if (zBin < 0 || zBin >= mainGridSize) {
-    return {-1, TrackGridVector::Zero()};
+  if (zBin < 0 || zBin >= m_cfg.mainGridSize) {
+    return {-1, TrackGridVector::Zero(m_cfg.trkGridSize)};
   }
   // Calculate the positions of the bin centers
   float binCtrZ = (zBin + 0.5f) * m_cfg.binSize - m_cfg.zMinMax;
@@ -93,71 +92,61 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   return {zBin, trackGrid};
 }
 
-template <int mainGridSize, int trkGridSize>
-void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
-    addTrackGridToMainGrid(int zBin, const TrackGridVector& trkGrid,
-                           MainGridVector& mainGrid) const {
+void GaussianGridTrackDensity::addTrackGridToMainGrid(
+    int zBin, const TrackGridVector& trkGrid, MainGridVector& mainGrid) const {
   modifyMainGridWithTrackGrid(zBin, trkGrid, mainGrid, +1);
 }
 
-template <int mainGridSize, int trkGridSize>
-void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
-    removeTrackGridFromMainGrid(int zBin, const TrackGridVector& trkGrid,
-                                MainGridVector& mainGrid) const {
+void GaussianGridTrackDensity::removeTrackGridFromMainGrid(
+    int zBin, const TrackGridVector& trkGrid, MainGridVector& mainGrid) const {
   modifyMainGridWithTrackGrid(zBin, trkGrid, mainGrid, -1);
 }
 
-template <int mainGridSize, int trkGridSize>
-void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
-    modifyMainGridWithTrackGrid(int zBin, const TrackGridVector& trkGrid,
-                                MainGridVector& mainGrid,
-                                int modifyModeSign) const {
-  int width = (trkGridSize - 1) / 2;
+void GaussianGridTrackDensity::modifyMainGridWithTrackGrid(
+    int zBin, const TrackGridVector& trkGrid, MainGridVector& mainGrid,
+    int modifyModeSign) const {
+  int width = (m_cfg.trkGridSize - 1) / 2;
   // Overlap left
   int leftOL = zBin - width;
   // Overlap right
-  int rightOL = zBin + width - mainGridSize + 1;
+  int rightOL = zBin + width - m_cfg.mainGridSize + 1;
   if (leftOL < 0) {
-    int totalTrkSize = trkGridSize + leftOL;
+    int totalTrkSize = m_cfg.trkGridSize + leftOL;
     mainGrid.segment(0, totalTrkSize) +=
         modifyModeSign * trkGrid.segment(-leftOL, totalTrkSize);
     return;
   }
   if (rightOL > 0) {
-    int totalTrkSize = trkGridSize - rightOL;
-    mainGrid.segment(mainGridSize - totalTrkSize, totalTrkSize) +=
+    int totalTrkSize = m_cfg.trkGridSize - rightOL;
+    mainGrid.segment(m_cfg.mainGridSize - totalTrkSize, totalTrkSize) +=
         modifyModeSign * trkGrid.segment(0, totalTrkSize);
     return;
   }
 
-  mainGrid.segment(zBin - width, trkGridSize) += modifyModeSign * trkGrid;
+  mainGrid.segment(zBin - width, m_cfg.trkGridSize) += modifyModeSign * trkGrid;
 }
 
-template <int mainGridSize, int trkGridSize>
-typename Acts::GaussianGridTrackDensity<mainGridSize,
-                                        trkGridSize>::TrackGridVector
-Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
-    float d0, float distCtrZ, const Acts::SquareMatrix2& cov) const {
-  TrackGridVector trackGrid(TrackGridVector::Zero());
-  float floorHalfTrkGridSize = static_cast<float>(trkGridSize) / 2 - 0.5f;
+GaussianGridTrackDensity::TrackGridVector
+GaussianGridTrackDensity::createTrackGrid(float d0, float distCtrZ,
+                                          const SquareMatrix2& cov) const {
+  TrackGridVector trackGrid(TrackGridVector::Zero(m_cfg.trkGridSize));
+  float floorHalfTrkGridSize = static_cast<float>(m_cfg.trkGridSize) / 2 - 0.5f;
 
   // Loop over columns
-  for (int j = 0; j < trkGridSize; j++) {
+  for (int j = 0; j < m_cfg.trkGridSize; j++) {
     float z = (j - floorHalfTrkGridSize) * m_cfg.binSize;
     trackGrid(j) = normal2D(-d0, z - distCtrZ, cov);
   }
   return trackGrid;
 }
 
-template <int mainGridSize, int trkGridSize>
-Acts::Result<float>
-Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
+Result<float> GaussianGridTrackDensity::estimateSeedWidth(
     MainGridVector& mainGrid, float maxZ) const {
-  if (mainGrid == MainGridVector::Zero()) {
+  if (mainGrid.isZero(0)) {
     return VertexingError::EmptyInput;
   }
   // Get z bin of max density z value
-  int zBin = int(maxZ / m_cfg.binSize + mainGridSize / 2.);
+  int zBin = int(maxZ / m_cfg.binSize + m_cfg.mainGridSize / 2.);
 
   const float maxValue = mainGrid(zBin);
   float gridValue = mainGrid(zBin);
@@ -195,9 +184,8 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
   return std::isnormal(width) ? width : 0.0f;
 }
 
-template <int mainGridSize, int trkGridSize>
-float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
-    float d, float z, const Acts::SquareMatrix2& cov) const {
+float GaussianGridTrackDensity::normal2D(float d, float z,
+                                         const SquareMatrix2& cov) const {
   float det = cov.determinant();
   float coef = 1 / std::sqrt(det);
   float expo =
@@ -206,9 +194,8 @@ float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
   return coef * safeExp(expo);
 }
 
-template <int mainGridSize, int trkGridSize>
-int Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
-    getHighestSumZPosition(MainGridVector& mainGrid) const {
+int GaussianGridTrackDensity::getHighestSumZPosition(
+    MainGridVector& mainGrid) const {
   // Checks the first (up to) 3 density maxima, if they are close, checks which
   // one has the highest surrounding density sum (the two neighboring bins)
 
@@ -255,9 +242,8 @@ int Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
   return zFirstMax;
 }
 
-template <int mainGridSize, int trkGridSize>
-double Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getDensitySum(
-    const MainGridVector& mainGrid, int pos) const {
+double GaussianGridTrackDensity::getDensitySum(const MainGridVector& mainGrid,
+                                               int pos) const {
   double sum = mainGrid(pos);
   // Sum up only the density contributions from the
   // neighboring bins if they are still within bounds
@@ -269,3 +255,5 @@ double Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getDensitySum(
   }
   return sum;
 }
+
+}  // namespace Acts
