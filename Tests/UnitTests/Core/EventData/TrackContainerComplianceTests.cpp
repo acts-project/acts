@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -73,7 +74,7 @@ ACTS_DOES_NOT_COMPILE_SUITE_BEGIN(BuildFromConstRef)
   auto t = tc.getTrack(tc.addTrack());
   (void)t;
 
-  ConstTrackAccessor<unsigned int> caccNMeasuements("nMeasurements");
+  ConstProxyAccessor<unsigned int> caccNMeasuements("nMeasurements");
   ACTS_DOES_NOT_COMPILE_BEGIN(ConstAccessorMutate)
   caccNMeasuements(t) = 66;
   ACTS_DOES_NOT_COMPILE_END()

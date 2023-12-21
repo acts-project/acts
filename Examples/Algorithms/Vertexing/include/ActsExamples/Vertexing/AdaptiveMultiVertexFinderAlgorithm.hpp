@@ -112,4 +112,5 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
 };
+
 }  // namespace ActsExamples
