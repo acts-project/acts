@@ -324,7 +324,7 @@ class TryAllNavigator {
   /// @return Boolean to indicate if we continue with the actors and
   ///         aborters or if we should target again.
   template <typename propagator_state_t, typename stepper_t>
-  bool postStep(propagator_state_t& state, const stepper_t& stepper) const {
+  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state) << "post step");
 
     assert(state.navigation.currentSurface == nullptr &&
@@ -332,7 +332,7 @@ class TryAllNavigator {
 
     if (state.navigation.intersectionCandidates.empty()) {
       ACTS_VERBOSE(volInfo(state) << "no intersections.");
-      return true;
+      return;
     }
 
     std::vector<detail::IntersectionCandidate> hitCandidates;
@@ -355,7 +355,7 @@ class TryAllNavigator {
 
     if (hitCandidates.empty()) {
       ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
-      return true;
+      return;
     }
 
     state.navigation.intersectionCandidates.clear();
@@ -389,7 +389,7 @@ class TryAllNavigator {
     if (trueHitCandidates.empty()) {
       ACTS_VERBOSE(volInfo(state)
                    << "Surface successfully hit, but outside bounds.");
-      return true;
+      return;
     }
 
     if (trueHitCandidates.size() > 1) {
@@ -429,8 +429,6 @@ class TryAllNavigator {
     } else {
       ACTS_ERROR(volInfo(state) << "Unknown intersection type");
     }
-
-    return true;
   }
 
  private:
