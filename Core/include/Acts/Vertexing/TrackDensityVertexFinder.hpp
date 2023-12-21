@@ -29,15 +29,12 @@ namespace Acts {
 /// of the maximum of all summed track density functions.
 ///
 /// Ref. (1): https://cds.cern.ch/record/2670380
-///
-/// @tparam track_density_t The track density type
-template <typename track_density_t = GaussianTrackDensity>
 class TrackDensityVertexFinder final : public IVertexFinder {
  public:
   /// @brief The Config struct
   struct Config {
     // The track density estimator
-    track_density_t trackDensityEstimator;
+    GaussianTrackDensity trackDensityEstimator;
   };
 
   /// State struct for fulfilling interface
