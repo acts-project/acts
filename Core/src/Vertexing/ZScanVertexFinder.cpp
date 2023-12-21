@@ -1,15 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline auto Acts::ZScanVertexFinder::find(
-    const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& /*state*/) const -> Result<std::vector<Vertex>> {
+#include "Acts/Vertexing/ZScanVertexFinder.hpp"
+
+auto Acts::ZScanVertexFinder::find(const std::vector<InputTrack>& trackVector,
+                                   const VertexingOptions& vertexingOptions,
+                                   IVertexFinder::State& /*state*/) const
+    -> Result<std::vector<Vertex>> {
   double ZResult = 0.;
   // Prepare the vector of points, on which the 3d mode has later to be
   // calculated

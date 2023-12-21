@@ -119,5 +119,3 @@ class ZScanVertexFinder final : public IVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "ZScanVertexFinder.ipp"
