@@ -39,10 +39,20 @@ BinnedGroup<grid_t>::BinnedGroup(std::unique_ptr<grid_t> grid,
 }
   
 template <typename grid_t>
-const grid_t& BinnedGroup<grid_t>::grid() const { return *m_grid.get(); }
+const grid_t& BinnedGroup<grid_t>::grid() const {
+  if (m_grid == nullptr) {
+    throw std::runtime_error("Trying to retrieve grid from Binned Group, but grid is a nullptr!");
+  }
+  return *m_grid.get();
+}
 
 template <typename grid_t>
-grid_t& BinnedGroup<grid_t>::grid() { return *m_grid.get(); }
+grid_t& BinnedGroup<grid_t>::grid() {
+  if (m_grid == nullptr) {
+    throw std::runtime_error("Trying to retrieve grid from Binned Group, but grid is a nullptr!");
+  }
+  return *m_grid.get();
+}
 
 template <typename grid_t>
 Acts::BinnedGroupIterator<grid_t> BinnedGroup<grid_t>::begin() const {
@@ -158,5 +168,5 @@ void BinnedGroup<grid_t>::fill(const Acts::SeedFinderConfig<external_spacepoint_
         });
   }  
 }
-
+  
 } // namespace Acts

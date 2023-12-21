@@ -113,7 +113,7 @@ private:
 
 } // namespace Acts
 
-#include "Acts/Seeding/BinnedSPGroupIterator.ipp"
+#include "Acts/Seeding/BinnedGroupIterator.ipp"
 
 namespace Acts {
   template <typename external_spacepoint_t>

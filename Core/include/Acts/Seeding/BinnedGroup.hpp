@@ -14,13 +14,19 @@
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Seeding/BinnedSPGroupIterator.hpp"
+#include "Acts/Seeding/BinnedGroupIterator.hpp"
 
 #include <memory>
 #include <vector>
 
 namespace Acts {
 
+/// @class BinnedGroup
+/// @tparam grid_t Type of the grid the group owns
+///  
+/// The assumption is that the grid has ownership of the space points and
+/// that the grid value_type (i.e. T in Grid<T, Axes ...>) is an iterable
+/// object of space points, such as a vector< ... >  
 template <typename grid_t>
 class BinnedGroup {
 public:
@@ -41,11 +47,11 @@ public:
   
   /// @brief Copy constructor
   /// @param [in] other The BinnedGroup to copy
-  BinnedGroup(const BinnedGroup<grid_t>& other) = default;
+  BinnedGroup(const BinnedGroup<grid_t>& other) = delete;
   /// @brief Copy assignment
   /// @param [in] other The BinnedGroup to copy
   /// @return The copied BinnedGroup
-  BinnedGroup<grid_t>& operator=(const BinnedGroup<grid_t>& other) = default;
+  BinnedGroup<grid_t>& operator=(const BinnedGroup<grid_t>& other) = delete;
 
   /// @brief Move Constructor
   /// @param [in] other The BinnedGroup to move
@@ -73,6 +79,16 @@ public:
   Acts::BinnedGroupIterator<grid_t> end() const;
 
   /// @brief Fill the grid
+  /// @tparam external_spacepoint_t The type of the external space points
+  /// @tparam spacepoint_iterator_t The type of the iterator on the collection of external space points
+  /// @tparam callable_t The type of the function for extracting global info
+  ///
+  /// @param [in] config Configuration object for the seed finder
+  /// @param [in] options Seed Finder options
+  /// @param [in] spBegin First element to be inserted in the grid
+  /// @param [in] spEnd Last element to be inserted in the grid
+  /// @param [in] toGlobal User-provided function for extracting global quantities from external space points
+  /// @param [in] rRangeSPExtent An Acts Extent object
   template < typename external_spacepoint_t,
 	     typename spacepoint_iterator_t,
 	     typename callable_t>  
@@ -95,7 +111,7 @@ private:
 
 } // namespace Acts
 
-#include "Acts/Seeding/BinnedSPGroup.ipp"
+#include "Acts/Seeding/BinnedGroup.ipp"
 
 namespace Acts {
   template <typename external_spacepoint_t>
