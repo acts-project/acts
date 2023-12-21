@@ -8,6 +8,7 @@
 
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -235,15 +236,17 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
     }
     // Set compatibility with current vertex
     Acts::Result<double> compatibilityResult(0.);
+    ActsDynamicVector vertexPos;
     if (m_cfg.useTime) {
-      compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<4>(
-          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
-          vtxInfo.oldPosition);
+      vertexPos = vtxInfo.oldPosition;
     } else {
-      compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<3>(
-          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
-          VectorHelpers::position(vtxInfo.oldPosition));
+      vertexPos = VectorHelpers::position(vtxInfo.oldPosition);
     }
+
+    compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
+        vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
+        vertexPos);
+
     if (!compatibilityResult.ok()) {
       return compatibilityResult.error();
     }
@@ -288,9 +291,10 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
           trkAtVtx.linearizedState = *result;
           trkAtVtx.isLinearized = true;
         }
-        // Update the vertex with the new track. The second template argument
-        // corresponds to the number of fitted vertex dimensions (i.e., 3 if we
-        // only fit spatial coordinates and 4 if we also fit time).
+        // Update the vertex with the new track. The second template
+        // argument corresponds to the number of fitted vertex dimensions
+        // (i.e., 3 if we only fit spatial coordinates and 4 if we also fit
+        // time).
         KalmanVertexUpdater::updateVertexWithTrack(*vtx, trkAtVtx,
                                                    m_cfg.useTime ? 4 : 3);
       } else {

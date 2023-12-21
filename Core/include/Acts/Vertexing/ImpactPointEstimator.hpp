@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -138,19 +139,17 @@ class ImpactPointEstimator {
   /// @note Confusingly, a *smaller* compatibility means that a track is *more*
   /// compatible.
   ///
-  /// @tparam nDim Number of dimensions used to compute compatibility
-  /// @note If nDim = 3 we only consider spatial dimensions; if nDim = 4, we
-  /// also consider time. Other values are not allowed.
+  /// @note If @p vertexPos has dimension 3 we only consider spatial dimensions; if is 4, we
+  ///       also consider time. Other values are not allowed.
   /// @param gctx The Geometry context
   /// @param trkParams Track parameters at point of closest
   /// approach in 3D as retrieved by estimate3DImpactParameters
   /// @param vertexPos The vertex position
   ///
   /// @return The compatibility value
-  template <unsigned int nDim>
   Result<double> getVertexCompatibility(
       const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-      const ActsVector<nDim>& vertexPos) const;
+      const ActsDynamicVector& vertexPos) const;
 
   /// @brief Calculate the distance between a track and a vertex by finding the
   /// corresponding 3D PCA. Returns also the momentum direction at the 3D PCA.
@@ -170,7 +169,15 @@ class ImpactPointEstimator {
   Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
   getDistanceAndMomentum(const GeometryContext& gctx,
                          const BoundTrackParameters& trkParams,
-                         const ActsVector<nDim>& vtxPos, State& state) const;
+                         const ActsVector<nDim>& vtxPos, State& state) const {
+    auto res =
+        getDistanceAndMomentum(gctx, trkParams, {vtxPos.data(), nDim}, state);
+    if (!res.ok()) {
+      return res.error();
+    }
+    auto& [distance, momentum] = *res;
+    return std::pair{distance.template head<nDim>(), momentum};
+  }
 
   /// @brief Calculates the impact parameters of a track w.r.t. a vertex. The
   /// corresponding errors are approximated by summing the variances of the
@@ -219,6 +226,10 @@ class ImpactPointEstimator {
       const MagneticFieldContext& mctx) const;
 
  private:
+  Result<std::pair<Acts::Vector4, Acts::Vector3>> getDistanceAndMomentum(
+      const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+      Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const;
+
   /// Configuration object
   const Config m_cfg;
 
@@ -227,24 +238,6 @@ class ImpactPointEstimator {
 
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
-
-  /// @brief Performs a Newton approximation to retrieve a point
-  /// of closest approach in 3D to a reference position
-  ///
-  /// @param helixCenter Position of the helix center
-  /// @param vtxPos Vertex position
-  /// @param phi Azimuthal momentum angle
-  /// @note Modifying phi corresponds to moving along the track. This function
-  /// optimizes phi until we reach a 3D PCA.
-  /// @param theta Polar momentum angle (constant along the track)
-  /// @param rho Signed helix radius
-  ///
-  /// @return Phi value at 3D PCA
-  Result<double> performNewtonOptimization(const Vector3& helixCenter,
-                                           const Vector3& vtxPos, double phi,
-                                           double theta, double rho) const;
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/ImpactPointEstimator.ipp"

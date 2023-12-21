@@ -6,12 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
+
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-inline Acts::Result<double> Acts::ImpactPointEstimator::calculateDistance(
+namespace Acts {
+
+Result<double> ImpactPointEstimator::calculateDistance(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
     const Vector3& vtxPos, State& state) const {
   auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
@@ -24,9 +29,8 @@ inline Acts::Result<double> Acts::ImpactPointEstimator::calculateDistance(
   return res.value().first.norm();
 }
 
-inline Acts::Result<Acts::BoundTrackParameters>
-Acts::ImpactPointEstimator::estimate3DImpactParameters(
-    const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
+    const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const BoundTrackParameters& trkParams, const Vector3& vtxPos,
     State& state) const {
   auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
@@ -99,13 +103,16 @@ Acts::ImpactPointEstimator::estimate3DImpactParameters(
     return result.error();
   }
 }
-
-template <unsigned int nDim>
-Acts::Result<double> Acts::ImpactPointEstimator::getVertexCompatibility(
-    const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-    const ActsVector<nDim>& vertexPos) const {
+namespace {
+template <unsigned int nDim, typename vector_t>
+Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
+                                          const BoundTrackParameters* trkParams,
+                                          vector_t vertexPos) {
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
+
+  static_assert(vector_t::RowsAtCompileTime == nDim,
+                "The dimension of the vertex position vector must match nDim.");
 
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
@@ -166,10 +173,21 @@ Acts::Result<double> Acts::ImpactPointEstimator::getVertexCompatibility(
   return residual.dot(weight * residual);
 }
 
-inline Acts::Result<double>
-Acts::ImpactPointEstimator::performNewtonOptimization(
+/// @brief Performs a Newton approximation to retrieve a point
+/// of closest approach in 3D to a reference position
+///
+/// @param helixCenter Position of the helix center
+/// @param vtxPos Vertex position
+/// @param phi Azimuthal momentum angle
+/// @note Modifying phi corresponds to moving along the track. This function
+/// optimizes phi until we reach a 3D PCA.
+/// @param theta Polar momentum angle (constant along the track)
+/// @param rho Signed helix radius
+///
+/// @return Phi value at 3D PCA
+Result<double> performNewtonOptimization(
     const Vector3& helixCenter, const Vector3& vtxPos, double phi, double theta,
-    double rho) const {
+    double rho, const ImpactPointEstimator::Config& cfg, const Logger& logger) {
   double sinPhi = std::sin(phi);
   double cosPhi = std::cos(phi);
 
@@ -186,9 +204,9 @@ Acts::ImpactPointEstimator::performNewtonOptimization(
   double yVtx = vtxPos.y();
   double zVtx = vtxPos.z();
 
-  // Iterate until convergence is reached or the maximum amount of iterations is
-  // exceeded
-  while (!hasConverged && nIter < m_cfg.maxIterations) {
+  // Iterate until convergence is reached or the maximum amount of iterations
+  // is exceeded
+  while (!hasConverged && nIter < cfg.maxIterations) {
     double derivative = rho * ((xVtx - xO) * cosPhi + (yVtx - yO) * sinPhi +
                                (zVtx - zO + rho * phi * cotTheta) * cotTheta);
     double secDerivative = rho * (-(xVtx - xO) * sinPhi + (yVtx - yO) * cosPhi +
@@ -196,7 +214,8 @@ Acts::ImpactPointEstimator::performNewtonOptimization(
 
     if (secDerivative < 0.) {
       ACTS_ERROR(
-          "Encountered negative second derivative during Newton optimization.");
+          "Encountered negative second derivative during Newton "
+          "optimization.");
       return VertexingError::NumericFailure;
     }
 
@@ -208,7 +227,7 @@ Acts::ImpactPointEstimator::performNewtonOptimization(
 
     nIter += 1;
 
-    if (std::abs(deltaPhi) < m_cfg.precision) {
+    if (std::abs(deltaPhi) < cfg.precision) {
       hasConverged = true;
     }
   }  // end while loop
@@ -220,13 +239,17 @@ Acts::ImpactPointEstimator::performNewtonOptimization(
   return phi;
 }
 
+// Note: always return Vector4, we'll chop off the last component if needed
 template <unsigned int nDim>
-Acts::Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
-Acts::ImpactPointEstimator::getDistanceAndMomentum(
+Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-    const ActsVector<nDim>& vtxPos, State& state) const {
+    Eigen::Map<const ActsDynamicVector> vtxPosDyn,
+    const ImpactPointEstimator::Config& cfg, ImpactPointEstimator::State& state,
+    const Logger& logger) {
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
+
+  Eigen::Map<const ActsVector<nDim>> vtxPos{vtxPosDyn.data()};
 
   // Reference point R
   Vector3 refPoint = trkParams.referenceSurface().center(gctx);
@@ -237,7 +260,7 @@ Acts::ImpactPointEstimator::getDistanceAndMomentum(
 
   // Z-component of the B field at the reference position.
   // Note that we assume a constant B field here!
-  auto fieldRes = m_cfg.bField->getField(refPoint, state.fieldCache);
+  auto fieldRes = cfg.bField->getField(refPoint, state.fieldCache);
   if (!fieldRes.ok()) {
     ACTS_ERROR("In getDistanceAndMomentum, the B field at\n"
                << refPoint << "\ncould not be retrieved.");
@@ -277,7 +300,8 @@ Acts::ImpactPointEstimator::getDistanceAndMomentum(
     }
 
     // Vector pointing from the vertex position to the 3D PCA
-    ActsVector<nDim> deltaRStraightTrack = pcaStraightTrack - vtxPos;
+    Vector4 deltaRStraightTrack;
+    deltaRStraightTrack.head<nDim>() = pcaStraightTrack - vtxPos;
 
     return std::make_pair(deltaRStraightTrack, momDirStraightTrack);
   }
@@ -314,7 +338,7 @@ Acts::ImpactPointEstimator::getDistanceAndMomentum(
   // Use Newton optimization method to iteratively change phi until we arrive at
   // the 3D PCA
   auto res = performNewtonOptimization(helixCenter, vtxPos.template head<3>(),
-                                       phi, theta, rho);
+                                       phi, theta, rho, cfg, logger);
   if (!res.ok()) {
     return res.error();
   }
@@ -350,15 +374,46 @@ Acts::ImpactPointEstimator::getDistanceAndMomentum(
     pca[3] = tP - rho / (beta * sinTheta) * (phi - phiP);
   }
   // Vector pointing from the vertex position to the 3D PCA
-  ActsVector<nDim> deltaR = pca - vtxPos;
+  Vector4 deltaR;
+  deltaR.head<nDim>() = pca - vtxPos;
 
   return std::make_pair(deltaR, momDir);
 }
 
-inline Acts::Result<Acts::ImpactParametersAndSigma>
-Acts::ImpactPointEstimator::getImpactParameters(
+}  // namespace
+
+Result<double> ImpactPointEstimator::getVertexCompatibility(
+    const GeometryContext& gctx, const BoundTrackParameters* trkParams,
+    const ActsDynamicVector& vertexPos) const {
+  if (vertexPos.size() == 3) {
+    return getVertexCompatibilityImpl<3>(gctx, trkParams,
+                                         vertexPos.template head<3>());
+  } else if (vertexPos.size() == 4) {
+    return getVertexCompatibilityImpl<4>(gctx, trkParams,
+                                         vertexPos.template head<4>());
+  } else {
+    return VertexingError::InvalidInput;
+  }
+}
+
+Result<std::pair<Acts::Vector4, Acts::Vector3>>
+ImpactPointEstimator::getDistanceAndMomentum(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const {
+  if (vtxPos.size() == 3) {
+    return getDistanceAndMomentumImpl<3>(gctx, trkParams, vtxPos, m_cfg, state,
+                                         *m_logger);
+  } else if (vtxPos.size() == 4) {
+    return getDistanceAndMomentumImpl<4>(gctx, trkParams, vtxPos, m_cfg, state,
+                                         *m_logger);
+  } else {
+    return VertexingError::InvalidInput;
+  }
+}
+
+Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
     const BoundTrackParameters& track, const Vertex& vtx,
-    const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    const GeometryContext& gctx, const MagneticFieldContext& mctx,
     bool calculateTimeIP) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
@@ -379,7 +434,8 @@ Acts::ImpactPointEstimator::getImpactParameters(
   if (!result.ok()) {
     ACTS_ERROR("Error during propagation in getImpactParameters.");
     ACTS_DEBUG(
-        "The Perigee surface to which we tried to propagate has its origin at\n"
+        "The Perigee surface to which we tried to propagate has its origin "
+        "at\n"
         << vtx.position());
     return result.error();
   }
@@ -438,10 +494,9 @@ Acts::ImpactPointEstimator::getImpactParameters(
   return ipAndSigma;
 }
 
-inline Acts::Result<std::pair<double, double>>
-Acts::ImpactPointEstimator::getLifetimeSignOfTrack(
+Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
     const BoundTrackParameters& track, const Vertex& vtx,
-    const Acts::Vector3& direction, const GeometryContext& gctx,
+    const Vector3& direction, const GeometryContext& gctx,
     const MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
@@ -478,10 +533,9 @@ Acts::ImpactPointEstimator::getLifetimeSignOfTrack(
   return vszs;
 }
 
-inline Acts::Result<double>
-Acts::ImpactPointEstimator::get3DLifetimeSignOfTrack(
+Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
     const BoundTrackParameters& track, const Vertex& vtx,
-    const Acts::Vector3& direction, const GeometryContext& gctx,
+    const Vector3& direction, const GeometryContext& gctx,
     const MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
@@ -507,3 +561,5 @@ Acts::ImpactPointEstimator::get3DLifetimeSignOfTrack(
 
   return sign >= 0. ? 1. : -1.;
 }
+
+}  // namespace Acts

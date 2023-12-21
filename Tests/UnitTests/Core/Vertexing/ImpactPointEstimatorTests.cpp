@@ -186,8 +186,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   // check that we get sensible compatibility scores
   // this is a chi2-like value and should always be positive
   auto compatibility =
-      ipEstimator
-          .getVertexCompatibility<3>(geoContext, &trackAtIP3d, refPosition)
+      ipEstimator.getVertexCompatibility(geoContext, &trackAtIP3d, refPosition)
           .value();
   BOOST_CHECK_GT(compatibility, 0);
 }
@@ -391,14 +390,14 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
 
   // Calculate the 4D vertex compatibilities of the three tracks
   double compatibilityClose =
-      ipEstimator.getVertexCompatibility<4>(geoContext, &paramsClose, vtxPos)
+      ipEstimator.getVertexCompatibility(geoContext, &paramsClose, vtxPos)
           .value();
   double compatibilityCloseLargerCov =
       ipEstimator
-          .getVertexCompatibility<4>(geoContext, &paramsCloseLargerCov, vtxPos)
+          .getVertexCompatibility(geoContext, &paramsCloseLargerCov, vtxPos)
           .value();
   double compatibilityFar =
-      ipEstimator.getVertexCompatibility<4>(geoContext, &paramsFar, vtxPos)
+      ipEstimator.getVertexCompatibility(geoContext, &paramsFar, vtxPos)
           .value();
 
   // The track who is closer in time must have a better (i.e., smaller)
