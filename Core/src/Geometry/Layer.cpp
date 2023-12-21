@@ -123,6 +123,7 @@ Acts::Layer::compatibleSurfaces(const GeometryContext& gctx,
   double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
 
+  // TODO this looks like a major hack; is this really needed?
   // (0) End surface check
   // @todo: - we might be able to skip this by use of options.pathLimit
   // check if you have to stop at the endSurface
