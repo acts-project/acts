@@ -286,5 +286,3 @@ class IterativeVertexFinder final : public IVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "IterativeVertexFinder.ipp"

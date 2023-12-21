@@ -6,7 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline auto Acts::AdaptiveGridDensityVertexFinder::find(
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
+
+auto Acts::AdaptiveGridDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
@@ -92,7 +94,7 @@ inline auto Acts::AdaptiveGridDensityVertexFinder::find(
   return std::vector<Vertex>{returnVertex};
 }
 
-inline auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
+auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
     const BoundTrackParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];

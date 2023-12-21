@@ -5,4 +5,7 @@ target_sources(
     KalmanVertexUpdater.cpp
     FsmwMode1dFinder.cpp
     VertexingError.cpp
+    IterativeVertexFinder.cpp
+    AdaptiveMultiVertexFitter.cpp
+    AdaptiveGridDensityVertexFinder.cpp
 )
