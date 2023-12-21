@@ -8,6 +8,9 @@
 
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
+
 auto Acts::IterativeVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
