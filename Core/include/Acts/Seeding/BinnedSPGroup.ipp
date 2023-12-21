@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -10,97 +11,68 @@
 
 #include <boost/container/flat_set.hpp>
 
-template <typename external_spacepoint_t>
-Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
-    Acts::BinnedSPGroup<external_spacepoint_t>& group,
-    std::array<std::size_t, 2> index,
-    std::array<std::vector<std::size_t>, 2> navigation)
-    : m_group(group), m_gridItr(*group.m_grid.get(), index, navigation) {
-  std::array<std::size_t, 2ul> endline{};
-  endline[0ul] = navigation[0ul].size();
-  endline[1ul] = navigation[1ul].size();
-  m_gridItrEnd =
-      typename Acts::SpacePointGrid<external_spacepoint_t>::local_iterator_t(
-          *group.m_grid.get(), endline, std::move(navigation));
-  findNotEmptyBin();
-}
+namespace Acts {
 
-template <typename external_spacepoint_t>
-inline Acts::BinnedSPGroupIterator<external_spacepoint_t>&
-Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator++() {
-  ++m_gridItr;
-  findNotEmptyBin();
-  return *this;
-}
+template <typename grid_t>
+BinnedGroup<grid_t>::BinnedGroup(std::unique_ptr<grid_t> grid,
+				 std::shared_ptr<const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>> bottomFinder,
+				 std::shared_ptr<const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>> topFinder,
+				 std::array<std::vector<std::size_t>, Acts::BinnedGroup<grid_t>::DIM> navigation)
+  : m_grid(std::move(grid)),
+    m_bottomBinFinder(std::move(bottomFinder)),
+    m_topBinFinder(std::move(topFinder)),
+    m_bins(std::move(navigation))
+{
+  assert(m_grid != nullptr);
+  assert(m_bottomBinFinder != nullptr);
+  assert(m_topBinFinder != nullptr);
 
-template <typename external_spacepoint_t>
-inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator==(
-    const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
-  return m_group.ptr == other.m_group.ptr && m_gridItr == other.m_gridItr;
-}
-
-template <typename external_spacepoint_t>
-inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator!=(
-    const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
-  return !(*this == other);
-}
-
-template <typename external_spacepoint_t>
-std::tuple<boost::container::small_vector<std::size_t, 9>, std::size_t,
-           boost::container::small_vector<std::size_t, 9>>
-Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
-  // Global Index
-  std::array<std::size_t, 2> localPosition = m_gridItr.localPosition();
-  std::size_t global_index =
-      m_group->m_grid->globalBinFromLocalBins(localPosition);
-
-  boost::container::small_vector<std::size_t, 9> bottoms =
-      m_group->m_bottomBinFinder->findBins(localPosition,
-                                           *m_group->m_grid.get());
-  boost::container::small_vector<std::size_t, 9> tops =
-      m_group->m_topBinFinder->findBins(localPosition, *m_group->m_grid.get());
-
-  // GCC12+ in Release throws an overread warning here due to the move.
-  // This is from inside boost code, so best we can do is to suppress it.
-#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-overread"
-#endif
-  return std::make_tuple(std::move(bottoms), global_index, std::move(tops));
-#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-}
-
-template <typename external_spacepoint_t>
-inline void
-Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
-  if (m_gridItr == m_gridItrEnd) {
-    return;
-  }
-  // Iterate on the grid till we find a not-empty bin
-  // We start from the current bin configuration and move forward
-  std::size_t dimCollection = (*m_gridItr).size();
-  while (dimCollection == 0ul && ++m_gridItr != m_gridItrEnd) {
-    dimCollection = (*m_gridItr).size();
+  /// If navigation is now defined for all axes, then we default that to a std::iota from 1ul
+  std::array<std::size_t, DIM> numLocBins = m_grid->numLocalBins();
+  for (std::size_t i(0ul); i<DIM; ++i) {
+    if (!m_bins[i].empty()) {
+      continue;
+    }
+    m_bins[i].resize(numLocBins[i]);
+    std::iota(m_bins[i].begin(), m_bins[i].end(), 1ul);
   }
 }
+  
+template <typename grid_t>
+const grid_t& BinnedGroup<grid_t>::grid() const { return *m_grid.get(); }
 
-// Binned SP Group
-template <typename external_spacepoint_t>
-template <typename spacepoint_iterator_t, typename callable_t>
-Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
-    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    callable_t&& toGlobal,
-    std::shared_ptr<const Acts::GridBinFinder<2ul>> botBinFinder,
-    std::shared_ptr<const Acts::GridBinFinder<2ul>> tBinFinder,
-    std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-    Acts::Extent& rRangeSPExtent,
-    const SeedFinderConfig<external_spacepoint_t>& config,
-    const SeedFinderOptions& options)
-    : m_grid(std::move(grid)),
-      m_topBinFinder(std::move(tBinFinder)),
-      m_bottomBinFinder(std::move(botBinFinder)) {
+template <typename grid_t>
+grid_t& BinnedGroup<grid_t>::grid() { return *m_grid.get(); }
+
+template <typename grid_t>
+Acts::BinnedGroupIterator<grid_t> BinnedGroup<grid_t>::begin() const {
+  return Acts::BinnedGroupIterator<grid_t>(*this, std::array<std::size_t, Acts::BinnedGroup<grid_t>::DIM>(), m_bins);
+}
+
+template <typename grid_t>
+Acts::BinnedGroupIterator<grid_t> BinnedGroup<grid_t>::end() const {
+  std::array<std::size_t, Acts::BinnedGroup<grid_t>::DIM> endline{};
+  for (std::size_t i(0ul); i<Acts::BinnedGroup<grid_t>::DIM; ++i) {
+    endline[i] = m_bins[i].size();
+  }
+  return Acts::BinnedGroupIterator<grid_t>(*this, endline, m_bins);
+}
+
+template <typename grid_t>
+template <typename external_spacepoint_t,
+	  typename external_spacepoint_iterator_t,
+	  typename callable_t>
+void BinnedGroup<grid_t>::fill(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+			       const Acts::SeedFinderOptions& options,
+			       external_spacepoint_iterator_t spBegin, external_spacepoint_iterator_t spEnd,
+			       callable_t&& toGlobal,
+			       Acts::Extent& rRangeSPExtent) {
+
+  using iterated_value_t = typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
+  using iterated_t = typename std::remove_const<typename std::remove_pointer<iterated_value_t>::type>::type;
+  static_assert(std::is_same<iterated_t, external_spacepoint_t>::value,
+		"Iterator does not contain type this class was templated with");
+  
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
@@ -109,11 +81,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
-  static_assert(
-      std::is_same<
-          typename std::iterator_traits<spacepoint_iterator_t>::value_type,
-          const external_spacepoint_t*>::value,
-      "Iterator does not contain type this class was templated with");
 
   // get region of interest (or full detector if configured accordingly)
   float phiMin = config.phiMin;
@@ -132,8 +99,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // keep track of changed bins while sorting
   boost::container::flat_set<std::size_t> rBinsIndex;
 
-  std::size_t counter = 0;
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
+  std::size_t counter = 0ul;
+  for (external_spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
     if (*it == nullptr) {
       continue;
     }
@@ -145,7 +112,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     float spY = spPosition[1];
     float spZ = spPosition[2];
 
-    // store x,y,z values in extent
+      // store x,y,z values in extent
     rRangeSPExtent.extend({spX, spY, spZ});
 
     // remove SPs outside z and phi region
@@ -180,49 +147,16 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       rBinsIndex.insert(m_grid->globalBinFromPosition(spLocation));
     }
   }
-
-  // sort SPs in R for each filled (z, phi) bin
+  
+  /// sort SPs in R for each filled bin
   for (auto& binIndex : rBinsIndex) {
-    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-        rbin = m_grid->atPosition(binIndex);
+    auto& rbin = m_grid->atPosition(binIndex);
     std::sort(
         rbin.begin(), rbin.end(),
-        [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
-           std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
+        [](const auto& a, const auto& b) {
           return a->radius() < b->radius();
         });
-  }
-
-  // phi axis
-  m_bins[INDEX::PHI].resize(m_grid->numLocalBins()[0]);
-  std::iota(m_bins[INDEX::PHI].begin(), m_bins[INDEX::PHI].end(), 1ul);
-
-  // z axis
-  if (config.zBinsCustomLooping.empty()) {
-    std::size_t nZbins = m_grid->numLocalBins()[INDEX::Z];
-    m_bins[INDEX::Z] = std::vector<std::size_t>(nZbins);
-    std::iota(m_bins[INDEX::Z].begin(), m_bins[INDEX::Z].end(), 1ul);
-  } else {
-    m_bins[INDEX::Z] = config.zBinsCustomLooping;
-  }
+  }  
 }
 
-template <typename external_spacepoint_t>
-inline std::size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
-  return m_grid->size();
-}
-
-template <typename external_spacepoint_t>
-inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
-Acts::BinnedSPGroup<external_spacepoint_t>::begin() {
-  return {*this, {0ul, 0ul}, m_bins};
-}
-
-template <typename external_spacepoint_t>
-inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
-Acts::BinnedSPGroup<external_spacepoint_t>::end() {
-  std::array<std::size_t, 2ul> endline{};
-  endline[0ul] = m_bins[0ul].size();
-  endline[1ul] = m_bins[1ul].size();
-  return {*this, endline, m_bins};
-}
+} // namespace Acts

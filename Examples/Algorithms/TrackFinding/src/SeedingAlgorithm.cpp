@@ -252,11 +252,16 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
       m_cfg.gridConfig, m_cfg.gridOptions);
 
-  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
-      spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
-      m_bottomBinFinder, m_topBinFinder, std::move(grid), rRangeSPExtent,
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
-
+  std::array<std::vector<std::size_t>, 2ul> navigation;
+  navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
+  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(std::move(grid),
+								m_bottomBinFinder,
+								m_topBinFinder,
+								std::move(navigation));
+  spacePointsGrouping.fill(m_cfg.seedFinderConfig, m_cfg.seedFinderOptions,
+			   spacePointPtrs.begin(), spacePointPtrs.end(),
+			   extractGlobalQuantities, rRangeSPExtent);
+  
   // safely clamp double to float
   float up = Acts::clampValue<float>(
       std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
