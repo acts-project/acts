@@ -114,10 +114,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator;
-
-  IPEstimator::Config ip3dEstCfg(bField, propagator);
-  IPEstimator ip3dEst(ip3dEstCfg);
+  ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
+  ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
   AdaptiveMultiVertexFitter<Linearizer>::Config fitterCfg(ip3dEst);
 
