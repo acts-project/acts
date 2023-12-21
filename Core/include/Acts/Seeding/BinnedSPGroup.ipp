@@ -193,7 +193,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
         });
   }
 
-  m_skipZMiddleBin = config.skipZMiddleBinSearch;
 
   // phi axis
   m_bins[INDEX::PHI].resize(m_grid->numLocalBins()[0]);
@@ -201,14 +200,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 
   // z axis
   if (config.zBinsCustomLooping.empty()) {
-    std::size_t nZbins = m_grid->numLocalBins()[1] - m_skipZMiddleBin;
+    std::size_t nZbins = m_grid->numLocalBins()[INDEX::Z];
     m_bins[INDEX::Z] = std::vector<std::size_t>(nZbins);
-    std::iota(m_bins[INDEX::Z].begin(), m_bins[INDEX::Z].end(),
-              1ul + m_skipZMiddleBin);
+    std::iota(m_bins[INDEX::Z].begin(), m_bins[INDEX::Z].end(), 1ul);
   } else {
-    m_bins[INDEX::Z] = std::vector<std::size_t>(
-        config.zBinsCustomLooping.begin() + m_skipZMiddleBin,
-        config.zBinsCustomLooping.end());
+    m_bins[INDEX::Z] = config.zBinsCustomLooping;
   }
 }
 
