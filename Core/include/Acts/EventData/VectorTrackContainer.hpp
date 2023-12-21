@@ -188,6 +188,7 @@ class VectorTrackContainerBase {
 
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 }  // namespace detail_vtc
