@@ -9,4 +9,5 @@ target_sources(
     AdaptiveMultiVertexFitter.cpp
     AdaptiveGridDensityVertexFinder.cpp
     ZScanVertexFinder.cpp
+    HelicalTrackLinearizer.cpp
 )
