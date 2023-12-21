@@ -9,7 +9,7 @@
 #pragma once
 
 // TODO: update to C++17 style
-#include "Acts/Seeding/GNN_DataStorage.hpp"  //includes geo which has trigindetsilayer, may move this to trigbase
+#include "Acts/Seeding/GbtsDataStorage.hpp"  //includes geo which has trigindetsilayer, may move this to trigbase
 
 #include <algorithm>
 #include <cmath>
@@ -19,20 +19,20 @@
 #include <vector>
 
 template <typename external_spacepoint_t>
-struct TrigFTF_GNN_EdgeState {
+struct GbtsEdgeState {
  public:
   struct Compare {
-    bool operator()(const struct TrigFTF_GNN_EdgeState* s1,
-                    const struct TrigFTF_GNN_EdgeState* s2) {
+    bool operator()(const struct GbtsEdgeState* s1,
+                    const struct GbtsEdgeState* s2) {
       return s1->m_J > s2->m_J;
     }
   };
 
-  TrigFTF_GNN_EdgeState() = default;
+  GbtsEdgeState() = default;
 
-  TrigFTF_GNN_EdgeState(bool f) : m_initialized(f) {}
+  GbtsEdgeState(bool f) : m_initialized(f) {}
 
-  void initialize(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS) {
+  void initialize(Acts::GbtsEdge<external_spacepoint_t>* pS) {
     m_initialized = true;
 
     m_J = 0.0;
@@ -40,8 +40,8 @@ struct TrigFTF_GNN_EdgeState {
 
     // n2->n1
 
-    float dx = pS->m_n1->m_sp_FTF.SP->x() - pS->m_n2->m_sp_FTF.SP->x();
-    float dy = pS->m_n1->m_sp_FTF.SP->y() - pS->m_n2->m_sp_FTF.SP->y();
+    float dx = pS->m_n1->m_sp_Gbts.SP->x() - pS->m_n2->m_sp_Gbts.SP->x();
+    float dy = pS->m_n1->m_sp_Gbts.SP->y() - pS->m_n2->m_sp_Gbts.SP->y();
     float L = std::sqrt(dx * dx + dy * dy);
 
     m_s = dy / L;
@@ -51,22 +51,22 @@ struct TrigFTF_GNN_EdgeState {
     //  x' =  x*m_c + y*m_s
     //  y' = -x*m_s + y*m_c
 
-    m_refY = pS->m_n2->m_sp_FTF.SP->r();
+    m_refY = pS->m_n2->m_sp_Gbts.SP->r();
     m_refX =
-        pS->m_n2->m_sp_FTF.SP->x() * m_c + pS->m_n2->m_sp_FTF.SP->y() * m_s;
+        pS->m_n2->m_sp_Gbts.SP->x() * m_c + pS->m_n2->m_sp_Gbts.SP->y() * m_s;
 
     // X-state: y, dy/dx, d2y/dx2
 
     m_X[0] =
-        -pS->m_n2->m_sp_FTF.SP->x() * m_s + pS->m_n2->m_sp_FTF.SP->y() * m_c;
+        -pS->m_n2->m_sp_Gbts.SP->x() * m_s + pS->m_n2->m_sp_Gbts.SP->y() * m_c;
     m_X[1] = 0.0;
     m_X[2] = 0.0;
 
     // Y-state: z, dz/dr
 
-    m_Y[0] = pS->m_n2->m_sp_FTF.SP->z();
-    m_Y[1] = (pS->m_n1->m_sp_FTF.SP->z() - pS->m_n2->m_sp_FTF.SP->z()) /
-             (pS->m_n1->m_sp_FTF.SP->r() - pS->m_n2->m_sp_FTF.SP->r());
+    m_Y[0] = pS->m_n2->m_sp_Gbts.SP->z();
+    m_Y[1] = (pS->m_n1->m_sp_Gbts.SP->z() - pS->m_n2->m_sp_Gbts.SP->z()) /
+             (pS->m_n1->m_sp_Gbts.SP->r() - pS->m_n2->m_sp_Gbts.SP->r());
 
     memset(&m_Cx[0][0], 0, sizeof(m_Cx));
     memset(&m_Cy[0][0], 0, sizeof(m_Cy));
@@ -79,7 +79,7 @@ struct TrigFTF_GNN_EdgeState {
     m_Cy[1][1] = 0.001;
   }
 
-  void clone(const struct TrigFTF_GNN_EdgeState& st) {
+  void clone(const struct GbtsEdgeState& st) {
     memcpy(&m_X[0], &st.m_X[0], sizeof(m_X));
     memcpy(&m_Y[0], &st.m_Y[0], sizeof(m_Y));
     memcpy(&m_Cx[0][0], &st.m_Cx[0][0], sizeof(m_Cx));
@@ -98,7 +98,7 @@ struct TrigFTF_GNN_EdgeState {
 
   float m_J{};
 
-  std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>*> m_vs;
+  std::vector<Acts::GbtsEdge<external_spacepoint_t>*> m_vs;
 
   float m_X[3]{}, m_Y[2]{}, m_Cx[3][3]{}, m_Cy[2][2]{};
   float m_refX{}, m_refY{}, m_c{}, m_s{};
@@ -109,15 +109,15 @@ struct TrigFTF_GNN_EdgeState {
 #define MAX_EDGE_STATE 2500
 
 template <typename external_spacepoint_t>
-class TrigFTF_GNN_TrackingFilter {
+class GbtsTrackingFilter {
  public:
-  TrigFTF_GNN_TrackingFilter(
+  GbtsTrackingFilter(
       const std::vector<Acts::TrigInDetSiLayer>& g,
-      std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>>& sb)
+      std::vector<Acts::GbtsEdge<external_spacepoint_t>>& sb)
       : m_geo(g), m_segStore(sb) {}
 
-  void followTrack(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS,
-                   TrigFTF_GNN_EdgeState<external_spacepoint_t>& output) {
+  void followTrack(Acts::GbtsEdge<external_spacepoint_t>* pS,
+                   GbtsEdgeState<external_spacepoint_t>& output) {
     if (pS->m_level == -1) {
       return;  // already collected
     }
@@ -125,7 +125,7 @@ class TrigFTF_GNN_TrackingFilter {
 
     // create track state
 
-    TrigFTF_GNN_EdgeState<external_spacepoint_t>* pInitState =
+    GbtsEdgeState<external_spacepoint_t>* pInitState =
         &m_stateStore[m_globalStateCounter++];
 
     pInitState->initialize(pS);
@@ -140,9 +140,9 @@ class TrigFTF_GNN_TrackingFilter {
       return;
     }
     std::sort(m_stateVec.begin(), m_stateVec.end(),
-              typename TrigFTF_GNN_EdgeState<external_spacepoint_t>::Compare());
+              typename GbtsEdgeState<external_spacepoint_t>::Compare());
 
-    TrigFTF_GNN_EdgeState<external_spacepoint_t>* best = (*m_stateVec.begin());
+    GbtsEdgeState<external_spacepoint_t>* best = (*m_stateVec.begin());
 
     output.clone(*best);
 
@@ -150,15 +150,15 @@ class TrigFTF_GNN_TrackingFilter {
   }
 
  protected:
-  void propagate(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS,
-                 TrigFTF_GNN_EdgeState<external_spacepoint_t>& ts) {
+  void propagate(Acts::GbtsEdge<external_spacepoint_t>* pS,
+                 GbtsEdgeState<external_spacepoint_t>& ts) {
     if (m_globalStateCounter >= MAX_EDGE_STATE) {
       return;
     }
-    TrigFTF_GNN_EdgeState<external_spacepoint_t>* p_new_ts =
+    GbtsEdgeState<external_spacepoint_t>* p_new_ts =
         &m_stateStore[m_globalStateCounter++];
 
-    TrigFTF_GNN_EdgeState<external_spacepoint_t>& new_ts = *p_new_ts;
+    GbtsEdgeState<external_spacepoint_t>& new_ts = *p_new_ts;
     new_ts.clone(ts);
 
     new_ts.m_vs.push_back(pS);
@@ -170,13 +170,13 @@ class TrigFTF_GNN_TrackingFilter {
     }
     int level = pS->m_level;
 
-    std::list<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>*> lCont;
+    std::list<Acts::GbtsEdge<external_spacepoint_t>*> lCont;
 
     for (int nIdx = 0; nIdx < pS->m_nNei;
          nIdx++) {  // loop over the neighbours of this segment
       unsigned int nextSegmentIdx = pS->m_vNei[nIdx];
 
-      Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pN =
+      Acts::GbtsEdge<external_spacepoint_t>* pN =
           &(m_segStore.at(nextSegmentIdx));
 
       if (pN->m_level == -1) {
@@ -191,14 +191,14 @@ class TrigFTF_GNN_TrackingFilter {
       // store in the vector
       if (m_globalStateCounter < MAX_EDGE_STATE) {
         if (m_stateVec.empty()) {  // add the first segment state
-          TrigFTF_GNN_EdgeState<external_spacepoint_t>* p =
+          GbtsEdgeState<external_spacepoint_t>* p =
               &m_stateStore[m_globalStateCounter++];
           p->clone(new_ts);
           m_stateVec.push_back(p);
         } else {  // compare with the best and add
           float best_so_far = (*m_stateVec.begin())->m_J;
           if (new_ts.m_J > best_so_far) {
-            TrigFTF_GNN_EdgeState<external_spacepoint_t>* p =
+            GbtsEdgeState<external_spacepoint_t>* p =
                 &m_stateStore[m_globalStateCounter++];
             p->clone(new_ts);
             m_stateVec.push_back(p);
@@ -208,7 +208,7 @@ class TrigFTF_GNN_TrackingFilter {
     } else {  // branching
       int nBranches = 0;
       for (typename std::list<
-               Acts::TrigFTF_GNN_Edge<external_spacepoint_t>*>::iterator sIt =
+               Acts::GbtsEdge<external_spacepoint_t>*>::iterator sIt =
                lCont.begin();
            sIt != lCont.end(); ++sIt, nBranches++) {
         propagate((*sIt), new_ts);  // recursive call
@@ -216,8 +216,8 @@ class TrigFTF_GNN_TrackingFilter {
     }
   }
 
-  bool update(Acts::TrigFTF_GNN_Edge<external_spacepoint_t>* pS,
-              TrigFTF_GNN_EdgeState<external_spacepoint_t>& ts) {
+  bool update(Acts::GbtsEdge<external_spacepoint_t>* pS,
+              GbtsEdgeState<external_spacepoint_t>& ts) {
     const float sigma_t = 0.0003;
     const float sigma_w = 0.00009;
 
@@ -247,7 +247,7 @@ class TrigFTF_GNN_TrackingFilter {
     ts.m_Cx[2][2] += sigma_w * sigma_w;
     ts.m_Cx[1][1] += sigma_t * sigma_t;
 
-    int type1 = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
+    int type1 = getLayerType(pS->m_n1->m_sp_Gbts.combined_ID);
 
     float t2 = type1 == 0 ? 1.0 + ts.m_Y[1] * ts.m_Y[1]
                           : 1.0 + 1.0 / (ts.m_Y[1] * ts.m_Y[1]);
@@ -267,10 +267,10 @@ class TrigFTF_GNN_TrackingFilter {
 
     float x{}, y{}, z{}, r{};
 
-    x = pS->m_n1->m_sp_FTF.SP->x();
-    y = pS->m_n1->m_sp_FTF.SP->y();
-    z = pS->m_n1->m_sp_FTF.SP->z();
-    r = pS->m_n1->m_sp_FTF.SP->r();
+    x = pS->m_n1->m_sp_Gbts.SP->x();
+    y = pS->m_n1->m_sp_Gbts.SP->y();
+    z = pS->m_n1->m_sp_Gbts.SP->z();
+    r = pS->m_n1->m_sp_Gbts.SP->r();
 
     refX = x * ts.m_c + y * ts.m_s;
     mx = -x * ts.m_s + y * ts.m_c;  // measured X[0]
@@ -324,7 +324,7 @@ class TrigFTF_GNN_TrackingFilter {
 
     float sigma_rz = 0.0;
     
-    int type = getLayerType(pS->m_n1->m_sp_FTF.combined_ID);
+    int type = getLayerType(pS->m_n1->m_sp_Gbts.combined_ID);
 
     if (type == 0) {  // barrel TODO: split into barrel Pixel and barrel SCT
       sigma_rz = sigma_y * sigma_y;
@@ -386,11 +386,11 @@ class TrigFTF_GNN_TrackingFilter {
 
   const std::vector<Acts::TrigInDetSiLayer>& m_geo;
 
-  std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>>& m_segStore;
+  std::vector<Acts::GbtsEdge<external_spacepoint_t>>& m_segStore;
 
-  std::vector<TrigFTF_GNN_EdgeState<external_spacepoint_t>*> m_stateVec;
+  std::vector<GbtsEdgeState<external_spacepoint_t>*> m_stateVec;
 
-  TrigFTF_GNN_EdgeState<external_spacepoint_t> m_stateStore[MAX_EDGE_STATE];
+  GbtsEdgeState<external_spacepoint_t> m_stateStore[MAX_EDGE_STATE];
 
   int m_globalStateCounter{0};
 };

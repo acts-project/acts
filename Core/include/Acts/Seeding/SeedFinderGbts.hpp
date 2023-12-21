@@ -14,7 +14,7 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Seeding/SeedFinderFTFConfig.hpp"
+#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 #include "Acts/Utilities/KDTree.hpp"
 
@@ -31,18 +31,18 @@
 namespace Acts {
 
 template <typename external_spacepoint_t>
-struct GNN_TrigTracklet {
+struct GbtsTrigTracklet {
  public:
-  GNN_TrigTracklet(std::vector<const FTF_SP<external_spacepoint_t> *> &vSP,
+  GbtsTrigTracklet(std::vector<const GbtsSP<external_spacepoint_t> *> &vSP,
                    std::vector<TrigInDetTriplet<external_spacepoint_t>> &tbuf)
       : m_track(vSP), m_seeds(tbuf) {}
 
-  std::vector<const FTF_SP<external_spacepoint_t> *> m_track;
+  std::vector<const GbtsSP<external_spacepoint_t> *> m_track;
   std::vector<TrigInDetTriplet<external_spacepoint_t>> m_seeds;
 };
 
 template <typename external_spacepoint_t>
-class SeedFinderFTF {
+class SeedFinderGbts {
  public:
   static constexpr std::size_t NDims = 3;
 
@@ -51,42 +51,42 @@ class SeedFinderFTF {
   //   using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
 
   // constructors
-  SeedFinderFTF(const SeedFinderFTFConfig<external_spacepoint_t> &config,
-                const TrigFTF_GNN_Geometry<external_spacepoint_t> &GNNgeo);
+  SeedFinderGbts(const SeedFinderGbtsConfig<external_spacepoint_t> &config,
+                const GbtsGeometry<external_spacepoint_t> &Gbtsgeo);
 
-  ~SeedFinderFTF();  //!!! is it dangerous not to use default? got def in ipp
-  SeedFinderFTF() = default;
-  SeedFinderFTF(const SeedFinderFTF<external_spacepoint_t> &) = delete;
-  SeedFinderFTF<external_spacepoint_t> &operator=(
-      const SeedFinderFTF<external_spacepoint_t> &) = delete;
+  ~SeedFinderGbts();  //!!! is it dangerous not to use default? got def in ipp
+  SeedFinderGbts() = default;
+  SeedFinderGbts(const SeedFinderGbts<external_spacepoint_t> &) = delete;
+  SeedFinderGbts<external_spacepoint_t> &operator=(
+      const SeedFinderGbts<external_spacepoint_t> &) = delete;
 
   void loadSpacePoints(
-      const std::vector<FTF_SP<external_spacepoint_t>> &FTF_SP_vect);
+      const std::vector<GbtsSP<external_spacepoint_t>> &GbtsSP_vect);
 
   // inner
   template <typename output_container_t>
   void createSeeds(
       const Acts::RoiDescriptor & /*roi*/,
-      const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t> & /*gnngeo*/,
+      const Acts::GbtsGeometry<external_spacepoint_t> & /*Gbtsgeo*/,
       output_container_t & /*out_cont*/);
   // outer
   std::vector<seed_t> createSeeds(
       const Acts::RoiDescriptor & /*roi*/,
-      const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t> & /*gnngeo*/);
+      const Acts::GbtsGeometry<external_spacepoint_t> & /*Gbtsgeo*/);
 
  private:
   enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
 
   // config object
-  SeedFinderFTFConfig<external_spacepoint_t> m_config;
+  SeedFinderGbtsConfig<external_spacepoint_t> m_config;
 
-  void runGNN_TrackFinder(
-      std::vector<GNN_TrigTracklet<external_spacepoint_t>> &vTracks,
+  void runGbts_TrackFinder(
+      std::vector<GbtsTrigTracklet<external_spacepoint_t>> &vTracks,
       const Acts::RoiDescriptor &roi,
-      const Acts::TrigFTF_GNN_Geometry<external_spacepoint_t> &gnngeo);
+      const Acts::GbtsGeometry<external_spacepoint_t> &Gbtsgeo);
 
   // needs to be member of class so can accessed by all member functions
-  TrigFTF_GNN_DataStorage<external_spacepoint_t> *m_storage;
+  GbtsDataStorage<external_spacepoint_t> *m_storage;
 
   // for create seeds:
   std::vector<TrigInDetTriplet<external_spacepoint_t>> m_triplets;
@@ -94,4 +94,4 @@ class SeedFinderFTF {
 
 }  // namespace Acts
 
-#include "Acts/Seeding/SeedFinderFTF.ipp"
+#include "Acts/Seeding/SeedFinderGbts.ipp"
