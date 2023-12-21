@@ -55,7 +55,7 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
   using Linearizer = Acts::HelicalTrackLinearizer;
   using Fitter = Acts::FullBilloirVertexFitter;
   using Seeder = Acts::TrackDensityVertexFinder;
-  using Finder = Acts::IterativeVertexFinder<Fitter>;
+  using Finder = Acts::IterativeVertexFinder;
   using Options = Acts::VertexingOptions;
 
   using VertexCollection = std::vector<Acts::Vertex>;
