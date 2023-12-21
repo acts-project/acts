@@ -20,7 +20,6 @@
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
@@ -60,9 +59,6 @@ namespace Acts {
 /// @tparam vfitter_t Vertex fitter type
 template <typename vfitter_t>
 class IterativeVertexFinder final : public IVertexFinder {
-  static_assert(VertexFitterConcept<vfitter_t>,
-                "Vertex fitter does not fulfill vertex fitter concept.");
-
  public:
   /// Configuration struct
   struct Config {
