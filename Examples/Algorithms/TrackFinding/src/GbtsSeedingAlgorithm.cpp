@@ -78,7 +78,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
   std::ifstream input_ifstream(
       m_cfg.seedFinderConfig.connector_input_file.c_str(), std::ifstream::in);
 
-  // connector 
+  // connector
   std::unique_ptr<Acts::GbtsConnector> input_connector =
       std::make_unique<Acts::GbtsConnector>(input_ifstream);
 
@@ -107,7 +107,7 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
 
   for (auto sp : Gbts_spacePoints) {
     ACTS_DEBUG("Gbts space points: "
-               << " Gbts_id: " << sp.Gbts_ID << " z: " << sp.SP->z()
+               << " Gbts_id: " << sp.GbtsID << " z: " << sp.SP->z()
                << " r: " << sp.SP->r() << " ACTS volume:  "
                << sp.SP->sourceLinks()
                       .front()
@@ -361,7 +361,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     } else {  // end so doesn't exists
       // make new if one with Gbts ID doesn't exist:
       Acts::TrigInDetSiLayer new_Gbts_ID(combined_id, barrel_ec, rc, minBound,
-                                        maxBound);
+                                         maxBound);
       input_vector.push_back(new_Gbts_ID);
       count_vector.push_back(
           1);  // so the element exists and not divinding by 0
@@ -376,7 +376,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
       fout << ACTS_vol_id << ", "                                  // vol
            << ACTS_lay_id << ", "                                  // lay
            << mod_id << ", "                                       // module
-           << Gbts_id << ","                                        // Gbts id
+           << Gbts_id << ","                                       // Gbts id
            << eta_mod << ","                                       // eta_mod
            << center(2) << ", "                                    // z
            << sqrt(center(0) * center(0) + center(1) * center(1))  // r

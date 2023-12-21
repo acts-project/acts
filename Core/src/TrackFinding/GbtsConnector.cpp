@@ -145,8 +145,8 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
   // the doublet making is done using "outside-in" approach hence the reverse
   // iterations
 
-  for (std::map<int, std::vector<const GbtsConnection *>>::reverse_iterator
-           it = newConnMap.rbegin();
+  for (std::map<int, std::vector<const GbtsConnection *>>::reverse_iterator it =
+           newConnMap.rbegin();
        it != newConnMap.rend(); ++it, currentStage++) {
     const std::vector<const GbtsConnection *> &vConn = (*it).second;
 

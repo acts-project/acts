@@ -52,7 +52,7 @@ class SeedFinderGbts {
 
   // constructors
   SeedFinderGbts(const SeedFinderGbtsConfig<external_spacepoint_t> &config,
-                const GbtsGeometry<external_spacepoint_t> &Gbtsgeo);
+                 const GbtsGeometry<external_spacepoint_t> &Gbtsgeo);
 
   ~SeedFinderGbts();  //!!! is it dangerous not to use default? got def in ipp
   SeedFinderGbts() = default;

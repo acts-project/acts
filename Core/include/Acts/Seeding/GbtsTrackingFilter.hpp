@@ -111,9 +111,8 @@ struct GbtsEdgeState {
 template <typename external_spacepoint_t>
 class GbtsTrackingFilter {
  public:
-  GbtsTrackingFilter(
-      const std::vector<Acts::TrigInDetSiLayer>& g,
-      std::vector<Acts::GbtsEdge<external_spacepoint_t>>& sb)
+  GbtsTrackingFilter(const std::vector<Acts::TrigInDetSiLayer>& g,
+                     std::vector<Acts::GbtsEdge<external_spacepoint_t>>& sb)
       : m_geo(g), m_segStore(sb) {}
 
   void followTrack(Acts::GbtsEdge<external_spacepoint_t>* pS,
@@ -207,9 +206,8 @@ class GbtsTrackingFilter {
       }
     } else {  // branching
       int nBranches = 0;
-      for (typename std::list<
-               Acts::GbtsEdge<external_spacepoint_t>*>::iterator sIt =
-               lCont.begin();
+      for (typename std::list<Acts::GbtsEdge<external_spacepoint_t>*>::iterator
+               sIt = lCont.begin();
            sIt != lCont.end(); ++sIt, nBranches++) {
         propagate((*sIt), new_ts);  // recursive call
       }
@@ -284,15 +282,21 @@ class GbtsTrackingFilter {
     X[0] = ts.m_X[0] + ts.m_X[1] * A + ts.m_X[2] * B;
     X[1] = ts.m_X[1] + ts.m_X[2] * A;
     X[2] = ts.m_X[2];
-    
-    std::cout << " printing pre  arithmetic error 00 : " << ts.m_Cx[0][0] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 01 : " << ts.m_Cx[0][1] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 02 : " << ts.m_Cx[0][2] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 11 : " << ts.m_Cx[1][1] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 12 : " << ts.m_Cx[1][2] << std::endl ; 
-    std::cout << "  printing pre  arithmetic error 22 : " << ts.m_Cx[2][2] << std::endl ; 
-    std::cout << " printing pre  arithmetic error A : " << A << std::endl ; 
-    std::cout << " printing pre  arithmetic error B : " << B << std::endl ; 
+
+    std::cout << " printing pre  arithmetic error 00 : " << ts.m_Cx[0][0]
+              << std::endl;
+    std::cout << "  printing pre  arithmetic error 01 : " << ts.m_Cx[0][1]
+              << std::endl;
+    std::cout << "  printing pre  arithmetic error 02 : " << ts.m_Cx[0][2]
+              << std::endl;
+    std::cout << "  printing pre  arithmetic error 11 : " << ts.m_Cx[1][1]
+              << std::endl;
+    std::cout << "  printing pre  arithmetic error 12 : " << ts.m_Cx[1][2]
+              << std::endl;
+    std::cout << "  printing pre  arithmetic error 22 : " << ts.m_Cx[2][2]
+              << std::endl;
+    std::cout << " printing pre  arithmetic error A : " << A << std::endl;
+    std::cout << " printing pre  arithmetic error B : " << B << std::endl;
 
     Cx[0][0] = ts.m_Cx[0][0] + 2 * ts.m_Cx[0][1] * A + 2 * ts.m_Cx[0][2] * B +
                A * A * ts.m_Cx[1][1] + 2 * A * B * ts.m_Cx[1][2] +
@@ -313,9 +317,9 @@ class GbtsTrackingFilter {
     Cy[0][0] = ts.m_Cy[0][0] + 2 * ts.m_Cy[0][1] * dr + dr * dr * ts.m_Cy[1][1];
     Cy[0][1] = Cy[1][0] = ts.m_Cy[0][1] + dr * ts.m_Cy[1][1];
     Cy[1][1] = ts.m_Cy[1][1];
-   
-    // std::cout << " printing after where arithmetic error is " << Cx[0][0] << std::endl ; 
-    // chi2 test
+
+    // std::cout << " printing after where arithmetic error is " << Cx[0][0] <<
+    // std::endl ; chi2 test
     float resid_x = mx - X[0];
     float resid_y = my - Y[0];
 
@@ -323,7 +327,7 @@ class GbtsTrackingFilter {
     float CHy[2] = {Cy[0][0], Cy[0][1]};
 
     float sigma_rz = 0.0;
-    
+
     int type = getLayerType(pS->m_n1->m_sp_Gbts.combined_ID);
 
     if (type == 0) {  // barrel TODO: split into barrel Pixel and barrel SCT

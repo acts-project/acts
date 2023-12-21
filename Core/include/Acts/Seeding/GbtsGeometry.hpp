@@ -263,7 +263,7 @@ template <typename space_point_t>
 class GbtsGeometry {
  public:
   GbtsGeometry(const std::vector<TrigInDetSiLayer> &layers,
-                       std::unique_ptr<Acts::GbtsConnector> &conn)
+               std::unique_ptr<Acts::GbtsConnector> &conn)
 
       : m_connector(std::move(conn)) {
     const float min_z0 = -168.0;
@@ -271,8 +271,7 @@ class GbtsGeometry {
 
     m_etaBinWidth = m_connector->m_etaBin;
     for (const auto &layer : layers) {
-      const GbtsLayer<space_point_t> *pL =
-          addNewLayer(layer, m_nEtaBins);
+      const GbtsLayer<space_point_t> *pL = addNewLayer(layer, m_nEtaBins);
       m_nEtaBins += pL->num_bins();
     }
 
@@ -283,16 +282,13 @@ class GbtsGeometry {
          it != m_connector->m_connMap.end(); ++it) {
       const std::vector<GbtsConnection *> &vConn = (*it).second;
 
-      for (std::vector<GbtsConnection *>::const_iterator cIt =
-               vConn.begin();
+      for (std::vector<GbtsConnection *>::const_iterator cIt = vConn.begin();
            cIt != vConn.end(); ++cIt) {
         unsigned int src = (*cIt)->m_src;  // n2 : the new connectors
         unsigned int dst = (*cIt)->m_dst;  // n1
 
-        const GbtsLayer<space_point_t> *pL1 =
-            getGbtsLayerByKey(dst);
-        const GbtsLayer<space_point_t> *pL2 =
-            getGbtsLayerByKey(src);
+        const GbtsLayer<space_point_t> *pL1 = getGbtsLayerByKey(dst);
+        const GbtsLayer<space_point_t> *pL2 = getGbtsLayerByKey(src);
 
         if (pL1 == nullptr) {
           std::cout << " skipping invalid dst layer " << dst << std::endl;
@@ -337,11 +333,9 @@ class GbtsGeometry {
     m_layArray.clear();
   }
 
-  const GbtsLayer<space_point_t> *getGbtsLayerByKey(
-      unsigned int key) const {
-    typename std::map<unsigned int,
-                      GbtsLayer<space_point_t> *>::const_iterator it =
-        m_layMap.find(key);
+  const GbtsLayer<space_point_t> *getGbtsLayerByKey(unsigned int key) const {
+    typename std::map<unsigned int, GbtsLayer<space_point_t> *>::const_iterator
+        it = m_layMap.find(key);
     if (it == m_layMap.end()) {
       return nullptr;
     }
@@ -349,8 +343,7 @@ class GbtsGeometry {
     return (*it).second;
   }
 
-  const GbtsLayer<space_point_t> *getGbtsLayerByIndex(
-      int idx) const {
+  const GbtsLayer<space_point_t> *getGbtsLayerByIndex(int idx) const {
     return m_layArray.at(idx);
   }
 
@@ -360,15 +353,14 @@ class GbtsGeometry {
 
  protected:
   const GbtsLayer<space_point_t> *addNewLayer(const TrigInDetSiLayer &l,
-                                                      int bin0) {
+                                              int bin0) {
     unsigned int layerKey = l.m_subdet;  // this should be combined ID
     float ew = m_etaBinWidth;
 
-    GbtsLayer<space_point_t> *pHL =
-        new GbtsLayer<space_point_t>(l, ew, bin0);
+    GbtsLayer<space_point_t> *pHL = new GbtsLayer<space_point_t>(l, ew, bin0);
 
-    m_layMap.insert(std::pair<unsigned int, GbtsLayer<space_point_t> *>(
-        layerKey, pHL));
+    m_layMap.insert(
+        std::pair<unsigned int, GbtsLayer<space_point_t> *>(layerKey, pHL));
     m_layArray.push_back(pHL);
     return pHL;
   }

@@ -54,7 +54,7 @@ class GbtsNode {
   };
 
   GbtsNode(const GbtsSP<space_point_t> &Gbts_sp, float minT = -100.0,
-                   float maxT = 100.0)
+           float maxT = 100.0)
       : m_sp_Gbts(Gbts_sp), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {}
 
   inline void addIn(int i) {
@@ -151,8 +151,7 @@ class GbtsEtaBin {
 template <typename space_point_t>
 class GbtsDataStorage {
  public:
-  GbtsDataStorage(const GbtsGeometry<space_point_t> &g)
-      : m_geo(g) {
+  GbtsDataStorage(const GbtsGeometry<space_point_t> &g) : m_geo(g) {
     m_etaBins.reserve(g.num_bins());
     for (int k = 0; k < g.num_bins(); k++) {
       m_etaBins.emplace_back(GbtsEtaBin<space_point_t>());
@@ -195,8 +194,7 @@ class GbtsDataStorage {
           return -3;
         }
       }
-      m_etaBins.at(binIndex).m_vn.push_back(
-          new GbtsNode<space_point_t>(sp));
+      m_etaBins.at(binIndex).m_vn.push_back(new GbtsNode<space_point_t>(sp));
     }
 
     return 0;
@@ -215,13 +213,11 @@ class GbtsDataStorage {
     return n;
   }
 
-  void getConnectingNodes(
-      std::vector<const GbtsNode<space_point_t> *> &vn) {
+  void getConnectingNodes(std::vector<const GbtsNode<space_point_t> *> &vn) {
     vn.clear();
     vn.reserve(numberOfNodes());
     for (const auto &b : m_etaBins) {
-      for (typename std::vector<
-               GbtsNode<space_point_t> *>::const_iterator nIt =
+      for (typename std::vector<GbtsNode<space_point_t> *>::const_iterator nIt =
                b.m_vn.begin();
            nIt != b.m_vn.end(); ++nIt) {
         if ((*nIt)->m_in.empty()) {
@@ -270,9 +266,8 @@ class GbtsEdge {
     }
   };
 
-  GbtsEdge(GbtsNode<space_point_t> *n1,
-                   GbtsNode<space_point_t> *n2, float p1, float p2,
-                   float p3, float p4)
+  GbtsEdge(GbtsNode<space_point_t> *n1, GbtsNode<space_point_t> *n2, float p1,
+           float p2, float p3, float p4)
       : m_n1(n1), m_n2(n2), m_level(1), m_next(1) {
     m_p[0] = p1;
     m_p[1] = p2;
