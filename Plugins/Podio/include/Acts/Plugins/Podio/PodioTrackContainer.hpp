@@ -294,6 +294,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   friend PodioTrackContainerBase;
 
   std::unique_ptr<ActsPodioEdm::TrackCollection> m_collection;
+  std::vector<HashedString> m_dynamicKeys;
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::DynamicColumnBase>>
       m_dynamic;
@@ -383,6 +384,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend, ConstPodioTrackContainer);

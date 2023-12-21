@@ -16,6 +16,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -406,6 +407,49 @@ void transportCovarianceToCurvilinear(BoundSquareMatrix& boundCovariance,
   // curvilinear surface
   reinitializeJacobians(freeTransportJacobian, freeToPathDerivatives,
                         boundToFreeJacobian, direction);
+}
+
+Acts::Result<Acts::BoundTrackParameters> boundToBoundConversion(
+    const GeometryContext& gctx, const BoundTrackParameters& boundParameters,
+    const Surface& targetSurface, const Vector3& bField) {
+  const auto& sourceSurface = boundParameters.referenceSurface();
+
+  Acts::FreeVector freePars = Acts::detail::transformBoundToFreeParameters(
+      sourceSurface, gctx, boundParameters.parameters());
+
+  auto res = Acts::detail::transformFreeToBoundParameters(freePars,
+                                                          targetSurface, gctx);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+  Acts::BoundVector parOut = *res;
+
+  std::optional<Acts::BoundMatrix> covOut = std::nullopt;
+
+  if (boundParameters.covariance().has_value()) {
+    Acts::BoundToFreeMatrix boundToFreeJacobian =
+        sourceSurface.boundToFreeJacobian(gctx, boundParameters.parameters());
+
+    Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
+
+    FreeVector freeToPathDerivatives = FreeVector::Zero();
+    freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
+
+    freeToPathDerivatives.segment<3>(eFreeDir0) =
+        bField.cross(freePars.segment<3>(eFreeDir0));
+
+    BoundMatrix boundToBoundJac = detail::boundToBoundTransportJacobian(
+        gctx, freePars, boundToFreeJacobian, freeTransportJacobian,
+        freeToPathDerivatives, targetSurface);
+
+    covOut = boundToBoundJac * (*boundParameters.covariance()) *
+             boundToBoundJac.transpose();
+  }
+
+  return Acts::BoundTrackParameters{targetSurface.getSharedPtr(), parOut,
+                                    covOut,
+                                    boundParameters.particleHypothesis()};
 }
 
 }  // namespace detail
