@@ -120,12 +120,14 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
   int vIndex = findVolume(&volume, detectorVolumes);
   jVolume["index"] = vIndex;
 
+  std::size_t sIndex = 0;
   // Write the surfaces - patch bounds & augment with self links
   nlohmann::json jSurfaces;
   for (const auto& s : volume.surfaces()) {
     auto jSurface =
         SurfaceJsonConverter::toJsonDetray(gctx, *s, options.surfaceOptions);
     DetrayJsonHelper::addVolumeLink(jSurface["mask"], vIndex);
+    jSurface["index_in_coll"] = sIndex++;
     jSurfaces.push_back(jSurface);
   }
 
@@ -140,7 +142,10 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
         (toJsonDetray(gctx, *p, ip, volume, orientedSurfaces, detectorVolumes,
                       options.portalOptions));
     std::for_each(jPortalSurfaces.begin(), jPortalSurfaces.end(),
-                  [&](auto& jSurface) { jSurfaces.push_back(jSurface); });
+                  [&](auto& jSurface) {
+                    jSurface["index_in_coll"] = sIndex++;
+                    jSurfaces.push_back(jSurface);
+                  });
   }
   jVolume["surfaces"] = jSurfaces;
 
