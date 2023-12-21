@@ -323,13 +323,11 @@ class TryAllOverstepNavigator {
   /// @return Boolean to indicate if we continue with the actors and
   ///         aborters or if we should target again.
   template <typename propagator_state_t, typename stepper_t>
-  bool postStep(propagator_state_t& state, const stepper_t& stepper) const {
+  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state) << "post step");
 
     assert(state.navigation.currentSurface == nullptr &&
            "Current surface must be reset.");
-
-    bool result = true;
 
     if (state.navigation.activeCandidateIndex ==
         state.navigation.activeCandidates.size()) {
@@ -381,10 +379,7 @@ class TryAllOverstepNavigator {
 
       ACTS_VERBOSE(volInfo(state)
                    << "Found " << state.navigation.activeCandidates.size()
-                   << " intersections")
-
-      result = state.navigation.activeCandidateIndex ==
-               state.navigation.activeCandidates.size();
+                   << " intersections");
     }
 
     if (state.navigation.activeCandidateIndex !=
@@ -415,10 +410,9 @@ class TryAllOverstepNavigator {
 
       if (hitCandidates.empty()) {
         ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
-        return result;
+        return;
       }
 
-      result = true;
       state.navigation.lastIntersection.reset();
 
       std::vector<detail::IntersectionCandidate> trueHitCandidates;
@@ -446,7 +440,7 @@ class TryAllOverstepNavigator {
       if (trueHitCandidates.empty()) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface successfully hit, but outside bounds.");
-        return true;
+        return;
       }
 
       if (trueHitCandidates.size() > 1) {
@@ -489,8 +483,6 @@ class TryAllOverstepNavigator {
         ACTS_ERROR(volInfo(state) << "Unknown intersection type");
       }
     }
-
-    return result;
   }
 
  private:
