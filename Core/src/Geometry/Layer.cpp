@@ -108,10 +108,9 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
 }
 
 boost::container::small_vector<Acts::SurfaceIntersection, 10>
-Acts::Layer::compatibleSurfaces(const GeometryContext& gctx,
-                                const Vector3& position,
-                                const Vector3& direction,
-                                const NavigationOptions& options) const {
+Acts::Layer::compatibleSurfaces(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const NavigationOptions<Surface>& options) const {
   // the list of valid intersection
   boost::container::small_vector<SurfaceIntersection, 10> sIntersections;
 
@@ -249,7 +248,7 @@ Acts::Layer::compatibleSurfaces(const GeometryContext& gctx,
 
 Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const NavigationOptions& options) const {
+    const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // resolve directive based by options
   // - options.resolvePassive is on -> always
   // - options.resolveSensitive is on -> always

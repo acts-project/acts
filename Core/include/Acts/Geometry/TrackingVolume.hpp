@@ -43,6 +43,7 @@ namespace Acts {
 
 class GlueVolumesDescriptor;
 class VolumeBounds;
+template <typename object_t>
 struct NavigationOptions;
 class GeometryIdentifier;
 class IMaterialDecorator;
@@ -203,7 +204,7 @@ class TrackingVolume : public Volume {
   /// @return vector of compatible intersections with layers
   boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const NavigationOptions& options) const;
+      const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
@@ -219,7 +220,7 @@ class TrackingVolume : public Volume {
   /// @return is the templated boundary intersection
   boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const NavigationOptions& options,
+      const Vector3& direction, const NavigationOptions<Surface>& options,
       const Logger& logger = getDummyLogger()) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
@@ -235,7 +236,7 @@ class TrackingVolume : public Volume {
   std::vector<SurfaceIntersection> compatibleSurfacesFromHierarchy(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, double angle,
-      const NavigationOptions& options) const;
+      const NavigationOptions<Surface>& options) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///

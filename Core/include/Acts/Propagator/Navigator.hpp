@@ -27,6 +27,9 @@ namespace Acts {
 
 /// @brief struct for the Navigation options that are forwarded to
 ///        the geometry
+///
+/// @tparam object_t Type of the object for navigation to check against
+template <typename object_t>
 struct NavigationOptions {
   /// The boundary check directive
   BoundaryCheck boundaryCheck = BoundaryCheck(true);
@@ -40,9 +43,9 @@ struct NavigationOptions {
   bool resolvePassive = false;
 
   /// Hint for start object
-  const void* startObject = nullptr;
+  const object_t* startObject = nullptr;
   /// Hint for end object
-  const void* endObject = nullptr;
+  const object_t* endObject = nullptr;
 
   /// External surface identifier for which the boundary check is ignored
   std::vector<GeometryIdentifier> externalSurfaces = {};
@@ -719,7 +722,7 @@ class Navigator {
       // check if current volume has BVH, or layers
       if (state.navigation.currentVolume->hasBoundingVolumeHierarchy()) {
         // has hierarchy, use that, skip layer resolution
-        NavigationOptions navOpts;
+        NavigationOptions<Surface> navOpts;
         navOpts.resolveSensitive = m_cfg.resolveSensitive;
         navOpts.resolveMaterial = m_cfg.resolveMaterial;
         navOpts.resolvePassive = m_cfg.resolvePassive;
@@ -907,7 +910,7 @@ class Navigator {
     // Helper function to find boundaries
     auto findBoundaries = [&]() -> bool {
       // The navigation options
-      NavigationOptions navOpts;
+      NavigationOptions<Surface> navOpts;
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
       navOpts.nearLimit = state.options.surfaceTolerance;
@@ -1104,7 +1107,7 @@ class Navigator {
     bool onStart = (navLayer == state.navigation.startLayer);
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
     // Use navigation parameters and NavigationOptions
-    NavigationOptions navOpts;
+    NavigationOptions<Surface> navOpts;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
@@ -1189,7 +1192,7 @@ class Navigator {
             : nullptr;
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
-    NavigationOptions navOpts;
+    NavigationOptions<Layer> navOpts;
     navOpts.boundaryCheck = m_cfg.boundaryCheckLayerResolving;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;

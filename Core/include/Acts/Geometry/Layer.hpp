@@ -35,6 +35,7 @@ class VolumeBounds;
 class TrackingVolume;
 class ApproachDescriptor;
 class IMaterialDecorator;
+template <typename object_t>
 struct NavigationOptions;
 
 // Simple surface intersection
@@ -170,7 +171,8 @@ class Layer : public virtual GeometryObject {
   /// @return list of intersection of surfaces on the layer
   boost::container::small_vector<SurfaceIntersection, 10> compatibleSurfaces(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const NavigationOptions& options) const;
+      const Vector3& direction,
+      const NavigationOptions<Surface>& options) const;
 
   /// Surface seen on approach
   /// for layers without sub structure, this is the surfaceRepresentation
@@ -182,10 +184,9 @@ class Layer : public virtual GeometryObject {
   /// @param options The  navigation options
   ///
   /// @return the Surface intersection of the approach surface
-  SurfaceIntersection surfaceOnApproach(const GeometryContext& gctx,
-                                        const Vector3& position,
-                                        const Vector3& direction,
-                                        const NavigationOptions& options) const;
+  SurfaceIntersection surfaceOnApproach(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
   /// Fast navigation to next layer
   ///

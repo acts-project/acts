@@ -468,11 +468,10 @@ void Acts::TrackingVolume::closeGeometry(
 
 // Returns the boundary surfaces ordered in probability to hit them based on
 boost::container::small_vector<Acts::BoundaryIntersection, 4>
-Acts::TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
-                                           const Vector3& position,
-                                           const Vector3& direction,
-                                           const NavigationOptions& options,
-                                           const Logger& logger) const {
+Acts::TrackingVolume::compatibleBoundaries(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const NavigationOptions<Surface>& options,
+    const Logger& logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
 
   boost::container::small_vector<Acts::BoundaryIntersection, 4> intersections;
@@ -569,10 +568,9 @@ Acts::TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
 }
 
 boost::container::small_vector<Acts::LayerIntersection, 10>
-Acts::TrackingVolume::compatibleLayers(const GeometryContext& gctx,
-                                       const Vector3& position,
-                                       const Vector3& direction,
-                                       const NavigationOptions& options) const {
+Acts::TrackingVolume::compatibleLayers(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // the layer intersections which are valid
   boost::container::small_vector<Acts::LayerIntersection, 10> lIntersections;
 
@@ -658,7 +656,7 @@ std::vector<Acts::SurfaceIntersection>
 Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, double angle,
-    const NavigationOptions& options) const {
+    const NavigationOptions<Surface>& options) const {
   std::vector<SurfaceIntersection> sIntersections;
   sIntersections.reserve(20);  // arbitrary
 
