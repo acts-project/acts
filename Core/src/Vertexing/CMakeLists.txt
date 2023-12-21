@@ -11,4 +11,5 @@ target_sources(
     ZScanVertexFinder.cpp
     HelicalTrackLinearizer.cpp
     FullBilloirVertexFitter.cpp
+    AdaptiveMultiVertexFinder.cpp
 )

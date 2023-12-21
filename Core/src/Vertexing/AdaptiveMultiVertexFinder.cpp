@@ -1,18 +1,22 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
+
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-inline auto Acts::AdaptiveMultiVertexFinder::find(
-    const std::vector<InputTrack>& allTracks,
-    const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
+namespace Acts {
+
+auto AdaptiveMultiVertexFinder::find(const std::vector<InputTrack>& allTracks,
+                                     const VertexingOptions& vertexingOptions,
+                                     IVertexFinder::State& anyState) const
+    -> Result<std::vector<Vertex>> {
   if (allTracks.empty()) {
     ACTS_ERROR("Empty track collection handed to find method");
     return VertexingError::EmptyInput;
@@ -142,7 +146,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::find(
   return getVertexOutputList(allVerticesPtr, fitterState);
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::doSeeding(
+auto AdaptiveMultiVertexFinder::doSeeding(
     const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& seedFinderState,
@@ -176,7 +180,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::doSeeding(
   return seedVertex;
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
+auto AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
     Vertex& currentConstraint, bool useVertexConstraintInFit,
     Vertex& seedVertex) const -> void {
   if (useVertexConstraintInFit) {
@@ -195,7 +199,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
   }
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::getIPSignificance(
+auto AdaptiveMultiVertexFinder::getIPSignificance(
     const InputTrack& track, const Vertex& vtx,
     const VertexingOptions& vertexingOptions) const -> Result<double> {
   // TODO: In original implementation the covariance of the given vertex is set
@@ -234,7 +238,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::getIPSignificance(
   return significance;
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
+auto AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
     const std::vector<InputTrack>& tracks, Vertex& vtx,
     VertexFitterState& fitterState,
     const VertexingOptions& vertexingOptions) const -> Result<void> {
@@ -263,7 +267,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
   return {};
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
+auto AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
     const std::vector<InputTrack>& allTracks,
     const std::vector<InputTrack>& seedTracks, Vertex& vtx,
     const Vertex& currentConstraint, VertexFitterState& fitterState,
@@ -317,7 +321,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
   return Result<bool>::success(true);
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::canPrepareVertexForFit(
+auto AdaptiveMultiVertexFinder::canPrepareVertexForFit(
     const std::vector<InputTrack>& allTracks,
     const std::vector<InputTrack>& seedTracks, Vertex& vtx,
     const Vertex& currentConstraint, VertexFitterState& fitterState,
@@ -344,7 +348,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::canPrepareVertexForFit(
   return Result<bool>::success(*resRec);
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::checkVertexAndCompatibleTracks(
+auto AdaptiveMultiVertexFinder::checkVertexAndCompatibleTracks(
     Vertex& vtx, const std::vector<InputTrack>& seedTracks,
     VertexFitterState& fitterState, bool useVertexConstraintInFit) const
     -> std::pair<int, bool> {
@@ -382,8 +386,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::checkVertexAndCompatibleTracks(
   return {nCompatibleTracks, isGoodVertex};
 }
 
-inline auto
-Acts::AdaptiveMultiVertexFinder::removeCompatibleTracksFromSeedTracks(
+auto AdaptiveMultiVertexFinder::removeCompatibleTracksFromSeedTracks(
     Vertex& vtx, std::vector<InputTrack>& seedTracks,
     VertexFitterState& fitterState,
     std::vector<InputTrack>& removedSeedTracks) const -> void {
@@ -407,7 +410,7 @@ Acts::AdaptiveMultiVertexFinder::removeCompatibleTracksFromSeedTracks(
   }
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
+auto AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
     Vertex& vtx, std::vector<InputTrack>& seedTracks,
     VertexFitterState& fitterState, std::vector<InputTrack>& removedSeedTracks,
     const GeometryContext& geoCtx) const -> bool {
@@ -462,7 +465,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
   return true;
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::keepNewVertex(
+auto AdaptiveMultiVertexFinder::keepNewVertex(
     Vertex& vtx, const std::vector<Vertex*>& allVertices,
     VertexFitterState& fitterState) const -> bool {
   double contamination = 0.;
@@ -489,7 +492,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::keepNewVertex(
   return true;
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::isMergedVertex(
+auto AdaptiveMultiVertexFinder::isMergedVertex(
     const Vertex& vtx, const std::vector<Vertex*>& allVertices) const -> bool {
   const Vector4& candidatePos = vtx.fullPosition();
   const SquareMatrix4& candidateCov = vtx.fullCovariance();
@@ -542,7 +545,7 @@ inline auto Acts::AdaptiveMultiVertexFinder::isMergedVertex(
   return false;
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::deleteLastVertex(
+auto AdaptiveMultiVertexFinder::deleteLastVertex(
     Vertex& vtx, std::vector<std::unique_ptr<Vertex>>& allVertices,
     std::vector<Vertex*>& allVerticesPtr, VertexFitterState& fitterState,
     const VertexingOptions& vertexingOptions) const -> Result<void> {
@@ -581,9 +584,9 @@ inline auto Acts::AdaptiveMultiVertexFinder::deleteLastVertex(
   return {};
 }
 
-inline auto Acts::AdaptiveMultiVertexFinder::getVertexOutputList(
+auto AdaptiveMultiVertexFinder::getVertexOutputList(
     const std::vector<Vertex*>& allVerticesPtr,
-    VertexFitterState& fitterState) const -> Acts::Result<std::vector<Vertex>> {
+    VertexFitterState& fitterState) const -> Result<std::vector<Vertex>> {
   std::vector<Vertex> outputVec;
   for (auto vtx : allVerticesPtr) {
     auto& outVtx = *vtx;
@@ -597,3 +600,4 @@ inline auto Acts::AdaptiveMultiVertexFinder::getVertexOutputList(
   }
   return Result<std::vector<Vertex>>(outputVec);
 }
+}  // namespace Acts
