@@ -23,6 +23,8 @@ from acts.examples.reconstruction import (
     AmbiguityResolutionMLConfig,
     addVertexFitting,
     VertexFinder,
+    addSeedFilterML,
+    SeedFilterMLDBScanConfig,
 )
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
@@ -43,12 +45,18 @@ parser.add_argument(
     help="Use the Ml Ambiguity Solver instead of the classical one",
     action="store_true",
 )
+parser.add_argument(
+    "--MLSeedFilter",
+    help="Use the Ml seed filter to select seed after the seeding step",
+    action="store_true",
+)
 
 args = vars(parser.parse_args())
 
 ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
 ambiguity_MLSolver = args["MLSolver"]
+seedFilter_ML = args["MLSeedFilter"]
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
@@ -173,6 +181,17 @@ addSeeding(
     outputDirRoot=outputDir,
     # outputDirCsv=outputDir,
 )
+if seedFilter_ML:
+    addSeedFilterML(
+        s,
+        SeedFilterMLDBScanConfig(
+            epsilonDBScan=0.03, minPointsDBScan=2, minSeedScore=0.1
+        ),
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
+        outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
+    )
 
 addCKFTracks(
     s,
@@ -204,7 +223,9 @@ else:
     addAmbiguityResolution(
         s,
         AmbiguityResolutionConfig(
-            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+            maximumSharedHits=3,
+            maximumIterations=1000000,
+            nMeasurementsMin=7,
         ),
         outputDirRoot=outputDir,
         writeCovMat=True,

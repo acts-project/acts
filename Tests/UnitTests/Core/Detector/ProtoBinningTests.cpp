@@ -15,6 +15,13 @@ using namespace Acts::Experimental;
 
 BOOST_AUTO_TEST_SUITE(Detector)
 
+BOOST_AUTO_TEST_CASE(ProtoBinningPlaceHolderEquidistant) {
+  // A valid placeholder binning
+  auto peq =
+      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, 5u);
+  BOOST_CHECK_EQUAL(peq.bins(), 5u);
+}
+
 BOOST_AUTO_TEST_CASE(ProtoBinningEquidistant) {
   // An invalid binning, 0 bins given
   BOOST_CHECK_THROW(
@@ -43,8 +50,9 @@ BOOST_AUTO_TEST_CASE(ProtoBinningEquidistant) {
 
 BOOST_AUTO_TEST_CASE(ProtoBinningVariable) {
   // An invalid binning, edge size < 2u
+  std::vector<Acts::ActsScalar> iedges = {12.};
   BOOST_CHECK_THROW(
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, {12.}),
+      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, iedges),
       std::invalid_argument);
 
   // A valid binning

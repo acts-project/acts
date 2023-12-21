@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -38,9 +39,10 @@ inline void updateCandidates(const GeometryContext& gctx,
                              NavigationState& nState) {
   const auto& position = nState.position;
   const auto& direction = nState.direction;
-  auto& nCandidates = nState.surfaceCandidates;
 
-  for (auto& c : nCandidates) {
+  NavigationState::SurfaceCandidates nextSurfaceCandidates;
+
+  for (NavigationState::SurfaceCandidate c : nState.surfaceCandidates) {
     // Get the surface representation: either native surfcae of portal
     const Surface& sRep =
         c.surface != nullptr ? *c.surface : c.portal->surface();
@@ -50,7 +52,14 @@ inline void updateCandidates(const GeometryContext& gctx,
     auto sIntersection = sRep.intersect(gctx, position, direction,
                                         c.boundaryCheck, s_onSurfaceTolerance);
     c.objectIntersection = sIntersection[c.objectIntersection.index()];
+
+    if (c.objectIntersection &&
+        c.objectIntersection.pathLength() > nState.overstepTolerance) {
+      nextSurfaceCandidates.emplace_back(std::move(c));
+    }
   }
+
+  nState.surfaceCandidates = std::move(nextSurfaceCandidates);
 }
 
 /// @brief  This sets a single object, e.g. single surface or single volume
