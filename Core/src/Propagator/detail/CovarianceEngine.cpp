@@ -218,9 +218,10 @@ Acts::Result<Acts::BoundTrackParameters> detail::boundToBoundConversion(
     freeToPathDerivatives.segment<3>(eFreeDir0) =
         bField.cross(freePars.segment<3>(eFreeDir0));
 
-    BoundMatrix boundToBoundJac = detail::boundToBoundTransportJacobian(
-        gctx, freePars, boundToFreeJacobian, freeTransportJacobian,
-        freeToPathDerivatives, targetSurface);
+    BoundMatrix boundToBoundJac;
+    detail::boundToBoundTransportJacobian(
+        gctx, targetSurface, freePars, boundToFreeJacobian,
+        freeTransportJacobian, freeToPathDerivatives, boundToBoundJac);
 
     covOut = boundToBoundJac * (*boundParameters.covariance()) *
              boundToBoundJac.transpose();
