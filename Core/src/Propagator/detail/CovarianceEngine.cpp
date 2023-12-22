@@ -9,6 +9,7 @@
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
@@ -17,6 +18,7 @@
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
