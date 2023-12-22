@@ -196,11 +196,11 @@ int main(int argc, char** argv) {
   Acts::SpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
-  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
+  Acts::SpacePointGrid<SpacePoint> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
+  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(std::move(grid),
                                                  bottomBinFinder, topBinFinder);
-  spGroup.fill(config, options, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;

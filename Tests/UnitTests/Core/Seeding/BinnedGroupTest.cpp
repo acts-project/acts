@@ -8,9 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
@@ -35,12 +33,9 @@ BOOST_AUTO_TEST_CASE(binned_group_constructor) {
       Acts::Grid<std::vector<std::size_t>, Acts::detail::EquidistantAxis,
                  Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>;
 
-  std::unique_ptr<grid_1d_t> grid_1d =
-      std::make_unique<grid_1d_t>(std::make_tuple(xAxis));
-  std::unique_ptr<grid_2d_t> grid_2d =
-      std::make_unique<grid_2d_t>(std::make_tuple(xAxis, yAxis));
-  std::unique_ptr<grid_3d_t> grid_3d =
-      std::make_unique<grid_3d_t>(std::make_tuple(xAxis, yAxis, zAxis));
+  grid_1d_t grid_1d(std::make_tuple(xAxis));
+  grid_2d_t grid_2d(std::make_tuple(xAxis, yAxis));
+  grid_3d_t grid_3d(std::make_tuple(xAxis, yAxis, zAxis));
 
   std::shared_ptr<Acts::GridBinFinder<1ul>> binFinder_1d =
       std::make_shared<Acts::GridBinFinder<1ul>>(1);
@@ -65,36 +60,21 @@ BOOST_AUTO_TEST_CASE(binned_group_constructor) {
   Acts::BinnedGroup<grid_3d_t> group_3d(std::move(grid_3d), binFinder_3d,
                                         binFinder_3d);
 
-  BOOST_CHECK_NO_THROW(group_1d.grid());
-  BOOST_CHECK_NO_THROW(group_2d.grid());
-  BOOST_CHECK_NO_THROW(group_3d.grid());
-
   // Move Constructor/Assignment
   const Acts::BinnedGroup<grid_1d_t> group_1d_moved(std::move(group_1d));
   const Acts::BinnedGroup<grid_2d_t> group_2d_moved(std::move(group_2d));
   const Acts::BinnedGroup<grid_3d_t> group_3d_moved = std::move(group_3d);
 
-  BOOST_CHECK_THROW(group_1d.grid(), std::runtime_error);
-  BOOST_CHECK_THROW(group_2d.grid(), std::runtime_error);
-  BOOST_CHECK_THROW(group_3d.grid(), std::runtime_error);
-
-  BOOST_CHECK_NO_THROW(group_1d_moved.grid());
-  BOOST_CHECK_NO_THROW(group_2d_moved.grid());
-  BOOST_CHECK_NO_THROW(group_3d_moved.grid());
-
   // With some nullptr inputs
-  std::unique_ptr<grid_1d_t> grid_1d_nullTest_1 =
-      std::make_unique<grid_1d_t>(std::make_tuple(xAxis));
-  std::unique_ptr<grid_1d_t> grid_1d_nullTest_2 =
-      std::make_unique<grid_1d_t>(std::make_tuple(xAxis));
+  grid_1d_t grid_1d_nullTest_1(std::make_tuple(xAxis));
+  grid_1d_t grid_1d_nullTest_2(std::make_tuple(xAxis));
 
   Acts::BinnedGroup<grid_1d_t> group_1d_nullBotFinder(
       std::move(grid_1d_nullTest_1), nullptr, binFinder_1d);
   Acts::BinnedGroup<grid_1d_t> group_1d_nullTopFinder(
       std::move(grid_1d_nullTest_2), binFinder_1d, nullptr);
 
-  BOOST_CHECK_NO_THROW(group_1d_nullBotFinder.grid());
-  BOOST_CHECK_NO_THROW(group_1d_nullTopFinder.grid());
+  [[maybe_unused]] const grid_1d_t& retrievedGrid = group_1d.grid();
 }
 
 BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_emptyGrid) {
@@ -103,8 +83,7 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_emptyGrid) {
   using binfinder_t = Acts::GridBinFinder<1ul>;
 
   Acts::detail::EquidistantAxis xAxis(0, 100, 10);
-  std::unique_ptr<grid_t> grid =
-      std::make_unique<grid_t>(std::make_tuple(xAxis));
+  grid_t grid(std::make_tuple(std::move(xAxis)));
   std::shared_ptr<binfinder_t> binfinder = std::make_shared<binfinder_t>(0);
   Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
 
@@ -126,11 +105,10 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_emptyGrid) {
 
   Acts::detail::EquidistantAxis xAxis(0, 100, 10);
   Acts::detail::EquidistantAxis yAxis(0, 100, 10);
-  std::unique_ptr<grid_t> grid = std::make_unique<grid_t>(
-      std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  grid_t grid( std::make_tuple(std::move(xAxis), std::move(yAxis)) );
   std::shared_ptr<binfinder_t> binfinder = std::make_shared<binfinder_t>(0, 0);
   Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
-
+  
   Acts::BinnedGroupIterator<grid_t> itrStart = group.begin();
   Acts::BinnedGroupIterator<grid_t> itrStop = group.end();
 
@@ -147,13 +125,12 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_perFilledGrid) {
   using binfinder_t = Acts::GridBinFinder<1ul>;
 
   Acts::detail::EquidistantAxis xAxis(0, 100, 10);
-  std::unique_ptr<grid_t> grid =
-      std::make_unique<grid_t>(std::make_tuple(xAxis));
+  grid_t grid(std::make_tuple(xAxis));
   /// Add some entries to the grid
-  grid->at(1ul).push_back(4ul);
-  grid->at(1ul).push_back(1ul);
-  grid->at(8ul).push_back(7ul);
-  grid->at(9ul).push_back(2ul);
+  grid.at(1ul).push_back(4ul);
+  grid.at(1ul).push_back(1ul);
+  grid.at(8ul).push_back(7ul);
+  grid.at(9ul).push_back(2ul);
 
   std::shared_ptr<binfinder_t> botBinfinder = std::make_shared<binfinder_t>(0);
   std::shared_ptr<binfinder_t> topBinfinder = std::make_shared<binfinder_t>(1);
@@ -177,11 +154,10 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_perFilledGrid) {
 
   Acts::detail::EquidistantAxis xAxis(0, 100, 10);
   Acts::detail::EquidistantAxis yAxis(0, 100, 10);
-  std::unique_ptr<grid_t> grid =
-      std::make_unique<grid_t>(std::make_tuple(xAxis, yAxis));
+  grid_t grid(std::make_tuple(xAxis, yAxis));
   /// Add some entries to the grid
-  grid->atLocalBins({2ul, 4ul}).push_back(4ul);
-  grid->atLocalBins({4ul, 4ul}).push_back(4ul);
+  grid.atLocalBins({2ul, 4ul}).push_back(4ul);
+  grid.atLocalBins({4ul, 4ul}).push_back(4ul);
 
   std::shared_ptr<binfinder_t> botBinfinder =
       std::make_shared<binfinder_t>(1, 2);
@@ -200,62 +176,30 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_perFilledGrid) {
 }
 
 BOOST_AUTO_TEST_CASE(binned_group_fill_2d) {
-  struct point {};
-
-  using value_t = std::unique_ptr<InternalSpacePoint<point>>;
+  using value_t = std::size_t;
   using phiAxis_t = Acts::detail::Axis<detail::AxisType::Equidistant,
                                        detail::AxisBoundaryType::Closed>;
   using zAxis_t = detail::Axis<detail::AxisType::Equidistant,
                                detail::AxisBoundaryType::Bound>;
   using grid_t = Acts::Grid<std::vector<value_t>, phiAxis_t, zAxis_t>;
   using binfinder_t = Acts::GridBinFinder<2ul>;
-
+  
   phiAxis_t phiAxis(-M_PI, M_PI, 40);
   zAxis_t zAxis(0, 100, 10);
 
-  std::unique_ptr<grid_t> grid = std::make_unique<grid_t>(
-      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+  grid_t grid( std::make_tuple(std::move(phiAxis), std::move(zAxis)) );
   std::shared_ptr<binfinder_t> binfinder = std::make_shared<binfinder_t>(1, 1);
   Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
 
-  auto extractionFunction =
-      [](const point&, float, float,
-         float) -> std::pair<Acts::Vector3, Acts::Vector2> {
-    return std::make_pair(Acts::Vector3({2, 4, 2}), Acts::Vector2({0, 0}));
-  };
-  Acts::Extent extent;
-  Acts::SeedFinderConfig<point> config;
-  Acts::SeedFinderOptions options;
-
-  std::vector<const point*> collection;
+  /// Fill the grid already owned by the group filling only one bin at a specific local position
+  std::array<std::size_t, 2ul> locPosition({4ul, 6ul});
+  std::size_t globPos = group.grid().globalBinFromLocalBins(locPosition);
+  
+  grid_t& storedGrid = group.grid();
   for (std::size_t i(0ul); i < 30ul; ++i) {
-    collection.push_back(new point());
+    storedGrid.at(globPos).push_back(1ul);
   }
-
-  BOOST_CHECK_THROW(
-      group.fill(config.toInternalUnits(), options.toInternalUnits(),
-                 collection.begin(), collection.end(),
-                 std::move(extractionFunction), extent),
-      std::runtime_error);
-
-  Acts::SeedFilterConfig seedFilterConfig;
-  config.seedFilter = std::make_shared<Acts::SeedFilter<point>>(
-      seedFilterConfig.toInternalUnits());
-
-  BOOST_CHECK_NO_THROW(group.fill(
-      config.toInternalUnits(), options.toInternalUnits(), collection.begin(),
-      collection.end(), std::move(extractionFunction), extent));
-
-  BOOST_CHECK_THROW(
-      group.fill(config, options.toInternalUnits(), collection.begin(),
-                 collection.begin(), std::move(extractionFunction), extent),
-      std::runtime_error);
-
-  BOOST_CHECK_THROW(
-      group.fill(config.toInternalUnits(), options, collection.begin(),
-                 collection.begin(), std::move(extractionFunction), extent),
-      std::runtime_error);
-
+  
   std::size_t nIterations = 0ul;
   for (const auto [bottom, middle, top] : group) {
     ++nIterations;

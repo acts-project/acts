@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
@@ -40,10 +38,15 @@ public:
   BinnedGroup() = delete;
 
   /// brief Constructor
-  BinnedGroup(std::unique_ptr<grid_t> grid,
+  BinnedGroup(grid_t&& grid,
 	      std::shared_ptr<const Acts::GridBinFinder<DIM>> bottomFinder,
 	      std::shared_ptr<const Acts::GridBinFinder<DIM>> topFinder,
 	      std::array<std::vector<std::size_t>, DIM> navigation = std::array<std::vector<std::size_t>, DIM>());
+
+  BinnedGroup(grid_t& grid,
+              std::shared_ptr<const Acts::GridBinFinder<DIM>> bottomFinder,
+              std::shared_ptr<const Acts::GridBinFinder<DIM>> topFinder,
+              std::array<std::vector<std::size_t>, DIM> navigation = std::array<std::vector<std::size_t>, DIM>()) = delete;
   
   /// @brief Copy constructor
   /// @param [in] other The BinnedGroup to copy
@@ -77,30 +80,10 @@ public:
   /// @brief Get the end iterator
   /// @return The iterator
   Acts::BinnedGroupIterator<grid_t> end() const;
-
-  /// @brief Fill the grid
-  /// @tparam external_spacepoint_t The type of the external space points
-  /// @tparam spacepoint_iterator_t The type of the iterator on the collection of external space points
-  /// @tparam callable_t The type of the function for extracting global info
-  ///
-  /// @param [in] config Configuration object for the seed finder
-  /// @param [in] options Seed Finder options
-  /// @param [in] spBegin First element to be inserted in the grid
-  /// @param [in] spEnd Last element to be inserted in the grid
-  /// @param [in] toGlobal User-provided function for extracting global quantities from external space points
-  /// @param [in] rRangeSPExtent An Acts Extent object
-  template < typename external_spacepoint_t,
-	     typename spacepoint_iterator_t,
-	     typename callable_t>  
-  void fill(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-	    const SeedFinderOptions& options,
-	    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-	    callable_t&& toGlobal,
-	    Acts::Extent& rRangeSPExtent);
   
 private:
   /// @brief The N-dimentional grid
-  std::unique_ptr<grid_t> m_grid{nullptr};
+  grid_t m_grid;
   /// @brief The Grid Bin Finder for bottom candidates
   std::shared_ptr<const Acts::GridBinFinder<DIM>> m_bottomBinFinder{nullptr};
   /// @brief The Grid Bin Finder for top candidates

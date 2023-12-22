@@ -16,7 +16,7 @@ BinnedGroupIterator<grid_t>::BinnedGroupIterator(const Acts::BinnedGroup<grid_t>
 						 std::array<std::size_t, Acts::BinnedGroupIterator<grid_t>::DIM> index,
 						 std::array<std::vector<std::size_t>, Acts::BinnedGroupIterator<grid_t>::DIM> navigation)
   : m_group(group),
-    m_gridItr(*group.m_grid.get(), index, navigation)
+    m_gridItr(group.grid(), index, navigation)
 {
   std::array<std::size_t, DIM> endline{};
   for (std::size_t i(0ul); i<DIM; ++i) {
@@ -24,7 +24,7 @@ BinnedGroupIterator<grid_t>::BinnedGroupIterator(const Acts::BinnedGroup<grid_t>
   }
   m_gridItrEnd =
     typename grid_t::local_iterator_t(
-				      *group.m_grid.get(), endline, std::move(navigation));
+				      m_group->grid(), endline, std::move(navigation));
   findNotEmptyBin();
 }
 
@@ -54,14 +54,14 @@ BinnedGroupIterator<grid_t>::operator*() const {
   /// And we know this is not an empty bin
   std::array<std::size_t, DIM> localPosition = m_gridItr.localPosition();
   std::size_t global_index =
-      m_group->m_grid->globalBinFromLocalBins(localPosition);
+    m_group->grid().globalBinFromLocalBins(localPosition);
 
   /// Get the neighbouring bins
   boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)> bottoms =
     m_group->m_bottomBinFinder->findBins(localPosition,
-					 *m_group->m_grid.get());
+					 m_group->grid());
   boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)> tops =
-    m_group->m_topBinFinder->findBins(localPosition, *m_group->m_grid.get());
+    m_group->m_topBinFinder->findBins(localPosition, m_group->grid());
 
   // GCC12+ in Release throws an overread warning here due to the move.
   // This is from inside boost code, so best we can do is to suppress it.
