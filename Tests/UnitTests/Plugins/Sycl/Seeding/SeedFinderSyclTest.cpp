@@ -185,7 +185,7 @@ auto main(int argc, char** argv) -> int {
       config, options, deviceAtlasCuts, queue, resource, &device_resource);
   Acts::SeedFinder<SpacePoint> normalSeedFinder(config);
   auto globalTool = [=](const SpacePoint& sp, float /*unused*/,
-                        float /*unused*/, float_t /*unused*/)
+                        float /*unused*/, float /*unused*/)
       -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
