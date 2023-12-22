@@ -242,7 +242,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
                                      float) {
     Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
     Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
-    return std::make_tuple(position, covariance, sp.t(), sp.varianceT());
+    return std::make_tuple(position, covariance, sp.t());
   };
 
   // extent used to store r range for middle spacepoint

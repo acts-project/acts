@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
   auto ct = [=](const SpacePoint& sp, float, float, float) {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
-    return std::make_tuple(position, covariance, sp.t(), sp.varianceT);
+    return std::make_tuple(position, covariance, sp.t());
   };
 
   // setup spacepoint grid config

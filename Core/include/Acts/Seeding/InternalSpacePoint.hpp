@@ -10,10 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-#include <array>
 #include <cmath>
 #include <functional>
-#include <limits>
 #include <optional>
 
 namespace Acts {
@@ -30,8 +28,7 @@ class InternalSpacePoint {
                      const Acts::Vector3& globalPos,
                      const Acts::Vector2& offsetXY,
                      const Acts::Vector2& variance,
-                     const std::optional<float>& globalTime,
-                     const std::optional<float>& varianceT);
+                     std::optional<float> globalTime);
 
   InternalSpacePoint(const InternalSpacePoint<SpacePoint>& sp);
   ~InternalSpacePoint() = default;
@@ -48,7 +45,6 @@ class InternalSpacePoint {
   float phi() const { return m_phi; }
   float varianceR() const { return m_varianceR; }
   float varianceZ() const { return m_varianceZ; }
-  std::optional<float> varianceT() const { return m_varianceT; }
   const SpacePoint& sp() const { return m_sp; }
 
  protected:
@@ -61,7 +57,6 @@ class InternalSpacePoint {
   float m_varianceR;         //
   float m_varianceZ;         //
   std::optional<float> m_t;  // time
-  std::optional<float> m_varianceT;
   std::reference_wrapper<const SpacePoint> m_sp;  // external space point
 };
 
@@ -73,8 +68,7 @@ template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
     std::size_t index, const SpacePoint& sp, const Acts::Vector3& globalPos,
     const Acts::Vector2& offsetXY, const Acts::Vector2& variance,
-    const std::optional<float>& globalTime,
-    const std::optional<float>& varianceT)
+    std::optional<float> globalTime)
     : m_index(index),
       m_x(globalPos.x() - offsetXY.x()),
       m_y(globalPos.y() - offsetXY.y()),
@@ -84,7 +78,6 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
       m_varianceR(variance.x()),
       m_varianceZ(variance.y()),
       m_t(globalTime),
-      m_varianceT(varianceT),
       m_sp(sp) {}
 
 /////////////////////////////////////////////////////////////////////////////////
