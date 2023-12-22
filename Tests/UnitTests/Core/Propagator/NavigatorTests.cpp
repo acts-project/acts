@@ -1056,8 +1056,7 @@ EigenStepper estepper(bField);
 StraightLineStepper slstepper;
 
 EigenPropagator epropagator(estepper,
-                            Navigator({tGeometry, true, true, false,
-                                       BoundaryCheck(false)},
+                            Navigator({tGeometry, true, true, false},
                                       getDefaultLogger("e_nav", Logging::INFO)),
                             getDefaultLogger("e_prop", Logging::INFO));
 StraightLinePropagator slpropagator(slstepper,
