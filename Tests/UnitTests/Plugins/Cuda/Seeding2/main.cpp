@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
 
   // Covariance tool, sets covariances per spacepoint as required.
   auto ct = [=](const TestSpacePoint& sp, float, float, float)
-      -> std::pair<Acts::Vector3, Acts::Vector2, std::optional<float>> {
+      -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.m_varianceR, sp.m_varianceZ);
     return std::make_tuple(position, covariance, std::nullopt);
