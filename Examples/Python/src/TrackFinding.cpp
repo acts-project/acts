@@ -231,7 +231,7 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SpacePointGridConfig;
+    using Config = Acts::CylindricalSpacePointGridConfig;
     auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -251,7 +251,7 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Options = Acts::SpacePointGridOptions;
+    using Options = Acts::CylindricalSpacePointGridOptions;
     auto c = py::class_<Options>(m, "SpacePointGridOptions").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Options);

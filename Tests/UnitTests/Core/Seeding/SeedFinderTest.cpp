@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
   };
 
   // setup spacepoint grid config
-  Acts::SpacePointGridConfig gridConf;
+  Acts::CylindricalSpacePointGridConfig gridConf;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
@@ -193,14 +193,14 @@ int main(int argc, char** argv) {
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
   // setup spacepoint grid options
-  Acts::SpacePointGridOptions gridOpts;
+  Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
-  Acts::SpacePointGrid<SpacePoint> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
-  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(std::move(grid),
-                                                 bottomBinFinder, topBinFinder);
+  Acts::CylindricalSpacePointGrid<SpacePoint> grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
+  auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(std::move(grid),
+							  bottomBinFinder, topBinFinder);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;

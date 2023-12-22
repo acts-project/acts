@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
@@ -114,8 +113,3 @@ private:
 } // namespace Acts
 
 #include "Acts/Seeding/BinnedGroupIterator.ipp"
-
-namespace Acts {
-  template <typename external_spacepoint_t>
-  using BinnedSPGroupIterator = BinnedGroupIterator<Acts::BinnedGroup<Acts::SpacePointGrid<external_spacepoint_t>>>;
-}

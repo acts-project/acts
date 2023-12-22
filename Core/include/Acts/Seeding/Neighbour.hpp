@@ -36,27 +36,27 @@ struct Neighbour {
   /// @param grid The grid containing the space points
   /// @param idx The global index of the bin in the grid
   /// @param lowerBound The lower bound of the allowed space points
-  Neighbour(Acts::SpacePointGrid<external_spacepoint_t>&& grid, std::size_t idx,
+  Neighbour(Acts::CylindricalSpacePointGrid<external_spacepoint_t>&& grid, std::size_t idx,
             const float lowerBound) = delete;
 
   /// @brief Constructor
   /// @param grid The grid containing the space points
   /// @param idx The global index of the bin in the grid
   /// @param lowerBound The lower bound of the allowed space point
-  Neighbour(const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+  Neighbour(const Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
             std::size_t idx, const float lowerBound);
 
   /// The global bin index on the grid
   std::size_t index;
   /// The iterator containing the position of the first space point in the valid
   /// radius range
-  typename Acts::SpacePointGrid<
+  typename Acts::CylindricalSpacePointGrid<
       external_spacepoint_t>::value_type::const_iterator itr;
 };
 
 template <typename external_spacepoint_t>
 Neighbour<external_spacepoint_t>::Neighbour(
-    const Acts::SpacePointGrid<external_spacepoint_t>& grid, std::size_t idx,
+    const Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid, std::size_t idx,
     const float lowerBound)
     : index(idx) {
   /// Get the space points in this specific global bin

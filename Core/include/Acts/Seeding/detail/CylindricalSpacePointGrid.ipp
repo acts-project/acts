@@ -1,26 +1,28 @@
 // -*- C++ -*-
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <boost/container/flat_set.hpp>
+
 template <typename SpacePoint>
-Acts::SpacePointGrid<SpacePoint>
-Acts::SpacePointGridCreator::createGrid(
-    const Acts::SpacePointGridConfig& config,
-    const Acts::SpacePointGridOptions& options) {
+Acts::CylindricalSpacePointGrid<SpacePoint>
+Acts::CylindricalSpacePointGridCreator::createGrid(
+    const Acts::CylindricalSpacePointGridConfig& config,
+    const Acts::CylindricalSpacePointGridOptions& options) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
-        "SpacePointGridConfig not in ACTS internal units in "
-        "SpacePointGridCreator::createGrid");
+        "CylindricalSpacePointGridConfig not in ACTS internal units in "
+        "CylindricalSpacePointGridCreator::createGrid");
   }
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
-        "SpacePointGridOptions not in ACTS internal units in "
-        "SpacePointGridCreator::createGrid");
+        "CylindricalSpacePointGridOptions not in ACTS internal units in "
+        "CylindricalSpacePointGridCreator::createGrid");
   }
   using AxisScalar = Acts::Vector3::Scalar;
   using namespace Acts::UnitLiterals;
@@ -133,15 +135,15 @@ Acts::SpacePointGridCreator::createGrid(
 
   detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
       zAxis(std::move(zValues));
-  return Acts::SpacePointGrid<SpacePoint>(std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+  return Acts::CylindricalSpacePointGrid<SpacePoint>(std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 }
 
 template <typename external_spacepoint_t,
 	  typename external_spacepoint_iterator_t,
 	  typename callable_t>
-void Acts::SpacePointGridCreator::fillGrid(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+void Acts::CylindricalSpacePointGridCreator::fillGrid(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
 					   const Acts::SeedFinderOptions& options,
-					   Acts::SpacePointGrid<external_spacepoint_t>& grid,
+					   Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
 					   external_spacepoint_iterator_t spBegin, external_spacepoint_iterator_t spEnd,
 					   callable_t&& toGlobal,
 					   Acts::Extent& rRangeSPExtent) {
