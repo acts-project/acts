@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // the jacobian from local to global at the starting position
   BoundToFreeMatrix boundToFreeJac =
-      sSurface->boundToFreeJacobian(geoCtx, sBoundParams);
+      sSurface->boundToFreeJacobian(geoCtx, eFreeParams);
 
   // the transport jacobian without B field
   FreeMatrix transportJac = FreeMatrix::Identity();

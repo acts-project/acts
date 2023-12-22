@@ -85,7 +85,7 @@ class StraightLineStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSquareMatrix(*par.covariance());
-        jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
+        jacToGlobal = surface.boundToFreeJacobian(gctx, pars);
       }
     }
 
