@@ -210,4 +210,42 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_2d) {
   BOOST_CHECK_EQUAL(nIterations, 1ul);
 }
 
+BOOST_AUTO_TEST_CASE(binned_group_fill_3d) {
+  using value_t = std::size_t;
+  using phiAxis_t = Acts::detail::Axis<detail::AxisType::Equidistant,
+                                       detail::AxisBoundaryType::Closed>;
+  using zAxis_t = detail::Axis<detail::AxisType::Equidistant,
+                               detail::AxisBoundaryType::Bound>;
+  using rAxis_t = detail::Axis<detail::AxisType::Equidistant,
+			       detail::AxisBoundaryType::Bound>;
+  using grid_t = Acts::Grid<std::vector<value_t>, phiAxis_t, zAxis_t, rAxis_t>;
+  using binfinder_t = Acts::GridBinFinder<3ul>;
+  
+  phiAxis_t phiAxis(-M_PI, M_PI, 40);
+  zAxis_t zAxis(0, 100, 10);
+  rAxis_t rAxis(0, 11000, 1);
+
+  grid_t grid( std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)) );
+  std::shared_ptr<binfinder_t> binfinder = std::make_shared<binfinder_t>(1, 1, 0);
+  Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
+
+  /// Fill the grid already owned by the group filling only one bin at a specific local position
+  std::array<std::size_t, grid_t::DIM> locPosition({4ul, 6ul, 1ul});
+  std::size_t globPos = group.grid().globalBinFromLocalBins(locPosition);
+  
+  grid_t& storedGrid = group.grid();
+  for (std::size_t i(0ul); i < 30ul; ++i) {
+    storedGrid.at(globPos).push_back(1ul);
+  }
+  
+  std::size_t nIterations = 0ul;
+  for (const auto [bottom, middle, top] : group) {
+    ++nIterations;
+    const auto& coll = group.grid().at(middle);
+    BOOST_CHECK_EQUAL(coll.size(), 30ul);
+  }
+
+  BOOST_CHECK_EQUAL(nIterations, 1ul);
+}
+
 }  // namespace Acts::Test
