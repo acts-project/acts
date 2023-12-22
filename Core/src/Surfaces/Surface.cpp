@@ -255,7 +255,7 @@ Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   const Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
-  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
+  const Vector3 direction = parameters.segment<3>(eFreeDir0);
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
   // Initialize the jacobian from local to global
