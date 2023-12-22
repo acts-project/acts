@@ -28,6 +28,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -183,12 +184,12 @@ auto main(int argc, char** argv) -> int {
   Acts::Sycl::SeedFinder<SpacePoint> syclSeedFinder(
       config, options, deviceAtlasCuts, queue, resource, &device_resource);
   Acts::SeedFinder<SpacePoint> normalSeedFinder(config);
-  auto globalTool =
-      [=](const SpacePoint& sp, float /*unused*/, float /*unused*/,
-          float_t /*unused*/) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto globalTool = [=](const SpacePoint& sp, float /*unused*/,
+                        float /*unused*/, float_t /*unused*/)
+      -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
-    return std::make_pair(position, covariance);
+    return std::make_tuple(position, covariance, std::nullopt);
   };
   auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
   gridConfig = gridConfig.toInternalUnits();
