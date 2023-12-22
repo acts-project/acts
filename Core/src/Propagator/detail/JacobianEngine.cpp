@@ -190,8 +190,7 @@ Result<void> detail::reinitializeJacobians(
     return boundParameters.error();
   }
   // Reset the jacobian from local to global
-  boundToFreeJacobian =
-      surface.boundToFreeJacobian(geoContext, *boundParameters);
+  boundToFreeJacobian = surface.boundToFreeJacobian(geoContext, freeParameters);
   return Result<void>::success();
 }
 
