@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
@@ -18,7 +17,6 @@
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
@@ -38,7 +36,6 @@ using CurvilinearState =
     std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
 /// @brief Evaluate the projection Jacobian from free to curvilinear parameters
-/// without transport jacobian.
 ///
 /// @param [in] direction Normalised direction vector
 ///
@@ -48,36 +45,41 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)
   const double z = direction(2);  // == cos(theta)
+  // can be turned into cosine/sine
+  const double cosTheta = z;
+  const double sinTheta = std::hypot(x, y);
+  const double invSinTheta = 1. / sinTheta;
+  const double cosPhi = x * invSinTheta;
+  const double sinPhi = y * invSinTheta;
   // prepare the jacobian to curvilinear
   FreeToBoundMatrix jacToCurv = FreeToBoundMatrix::Zero();
-  if (std::abs(z) < s_curvilinearProjTolerance) {
-    auto [cosPhi, sinPhi, cosTheta, sinTheta] =
-        VectorHelpers::evaluateTrigonomics(direction);
+  if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
     // We normally operate in curvilinear coordinates defined as follows
-    jacToCurv(eBoundLoc0, eFreePos0) = -sinPhi;
-    jacToCurv(eBoundLoc0, eFreePos1) = cosPhi;
-    // jacToCurv(eBoundLoc0, eFreePos2) = 0;
-    jacToCurv(eBoundLoc1, eFreePos0) = -cosPhi * cosTheta;
-    jacToCurv(eBoundLoc1, eFreePos1) = -sinPhi * cosTheta;
-    jacToCurv(eBoundLoc1, eFreePos2) = sinTheta;
+    jacToCurv(0, 0) = -sinPhi;
+    jacToCurv(0, 1) = cosPhi;
+    jacToCurv(1, 0) = -cosPhi * cosTheta;
+    jacToCurv(1, 1) = -sinPhi * cosTheta;
+    jacToCurv(1, 2) = sinTheta;
   } else {
     // Under grazing incidence to z, the above coordinate system definition
     // becomes numerically unstable, and we need to switch to another one
     const double c = std::hypot(y, z);
     const double invC = 1. / c;
-    // jacToCurv(eBoundLoc0, eFreePos0) = 0;
-    jacToCurv(eBoundLoc0, eFreePos1) = -z * invC;
-    jacToCurv(eBoundLoc0, eFreePos2) = y * invC;
-    jacToCurv(eBoundLoc1, eFreePos0) = c;
-    jacToCurv(eBoundLoc1, eFreePos1) = -x * y * invC;
-    jacToCurv(eBoundLoc1, eFreePos2) = -x * z * invC;
+    jacToCurv(0, 1) = -z * invC;
+    jacToCurv(0, 2) = y * invC;
+    jacToCurv(1, 0) = c;
+    jacToCurv(1, 1) = -x * y * invC;
+    jacToCurv(1, 2) = -x * z * invC;
   }
   // Time parameter
-  jacToCurv(eBoundTime, eFreeTime) = 1.;
+  jacToCurv(5, 3) = 1.;
   // Directional and momentum parameters for curvilinear
-  jacToCurv.block<2, 3>(eBoundPhi, eFreeDir0) =
-      freeToSphericalDirectionJacobian(direction);
-  jacToCurv(eBoundQOverP, eFreeQOverP) = 1.;
+  jacToCurv(2, 4) = -sinPhi * invSinTheta;
+  jacToCurv(2, 5) = cosPhi * invSinTheta;
+  jacToCurv(3, 4) = cosPhi * cosTheta;
+  jacToCurv(3, 5) = sinPhi * cosTheta;
+  jacToCurv(3, 6) = -sinTheta;
+  jacToCurv(4, 7) = 1.;
 
   return jacToCurv;
 }
@@ -235,8 +237,16 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
   freeToPathDerivatives = FreeVector::Zero();
   boundToFreeJacobian = BoundToFreeMatrix::Zero();
 
-  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
-      VectorHelpers::evaluateTrigonomics(direction);
+  // Optimized trigonometry on the propagation direction
+  const double x = direction(0);  // == cos(phi) * sin(theta)
+  const double y = direction(1);  // == sin(phi) * sin(theta)
+  const double z = direction(2);  // == cos(theta)
+  // can be turned into cosine/sine
+  const double cosTheta = z;
+  const double sinTheta = std::hypot(x, y);
+  const double invSinTheta = 1. / sinTheta;
+  const double cosPhi = x * invSinTheta;
+  const double sinPhi = y * invSinTheta;
 
   boundToFreeJacobian(eFreePos0, eBoundLoc0) = -sinPhi;
   boundToFreeJacobian(eFreePos0, eBoundLoc1) = -cosPhi * cosTheta;
@@ -244,8 +254,11 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
   boundToFreeJacobian(eFreePos1, eBoundLoc1) = -sinPhi * cosTheta;
   boundToFreeJacobian(eFreePos2, eBoundLoc1) = sinTheta;
   boundToFreeJacobian(eFreeTime, eBoundTime) = 1;
-  boundToFreeJacobian.block<3, 2>(eFreeDir0, eBoundPhi) =
-      sphericalToFreeDirectionJacobian(direction);
+  boundToFreeJacobian(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
+  boundToFreeJacobian(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
+  boundToFreeJacobian(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
+  boundToFreeJacobian(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
+  boundToFreeJacobian(eFreeDir2, eBoundTheta) = -sinTheta;
   boundToFreeJacobian(eFreeQOverP, eBoundQOverP) = 1;
 }
 }  // namespace
