@@ -89,6 +89,25 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_no_bfield) {
                     0);
 }
 
+BOOST_AUTO_TEST_CASE(without_boundary_check_no_bfield) {
+  auto navCfg = Acts::Navigator::Config{};
+  navCfg.boundaryCheckLayerResolving = Acts::BoundaryCheck(false);
+  const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.0_T);
+
+  // without bField we exit at the side so we don't hit the surfaces at x ~
+  // 2000 and also not the boundary surface at x = 3000, regardless of the
+  // boundary checking
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 999.0), 1);
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 1001.0),
+                    1);
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 1999.0),
+                    0);
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 2001.0),
+                    0);
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 3000.0),
+                    0);
+}
+
 BOOST_AUTO_TEST_CASE(with_boundary_check_with_bfield) {
   auto navCfg = Acts::Navigator::Config{};
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.5_T);
@@ -102,6 +121,24 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_with_bfield) {
                     0);
   BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 2001.0),
                     0);
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 3000.0),
+                    1);
+}
+
+BOOST_AUTO_TEST_CASE(no_boundary_check_with_bfield) {
+  auto navCfg = Acts::Navigator::Config{};
+  navCfg.boundaryCheckLayerResolving = Acts::BoundaryCheck(false);
+  const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.5_T);
+
+  // Without boundary check at layer resolving, we also hit the surfaces at x ~
+  // 2000
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 999.0), 1);
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 1001.0),
+                    1);
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 1999.0),
+                    1);
+  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 2001.0),
+                    1);
   BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 3000.0),
                     1);
 }

@@ -113,6 +113,10 @@ class Navigator {
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
+
+    /// Whether to perform boundary checks for layer resolving (improves
+    /// navigation for bended tracks)
+    BoundaryCheck boundaryCheckLayerResolving = BoundaryCheck(true);
   };
 
   /// @brief Nested State struct
@@ -1183,6 +1187,7 @@ class Navigator {
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
     NavigationOptions<Layer> navOpts;
+    navOpts.boundaryCheck = m_cfg.boundaryCheckLayerResolving;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
