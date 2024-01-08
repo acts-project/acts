@@ -8,6 +8,7 @@
 
 #pragma once
 
-/// Define specialization for Cylindrical detector geometry
+// Define specialization for Cylindrical detector geometry
 #include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
 
+// Define specialization for other detector geometries
