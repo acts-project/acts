@@ -74,7 +74,8 @@ class ISurfaceMaterial {
   ///
   /// @param bin0 is the material bin in dimension 0
   /// @param bin1 is the material bin in dimension 1
-  virtual const MaterialSlab& materialSlab(size_t bin0, size_t bin1) const = 0;
+  virtual const MaterialSlab& materialSlab(std::size_t bin0,
+                                           std::size_t bin1) const = 0;
 
   /// Update pre factor
   ///

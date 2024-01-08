@@ -13,15 +13,18 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
+#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
+#include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeList.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
-#include <tuple>
+#include <climits>
 #include <vector>
 
 namespace Acts {
@@ -30,62 +33,18 @@ using namespace Experimental::detail::GridAxisGenerators;
 
 namespace IndexedSurfacesJsonConverter {
 
-// Generate the possible axes in this case
-static auto s_possibleAxes =
-    std::tuple<EqBound, EqOpen, EqClosed,
-               // All 1D Var  options
-               VarBound, VarOpen, VarClosed,
-               // All 2D EqEq options
-               EqBoundEqBound, EqBoundEqOpen, EqBoundEqClosed, EqOpenEqBound,
-               EqOpenEqOpen, EqOpenEqClosed, EqClosedEqBound, EqClosedEqOpen,
-               EqClosedEqClosed,
-               // All 2D EqVar options
-               EqBoundVarBound, EqBoundVarOpen, EqBoundVarClosed,
-               EqOpenVarBound, EqOpenVarOpen, EqOpenVarClosed, EqClosedVarBound,
-               EqClosedVarOpen, EqClosedVarClosed,
-               // All 2D VarEq options
-               VarBoundEqBound, VarBoundEqOpen, VarBoundEqClosed,
-               VarOpenEqBound, VarOpenEqOpen, VarOpenEqClosed, VarClosedEqBound,
-               VarClosedEqOpen, VarClosedEqClosed,
-               // All 2D VarEq options
-               VarBoundVarBound, VarBoundVarOpen, VarBoundVarClosed,
-               VarOpenVarBound, VarOpenVarOpen, VarOpenVarClosed,
-               VarClosedVarBound, VarClosedVarOpen, VarClosedVarClosed>{};
-
-/// @brief The actual conversion method
-template <typename index_grid>
-nlohmann::json convertImpl(const index_grid& indexGrid) {
-  nlohmann::json jIndexedSurfaces;
-
-  // Fill the casts
-  nlohmann::json jCasts;
-  // 1D casts
-  if constexpr (index_grid::grid_type::DIM == 1u) {
-    jCasts.push_back(indexGrid.casts[0u]);
-  }
-  // 1D casts
-  if constexpr (index_grid::grid_type::DIM == 2u) {
-    jCasts.push_back(indexGrid.casts[0u]);
-    jCasts.push_back(indexGrid.casts[1u]);
-  }
-  jIndexedSurfaces["casts"] = jCasts;
-  jIndexedSurfaces["transform"] =
-      Transform3JsonConverter::toJson(indexGrid.transform);
-  jIndexedSurfaces["grid"] = GridJsonConverter::toJson(indexGrid.grid);
-  return jIndexedSurfaces;
-}
-
 /// @brief Convert the single delegate if it is of the type of the reference
 ///
 /// @note It will do nothing if the type does not match
 ///
 /// @param jIndexedSurfaces the json object to be filled
 /// @param delegate the delegate to be translated
+/// @param detray if the detray json format is written
 /// @param refInstance is a reference instance of potential type casting
 template <typename instance_type>
 void convert(nlohmann::json& jIndexedSurfaces,
-             const Experimental::SurfaceCandidatesUpdator& delegate,
-             [[maybe_unused]] const instance_type& refInstance) {
+             const Experimental::SurfaceCandidatesUpdater& delegate,
+             bool detray, [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
@@ -99,7 +58,15 @@ void convert(nlohmann::json& jIndexedSurfaces,
   if (castedDelegate != nullptr) {
     // Get the surface updator
     auto indexedSurfaces = std::get<SubDelegateType>(castedDelegate->updators);
-    jIndexedSurfaces = convertImpl<SubDelegateType>(indexedSurfaces);
+    jIndexedSurfaces = IndexedGridJsonHelper::convertImpl<SubDelegateType>(
+        indexedSurfaces, detray, detray);
+    if (detray) {
+      nlohmann::json jAccLink;
+      jAccLink["type"] =
+          DetrayJsonHelper::accelerationLink(indexedSurfaces.casts);
+      jAccLink["index"] = std::numeric_limits<std::size_t>::max();
+      jIndexedSurfaces["acc_link"] = jAccLink;
+    }
   }
 }
 
@@ -107,34 +74,34 @@ void convert(nlohmann::json& jIndexedSurfaces,
 ///
 /// @param jIndexedSurfaces the json object to be filled
 /// @param delegate the delegate to be translated
-/// @param axesTuple the tuple of axes to be unrolled
-///
-/// @note parameters are as of the `convertImpl` method
-template <typename tuple_type, std::size_t... I>
+/// @param detray if the detray json format is written
+template <typename... Args>
 void unrollConvert(nlohmann::json& jIndexedSurfaces,
-                   const Experimental::SurfaceCandidatesUpdator& delegate,
-                   const tuple_type& axesTuple,
-                   std::index_sequence<I...> /*unused*/) {
-  (convert(jIndexedSurfaces, delegate, std::get<I>(axesTuple)), ...);
+                   const Experimental::SurfaceCandidatesUpdater& delegate,
+                   bool detray, TypeList<Args...> /*unused*/) {
+  (convert(jIndexedSurfaces, delegate, detray, Args{}), ...);
 }
 
-/// Convert a surface array into needed constituents
+/// Convert a surface updator
 ///
 /// @param delegate the delegate to be translated
+/// @param detray if the detray json format is written
 ///
 /// @note this is the entry point of the conversion, i.e. top of the
 /// unrolling loop
 ///
-/// @return a collection of proto surface object and a grid, and associations
+/// @return a json object representing the surface updator
 static inline nlohmann::json toJson(
-    const Experimental::SurfaceCandidatesUpdator& delegate) {
+    const Experimental::SurfaceCandidatesUpdater& delegate,
+    bool detray = false) {
   // Convert if dynamic cast happens to work
   nlohmann::json jIndexedSurfaces;
-  unrollConvert(jIndexedSurfaces, delegate, s_possibleAxes,
-                std::make_index_sequence<
-                    std::tuple_size<decltype(s_possibleAxes)>::value>());
+  unrollConvert(jIndexedSurfaces, delegate, detray,
+                Experimental::detail::GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
-  jIndexedSurfaces["type"] = "IndexedSurfaces";
+  if (!jIndexedSurfaces.is_null()) {
+    jIndexedSurfaces["type"] = "IndexedSurfaces";
+  }
   return jIndexedSurfaces;
 }
 
@@ -143,7 +110,7 @@ static inline nlohmann::json toJson(
 /// @param jSurfaceNavigation the json file to read from
 ///
 /// @return the surface navigation delegate
-Experimental::SurfaceCandidatesUpdator fromJson(
+Experimental::SurfaceCandidatesUpdater fromJson(
     const nlohmann::json& jSurfaceNavigation);
 
 }  // namespace IndexedSurfacesJsonConverter

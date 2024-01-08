@@ -8,7 +8,7 @@
 
 #pragma once
 
-#if defined(ACTS_CONCEPTS_SUPPORTED)
+#if defined(__cpp_concepts)
 
 #define ACTS_REQUIRES(x) requires(x)
 #define ACTS_CONCEPT(x) x

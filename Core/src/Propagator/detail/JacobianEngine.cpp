@@ -22,8 +22,9 @@ namespace Acts {
 namespace detail {
 
 FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
+  ActsScalar invSinTheta = 1. / sinTheta;
   // Prepare the jacobian to curvilinear
   FreeToBoundMatrix freeToCurvJacobian = FreeToBoundMatrix::Zero();
   if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
@@ -61,7 +62,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
 }
 
 BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction) {
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
 
   // Prepare the jacobian to free
@@ -88,7 +89,7 @@ BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction) {
 ActsMatrix<8, 7> anglesToDirectionJacobian(const Vector3& direction) {
   ActsMatrix<8, 7> jacobian = ActsMatrix<8, 7>::Zero();
 
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
 
   jacobian(0, 0) = 1.;
@@ -108,8 +109,9 @@ ActsMatrix<8, 7> anglesToDirectionJacobian(const Vector3& direction) {
 ActsMatrix<7, 8> directionToAnglesJacobian(const Vector3& direction) {
   ActsMatrix<7, 8> jacobian = ActsMatrix<7, 8>::Zero();
 
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
+  ActsScalar invSinTheta = 1. / sinTheta;
 
   jacobian(0, 0) = 1.;
   jacobian(1, 1) = 1.;
@@ -138,6 +140,7 @@ BoundMatrix boundToBoundTransportJacobian(
   // Calculate the jacobian from free to bound at the final surface
   FreeToBoundMatrix freeToBoundJacobian =
       surface.freeToBoundJacobian(geoContext, freeParameters);
+  // https://acts.readthedocs.io/en/latest/white_papers/correction-for-transport-jacobian.html
   // Calculate the full jacobian from the local/bound parameters at the start
   // surface to local/bound parameters at the final surface
   return freeToBoundJacobian *

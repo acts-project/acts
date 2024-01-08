@@ -86,7 +86,7 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + path);
+    throw std::ios_base::failure("Could not open '" + path + "'");
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
@@ -153,6 +153,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("trk_pullThetaFitted", &m_pullThetaFitted);
     m_outputTree->Branch("trk_pullQOverP", &m_pullQOverP);
     m_outputTree->Branch("trk_pullQOverPFitted", &m_pullQOverPFitted);
+
+    m_outputTree->Branch("trk_weight", &m_trkWeight);
 
     m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
     m_outputTree->Branch("nTracksRecoVtx", &m_nTracksOnRecoVertex);
@@ -320,7 +322,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                                       particleHitCounts);
         ActsFatras::Barcode majorityParticleId =
             particleHitCounts.front().particleId;
-        size_t nMajorityHits = particleHitCounts.front().hitCount;
+        std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
         if (nMajorityHits * 1. / track.nMeasurements() <
             m_cfg.truthMatchProbMin) {
@@ -403,7 +405,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         for (std::size_t i = 0; i < trackParameters.size(); ++i) {
           const auto& params = trackParameters[i].parameters();
 
-          if (origTrack.parameters() == params) {
+          if (origTrack.parameters() == params &&
+              trk.trackWeight > m_cfg.minTrkWeight) {
             // We expect that the i-th associated truth particle corresponds to
             // the i-th track parameters
             const auto& particle = associatedTruthParticles[i];
@@ -448,11 +451,18 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }
     }
 
+    // Get number of contributing tracks (i.e., tracks with a weight above
+    // threshold)
+    auto weightHighEnough = [this](const auto& trkAtVtx) {
+      return trkAtVtx.trackWeight > m_cfg.minTrkWeight;
+    };
+    unsigned int nTracksOnRecoVertex =
+        std::count_if(tracksAtVtx.begin(), tracksAtVtx.end(), weightHighEnough);
     // Match reconstructed and truth vertex if the tracks of the truth vertex
     // make up at least minTrackVtxMatchFraction of the tracks at the
     // reconstructed vertex.
     double trackVtxMatchFraction =
-        (m_cfg.useTracks ? (double)fmap[maxOccurrenceId] / tracksAtVtx.size()
+        (m_cfg.useTracks ? (double)fmap[maxOccurrenceId] / nTracksOnRecoVertex
                          : 1.0);
     if (trackVtxMatchFraction > m_cfg.minTrackVtxMatchFraction) {
       int count = 0;
@@ -488,6 +498,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       auto& innerPullPhiFitted = m_pullPhiFitted.emplace_back();
       auto& innerPullThetaFitted = m_pullThetaFitted.emplace_back();
       auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
+
+      auto& innerTrkWeight = m_trkWeight.emplace_back();
 
       for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
         const auto& particle = associatedTruthParticles[j];
@@ -577,7 +589,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreeTime));
 
             m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
-            m_nTracksOnRecoVertex.push_back(tracksAtVtx.size());
+            m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
 
             m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
           }
@@ -597,7 +609,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             auto intersection =
                 perigeeSurface
                     ->intersect(ctx.geoContext, params.position(ctx.geoContext),
-                                params.direction(), false)
+                                params.direction(), Acts::BoundaryCheck(false))
                     .closest();
             pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
                 intersection.pathLength());
@@ -618,6 +630,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // We save the momenta if we find a match.
           for (const auto& trk : tracksAtVtx) {
             if (trk.originalParams->parameters() == params) {
+              innerTrkWeight.push_back(trk.trackWeight);
               const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
               trueMom.head(2) = Acts::makePhiThetaFromDirection(trueUnitDir);
@@ -661,7 +674,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
               // Save track parameters after the vertex fit
               const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
-              if (paramsAtVtxFitted != std::nullopt) {
+              if (paramsAtVtxFitted != std::nullopt &&
+                  trk.trackWeight > m_cfg.minTrkWeight) {
                 Acts::ActsVector<3> recoMomFitted =
                     paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
                 const Acts::ActsMatrix<3, 3>& momCovFitted =
@@ -751,6 +765,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_pullThetaFitted.clear();
   m_pullQOverP.clear();
   m_pullQOverPFitted.clear();
+
+  m_trkWeight.clear();
 
   m_nTracksOnTruthVertex.clear();
   m_nTracksOnRecoVertex.clear();

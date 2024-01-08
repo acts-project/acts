@@ -4,7 +4,7 @@ rules:
       - WIP
       - milestone-set
     required_pattern:
-      - "review-required: *"
+      - "policy-bot: *"
 
   - branch_filter:
      - "main"

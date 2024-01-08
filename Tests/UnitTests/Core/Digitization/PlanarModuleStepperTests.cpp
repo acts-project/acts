@@ -27,7 +27,6 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -35,9 +34,9 @@ namespace Test {
 
 double halfX = 5_mm;
 double halfY = 10_mm;
-size_t ntests = 100;
-size_t nbinsx = 100;
-size_t nbinsy = 200;
+std::size_t ntests = 100;
+std::size_t nbinsx = 100;
+std::size_t nbinsy = 200;
 double hThickness = 75_um;
 double lAngle = 0.1;
 double tanAlpha = tan(lAngle);
@@ -65,19 +64,21 @@ GeometryContext tgContext = GeometryContext();
 /// guaranteed to be in on the readout/counter plane
 BOOST_DATA_TEST_CASE(
     readout_counter_test,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<>(
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
+                   bdata::distribution = std::uniform_real_distribution<double>(
                        -halfX + sguardX, halfX - sguardX))) ^
-        bdata::random((bdata::seed = 1,
-                       bdata::distribution = std::uniform_real_distribution<>(
-                           -halfX + sguardX, halfX - sguardX))) ^
-        bdata::random((bdata::seed = 2,
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 1,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -halfX + sguardX, halfX - sguardX))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-halfY, halfY))) ^
-        bdata::random((bdata::seed = 3,
-                       bdata::distribution = std::uniform_int_distribution<>(
-                           -static_cast<int>(halfY),
-                           static_cast<int>(halfY)))) ^
+                           std::uniform_real_distribution<double>(-halfY,
+                                                                  halfY))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-halfY,
+                                                                  halfY))) ^
         bdata::xrange(ntests),
     entryX, entryY, exitX, exitY, index) {
   // avoid warning with void

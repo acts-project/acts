@@ -84,7 +84,7 @@ void Acts::Extent::addConstrain(const Acts::Extent& rhs,
   for (const auto& bValue : s_binningValues) {
     if (rhs.constrains(bValue) && !constrains(bValue)) {
       const auto& cRange = rhs.range(bValue);
-      m_range[bValue].setMin(cRange.min() + envelope[bValue][0u]);
+      m_range[bValue].setMin(cRange.min() - envelope[bValue][0u]);
       m_range[bValue].setMax(cRange.max() + envelope[bValue][1u]);
       m_constrains.set(bValue);
     }
@@ -152,7 +152,7 @@ bool Acts::Extent::constrains(BinningValue bValue) const {
   if (bValue == binValues) {
     return (m_constrains.count() > 0);
   }
-  return m_constrains.test(size_t(bValue));
+  return m_constrains.test(std::size_t(bValue));
 }
 
 bool Acts::Extent::operator==(const Extent& e) const {
@@ -174,7 +174,7 @@ bool Acts::Extent::operator==(const Extent& e) const {
 std::string Acts::Extent::toString(const std::string& indent) const {
   std::stringstream sl;
   sl << indent << "Extent in space : " << std::endl;
-  for (size_t ib = 0; ib < static_cast<size_t>(binValues); ++ib) {
+  for (std::size_t ib = 0; ib < static_cast<std::size_t>(binValues); ++ib) {
     if (constrains((BinningValue)ib)) {
       sl << indent << "  - value :" << std::setw(10) << binningValueNames()[ib]
          << " | range = [" << m_range[ib].min() << ", " << m_range[ib].max()

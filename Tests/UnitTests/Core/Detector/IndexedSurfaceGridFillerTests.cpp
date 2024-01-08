@@ -12,8 +12,8 @@
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -21,11 +21,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cmath>
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
   std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   // Check the correct number of filled bins
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 1u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 1u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
 
   std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 1u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 1u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
 
   std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 25u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 25u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
 
   std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 49u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 49u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
   std::size_t nonEmptyBins =
       countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 6u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 6u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   std::size_t nonEmptyBins =
       countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 9u);
+  BOOST_CHECK_EQUAL(nonEmptyBins, 9u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

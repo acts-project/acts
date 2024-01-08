@@ -141,6 +141,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(outputMaterialTracks);
+    ACTS_PYTHON_MEMBER(excludeMaterials);
     ACTS_PYTHON_STRUCT_END();
   }
 

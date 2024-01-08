@@ -21,7 +21,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -63,7 +63,7 @@ class MultiWireInternalStructureBuilder
       ACTS_DEBUG(m_cfg.auxiliary);
     }
 
-    Acts::Experimental::DetectorVolumeUpdator internalVolumeUpdator =
+    Acts::Experimental::DetectorVolumeUpdater internalVolumeUpdater =
         Acts::Experimental::tryNoVolumes();
     // Create the indexed surfaces
     auto internalSurfaces = m_cfg.iSurfaces;
@@ -80,12 +80,12 @@ class MultiWireInternalStructureBuilder
         {m_cfg.binning[1u].edges.front(), m_cfg.binning[1u].edges.back()},
         m_cfg.binning[1u].edges.size() - 1};
 
-    auto sfCandidatesUpdator = isg(gctx, aGenerator, rGenerator);
+    auto sfCandidatesUpdater = isg(gctx, aGenerator, rGenerator);
 
     return {internalSurfaces,
             {},
-            std::move(sfCandidatesUpdator),
-            std::move(internalVolumeUpdator)};
+            std::move(sfCandidatesUpdater),
+            std::move(internalVolumeUpdater)};
   }
 
  private:
@@ -116,14 +116,9 @@ Acts::Experimental::MultiWireStructureBuilder::MultiWireStructureBuilder(
 Acts::Experimental::DetectorComponent
 Acts::Experimental::MultiWireStructureBuilder::construct(
     const Acts::GeometryContext& gctx) {
-  if (mCfg.mlBounds.size() != 3u) {
-    throw std::invalid_argument(
-        "MultiWireStructureBuilder: Invalid dimension for bounds.");
-  }
-
   // Configure the external structure builder for the internal structure
   Acts::Experimental::VolumeStructureBuilder::Config vsConfig;
-  vsConfig.boundsType = Acts::VolumeBounds::eCuboid;
+  vsConfig.boundsType = Acts::VolumeBounds::eTrapezoid;
   vsConfig.transform = mCfg.transform;
   vsConfig.boundValues = mCfg.mlBounds;
   vsConfig.auxiliary = "Construct External Structure";

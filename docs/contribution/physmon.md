@@ -4,7 +4,7 @@ The ACTS CI runs a suite of physics performance monitoring jobs dubbed
 *physmon*. The purpose is to monitor and detect changes in the physics
 performance, both intentional and accidental.
 
-The associated job will run a number of workflow combinations. Currently this
+The associated job will run a number of workflow combinations. Currently, this
 includes the truth tracking and OpenDataDetector *full chain* workflows. The
 latter is further split into configurations with full seeding, truth smeared or
 truth estimated seeds. These jobs produce performance output files.
@@ -20,21 +20,21 @@ this on a pull request.
 The physmon CI job attaches its results as an artifact to the CI run (also for successful runs)
 From your pull request, you need to click on the *Checks* tab at the top:
 
-:::{figure} ../figures/physmon/physmon_checks.png
+:::{figure} figures/physmon/physmon_checks.png
 :width: 150px
 :align: center
 :::
 
 From there, click on the *Builds* workflow on the left:
 
-:::{figure} ../figures/physmon/physmon_run.png
+:::{figure} figures/physmon/physmon_run.png
 :width: 300px
 :align: center
 :::
 
 On the workflow overview, scroll down to find the attached artifacts, and locate the *physmon* artifact. You can click to download it:
 
-:::{figure} ../figures/physmon/physmon_artifact.png
+:::{figure} figures/physmon/physmon_artifact.png
 :width: 100%
 :align: center
 :::
@@ -81,7 +81,7 @@ contain plots of all the histogram comparisons, and the `.html` files contain
 single-file reports showing the detailed results. An example of an HTML report
 looks like this:
 
-:::{figure} ../figures/physmon/physmon_report.png
+:::{figure} figures/physmon/physmon_report.png
 :width: 100%
 :align: center
 :::

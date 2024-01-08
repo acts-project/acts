@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
@@ -233,11 +233,6 @@ Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
   return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 
-Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
-                                    const Vector3& /*position*/) const {
-  return normal(gctx, Vector2(Vector2::Zero()));
-}
-
 const Acts::Transform3& Acts::Surface::transform(
     const GeometryContext& gctx) const {
   if (m_associatedDetElement != nullptr) {
@@ -266,9 +261,6 @@ Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
   const Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
   const Vector3 direction = freeParams.segment<3>(eFreeDir0);
-  // Use fast evaluation function of sin/cos
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      VectorHelpers::evaluateTrigonomics(direction);
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
   // Initialize the jacobian from local to global
@@ -278,11 +270,8 @@ Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacToGlobal(eFreeDir0, eBoundPhi) = (-sinTheta) * sinPhi;
-  jacToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
-  jacToGlobal(eFreeDir2, eBoundTheta) = (-sinTheta);
+  jacToGlobal.block<3, 2>(eFreeDir0, eBoundPhi) =
+      sphericalToFreeDirectionJacobian(direction);
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
   return jacToGlobal;
 }
@@ -293,9 +282,6 @@ Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
-  // Use fast evaluation function of sin/cos
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-      VectorHelpers::evaluateTrigonomics(direction);
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
@@ -306,11 +292,8 @@ Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
   // Time component
   jacToLocal(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  jacToLocal(eBoundPhi, eFreeDir0) = -sinPhi * invSinTheta;
-  jacToLocal(eBoundPhi, eFreeDir1) = cosPhi * invSinTheta;
-  jacToLocal(eBoundTheta, eFreeDir0) = cosPhi * cosTheta;
-  jacToLocal(eBoundTheta, eFreeDir1) = sinPhi * cosTheta;
-  jacToLocal(eBoundTheta, eFreeDir2) = -sinTheta;
+  jacToLocal.block<2, 3>(eBoundPhi, eFreeDir0) =
+      freeToSphericalDirectionJacobian(direction);
   jacToLocal(eBoundQOverP, eFreeQOverP) = 1;
   return jacToLocal;
 }

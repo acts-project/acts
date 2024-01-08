@@ -192,12 +192,12 @@ struct CylindricalTrackingGeometry {
     double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
     double zStep = 2 * std::abs(zStart) / (nZbins - 1);
     // loop over the bins
-    for (size_t zBin = 0; zBin < size_t(nZbins); ++zBin) {
+    for (std::size_t zBin = 0; zBin < std::size_t(nZbins); ++zBin) {
       // prepare z and r
       double moduleZ = zStart + zBin * zStep;
       double moduleR =
           (zBin % 2) != 0u ? radius - 0.5 * zStagger : radius + 0.5 * zStagger;
-      for (size_t phiBin = 0; phiBin < size_t(nPhiBins); ++phiBin) {
+      for (std::size_t phiBin = 0; phiBin < std::size_t(nPhiBins); ++phiBin) {
         // calculate the current phi value
         double modulePhi = minPhi + phiBin * phiStep;
         mPositions.push_back(Vector3(moduleR * cos(modulePhi),
@@ -288,7 +288,7 @@ struct CylindricalTrackingGeometry {
 
     std::vector<LayerPtr> pLayers;
 
-    for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
+    for (std::size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
       std::vector<const Surface*> layerSurfaces =
           surfacesCylinder(detectorStore, pModuleHalfX[ilp], pModuleHalfY[ilp],
                            pModuleThickness[ilp], pModuleTiltPhi[ilp],

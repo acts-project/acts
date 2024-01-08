@@ -33,17 +33,18 @@ namespace detail {
 template <typename stepper_t>
 Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
-    const Surface& surface, Direction navDir, const BoundaryCheck& bcheck,
-    ActsScalar surfaceTolerance, const Logger& logger) {
-  ACTS_VERBOSE(
-      "Update single surface status for surface: " << surface.geometryId());
+    const Surface& surface, std::uint8_t index, Direction navDir,
+    const BoundaryCheck& bcheck, ActsScalar surfaceTolerance,
+    const Logger& logger) {
+  ACTS_VERBOSE("Update single surface status for surface: "
+               << surface.geometryId() << " index " << (int)index);
 
   auto sIntersection = surface.intersect(
       state.geoContext, stepper.position(state),
-      navDir * stepper.direction(state), bcheck, surfaceTolerance);
+      navDir * stepper.direction(state), bcheck, surfaceTolerance)[index];
 
   // The intersection is on surface already
-  if (sIntersection.closest().status() == Intersection3D::Status::onSurface) {
+  if (sIntersection.status() == Intersection3D::Status::onSurface) {
     // Release navigation step size
     state.stepSize.release(ConstrainedStep::actor);
     ACTS_VERBOSE("Intersection: state is ON SURFACE");
@@ -51,17 +52,15 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
   }
 
   // Path and overstep limit checking
-  const double pLimit = state.stepSize.value(ConstrainedStep::aborter);
-  const double oLimit = stepper.overstepLimit(state);
+  const double nearLimit = stepper.overstepLimit(state);
+  const double farLimit = state.stepSize.value(ConstrainedStep::aborter);
 
-  for (const auto& intersection : sIntersection.split()) {
-    if (intersection &&
-        detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
-                                  surfaceTolerance, logger)) {
-      ACTS_VERBOSE("Surface is reachable");
-      stepper.setStepSize(state, intersection.pathLength());
-      return Intersection3D::Status::reachable;
-    }
+  if (sIntersection && detail::checkIntersection(sIntersection.intersection(),
+                                                 nearLimit, farLimit, logger)) {
+    ACTS_VERBOSE("Surface is reachable");
+    stepper.updateStepSize(state, sIntersection.pathLength(),
+                           ConstrainedStep::actor);
+    return Intersection3D::Status::reachable;
   }
 
   ACTS_VERBOSE("Surface is NOT reachable");

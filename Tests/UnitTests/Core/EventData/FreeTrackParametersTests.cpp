@@ -16,7 +16,6 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericFreeTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -33,7 +32,6 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
-const GeometryContext geoCtx;
 const FreeSquareMatrix cov = FreeSquareMatrix::Identity();
 
 void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,

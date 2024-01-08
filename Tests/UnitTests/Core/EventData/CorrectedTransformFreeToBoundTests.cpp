@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -76,7 +77,9 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // the intersection of the track with the end surface
   SurfaceIntersection intersection =
-      eSurface->intersect(geoCtx, Vector3(0, 0, 0), dir, true).closest();
+      eSurface
+          ->intersect(geoCtx, Vector3(0, 0, 0), dir, Acts::BoundaryCheck(true))
+          .closest();
   Vector3 tpos = intersection.position();
   auto s = intersection.pathLength();
 

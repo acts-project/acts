@@ -17,10 +17,10 @@ void ActsExamples::Options::addCsvWriterOptions(
     ActsExamples::Options::Description& desc) {
   using namespace boost::program_options;
 
-  desc.add_options()(
-      "csv-output-precision",
-      value<size_t>()->default_value(std::numeric_limits<float>::max_digits10),
-      "Floating number output precision.")(
+  desc.add_options()("csv-output-precision",
+                     value<std::size_t>()->default_value(
+                         std::numeric_limits<float>::max_digits10),
+                     "Floating number output precision.")(
       "csv-tg-perevent", bool_switch(), "Write tracking geometry per event.");
 }
 
@@ -31,7 +31,7 @@ ActsExamples::Options::readCsvParticleWriterConfig(
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
-  cfg.outputPrecision = vm["csv-output-precision"].as<size_t>();
+  cfg.outputPrecision = vm["csv-output-precision"].as<std::size_t>();
   return cfg;
 }
 
@@ -51,7 +51,7 @@ ActsExamples::Options::readCsvPlanarClusterWriterConfig(
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
-  cfg.outputPrecision = vm["csv-output-precision"].as<size_t>();
+  cfg.outputPrecision = vm["csv-output-precision"].as<std::size_t>();
   return cfg;
 }
 
@@ -62,7 +62,7 @@ ActsExamples::Options::readCsvMeasurementWriterConfig(
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
-  // cfg.outputPrecision = vm["csv-output-precision"].as<size_t>();
+  // cfg.outputPrecision = vm["csv-output-precision"].as<std::size_t>();
   return cfg;
 }
 
@@ -73,7 +73,7 @@ ActsExamples::Options::readCsvTrackingGeometryWriterConfig(
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
-  cfg.outputPrecision = vm["csv-output-precision"].as<size_t>();
+  cfg.outputPrecision = vm["csv-output-precision"].as<std::size_t>();
   cfg.writePerEvent = (vm.count("csv-tg-perevent") != 0u);
   return cfg;
 }

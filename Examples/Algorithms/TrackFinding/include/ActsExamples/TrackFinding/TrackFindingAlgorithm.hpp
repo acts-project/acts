@@ -138,8 +138,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 
-  mutable std::atomic<size_t> m_nTotalSeeds{0};
-  mutable std::atomic<size_t> m_nFailedSeeds{0};
+  mutable std::atomic<std::size_t> m_nTotalSeeds{0};
+  mutable std::atomic<std::size_t> m_nFailedSeeds{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {

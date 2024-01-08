@@ -114,11 +114,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 
     root_files = [
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
         (
@@ -162,8 +158,7 @@ def test_geant4(tmp_path, assert_root_hash):
     csv.mkdir()
 
     root_files = [
-        "particles_final.root",
-        "particles_initial.root",
+        "particles_simulation.root",
         "hits.root",
     ]
 
@@ -227,11 +222,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
     ]
@@ -284,11 +275,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
     ]
@@ -345,11 +332,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
     ]

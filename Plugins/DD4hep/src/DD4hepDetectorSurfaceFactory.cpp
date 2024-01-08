@@ -28,8 +28,8 @@ Acts::DD4hepDetectorSurfaceFactory::DD4hepDetectorSurfaceFactory(
 }
 
 void Acts::DD4hepDetectorSurfaceFactory::construct(
-    Cache& cache, const dd4hep::DetElement& dd4hepElement,
-    const Options& options) {
+    Cache& cache, const GeometryContext& gctx,
+    const dd4hep::DetElement& dd4hepElement, const Options& options) {
   ACTS_DEBUG("Configured to convert "
              << (options.convertSensitive ? "sensitive components and " : "")
              << (options.convertPassive
@@ -39,22 +39,29 @@ void Acts::DD4hepDetectorSurfaceFactory::construct(
                             : "")));
   ACTS_DEBUG("Constructing DD4hepDetectorElements - tree level call from  "
              << dd4hepElement.name() << ".");
-  recursiveConstruct(cache, dd4hepElement, options, 1);
+  recursiveConstruct(cache, gctx, dd4hepElement, options, 1);
   ACTS_DEBUG("Recursive search did yield: "
              << cache.sensitiveSurfaces.size() << " sensitive surface(s), "
              << cache.passiveSurfaces.size() << " passive surface(s)");
+
+  // Check for auto-range determination
+  if (!cache.binnings.empty() && cache.sExtent.has_value()) {
+    ACTS_DEBUG("Autorange deterimnation of binning enabled.");
+  }
 }
 
 void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
-    Cache& cache, const dd4hep::DetElement& dd4hepElement,
-    const Options& options, int level) {
+    Cache& cache, const GeometryContext& gctx,
+    const dd4hep::DetElement& dd4hepElement, const Options& options,
+    int level) {
   ACTS_VERBOSE("Conversion call at level " << level << " for element "
                                            << dd4hepElement.name());
 
   // Check if any surface binnning can be detected
   int sBinning = getParamOr<int>("acts_surface_binning_dim", dd4hepElement, 0);
   if (sBinning > 0) {
-    cache.binnings = convertBinning(dd4hepElement, "acts_surface_binning");
+    cache.binnings = DD4hepBinningHelpers::convertBinning(
+        dd4hepElement, "acts_surface_binning");
   }
 
   // Deal with passive surface if detected
@@ -63,7 +70,7 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
   if (pSurface && options.convertPassive) {
     ACTS_VERBOSE("Passive surface(s) detected.");
     cache.passiveSurfaces.push_back(
-        constructPassiveComponents(dd4hepElement, options));
+        constructPassiveComponents(cache, gctx, dd4hepElement, options));
   }
 
   const dd4hep::DetElement::Children& children = dd4hepElement.children();
@@ -74,10 +81,10 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
       ACTS_VERBOSE("Processing child " << childDetElement.name());
       if (childDetElement.volume().isSensitive() && options.convertSensitive) {
         ACTS_VERBOSE("Sensitive surface detected.");
-        cache.sensitiveSurfaces.push_back(
-            constructSensitiveComponents(childDetElement, options));
+        cache.sensitiveSurfaces.push_back(constructSensitiveComponents(
+            cache, gctx, childDetElement, options));
       }
-      recursiveConstruct(cache, childDetElement, options, level + 1);
+      recursiveConstruct(cache, gctx, childDetElement, options, level + 1);
     }
   } else {
     ACTS_VERBOSE("No children detected.");
@@ -86,6 +93,7 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
 
 Acts::DD4hepDetectorSurfaceFactory::DD4hepSensitiveSurface
 Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
+    Cache& cache, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) const {
   // Extract the axis definition
   std::string detAxis =
@@ -96,6 +104,14 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   auto dd4hepDetElement = std::make_shared<Acts::DD4hepDetectorElement>(
       dd4hepElement, detAxis, unitLength, false, nullptr);
   auto sSurface = dd4hepDetElement->surface().getSharedPtr();
+  // Measure if configured to do so
+  if (cache.sExtent.has_value()) {
+    auto sExtent =
+        sSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
+            .extent();
+    cache.sExtent.value().extend(sExtent, cache.extentContraints);
+  }
+
   attachSurfaceMaterial(dd4hepElement, *sSurface.get(),
                         dd4hepDetElement->thickness(), options);
   // return the surface
@@ -104,6 +120,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
 
 Acts::DD4hepDetectorSurfaceFactory::DD4hepPassiveSurface
 Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
+    Cache& cache, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) const {
   // Underlying TGeo node, shape & transform
   const auto& tgeoNode = *(dd4hepElement.placement().ptr());
@@ -113,9 +130,15 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
   auto detAxis =
       getParamOr<std::string>("axis_definitions", dd4hepElement, "XYZ");
   bool assignToAll = getParamOr<bool>("assign_to_all", dd4hepElement, true);
-
   auto [pSurface, thickness] =
       TGeoSurfaceConverter::toSurface(*tgeoShape, tgeoTransform, detAxis);
+  // Measure if configured to do so
+  if (cache.pExtent.has_value()) {
+    auto sExtent =
+        pSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
+            .extent();
+    cache.pExtent.value().extend(sExtent, cache.extentContraints);
+  }
   attachSurfaceMaterial(dd4hepElement, *pSurface.get(), thickness, options);
   // Return a passive surface
   return {pSurface, assignToAll};

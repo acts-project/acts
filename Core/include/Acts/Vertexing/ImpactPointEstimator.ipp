@@ -81,10 +81,11 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   std::shared_ptr<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(coordinateSystem);
 
-  auto intersection = planeSurface
-                          ->intersect(gctx, trkParams.position(gctx),
-                                      trkParams.direction(), false)
-                          .closest();
+  auto intersection =
+      planeSurface
+          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
+                      BoundaryCheck(false))
+          .closest();
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
@@ -97,6 +98,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   if (result.ok()) {
     return *result->endParameters;
   } else {
+    ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
+    ACTS_DEBUG(
+        "The plane surface to which we tried to propagate has its origin at\n"
+        << vtxPos);
     return result.error();
   }
 }
@@ -116,22 +121,43 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return VertexingError::EmptyInput;
   }
 
+  // Retrieve weight matrix of the track's local x-, y-, and time-coordinate
+  // (the latter only if nDim = 4). For this, the covariance needs to be set.
+  if (!trkParams->covariance().has_value()) {
+    return VertexingError::NoCovariance;
+  }
+  ActsSquareMatrix<nDim - 1> subCovMat;
+  if constexpr (nDim == 3) {
+    subCovMat = trkParams->spatialImpactParameterCovariance().value();
+  } else {
+    subCovMat = trkParams->impactParameterCovariance().value();
+  }
+  ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
+
+  // Orientation of the surface (i.e., axes of the corresponding coordinate
+  // system)
+  RotationMatrix3 surfaceAxes =
+      trkParams->referenceSurface().transform(gctx).rotation();
   // Origin of the surface coordinate system
   Vector3 surfaceOrigin =
       trkParams->referenceSurface().transform(gctx).translation();
 
-  if (vertexPos.template head<3>() != surfaceOrigin) {
-    throw std::invalid_argument(
-        "The origin of the track reference surface must be at the vertex "
-        "position. Please make sure that trkParams was computed using "
-        "estimate3DImpactParameters.");
-  }
+  // x- and y-axis of the surface coordinate system
+  Vector3 xAxis = surfaceAxes.col(0);
+  Vector3 yAxis = surfaceAxes.col(1);
+
+  // Vector pointing from the surface origin to the vertex position
+  // TODO: The vertex should always be at the surfaceOrigin since the
+  // track parameters should be obtained by estimate3DImpactParameters.
+  // Therefore, originToVertex should always be 0, which is currently not the
+  // case.
+  Vector3 originToVertex = vertexPos.template head<3>() - surfaceOrigin;
 
   // x-, y-, and possibly time-coordinate of the vertex and the track in the
-  // surface coordinate system. Since the vertex is at the surface origin, its
-  // spatial coordinates are 0.
+  // surface coordinate system
   ActsVector<nDim - 1> localVertexCoords;
-  localVertexCoords.template head<2>() = Vector2(0., 0.);
+  localVertexCoords.template head<2>() =
+      Vector2(originToVertex.dot(xAxis), originToVertex.dot(yAxis));
 
   ActsVector<nDim - 1> localTrackCoords;
   localTrackCoords.template head<2>() =
@@ -145,19 +171,6 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // residual
   ActsVector<nDim - 1> residual = localTrackCoords - localVertexCoords;
-
-  // Retrieve weight matrix of the track's local x-, y-, and time-coordinate
-  // (the latter only if nDim = 4). For this, the covariance needs to be set.
-  if (!trkParams->covariance().has_value()) {
-    return VertexingError::NoCovariance;
-  }
-  ActsSquareMatrix<nDim - 1> subCovMat;
-  if constexpr (nDim == 3) {
-    subCovMat = trkParams->spatialImpactParameterCovariance().value();
-  } else {
-    subCovMat = trkParams->impactParameterCovariance().value();
-  }
-  ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
 
   // return chi2
   return residual.dot(weight * residual);
@@ -196,6 +209,8 @@ Acts::Result<double> Acts::ImpactPointEstimator<
                                   rho * cotTheta * cotTheta);
 
     if (secDerivative < 0.) {
+      ACTS_ERROR(
+          "Encountered negative second derivative during Newton optimization.");
       return VertexingError::NumericFailure;
     }
 
@@ -213,7 +228,7 @@ Acts::Result<double> Acts::ImpactPointEstimator<
   }  // end while loop
 
   if (!hasConverged) {
-    // max iterations reached but did not converge
+    ACTS_ERROR("Newton optimization did not converge.");
     return VertexingError::NotConverged;
   }
   return phi;
@@ -241,6 +256,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Note that we assume a constant B field here!
   auto fieldRes = m_cfg.bField->getField(refPoint, state.fieldCache);
   if (!fieldRes.ok()) {
+    ACTS_ERROR("In getDistanceAndMomentum, the B field at\n"
+               << refPoint << "\ncould not be retrieved.");
     return fieldRes.error();
   }
   double bZ = (*fieldRes)[eZ];
@@ -369,10 +386,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
-  auto intersection =
-      perigeeSurface
-          ->intersect(gctx, track.position(gctx), track.direction(), false)
-          .closest();
+  auto intersection = perigeeSurface
+                          ->intersect(gctx, track.position(gctx),
+                                      track.direction(), BoundaryCheck(false))
+                          .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
@@ -380,6 +397,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
+    ACTS_ERROR("Error during propagation in getImpactParameters.");
+    ACTS_DEBUG(
+        "The Perigee surface to which we tried to propagate has its origin at\n"
+        << vtx.position());
     return result.error();
   }
 

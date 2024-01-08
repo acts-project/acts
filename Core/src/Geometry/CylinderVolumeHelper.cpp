@@ -24,6 +24,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -214,7 +215,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
-  ACTS_VERBOSE('\t' << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
+  ACTS_VERBOSE("\t" << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
   // assign min/max
   double min = cylinder ? rMin : zMin;
@@ -248,7 +249,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
-  ACTS_VERBOSE('\t' << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
+  ACTS_VERBOSE("\t" << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
   // create the layers
   LayerVector layers;
@@ -287,7 +288,7 @@ std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     const GeometryContext& gctx, const TrackingVolumeVector& volumes) const {
   // check if you have more than one volume
-  if (volumes.size() <= (size_t)1) {
+  if (volumes.size() <= (std::size_t)1) {
     ACTS_WARNING(
         "None (only one) TrackingVolume given to create container "
         "volume (min required: 2) - returning 0 ");
@@ -302,7 +303,7 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   auto firstVolume = volumes.begin();
   auto lastVolume = volumes.end();
 
-  for (size_t ivol = 0; firstVolume != lastVolume; ++firstVolume, ++ivol) {
+  for (std::size_t ivol = 0; firstVolume != lastVolume; ++firstVolume, ++ivol) {
     ACTS_VERBOSE("   - volume (" << ivol
                                  << ") is : " << (*firstVolume)->volumeName());
     ACTS_VERBOSE("     at position : " << (*firstVolume)->center().x() << ", "
@@ -602,7 +603,7 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
 
     // list the volume names:
     //  and make the screen output readable
-    size_t ivol = 0;
+    std::size_t ivol = 0;
     for (auto& vol : volumes) {
       ACTS_VERBOSE("[" << ivol++ << "] - volume : " << vol->volumeName());
     }
@@ -742,7 +743,7 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
                                   << " volumes at face tubeOuterCover:");
     for (tVolIter = glueVolumesOuterTube.begin();
          tVolIter != glueVolumesOuterTube.end(); ++tVolIter) {
-      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     }
   }
   // return success
@@ -761,14 +762,14 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
   const GlueVolumesDescriptor& gvDescriptorTwo =
       tvolTwo->glueVolumesDescriptor();
 
-  size_t volOneGlueVols =
+  std::size_t volOneGlueVols =
       gvDescriptorOne.glueVolumes(faceOne)
           ? gvDescriptorOne.glueVolumes(faceOne)->arrayObjects().size()
           : 0;
   ACTS_VERBOSE("GlueVolumeDescriptor of volume '"
                << tvolOne->volumeName() << "' has " << volOneGlueVols << " @ "
                << faceOne);
-  size_t volTwoGlueVols =
+  std::size_t volTwoGlueVols =
       gvDescriptorTwo.glueVolumes(faceTwo)
           ? gvDescriptorTwo.glueVolumes(faceTwo)->arrayObjects().size()
           : 0;
@@ -842,7 +843,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
       // (1) create the Boundary CylinderSurface
       auto cBounds =
           std::make_shared<CylinderBounds>(rGlueMin, 0.5 * (zMax - zMin));
-      std::shared_ptr<const Surface> cSurface =
+      std::shared_ptr<const RegularSurface> cSurface =
           Surface::makeShared<CylinderSurface>(transform, cBounds);
       ACTS_VERBOSE(
           "             creating a new cylindrical boundary surface "
@@ -867,7 +868,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
 
       // (2) create the BoundaryDiscSurface, in that case the zMin/zMax provided
       // are both the position of the disk in question
-      std::shared_ptr<const Surface> dSurface =
+      std::shared_ptr<const RegularSurface> dSurface =
           Surface::makeShared<DiscSurface>(transform, rMin, rMax);
       ACTS_VERBOSE(
           "             creating a new disc-like boundary surface "
@@ -922,8 +923,8 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
       // Adapt the boundary material
       ACTS_VERBOSE("- the new boundary surface has boundary material: ");
       ACTS_VERBOSE("    " << *boundaryMaterial);
-      Surface* newSurface =
-          const_cast<Surface*>(&(boundarySurface->surfaceRepresentation()));
+      RegularSurface* newSurface = const_cast<RegularSurface*>(
+          &(boundarySurface->surfaceRepresentation()));
       newSurface->assignSurfaceMaterial(boundaryMaterial);
     }
 

@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   ActsExamples::DigiComponentsConfig dcTest(dcJsonIn);
   BOOST_CHECK(dcTest.geometricDigiConfig.indices ==
               dcRef.geometricDigiConfig.indices);
-  BOOST_CHECK(dcTest.geometricDigiConfig.segmentation.dimensions() ==
-              dcRef.geometricDigiConfig.segmentation.dimensions());
+  BOOST_CHECK_EQUAL(dcTest.geometricDigiConfig.segmentation.dimensions(),
+                    dcRef.geometricDigiConfig.segmentation.dimensions());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -80,11 +80,11 @@ class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
   DuplicationPlotTool m_duplicationPlotTool;
   DuplicationPlotTool::DuplicationPlotCache m_duplicationPlotCache{};
 
-  size_t m_nTotalSeeds = 0;
-  size_t m_nTotalMatchedSeeds = 0;
-  size_t m_nTotalParticles = 0;
-  size_t m_nTotalMatchedParticles = 0;
-  size_t m_nTotalDuplicatedParticles = 0;
+  std::size_t m_nTotalSeeds = 0;
+  std::size_t m_nTotalMatchedSeeds = 0;
+  std::size_t m_nTotalParticles = 0;
+  std::size_t m_nTotalMatchedParticles = 0;
+  std::size_t m_nTotalDuplicatedParticles = 0;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{

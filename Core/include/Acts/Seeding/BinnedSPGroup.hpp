@@ -14,6 +14,7 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
 #include <memory>
@@ -39,9 +40,12 @@ class BinnedSPGroupIterator {
  public:
   // Never take ownerships
   BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>&& group,
-                        std::size_t) = delete;
+                        std::array<std::size_t, 2> index,
+                        std::array<std::vector<std::size_t>, 2> navigation) =
+      delete;
   BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>& group,
-                        std::size_t index);
+                        std::array<std::size_t, 2> index,
+                        std::array<std::vector<std::size_t>, 2> navigation);
 
   BinnedSPGroupIterator(const BinnedSPGroupIterator&) = delete;
   BinnedSPGroupIterator& operator=(const BinnedSPGroupIterator&) = delete;
@@ -56,8 +60,8 @@ class BinnedSPGroupIterator {
   bool operator==(const BinnedSPGroupIterator& other) const;
   bool operator!=(const BinnedSPGroupIterator& other) const;
 
-  std::tuple<boost::container::small_vector<size_t, 9>, std::size_t,
-             boost::container::small_vector<size_t, 9>>
+  std::tuple<boost::container::small_vector<std::size_t, 9>, std::size_t,
+             boost::container::small_vector<std::size_t, 9>>
   operator*() const;
 
  private:
@@ -66,10 +70,12 @@ class BinnedSPGroupIterator {
  private:
   // The group, it contains the grid and the bin finders
   Acts::detail::RefHolder<BinnedSPGroup<external_spacepoint_t>> m_group;
-  // Max Local Bins - limits of the grid
-  std::array<std::size_t, 2> m_max_localBins;
-  // Current Local Bins
-  std::array<std::size_t, 2> m_current_localBins{0, 0};
+  // Current grid iterator
+  typename Acts::SpacePointGrid<external_spacepoint_t>::local_iterator_t
+      m_gridItr;
+  // End iterator
+  typename Acts::SpacePointGrid<external_spacepoint_t>::local_iterator_t
+      m_gridItrEnd;
 };
 
 /// @c BinnedSPGroup Provides access to begin and end BinnedSPGroupIterator
@@ -80,6 +86,8 @@ class BinnedSPGroup {
 #ifndef DOXYGEN
   friend BinnedSPGroupIterator<external_spacepoint_t>;
 #endif
+
+  enum INDEX : int { PHI = 0, Z = 1 };
 
  public:
   BinnedSPGroup() = delete;
@@ -104,7 +112,7 @@ class BinnedSPGroup {
 
   ~BinnedSPGroup() = default;
 
-  size_t size() const;
+  std::size_t size() const;
 
   BinnedSPGroupIterator<external_spacepoint_t> begin();
   BinnedSPGroupIterator<external_spacepoint_t> end();
@@ -119,17 +127,19 @@ class BinnedSPGroup {
 
  private:
   // grid with ownership of all InternalSpacePoint
-  std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_grid;
+  std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_grid{nullptr};
 
   // BinFinder must return std::vector<Acts::Seeding::Bin> with content of
   // each bin sorted in r (ascending)
-  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_topBinFinder;
-  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_bottomBinFinder;
+  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_topBinFinder{
+      nullptr};
+  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_bottomBinFinder{
+      nullptr};
 
   // Order of z bins to loop over when searching for SPs
-  std::vector<size_t> m_bins;
+  std::array<std::vector<std::size_t>, 2> m_bins{};
   // Number of Z bins to skip the search for middle SP
-  std::size_t m_skipZMiddleBin;
+  std::size_t m_skipZMiddleBin{0ul};
 };
 
 }  // namespace Acts

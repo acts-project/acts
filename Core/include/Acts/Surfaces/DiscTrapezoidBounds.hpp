@@ -79,7 +79,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// coordinates)
   /// @param bcheck is the boundary check directive
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck = true) const final;
+              const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

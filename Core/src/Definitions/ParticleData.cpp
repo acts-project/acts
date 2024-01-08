@@ -117,7 +117,7 @@ std::optional<std::string_view> Acts::pdgToShortAbsString(PdgParticle pdg) {
   if (pdg == eTau) {
     return "t";
   }
-  if (pdg == eTau) {
+  if (pdg == eGamma) {
     return "g";
   }
   if (pdg == ePionZero) {

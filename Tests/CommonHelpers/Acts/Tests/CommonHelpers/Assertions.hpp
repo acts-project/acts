@@ -16,7 +16,7 @@
   do {                                                                         \
     BOOST_CHECK_EQUAL(col1.size(), col2.size());                               \
     std::vector<bool> result;                                                  \
-    for (size_t i = 0; i < col1.size(); i++) {                                 \
+    for (std::size_t i = 0; i < col1.size(); i++) {                            \
       result.push_back(col1[i] == col2[i]);                                    \
     }                                                                          \
     BOOST_CHECK(                                                               \

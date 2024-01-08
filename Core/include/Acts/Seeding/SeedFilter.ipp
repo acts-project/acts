@@ -54,30 +54,31 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
             : seedConfRange.nTopForSmallR;
   }
 
-  size_t maxWeightSeedIndex = 0;
+  std::size_t maxWeightSeedIndex = 0;
   bool maxWeightSeed = false;
   float weightMax = std::numeric_limits<float>::lowest();
   float zOrigin = seedFilterState.zOrigin;
 
   // initialize original index locations
-  std::vector<size_t> topSPIndexVec(topSpVec.size());
+  std::vector<std::size_t> topSPIndexVec(topSpVec.size());
   for (std::size_t i(0); i < topSPIndexVec.size(); ++i) {
     topSPIndexVec[i] = i;
   }
 
   if (topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
-    std::sort(topSPIndexVec.begin(), topSPIndexVec.end(),
-              [&invHelixDiameterVec](const size_t i1, const size_t i2) {
-                return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
-              });
+    std::sort(
+        topSPIndexVec.begin(), topSPIndexVec.end(),
+        [&invHelixDiameterVec](const std::size_t i1, const std::size_t i2) {
+          return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
+        });
   }
 
   // vector containing the radius of all compatible seeds
   std::vector<float> compatibleSeedR;
   compatibleSeedR.reserve(m_cfg.compatSeedLimit);
 
-  size_t beginCompTopIndex = 0;
+  std::size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
   for (const std::size_t topSPIndex : topSPIndexVec) {
     // if two compatible seeds with high distance in r are found, compatible
@@ -97,9 +98,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float weight = -(impact * m_cfg.impactWeightFactor);
 
     // loop over compatible top SP candidates
-    for (size_t variableCompTopIndex = beginCompTopIndex;
+    for (std::size_t variableCompTopIndex = beginCompTopIndex;
          variableCompTopIndex < topSPIndexVec.size(); variableCompTopIndex++) {
-      size_t compatibleTopSPIndex = topSPIndexVec[variableCompTopIndex];
+      std::size_t compatibleTopSPIndex = topSPIndexVec[variableCompTopIndex];
       if (compatibleTopSPIndex == topSPIndex) {
         continue;
       }

@@ -41,8 +41,6 @@ At the time of writing, there are two aspects to the ACTS examples:
    :maxdepth: 2
 
    Python bindings <python_bindings>
-   full_chain_odd
-   material_mapping
-   digizier_config
+   OpenDataDetector full chain <full_chain_odd>
    alignment
-   Analysis Apps <analysis_apps>
+   How-to guides <howto/howto>

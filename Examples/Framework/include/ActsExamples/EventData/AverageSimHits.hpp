@@ -43,7 +43,7 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
   Acts::Vector4 avgPos4 = Acts::Vector4::Zero();
   Acts::Vector3 avgDir = Acts::Vector3::Zero();
 
-  size_t n = 0u;
+  std::size_t n = 0u;
   for (auto [_, simHitIdx] : hitSimHitsRange) {
     n += 1u;
 

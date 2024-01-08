@@ -33,7 +33,7 @@ void addTruthSeedSelectorOptions(Options::Description& desc) {
       "Select particle absolute pseudo-rapidity");
   opt("select-pt-gev", value<Interval>()->value_name("MIN:MAX"),
       "Select particle transverse momentum in GeV");
-  opt("select-min-hits", value<size_t>()->default_value(3),
+  opt("select-min-hits", value<std::size_t>()->default_value(3),
       "Select particle minimum hits");
 }
 
@@ -59,7 +59,7 @@ ActsExamples::TruthSeedSelector::Config readTruthSeedSelectorConfig(
   extractInterval("select-eta", 1.0, cfg.etaMin, cfg.etaMax);
   extractInterval("select-abseta", 1.0, cfg.absEtaMin, cfg.absEtaMax);
   extractInterval("select-pt-gev", 1_GeV, cfg.ptMin, cfg.ptMax);
-  cfg.nHitsMin = vars["select-min-hits"].as<size_t>();
+  cfg.nHitsMin = vars["select-min-hits"].as<std::size_t>();
   return cfg;
 }
 

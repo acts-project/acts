@@ -44,7 +44,7 @@ namespace PortalHelper {
 /// @param volume is the volume that is attached to the portal
 /// @param direction is the direction to which it is attached
 ///
-void attachDetectorVolumeUpdator(Portal& portal,
+void attachDetectorVolumeUpdater(Portal& portal,
                                  const std::shared_ptr<DetectorVolume>& volume,
                                  const Direction& direction);
 
@@ -59,7 +59,7 @@ void attachDetectorVolumeUpdator(Portal& portal,
 /// @param boundaries are the value boundaries
 /// @param binning is the binning type
 ///
-void attachDetectorVolumesUpdator(
+void attachDetectorVolumesUpdater(
     const GeometryContext& gctx, Portal& portal,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     const Direction& direction, const std::vector<ActsScalar>& boundaries,
@@ -73,7 +73,7 @@ void attachDetectorVolumesUpdator(
 /// @param volumes are the volumes that are pointed to
 /// @param pReplacements are the portal replacements that are newly connected
 ///
-void attachDetectorVolumeUpdators(
+void attachDetectorVolumeUpdaters(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     std::vector<PortalReplacement>& pReplacements);

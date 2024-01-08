@@ -168,7 +168,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     // write per-track performance measures
     {
       std::lock_guard<std::mutex> guardTrk(trkMutex);
-      for (size_t itrack = 0; itrack < tracks.size(); ++itrack) {
+      for (std::size_t itrack = 0; itrack < tracks.size(); ++itrack) {
         const auto& track = tracks[itrack];
 
         identifyContributingParticles(hitParticlesMap, track,

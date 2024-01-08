@@ -70,9 +70,9 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Boolean flag if layer is active
     bool active = false;
     // Bins in Y direction
-    size_t binsY = 1;
+    std::size_t binsY = 1;
     // Bins in Z direction
-    size_t binsZ = 1;
+    std::size_t binsZ = 1;
     // Envelope in X
     std::array<ActsScalar, 2u> envelopeX{0, 0};
     // Envelope in Y

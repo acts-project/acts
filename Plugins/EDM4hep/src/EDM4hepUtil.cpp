@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -92,14 +93,14 @@ ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
 void packCovariance(const ActsSquareMatrix<6>& from, float* to) {
   for (int i = 0; i < from.rows(); i++) {
     for (int j = 0; j <= i; j++) {
-      size_t k = (i + 1) * i / 2 + j;
+      std::size_t k = (i + 1) * i / 2 + j;
       to[k] = from(i, j);
     }
   }
 }
 
 void unpackCovariance(const float* from, ActsSquareMatrix<6>& to) {
-  auto k = [](size_t i, size_t j) { return (i + 1) * i / 2 + j; };
+  auto k = [](std::size_t i, std::size_t j) { return (i + 1) * i / 2 + j; };
   for (int i = 0; i < to.rows(); i++) {
     for (int j = 0; j < to.cols(); j++) {
       to(i, j) = from[j <= i ? k(i, j) : k(j, i)];
@@ -144,25 +145,9 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
 
   // Only run covariance conversion if we have a covariance input
   if (params.covariance()) {
-    auto boundToFree =
-        refSurface->boundToFreeJacobian(gctx, params.parameters());
-    Acts::FreeMatrix freeCov =
-        boundToFree * params.covariance().value() * boundToFree.transpose();
-
-    // ensure we have free pars
-    if (!freePars.has_value()) {
-      freePars = makeFreePars();
-    }
-
-    Acts::CovarianceCache covCache{freePars.value(), freeCov};
-    auto [varNewCov, varNewJac] = Acts::transportCovarianceToBound(
-        gctx, *refSurface, freePars.value(), covCache);
-    auto targetCov = std::get<Acts::BoundSquareMatrix>(varNewCov);
-
     Acts::ActsSquareMatrix<6> J = jacobianToEdm4hep(
         targetPars[eBoundTheta], targetPars[eBoundQOverP], Bz);
-    Acts::ActsSquareMatrix<6> cIn = targetCov.template topLeftCorner<6, 6>();
-    result.covariance = J * cIn * J.transpose();
+    result.covariance = J * params.covariance().value() * J.transpose();
   }
 
   result.values[0] = targetPars[Acts::eBoundLoc0];

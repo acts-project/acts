@@ -21,11 +21,11 @@ namespace detail {
  *         at the given position in `values` if 0 &le; `index` <
  *         sizeof...(values). Otherwise, a compile-time error is generated.
  */
-template <typename T, size_t index, T... values>
+template <typename T, std::size_t index, T... values>
 struct at_index;
 
 /// @cond
-template <typename T, size_t index, T next, T... others>
+template <typename T, std::size_t index, T next, T... others>
 struct at_index<T, index, next, others...> {
   static constexpr T value = at_index<T, index - 1, others...>::value;
 };

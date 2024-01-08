@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <memory>
@@ -33,9 +32,10 @@ class Geant4DetectorElement : public DetectorElementBase {
   using ContextType = GeometryContext;
 
   /// @brief  Constructor with arguments
-  /// @param thickness the thickness of this detector element
+  /// @param surface the surface representing this detector element
+  /// @param g4physVol the physical volume representing this detector element
   /// @param toGlobal the global transformation before the volume
-  /// @param g4phys the physical volume representing this detector element
+  /// @param thickness the thickness of this detector element
   Geant4DetectorElement(std::shared_ptr<Surface> surface,
                         const G4VPhysicalVolume& g4physVol,
                         const Transform3& toGlobal, ActsScalar thickness);

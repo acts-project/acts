@@ -85,6 +85,10 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
   res[DimPhi].shrinkMin(pL - m_config.deltaPhiMax);
   res[DimPhi].shrinkMax(pL + m_config.deltaPhiMax);
 
+  // Cut: Ensure that z-distance between SPs is within max and min values.
+  res[DimZ].shrinkMin(zL - m_config.deltaZMax);
+  res[DimZ].shrinkMax(zL + m_config.deltaZMax);
+
   return res;
 }
 
@@ -93,6 +97,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
     const internal_sp_t &high) const -> typename tree_t::range_t {
   float pM = high.phi();
   float rM = high.radius();
+  float zM = high.z();
 
   typename tree_t::range_t res;
 
@@ -129,19 +134,23 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
    */
   float fracR = res[DimR].min() / rM;
 
-  float zMin = (high.z() - m_config.collisionRegionMin) * fracR +
-               m_config.collisionRegionMin;
-  float zMax = (high.z() - m_config.collisionRegionMax) * fracR +
-               m_config.collisionRegionMax;
+  float zMin =
+      (zM - m_config.collisionRegionMin) * fracR + m_config.collisionRegionMin;
+  float zMax =
+      (zM - m_config.collisionRegionMax) * fracR + m_config.collisionRegionMax;
 
-  res[DimZ].shrinkMin(std::min(zMin, high.z()));
-  res[DimZ].shrinkMax(std::max(zMax, high.z()));
+  res[DimZ].shrinkMin(std::min(zMin, zM));
+  res[DimZ].shrinkMax(std::max(zMax, zM));
 
   /*
    * Cut: Shrink the φ range, such that Δφ_min ≤ φ - φ_H ≤ Δφ_max
    */
   res[DimPhi].shrinkMin(pM - m_config.deltaPhiMax);
   res[DimPhi].shrinkMax(pM + m_config.deltaPhiMax);
+
+  // Cut: Ensure that z-distance between SPs is within max and min values.
+  res[DimZ].shrinkMin(zM - m_config.deltaZMax);
+  res[DimZ].shrinkMax(zM + m_config.deltaZMax);
 
   return res;
 }
@@ -219,10 +228,13 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   if (std::fabs(cotTheta) > m_config.cotThetaMax) {
     return false;
   }
+
   /*
-   * Cut: Ensure that z-distance between SPs is within max and min values.
+   * Cut: Ensure that inner-middle dublet is in a certain (r, eta) region of the
+   * detector according to detector specific cuts.
    */
-  if (std::abs(deltaZ) > m_config.deltaZMax) {
+  const float rInner = (isMiddleInverted) ? rH : rL;
+  if (!m_config.experimentCuts(rInner, cotTheta)) {
     return false;
   }
 
@@ -313,13 +325,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<float> tanMT;
   tanMT.reserve(top.size());
 
-  size_t numTopSP = top.size();
-  for (size_t t = 0; t < numTopSP; t++) {
+  std::size_t numTopSP = top.size();
+  for (std::size_t t = 0; t < numTopSP; t++) {
     tanMT.push_back(
         std::atan2(top[t]->radius() - middle.radius(), top[t]->z() - zM));
   }
 
-  size_t t0 = 0;
+  std::size_t t0 = 0;
 
   for (const std::size_t b : sorted_bottoms) {
     // break if we reached the last top SP
@@ -346,7 +358,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // minimum number of compatible top SPs to trigger the filter for a certain
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
-    size_t minCompatibleTopSPs = 2;
+    std::size_t minCompatibleTopSPs = 2;
     if (!m_config.seedConfirmation ||
         bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
@@ -362,7 +374,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     float tanLM = std::atan2(rM - bottom[b]->radius(), zM - bottom[b]->z());
 
-    for (size_t index_t = t0; index_t < numTopSP; index_t++) {
+    for (std::size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
       auto lt = linCircleTop[t];
 
@@ -453,7 +465,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
 
     // continue if number of top SPs is smaller than minimum required for filter
-    if (top.size() < minCompatibleTopSPs) {
+    if (top_valid.size() < minCompatibleTopSPs) {
       continue;
     }
 

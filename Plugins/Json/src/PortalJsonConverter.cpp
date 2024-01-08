@@ -11,7 +11,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
@@ -19,11 +19,14 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <vector>
 
 namespace {
@@ -55,7 +58,7 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
   jPortal["surface"] = SurfaceJsonConverter::toJson(gctx, portal.surface(),
                                                     options.surfaceOptions);
   // And the portal specific information
-  const auto& volumeLinks = portal.detectorVolumeUpdators();
+  const auto& volumeLinks = portal.detectorVolumeUpdaters();
   nlohmann::json jLinks;
   for (const auto& vLink : volumeLinks) {
     nlohmann::json jLink = toJson(vLink, detectorVolumes);
@@ -74,8 +77,8 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
     const Options& option) {
   // The overall return object
   std::vector<nlohmann::json> jPortals = {};
-  const Surface& surface = portal.surface();
-  const auto& volumeLinks = portal.detectorVolumeUpdators();
+  const RegularSurface& surface = portal.surface();
+  const auto& volumeLinks = portal.detectorVolumeUpdaters();
 
   // First assumption for outside link (along direction)
   std::size_t outside = 1u;
@@ -86,10 +89,10 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
     // Get the two volume center
     const auto volumeCenter = volume.transform(gctx).translation();
     const auto surfaceCenter = surface.center(gctx);
-    const auto surfaceNormal = surface.normal(gctx);
+    const auto surfaceNormal = surface.normal(gctx, surfaceCenter);
     // Get the direction from the volume to the surface, correct link
     const auto volumeToSurface = surfaceCenter - volumeCenter;
-    if (volumeToSurface.dot(surfaceNormal) < 0) {
+    if (volumeToSurface.dot(surfaceNormal) < 0.) {
       outside = 0u;
     }
   } else {
@@ -128,15 +131,15 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
     if (multiLink1D != nullptr) {
       // Resolve the multi link 1D
       auto boundaries =
-          multiLink1D->indexedUpdator.grid.axes()[0u]->getBinEdges();
-      const auto& cast = multiLink1D->indexedUpdator.casts[0u];
-      const auto& transform = multiLink1D->indexedUpdator.transform;
-      const auto& volumes = multiLink1D->indexedUpdator.extractor.dVolumes;
-      if (!transform.isApprox(Transform3::Identity())) {
-        std::runtime_error(
-            "PortalJsonConverter: transformed boundary link implementation not "
-            "(yet) supported");
-      }
+          multiLink1D->indexedUpdater.grid.axes()[0u]->getBinEdges();
+      const auto& cast = multiLink1D->indexedUpdater.casts[0u];
+      const auto& transform = multiLink1D->indexedUpdater.transform;
+      const auto& volumes = multiLink1D->indexedUpdater.extractor.dVolumes;
+
+      // Apply the correction from local to global boundaries
+      ActsScalar gCorr = VectorHelpers::cast(transform.translation(), cast);
+      std::for_each(boundaries.begin(), boundaries.end(),
+                    [&gCorr](ActsScalar& b) { b -= gCorr; });
 
       // Get the volume indices
       auto surfaceType = surfaceAdjusted->type();
@@ -173,7 +176,8 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
           if (boundaries[ib - 1] >= clipRange[1u]) {
             break;
           }
-          if (highEdge <= clipRange[0u]) {
+          if (highEdge <= clipRange[0u] ||
+              std::abs(highEdge - clipRange[0u]) < 1e-5) {
             continue;
           }
           if (highEdge > clipRange[1u]) {
@@ -183,7 +187,6 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
           clippedBoundaries.push_back(highEdge);
         }
       }
-
       // Interpret the clipped information
       //
       // Clipped cylinder case
@@ -251,7 +254,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
 }
 
 nlohmann::json Acts::PortalJsonConverter::toJson(
-    const Experimental::DetectorVolumeUpdator& updator,
+    const Experimental::DetectorVolumeUpdater& updator,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes) {
   nlohmann::json jLink;
   if (updator.connected()) {
@@ -273,16 +276,16 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
         dynamic_cast<const Experimental::BoundVolumesGrid1Impl*>(instance);
     if (multiLink1D != nullptr) {
       nlohmann::json jMultiLink;
-      const auto& volumes = multiLink1D->indexedUpdator.extractor.dVolumes;
-      const auto& casts = multiLink1D->indexedUpdator.casts;
+      const auto& volumes = multiLink1D->indexedUpdater.extractor.dVolumes;
+      const auto& casts = multiLink1D->indexedUpdater.casts;
       nlohmann::json jTransform = Transform3JsonConverter::toJson(
-          multiLink1D->indexedUpdator.transform);
+          multiLink1D->indexedUpdater.transform);
       std::vector<unsigned int> vIndices = {};
       for (const auto& v : volumes) {
         vIndices.push_back(findVolume(v, detectorVolumes));
       }
       jMultiLink["boundaries"] =
-          multiLink1D->indexedUpdator.grid.axes()[0u]->getBinEdges();
+          multiLink1D->indexedUpdater.grid.axes()[0u]->getBinEdges();
       jMultiLink["binning"] = casts[0u];
       jMultiLink["targets"] = vIndices;
       jMultiLink["transform"] = jTransform;
@@ -298,7 +301,12 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
         detectorVolumes) {
   // The surface re-creation is trivial
   auto surface = SurfaceJsonConverter::fromJson(jPortal["surface"]);
-  auto portal = Experimental::Portal::makeShared(surface);
+  auto regSurface = std::dynamic_pointer_cast<RegularSurface>(surface);
+  if (!regSurface) {
+    throw std::runtime_error(
+        "PortalJsonConverter: surface is not a regular surface.");
+  }
+  auto portal = std::make_shared<Experimental::Portal>(regSurface);
 
   std::array<Acts::Direction, 2> normalDirs = {Direction::Backward,
                                                Direction::Forward};
@@ -307,7 +315,7 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
   for (auto [ivl, vl] : enumerate(jLinks)) {
     if (vl.contains("single")) {
       const auto vIndex = vl["single"].get<unsigned int>();
-      Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
+      Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
           *portal, detectorVolumes[vIndex], normalDirs[ivl]);
     } else if (vl.contains("multi_1D")) {
       // Resolve the multi link 1D
@@ -319,7 +327,7 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
       for (const auto t : targets) {
         targetVolumes.push_back(detectorVolumes[t]);
       }
-      Experimental::detail::PortalHelper::attachDetectorVolumesUpdator(
+      Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
           gctx, *portal, targetVolumes, normalDirs[ivl], boundaries, binning);
     }
   }

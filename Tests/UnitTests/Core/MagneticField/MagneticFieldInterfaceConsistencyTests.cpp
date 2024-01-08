@@ -20,11 +20,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -77,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
     DummyFieldCell getFieldCell(const Vector3&) const {
       return DummyFieldCell();
     }
-    std::vector<size_t> getNBins() const { return {42}; }
+    std::vector<std::size_t> getNBins() const { return {42}; }
     std::vector<double> getMin() const { return {5}; }
     std::vector<double> getMax() const { return {15}; }
   };
@@ -93,5 +89,4 @@ BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
 }
 
 }  // namespace Test
-
 }  // namespace Acts

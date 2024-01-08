@@ -29,7 +29,7 @@ namespace po = boost::program_options;
 template <typename options_t>
 void addGenericGeometryOptions(options_t& opt) {
   opt.add_options()("geo-generic-buildlevel",
-                    po::value<size_t>()->default_value(3),
+                    po::value<std::size_t>()->default_value(3),
                     "The building level: 0 - pixel barrel only, 1 - pixel "
                     "detector only, 2 - full barrel only, 3 - full detector "
                     "(without stereo modules).");

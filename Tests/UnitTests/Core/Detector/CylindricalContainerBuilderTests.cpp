@@ -13,13 +13,14 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -176,6 +177,12 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   tripleZCfg.builders = {negDisc, barrel, posDisc};
   tripleZCfg.binning = {binZ};
   tripleZCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
+  // Create a materialBinning
+  tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
+      {ProtoBinning(binZ, Acts::detail::AxisBoundaryType::Bound, 50),
+       ProtoBinning(binPhi, Acts::detail::AxisBoundaryType::Closed, -M_PI, M_PI,
+                    12)}};
+
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;
 
@@ -184,11 +191,18 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
 
   auto [volumes, portals, roots] = tripleZ->construct(tContext);
 
-  BOOST_CHECK(portals.size() == 4u);
-  BOOST_CHECK(roots.volumes.size() == 3u);
-  BOOST_CHECK(roots.volumes[0]->geometryId().volume() == 3u);
-  BOOST_CHECK(roots.volumes[1]->geometryId().volume() == 2u);
-  BOOST_CHECK(roots.volumes[2]->geometryId().volume() == 1u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 3u);
+  BOOST_CHECK_EQUAL(roots.volumes[0]->geometryId().volume(), 3u);
+  BOOST_CHECK_EQUAL(roots.volumes[1]->geometryId().volume(), 2u);
+  BOOST_CHECK_EQUAL(roots.volumes[2]->geometryId().volume(), 1u);
+
+  // The outside surface should have a proto material description now
+  BOOST_CHECK_NE(portals[2u]->surface().surfaceMaterial(), nullptr);
+  // others should not have a proto material description
+  BOOST_CHECK_EQUAL(portals[0u]->surface().surfaceMaterial(), nullptr);
+  BOOST_CHECK_EQUAL(portals[1u]->surface().surfaceMaterial(), nullptr);
+  BOOST_CHECK_EQUAL(portals[3u]->surface().surfaceMaterial(), nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
@@ -222,11 +236,11 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
 
   auto [volumes, portals, roots] = barrelR->construct(tContext);
 
-  BOOST_CHECK(portals.size() == 4u);
-  BOOST_CHECK(roots.volumes.size() == 3u);
-  BOOST_CHECK(roots.volumes[0]->geometryId().volume() == 1u);
-  BOOST_CHECK(roots.volumes[1]->geometryId().volume() == 2u);
-  BOOST_CHECK(roots.volumes[2]->geometryId().volume() == 3u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 3u);
+  BOOST_CHECK_EQUAL(roots.volumes[0]->geometryId().volume(), 1u);
+  BOOST_CHECK_EQUAL(roots.volumes[1]->geometryId().volume(), 2u);
+  BOOST_CHECK_EQUAL(roots.volumes[2]->geometryId().volume(), 3u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
@@ -259,8 +273,8 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
 
   auto [volumes, portals, roots] = barrelPhi->construct(tContext);
 
-  BOOST_CHECK(portals.size() == 4u);
-  BOOST_CHECK(roots.volumes.size() == 5u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 5u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
@@ -329,8 +343,8 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
       detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));
 
   auto [volumes, portals, roots] = detector->construct(tContext);
-  BOOST_CHECK(portals.size() == 3u);
-  BOOST_CHECK(roots.volumes.size() == 6u);
+  BOOST_CHECK_EQUAL(portals.size(), 3u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 6u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

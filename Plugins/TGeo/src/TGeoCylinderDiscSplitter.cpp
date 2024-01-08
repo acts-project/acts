@@ -69,7 +69,7 @@ Acts::TGeoCylinderDiscSplitter::split(
         radialValues = {discMinR, discMaxR};
       }
 
-      for (size_t ir = 1; ir < radialValues.size(); ++ir) {
+      for (std::size_t ir = 1; ir < radialValues.size(); ++ir) {
         ActsScalar minR = radialValues[ir - 1];
         ActsScalar maxR = radialValues[ir];
 
@@ -139,7 +139,7 @@ Acts::TGeoCylinderDiscSplitter::split(
       ActsScalar planeR = cylinderR * cosPhiHalf;
       ActsScalar planeHalfX = cylinderR * sinPhiHalf;
 
-      for (size_t iz = 1; iz < zValues.size(); ++iz) {
+      for (std::size_t iz = 1; iz < zValues.size(); ++iz) {
         ActsScalar minZ = zValues[iz - 1];
         ActsScalar maxZ = zValues[iz];
 

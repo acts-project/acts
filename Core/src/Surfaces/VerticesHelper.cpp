@@ -110,7 +110,7 @@ bool Acts::detail::VerticesHelper::onHyperPlane(
   // Create the hyperplane
   auto hyperPlane = Eigen::Hyperplane<ActsScalar, 3>::Through(
       vertices[0], vertices[1], vertices[2]);
-  for (size_t ip = 3; ip < vertices.size(); ++ip) {
+  for (std::size_t ip = 3; ip < vertices.size(); ++ip) {
     if (hyperPlane.absDistance(vertices[ip]) > tolerance) {
       return false;
     }
