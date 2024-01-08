@@ -129,6 +129,7 @@ class TestAxis : public IAxis {
 class MultiGrid1D {
  public:
   static constexpr std::size_t DIM = 1u;
+  using point_t = std::array<ActsScalar, DIM>;
 
   const std::vector<std::size_t>& atPosition(
       const std::array<ActsScalar, 1u>& /*position*/) const {
@@ -145,6 +146,7 @@ class MultiGrid1D {
 class MultiGrid2D {
  public:
   static constexpr std::size_t DIM = 2u;
+  using point_t = std::array<ActsScalar, DIM>;
 
   const std::vector<std::size_t>& atPosition(
       const std::array<ActsScalar, 2u>& /*position*/) const {
@@ -152,11 +154,12 @@ class MultiGrid2D {
   }
 
   std::array<const IAxis*, DIM> axes() const { return {&ta, &ta}; };
-  TestAxis ta;
+  const TestAxis ta;
 
  private:
   std::vector<std::size_t> e = {1u};
 };
+
 }  // namespace Acts
 
 using SingleVolumeUpdater = Acts::Experimental::SingleObjectImpl<

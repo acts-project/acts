@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
@@ -20,8 +20,7 @@
 
 using namespace Acts;
 using namespace Acts::detail;
-using namespace Acts::Experimental;
-using namespace Acts::Experimental::detail::GridAxisGenerators;
+using namespace Acts::GridAxisGenerators;
 
 BOOST_AUTO_TEST_SUITE(Detector)
 
