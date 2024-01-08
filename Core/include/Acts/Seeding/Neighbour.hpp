@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "Acts/Seeding/SpacePointGrid.hpp"
+//#include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 namespace Acts {
 
@@ -27,7 +28,7 @@ namespace Acts {
 /// have a higher radius. That means that there is no point in looking at
 /// neighbour space point before itr, since we know they will be out of range.
 
-template <typename external_spacepoint_t>
+template <typename grid_t>
 struct Neighbour {
   /// @brief default constructor
   Neighbour() = delete;
@@ -36,27 +37,26 @@ struct Neighbour {
   /// @param grid The grid containing the space points
   /// @param idx The global index of the bin in the grid
   /// @param lowerBound The lower bound of the allowed space points
-  Neighbour(Acts::CylindricalSpacePointGrid<external_spacepoint_t>&& grid, std::size_t idx,
+  Neighbour(grid_t&& grid, std::size_t idx,
             const float lowerBound) = delete;
 
   /// @brief Constructor
   /// @param grid The grid containing the space points
   /// @param idx The global index of the bin in the grid
   /// @param lowerBound The lower bound of the allowed space point
-  Neighbour(const Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+  Neighbour(const grid_t& grid,
             std::size_t idx, const float lowerBound);
 
   /// The global bin index on the grid
   std::size_t index;
   /// The iterator containing the position of the first space point in the valid
   /// radius range
-  typename Acts::CylindricalSpacePointGrid<
-      external_spacepoint_t>::value_type::const_iterator itr;
+  typename grid_t::value_type::const_iterator itr;
 };
 
-template <typename external_spacepoint_t>
-Neighbour<external_spacepoint_t>::Neighbour(
-    const Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid, std::size_t idx,
+template <typename grid_t>
+Neighbour<grid_t>::Neighbour(
+    const grid_t& grid, std::size_t idx,
     const float lowerBound)
     : index(idx) {
   /// Get the space points in this specific global bin
