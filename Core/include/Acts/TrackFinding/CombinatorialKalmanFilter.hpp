@@ -132,6 +132,7 @@ struct CombinatorialKalmanFilterExtensions {
 
   /// Default branch stopper which will never stop
   /// @param tipState The tip state to decide whether to stop (unused)
+  /// @param trackState The track state to decide whether to stop (unused)
   /// @return false
   static bool voidBranchStopper(
       const CombinatorialKalmanFilterTipState& tipState,
