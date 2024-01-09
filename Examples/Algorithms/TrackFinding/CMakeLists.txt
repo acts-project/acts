@@ -7,7 +7,6 @@ add_library(
   src/TrackFindingAlgorithmFunction.cpp
   src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp
-  src/SeedingFTFAlgorithm.cpp
   src/MuonHoughSeeder.cpp
   src/GbtsSeedingAlgorithm.cpp
 )
