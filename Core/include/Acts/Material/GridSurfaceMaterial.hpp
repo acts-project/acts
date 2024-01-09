@@ -79,8 +79,7 @@ struct IndexedMaterialAccessor {
   }
 };
 
-/// GridSurfaceMaterialBase - template class holder for grid based surface
-/// materials
+/// @brief GridSurfaceMaterialBase
 ///
 /// It extends the @c ISurfaceMaterial base class and allows to create
 /// material maps associated to a grid structure
