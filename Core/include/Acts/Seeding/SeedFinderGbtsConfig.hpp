@@ -12,8 +12,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/GbtsBase.hpp"  //definition of Trigsispacepoint base and trigtriplets
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
-#include "Acts/Seeding/TrigBase.hpp"  //definition of Trigsispacepoint base and trigtriplets
 
 #include <memory>
 
@@ -24,7 +24,7 @@ template <typename T>
 class SeedFilter;
 
 template <typename SpacePoint>
-struct SeedFinderFTFConfig {
+struct SeedFinderGbtsConfig {
   // // how many sigmas of scattering angle should be considered?
   float sigmaScattering = 5;
 
@@ -50,10 +50,10 @@ struct SeedFinderFTFConfig {
   float m_nMaxPhiSlice = 53;  // used to calculate phi slices
   bool m_useClusterWidth =
       false;  // bool for use of cluster width in loadSpacePoints function
-  std::string fastrack_input_file;  // input file for fastrack object
+  std::string connector_input_file;  // input file for connector object
   std::vector<TrigInDetSiLayer> m_layerGeometry;
 
-  // for runGNN_TrackFinder
+  // for runGbts_TrackFinder
   bool m_LRTmode = true;  // eventually want to set from full chain
   bool m_useEtaBinning =
       true;  // bool to use eta binning from geometry structure
@@ -62,7 +62,7 @@ struct SeedFinderFTFConfig {
   float m_tripletD0Max = 4.0;     // D0 cut for triplets
   unsigned int m_maxTripletBufferLength =
       3;                        // maximum number of space points per triplet
-  int MaxEdges = 2000000;       // max number of GNN edges/doublets
+  int MaxEdges = 2000000;       // max number of Gbts edges/doublets
   float cut_dphi_max = 0.012;   // phi cut for triplets
   float cut_dcurv_max = 0.001;  // curv cut for triplets
   float cut_tau_ratio_max = 0.007;  // tau cut for doublets and triplets
@@ -81,19 +81,19 @@ struct SeedFinderFTFConfig {
 
   ////
   // 2 member functions
-  SeedFinderFTFConfig calculateDerivedQuantities() const {
+  SeedFinderGbtsConfig calculateDerivedQuantities() const {
     // thorw statement if the isInternalUnits member is false, ie if dont call
     // this function
-    SeedFinderFTFConfig config = *this;
+    SeedFinderGbtsConfig config = *this;
     // use a formula to calculate scattering
 
     return config;
   }
 
-  SeedFinderFTFConfig toInternalUnits() const {
+  SeedFinderGbtsConfig toInternalUnits() const {
     // throw statement if the isInternalUnits member is false, ie if dont call
     // this function
-    SeedFinderFTFConfig config = *this;
+    SeedFinderGbtsConfig config = *this;
     // divides inputs by 1mm, all ones input
     // changes member inInInternalUnits to true
     return config;

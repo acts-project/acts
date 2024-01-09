@@ -115,24 +115,24 @@ Acts::SpacePointGridCreator::createGrid(
     // seeds
     // FIXME: zBinSize must include scattering
     float zBinSize = config.cotThetaMax * config.deltaRMax;
-    int zBins =
-        std::max(1, (int)std::floor((config.zMax - config.zMin) / zBinSize));
+    float zBins =
+        std::max(1.f, std::floor((config.zMax - config.zMin) / zBinSize));
 
-    for (int bin = 0; bin <= zBins; bin++) {
+    for (int bin = 0; bin <= static_cast<int>(zBins); bin++) {
       AxisScalar edge =
-          config.zMin + bin * ((config.zMax - config.zMin) / (float)zBins);
+          config.zMin + bin * ((config.zMax - config.zMin) / zBins);
       zValues.push_back(edge);
     }
 
   } else {
     // Use the zBinEdges defined in the config
-    for (auto& bin : config.zBinEdges) {
+    for (float bin : config.zBinEdges) {
       zValues.push_back(bin);
     }
   }
 
   detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
-      zAxis(zValues);
+      zAxis(std::move(zValues));
   return std::make_unique<Acts::SpacePointGrid<SpacePoint>>(
-      std::make_tuple(phiAxis, zAxis));
+      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 }

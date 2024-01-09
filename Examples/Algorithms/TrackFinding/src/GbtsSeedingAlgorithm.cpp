@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -24,17 +24,17 @@
 #include <sstream>
 #include <vector>
 
-template class Acts::TrigFTF_GNN_Layer<ActsExamples::SimSpacePoint>;
-template class Acts::TrigFTF_GNN_Geometry<ActsExamples::SimSpacePoint>;
-template class Acts::TrigFTF_GNN_Node<ActsExamples::SimSpacePoint>;
-template class Acts::TrigFTF_GNN_EtaBin<ActsExamples::SimSpacePoint>;
-template struct Acts::FTF_SP<ActsExamples::SimSpacePoint>;
-template class Acts::TrigFTF_GNN_DataStorage<ActsExamples::SimSpacePoint>;
-template class Acts::TrigFTF_GNN_Edge<ActsExamples::SimSpacePoint>;
+template class Acts::GbtsLayer<ActsExamples::SimSpacePoint>;
+template class Acts::GbtsGeometry<ActsExamples::SimSpacePoint>;
+template class Acts::GbtsNode<ActsExamples::SimSpacePoint>;
+template class Acts::GbtsEtaBin<ActsExamples::SimSpacePoint>;
+template struct Acts::GbtsSP<ActsExamples::SimSpacePoint>;
+template class Acts::GbtsDataStorage<ActsExamples::SimSpacePoint>;
+template class Acts::GbtsEdge<ActsExamples::SimSpacePoint>;
 
 // constructor:
-ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
-    ActsExamples::SeedingFTFAlgorithm::Config cfg, Acts::Logging::Level lvl)
+ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
+    ActsExamples::GbtsSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
   // fill config struct
   m_cfg.layerMappingFile = m_cfg.layerMappingFile;
@@ -71,33 +71,33 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
 
   // map
-  m_cfg.ACTS_FTF_Map = Make_ACTS_FTF_Map();
+  m_cfg.ActsGbtsMap = makeActsGbtsMap();
   // input trig vector
   m_cfg.seedFinderConfig.m_layerGeometry = LayerNumbering();
 
   std::ifstream input_ifstream(
-      m_cfg.seedFinderConfig.fastrack_input_file.c_str(), std::ifstream::in);
+      m_cfg.seedFinderConfig.connector_input_file.c_str(), std::ifstream::in);
 
-  // fastrack
-  std::unique_ptr<Acts::FasTrackConnector> input_fastrack =
-      std::make_unique<Acts::FasTrackConnector>(input_ifstream);
+  // connector
+  std::unique_ptr<Acts::GbtsConnector> inputConnector =
+      std::make_unique<Acts::GbtsConnector>(input_ifstream);
 
-  mGNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>>(
-      m_cfg.seedFinderConfig.m_layerGeometry, input_fastrack);
+  m_gbtsGeo = std::make_unique<Acts::GbtsGeometry<SimSpacePoint>>(
+      m_cfg.seedFinderConfig.m_layerGeometry, inputConnector);
 
-}  // this is not FTF config type because it is a member of the algs config,
-   // which is of type FTF cofig
+}  // this is not Gbts config type because it is a member of the algs config,
+   // which is of type Gbts cofig
 
 // execute:
-ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
     const AlgorithmContext &ctx) const {
-  std::vector<Acts::FTF_SP<SimSpacePoint>> FTF_spacePoints =
-      Make_FTF_spacePoints(ctx, m_cfg.ACTS_FTF_Map);
+  std::vector<Acts::GbtsSP<SimSpacePoint>> GbtsSpacePoints =
+      MakeGbtsSpacePoints(ctx, m_cfg.ActsGbtsMap);
 
   // cluster width
   //  const ClusterContainer* clusters = &m_inputClusters(ctx) ;
 
-  // for (const auto& sp : FTF_spacePoints){
+  // for (const auto& sp : GbtsSpacePoints){
   //   const auto& sl = sp.SP->sourceLinks().front().get<IndexSourceLink>() ;
   //   const auto& cluster = clusters->at(sl.index()) ;
   //   std::cout << "testing 0: " << cluster.sizeLoc0 << " 1: " <<
@@ -105,9 +105,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
   // }
 
-  for (auto sp : FTF_spacePoints) {
-    ACTS_DEBUG("FTF space points: "
-               << " FTF_id: " << sp.FTF_ID << " z: " << sp.SP->z()
+  for (auto sp : GbtsSpacePoints) {
+    ACTS_DEBUG("Gbts space points: "
+               << " Gbts_id: " << sp.gbtsID << " z: " << sp.SP->z()
                << " r: " << sp.SP->r() << " ACTS volume:  "
                << sp.SP->sourceLinks()
                       .front()
@@ -118,7 +118,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   }
 
   // this is now calling on a core algorithm
-  Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig, *mGNNgeo);
+  Acts::SeedFinderGbts<SimSpacePoint> finder(m_cfg.seedFinderConfig,
+                                             *m_gbtsGeo);
 
   // need this function as create_coords is needed for seeds
   std::function<std::pair<Acts::Vector3, Acts::Vector2>(
@@ -130,9 +131,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       };
   // output of function needed for seed
 
-  finder.loadSpacePoints(FTF_spacePoints);
+  finder.loadSpacePoints(GbtsSpacePoints);
 
-  // trigFTF file :
+  // trigGbts file :
   Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0,
                                   150.0);
   // ROI file:
@@ -140,7 +141,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   //                                  225.0);
 
   // new version returns seeds
-  SimSeedContainer seeds = finder.createSeeds(internalRoi, *mGNNgeo);
+  SimSeedContainer seeds = finder.createSeeds(internalRoi, *m_gbtsGeo);
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -148,10 +149,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 }
 
 std::map<std::pair<int, int>, std::pair<int, int>>
-ActsExamples::SeedingFTFAlgorithm::Make_ACTS_FTF_Map() const {
-  std::map<std::pair<int, int>, std::pair<int, int>> ACTS_FTF;
+ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
+  std::map<std::pair<int, int>, std::pair<int, int>> ActsGbts;
   std::ifstream data(
-      m_cfg.layerMappingFile);  // 0 in this file refers to no FTF ID
+      m_cfg.layerMappingFile);  // 0 in this file refers to no Gbts ID
   std::string line;
   std::vector<std::vector<std::string>> parsedCsv;
   while (std::getline(data, line)) {
@@ -164,28 +165,28 @@ ActsExamples::SeedingFTFAlgorithm::Make_ACTS_FTF_Map() const {
 
     parsedCsv.push_back(parsedRow);
   }
-  // file in format ACTS_vol,ACTS_lay,ACTS_mod,FTF_id
+  // file in format ACTS_vol,ACTS_lay,ACTS_mod,Gbts_id
   for (auto i : parsedCsv) {
     int ACTS_vol = stoi(i[0]);
     int ACTS_lay = stoi(i[1]);
     int ACTS_mod = stoi(i[2]);
-    int FTF = stoi(i[5]);
+    int Gbts = stoi(i[5]);
     int eta_mod = stoi(i[6]);
     int ACTS_joint = ACTS_vol * 100 + ACTS_lay;
-    ACTS_FTF.insert({{ACTS_joint, ACTS_mod}, {FTF, eta_mod}});
+    ActsGbts.insert({{ACTS_joint, ACTS_mod}, {Gbts, eta_mod}});
   }
 
-  return ACTS_FTF;
+  return ActsGbts;
 }
 
-std::vector<Acts::FTF_SP<ActsExamples::SimSpacePoint>>
-ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
+std::vector<Acts::GbtsSP<ActsExamples::SimSpacePoint>>
+ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
     const AlgorithmContext &ctx,
     std::map<std::pair<int, int>, std::pair<int, int>> map) const {
   // create space point vectors
   std::vector<const ActsExamples::SimSpacePoint *> spacePoints;
-  std::vector<Acts::FTF_SP<ActsExamples::SimSpacePoint>> FTF_spacePoints;
-  FTF_spacePoints.reserve(
+  std::vector<Acts::GbtsSP<ActsExamples::SimSpacePoint>> gbtsSpacePoints;
+  gbtsSpacePoints.reserve(
       m_inputSpacePoints.size());  // not sure if this is enough
 
   // for loop filling space
@@ -194,7 +195,7 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
       // fill original space point vector
       spacePoints.push_back(&spacePoint);
 
-      // FTF space point vector
+      // Gbts space point vector
       // loop over space points, call on map
       const auto &source_link = spacePoint.sourceLinks();
       const auto &index_source_link =
@@ -232,36 +233,36 @@ ActsExamples::SeedingFTFAlgorithm::Make_FTF_spacePoints(
 
       // warning if key not in map
       if (Find == map.end()) {
-        ACTS_WARNING("Key not found in FTF map for volume id: "
+        ACTS_WARNING("Key not found in Gbts map for volume id: "
                      << ACTS_vol_id << " and layer id: " << ACTS_lay_id);
         continue;
       }
 
-      // now should be pixel with FTF ID:
-      int FTF_id =
+      // now should be pixel with Gbts ID:
+      int Gbts_id =
           Find->second
               .first;  // new map the item is a pair so want first from it
 
-      if (FTF_id == 0) {
-        ACTS_WARNING("No assigned FTF ID for key for volume id: "
+      if (Gbts_id == 0) {
+        ACTS_WARNING("No assigned Gbts ID for key for volume id: "
                      << ACTS_vol_id << " and layer id: " << ACTS_lay_id);
       }
 
       // access IDs from map
       int eta_mod = Find->second.second;
-      int combined_id = FTF_id * 1000 + eta_mod;
+      int combined_id = Gbts_id * 1000 + eta_mod;
 
-      // fill FTF vector with current sapce point and ID
-      FTF_spacePoints.emplace_back(&spacePoint, FTF_id, combined_id);
+      // fill Gbts vector with current sapce point and ID
+      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id);
     }
   }
-  ACTS_VERBOSE("Space points successfully assigned FTF ID");
+  ACTS_VERBOSE("Space points successfully assigned Gbts ID");
 
-  return FTF_spacePoints;
+  return gbtsSpacePoints;
 }
 
 std::vector<Acts::TrigInDetSiLayer>
-ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
+ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
   std::vector<Acts::TrigInDetSiLayer> input_vector;
   std::vector<std::size_t> count_vector;
 
@@ -294,29 +295,29 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
     float minBound = 100000.0;
     float maxBound = -100000.0;
 
-    // convert to FTF ID
+    // convert to Gbts ID
     auto ACTS_joint_id = ACTS_vol_id * 100 + ACTS_lay_id;
     auto key =
         std::make_pair(ACTS_joint_id,
                        0);  // here the key needs to be pair of(vol*100+lay, 0)
-    auto Find = m_cfg.ACTS_FTF_Map.find(key);
-    int FTF_id = 0;               // initialise first to avoid FLTUND later
-    FTF_id = Find->second.first;  // new map, item is pair want first
+    auto Find = m_cfg.ActsGbtsMap.find(key);
+    int Gbts_id = 0;               // initialise first to avoid FLTUND later
+    Gbts_id = Find->second.first;  // new map, item is pair want first
     if (Find ==
-        m_cfg.ACTS_FTF_Map
+        m_cfg.ActsGbtsMap
             .end()) {  // if end then make new key of (vol*100+lay, modid)
       key = std::make_pair(ACTS_joint_id, mod_id);  // mod ID
-      Find = m_cfg.ACTS_FTF_Map.find(key);
-      FTF_id = Find->second.first;
+      Find = m_cfg.ActsGbtsMap.find(key);
+      Gbts_id = Find->second.first;
     }
 
     short barrel_ec = 0;  // a variable that says if barrrel, 0 = barrel
     int eta_mod = Find->second.second;
 
-    // assign barrel_ec depending on FTF_layer
-    if (79 < FTF_id && FTF_id < 85) {  // 80s, barrel
+    // assign barrel_ec depending on Gbts_layer
+    if (79 < Gbts_id && Gbts_id < 85) {  // 80s, barrel
       barrel_ec = 0;
-    } else if (89 < FTF_id && FTF_id < 99) {  // 90s positive
+    } else if (89 < Gbts_id && Gbts_id < 99) {  // 90s positive
       barrel_ec = 2;
     } else {  // 70s negative
       barrel_ec = -2;
@@ -347,7 +348,7 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
       }
     }
 
-    int combined_id = FTF_id * 1000 + eta_mod;
+    int combined_id = Gbts_id * 1000 + eta_mod;
     auto current_index =
         find_if(input_vector.begin(), input_vector.end(),
                 [combined_id](auto n) { return n.m_subdet == combined_id; });
@@ -359,10 +360,10 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
       count_vector[index] += 1;  // increase count at the index
 
     } else {  // end so doesn't exists
-      // make new if one with FTF ID doesn't exist:
-      Acts::TrigInDetSiLayer new_FTF_ID(combined_id, barrel_ec, rc, minBound,
-                                        maxBound);
-      input_vector.push_back(new_FTF_ID);
+      // make new if one with Gbts ID doesn't exist:
+      Acts::TrigInDetSiLayer new_Gbts_ID(combined_id, barrel_ec, rc, minBound,
+                                         maxBound);
+      input_vector.push_back(new_Gbts_ID);
       count_vector.push_back(
           1);  // so the element exists and not divinding by 0
     }
@@ -376,7 +377,7 @@ ActsExamples::SeedingFTFAlgorithm::LayerNumbering() const {
       fout << ACTS_vol_id << ", "                                  // vol
            << ACTS_lay_id << ", "                                  // lay
            << mod_id << ", "                                       // module
-           << FTF_id << ","                                        // FTF id
+           << Gbts_id << ","                                       // Gbts id
            << eta_mod << ","                                       // eta_mod
            << center(2) << ", "                                    // z
            << sqrt(center(0) * center(0) + center(1) * center(1))  // r
