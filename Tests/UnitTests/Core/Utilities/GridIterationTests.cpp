@@ -156,7 +156,8 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; gridStart++) {
     BOOST_CHECK_EQUAL(gridStart.globalBinIndex(), numIterations);
-    const std::array<std::size_t, 1ul> locPosition = gridStart.localBinsIndexes();
+    const std::array<std::size_t, 1ul> locPosition =
+        gridStart.localBinsIndexes();
     BOOST_CHECK_EQUAL(numIterations, locPosition[0ul]);
     ++numIterations;
   }
