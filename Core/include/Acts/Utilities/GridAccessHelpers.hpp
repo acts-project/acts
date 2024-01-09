@@ -99,7 +99,7 @@ typename grid_type::point_t accessLocal(
 /// 2-D grid:
 /// * [ 0 - n ] x [ 0, m ]
 ///
-/// To a local position that can be looked up the accessLocal(...) method
+/// To a local position that can be looked up via the accessLocal(...) method
 ///
 /// @param grid is the grid, we need the axes
 /// @param bin0 is the first bin
