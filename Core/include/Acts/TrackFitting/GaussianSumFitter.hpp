@@ -298,7 +298,7 @@ struct GaussianSumFitter {
 
       return m_propagator
           .template makeResult<decltype(state), decltype(fwdPropOptions)>(
-              m_propagator.propagate(state), std::move(state), fwdPropOptions,
+              std::move(state), m_propagator.propagate(state), fwdPropOptions,
               false);
     }();
 
@@ -375,7 +375,7 @@ struct GaussianSumFitter {
 
       return m_propagator
           .template makeResult<decltype(state), decltype(bwdPropOptions)>(
-              m_propagator.propagate(state), std::move(state), target,
+              std::move(state), m_propagator.propagate(state), target,
               bwdPropOptions);
     }();
 

@@ -654,8 +654,9 @@ class Gx2Fitter {
       trackContainer.clear();
 
       auto result = m_propagator.template makeResult(
-          m_propagator.template propagate(propagatorState),
-          std::move(propagatorState), propagatorOptions, true);
+          std::move(propagatorState),
+          m_propagator.template propagate(propagatorState), propagatorOptions,
+          false);
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements

@@ -458,14 +458,14 @@ class Propagator final {
   Result<
       action_list_t_result_t<StepperCurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>>
-  makeResult(Result<void> result, propagator_state_t state,
+  makeResult(propagator_state_t state, Result<void> result,
              const propagator_options_t& options, bool makeCurvilinear) const;
 
   template <typename propagator_state_t, typename propagator_options_t>
   Result<
       action_list_t_result_t<StepperBoundTrackParameters,
                              typename propagator_options_t::action_list_type>>
-  makeResult(Result<void> result, propagator_state_t state,
+  makeResult(propagator_state_t state, Result<void> result,
              const Surface& target, const propagator_options_t& options) const;
 
   const stepper_t& stepper() const { return m_stepper; }
