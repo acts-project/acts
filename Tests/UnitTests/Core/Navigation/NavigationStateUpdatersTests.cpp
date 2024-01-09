@@ -109,6 +109,8 @@ struct IndexedSurfacesExtractor {
 
 class TestAxis : public IAxis {
  public:
+  TestAxis() = default;
+
   bool isEquidistant() const final { return true; }
 
   bool isVariable() const final { return false; }
@@ -137,7 +139,7 @@ class MultiGrid1D {
   }
 
   std::array<const IAxis*, DIM> axes() const { return {&ta}; }
-  TestAxis ta;
+  TestAxis ta = TestAxis();
 
  private:
   std::vector<std::size_t> e = {0u, 1u};
@@ -154,7 +156,7 @@ class MultiGrid2D {
   }
 
   std::array<const IAxis*, DIM> axes() const { return {&ta, &ta}; };
-  const TestAxis ta;
+  TestAxis ta = TestAxis();
 
  private:
   std::vector<std::size_t> e = {1u};
