@@ -49,7 +49,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
 
-    std::map<std::pair<int, int>, std::pair<int, int>> ACTSGbtsMap;
+    std::map<std::pair<int, int>, std::pair<int, int>> ActsGbtsMap;
 
     bool fill_module_csv = false;
 
@@ -71,7 +71,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
   // own class functions
   // make the map
-  std::map<std::pair<int, int>, std::pair<int, int>> makeACTSGbtsMap() const;
+  std::map<std::pair<int, int>, std::pair<int, int>> makeActsGbtsMap() const;
   // make the vector of space points with FTF Info
   std::vector<Acts::GbtsSP<SimSpacePoint>> MakeGbtsSpacePoints(
       const AlgorithmContext &ctx,
@@ -82,7 +82,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  std::unique_ptr<Acts::GbtsGeometry<SimSpacePoint>> mGbtsgeo;
+  std::unique_ptr<Acts::GbtsGeometry<SimSpacePoint>> m_gbtsGeo;
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};

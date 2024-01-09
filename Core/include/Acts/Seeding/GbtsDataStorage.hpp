@@ -53,9 +53,9 @@ class GbtsNode {
     }
   };
 
-  GbtsNode(const GbtsSP<space_point_t> &Gbtssp, float minT = -100.0,
+  GbtsNode(const GbtsSP<space_point_t> &spGbts, float minT = -100.0,
            float maxT = 100.0)
-      : m_spGbts(Gbtssp), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {}
+      : m_spGbts(spGbts), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {}
 
   inline void addIn(int i) {
     if (m_in.size() < MAX_SEG_PER_NODE) {
