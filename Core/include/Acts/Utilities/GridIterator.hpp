@@ -136,12 +136,12 @@ class GridGlobalIterator {
   /// This will increase the global position by one
   GridGlobalIterator<T, Axes...> operator++(int);
 
-  /// @brief Retrieve the global position
-  /// @return The current global position in the grid
-  std::size_t globalPosition() const;
-  /// @brief Retrieve the local position
-  /// @return The current local position in the grid
-  std::array<std::size_t, DIM> localPosition() const;
+  /// @brief Retrieve the global bin index
+  /// @return The current global bin index in the grid
+  std::size_t globalBinIndex() const;
+  /// @brief Retrieve the local bins indexes
+  /// @return The current local bins indexed in the grid
+  std::array<std::size_t, DIM> localBinsIndexes() const;
 
  private:
   /// @brief The grid on which we are iterating
@@ -258,12 +258,12 @@ class GridLocalIterator {
   /// This will increase the local position by one
   GridLocalIterator<T, Axes...> operator++(int);
 
-  /// @brief Retrieve the global position
-  /// @return The current global position in the grid
-  std::size_t globalPosition() const;
+  /// @brief Retrieve the global bin index
+  /// @return The current global bin index in the grid
+  std::size_t globalBinIndex() const;
   /// @brief Retrieve the local position
   /// @return The current local position in the grid
-  std::array<std::size_t, DIM> localPosition() const;
+  std::array<std::size_t, DIM> localBinsIndexes() const;
 
  private:
   /// @brief Increment the local position

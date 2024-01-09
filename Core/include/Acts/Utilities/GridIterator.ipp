@@ -126,13 +126,13 @@ GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator++(int) {
 }
 
 template <typename T, class... Axes>
-std::size_t GridGlobalIterator<T, Axes...>::globalPosition() const {
+std::size_t GridGlobalIterator<T, Axes...>::globalBinIndex() const {
   return m_idx;
 }
 
 template <typename T, class... Axes>
 std::array<std::size_t, GridGlobalIterator<T, Axes...>::DIM>
-GridGlobalIterator<T, Axes...>::localPosition() const {
+GridGlobalIterator<T, Axes...>::localBinsIndexes() const {
   return m_grid->localBinsFromGlobalBin(m_idx);
 }
 
@@ -270,13 +270,13 @@ void GridLocalIterator<T, Axes...>::increment() {
 }
 
 template <typename T, class... Axes>
-std::size_t GridLocalIterator<T, Axes...>::globalPosition() const {
-  return m_grid->globalBinFromLocalBins(localPosition());
+std::size_t GridLocalIterator<T, Axes...>::globalBinIndex() const {
+  return m_grid->globalBinFromLocalBins(localBinsIndexes());
 }
 
 template <typename T, class... Axes>
 std::array<std::size_t, GridLocalIterator<T, Axes...>::DIM>
-GridLocalIterator<T, Axes...>::localPosition() const {
+GridLocalIterator<T, Axes...>::localBinsIndexes() const {
   std::array<std::size_t, DIM> output{};
   for (std::size_t i(0); i < DIM; ++i) {
     output[i] = m_navigationIndex[i][m_currentIndex[i]];
