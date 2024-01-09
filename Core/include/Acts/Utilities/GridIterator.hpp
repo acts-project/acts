@@ -112,7 +112,7 @@ class GridGlobalIterator {
   /// @return The decremented iterator
   GridGlobalIterator<T, Axes...> operator-(const std::size_t offset) const;
 
-  /// @brief Distance between two GridGlobalIterator
+  /// @brief Distance between two GridGlobalIterators
   /// @param [in] other The other GridGlobalIterator
   /// @return The distance between the two iterators
   ///
@@ -192,7 +192,7 @@ class GridLocalIterator {
   /// @param [in] grid The grid
   /// @param [in] indexes The local position
   ///
-  /// @pre The local bins representing the local bins must be a valid local position in the grid
+  /// @pre The local bins must be a valid local position in the grid
   GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
                     const std::array<std::size_t, DIM>& indexes);
   /// @brief Constructor with custom navigation pattern
@@ -200,7 +200,7 @@ class GridLocalIterator {
   /// @param [in] indexes The local position
   /// @param [in] navigation The custom navigation pattern for each axis
   ///
-  /// @pre The local bins representing the local bins must be a valid local position in the grid.
+  /// @pre The local bins must be a valid local position in the grid.
   /// The navigation pattern must be consistent with the local bins (i.e. size
   /// <= num bins in the axis) in the grid and have no repetitions.
   ///
@@ -292,7 +292,7 @@ class GridLocalIterator {
   std::array<std::size_t, DIM> m_currentIndex{};
   /// @brief The custom navigation pattern in the grid
   ///
-  /// This allows user to define any custom iteration sequence in all the
+  /// This allows users to define any custom iteration sequence in all the
   /// different axes of the grid. If nothing is defined by the user, then
   /// a std::iota is used as the default starting with the 1ul bin (0ul) is
   /// the under-flow in the axis
