@@ -15,6 +15,8 @@
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <ostream>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
