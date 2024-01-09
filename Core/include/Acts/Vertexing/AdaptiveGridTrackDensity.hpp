@@ -197,6 +197,10 @@ class AdaptiveGridTrackDensity {
   /// @param centralBin Central z and t bin of the track (where its
   /// density is the highest)
   /// @param cov 3x3 impact parameter covariance matrix
+  /// @param spatialTrkGridSize Number of bins in z direction
+  /// @param temporalTrkGridSize Number of bins in time direction
+  ///
+  /// @return The track density map
   DensityMap createTrackGrid(const Acts::Vector3& impactParams,
                              const Bin& centralBin,
                              const Acts::SquareMatrix3& cov,

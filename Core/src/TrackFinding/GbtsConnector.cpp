@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // TODO: update to C++17 style
-#include "Acts/TrackFinding/FasTrackConnector.hpp"
+#include "Acts/TrackFinding/GbtsConnector.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -17,10 +17,10 @@
 
 namespace Acts {
 
-FasTrackConnection::FasTrackConnection(unsigned int s, unsigned int d)
+GbtsConnection::GbtsConnection(unsigned int s, unsigned int d)
     : m_src(s), m_dst(d) {}
 
-FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
+GbtsConnector::GbtsConnector(std::ifstream &inFile) {
   m_layerGroups.clear();
 
   int nLinks{};
@@ -33,7 +33,7 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
 
     inFile >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
 
-    FasTrackConnection *pC = new FasTrackConnection(src, dst);
+    GbtsConnection *pC = new GbtsConnection(src, dst);
 
     int dummy{};
 
@@ -57,11 +57,11 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
       continue;
     }
 
-    std::map<int, std::vector<FasTrackConnection *>>::iterator it =
+    std::map<int, std::vector<GbtsConnection *>>::iterator it =
         m_connMap.find(stage);
 
     if (it == m_connMap.end()) {
-      std::vector<FasTrackConnection *> v(1, pC);
+      std::vector<GbtsConnection *> v(1, pC);
       m_connMap.insert(std::make_pair(stage, v));
     } else {
       (*it).second.push_back(pC);
@@ -70,9 +70,9 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
 
   // re-arrange the connection stages
 
-  std::list<const FasTrackConnection *> lConns;
+  std::list<const GbtsConnection *> lConns;
 
-  std::map<int, std::vector<const FasTrackConnection *>> newConnMap;
+  std::map<int, std::vector<const GbtsConnection *>> newConnMap;
 
   for (const auto &conn : m_connMap) {
     std::copy(conn.second.begin(), conn.second.end(),
@@ -121,9 +121,9 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
 
     // remove connections which use zeroLayer as destination
 
-    std::vector<const FasTrackConnection *> theStage;
+    std::vector<const GbtsConnection *> theStage;
 
-    std::list<const FasTrackConnection *>::iterator cIt = lConns.begin();
+    std::list<const GbtsConnection *>::iterator cIt = lConns.begin();
 
     while (cIt != lConns.end()) {
       if (zeroLayers.find((*cIt)->m_dst) !=
@@ -145,25 +145,25 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
   // the doublet making is done using "outside-in" approach hence the reverse
   // iterations
 
-  for (std::map<int, std::vector<const FasTrackConnection *>>::reverse_iterator
-           it = newConnMap.rbegin();
+  for (std::map<int, std::vector<const GbtsConnection *>>::reverse_iterator it =
+           newConnMap.rbegin();
        it != newConnMap.rend(); ++it, currentStage++) {
-    const std::vector<const FasTrackConnection *> &vConn = (*it).second;
+    const std::vector<const GbtsConnection *> &vConn = (*it).second;
 
     // loop over links, extract all connections for the stage, group sources by
     // L1 (dst) index
 
-    std::map<unsigned int, std::vector<const FasTrackConnection *>> l1ConnMap;
+    std::map<unsigned int, std::vector<const GbtsConnection *>> l1ConnMap;
 
     for (const auto *conn : vConn) {
       unsigned int dst = conn->m_dst;
 
-      std::map<unsigned int, std::vector<const FasTrackConnection *>>::iterator
+      std::map<unsigned int, std::vector<const GbtsConnection *>>::iterator
           l1MapIt = l1ConnMap.find(dst);
       if (l1MapIt != l1ConnMap.end()) {
         (*l1MapIt).second.push_back(conn);
       } else {
-        std::vector<const FasTrackConnection *> v = {conn};
+        std::vector<const GbtsConnection *> v = {conn};
         l1ConnMap.insert(std::make_pair(dst, v));
       }
     }
@@ -182,12 +182,12 @@ FasTrackConnector::FasTrackConnector(std::ifstream &inFile) {
   newConnMap.clear();
 }
 
-FasTrackConnector::~FasTrackConnector() {
+GbtsConnector::~GbtsConnector() {
   m_layerGroups.clear();
-  for (std::map<int, std::vector<FasTrackConnection *>>::iterator it =
+  for (std::map<int, std::vector<GbtsConnection *>>::iterator it =
            m_connMap.begin();
        it != m_connMap.end(); ++it) {
-    for (std::vector<FasTrackConnection *>::iterator cIt = (*it).second.begin();
+    for (std::vector<GbtsConnection *>::iterator cIt = (*it).second.begin();
          cIt != (*it).second.end(); ++cIt) {
       delete (*cIt);
     }
