@@ -92,7 +92,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
     const AlgorithmContext &ctx) const {
   std::vector<Acts::GbtsSP<SimSpacePoint>> GbtsSpacePoints =
-      MakeGbtsSpacePoints(ctx, m_cfg.ACTSGbtsMap);
+      MakeGbtsSpacePoints(ctx, m_cfg.ActsGbtsMap);
 
   // cluster width
   //  const ClusterContainer* clusters = &m_inputClusters(ctx) ;
@@ -118,7 +118,8 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   }
 
   // this is now calling on a core algorithm
-  Acts::SeedFinderGbts<SimSpacePoint> finder(m_cfg.seedFinderConfig, *m_gbtsGeo);
+  Acts::SeedFinderGbts<SimSpacePoint> finder(m_cfg.seedFinderConfig,
+                                             *m_gbtsGeo);
 
   // need this function as create_coords is needed for seeds
   std::function<std::pair<Acts::Vector3, Acts::Vector2>(
@@ -172,10 +173,10 @@ ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
     int Gbts = stoi(i[5]);
     int eta_mod = stoi(i[6]);
     int ACTS_joint = ACTS_vol * 100 + ACTS_lay;
-    ACTSGbts.insert({{ACTS_joint, ACTS_mod}, {Gbts, eta_mod}});
+    ActsGbts.insert({{ACTS_joint, ACTS_mod}, {Gbts, eta_mod}});
   }
 
-  return ACTSGbts;
+  return ActsGbts;
 }
 
 std::vector<Acts::GbtsSP<ActsExamples::SimSpacePoint>>
