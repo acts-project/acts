@@ -8,11 +8,11 @@
 
 #include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <array>
 #include <memory>
