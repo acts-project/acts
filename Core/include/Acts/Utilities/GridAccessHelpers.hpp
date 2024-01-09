@@ -114,15 +114,14 @@ template <typename grid_type>
 Vector2 toLocal(const grid_type& grid, std::size_t bin0, std::size_t bin1,
                 std::size_t laccess = 0u) {
   Vector2 lposition{};
-  auto gridAxes = grid.axes();
   // One-dimensional case, needs decision which one is assigned
   if constexpr (grid_type::DIM == 1u) {
     if (laccess > 1u) {
       throw std::invalid_argument(
           "GridAccessHelper: only 0u/1u are allowed for local access.");
     }
-
     // Get axis for bin edges
+    auto gridAxes = grid.axes();
     std::size_t bin = laccess == 0u ? bin0 : bin1;
     const auto& edges = gridAxes[laccess]->getBinEdges();
     ActsScalar pval = 0.5 * (edges[bin] + edges[bin + 1]);
@@ -131,6 +130,7 @@ Vector2 toLocal(const grid_type& grid, std::size_t bin0, std::size_t bin1,
   // Two-dimensional case, relatively straight forward
   if constexpr (grid_type::DIM == 2u) {
     // Get axis for the bin edge
+    auto gridAxes = grid.axes();
     const auto& edges0 = gridAxes[0u]->getBinEdges();
     const auto& edges1 = gridAxes[1u]->getBinEdges();
     ActsScalar pval0 = 0.5 * (edges0[bin0] + edges0[bin0 + 1u]);
