@@ -8,9 +8,7 @@
 
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
-#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
 ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
@@ -26,7 +24,7 @@ ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
       m_elementDiscBounds(nullptr) {
   auto mutableSurface =
       std::const_pointer_cast<Acts::Surface>(m_elementSurface);
-  mutableSurface->assignSurfaceMaterial(material);
+  mutableSurface->assignSurfaceMaterial(std::move(material));
 }
 
 ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
@@ -40,7 +38,5 @@ ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
       m_elementThickness(thickness),
       m_elementPlanarBounds(nullptr),
       m_elementDiscBounds(std::move(dBounds)) {
-  auto mutableSurface =
-      std::const_pointer_cast<Acts::Surface>(m_elementSurface);
-  mutableSurface->assignSurfaceMaterial(material);
+  m_elementSurface->assignSurfaceMaterial(std::move(material));
 }

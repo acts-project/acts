@@ -10,7 +10,7 @@ target_link_libraries(
   ActsExamplesDetectorContextual
   PUBLIC
     ActsCore ActsPluginIdentification
-    ActsExamplesFramework ActsExamplesDetectorsCommon ActsExamplesDetectorGeneric)
+    ActsExamplesFramework ActsExamplesDetectorGeneric)
 
 install(
   TARGETS ActsExamplesDetectorContextual

@@ -66,7 +66,7 @@ int runMaterialMapping(int argc, char* argv[],
   auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 
@@ -78,8 +78,9 @@ int runMaterialMapping(int argc, char* argv[],
 
   /// Decorate the context
   for (auto& cdr : contextDecorators) {
-    if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS)
+    if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS) {
       throw std::runtime_error("Failed to decorate event context");
+    }
   }
 
   /// Default contexts
@@ -100,13 +101,16 @@ int runMaterialMapping(int argc, char* argv[],
   // Input directory & input file handling
   std::string intputDir = vm["input-dir"].template as<std::string>();
   auto intputFiles = vm["input-files"].template as<std::vector<std::string>>();
-
+  bool readCachedSurfaceInformation =
+      vm["mat-mapping-read-surfaces"].template as<bool>();
   if (vm["input-root"].template as<bool>()) {
     // Read the material step information from a ROOT TTree
     ActsExamples::RootMaterialTrackReader::Config matTrackReaderRootConfig;
     matTrackReaderRootConfig.collection =
         ActsExamples::Simulation::kMaterialTracks;
     matTrackReaderRootConfig.fileList = intputFiles;
+    matTrackReaderRootConfig.readCachedSurfaceInformation =
+        readCachedSurfaceInformation;
     auto matTrackReaderRoot =
         std::make_shared<ActsExamples::RootMaterialTrackReader>(
             matTrackReaderRootConfig, logLevel);
@@ -121,7 +125,7 @@ int runMaterialMapping(int argc, char* argv[],
     Acts::Navigator navigator({tGeometry, true, true, true});
     // Make stepper and propagator
     SlStepper stepper;
-    Propagator propagator(std::move(stepper), std::move(navigator));
+    Propagator propagator(stepper, std::move(navigator));
     /// The material surface mapper
     Acts::SurfaceMaterialMapper::Config smmConfig;
     auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
@@ -134,7 +138,7 @@ int runMaterialMapping(int argc, char* argv[],
     Acts::Navigator navigator({tGeometry});
     // Make stepper and propagator
     SlStepper stepper;
-    Propagator propagator(std::move(stepper), std::move(navigator));
+    Propagator propagator(stepper, std::move(navigator));
     /// The material volume mapper
     Acts::VolumeMaterialMapper::Config vmmConfig;
     vmmConfig.mappingStep = volumeStep;
@@ -152,7 +156,7 @@ int runMaterialMapping(int argc, char* argv[],
     // The writer of the indexed material
     ActsExamples::RootMaterialWriter::Config rmwConfig;
     rmwConfig.filePath = materialFileName + ".root";
-    // Fullfill the IMaterialWriter interface
+    // Fulfill the IMaterialWriter interface
 
     auto rmw =
         std::make_shared<ActsExamples::RootMaterialWriter>(rmwConfig, logLevel);

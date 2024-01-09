@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,17 +8,33 @@
 
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/ApproachDescriptor.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
+#include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include <Acts/Surfaces/AnnulusBounds.hpp>
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
@@ -26,12 +42,53 @@
 #include <Acts/Surfaces/TrapezoidBounds.hpp>
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <map>
+#include <stdexcept>
+
+namespace Acts {
+// specialisations of decoration helper function
+// to pick correct objects from the container object
+template <>
+inline void decorateJson<Acts::SurfaceAndMaterialWithContext>(
+    const ITrackingGeometryJsonDecorator* decorator,
+    const Acts::SurfaceAndMaterialWithContext& src, nlohmann::json& dest) {
+  if (decorator != nullptr && std::get<0>(src) != nullptr) {
+    decorator->decorate(*std::get<0>(src), dest);
+  }
+}
+template <>
+inline void decorateJson<Acts::TrackingVolumeAndMaterial>(
+    const ITrackingGeometryJsonDecorator* decorator,
+    const Acts::TrackingVolumeAndMaterial& src, nlohmann::json& dest) {
+  if (decorator != nullptr && src.first != nullptr) {
+    decorator->decorate(*src.first, dest);
+  }
+}
+
+template <>
+inline void decorateJson<Acts::IVolumeMaterial>(
+    const IVolumeMaterialJsonDecorator* decorator,
+    const Acts::IVolumeMaterial* src, nlohmann::json& dest) {
+  if (decorator != nullptr && src != nullptr) {
+    decorator->decorate(*src, dest);
+  }
+}
+template <>
+inline void decorateJson<Acts::ISurfaceMaterial>(
+    const IVolumeMaterialJsonDecorator* decorator,
+    const Acts::ISurfaceMaterial* src, nlohmann::json& dest) {
+  if (decorator != nullptr && src != nullptr) {
+    decorator->decorate(*src, dest);
+  }
+}
+}  // namespace Acts
 
 namespace {
 
 Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
-    std::shared_ptr<const Acts::Surface> surface,
+    const std::shared_ptr<const Acts::Surface>& surface,
     const Acts::GeometryContext& context) {
   if (surface->surfaceMaterialSharedPtr() != nullptr) {
     return {surface, surface->surfaceMaterialSharedPtr(), context};
@@ -178,7 +235,7 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
 Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
     const Acts::MaterialMapJsonConverter::Config& config,
     Acts::Logging::Level level)
-    : m_cfg(std::move(config)),
+    : m_cfg(config),
       m_logger{getDefaultLogger("MaterialMapJsonConverter", level)},
       m_volumeMaterialConverter(m_volumeName),
       m_volumeConverter(m_volumeName),
@@ -188,7 +245,8 @@ Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
 /// Convert method
 ///
 nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
-    const DetectorMaterialMaps& maps) {
+    const DetectorMaterialMaps& maps,
+    const IVolumeMaterialJsonDecorator* decorator) {
   VolumeMaterialMap volumeMap = maps.second;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
       mapVolumeInit;
@@ -198,7 +256,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap(
       mapVolumeInit);
   nlohmann::json materialVolume =
-      m_volumeMaterialConverter.toJson(hierarchyVolumeMap);
+      m_volumeMaterialConverter.toJson(hierarchyVolumeMap, decorator);
   SurfaceMaterialMap surfaceMap = maps.first;
   std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
       mapSurfaceInit;
@@ -208,7 +266,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap(
       mapSurfaceInit);
   nlohmann::json materialSurface =
-      m_surfaceMaterialConverter.toJson(hierarchySurfaceMap);
+      m_surfaceMaterialConverter.toJson(hierarchySurfaceMap, decorator);
   nlohmann::json materialMap;
   materialMap["Volumes"] = materialVolume;
   materialMap["Surfaces"] = materialSurface;
@@ -222,7 +280,7 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap =
       m_volumeMaterialConverter.fromJson(materialVolume);
   VolumeMaterialMap volumeMap;
-  for (size_t i = 0; i < hierarchyVolumeMap.size(); i++) {
+  for (std::size_t i = 0; i < hierarchyVolumeMap.size(); i++) {
     std::shared_ptr<const IVolumeMaterial> volumePointer(
         hierarchyVolumeMap.valueAt(i));
     volumeMap.insert({hierarchyVolumeMap.idAt(i), std::move(volumePointer)});
@@ -231,7 +289,7 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
   GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap =
       m_surfaceMaterialConverter.fromJson(materialSurface);
   SurfaceMaterialMap surfaceMap;
-  for (size_t i = 0; i < hierarchySurfaceMap.size(); i++) {
+  for (std::size_t i = 0; i < hierarchySurfaceMap.size(); i++) {
     std::shared_ptr<const ISurfaceMaterial> surfacePointer(
         hierarchySurfaceMap.valueAt(i));
     surfaceMap.insert({hierarchySurfaceMap.idAt(i), std::move(surfacePointer)});
@@ -245,7 +303,8 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
 }
 
 nlohmann::json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
-    const Acts::TrackingGeometry& tGeometry) {
+    const Acts::TrackingGeometry& tGeometry,
+    const ITrackingGeometryJsonDecorator* decorator) {
   std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>
       volumeHierarchy;
   std::vector<
@@ -255,10 +314,12 @@ nlohmann::json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
                      tGeometry.highestTrackingVolume());
   GeometryHierarchyMap<Acts::TrackingVolumeAndMaterial> hierarchyVolumeMap(
       volumeHierarchy);
-  nlohmann::json jsonVolumes = m_volumeConverter.toJson(hierarchyVolumeMap);
+  nlohmann::json jsonVolumes =
+      m_volumeConverter.toJson(hierarchyVolumeMap, decorator);
   GeometryHierarchyMap<Acts::SurfaceAndMaterialWithContext> hierarchySurfaceMap(
       surfaceHierarchy);
-  nlohmann::json jsonSurfaces = m_surfaceConverter.toJson(hierarchySurfaceMap);
+  nlohmann::json jsonSurfaces =
+      m_surfaceConverter.toJson(hierarchySurfaceMap, decorator);
   nlohmann::json hierarchyMap;
   hierarchyMap["Volumes"] = jsonVolumes;
   hierarchyMap["Surfaces"] = jsonSurfaces;
@@ -274,9 +335,8 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
     const Acts::TrackingVolume* tVolume) {
   auto sameId =
       [tVolume](
-          std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial> pair) {
-        return (tVolume->geometryId() == pair.first);
-      };
+          const std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>&
+              pair) { return (tVolume->geometryId() == pair.first); };
   if (std::find_if(volumeHierarchy.begin(), volumeHierarchy.end(), sameId) !=
       volumeHierarchy.end()) {
     // this volume was already visited

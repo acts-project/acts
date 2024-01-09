@@ -43,7 +43,7 @@ class DupletSearch {
   DupletSearch(vecmem::data::vector_view<const DeviceSpacePoint> middleSPs,
                vecmem::data::vector_view<const DeviceSpacePoint> otherSPs,
                vecmem::data::jagged_vector_view<uint32_t> middleOtherSPIndices,
-               const DeviceSeedfinderConfig& config)
+               const DeviceSeedFinderConfig& config)
       : m_middleSPs(middleSPs),
         m_otherSPs(otherSPs),
         m_middleOtherSPIndices(middleOtherSPIndices),
@@ -106,7 +106,7 @@ class DupletSearch {
   vecmem::data::jagged_vector_view<uint32_t> m_middleOtherSPIndices;
 
   /// Configuration for the seed finding
-  DeviceSeedfinderConfig m_config;
+  DeviceSeedFinderConfig m_config;
 
 };  // struct DupletSearch
 

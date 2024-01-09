@@ -10,7 +10,10 @@
 
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <cmath>
 
 namespace Acts {
 namespace Test {
@@ -21,11 +24,11 @@ BOOST_AUTO_TEST_CASE(vacuum) {
   AccumulatedVolumeMaterial avm;
 
   // averaging over nothing is vacuum
-  BOOST_CHECK(not avm.average());
+  BOOST_CHECK(!avm.average());
 
   // averaging over vacuum is still vacuum
   avm.accumulate(MaterialSlab(1));
-  BOOST_CHECK(not avm.average());
+  BOOST_CHECK(!avm.average());
 }
 
 BOOST_AUTO_TEST_CASE(single_material) {

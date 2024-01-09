@@ -202,12 +202,12 @@ __global__ void transformCoordinates(
 ///            as @c middleBottomArray
 /// @param[in] topSPLinTransArray 2-dimensional matrix indexed the same way as
 ///            @c middleTopArray
-/// @param[in] maxScatteringAngle2 Parameter from @c Acts::SeedfinderConfig
-/// @param[in] sigmaScattering Parameter from @c Acts::SeedfinderConfig
-/// @param[in] minHelixDiameter2 Parameter from @c Acts::SeedfinderConfig
-/// @param[in] pT2perRadius Parameter from @c Acts::SeedfinderConfig
-/// @param[in] impactMax Parameter from @c Acts::SeedfinderConfig
-/// @param[in] impactWeightFactor Parameter from @c Acts::SeedfinderConfig
+/// @param[in] maxScatteringAngle2 Parameter from @c Acts::SeedFinderConfig
+/// @param[in] sigmaScattering Parameter from @c Acts::SeedFinderConfig
+/// @param[in] minHelixDiameter2 Parameter from @c Acts::SeedFinderConfig
+/// @param[in] pT2perRadius Parameter from @c Acts::SeedFinderConfig
+/// @param[in] impactMax Parameter from @c Acts::SeedFinderConfig
+/// @param[in] impactWeightFactor Parameter from @c Acts::SeedFinderConfig
 /// @param[out] tripletsPerBottomDublet 1-dimensional array of the triplet
 ///             counts for each bottom spacepoint
 /// @param[out] tripletIndices 2-dimensional matrix of the indices of the
@@ -320,7 +320,7 @@ __global__ void findTriplets(
     float error = sqrtf(error2);
     dCotThetaMinusError2 = deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
     // avoid taking root of scatteringInRegion
-    // if left side of ">" is positive, both sides of unequality can be
+    // if left side of ">" is positive, both sides of inequality can be
     // squared
     // (scattering is always positive)
     if (dCotThetaMinusError2 > scatteringInRegion2) {
@@ -497,7 +497,7 @@ __global__ void filterTriplets2Sp(
 
   // Allow only a maximum number of top spacepoints in the filtering. Since a
   // limit is coming from @c compatSeedLimit anyway, this could potentially be
-  // re-written with an array alocation, instead of statically defining the
+  // re-written with an array allocation, instead of statically defining the
   // array's size.
   static constexpr std::size_t MAX_TOP_SP = 10;
   assert(compatSeedLimit < MAX_TOP_SP);

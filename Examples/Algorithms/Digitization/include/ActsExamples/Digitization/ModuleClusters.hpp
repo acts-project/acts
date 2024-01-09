@@ -8,15 +8,34 @@
 
 #pragma once
 
+#include "Acts/Clusterization/Clusterization.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <set>
 #include <unordered_map>
+#include <utility>
+#include <variant>
 #include <vector>
 
 namespace ActsExamples {
+struct DigitizedParameters;
+
+struct ModuleValue {
+  std::vector<Acts::BoundIndices> paramIndices = {};
+  std::vector<Acts::ActsScalar> paramValues = {};
+  std::vector<Acts::ActsScalar> paramVariances = {};
+  std::variant<Cluster, Cluster::Cell> value;
+  std::set<SimHitContainer::size_type> sources = {};
+  Acts::Ccl::Label label = {Acts::Ccl::NO_LABEL};
+};
+
 class ModuleClusters {
  public:
   using simhit_t = SimHitContainer::size_type;
@@ -35,23 +54,6 @@ class ModuleClusters {
   digitizedParameters();
 
  private:
-  struct ModuleValue {
-    std::vector<Acts::BoundIndices> paramIndices = {};
-    std::vector<Acts::ActsScalar> paramValues = {};
-    std::vector<Acts::ActsScalar> paramVariances = {};
-    std::variant<Cluster, Cluster::Cell> value;
-    std::set<simhit_t> sources = {};
-  };
-
-  // Type to deal with activations from different particles in a
-  // single cell
-  struct ModuleValueAmbi {
-    std::vector<ModuleValue> values;
-    ModuleValueAmbi(ModuleValue val) { add(std::move(val)); }
-    void add(ModuleValue val) { values.push_back(std::move(val)); }
-    double activation();
-  };
-
   Acts::BinUtility m_segmentation;
   std::vector<Acts::BoundIndices> m_geoIndices;
   std::vector<ModuleValue> m_moduleValues;
@@ -59,11 +61,11 @@ class ModuleClusters {
   double m_nsigma;
   bool m_commonCorner;
 
-  std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>>
-  createCellMap();
+  std::vector<ModuleValue> createCellCollection();
   void merge();
   ModuleValue squash(std::vector<ModuleValue>& values);
-  std::vector<size_t> nonGeoEntries(std::vector<Acts::BoundIndices>& indices);
+  std::vector<std::size_t> nonGeoEntries(
+      std::vector<Acts::BoundIndices>& indices);
   std::vector<std::vector<ModuleValue>> mergeParameters(
       std::vector<ModuleValue> values);
 };

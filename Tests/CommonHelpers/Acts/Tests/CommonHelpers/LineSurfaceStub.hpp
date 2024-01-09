@@ -25,12 +25,13 @@ class LineSurfaceStub : public LineSurface {
   //
   LineSurfaceStub(const Transform3& htrans,
                   std::shared_ptr<const LineBounds> lbounds = nullptr)
-      : GeometryObject(), LineSurface(htrans, lbounds) { /*nop */
+      : GeometryObject(), LineSurface(htrans, std::move(lbounds)) { /*nop */
   }
   //
   LineSurfaceStub(std::shared_ptr<const LineBounds> lbounds,
                   const DetectorElementBase& detelement)
-      : GeometryObject(), LineSurface(lbounds, detelement) { /* nop */
+      : GeometryObject(),
+        LineSurface(std::move(lbounds), detelement) { /* nop */
   }
 
   //
@@ -38,10 +39,7 @@ class LineSurfaceStub : public LineSurface {
       : GeometryObject(), LineSurface(ls) { /* nop */
   }
 
-  LineSurfaceStub& operator=(const LineSurfaceStub& ls) {
-    LineSurface::operator=(ls);
-    return *this;
-  }
+  LineSurfaceStub& operator=(const LineSurfaceStub& ls) = default;
 
   //
   LineSurfaceStub(const GeometryContext& gctx, const LineSurfaceStub& ls,
@@ -64,7 +62,7 @@ class LineSurfaceStub : public LineSurface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& /*gctx*/,
-                                      size_t /*lseg*/) const final {
+                                      std::size_t /*lseg*/) const final {
     return Polyhedron({}, {}, {});
   }
 };

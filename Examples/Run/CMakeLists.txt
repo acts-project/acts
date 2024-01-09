@@ -1,5 +1,8 @@
+message(WARNING "The examples binaries are deprecated and may be removed in the future. Consider using the python bindings.")
+
 # shared code
 add_subdirectory(Common)
+add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)
 
 # tools
 add_subdirectory(Digitization)

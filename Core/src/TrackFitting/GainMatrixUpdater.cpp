@@ -8,102 +8,90 @@
 
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <utility>
+
+#include <Eigen/src/Core/MatrixBase.h>
+
 namespace Acts {
 
-Result<void> GainMatrixUpdater::operator()(
-    const GeometryContext& gctx, MultiTrajectory::TrackStateProxy trackState,
-    NavigationDirection direction, LoggerWrapper logger) const {
-  (void)gctx;
-  ACTS_VERBOSE("Invoked GainMatrixUpdater");
-
-  // we should definitely have an uncalibrated measurement here
-  assert(trackState.hasUncalibrated());
-  // there should be a calibrated measurement
-  assert(trackState.hasCalibrated());
-  // we should have predicted state set
-  assert(trackState.hasPredicted());
-  // filtering should not have happened yet, but is allocated, therefore set
-  assert(trackState.hasFiltered());
-
-  // read-only handles. Types are eigen maps to backing storage
-  const auto predicted = trackState.predicted();
-  const auto predictedCovariance = trackState.predictedCovariance();
-
-  ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
-  ACTS_VERBOSE("Predicted covariance:\n" << predictedCovariance);
-
-  // read-write handles. Types are eigen maps into backing storage.
-  // This writes directly into the trajectory storage
-  auto filtered = trackState.filtered();
-  auto filteredCovariance = trackState.filteredCovariance();
-
+std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
+    InternalTrackState trackState, Direction direction,
+    const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
   std::error_code error;
-  visit_measurement(
-      trackState.calibrated(), trackState.calibratedCovariance(),
-      trackState.calibratedSize(),
-      [&](const auto calibrated, const auto calibratedCovariance) {
-        constexpr size_t kMeasurementSize =
-            decltype(calibrated)::RowsAtCompileTime;
-        using ParametersVector = ActsVector<kMeasurementSize>;
-        using CovarianceMatrix = ActsSymMatrix<kMeasurementSize>;
+  double chi2 = 0;
 
-        ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
-        ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
-        ACTS_VERBOSE("Calibrated measurement covariance:\n"
-                     << calibratedCovariance);
+  visit_measurement(trackState.calibratedSize, [&](auto N) -> bool {
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
+    using ParametersVector = ActsVector<kMeasurementSize>;
+    using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
 
-        const auto H =
-            trackState.projector()
-                .template topLeftCorner<kMeasurementSize, eBoundSize>()
-                .eval();
+    typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
+        trackState.calibrated};
+    typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
+        calibratedCovariance{trackState.calibratedCovariance};
 
-        ACTS_VERBOSE("Measurement projector H:\n" << H);
+    ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
+    ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
+    ACTS_VERBOSE("Calibrated measurement covariance:\n"
+                 << calibratedCovariance);
 
-        const auto K =
-            (predictedCovariance * H.transpose() *
-             (H * predictedCovariance * H.transpose() + calibratedCovariance)
-                 .inverse())
-                .eval();
+    const auto H = trackState.projector
+                       .template topLeftCorner<kMeasurementSize, eBoundSize>()
+                       .eval();
 
-        ACTS_VERBOSE("Gain Matrix K:\n" << K);
+    ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-        if (K.hasNaN()) {
-          error =
-              (direction == NavigationDirection::Forward)
+    const auto K = (trackState.predictedCovariance * H.transpose() *
+                    (H * trackState.predictedCovariance * H.transpose() +
+                     calibratedCovariance)
+                        .inverse())
+                       .eval();
+
+    ACTS_VERBOSE("Gain Matrix K:\n" << K);
+
+    if (K.hasNaN()) {
+      error = (direction == Direction::Forward)
                   ? KalmanFitterError::ForwardUpdateFailed
                   : KalmanFitterError::BackwardUpdateFailed;  // set to error
-          return false;                                       // abort execution
-        }
+      return false;                                           // abort execution
+    }
 
-        filtered = predicted + K * (calibrated - H * predicted);
-        filteredCovariance =
-            (BoundSymMatrix::Identity() - K * H) * predictedCovariance;
-        ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
-        ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
+    trackState.filtered =
+        trackState.predicted + K * (calibrated - H * trackState.predicted);
+    trackState.filteredCovariance = (BoundSquareMatrix::Identity() - K * H) *
+                                    trackState.predictedCovariance;
+    ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
+    ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
 
-        // calculate filtered residual
-        //
-        // FIXME: Without separate residual construction and assignment, we
-        //        currently take a +0.7GB build memory consumption hit in the
-        //        EventDataView unit tests. Revisit this once Measurement
-        //        overhead problems (Acts issue #350) are sorted out.
-        //
-        ParametersVector residual;
-        residual = calibrated - H * filtered;
-        ACTS_VERBOSE("Residual: " << residual.transpose());
+    // calculate filtered residual
+    //
+    // FIXME: Without separate residual construction and assignment, we
+    //        currently take a +0.7GB build memory consumption hit in the
+    //        EventDataView unit tests. Revisit this once Measurement
+    //        overhead problems (Acts issue #350) are sorted out.
+    //
+    ParametersVector residual;
+    residual = calibrated - H * trackState.filtered;
+    ACTS_VERBOSE("Residual: " << residual.transpose());
 
-        trackState.chi2() =
-            (residual.transpose() *
-             ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance)
-                 .inverse() *
-             residual)
-                .value();
+    CovarianceMatrix m =
+        ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance).eval();
 
-        ACTS_VERBOSE("Chi2: " << trackState.chi2());
-        return true;  // continue execution
-      });
+    chi2 = (residual.transpose() * m.inverse() * residual).value();
 
-  return error ? Result<void>::failure(error) : Result<void>::success();
+    ACTS_VERBOSE("Chi2: " << chi2);
+    return true;  // continue execution
+  });
+
+  return {chi2, error};
 }
+
 }  // namespace Acts

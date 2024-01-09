@@ -16,6 +16,8 @@
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+
 ActsExamples::RandomNumbers::RandomNumbers(const Config& cfg) : m_cfg(cfg) {}
 
 ActsExamples::RandomEngine ActsExamples::RandomNumbers::spawnGenerator(
@@ -25,11 +27,5 @@ ActsExamples::RandomEngine ActsExamples::RandomNumbers::spawnGenerator(
 
 uint64_t ActsExamples::RandomNumbers::generateSeed(
     const AlgorithmContext& context) const {
-  // use Cantor pairing function to generate a unique generator id from
-  // algorithm and event number to get a consistent seed
-  // see https://en.wikipedia.org/wiki/Pairing_function#Cantor_pairing_function
-  const uint64_t k1 = context.algorithmNumber;
-  const uint64_t k2 = context.eventNumber;
-  const uint64_t id = (k1 + k2) * (k1 + k2 + 1) / 2 + k2;
-  return m_cfg.seed + id;
+  return m_cfg.seed + context.eventNumber;
 }

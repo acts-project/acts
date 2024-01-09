@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include "Acts/Utilities/PdgParticle.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 namespace ActsFatras {
 
 /// No-op particle selector that selects all particles.
 struct EveryParticle {
-  bool operator()(const Particle &) const { return true; }
+  bool operator()(const Particle & /*particle*/) const { return true; }
 };
 
 /// Select neutral particles.

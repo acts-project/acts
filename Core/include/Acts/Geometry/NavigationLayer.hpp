@@ -15,7 +15,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
 #include <memory>
+#include <utility>
 
 namespace Acts {
 
@@ -24,7 +26,6 @@ namespace Acts {
 /// Class to be used for gaps in Volumes as a navigational link.
 /// Navigation Layers have a surface representation, but should usually never be
 /// propagated to.
-
 class NavigationLayer : public Layer {
  public:
   ///  Factory Constructor - the surface representation is given by pointer
@@ -75,9 +76,9 @@ class NavigationLayer : public Layer {
   ///
   /// @return boolean that indicates if the position is on surface
   bool isOnLayer(const GeometryContext& gctx, const Vector3& gp,
-                 const BoundaryCheck& bcheck = true) const final;
+                 const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
 
-  /// Accept layer according to the following colelction directives
+  /// Accept layer according to the following collection directives
   ///
   /// @param resolveSensitive is the prescription to find the sensitive surfaces
   /// @param resolveMaterial is the precription to find material surfaces

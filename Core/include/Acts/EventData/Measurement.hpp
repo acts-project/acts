@@ -41,11 +41,11 @@ namespace Acts {
 /// This means either, that there needs to be an additional variable type or
 /// that a pointer to a base object is stored (requiring a `dynamic_cast` later
 /// on). Both variants add additional complications. Since the geometry object
-/// is not required anyways (as discussed above), not storing it removes all
+/// is not required anyway (as discussed above), not storing it removes all
 /// these complications altogether.
-template <typename indices_t, size_t kSize>
+template <typename indices_t, std::size_t kSize>
 class Measurement {
-  static constexpr size_t kFullSize = detail::kParametersSize<indices_t>;
+  static constexpr std::size_t kFullSize = detail::kParametersSize<indices_t>;
 
   using Subspace = detail::FixedSizeSubspace<kFullSize, kSize>;
 
@@ -54,7 +54,7 @@ class Measurement {
   /// Vector type containing for measured parameter values.
   using ParametersVector = ActsVector<kSize>;
   /// Matrix type for the measurement covariance.
-  using CovarianceMatrix = ActsSymMatrix<kSize>;
+  using CovarianceMatrix = ActsSquareMatrix<kSize>;
   /// Vector type containing all parameters in the same space.
   using FullParametersVector = ActsVector<kFullSize>;
   using ProjectionMatrix = ActsMatrix<kSize, kFullSize>;
@@ -72,11 +72,13 @@ class Measurement {
   /// @note The indices must be ordered and must describe/match the content
   ///   of parameters and covariance.
   template <typename parameters_t, typename covariance_t>
-  Measurement(const SourceLink& source,
-              const std::array<indices_t, kSize>& indices,
+  Measurement(SourceLink source, const std::array<indices_t, kSize>& indices,
               const Eigen::MatrixBase<parameters_t>& params,
               const Eigen::MatrixBase<covariance_t>& cov)
-      : m_source(source), m_subspace(indices), m_params(params), m_cov(cov) {
+      : m_source(std::move(source)),
+        m_subspace(indices),
+        m_params(params),
+        m_cov(cov) {
     // TODO we should be able to support arbitrary ordering, by sorting the
     //   indices and reordering parameters/covariance. since the parameter order
     //   can be modified by the user, the user can not always know what the
@@ -96,10 +98,20 @@ class Measurement {
   const SourceLink& sourceLink() const { return m_source; }
 
   /// Number of measured parameters.
-  static constexpr size_t size() { return kSize; }
+  static constexpr std::size_t size() { return kSize; }
 
   /// Check if a specific parameter is part of this measurement.
   bool contains(indices_t i) const { return m_subspace.contains(i); }
+
+  /// The measurement indices
+  constexpr std::array<indices_t, kSize> indices() const {
+    std::array<uint8_t, kSize> subInds = m_subspace.indices();
+    std::array<indices_t, kSize> inds{};
+    for (std::size_t i = 0; i < kSize; i++) {
+      inds[i] = static_cast<indices_t>(subInds[i]);
+    }
+    return inds;
+  }
 
   /// Measured parameters values.
   const ParametersVector& parameters() const { return m_params; }
@@ -114,10 +126,10 @@ class Measurement {
 
   /// Expansion matrix from the measured subspace into the full space.
   ///
-  /// This is equivalent to the tranpose of the projection matrix only in the
+  /// This is equivalent to the transpose of the projection matrix only in the
   /// case of a trivial projection matrix. While this is the case here, it is
   /// still recommended to use the expansion matrix directly in cases where it
-  /// is explicitely used.
+  /// is explicitly used.
   ExpansionMatrix expander() const {
     return m_subspace.template expander<Scalar>();
   }
@@ -144,7 +156,7 @@ class Measurement {
   }
 
  private:
-  std::reference_wrapper<const SourceLink> m_source;
+  SourceLink m_source;
   Subspace m_subspace;
   ParametersVector m_params;
   CovarianceMatrix m_cov;
@@ -175,13 +187,14 @@ class Measurement {
 ///   parameters and covariance.
 template <typename parameters_t, typename covariance_t, typename indices_t,
           typename... tail_indices_t>
-auto makeMeasurement(const SourceLink& source,
+auto makeMeasurement(SourceLink source,
                      const Eigen::MatrixBase<parameters_t>& params,
                      const Eigen::MatrixBase<covariance_t>& cov,
                      indices_t index0, tail_indices_t... tailIndices)
     -> Measurement<indices_t, 1u + sizeof...(tail_indices_t)> {
   using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
-  return {source, IndexContainer{index0, tailIndices...}, params, cov};
+  return {std::move(source), IndexContainer{index0, tailIndices...}, params,
+          cov};
 }
 
 namespace detail {
@@ -198,10 +211,10 @@ namespace detail {
 //     -> VariantMeasurementGenerator<..., 1, 2, 3, 4>
 //     -> VariantMeasurementGenerator<..., 0, 1, 2, 3, 4>
 //
-template <typename indices_t, size_t kN, size_t... kSizes>
+template <typename indices_t, std::size_t kN, std::size_t... kSizes>
 struct VariantMeasurementGenerator
     : VariantMeasurementGenerator<indices_t, kN - 1u, kN, kSizes...> {};
-template <typename indices_t, size_t... kSizes>
+template <typename indices_t, std::size_t... kSizes>
 struct VariantMeasurementGenerator<indices_t, 0u, kSizes...> {
   using Type = std::variant<Measurement<indices_t, kSizes>...>;
 };

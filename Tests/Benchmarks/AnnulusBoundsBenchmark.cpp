@@ -10,7 +10,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -62,7 +62,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   BoundaryCheck bcCov{cov, 1};
 
   // visualization to make sense of things
-  for (size_t i = 0; i < 10000; i++) {
+  for (std::size_t i = 0; i < 10000; i++) {
     const Vector2 loc{xDist(rng), yDist(rng)};
     auto locPC = toStripFrame(loc);
     bool isInsideAbs = aBounds.inside(locPC, bcAbs);
@@ -135,8 +135,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
     print_bench_header(check_name);
 
     // Pre-determined "interesting" test points
-    int num_inside_points;
-    int num_outside_points;
+    int num_inside_points = 0;
+    int num_outside_points = 0;
     switch (mode) {
       case Mode::FastOutside:
         num_inside_points = NTESTS;
@@ -145,6 +145,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
       case Mode::SlowOutside:
         num_inside_points = NTESTS;
         num_outside_points = NTESTS_SLOW;
+      default:  // do nothing
+        break;
     };
 
     for (const auto& [loc, inside, label] : testPoints) {

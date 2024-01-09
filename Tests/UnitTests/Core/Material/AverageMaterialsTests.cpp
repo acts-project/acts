@@ -8,10 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/detail/AverageMaterials.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <cmath>
 #include <limits>
 
 namespace {
@@ -38,7 +41,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsVacuum) {
   // vacuum with zero thickness
   {
     auto slab = combineSlabs(zeroVacuum, zeroVacuum);
-    BOOST_CHECK(not slab.material());
+    BOOST_CHECK(!slab.material());
     BOOST_CHECK_EQUAL(slab.thickness(), 0.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), 0.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), 0.0f);
@@ -46,7 +49,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsVacuum) {
   // vacuum with unit thickness
   {
     auto slab = combineSlabs(unitVacuum, unitVacuum);
-    BOOST_CHECK(not slab.material());
+    BOOST_CHECK(!slab.material());
     BOOST_CHECK_EQUAL(slab.thickness(), 2.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInX0(), 0.0f);
     BOOST_CHECK_EQUAL(slab.thicknessInL0(), 0.0f);

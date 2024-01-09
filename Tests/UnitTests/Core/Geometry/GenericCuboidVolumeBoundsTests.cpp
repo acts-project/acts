@@ -9,17 +9,25 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
-#include <chrono>
+#include <array>
+#include <cmath>
 #include <fstream>
-#include <iostream>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {
@@ -178,6 +186,25 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   CHECK_CLOSE_ABS(bb.max(), Vector3(1.00976, 2.26918, 1.11988), tol);
   CHECK_CLOSE_ABS(bb.min(), Vector3(-0.871397, 0, -0.0867708), tol);
+
+  // Check recreation from bound values
+  const auto boundValues = gcvb.values();
+  BOOST_CHECK_EQUAL(boundValues.size(), 24u);
+
+  auto bValueArrray =
+      to_array<GenericCuboidVolumeBounds::BoundValues::eSize, ActsScalar>(
+          boundValues);
+  GenericCuboidVolumeBounds gcvbCopy(bValueArrray);
+  BOOST_CHECK_EQUAL(gcvbCopy.values().size(), 24u);
+
+  // Redo the check from above
+  rot = AngleAxis3(0.542, Vector3::UnitZ()) *
+        AngleAxis3(M_PI / 5., Vector3(1, 3, 6).normalized());
+
+  bb = gcvbCopy.boundingBox(&rot);
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  CHECK_CLOSE_ABS(bb.max(), Vector3(1.00976, 2.26918, 1.11988), tol);
+  CHECK_CLOSE_ABS(bb.min(), Vector3(-0.871397, 0, -0.0867708), tol);
 }
 
 BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
@@ -199,11 +226,14 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
   for (auto& os : gcvbOrientedSurfaces) {
     auto geoCtx = GeometryContext();
     auto osCenter = os.first->center(geoCtx);
-    auto osNormal = os.first->normal(geoCtx);
-    double nDir = (double)os.second;
+    const auto* pSurface =
+        dynamic_cast<const Acts::PlaneSurface*>(os.first.get());
+    BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
+                          "The surface is not a plane surface");
+    auto osNormal = pSurface->normal(geoCtx);
     // Check if you step inside the volume with the oriented normal
-    auto insideGcvb = osCenter + nDir * osNormal;
-    auto outsideGcvb = osCenter - nDir * osNormal;
+    Vector3 insideGcvb = osCenter + os.second * osNormal;
+    Vector3 outsideGcvb = osCenter - os.second * osNormal;
     BOOST_CHECK(cubo.inside(insideGcvb));
     BOOST_CHECK(!cubo.inside(outsideGcvb));
   }

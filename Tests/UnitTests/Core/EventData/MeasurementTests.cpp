@@ -9,20 +9,27 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <limits>
 #include <random>
 #include <tuple>
+#include <utility>
+#include <variant>
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Test;
-using SourceLink = Acts::Test::TestSourceLink;
+using namespace Acts::detail::Test;
+using SourceLink = Acts::detail::Test::TestSourceLink;
 namespace bd = boost::unit_test::data;
 
 namespace {
@@ -33,7 +40,8 @@ constexpr FreeIndices freeIndices[] = {
     eFreePos0, eFreePos1, eFreePos2, eFreeTime,
     eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP,
 };
-const TestSourceLink source;
+const TestSourceLink sourceOrig;
+const Acts::SourceLink source{sourceOrig};
 // fix seed for reproducible tests
 std::default_random_engine rng(123);
 }  // namespace
@@ -53,12 +61,13 @@ BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
     if (i == index) {
       BOOST_CHECK(meas.contains(i));
     } else {
-      BOOST_CHECK(not meas.contains(i));
+      BOOST_CHECK(!meas.contains(i));
     }
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(&meas.sourceLink(), &source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
+                    sourceOrig);
 }
 
 BOOST_AUTO_TEST_CASE(FixedBoundAll) {
@@ -72,7 +81,7 @@ BOOST_AUTO_TEST_CASE(FixedBoundAll) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(&meas.sourceLink(), &source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
 }
 
 namespace {
@@ -100,7 +109,7 @@ const std::vector<std::tuple<double, double, double>> kPhiDataset = {
 BOOST_DATA_TEST_CASE(BoundResidualsPhi, bd::make(kPhiDataset), phiMea, phiRef,
                      phiRes) {
   using MeasurementVector = Acts::ActsVector<1>;
-  using MeasurementCovariance = Acts::ActsSymMatrix<1>;
+  using MeasurementCovariance = Acts::ActsSquareMatrix<1>;
 
   // prepare measurement
   MeasurementVector params = MeasurementVector::Zero();
@@ -125,12 +134,13 @@ BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
     if (i == index) {
       BOOST_CHECK(meas.contains(i));
     } else {
-      BOOST_CHECK(not meas.contains(i));
+      BOOST_CHECK(!meas.contains(i));
     }
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(&meas.sourceLink(), &source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
+                    sourceOrig);
 
   // all free parameters are unrestricted and we know the expected residual.
   constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();
@@ -151,7 +161,7 @@ BOOST_AUTO_TEST_CASE(FixedFreeAll) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(&meas.sourceLink(), &source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
 
   // all free parameters are unrestricted and we know the expected residual.
   constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();
@@ -167,12 +177,12 @@ BOOST_AUTO_TEST_CASE(VariantBound) {
   std::visit(
       [](const auto& m) {
         BOOST_CHECK_EQUAL(m.size(), 1);
-        BOOST_CHECK(not m.contains(eBoundLoc0));
-        BOOST_CHECK(not m.contains(eBoundLoc1));
-        BOOST_CHECK(not m.contains(eBoundTime));
-        BOOST_CHECK(not m.contains(eBoundPhi));
+        BOOST_CHECK(!m.contains(eBoundLoc0));
+        BOOST_CHECK(!m.contains(eBoundLoc1));
+        BOOST_CHECK(!m.contains(eBoundTime));
+        BOOST_CHECK(!m.contains(eBoundPhi));
         BOOST_CHECK(m.contains(eBoundTheta));
-        BOOST_CHECK(not m.contains(eBoundQOverP));
+        BOOST_CHECK(!m.contains(eBoundQOverP));
       },
       meas);
 
@@ -201,14 +211,14 @@ BOOST_AUTO_TEST_CASE(VariantFree) {
   std::visit(
       [](const auto& m) {
         BOOST_CHECK_EQUAL(m.size(), 2);
-        BOOST_CHECK(not m.contains(eFreePos0));
-        BOOST_CHECK(not m.contains(eFreePos1));
+        BOOST_CHECK(!m.contains(eFreePos0));
+        BOOST_CHECK(!m.contains(eFreePos1));
         BOOST_CHECK(m.contains(eFreePos2));
         BOOST_CHECK(m.contains(eFreeTime));
-        BOOST_CHECK(not m.contains(eFreeDir0));
-        BOOST_CHECK(not m.contains(eFreeDir1));
-        BOOST_CHECK(not m.contains(eFreeDir2));
-        BOOST_CHECK(not m.contains(eFreeQOverP));
+        BOOST_CHECK(!m.contains(eFreeDir0));
+        BOOST_CHECK(!m.contains(eFreeDir1));
+        BOOST_CHECK(!m.contains(eFreeDir2));
+        BOOST_CHECK(!m.contains(eFreeQOverP));
       },
       meas);
 

@@ -30,10 +30,10 @@ class ObjPropagationStepsWriter
     : public WriterT<std::vector<std::vector<step_t>>> {
  public:
   struct Config {
-    std::string collection;      ///< which collection to write
-    std::string outputDir;       ///< where to place output files
-    double outputScalor = 1.0;   ///< scale output values
-    size_t outputPrecision = 6;  ///< floating point precision
+    std::string collection;           ///< which collection to write
+    std::string outputDir;            ///< where to place output files
+    double outputScalor = 1.0;        ///< scale output values
+    std::size_t outputPrecision = 6;  ///< floating point precision
   };
 
   /// Constructor with arguments
@@ -54,19 +54,20 @@ class ObjPropagationStepsWriter
   ~ObjPropagationStepsWriter() override = default;
 
   /// End-of-run hook
-  ProcessCode endRun() final override {
-    return ActsExamples::ProcessCode::SUCCESS;
-  }
+  ProcessCode finalize() override { return ActsExamples::ProcessCode::SUCCESS; }
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
-  Config m_cfg;  ///!< Internal configuration represenation
+  Config m_cfg;  ///!< Internal configuration representation
 
  protected:
   /// This implementation holds the actual writing method
   /// and is called by the WriterT<>::write interface
   ProcessCode writeT(
       const AlgorithmContext& context,
-      const std::vector<std::vector<step_t>>& stepCollection) final override {
+      const std::vector<std::vector<step_t>>& stepCollection) override {
     // open per-event file
     std::string path = ActsExamples::perEventFilepath(
         m_cfg.outputDir, "propagation-steps.obj", context.eventNumber);
@@ -90,9 +91,10 @@ class ObjPropagationStepsWriter
              << m_cfg.outputScalor * step.position.z() << '\n';
         }
         // Write out the line - only if we have at least two points created
-        size_t vBreak = vCounter + steps.size() - 1;
-        for (; vCounter < vBreak; ++vCounter)
+        std::size_t vBreak = vCounter + steps.size() - 1;
+        for (; vCounter < vBreak; ++vCounter) {
           os << "l " << vCounter << " " << vCounter + 1 << '\n';
+        }
       }
     }
     return ActsExamples::ProcessCode::SUCCESS;

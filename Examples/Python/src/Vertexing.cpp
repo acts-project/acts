@@ -7,8 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/SingleSeedVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
@@ -25,91 +28,37 @@ using namespace Acts;
 namespace Acts::Python {
 
 void addVertexing(Context& ctx) {
+  using Seeder = ActsExamples::AdaptiveMultiVertexFinderAlgorithm::SeedFinder;
   auto mex = ctx.get("examples");
+  auto& m = ctx.get("main");
 
-  {
-    using Alg = ActsExamples::AdaptiveMultiVertexFinderAlgorithm;
-    using Config = Alg::Config;
+  py::enum_<Seeder>(m, "VertexSeedFinder")
+      .value("GaussianSeeder", Seeder::GaussianSeeder)
+      .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder);
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "AdaptiveMultiVertexFinderAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
+      "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
+      outputProtoVertices, outputVertices, seedFinder, useTime, bField);
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
+                                mex, "IterativeVertexFinderAlgorithm",
+                                inputTrackParameters, outputProtoVertices,
+                                outputVertices, bField);
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputProtoVertices);
-    ACTS_PYTHON_MEMBER(outputVertices);
-    ACTS_PYTHON_MEMBER(outputTime);
-    ACTS_PYTHON_MEMBER(bField);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TutorialVertexFinderAlgorithm,
+                                mex, "TutorialVertexFinderAlgorithm",
+                                inputTrackParameters, outputProtoVertices,
+                                bField);
 
-  {
-    using Alg = ActsExamples::IterativeVertexFinderAlgorithm;
-    using Config = Alg::Config;
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VertexFitterAlgorithm, mex,
+                                "VertexFitterAlgorithm", inputTrackParameters,
+                                inputProtoVertices, outputVertices, bField,
+                                doConstrainedFit, constraintPos, constraintCov);
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "IterativeVertexFinderAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputProtoVertices);
-    ACTS_PYTHON_MEMBER(outputVertices);
-    ACTS_PYTHON_MEMBER(outputTime);
-    ACTS_PYTHON_MEMBER(bField);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using Alg = ActsExamples::TutorialVertexFinderAlgorithm;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TutorialVertexFinderAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputProtoVertices);
-    ACTS_PYTHON_MEMBER(bField);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using Alg = ActsExamples::VertexFitterAlgorithm;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "VertexFitterAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTrackParameters);
-    ACTS_PYTHON_MEMBER(inputProtoVertices);
-    ACTS_PYTHON_MEMBER(outputVertices);
-    ACTS_PYTHON_MEMBER(bField);
-    ACTS_PYTHON_MEMBER(doConstrainedFit);
-    ACTS_PYTHON_MEMBER(constraintPos);
-    ACTS_PYTHON_MEMBER(constraintCov);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SingleSeedVertexFinderAlgorithm,
+                                mex, "SingleSeedVertexFinderAlgorithm",
+                                inputSpacepoints, outputVertices);
 }
 
 }  // namespace Acts::Python

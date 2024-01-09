@@ -10,13 +10,22 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iosfwd>
 #include <limits>
+#include <memory>
+#include <optional>
 
 namespace ActsFatras {
 
@@ -67,10 +76,29 @@ class Particle {
   }
 
   /// Set the process type that generated this particle.
-  Particle &setProcess(ProcessType proc) { return m_process = proc, *this; }
+  Particle &setProcess(ProcessType proc) {
+    m_process = proc;
+    return *this;
+  }
+  /// Set the pdg.
+  Particle setPdg(Acts::PdgParticle pdg) {
+    m_pdg = pdg;
+    return *this;
+  }
+  /// Set the charge.
+  Particle setCharge(Scalar charge) {
+    m_charge = charge;
+    return *this;
+  }
+  /// Set the mass.
+  Particle setMass(Scalar mass) {
+    m_mass = mass;
+    return *this;
+  }
   /// Set the particle ID.
   Particle &setParticleId(Barcode barcode) {
-    return m_particleId = barcode, *this;
+    m_particleId = barcode;
+    return *this;
   }
   /// Set the space-time position four-vector.
   Particle &setPosition4(const Vector4 &pos4) {
@@ -93,16 +121,16 @@ class Particle {
   }
   /// Set the direction three-vector
   Particle &setDirection(const Vector3 &direction) {
-    m_unitDirection = direction;
-    m_unitDirection.normalize();
+    m_direction = direction;
+    m_direction.normalize();
     return *this;
   }
   /// Set the direction three-vector from scalar components.
   Particle &setDirection(Scalar dx, Scalar dy, Scalar dz) {
-    m_unitDirection[Acts::ePos0] = dx;
-    m_unitDirection[Acts::ePos1] = dy;
-    m_unitDirection[Acts::ePos2] = dz;
-    m_unitDirection.normalize();
+    m_direction[Acts::ePos0] = dx;
+    m_direction[Acts::ePos1] = dy;
+    m_direction[Acts::ePos2] = dz;
+    m_direction.normalize();
     return *this;
   }
   /// Set the absolute momentum.
@@ -110,9 +138,6 @@ class Particle {
     m_absMomentum = absMomentum;
     return *this;
   }
-
-  /// Set the particle charge.
-  Particle &setCharge(Scalar charge) { return m_charge = charge, *this; }
 
   /// Change the energy by the given amount.
   ///
@@ -135,10 +160,25 @@ class Particle {
   constexpr ProcessType process() const { return m_process; }
   /// PDG particle number that identifies the type.
   constexpr Acts::PdgParticle pdg() const { return m_pdg; }
+  /// Absolute PDG particle number that identifies the type.
+  constexpr Acts::PdgParticle absolutePdg() const {
+    return Acts::makeAbsolutePdgParticle(pdg());
+  }
   /// Particle charge.
   constexpr Scalar charge() const { return m_charge; }
+  /// Particle absolute charge.
+  constexpr Scalar absoluteCharge() const { return std::abs(m_charge); }
   /// Particle mass.
   constexpr Scalar mass() const { return m_mass; }
+
+  /// Particle hypothesis.
+  constexpr Acts::ParticleHypothesis hypothesis() const {
+    return Acts::ParticleHypothesis(absolutePdg(), mass(), absoluteCharge());
+  }
+  /// Particl qOverP.
+  constexpr Scalar qOverP() const {
+    return hypothesis().qOverP(absoluteMomentum(), charge());
+  }
 
   /// Space-time position four-vector.
   constexpr const Vector4 &fourPosition() const { return m_position4; }
@@ -150,27 +190,36 @@ class Particle {
   Vector4 fourMomentum() const {
     Vector4 mom4;
     // stored direction is always normalized
-    mom4[Acts::eMom0] = m_absMomentum * m_unitDirection[Acts::ePos0];
-    mom4[Acts::eMom1] = m_absMomentum * m_unitDirection[Acts::ePos1];
-    mom4[Acts::eMom2] = m_absMomentum * m_unitDirection[Acts::ePos2];
+    mom4[Acts::eMom0] = m_absMomentum * m_direction[Acts::ePos0];
+    mom4[Acts::eMom1] = m_absMomentum * m_direction[Acts::ePos1];
+    mom4[Acts::eMom2] = m_absMomentum * m_direction[Acts::ePos2];
     mom4[Acts::eEnergy] = energy();
     return mom4;
   }
   /// Unit three-direction, i.e. the normalized momentum three-vector.
-  const Vector3 &unitDirection() const { return m_unitDirection; }
+  const Vector3 &direction() const { return m_direction; }
+  /// Polar angle.
+  Scalar theta() const { return Acts::VectorHelpers::theta(direction()); }
+  /// Azimuthal angle.
+  Scalar phi() const { return Acts::VectorHelpers::phi(direction()); }
   /// Absolute momentum in the x-y plane.
   Scalar transverseMomentum() const {
-    return m_absMomentum * m_unitDirection.segment<2>(Acts::eMom0).norm();
+    return m_absMomentum * m_direction.segment<2>(Acts::eMom0).norm();
   }
   /// Absolute momentum.
   constexpr Scalar absoluteMomentum() const { return m_absMomentum; }
+  /// Absolute momentum.
+  Vector3 momentum() const { return absoluteMomentum() * direction(); }
   /// Total energy, i.e. norm of the four-momentum.
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
-  constexpr operator bool() const { return Scalar(0) < m_absMomentum; }
-  /// Check if the particle is dead, i.e is at rest.
-  constexpr bool operator!() const { return m_absMomentum <= Scalar(0); }
+  constexpr bool isAlive() const { return Scalar(0) < m_absMomentum; }
+
+  constexpr bool isSecondary() const {
+    return particleId().vertexSecondary() != 0 ||
+           particleId().generation() != 0 || particleId().subParticle() != 0;
+  }
 
   // simulation specific properties
 
@@ -198,6 +247,43 @@ class Particle {
   /// Accumulated path within material measured in interaction lengths.
   constexpr Scalar pathInL0() const { return m_pathInL0; }
 
+  /// Set the reference surface.
+  ///
+  /// @param surface reference surface
+  Particle &setReferenceSurface(const Acts::Surface *surface) {
+    m_referenceSurface = surface;
+    return *this;
+  }
+
+  /// Reference surface.
+  const Acts::Surface *referenceSurface() const { return m_referenceSurface; }
+
+  /// Check if the particle has a reference surface.
+  bool hasReferenceSurface() const { return m_referenceSurface != nullptr; }
+
+  /// Bound track parameters.
+  Acts::Result<Acts::BoundTrackParameters> boundParameters(
+      const Acts::GeometryContext &gctx) const {
+    if (!hasReferenceSurface()) {
+      return Acts::Result<Acts::BoundTrackParameters>::failure(
+          std::error_code());
+    }
+    Acts::Result<Acts::Vector2> localResult =
+        m_referenceSurface->globalToLocal(gctx, position(), direction());
+    if (!localResult.ok()) {
+      return localResult.error();
+    }
+    Acts::BoundVector params;
+    params << localResult.value(), phi(), theta(), qOverP(), time();
+    return Acts::BoundTrackParameters(referenceSurface()->getSharedPtr(),
+                                      params, std::nullopt, hypothesis());
+  }
+
+  Acts::CurvilinearTrackParameters curvilinearParameters() const {
+    return Acts::CurvilinearTrackParameters(
+        fourPosition(), direction(), qOverP(), std::nullopt, hypothesis());
+  }
+
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
@@ -210,7 +296,7 @@ class Particle {
   Scalar m_charge = Scalar(0);
   Scalar m_mass = Scalar(0);
   // kinematics, i.e. things that change over the particle lifetime.
-  Vector3 m_unitDirection = Vector3::UnitZ();
+  Vector3 m_direction = Vector3::UnitZ();
   Scalar m_absMomentum = Scalar(0);
   Vector4 m_position4 = Vector4::Zero();
   // proper time in the particle rest frame
@@ -218,6 +304,8 @@ class Particle {
   // accumulated material
   Scalar m_pathInX0 = Scalar(0);
   Scalar m_pathInL0 = Scalar(0);
+  // reference surface
+  const Acts::Surface *m_referenceSurface{nullptr};
 };
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle);

@@ -9,12 +9,14 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "Visualization3DTester.hpp"
 
@@ -46,12 +48,12 @@ l 4 1
 
   // Valid obj
   auto objErrors = testObjString(validObj);
-  BOOST_CHECK(objErrors.size() == 0);
+  BOOST_CHECK(objErrors.empty());
 
   // Valid obj, but triangular mesh is requested
   objErrors = testObjString(validObj, true);
-  BOOST_CHECK(objErrors.size() == 1);
-  for (auto objerr : objErrors) {
+  BOOST_CHECK_EQUAL(objErrors.size(), 1);
+  for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
 
@@ -75,8 +77,8 @@ l 4 1
 )";
 
   objErrors = testObjString(invalidObj);
-  BOOST_CHECK(objErrors.size() == 4);
-  for (auto objerr : objErrors) {
+  BOOST_CHECK_EQUAL(objErrors.size(), 4);
+  for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
 }
@@ -112,12 +114,12 @@ end_header
 
   // Valid ply
   auto plyErrors = testPlyString(validPly);
-  BOOST_CHECK(plyErrors.size() == 0);
+  BOOST_CHECK(plyErrors.empty());
 
   // Valid ply, but triangular mesh is requested
   plyErrors = testPlyString(validPly, true);
-  BOOST_CHECK(plyErrors.size() == 0);
-  for (auto plyerr : plyErrors) {
+  BOOST_CHECK(plyErrors.empty());
+  for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
 
@@ -152,8 +154,8 @@ end_header
 
   // Valid ply, but triangular mesh is requested
   plyErrors = testPlyString(invalidPly);
-  BOOST_CHECK(plyErrors.size() == 3);
-  for (auto plyerr : plyErrors) {
+  BOOST_CHECK_EQUAL(plyErrors.size(), 3);
+  for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
 }
@@ -164,7 +166,7 @@ BOOST_AUTO_TEST_CASE(Visualization3DConstruction) {
   PlyVisualization3D ply;
   ObjVisualization3D obj;
 
-  IVisualization3D* vis;
+  IVisualization3D* vis = nullptr;
   vis = &ply;
   std::cout << *vis << std::endl;
   vis = &obj;

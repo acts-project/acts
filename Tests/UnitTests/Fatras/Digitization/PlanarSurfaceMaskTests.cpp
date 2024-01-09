@@ -10,19 +10,28 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "ActsFatras/Digitization/DigitizationError.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 
 #include <array>
+#include <cmath>
 #include <fstream>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include "DigitizationCsvOutput.hpp"
 #include "PlanarSurfaceTestBeds.hpp"
@@ -122,11 +131,22 @@ std::vector<std::array<std::ofstream, 3>> segmentOutput;
 int ntests = 100;
 
 /// Unit test for testing the Surface mask
-BOOST_DATA_TEST_CASE(RandomPlanarSurfaceMask,
-                     bdata::random(0., 1.) ^ bdata::random(0., 1.) ^
-                         bdata::random(0., 1.) ^ bdata::random(0., 1.) ^
-                         bdata::xrange(ntests),
-                     startR0, startR1, endR0, endR1, index) {
+BOOST_DATA_TEST_CASE(
+    RandomPlanarSurfaceMask,
+    bdata::random((
+        bdata::engine = std::mt19937(), bdata::seed = 1,
+        bdata::distribution = std::uniform_real_distribution<double>(0., 1.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(0., 1.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(0., 1.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(0., 1.))) ^
+        bdata::xrange(ntests),
+    startR0, startR1, endR0, endR1, index) {
   Acts::GeometryContext geoCtx;
 
   ActsFatras::PlanarSurfaceMask psm;
@@ -146,7 +166,7 @@ BOOST_DATA_TEST_CASE(RandomPlanarSurfaceMask,
 
     if (index == 0) {
       std::ofstream shape;
-      const auto centerXY = surface->center(geoCtx).segment<2>(0);
+      const Acts::Vector2 centerXY = surface->center(geoCtx).segment<2>(0);
 
       // 0 - write the shape
       shape.open("PlanarSurfaceMask" + name + "Borders.csv");

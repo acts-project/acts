@@ -9,6 +9,7 @@ target_link_libraries(
     ActsExampleDetectorAlignContextual 
   PRIVATE
     ActsExamplesAlignmentCommon
+    ActsExamplesUtilities
     ActsExamplesDetectorContextual
 )
 

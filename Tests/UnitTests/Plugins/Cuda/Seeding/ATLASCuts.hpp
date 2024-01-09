@@ -1,10 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
 
 #include "Acts/Seeding/IExperimentCuts.hpp"
 
@@ -32,15 +34,14 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
                      const InternalSpacePoint<SpacePoint>&,
                      const InternalSpacePoint<SpacePoint>&) const;
 
-  /// @param seeds contains pairs of weight and seed created for one middle
-  /// space
-  /// point
-  /// @return vector of seeds that pass the cut
-  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-  cutPerMiddleSP(
-      std::vector<
-          std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-          seeds) const;
+  /// @param seedCandidates contains collection of seed candidates created for one middle
+  /// space point in a std::tuple format
+  /// @return vector of seed candidates that pass the cut
+  std::vector<typename CandidatesForMiddleSp<
+      const InternalSpacePoint<SpacePoint>>::value_type>
+  cutPerMiddleSP(std::vector<typename CandidatesForMiddleSp<
+                     const InternalSpacePoint<SpacePoint>>::value_type>
+                     seedCandidates) const override;
 };
 
 template <typename SpacePoint>
@@ -67,24 +68,29 @@ bool ATLASCuts<SpacePoint>::singleSeedCut(
 }
 
 template <typename SpacePoint>
-std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+std::vector<typename CandidatesForMiddleSp<
+    const InternalSpacePoint<SpacePoint>>::value_type>
 ATLASCuts<SpacePoint>::cutPerMiddleSP(
-    std::vector<
-        std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-        seeds) const {
-  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+    std::vector<typename CandidatesForMiddleSp<
+        const InternalSpacePoint<SpacePoint>>::value_type>
+        seedCandidates) const {
+  std::vector<typename CandidatesForMiddleSp<
+      const InternalSpacePoint<SpacePoint>>::value_type>
       newSeedsVector;
-  if (seeds.size() > 1) {
-    newSeedsVector.push_back(std::move(seeds[0]));
-    size_t itLength = std::min(seeds.size(), size_t(5));
-    // don't cut first element
-    for (size_t i = 1; i < itLength; i++) {
-      if (seeds[i].first > 200. || seeds[i].second->sp[0]->radius() > 43.) {
-        newSeedsVector.push_back(std::move(seeds[i]));
-      }
-    }
-    return newSeedsVector;
+  if (seedCandidates.size() <= 1) {
+    return seedCandidates;
   }
-  return seeds;
+
+  newSeedsVector.push_back(std::move(seedCandidates[0]));
+  std::size_t itLength = std::min(seedCandidates.size(), std::size_t(5));
+  // don't cut first element
+  for (std::size_t i(1); i < itLength; i++) {
+    float weight = seedCandidates[i].weight;
+    const auto& bottom = seedCandidates[i].bottom;
+    if (weight > 200. || bottom->radius() > 43.) {
+      newSeedsVector.push_back(std::move(seedCandidates[i]));
+    }
+  }
+  return newSeedsVector;
 }
 }  // namespace Acts

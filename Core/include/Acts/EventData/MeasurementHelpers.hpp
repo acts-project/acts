@@ -19,7 +19,7 @@ namespace detail {
 /// Helper functor for @c visit_measurement. This is the actual functor given
 /// to @c template_switch.
 /// @tparam I Compile time int value
-template <size_t I>
+template <std::size_t I>
 struct visit_measurement_callable {
   /// The invoked function. It will perform the head/top-left corner
   /// extraction, and pass thee results to the given lambda.
@@ -52,9 +52,21 @@ struct visit_measurement_callable {
 /// @param dim The actual dimension as a runtime value
 /// @param lambda The lambda to call with the statically sized subsets
 template <typename L, typename A, typename B>
-auto visit_measurement(A&& param, B&& cov, size_t dim, L&& lambda) {
+auto visit_measurement(A&& param, B&& cov, std::size_t dim, L&& lambda) {
   return template_switch<detail::visit_measurement_callable, 1, eBoundSize>(
       dim, param, cov, lambda);
+}
+
+/// Dispatch a generic lambda on a measurement dimension. This overload doesn't
+/// assume anything about what is needed inside the lambda, it communicates the
+/// dimension via an integral constant type
+/// @tparam L The generic lambda type to call
+/// @param dim The runtime dimension of the measurement
+/// @param lambda The generic lambda instance to call
+/// @return Returns the lambda return value
+template <typename L>
+auto visit_measurement(std::size_t dim, L&& lambda) {
+  return template_switch_lambda<1, eBoundSize>(dim, lambda);
 }
 
 }  // namespace Acts

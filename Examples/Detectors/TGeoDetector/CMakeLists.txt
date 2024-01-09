@@ -10,9 +10,12 @@ target_link_libraries(
   ActsExamplesDetectorTGeo
   PUBLIC
     ActsCore ActsPluginIdentification ActsPluginTGeo ActsPluginJson
-    ActsExamplesFramework ActsExamplesDetectorsCommon
-    ActsExamplesDetectorGeneric)
+    ActsExamplesFramework ActsExamplesDetectorGeneric)
 
 install(
   TARGETS ActsExamplesDetectorTGeo
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(
+  DIRECTORY include/ActsExamples 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

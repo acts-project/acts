@@ -8,14 +8,20 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Group particles into proto vertices using truth information.
-class TruthVertexFinder final : public BareAlgorithm {
+class TruthVertexFinder final : public IAlgorithm {
  public:
   struct Config {
     /// The input truth particles that should be used to create proto vertices.
@@ -37,6 +43,11 @@ class TruthVertexFinder final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+  WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
+      this, "OutputProtoVertices"};
 };
 
 }  // namespace ActsExamples

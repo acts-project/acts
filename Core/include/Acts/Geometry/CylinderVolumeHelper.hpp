@@ -70,7 +70,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// together with the volume enevlope parameters
   /// @param volumeMaterial material properties for this TrackingVolume
   /// @param volumeBounds: confinement of this TrackingVolume
-  /// @param mtvVector (optiona) Vector of confined TrackingVolumes
+  /// @param mtvVector (optional) Vector of confined TrackingVolumes
   /// @param transform (optional) placement of this TrackingVolume
   /// @param volumeName  volume name to be given
   /// @param bType (optional) BinningType - arbitrary(default) or equidistant
@@ -118,7 +118,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param rMax maximum radius
   /// @param zMin minimum z
   /// @param zMax maximum z
-  /// @param materialLayers number of material layers (aequidistant binning)
+  /// @param materialLayers number of material layers (equidistant binning)
   /// @param cylinder type of layers
   /// @param volumeName  volume name to be given
   ///
@@ -167,7 +167,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
 
   /// Set configuration method
   ///
-  /// @param cvhConfig is the configurtion struct assigned
+  /// @param cvhConfig is the configuration struct assigned
   void setConfiguration(const Config& cvhConfig);
 
   /// Get configuration method
@@ -175,7 +175,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
 
   /// Set logging instance
   ///
-  /// @param newLogger is the logger isntance to be set
+  /// @param newLogger is the logger instance to be set
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
  protected:
@@ -217,7 +217,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param rBinned a boolean indicating if it is binned in r
   /// @param rMin the minimum radius of the volume
   /// @param rGlueMin the minimum glue radius (@todo check and document)
-  /// @param rMax the maximim radius of the volume
+  /// @param rMax the maximum radius of the volume
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   bool interGlueTrackingVolume(const GeometryContext& gctx,
@@ -234,7 +234,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param faceTwo is the second boundary face of the glue process
   /// @param rMin the minimum radius of the volume
   /// @param rGlueMin the minimum glue radius (@todo check and document)
-  /// @param rMax the maximim radius of the volume
+  /// @param rMax the maximum radius of the volume
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   void glueTrackingVolumes(const GeometryContext& gctx,

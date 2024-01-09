@@ -1,10 +1,11 @@
 add_library(
   ActsExamplesIoPerformance SHARED
+  ActsExamples/Io/Performance/CKFPerformanceWriter.cpp
+  ActsExamples/Io/Performance/SeedingPerformanceWriter.cpp
   ActsExamples/Io/Performance/TrackFinderPerformanceWriter.cpp
   ActsExamples/Io/Performance/TrackFitterPerformanceWriter.cpp
-  ActsExamples/Io/Performance/CKFPerformanceWriter.cpp
-  ActsExamples/Io/Performance/SeedingPerformanceWriter.cpp  
-  )
+  ActsExamples/Io/Performance/VertexPerformanceWriter.cpp
+)
 target_include_directories(
   ActsExamplesIoPerformance
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)

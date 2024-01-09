@@ -26,7 +26,7 @@ namespace Acts {
 /// This is a backport of C++20's std::identity
 struct Identity {
   template <typename T>
-  auto operator()(T &&v) const {
+  constexpr auto operator()(T &&v) const {
     return std::forward<T>(v);
   }
 };

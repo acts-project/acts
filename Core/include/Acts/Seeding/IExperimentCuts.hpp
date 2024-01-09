@@ -8,8 +8,10 @@
 
 #pragma once
 
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 
+#include <limits>
 #include <memory>
 
 namespace Acts {
@@ -41,15 +43,13 @@ class IExperimentCuts {
       const InternalSpacePoint<SpacePoint>& middle,
       const InternalSpacePoint<SpacePoint>& top) const = 0;
 
-  /// @param seeds contains pairs of weight and seed created for one middle
-  /// space
-  /// point
-  /// @return vector of seeds that pass the cut
-  virtual std::vector<
-      std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-  cutPerMiddleSP(
-      std::vector<
-          std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-          seeds) const = 0;
+  /// @param seedCandidates contains collection of seed candidates created for one middle
+  /// space point in a std::tuple format
+  /// @return vector of seed candidates that pass the cut
+  virtual std::vector<typename CandidatesForMiddleSp<
+      const InternalSpacePoint<SpacePoint>>::value_type>
+  cutPerMiddleSP(std::vector<typename CandidatesForMiddleSp<
+                     const InternalSpacePoint<SpacePoint>>::value_type>
+                     seedCandidates) const = 0;
 };
 }  // namespace Acts

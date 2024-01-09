@@ -14,7 +14,10 @@
 
 #include <map>
 #include <memory>
+#include <regex>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 class TGeoNode;
@@ -37,6 +40,7 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
     // Map the nodes name to the splitting parameters
     std::map<std::string, unsigned int> barrelMap = {};
     std::map<std::string, std::vector<SplitRange>> discMap = {};
+    std::map<std::string, std::string> splitPatterns;
   };
 
   /// Constructor
@@ -48,7 +52,7 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
                             Acts::getDefaultLogger("TGeoITkModuleSplitter",
                                                    Acts::Logging::INFO));
 
-  virtual ~TGeoITkModuleSplitter() = default;
+  ~TGeoITkModuleSplitter() override = default;
 
   /// Take a geometry context and TGeoElement and find the correct splitting
   /// method for the module type.
@@ -65,6 +69,13 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
       const override;
 
  private:
+  /// Categorise module split patterns as barrel or disc module splits
+  ///
+  /// Mark the split pattern as either barrel or disc module split
+  /// depending on whether the split category is found in the
+  /// barrel or disc map, and compile the regular expression.
+  void initSplitCategories();
+
   /// Take a geometry context and TGeoElement in the Itk barrel region
   /// and split it into sub elements.
   ///
@@ -76,9 +87,10 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
   ///
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
-  splitBarrelModule(const Acts::GeometryContext& gctx,
-                    std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
-                    unsigned int nSegments) const;
+  splitBarrelModule(
+      const Acts::GeometryContext& gctx,
+      const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
+      unsigned int nSegments) const;
 
   /// Take a geometry context and TGeoElement in the Itk disks and split it
   /// into sub elements.
@@ -92,11 +104,14 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> splitDiscModule(
       const Acts::GeometryContext& gctx,
-      std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
+      const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
       const std::vector<SplitRange>& splitRanges) const;
 
   /// Contains the splitting parameters, sorted by sensor type
   Config m_cfg;
+
+  /// regular expressions to match sensors for barrel or disk module splits
+  std::vector<std::tuple<std::regex, std::string, bool>> m_splitCategories;
 
   /// Private access to the logger
   const Acts::Logger& logger() const { return *m_logger; }

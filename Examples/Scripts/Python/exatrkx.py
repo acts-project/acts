@@ -7,82 +7,18 @@ import acts
 from acts import UnitConstants as u
 
 
-def addExaTrkx(
-    s: acts.examples.Sequencer,
-    trackingGeometry: acts.TrackingGeometry,
-    geometrySelection: Union[Path, str],
-    onnxModelDir: Union[Path, str],
-    outputDirRoot: Optional[Union[Path, str]] = None,
-) -> acts.examples.Sequencer:
-
-    # Run the particle selection
-    # The pre-selection will select truth particles satisfying provided criteria
-    # from all particles read in by particle reader for further processing. It
-    # has no impact on the truth hits themselves
-    s.addAlgorithm(
-        acts.examples.TruthSeedSelector(
-            level=acts.logging.INFO,
-            ptMin=500 * u.MeV,
-            nHitsMin=9,
-            inputParticles="particles_initial",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputParticles="particles_seed_selected",
-        )
-    )
-
-    # Create space points
-    s.addAlgorithm(
-        acts.examples.SpacePointMaker(
-            level=acts.logging.INFO,
-            inputSourceLinks="sourcelinks",
-            inputMeasurements="measurements",
-            outputSpacePoints="spacepoints",
-            trackingGeometry=trackingGeometry,
-            geometrySelection=acts.examples.readJsonGeometryList(
-                str(geometrySelection)
-            ),
-        )
-    )
-
-    # Setup the track finding algorithm with ExaTrkX
-    # It takes all the source links created from truth hit smearing, seeds from
-    # truth particle smearing and source link selection config
-    exaTrkxFinding = acts.examples.ExaTrkXTrackFinding(
-        inputMLModuleDir=str(onnxModelDir),
-        spacepointFeatures=3,
-        embeddingDim=8,
-        rVal=1.6,
-        knnVal=500,
-        filterCut=0.21,
-    )
-
-    s.addAlgorithm(
-        acts.examples.TrackFindingAlgorithmExaTrkX(
-            level=acts.logging.INFO,
-            inputSpacePoints="spacepoints",
-            outputProtoTracks="protoTracks",
-            trackFinderML=exaTrkxFinding,
-        )
-    )
-
-    # Write truth track finding / seeding performance
-    if outputDirRoot is not None:
-        s.addWriter(
-            acts.examples.TrackFinderPerformanceWriter(
-                level=acts.logging.INFO,
-                inputProtoTracks="protoTracks",
-                inputParticles="particles_initial",  # the original selected particles after digitization
-                inputMeasurementParticlesMap="measurement_particles_map",
-                filePath=str(Path(outputDirRoot) / "performance_seeding_trees.root"),
-            )
-        )
-
-    return s
-
-
 if "__main__" == __name__:
     import os
-    from digitization import configureDigitization
+    import sys
+    from digitization import runDigitization
+    from acts.examples.reconstruction import addExaTrkX, ExaTrkXBackend
+
+    backend = ExaTrkXBackend.Torch
+
+    if "onnx" in sys.argv:
+        backend = ExaTrkXBackend.Onnx
+    if "torch" in sys.argv:
+        backend = ExaTrkXBackend.Torch
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -95,35 +31,54 @@ if "__main__" == __name__:
         inputParticlePath = None
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
     geometrySelection = (
         srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
     )
     assert geometrySelection.exists()
 
-    onnxdir = Path(cwd=os.getcwd()) / "onnx_models"
-    assert (
-        (onnxdir / "embedding.onnx").exists()
-        and (onnxdir / "filtering.onnx").exists()
-        and (onnxdir / "gnn.onnx").exists()
+    digiConfigFile = (
+        srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
     )
+    assert digiConfigFile.exists()
 
-    s = acts.examples.Sequencer(events=2, numThreads=-1)
+    if backend == ExaTrkXBackend.Torch:
+        modelDir = Path.cwd() / "torchscript_models"
+        assert (modelDir / "embed.pt").exists()
+        assert (modelDir / "filter.pt").exists()
+        assert (modelDir / "gnn.pt").exists()
+    else:
+        modelDir = Path.cwd() / "onnx_models"
+        assert (modelDir / "embedding.onnx").exists()
+        assert (modelDir / "filtering.onnx").exists()
+        assert (modelDir / "gnn.onnx").exists()
+
+    s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
 
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(os.getcwd())
 
-    s = configureDigitization(
+    s = runDigitization(
         trackingGeometry,
         field,
         outputDir,
-        inputParticlePath,
+        digiConfigFile=digiConfigFile,
+        particlesInput=inputParticlePath,
         outputRoot=True,
         outputCsv=True,
         s=s,
     )
 
-    s = addExaTrkx(s, trackingGeometry, geometrySelection, onnxdir, outputDir)
+    addExaTrkX(
+        s,
+        trackingGeometry,
+        geometrySelection,
+        modelDir,
+        outputDir,
+        backend=backend,
+    )
 
     s.run()

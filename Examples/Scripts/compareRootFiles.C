@@ -52,7 +52,7 @@
   CHECK(strcmp((s1), (s2)) == 0, msg << " (" << (s1) << " vs " << (s2) << ") ")
 
 // This script returns 0 if the files have identical contents except for event
-// ordering, and a nonzero result if the contents differ or an error occured.
+// ordering, and a nonzero result if the contents differ or an error occurred.
 //
 // If the optional dump_data_on_failure flag is set, it will also dump the
 // mismatching event data to stdout on failure for manual inspection.

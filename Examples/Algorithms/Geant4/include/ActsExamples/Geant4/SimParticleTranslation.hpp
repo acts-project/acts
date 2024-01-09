@@ -9,8 +9,10 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <G4VUserPrimaryGeneratorAction.hh>
@@ -27,19 +29,19 @@ namespace ActsExamples {
 /// generator action.
 ///
 /// This also ensures that the event numbers correspond to the
-/// ACTS framework event numbers and hence harmonizes the EventStoreRegistry.
+/// ACTS framework event numbers and hence harmonizes the EventStore.
 class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
  public:
   /// Nested configuration struct that contains the
   /// input particle collection name,
   struct Config {
-    /// The input particle collection
-    std::string inputParticles = "";
+    std::shared_ptr<EventStore> eventStore;
 
-    /// Force pdgCode & mass (this is needed for Geantino simulation)
-    bool forceParticle = false;
-    G4int forcedPdgCode = 998;
-    G4double forcedMass = 0.;
+    /// Force pdgCode & mass & charge in G4 units (this is needed for Geantino
+    /// simulation)
+    std::optional<G4int> forcedPdgCode;
+    std::optional<G4double> forcedCharge;  // e.g. 1 for charged geantino
+    std::optional<G4double> forcedMass;    // e.g. 0 for geantino
 
     /// The number of hits per particle to be expected
     /// @note best to include secondaries for that
@@ -55,22 +57,25 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
                              Acts::getDefaultLogger("SimParticleTranslation",
                                                     Acts::Logging::INFO));
 
-  ~SimParticleTranslation() final override;
+  ~SimParticleTranslation() override;
 
   /// Interface method to generate the primary
   ///
   /// @param anEvent is the event that will be run
-  void GeneratePrimaries(G4Event* anEvent) final override;
+  void GeneratePrimaries(G4Event* anEvent) override;
 
  protected:
   Config m_cfg;
 
  private:
-  /// Event number cache for EventStoreRegistry harmonization
+  /// Event number cache for EventStore harmonization
   unsigned int m_eventNr = 0;
 
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
+
+  /// Private access method to the event store
+  EventStore& eventStore() const { return *m_cfg.eventStore; }
 
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;

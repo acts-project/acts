@@ -33,11 +33,9 @@ struct DenseStepperPropagatorOptions
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param mctx The current magnetic fielc context object
-  /// @param logger_ An instance of @c LoggerWrapper
   DenseStepperPropagatorOptions(const GeometryContext& gctx,
-                                const MagneticFieldContext& mctx,
-                                LoggerWrapper logger_)
-      : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx, logger_) {}
+                                const MagneticFieldContext& mctx)
+      : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx) {}
 
   /// Toggle between mean and mode evaluation of energy loss
   bool meanEnergyLoss = true;
@@ -57,28 +55,20 @@ struct DenseStepperPropagatorOptions
   DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t> extend(
       extended_aborter_list_t aborters) const {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
-        eoptions(this->geoContext, this->magFieldContext, this->logger);
-    // Copy the options over
-    eoptions.direction = this->direction;
-    eoptions.absPdgCode = this->absPdgCode;
-    eoptions.mass = this->mass;
-    eoptions.maxSteps = this->maxSteps;
-    eoptions.maxStepSize = this->maxStepSize;
-    eoptions.targetTolerance = this->targetTolerance;
-    eoptions.pathLimit = this->pathLimit;
-    eoptions.loopProtection = this->loopProtection;
-    eoptions.loopFraction = this->loopFraction;
+        eoptions(this->geoContext, this->magFieldContext);
 
-    // Stepper options
-    eoptions.tolerance = this->tolerance;
-    eoptions.stepSizeCutOff = this->stepSizeCutOff;
+    // Copy the options over
+    eoptions.setPlainOptions(*this);
+
     // Action / abort list
-    eoptions.actionList = this->actionList;
+    eoptions.actionList = std::move(this->actionList);
     eoptions.abortList = std::move(aborters);
+
     // Copy dense environment specific parameters
     eoptions.meanEnergyLoss = meanEnergyLoss;
     eoptions.includeGgradient = includeGgradient;
     eoptions.momentumCutOff = momentumCutOff;
+
     // And return the options
     return eoptions;
   }

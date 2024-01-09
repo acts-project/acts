@@ -9,9 +9,11 @@
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <algorithm>
-#include <istream>
-#include <ostream>
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace {
 constexpr char s_separator = ':';
@@ -51,7 +53,7 @@ std::istream& ActsExamples::Options::operator>>(
 
 std::ostream& ActsExamples::Options::operator<<(
     std::ostream& os, const ActsExamples::Options::Interval& interval) {
-  if (not interval.lower.has_value() and not interval.upper.has_value()) {
+  if (!interval.lower.has_value() && !interval.upper.has_value()) {
     os << "unbounded";
   } else {
     if (interval.lower.has_value()) {
@@ -93,7 +95,7 @@ void parseVariable(std::istream& is, std::vector<value_t>& values,
 }
 
 template <typename value_t, typename converter_t>
-void parseFixed(std::istream& is, size_t size, value_t* values,
+void parseFixed(std::istream& is, std::size_t size, value_t* values,
                 converter_t&& convert) {
   // reserve space for the expected number of values
   std::vector<value_t> tmp(size, 0);
@@ -112,8 +114,8 @@ void parseFixed(std::istream& is, size_t size, value_t* values,
 }
 
 template <typename value_t>
-void print(std::ostream& os, size_t size, const value_t* values) {
-  for (size_t i = 0; i < size; ++i) {
+void print(std::ostream& os, std::size_t size, const value_t* values) {
+  for (std::size_t i = 0; i < size; ++i) {
     if (0u < i) {
       os << s_separator;
     }
@@ -126,7 +128,7 @@ void print(std::ostream& os, size_t size, const value_t* values) {
 // fixed and variable number of generic values
 
 void ActsExamples::Options::detail::parseDoublesFixed(std::istream& is,
-                                                      size_t size,
+                                                      std::size_t size,
                                                       double* values) {
   parseFixed(is, size, values,
              [](const std::string& s) { return std::stod(s); });
@@ -137,7 +139,8 @@ void ActsExamples::Options::detail::parseDoublesVariable(
   parseVariable(is, values, [](const std::string& s) { return std::stod(s); });
 }
 
-void ActsExamples::Options::detail::printDoubles(std::ostream& os, size_t size,
+void ActsExamples::Options::detail::printDoubles(std::ostream& os,
+                                                 std::size_t size,
                                                  const double* values) {
   print(os, size, values);
 }
@@ -145,7 +148,7 @@ void ActsExamples::Options::detail::printDoubles(std::ostream& os, size_t size,
 // fixed and variable number of integers
 
 void ActsExamples::Options::detail::parseIntegersFixed(std::istream& is,
-                                                       size_t size,
+                                                       std::size_t size,
                                                        int* values) {
   parseFixed(is, size, values,
              [](const std::string& s) { return std::stoi(s); });
@@ -156,7 +159,8 @@ void ActsExamples::Options::detail::parseIntegersVariable(
   parseVariable(is, values, [](const std::string& s) { return std::stoi(s); });
 }
 
-void ActsExamples::Options::detail::printIntegers(std::ostream& os, size_t size,
+void ActsExamples::Options::detail::printIntegers(std::ostream& os,
+                                                  std::size_t size,
                                                   const int* values) {
   print(os, size, values);
 }

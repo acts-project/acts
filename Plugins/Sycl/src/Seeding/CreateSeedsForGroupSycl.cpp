@@ -47,7 +47,7 @@ class filter_2sp_fixed_kernel;
 void createSeedsForGroupSycl(
     QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource,
-    const detail::DeviceSeedfinderConfig& seedfinderConfig,
+    const detail::DeviceSeedFinderConfig& seedFinderConfig,
     const DeviceExperimentCuts& deviceCuts,
     vecmem::vector<detail::DeviceSpacePoint>& bottomSPs,
     vecmem::vector<detail::DeviceSpacePoint>& middleSPs,
@@ -73,7 +73,7 @@ void createSeedsForGroupSycl(
   vecmem::vector<uint32_t> sumBotTopCombPrefix(&resource);
   sumBotTopCombPrefix.push_back(0);
 
-  // After completing the duplet search, we'll have successfully contructed
+  // After completing the duplet search, we'll have successfully constructed
   // two bipartite graphs for bottom-middle and top-middle space points.
   // We store the indices of the middle space points of the corresponding
   // edges.
@@ -154,7 +154,7 @@ void createSeedsForGroupSycl(
     // Perform the middle-bottom duplet search.
     auto middleBottomEvent = q->submit([&](cl::sycl::handler& h) {
       detail::DupletSearch<detail::SpacePointType::Bottom> kernel(
-          middleSPsView, bottomSPsView, *midBotDupletBuffer, seedfinderConfig);
+          middleSPsView, bottomSPsView, *midBotDupletBuffer, seedFinderConfig);
       h.parallel_for<class DupletSearchBottomKernel>(bottomDupletNDRange,
                                                      kernel);
     });
@@ -162,7 +162,7 @@ void createSeedsForGroupSycl(
     // Perform the middle-top duplet search.
     auto middleTopEvent = q->submit([&](cl::sycl::handler& h) {
       detail::DupletSearch<detail::SpacePointType::Top> kernel(
-          middleSPsView, topSPsView, *midTopDupletBuffer, seedfinderConfig);
+          middleSPsView, topSPsView, *midTopDupletBuffer, seedFinderConfig);
       h.parallel_for<class DupletSearchTopKernel>(topDupletNDRange, kernel);
     });
     middleBottomEvent.wait_and_throw();
@@ -206,7 +206,7 @@ void createSeedsForGroupSycl(
     }
 
     if (edgesBottom > 0 && edgesTop > 0) {
-      // Calcualte global and local range of execution for edgesBottom number of
+      // Calculate global and local range of execution for edgesBottom number of
       // threads. Local range is the same as block size in CUDA.
       cl::sycl::nd_range<1> edgesBotNdRange =
           calculate1DimNDRange(edgesBottom, maxWorkGroupSize);
@@ -215,7 +215,7 @@ void createSeedsForGroupSycl(
       cl::sycl::nd_range<1> edgesTopNdRange =
           calculate1DimNDRange(edgesTop, maxWorkGroupSize);
 
-      // EXPLANATION OF INDEXING (fisrt part)
+      // EXPLANATION OF INDEXING (first part)
       /*
         (for bottom-middle duplets, but it is the same for middle-tops)
         In case we have 4 middle SP and 5 bottom SP, our temporary array of
@@ -536,7 +536,7 @@ void createSeedsForGroupSycl(
       copy.setup(*curvImpactBuffer);
       copy.setup(*seedArrayBuffer);
       // Reserve memory in advance for seed indices and weight
-      // Other way around would allocating it inside the loop
+      // Other way around would allocate it inside the loop
       // -> less memory usage, but more frequent allocation and deallocation
 
       // Counting the seeds in the second kernel allows us to copy back the
@@ -599,7 +599,7 @@ void createSeedsForGroupSycl(
               sumBotTopCombView, numTripletSearchThreads, firstMiddle,
               lastMiddle, *midTopDupletBuffer, sumBotMidView, sumTopMidView,
               *linearBotBuffer, *linearTopBuffer, middleSPsView,
-              *indTopDupletBuffer, countTripletsView, seedfinderConfig,
+              *indTopDupletBuffer, countTripletsView, seedFinderConfig,
               *curvImpactBuffer);
           h.parallel_for<class triplet_search_kernel>(tripletSearchNDRange,
                                                       kernel);
@@ -612,7 +612,7 @@ void createSeedsForGroupSycl(
                indMidBotCompView, *indBotDupletBuffer, sumBotTopCombView,
                *midTopDupletBuffer, *curvImpactBuffer, topSPsView,
                middleSPsView, bottomSPsView, countTripletsView,
-               *seedArrayBuffer, seedfinderConfig, deviceCuts);
+               *seedArrayBuffer, seedFinderConfig, deviceCuts);
            h.parallel_for<class filter_2sp_fixed_kernel>(tripletFilterNDRange,
                                                          kernel);
          }).wait_and_throw();

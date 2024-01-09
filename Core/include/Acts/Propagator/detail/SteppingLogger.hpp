@@ -10,8 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <vector>
@@ -19,18 +22,21 @@
 namespace Acts {
 
 class Surface;
-class Layer;
-class TrackingVolume;
 
 namespace detail {
 
-/// @brief the step information for
+/// @brief The step information for recording
+///
+/// The surface object could be a temporarily created object
+/// and as the Step vector is collected and written out at a
+/// later stage, the surface is referenced counted here.
 struct Step {
-  ConstrainedStep stepSize = 0.;
+  ConstrainedStep stepSize;
+  Direction navDir;
   Vector3 position = Vector3(0., 0., 0.);
   Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
-  const TrackingVolume* volume = nullptr;
+  GeometryIdentifier geoID = 0;
 };
 
 /// @brief a step length logger for debugging the stepping
@@ -49,39 +55,40 @@ struct SteppingLogger {
 
   /// SteppingLogger action for the ActionList of the Propagator
   ///
-  /// @tparam stepper_t is the type of the Stepper
   /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_t is the type of the Stepper
+  /// @tparam navigator_t is the type of the Navigator
   ///
   /// @param [in,out] state is the mutable stepper state object
+  /// @param [in] stepper the stepper in use
+  /// @param [in] navigator the navigator in use
   /// @param [in,out] result is the mutable result object
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
-    // don't log if you have reached the target
-    if (sterile or state.navigation.targetReached) {
+                  const navigator_t& navigator, result_type& result,
+                  const Logger& /*logger*/) const {
+    // Don't log if you have reached the target or are sterile
+    if (sterile || navigator.targetReached(state.navigation)) {
       return;
     }
-    // record the propagation state
+    // Record the propagation state
     Step step;
     step.stepSize = state.stepping.stepSize;
+    step.navDir = state.options.direction;
     step.position = stepper.position(state.stepping);
-    step.momentum =
-        stepper.momentum(state.stepping) * stepper.direction(state.stepping);
+    step.momentum = stepper.momentum(state.stepping);
 
-    if (state.navigation.currentSurface != nullptr) {
-      // hang on to surface
-      step.surface = state.navigation.currentSurface->getSharedPtr();
+    // Record the information about the surface
+    if (navigator.currentSurface(state.navigation) != nullptr) {
+      step.surface = navigator.currentSurface(state.navigation)->getSharedPtr();
+      step.geoID = step.surface->geometryId();
+    } else if (navigator.currentVolume(state.navigation) != nullptr) {
+      // If there's no surface but a volume, this sets the geoID
+      step.geoID = navigator.currentVolume(state.navigation)->geometryId();
     }
-
-    step.volume = state.navigation.currentVolume;
     result.steps.push_back(std::move(step));
   }
-
-  /// Pure observer interface
-  /// - this does not apply to the logger
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/,
-                  const stepper_t& /*unused*/) const {}
 };
 
 }  // namespace detail

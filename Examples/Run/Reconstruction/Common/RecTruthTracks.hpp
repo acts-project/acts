@@ -19,5 +19,6 @@ class IBaseDetector;
 /// @param argc number of command line arguments
 /// @param argv command line arguments
 /// @param detector is the detector to be used
-int runRecTruthTracks(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector);
+int runRecTruthTracks(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector);

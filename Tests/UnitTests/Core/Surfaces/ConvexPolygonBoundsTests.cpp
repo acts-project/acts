@@ -9,12 +9,20 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 
-#include <chrono>
-#include <iostream>
-#include <memory>
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class AssertionFailureException;
+}  // namespace Acts
 
 using vec2 = Acts::Vector2;
 template <int N>
@@ -90,7 +98,7 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsRecreation) {
   poly<4> original(vertices);
 
   auto valvector = original.values();
-  std::array<double, poly<4>::eSize> values;
+  std::array<double, poly<4>::eSize> values{};
   std::copy_n(valvector.begin(), poly<4>::eSize, values.begin());
   poly<4> recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

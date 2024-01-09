@@ -10,20 +10,24 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <charconv>
+#include <cstdint>
 #include <cstdio>
+#include <filesystem>
+#include <map>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
-
-#include <boost/filesystem.hpp>
+#include <type_traits>
+#include <vector>
 
 std::string ActsExamples::ensureWritableDirectory(const std::string& dir) {
-  using boost::filesystem::current_path;
-  using boost::filesystem::path;
+  using std::filesystem::current_path;
+  using std::filesystem::path;
 
   auto dir_path = dir.empty() ? current_path() : path(dir);
-  if (exists(dir_path) and not is_directory(dir_path)) {
+  if (exists(dir_path) && !is_directory(dir_path)) {
     throw std::runtime_error("'" + dir +
                              "' already exists but is not a directory");
   }
@@ -42,7 +46,7 @@ std::string ActsExamples::joinPaths(const std::string& dir,
 
 std::string ActsExamples::perEventFilepath(const std::string& dir,
                                            const std::string& name,
-                                           size_t event) {
+                                           std::size_t event) {
   char prefix[64];
 
   snprintf(prefix, sizeof(prefix), "event%09zu-", event);
@@ -54,27 +58,27 @@ std::string ActsExamples::perEventFilepath(const std::string& dir,
   }
 }
 
-std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
+std::pair<std::size_t, std::size_t> ActsExamples::determineEventFilesRange(
     const std::string& dir, const std::string& name) {
-  using boost::filesystem::current_path;
-  using boost::filesystem::directory_iterator;
-  using boost::filesystem::path;
+  using std::filesystem::current_path;
+  using std::filesystem::directory_iterator;
+  using std::filesystem::path;
 
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("EventFilesRange", Acts::Logging::INFO));
 
   // ensure directory path is valid
   auto dir_path = dir.empty() ? current_path() : path(dir);
-  if (not exists(dir_path)) {
+  if (!exists(dir_path)) {
     throw std::runtime_error("'" + dir_path.native() + "' does not exists");
   }
-  if (not is_directory(dir_path)) {
+  if (!is_directory(dir_path)) {
     throw std::runtime_error("'" + dir_path.native() + "' is not a directory");
   }
 
   // invalid default range that allows simple restriction later on
-  size_t eventMin = SIZE_MAX;
-  size_t eventMax = 0;
+  std::size_t eventMin = SIZE_MAX;
+  std::size_t eventMax = 0;
 
   // filter matching event files from the directory listing
   std::string filename;
@@ -82,7 +86,7 @@ std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
   std::cmatch match;
 
   for (const auto& f : directory_iterator(dir_path)) {
-    if ((not exists(f.status())) or (not is_regular_file(f.status()))) {
+    if ((!exists(f.status())) || (!is_regular_file(f.status()))) {
       continue;
     }
     // keep a copy so the match can refer to the underlying const char*
@@ -91,7 +95,7 @@ std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
       ACTS_VERBOSE("Matching file " << filename);
 
       // first sub_match is the whole string, second should be the event number
-      size_t event = 0;
+      std::size_t event = 0;
       auto ret = std::from_chars(match[1].first, match[1].second, event);
       if (ret.ptr == match[1].first) {
         throw std::runtime_error(

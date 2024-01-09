@@ -8,20 +8,31 @@
 
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/DigitizationSourceLink.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
+#include <cstdint>
 #include <ios>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -35,21 +46,25 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
   // Setup ROOT I/O
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath + "'");
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_nr", &m_eventNr);
@@ -78,15 +93,21 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   m_outputTree->Branch("truth_barcode", &m_t_barcode);
 }
 
-ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {}
+ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
-ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
+  m_outputFile->Close();
+
   ACTS_INFO("Wrote clusters to tree '" << m_cfg.treeName << "' in '"
                                        << m_cfg.filePath << "'");
-  m_outputFile->Close();
+
   return ProcessCode::SUCCESS;
 }
 
@@ -95,7 +116,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
     const ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>&
         clusters) {
   // retrieve simulated hits
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& simHits = m_inputSimHits(ctx);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -106,7 +127,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
   for (auto [moduleGeoId, moduleClusters] : groupByModule(clusters)) {
     const Acts::Surface* surfacePtr =
         m_cfg.trackingGeometry->findSurface(moduleGeoId);
-    if (not surfacePtr) {
+    if (surfacePtr == nullptr) {
       ACTS_ERROR("Could not find surface for " << moduleGeoId);
       return ProcessCode::ABORT;
     }
@@ -147,7 +168,8 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
         m_cell_IDy.push_back(cell.channel1);
         m_cell_data.push_back(cell.data);
         // for more we need the digitization module
-        if (detectorElement && detectorElement->digitizationModule()) {
+        if ((detectorElement != nullptr) &&
+            detectorElement->digitizationModule()) {
           auto digitationModule = detectorElement->digitizationModule();
           const Acts::Segmentation& segmentation =
               digitationModule->segmentation();
@@ -159,8 +181,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       }
       // write hit-particle truth association
       // each hit can have multiple particles, e.g. in a dense environment
-      const auto& sl = static_cast<const Acts::DigitizationSourceLink&>(
-          cluster.sourceLink());
+      const auto& sl = cluster.sourceLink().get<Acts::DigitizationSourceLink>();
       for (auto idx : sl.indices()) {
         auto it = simHits.nth(idx);
         if (it == simHits.end()) {
@@ -172,8 +193,8 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
         // local position to be calculated
         Acts::Vector2 lPosition{0., 0.};
         auto lpResult = surface.globalToLocal(ctx.geoContext, simHit.position(),
-                                              simHit.unitDirection());
-        if (not lpResult.ok()) {
+                                              simHit.direction());
+        if (!lpResult.ok()) {
           ACTS_FATAL("Global to local transformation did not succeed.");
           return ProcessCode::ABORT;
         }

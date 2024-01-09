@@ -8,97 +8,133 @@
 
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
+#include <cstddef>
 #include <fstream>
-#include <functional>
+#include <initializer_list>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
-void ActsExamples::to_json(nlohmann::json& j,
-                           const ActsExamples::ParameterSmearingConfig& psc) {
-  j["index"] = psc.index;
+namespace ActsExamples {
+namespace {
+void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
+                                    ActsExamples::RandomEngine>& f) {
   // Gauss:
-  const Digitization::Gauss* gauss =
-      psc.smearFunction.target<const Digitization::Gauss>();
+  auto gauss = f.target<const Digitization::Gauss>();
   if (gauss != nullptr) {
     j["type"] = "Gauss";
     j["mean"] = 0;
     j["stddev"] = gauss->sigma;
+    return;
   }
   // Truncated gauss:
-  const Digitization::GaussTrunc* gaussT =
-      psc.smearFunction.target<const Digitization::GaussTrunc>();
+  auto gaussT = f.target<const Digitization::GaussTrunc>();
   if (gaussT != nullptr) {
     j["type"] = "GaussTrunc";
     j["mean"] = 0;
     j["stddev"] = gaussT->sigma;
     j["range"] = gaussT->range;
+    return;
   }
   // Clipped gauss:
-  const Digitization::GaussClipped* gaussC =
-      psc.smearFunction.target<const Digitization::GaussClipped>();
+  auto gaussC = f.target<const Digitization::GaussClipped>();
   if (gaussC != nullptr) {
     j["type"] = "GaussClipped";
     j["mean"] = 0;
     j["stddev"] = gaussC->sigma;
     j["range"] = gaussC->range;
     j["max_attempts"] = gaussC->maxAttemps;
+    return;
   }
   // Uniform
-  const Digitization::Uniform* uniform =
-      psc.smearFunction.target<const Digitization::Uniform>();
+  auto uniform = f.target<const Digitization::Uniform>();
   if (uniform != nullptr) {
     j["type"] = "Uniform";
     j["bindata"] = nlohmann::json(uniform->binningData);
+    return;
   }
   // Digital
-  const Digitization::Digital* digital =
-      psc.smearFunction.target<const Digitization::Digital>();
-  if (uniform != nullptr) {
+  auto digital = f.target<const Digitization::Digital>();
+  if (digital != nullptr) {
     j["type"] = "Digitial";
     j["bindata"] = nlohmann::json(digital->binningData);
+    return;
   }
+  // Exact
+  auto exact = f.target<const Digitization::Digital>();
+  if (exact != nullptr) {
+    j["type"] = "Exact";
+    return;
+  }
+
+  throw std::runtime_error("Unable to serialize smearer");
+}
+
+void from_json(
+    const nlohmann::json& j,
+    ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>& f) {
+  std::string sType = j["type"];
+
+  if (sType == "Gauss") {
+    f = Digitization::Gauss(j["stddev"]);
+  } else if (sType == "GaussTrunc") {
+    Acts::ActsScalar sigma = j["stddev"];
+    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    f = Digitization::GaussTrunc(sigma, range);
+  } else if (sType == "GaussClipped") {
+    Acts::ActsScalar sigma = j["stddev"];
+    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    f = Digitization::GaussClipped(sigma, range);
+  } else if (sType == "Uniform") {
+    Acts::BinningData bd;
+    from_json(j["bindata"], bd);
+    f = Digitization::Uniform(std::move(bd));
+  } else if (sType == "Digitial") {
+    Acts::BinningData bd;
+    from_json(j["bindata"], bd);
+    f = Digitization::Uniform(std::move(bd));
+  } else if (sType == "Exact") {
+    f = Digitization::Exact{};
+  } else {
+    throw std::invalid_argument("Unknown smearer type '" + sType + "'");
+  }
+}
+
+}  // namespace
+}  // namespace ActsExamples
+
+void ActsExamples::to_json(nlohmann::json& j,
+                           const ActsExamples::ParameterSmearingConfig& psc) {
+  j["index"] = psc.index;
+  to_json(j, psc.smearFunction);
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
                              ActsExamples::ParameterSmearingConfig& psc) {
-  std::string sType = j["type"];
-
   psc.index = static_cast<Acts::BoundIndices>(j["index"]);
-
-  if (sType == "Gauss") {
-    psc.smearFunction = Digitization::Gauss(j["stddev"]);
-  } else if (sType == "GaussTrunc") {
-    Acts::ActsScalar sigma = j["stddev"];
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
-    psc.smearFunction = Digitization::GaussTrunc(sigma, range);
-  } else if (sType == "GaussClipped") {
-    Acts::ActsScalar sigma = j["stddev"];
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
-    psc.smearFunction = Digitization::GaussClipped(sigma, range);
-  } else if (sType == "Uniform") {
-    Acts::BinningData bd;
-    from_json(j["bindata"], bd);
-    psc.smearFunction = Digitization::Uniform(std::move(bd));
-  } else if (sType == "Digitial") {
-    Acts::BinningData bd;
-    from_json(j["bindata"], bd);
-    psc.smearFunction = Digitization::Uniform(std::move(bd));
-  }
+  from_json(j, psc.smearFunction);
 }
 
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::GeometricConfig& gdc) {
-  std::vector<size_t> indices;
+  std::vector<std::size_t> indices;
   for (const auto& idx : gdc.indices) {
-    indices.push_back(static_cast<size_t>(idx));
+    indices.push_back(static_cast<std::size_t>(idx));
   }
   j["indices"] = indices;
   j["segmentation"] = nlohmann::json(gdc.segmentation);
   j["thickness"] = gdc.thickness;
   j["threshold"] = gdc.threshold;
   j["digital"] = gdc.digital;
+  to_json(j["charge-smearing"], gdc.chargeSmearer);
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
@@ -110,6 +146,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];
   gdc.digital = j["digital"];
+  from_json(j["charge-smearing"], gdc.chargeSmearer);
 }
 
 void ActsExamples::to_json(nlohmann::json& j,
@@ -130,10 +167,10 @@ void ActsExamples::from_json(const nlohmann::json& j,
 
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::DigiComponentsConfig& dc) {
-  if (not dc.geometricDigiConfig.indices.empty()) {
+  if (!dc.geometricDigiConfig.indices.empty()) {
     j["geometric"] = nlohmann::json(dc.geometricDigiConfig);
   }
-  if (not dc.smearingDigiConfig.empty()) {
+  if (!dc.smearingDigiConfig.empty()) {
     j["smearing"] = nlohmann::json(dc.smearingDigiConfig);
   }
 }
@@ -169,6 +206,7 @@ void ActsExamples::writeDigiConfigToJson(
   std::ofstream outfile(path, std::ofstream::out | std::ofstream::binary);
   // rely on exception for error handling
   outfile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
-  outfile
-      << DigiConfigConverter("digitization-configuration").toJson(cfg).dump(2);
+  outfile << DigiConfigConverter("digitization-configuration")
+                 .toJson(cfg, nullptr)
+                 .dump(2);
 }

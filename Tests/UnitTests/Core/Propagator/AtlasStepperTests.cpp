@@ -9,24 +9,51 @@
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/Assertions.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <array>
+#include <functional>
+#include <iterator>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 
 namespace Acts {
 namespace Test {
 
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Jacobian = BoundMatrix;
 using Stepper = Acts::AtlasStepper;
 
@@ -39,10 +66,14 @@ struct MockPropagatorState {
   Stepper::State stepping;
   /// Propagator options with only the relevant components.
   struct {
-    double mass = 1_GeV;
-    double tolerance = 10_um;
+    double stepTolerance = 10_um;
+    Direction direction = Direction::Backward;
   } options;
 };
+
+struct MockNavigator {};
+
+static constexpr MockNavigator navigator;
 
 // epsilon for floating point comparisons
 static constexpr auto eps = 1024 * std::numeric_limits<double>::epsilon();
@@ -50,7 +81,7 @@ static constexpr auto eps = 1024 * std::numeric_limits<double>::epsilon();
 // propagation settings
 static constexpr auto stepSize = 10_mm;
 static constexpr auto tolerance = 10_um;
-static constexpr NavigationDirection navDir = NavigationDirection::Backward;
+static constexpr Direction navDir = Direction::Backward;
 static auto magneticField =
     std::make_shared<ConstantBField>(Vector3(0.1_T, -0.2_T, 2_T));
 
@@ -61,6 +92,7 @@ static const auto time = pos4[eTime];
 static const Vector3 unitDir = Vector3(-2, 2, 1).normalized();
 static constexpr auto absMom = 1_GeV;
 static constexpr auto charge = -1_e;
+static const auto particleHypothesis = ParticleHypothesis::pion();
 static const Covariance cov = Covariance::Identity();
 
 // context objects
@@ -73,7 +105,8 @@ BOOST_AUTO_TEST_SUITE(AtlasStepper)
 BOOST_AUTO_TEST_CASE(ConstructState) {
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge), navDir,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, std::nullopt,
+                                 particleHypothesis),
       stepSize, tolerance);
 
   BOOST_CHECK(!state.covTransport);
@@ -86,9 +119,8 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
   CHECK_CLOSE_ABS(state.pVector[5], unitDir.y(), eps);
   CHECK_CLOSE_ABS(state.pVector[6], unitDir.z(), eps);
   BOOST_CHECK_EQUAL(state.pVector[7], charge / absMom);
-  BOOST_CHECK_EQUAL(state.navDir, navDir);
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(state.stepSize, navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(state.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(state.tolerance, tolerance);
 }
@@ -97,7 +129,8 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
 BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
+                                 particleHypothesis),
       stepSize, tolerance);
 
   BOOST_CHECK(state.covTransport);
@@ -110,9 +143,8 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   CHECK_CLOSE_ABS(state.pVector[5], unitDir.y(), eps);
   CHECK_CLOSE_ABS(state.pVector[6], unitDir.z(), eps);
   BOOST_CHECK_EQUAL(state.pVector[7], charge / absMom);
-  BOOST_CHECK_EQUAL(state.navDir, navDir);
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(state.stepSize, navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(state.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(state.tolerance, tolerance);
 }
@@ -122,13 +154,14 @@ BOOST_AUTO_TEST_CASE(Getters) {
   Stepper stepper(magneticField);
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
+                                 particleHypothesis),
       stepSize, tolerance);
 
   CHECK_CLOSE_ABS(stepper.position(state), pos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), time, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), unitDir, eps);
-  CHECK_CLOSE_ABS(stepper.momentum(state), absMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 }
 
@@ -137,7 +170,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   Stepper stepper(magneticField);
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
+                                 particleHypothesis),
       stepSize, tolerance);
 
   auto newPos4 = (pos4 + Vector4(1_mm, 2_mm, 3_mm, 20_ns)).eval();
@@ -148,9 +182,10 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
 
   // example surface and bound parameters at the updated position
   auto plane = Surface::makeShared<PlaneSurface>(newPos, newUnitDir);
-  auto params = BoundTrackParameters::create(plane, geoCtx, newPos4, newUnitDir,
-                                             charge, cov)
-                    .value();
+  auto params =
+      BoundTrackParameters::create(plane, geoCtx, newPos4, newUnitDir,
+                                   charge / absMom, cov, particleHypothesis)
+          .value();
   FreeVector freeParams;
   freeParams[eFreePos0] = newPos4[ePos0];
   freeParams[eFreePos1] = newPos4[ePos1];
@@ -170,7 +205,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);
-  CHECK_CLOSE_ABS(stepper.momentum(state), newAbsMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), newAbsMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 }
 
@@ -179,7 +214,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   Stepper stepper(magneticField);
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
+                                 particleHypothesis),
       stepSize, tolerance);
 
   auto newPos = (pos + Vector3(1_mm, 2_mm, 3_mm)).eval();
@@ -187,11 +223,11 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   auto newUnitDir = (unitDir + Vector3(1, -1, -1)).normalized();
   auto newAbsMom = 0.9 * absMom;
 
-  stepper.update(state, newPos, newUnitDir, newAbsMom, newTime);
+  stepper.update(state, newPos, newUnitDir, charge / newAbsMom, newTime);
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);
-  CHECK_CLOSE_ABS(stepper.momentum(state), newAbsMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), newAbsMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 }
 
@@ -200,7 +236,8 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   Stepper stepper(magneticField);
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
+                                 particleHypothesis),
       stepSize, tolerance);
   // example surface at the current state position
   auto plane = Surface::makeShared<PlaneSurface>(pos, unitDir);
@@ -224,7 +261,8 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   Stepper stepper(magneticField);
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
+                                 particleHypothesis),
       stepSize, tolerance);
 
   auto&& [pars, jac, pathLength] = stepper.curvilinearState(state);
@@ -244,20 +282,21 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
 // test step method without covariance transport
 BOOST_AUTO_TEST_CASE(Step) {
   Stepper stepper(magneticField);
-  MockPropagatorState state(Stepper::State(
-      geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
-      stepSize, tolerance));
+  MockPropagatorState state(
+      Stepper::State(geoCtx, magneticField->makeCache(magCtx),
+                     CurvilinearTrackParameters(pos4, unitDir, charge / absMom,
+                                                cov, particleHypothesis),
+                     stepSize, tolerance));
   state.stepping.covTransport = false;
 
   // ensure step does not result in an error
-  auto res = stepper.step(state);
+  auto res = stepper.step(state, navigator);
   BOOST_CHECK(res.ok());
 
   // extract the actual step size
   auto h = res.value();
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, h);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), stepSize);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h * navDir);
 
   // check that the position has moved
   auto deltaPos = (stepper.position(state.stepping) - pos).eval();
@@ -270,27 +309,28 @@ BOOST_AUTO_TEST_CASE(Step) {
   BOOST_CHECK_LT(projDir, 1);
 
   // momentum and charge should not change
-  CHECK_CLOSE_ABS(stepper.momentum(state.stepping), absMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state.stepping), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state.stepping), charge);
 }
 
 // test step method with covariance transport
 BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   Stepper stepper(magneticField);
-  MockPropagatorState state(Stepper::State(
-      geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
-      stepSize, tolerance));
+  MockPropagatorState state(
+      Stepper::State(geoCtx, magneticField->makeCache(magCtx),
+                     CurvilinearTrackParameters(pos4, unitDir, charge / absMom,
+                                                cov, particleHypothesis),
+                     stepSize, tolerance));
   state.stepping.covTransport = true;
 
   // ensure step does not result in an error
-  auto res = stepper.step(state);
+  auto res = stepper.step(state, navigator);
   BOOST_CHECK(res.ok());
 
   // extract the actual step size
   auto h = res.value();
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, h);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), stepSize);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h * navDir);
 
   // check that the position has moved
   auto deltaPos = (stepper.position(state.stepping) - pos).eval();
@@ -303,7 +343,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   BOOST_CHECK_LT(projDir, 1);
 
   // momentum and charge should not change
-  CHECK_CLOSE_ABS(stepper.momentum(state.stepping), absMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state.stepping), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state.stepping), charge);
 
   stepper.transportCovarianceToCurvilinear(state.stepping);
@@ -313,35 +353,36 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 // test state reset method
 BOOST_AUTO_TEST_CASE(Reset) {
   Stepper stepper(magneticField);
-  MockPropagatorState state(Stepper::State(
-      geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
-      stepSize, tolerance));
+  MockPropagatorState state(
+      Stepper::State(geoCtx, magneticField->makeCache(magCtx),
+                     CurvilinearTrackParameters(pos4, unitDir, charge / absMom,
+                                                cov, particleHypothesis),
+                     stepSize, tolerance));
   state.stepping.covTransport = true;
 
   // ensure step does not result in an error
-  stepper.step(state);
+  stepper.step(state, navigator);
 
   // Construct the parameters
   Vector3 newPos(1.5, -2.5, 3.5);
   auto newAbsMom = 4.2 * absMom;
   double newTime = 7.5;
   double newCharge = 1.;
-  BoundSymMatrix newCov = 8.5 * Covariance::Identity();
+  BoundSquareMatrix newCov = 8.5 * Covariance::Identity();
   CurvilinearTrackParameters cp(makeVector4(newPos, newTime), unitDir,
-                                newAbsMom, newCharge, newCov);
+                                newCharge / newAbsMom, newCov,
+                                particleHypothesis);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
-  NavigationDirection ndir = NavigationDirection::Forward;
+  Direction navDir = Direction::Forward;
   double stepSize = -256.;
 
   auto copyState = [&](auto& field, const auto& other) {
     using field_t = std::decay_t<decltype(field)>;
     std::decay_t<decltype(other)> copy(geoCtx, field.makeCache(magCtx), cp,
-                                       ndir, stepSize, tolerance);
+                                       stepSize, tolerance);
 
     copy.state_ready = other.state_ready;
-    copy.navDir = other.navDir;
     copy.useJacobian = other.useJacobian;
     copy.step = other.step;
     copy.maxPathLength = other.maxPathLength;
@@ -378,7 +419,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   Stepper::State stateCopy(copyState(*magneticField, state.stepping));
   BOOST_CHECK(cp.covariance().has_value());
   stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
-                     cp.referenceSurface(), ndir, stepSize);
+                     cp.referenceSurface(), stepSize);
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
   BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
@@ -386,13 +427,12 @@ BOOST_AUTO_TEST_CASE(Reset) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.momentum(stateCopy),
+  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(stateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize, ndir * stepSize);
+  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(), navDir * stepSize);
   BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
                     state.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(stateCopy.tolerance, state.stepping.tolerance);
@@ -400,7 +440,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Reset all possible parameters except the step size
   stateCopy = copyState(*magneticField, state.stepping);
   stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
-                     cp.referenceSurface(), ndir);
+                     cp.referenceSurface());
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
   BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
@@ -408,14 +448,13 @@ BOOST_AUTO_TEST_CASE(Reset) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.momentum(stateCopy),
+  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(stateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize,
-                    ndir * std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
                     state.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(stateCopy.tolerance, state.stepping.tolerance);
@@ -431,13 +470,13 @@ BOOST_AUTO_TEST_CASE(Reset) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.momentum(stateCopy),
+  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(stateCopy.navDir, NavigationDirection::Forward);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize, std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
                     state.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(stateCopy.tolerance, state.stepping.tolerance);
@@ -452,10 +491,10 @@ BOOST_AUTO_TEST_CASE(Reset) {
   newCov = 10.9 * Covariance::Identity();
   Transform3 trafo = Transform3::Identity();
   auto disc = Surface::makeShared<DiscSurface>(trafo);
-  auto boundDisc =
-      BoundTrackParameters::create(disc, geoCtx, makeVector4(newPos, newTime),
-                                   unitDir, newAbsMom, newCharge, newCov)
-          .value();
+  auto boundDisc = BoundTrackParameters::create(
+                       disc, geoCtx, makeVector4(newPos, newTime), unitDir,
+                       newCharge / newAbsMom, newCov, particleHypothesis)
+                       .value();
 
   // Reset the state and test
   Stepper::State stateDisc = copyState(*magneticField, state.stepping);
@@ -468,16 +507,17 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // 2) Perigee surface
   // Setting some parameters
-  newPos << 1.5, -2.5, 3.5;
+  newPos << -2.06155, -2.06155, 3.5;
   newAbsMom *= 0.45;
   newTime = 2.3;
   newCharge = 1.;
   newCov = 8.7 * Covariance::Identity();
   auto perigee = Surface::makeShared<PerigeeSurface>(trafo);
-  auto boundPerigee = BoundTrackParameters::create(
-                          perigee, geoCtx, makeVector4(newPos, newTime),
-                          unitDir, newAbsMom, newCharge, newCov)
-                          .value();
+  auto boundPerigee =
+      BoundTrackParameters::create(
+          perigee, geoCtx, makeVector4(newPos, newTime), unitDir,
+          newCharge / newAbsMom, newCov, particleHypothesis)
+          .value();
 
   // Reset the state and test
   Stepper::State statePerigee = copyState(*magneticField, state.stepping);
@@ -492,10 +532,10 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // 3) Straw surface
   // Use the same parameters as for previous Perigee surface
   auto straw = Surface::makeShared<StrawSurface>(trafo);
-  auto boundStraw =
-      BoundTrackParameters::create(straw, geoCtx, makeVector4(newPos, newTime),
-                                   unitDir, newAbsMom, newCharge, newCov)
-          .value();
+  auto boundStraw = BoundTrackParameters::create(
+                        straw, geoCtx, makeVector4(newPos, newTime), unitDir,
+                        newCharge / newAbsMom, newCov, particleHypothesis)
+                        .value();
 
   // Reset the state and test
   Stepper::State stateStraw = copyState(*magneticField, state.stepping);
@@ -514,18 +554,19 @@ BOOST_AUTO_TEST_CASE(StepSize) {
   Stepper stepper(magneticField);
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
+                                 particleHypothesis),
       stepSize, tolerance);
 
   // TODO figure out why this fails and what it should be
   // BOOST_CHECK_EQUAL(stepper.overstepLimit(state), tolerance);
 
-  stepper.setStepSize(state, 5_cm);
-  BOOST_CHECK_EQUAL(state.previousStepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepSize, 5_cm);
+  stepper.updateStepSize(state, -5_cm, ConstrainedStep::actor);
+  BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), -5_cm);
 
-  stepper.releaseStepSize(state);
-  BOOST_CHECK_EQUAL(state.stepSize, navDir * stepSize);
+  stepper.releaseStepSize(state, ConstrainedStep::actor);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 
 // test step size modification with target surfaces
@@ -533,33 +574,37 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   Stepper stepper(magneticField);
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, absMom, charge, cov), navDir,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
+                                 particleHypothesis),
       stepSize, tolerance);
 
   auto distance = 10_mm;
   auto target = Surface::makeShared<PlaneSurface>(
       pos + navDir * distance * unitDir, unitDir);
 
-  stepper.updateSurfaceStatus(state, *target, BoundaryCheck(false));
-  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor),
-                    navDir * distance);
+  stepper.updateSurfaceStatus(state, *target, 0, navDir, BoundaryCheck(false));
+  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
 
   // test the step size modification in the context of a surface
   stepper.updateStepSize(
       state,
-      target->intersect(state.geoContext, stepper.position(state),
-                        state.navDir * stepper.direction(state), false),
-      false);
-  BOOST_CHECK_EQUAL(state.stepSize, distance);
+      target
+          ->intersect(state.geoContext, stepper.position(state),
+                      navDir * stepper.direction(state), BoundaryCheck(false))
+          .closest(),
+      navDir, false);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
-  state.stepSize = navDir * stepSize;
+  state.stepSize.setUser(navDir * stepSize);
   stepper.updateStepSize(
       state,
-      target->intersect(state.geoContext, stepper.position(state),
-                        state.navDir * stepper.direction(state), false),
-      true);
-  BOOST_CHECK_EQUAL(state.stepSize, distance);
+      target
+          ->intersect(state.geoContext, stepper.position(state),
+                      navDir * stepper.direction(state), BoundaryCheck(false))
+          .closest(),
+      navDir, true);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

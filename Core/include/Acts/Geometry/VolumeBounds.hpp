@@ -9,7 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/Volume.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
@@ -21,12 +23,12 @@
 namespace Acts {
 
 class Surface;
-
 class VolumeBounds;
+class Direction;
+
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
-using SurfacePtr = std::shared_ptr<const Surface>;
-using OrientedSurface = std::pair<SurfacePtr, NavigationDirection>;
+using OrientedSurface = std::pair<std::shared_ptr<RegularSurface>, Direction>;
 using OrientedSurfaces = std::vector<OrientedSurface>;
 
 // Planar definitions to help construct the boundary surfaces
@@ -64,6 +66,9 @@ class VolumeBounds {
     eTrapezoid = 5,
     eOther = 6
   };
+
+  /// Static member to get the name of the BoundsType
+  static const std::vector<std::string> s_boundsTypeNames;
 
   VolumeBounds() = default;
 

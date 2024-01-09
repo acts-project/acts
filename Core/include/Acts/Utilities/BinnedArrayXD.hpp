@@ -50,7 +50,7 @@ class BinnedArrayXD : public BinnedArray<T> {
   }
 
   /// Constructor with std::vector and a BinUtility
-  /// - fills the internal data structur
+  /// - fills the internal data structure
   ///
   /// @param tapvector is a vector of object and binning position
   /// @param bu is the unique bin utility for this binned array
@@ -93,7 +93,7 @@ class BinnedArrayXD : public BinnedArray<T> {
         m_arrayObjects(),
         m_binUtility(std::move(bu)) {
     // get the total dimension
-    size_t objects =
+    std::size_t objects =
         m_binUtility->bins(0) * m_binUtility->bins(1) * m_binUtility->bins(2);
     /// reserve the right amount of data
     m_arrayObjects.reserve(objects);
@@ -131,9 +131,10 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// @param bins is the bin triple filled during this access
   ///
   /// @return is the object in that bin
-  T object(const Vector2& lposition, std::array<size_t, 3>& bins) const final {
+  T object(const Vector2& lposition,
+           std::array<std::size_t, 3>& bins) const final {
     if (m_binUtility) {
-      size_t bdim = m_binUtility->dimensions();
+      std::size_t bdim = m_binUtility->dimensions();
       bins[2] = bdim > 2 ? m_binUtility->bin(lposition, 2) : 0;
       bins[1] = bdim > 1 ? m_binUtility->bin(lposition, 1) : 0;
       bins[0] = m_binUtility->bin(lposition, 0);
@@ -144,7 +145,7 @@ class BinnedArrayXD : public BinnedArray<T> {
 
   // satisfy overload / override
   T object(const Vector2& lposition) const override {
-    std::array<size_t, 3> bins;
+    std::array<std::size_t, 3> bins{};
     return object(lposition, bins);
   }
 
@@ -154,9 +155,10 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// @param bins is the bins triple filled during access
   ///
   /// @return is the object in that bin
-  T object(const Vector3& position, std::array<size_t, 3>& bins) const final {
+  T object(const Vector3& position,
+           std::array<std::size_t, 3>& bins) const final {
     if (m_binUtility) {
-      size_t bdim = m_binUtility->dimensions();
+      std::size_t bdim = m_binUtility->dimensions();
       bins[2] = bdim > 2 ? m_binUtility->bin(position, 2) : 0;
       bins[1] = bdim > 1 ? m_binUtility->bin(position, 1) : 0;
       bins[0] = m_binUtility->bin(position, 0);
@@ -167,11 +169,11 @@ class BinnedArrayXD : public BinnedArray<T> {
 
   // satisfy overload / override
   T object(const Vector3& position) const override {
-    std::array<size_t, 3> bins;
+    std::array<std::size_t, 3> bins{};
     return object(position, bins);
   }
 
-  /// Return all unqiue object
+  /// Return all unique object
   /// @return vector of unique array objects
   const std::vector<T>& arrayObjects() const final { return m_arrayObjects; }
 

@@ -8,28 +8,34 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
-#include <limits>
-#include <random>
+#include <cmath>
+#include <functional>
+#include <memory>
+#include <utility>
 #include <vector>
 
 namespace Acts {
-
 namespace Test {
 
-using RecordedMaterial = std::vector<std::pair<Acts::Material, Acts::Vector3>>;
 using EAxis = Acts::detail::EquidistantAxis;
-using Grid2D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
-using Grid3D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
+using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
+using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =
-    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
+    Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
 using MaterialGrid3D =
-    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
+    Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
 /// @brief Various test for the Material in the case of a Cuboid volume and 2D
 /// Grid
@@ -104,7 +110,7 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -196,7 +202,7 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -290,7 +296,7 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -388,7 +394,7 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   matRecord.push_back(std::make_pair(matprop1, vectPos1));
   matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {

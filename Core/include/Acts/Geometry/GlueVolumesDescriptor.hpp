@@ -14,11 +14,13 @@
 #include <iosfwd>
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace Acts {
 
 class TrackingVolume;
+
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
 
@@ -40,7 +42,7 @@ class GlueVolumesDescriptor {
       const std::map<BoundarySurfaceFace,
                      std::shared_ptr<const TrackingVolumeArray>>& gvs);
 
-  /// Desctructor
+  /// Destructor
   ~GlueVolumesDescriptor() = default;
   /// Register the volumes
   ///

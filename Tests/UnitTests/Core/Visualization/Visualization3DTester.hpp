@@ -6,9 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <boost/algorithm/string.hpp>
 
@@ -31,7 +34,7 @@ namespace Test {
 /// * l is checked for integer > 0 entries only
 ///
 /// @param tString is the test string
-/// @param triMesh ist he test if only triangular surfaces exist
+/// @param triMesh is the test if only triangular surfaces exist
 ///
 /// @return a vector of failure messages
 inline static std::vector<std::string> testObjString(const std::string& tString,
@@ -64,11 +67,11 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
       std::string body = line.substr(tnbc, line.size() - tnbc);
 
       // Check if we have triplets
-      if (stag.find("v") != std::string::npos or
-          (stag == std::string("f") and triMesh)) {
+      if (stag.find("v") != std::string::npos ||
+          (stag == std::string("f") && triMesh)) {
         std::vector<std::string> bodySplit;
         boost::split(bodySplit, body, boost::is_any_of(" "));
-        if (bodySplit.size() != 3 and stag != std::string("f")) {
+        if (bodySplit.size() != 3 && stag != std::string("f")) {
           errorStrings.push_back(w + line + " ] " + stag +
                                  " must only have three attributes!");
         } else if (bodySplit.size() != 3) {
@@ -78,7 +81,7 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
       }
       // Check if face and line only have positive integer numbers > 1
       // or deliminator " ", " /"
-      if (stag == std::string("f") or stag == std::string("l")) {
+      if (stag == std::string("f") || stag == std::string("l")) {
         bool onlyDigits =
             (body.find_first_not_of("0123456789/ ") == std::string::npos);
         if (!onlyDigits) {
@@ -104,7 +107,7 @@ inline static std::vector<std::string> testObjString(const std::string& tString,
 /// Ply element struct
 struct PlyElement {
   std::string name = "none";
-  size_t copies = 0;
+  std::size_t copies = 0;
   int properties = 0;  // -1 for list
 };
 
@@ -115,7 +118,7 @@ struct PlyElement {
 ///
 ///
 /// @param tString is the test string
-/// @param triMesh ist he test if only triangular surfaces exist
+/// @param triMesh is the test if only triangular surfaces exist
 ///
 /// @return a vector of failure messages
 inline static std::vector<std::string> testPlyString(const std::string& tString,
@@ -128,14 +131,14 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
   auto ss = std::stringstream{tString};
   bool inHeader = false;
 
-  size_t lNumber = 0;
-  size_t cElement = 0;
+  std::size_t lNumber = 0;
+  std::size_t cElement = 0;
   std::vector<PlyElement> elements;
   PlyElement currentElement;
 
   for (std::string line; std::getline(ss, line, '\n'); ++lNumber) {
     // Check the "ply" statement at the beginning of the file
-    if (lNumber == 0 and line != "ply") {
+    if (lNumber == 0 && line != "ply") {
       errorStrings.push_back(w + line + " ] first line has to be 'ply");
     } else if (line == "ply") {
       inHeader = true;
@@ -149,7 +152,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
       if (fnbc != std::string::npos) {
         auto snbc = line.find_first_of(" ", fnbc);
         std::string stag = line.substr(fnbc, snbc - fnbc);
-        if (stag == "comment" or stag == "format") {
+        if (stag == "comment" || stag == "format") {
           continue;
         }
         if (stag == "end_header") {
@@ -168,7 +171,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
 
         if (stag == "element") {
           // new element write the old one
-          if (currentElement.name != "none" and currentElement.copies > 0) {
+          if (currentElement.name != "none" && currentElement.copies > 0) {
             elements.push_back(currentElement);
             currentElement = PlyElement();
           }
@@ -186,7 +189,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
             ++currentElement.properties;
           }
         } else {
-          errorStrings.push_back(w + line + " ] Unkown command.");
+          errorStrings.push_back(w + line + " ] Unknown command.");
         }
       }
     } else {
@@ -206,11 +209,12 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
                                    std::to_string(lineSplit.size() - 1) +
                                    std::string("."));
           }
-        } else if (lineSplit.size() != size_t(elements[cElement].properties)) {
+        } else if (lineSplit.size() !=
+                   std::size_t(elements[cElement].properties)) {
           errorStrings.push_back(
               w + line + std::string(" ] Element expected ") +
               std::to_string(elements[cElement].properties) +
-              std::string(" propertes, while found ") +
+              std::string(" properties, while found ") +
               std::to_string(lineSplit.size()) + std::string("."));
         }
       }

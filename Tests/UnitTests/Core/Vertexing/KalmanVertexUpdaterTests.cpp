@@ -11,15 +11,37 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
+#include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <random>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -27,7 +49,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
@@ -36,27 +58,27 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
 // Track theta distribution
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
-std::uniform_real_distribution<> qDist(-1, 1);
+std::uniform_real_distribution<double> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100_um);
+std::uniform_real_distribution<double> resIPDist(0., 100_um);
 // Track angular distribution
-std::uniform_real_distribution<> resAngDist(0., 0.1);
+std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(-0.01, 0.01);
+std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
 // Number of vertices per test event distribution
 
 ///
@@ -124,13 +146,17 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat));
+    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat),
+                                ParticleHypothesis::pion());
+
+    std::shared_ptr<PerigeeSurface> perigee =
+        Surface::makeShared<PerigeeSurface>(Vector3::Zero());
 
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, Vector4::Zero(), geoContext,
-                            magFieldContext, state)
+            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
+                            state)
             .value();
 
     // Create TrackAtVertex
@@ -138,15 +164,16 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
+    trkAtVtx.isLinearized = true;
 
     // Create a vertex
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundTrackParameters> vtx(vtxPos);
-    vtx.setFullCovariance(SymMatrix4::Identity() * 0.01);
+    vtx.setFullCovariance(SquareMatrix4::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters>(vtx,
-                                                                     trkAtVtx);
+    KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters, 3>(
+        vtx, trkAtVtx);
 
     if (debug) {
       std::cout << "Old vertex position: " << vtxPos << std::endl;
@@ -162,13 +189,13 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     }
 
     // After update, vertex should be closer to the track
-    BOOST_CHECK(newDistance < oldDistance);
+    BOOST_CHECK_LT(newDistance, oldDistance);
 
     // Note: KalmanVertexUpdater updates the vertex w.r.t. the
     // newly given track, but does NOT add the track to the
     // TrackAtVertex list. Has to be done manually after calling
     // the update method.
-    BOOST_CHECK(vtx.tracks().size() == 0);
+    BOOST_CHECK(vtx.tracks().empty());
 
   }  // end for loop
 

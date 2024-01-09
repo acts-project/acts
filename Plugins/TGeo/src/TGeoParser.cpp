@@ -8,14 +8,17 @@
 
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <iostream>
-
+#include "RtypesCore.h"
+#include "TCollection.h"
 #include "TGeoBBox.h"
 #include "TGeoNode.h"
 #include "TGeoVolume.h"
+#include "TObjArray.h"
+#include "TObject.h"
 
 void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
                               const Acts::TGeoParser::Options& options,
@@ -25,12 +28,12 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
     std::string volumeName = state.volume->GetName();
     // If you are on branch, you stay on branch
     state.onBranch =
-        state.onBranch or
+        state.onBranch ||
         TGeoPrimitivesHelper::match(options.volumeNames, volumeName.c_str());
     // Loop over the daughters and collect them
-    auto daugthers = state.volume->GetNodes();
+    auto daughters = state.volume->GetNodes();
     // Daughter node iteration
-    TIter iObj(daugthers);
+    TIter iObj(daughters);
     while (TObject* obj = iObj()) {
       TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
       if (node != nullptr) {
@@ -49,7 +52,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
     std::string suffix = "_transform";
     transform.SetName((nodeName + suffix).c_str());
     // Check if you had found the target node
-    if (state.onBranch and
+    if (state.onBranch &&
         TGeoPrimitivesHelper::match(options.targetNames, nodeVolName.c_str())) {
       // Get the placement and orientation in respect to its mother
       const Double_t* rotation = transform.GetRotationMatrix();
@@ -64,7 +67,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
       auto etrf = TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t);
 
       bool accept = true;
-      if (not options.parseRanges.empty()) {
+      if (!options.parseRanges.empty()) {
         auto shape =
             dynamic_cast<TGeoBBox*>(state.node->GetVolume()->GetShape());
         // It uses the bounding box of TGeoBBox
@@ -79,7 +82,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
               Vector3 edge = etrf * Vector3(x, y, z);
               for (auto& check : options.parseRanges) {
                 double val = VectorHelpers::cast(edge, check.first);
-                if (val < check.second.first or val > check.second.second) {
+                if (val < check.second.first || val > check.second.second) {
                   accept = false;
                   break;
                 }

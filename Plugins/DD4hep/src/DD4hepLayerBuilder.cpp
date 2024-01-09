@@ -8,28 +8,44 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
-#include "Acts/Geometry/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Plugins/DD4hep/ActsExtension.hpp"
-#include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArrayXD.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Range1D.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <iterator>
+#include <map>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 
 #include <boost/algorithm/string.hpp>
 
-#include "DD4hep/Detector.h"
+#include "DD4hep/Alignments.h"
+#include "DD4hep/DetElement.h"
+#include "DD4hep/Volumes.h"
+#include "DDRec/DetectorData.h"
+#include "RtypesCore.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 
@@ -60,13 +76,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
                                             "disc layers");
     // go through layers
     for (auto& detElement : dendcapLayers) {
+      ACTS_VERBOSE("=> Translating layer from: " << detElement.name());
       // prepare the layer surfaces
       std::vector<std::shared_ptr<const Surface>> layerSurfaces;
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
-      Acts::ActsExtension* detExtension =
-          detElement.extension<Acts::ActsExtension>();
+      auto& params = getParams(detElement);
       // collect the sensitive detector elements possibly contained by the layer
       resolveSensitive(detElement, layerSurfaces);
       // access the global transformation matrix of the layer
@@ -77,15 +93,36 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
-      if (detExtension->hasValue("r_min", "envelope") &&
-          detExtension->hasValue("r_max", "envelope") &&
-          detExtension->hasValue("z_min", "envelope") &&
-          detExtension->hasValue("z_max", "envelope")) {
-        // set the values of the proto layer in case enevelopes are handed over
-        pl.envelope[Acts::binR] = {detExtension->getValue("r_min", "envelope"),
-                                   detExtension->getValue("r_max", "envelope")};
-        pl.envelope[Acts::binZ] = {detExtension->getValue("z_min", "envelope"),
-                                   detExtension->getValue("z_max", "envelope")};
+      if (logger().doPrint(Logging::VERBOSE)) {
+        std::stringstream ss;
+        pl.toStream(ss);
+        ACTS_VERBOSE("Extent from surfaces: " << ss.str());
+
+        std::vector<double> rvalues;
+        std::transform(layerSurfaces.begin(), layerSurfaces.end(),
+                       std::back_inserter(rvalues), [&](const auto& surface) {
+                         return VectorHelpers::perp(surface->center(gctx));
+                       });
+        std::sort(rvalues.begin(), rvalues.end());
+        std::vector<std::string> locs;
+        std::transform(rvalues.begin(),
+                       std::unique(rvalues.begin(), rvalues.end()),
+                       std::back_inserter(locs),
+                       [](const auto& v) { return std::to_string(v); });
+        ACTS_VERBOSE(
+            "-> unique r locations: " << boost::algorithm::join(locs, ", "));
+      }
+
+      if (params.contains("envelope_r_min") &&
+          params.contains("envelope_r_max") &&
+          params.contains("envelope_z_min") &&
+          params.contains("envelope_z_max")) {
+        // set the values of the proto layer in case enevelopes are handed
+        // over
+        pl.envelope[Acts::binR] = {params.get<double>("envelope_r_min"),
+                                   params.get<double>("envelope_r_max")};
+        pl.envelope[Acts::binZ] = {params.get<double>("envelope_z_min"),
+                                   params.get<double>("envelope_z_max")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr) {
@@ -107,28 +144,28 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         }
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
-          ACTS_VERBOSE(" Disc layer has no senstive surfaces.");
-          // in case no surfaces are handed over the layer thickness will be set
-          // to a default value to allow attaching material layers
+          ACTS_VERBOSE(" Disc layer has no sensitive surfaces.");
+          // in case no surfaces are handed over the layer thickness will be
+          // set to a default value to allow attaching material layers
           double z = (zMin + zMax) * 0.5;
           // create layer without surfaces
           // manually create a proto layer
           double eiz = (z != 0.) ? z - m_cfg.defaultThickness : 0.;
           double eoz = (z != 0.) ? z + m_cfg.defaultThickness : 0.;
-          pl.extent.ranges[Acts::binZ] = {eiz, eoz};
-          pl.extent.ranges[Acts::binR] = {rMin, rMax};
+          pl.extent.range(Acts::binZ).set(eiz, eoz);
+          pl.extent.range(Acts::binR).set(rMin, rMax);
           pl.envelope[Acts::binR] = {0., 0.};
           pl.envelope[Acts::binZ] = {0., 0.};
         } else {
           ACTS_VERBOSE(" Disc layer has " << layerSurfaces.size()
-                                          << " senstive surfaces.");
+                                          << " sensitive surfaces.");
           // set the values of the proto layer in case dimensions are given by
           // geometry
           pl.envelope[Acts::binZ] = {std::abs(zMin - pl.min(Acts::binZ)),
                                      std::abs(zMax - pl.max(Acts::binZ))};
           pl.envelope[Acts::binR] = {std::abs(rMin - pl.min(Acts::binR)),
                                      std::abs(rMax - pl.max(Acts::binR))};
-          pl.extent.ranges[Acts::binR] = {rMin, rMax};
+          pl.extent.range(Acts::binR).set(rMin, rMax);
         }
       } else {
         throw std::logic_error(
@@ -141,17 +178,17 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       std::shared_ptr<Layer> endcapLayer = nullptr;
 
       // Check if DD4hep pre-defines the surface binning
-      bool hasSurfaceBinning = detExtension->hasCategory("surface_binning");
-      size_t nPhi = 1;
-      size_t nR = 1;
+      bool hasSurfaceBinning =
+          getParamOr<bool>("surface_binning", detElement, true);
+      std::size_t nPhi = 1;
+      std::size_t nR = 1;
       if (hasSurfaceBinning) {
-        if (detExtension->hasValue("n_phi", "surface_binning")) {
-          nPhi = static_cast<size_t>(
-              detExtension->getValue("n_phi", "surface_binning"));
+        if (params.contains("surface_binning_n_phi")) {
+          nPhi = static_cast<std::size_t>(
+              params.get<int>("surface_binning_n_phi"));
         }
-        if (detExtension->hasValue("n_r", "surface_binning")) {
-          nR = static_cast<size_t>(
-              detExtension->getValue("n_r", "surface_binning"));
+        if (params.contains("surface_binning_n_r")) {
+          nR = static_cast<std::size_t>(params.get<int>("surface_binning_n_r"));
         }
         hasSurfaceBinning = nR * nPhi > 1;
       }
@@ -183,7 +220,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
             nullptr);
       }
       // Add the ProtoMaterial if present
-      addDiscLayerProtoMaterial(detElement, *endcapLayer);
+      addDiscLayerProtoMaterial(detElement, *endcapLayer, logger());
       // push back created layer
       layers.push_back(endcapLayer);
     }
@@ -207,13 +244,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
         "cylindrical layers");
     // go through layers
     for (auto& detElement : m_cfg.centralLayers) {
+      ACTS_VERBOSE("=> Translating layer from: " << detElement.name());
       // prepare the layer surfaces
       std::vector<std::shared_ptr<const Surface>> layerSurfaces;
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
-      Acts::ActsExtension* detExtension =
-          detElement.extension<Acts::ActsExtension>();
+      auto& params = getParams(detElement);
       // collect the sensitive detector elements possibly contained by the layer
       resolveSensitive(detElement, layerSurfaces);
       // access the global transformation matrix of the layer
@@ -224,21 +261,40 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
+      if (logger().doPrint(Logging::VERBOSE)) {
+        std::stringstream ss;
+        pl.toStream(ss);
+        ACTS_VERBOSE("Extent from surfaces: " << ss.str());
+        std::vector<double> zvalues;
+        std::transform(layerSurfaces.begin(), layerSurfaces.end(),
+                       std::back_inserter(zvalues), [&](const auto& surface) {
+                         return surface->center(gctx)[eZ];
+                       });
+        std::sort(zvalues.begin(), zvalues.end());
+        std::vector<std::string> locs;
+        std::transform(zvalues.begin(),
+                       std::unique(zvalues.begin(), zvalues.end()),
+                       std::back_inserter(locs),
+                       [](const auto& v) { return std::to_string(v); });
+        ACTS_VERBOSE(
+            "-> unique z locations: " << boost::algorithm::join(locs, ", "));
+      }
 
-      if (detExtension->hasValue("r_min", "envelope") &&
-          detExtension->hasValue("r_max", "envelope") &&
-          detExtension->hasValue("z_min", "envelope") &&
-          detExtension->hasValue("z_max", "envelope")) {
+      if (params.contains("envelope_r_min") &&
+          params.contains("envelope_r_max") &&
+          params.contains("envelope_z_min") &&
+          params.contains("envelope_z_max")) {
         // set the values of the proto layer in case enevelopes are handed over
-        pl.envelope[Acts::binR] = {detExtension->getValue("r_min", "envelope"),
-                                   detExtension->getValue("r_max", "envelope")};
-        pl.envelope[Acts::binZ] = {detExtension->getValue("z_min", "envelope"),
-                                   detExtension->getValue("z_max", "envelope")};
+        pl.envelope[Acts::binR] = {params.get<double>("envelope_r_min"),
+                                   params.get<double>("envelope_r_max")};
+        pl.envelope[Acts::binZ] = {params.get<double>("envelope_z_min"),
+                                   params.get<double>("envelope_z_max")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (tube == nullptr)
+        if (tube == nullptr) {
           ACTS_ERROR(
               " Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
+        }
 
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;
@@ -253,8 +309,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
           // manually create a proto layer
           double eir = (r != 0.) ? r - m_cfg.defaultThickness : 0.;
           double eor = (r != 0.) ? r + m_cfg.defaultThickness : 0.;
-          pl.extent.ranges[Acts::binR] = {eir, eor};
-          pl.extent.ranges[Acts::binZ] = {-dz, dz};
+          pl.extent.range(Acts::binR).set(eir, eor);
+          pl.extent.range(Acts::binZ).set(-dz, dz);
           pl.envelope[Acts::binR] = {0., 0.};
           pl.envelope[Acts::binZ] = {0., 0.};
         } else {
@@ -300,7 +356,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
             nullptr);
       }
       // Add the ProtoMaterial if present
-      addCylinderLayerProtoMaterial(detElement, *centralLayer);
+      addCylinderLayerProtoMaterial(detElement, *centralLayer, logger());
       // push back created layer
       layers.push_back(centralLayer);
     }
@@ -332,20 +388,12 @@ void Acts::DD4hepLayerBuilder::resolveSensitive(
 std::shared_ptr<const Acts::Surface>
 Acts::DD4hepLayerBuilder::createSensitiveSurface(
     const dd4hep::DetElement& detElement, bool isDisc) const {
-  // access the possible extension of the DetElement
-  Acts::ActsExtension* detExtension = nullptr;
-  try {
-    detExtension = detElement.extension<Acts::ActsExtension>();
-  } catch (std::runtime_error& e) {
-    ACTS_WARNING("Could not get Acts::Extension");
-    return nullptr;
-  }
-
-  auto detAxis = detExtension->getType("axes", "definitions");
+  std::string detAxis =
+      getParamOr<std::string>("axis_definitions", detElement, "XYZ");
   // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =
       new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
-                                      isDisc, nullptr, nullptr);
+                                      isDisc, nullptr);
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();

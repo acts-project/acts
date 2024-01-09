@@ -9,11 +9,14 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <cmath>
+#include <algorithm>
+#include <array>
+#include <string>
+#include <utility>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -35,14 +38,14 @@ ProtoLayer::ProtoLayer(
 
 double ProtoLayer::min(BinningValue bval, bool addenv) const {
   if (addenv) {
-    return extent.min(bval) - envelope[bval].first;
+    return extent.min(bval) - envelope[bval][0u];
   }
   return extent.min(bval);
 }
 
 double ProtoLayer::max(BinningValue bval, bool addenv) const {
   if (addenv) {
-    return extent.max(bval) + envelope[bval].second;
+    return extent.max(bval) + envelope[bval][1u];
   }
   return extent.max(bval);
 }
@@ -57,7 +60,7 @@ double ProtoLayer::range(BinningValue bval, bool addenv) const {
 
 std::ostream& ProtoLayer::toStream(std::ostream& sl) const {
   sl << "ProtoLayer with dimensions (min/max)" << std::endl;
-  extent.toStream(sl);
+  sl << extent.toString();
   return sl;
 }
 
@@ -66,11 +69,12 @@ void ProtoLayer::measure(const GeometryContext& gctx,
   for (const auto& sf : surfaces) {
     auto sfPolyhedron = sf->polyhedronRepresentation(gctx, 1);
     const DetectorElementBase* element = sf->associatedDetectorElement();
-    if (element != nullptr) {
+    const auto* regSurface = dynamic_cast<const RegularSurface*>(sf);
+    if (element != nullptr && regSurface != nullptr) {
       // Take the thickness in account if necessary
       double thickness = element->thickness();
       // We need a translation along and opposite half thickness
-      Vector3 sfNormal = sf->normal(gctx, sf->center(gctx));
+      Vector3 sfNormal = regSurface->normal(gctx, sf->center(gctx));
       std::vector<double> deltaT = {-0.5 * thickness, 0.5 * thickness};
       for (const auto& dT : deltaT) {
         Transform3 dtransform = Transform3::Identity();

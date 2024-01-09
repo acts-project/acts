@@ -43,7 +43,6 @@ struct AlignmentOptions {
   /// AlignmentOptions
   ///
   /// @param fOptions The fit options
-  /// @param logger_ The logger wrapper
   /// @param aTransformUpdater The updater to update aligned transform
   /// @param aDetElements The alignable detector elements
   /// @param chi2CufOff The alignment chi2 tolerance
@@ -53,11 +52,10 @@ struct AlignmentOptions {
   AlignmentOptions(
       const fit_options_t& fOptions,
       const AlignedTransformUpdater& aTransformUpdater,
-      Acts::LoggerWrapper logger_,
       const std::vector<Acts::DetectorElementBase*>& aDetElements = {},
       double chi2CutOff = 0.5,
-      const std::pair<size_t, double>& deltaChi2CutOff = {5, 0.01},
-      size_t maxIters = 5,
+      const std::pair<std::size_t, double>& deltaChi2CutOff = {5, 0.01},
+      std::size_t maxIters = 5,
       const std::map<unsigned int, AlignmentMask>& iterState = {})
       : fitOptions(fOptions),
         alignedTransformUpdater(aTransformUpdater),
@@ -65,8 +63,7 @@ struct AlignmentOptions {
         averageChi2ONdfCutOff(chi2CutOff),
         deltaAverageChi2ONdfCutOff(deltaChi2CutOff),
         maxIterations(maxIters),
-        iterationState(iterState),
-        logger(logger_) {}
+        iterationState(iterState) {}
 
   // The fit options
   fit_options_t fitOptions;
@@ -77,21 +74,18 @@ struct AlignmentOptions {
   // The detector elements to be aligned
   std::vector<Acts::DetectorElementBase*> alignedDetElements;
 
-  // The alignment tolerance to determine if the alignment is coveraged
+  // The alignment tolerance to determine if the alignment is covered
   double averageChi2ONdfCutOff = 0.5;
 
   // The delta of average chi2/ndf within a couple of iterations to determine if
   // alignment is converged
-  std::pair<size_t, double> deltaAverageChi2ONdfCutOff = {5, 0.01};
+  std::pair<std::size_t, double> deltaAverageChi2ONdfCutOff = {5, 0.01};
 
   // The maximum number of iterations to run alignment
-  size_t maxIterations = 5;
+  std::size_t maxIterations = 5;
 
   // The alignment mask for different iterations
   std::map<unsigned int, AlignmentMask> iterationState;
-
-  /// Logger
-  Acts::LoggerWrapper logger;
 };
 
 /// @brief Alignment result struct
@@ -107,7 +101,7 @@ struct AlignmentResult {
   // The covariance of alignment parameters
   Acts::ActsDynamicMatrix alignmentCovariance;
 
-  // The avarage chi2/ndf (ndf is the measurement dim)
+  // The average chi2/ndf (ndf is the measurement dim)
   double averageChi2ONdf = std::numeric_limits<double>::max();
 
   // The delta chi2
@@ -117,16 +111,16 @@ struct AlignmentResult {
   double chi2 = 0;
 
   // The measurement dimension from all tracks
-  size_t measurementDim = 0;
+  std::size_t measurementDim = 0;
 
   // The alignment degree of freedom
-  size_t alignmentDof = 0;
+  std::size_t alignmentDof = 0;
 
   // The number of tracks used for alignment
-  size_t numTracks = 0;
+  std::size_t numTracks = 0;
 
   // The indexed alignable surfaces
-  std::unordered_map<const Acts::Surface*, size_t> idxedAlignSurfaces;
+  std::unordered_map<const Acts::Surface*, std::size_t> idxedAlignSurfaces;
 
   Acts::Result<void> result{Acts::Result<void>::success()};
 };
@@ -136,11 +130,16 @@ struct AlignmentResult {
 /// @tparam fitter_t Type of the fitter class
 template <typename fitter_t>
 struct Alignment {
+  // @TODO: Redefine in terms of Track object
+
   /// Default constructor is deleted
   Alignment() = delete;
 
   /// Constructor from arguments
-  Alignment(fitter_t fitter) : m_fitter(std::move(fitter)) {}
+  Alignment(fitter_t fitter,
+            std::unique_ptr<const Acts::Logger> _logger =
+                Acts::getDefaultLogger("Alignment", Acts::Logging::INFO))
+      : m_fitter(std::move(fitter)), m_logger{std::move(_logger)} {}
 
   /// @brief evaluate alignment state for a single track
   ///
@@ -164,10 +163,9 @@ struct Alignment {
       const Acts::GeometryContext& gctx,
       const std::vector<source_link_t>& sourcelinks,
       const start_parameters_t& sParameters, const fit_options_t& fitOptions,
-      const std::unordered_map<const Acts::Surface*, size_t>&
+      const std::unordered_map<const Acts::Surface*, std::size_t>&
           idxedAlignSurfaces,
-      const AlignmentMask& alignMask,
-      Acts::LoggerWrapper logger = Acts::getDummyLogger()) const;
+      const AlignmentMask& alignMask) const;
 
   /// @brief calculate the alignment parameters delta
   ///
@@ -188,8 +186,7 @@ struct Alignment {
       const trajectory_container_t& trajectoryCollection,
       const start_parameters_container_t& startParametersCollection,
       const fit_options_t& fitOptions, AlignmentResult& alignResult,
-      const AlignmentMask& alignMask = AlignmentMask::All,
-      Acts::LoggerWrapper logger = Acts::getDummyLogger()) const;
+      const AlignmentMask& alignMask = AlignmentMask::All) const;
 
   /// @brief update the detector element alignment parameters
   ///
@@ -201,8 +198,7 @@ struct Alignment {
       const Acts::GeometryContext& gctx,
       const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
       const AlignedTransformUpdater& alignedTransformUpdater,
-      AlignmentResult& alignResult,
-      Acts::LoggerWrapper logger = Acts::getDummyLogger()) const;
+      AlignmentResult& alignResult) const;
 
   /// @brief Alignment implementation
   ///
@@ -227,6 +223,10 @@ struct Alignment {
  private:
   // The fitter
   fitter_t m_fitter;
+
+  std::unique_ptr<const Acts::Logger> m_logger;
+
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 }  // namespace ActsAlignment
 

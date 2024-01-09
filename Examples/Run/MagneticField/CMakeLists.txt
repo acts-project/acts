@@ -17,7 +17,7 @@ target_link_libraries(
   PRIVATE
     ActsCore
     ActsExamplesFramework ActsExamplesCommon
-    ActsExamplesMagneticField ActsExamplesIoRoot Boost::program_options)
+    ActsExamplesMagneticField ActsExamplesIoRoot)
 
 install(
   TARGETS ActsExampleMagneticField ActsExampleMagneticFieldAccess

@@ -9,22 +9,22 @@
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/DigitizationOptions.hpp"
+#include "ActsExamples/Options/TrackFindingOptions.hpp"
+#include "ActsExamples/Options/TrackFittingOptions.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/TrackFindingOptions.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
-#include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -76,12 +76,14 @@ ActsExamples::DigitizationConfig setupDigitization(
   auto logLevel = Options::readLogLevel(vars);
 
   auto digiCfg = ActsExamples::DigitizationConfig(
-      vars, ActsExamples::readDigiConfigFromJson(
-                vars["digi-config-file"].as<std::string>()));
+      vars["digi-merge"].as<bool>(), vars["digi-merge-nsigma"].as<double>(),
+      vars["digi-merge-common-corner"].as<bool>(),
+      ActsExamples::readDigiConfigFromJson(
+          vars["digi-config-file"].as<std::string>()));
   // Common options for digitization
   digiCfg.inputSimHits = inputSimHits;
-  digiCfg.randomNumbers = rnd;
-  digiCfg.trackingGeometry = trackingGeometry;
+  digiCfg.randomNumbers = std::move(rnd);
+  digiCfg.trackingGeometry = std::move(trackingGeometry);
   sequencer.addAlgorithm(
       std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
 
@@ -109,7 +111,7 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
       Options::readParticleSmearingOptions(vars);
   particleSmearingCfg.inputParticles = inputParticles;
   particleSmearingCfg.outputTrackParameters = "smearedparameters";
-  particleSmearingCfg.randomNumbers = rnd;
+  particleSmearingCfg.randomNumbers = std::move(rnd);
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 

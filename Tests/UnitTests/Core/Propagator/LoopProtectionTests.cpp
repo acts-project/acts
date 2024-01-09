@@ -11,19 +11,37 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <random>
+#include <string>
+#include <tuple>
+#include <utility>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -42,8 +60,6 @@ struct SteppingState {
   Vector3 pos = Vector3(0., 0., 0.);
   Vector3 dir = Vector3(0., 0., 1);
   double p = 100_MeV;
-
-  NavigationDirection navDir = NavigationDirection::Forward;
 };
 
 /// @brief mockup of stepping state
@@ -57,8 +73,8 @@ struct Stepper {
   ///                 the magnetic field cell is used (and potentially
   ///                 updated)
   /// @param [in] pos is the field position
-  Result<Vector3> getField(SteppingState& /*unused*/,
-                           const Vector3& /*unused*/) const {
+  Result<Vector3> getField(SteppingState& /*state*/,
+                           const Vector3& /*pos*/) const {
     // get the field from the cell
     return Result<Vector3>::success(field);
   }
@@ -70,7 +86,7 @@ struct Stepper {
   Vector3 direction(const SteppingState& state) const { return state.dir; }
 
   /// Access method - momentum
-  double momentum(const SteppingState& state) const { return state.p; }
+  double absoluteMomentum(const SteppingState& state) const { return state.p; }
 };
 
 /// @brief mockup of navigation state
@@ -84,6 +100,7 @@ struct Options {
   double pathLimit = std::numeric_limits<double>::max();
   bool loopProtection = true;
   double loopFraction = 0.5;
+  Direction direction = Direction::Forward;
 
   bool debug = false;
   std::string debugString;
@@ -93,7 +110,7 @@ struct Options {
   /// Contains: target aborters
   AbortList<PathLimitReached> abortList;
 
-  LoggerWrapper logger{getDummyLogger()};
+  const Acts::Logger& logger = Acts::getDummyLogger();
 };
 
 /// @brief mockup of propagtor state
@@ -110,12 +127,13 @@ struct PropagatorState {
 // - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
     loop_aborter_test,
-    bdata::random(
-        (bdata::seed = 21,
-         bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
         bdata::xrange(1),
     phi, deltaPhi, index) {
   (void)index;
@@ -127,11 +145,12 @@ BOOST_DATA_TEST_CASE(
 
   Stepper pStepper;
 
-  auto initialLimit =
-      pState.options.abortList.get<PathLimitReached>().internalLimit;
+  auto& pathLimit = pState.options.abortList.get<PathLimitReached>();
+  auto initialLimit = pathLimit.internalLimit;
 
-  LoopProtection<PathLimitReached> lProtection;
-  lProtection(pState, pStepper);
+  detail::setupLoopProtection(
+      pState, pStepper, pathLimit, false,
+      *Acts::getDefaultLogger("LoopProt", Logging::INFO));
 
   auto updatedLimit =
       pState.options.abortList.get<PathLimitReached>().internalLimit;
@@ -149,18 +168,20 @@ const int skip = 0;
 // stops where expected
 BOOST_DATA_TEST_CASE(
     propagator_loop_protection_test,
-    bdata::random((bdata::seed = 20,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 21,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.5_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
         bdata::random(
-            (bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+            (bdata::engine = std::mt19937(), bdata::seed = 22,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
   if (index < skip) {
@@ -179,10 +200,11 @@ BOOST_DATA_TEST_CASE(
   EigenPropagator epropagator(std::move(estepper));
 
   // define start parameters
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, p, q);
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, q / p,
+                                   std::nullopt, ParticleHypothesis::pion());
 
   using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
-  PropagatorOptions options(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions options(tgContext, mfContext);
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();
 

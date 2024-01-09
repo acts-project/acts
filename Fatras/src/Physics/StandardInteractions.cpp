@@ -9,10 +9,14 @@
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 
 ActsFatras::StandardChargedElectroMagneticInteractions
-ActsFatras::makeStandardChargedElectroMagneticInteractions(double pMin) {
+ActsFatras::makeStandardChargedElectroMagneticInteractions(
+    double minimumAbsMomentum) {
   StandardChargedElectroMagneticInteractions pl;
-  pl.get<detail::StandardBetheBloch>().selectOutputParticle.valMin = pMin;
-  pl.get<detail::StandardBetheHeitler>().selectOutputParticle.valMin = pMin;
-  pl.get<detail::StandardBetheHeitler>().selectChildParticle.valMin = pMin;
+  pl.get<detail::StandardBetheBloch>().selectOutputParticle.valMin =
+      minimumAbsMomentum;
+  pl.get<detail::StandardBetheHeitler>().selectOutputParticle.valMin =
+      minimumAbsMomentum;
+  pl.get<detail::StandardBetheHeitler>().selectChildParticle.valMin =
+      minimumAbsMomentum;
   return pl;
 }

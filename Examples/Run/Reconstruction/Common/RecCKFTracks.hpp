@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
+
 #include <memory>
 
 namespace ActsExamples {
@@ -24,5 +26,6 @@ void addRecCKFOptions(ActsExamples::Options::Description& desc);
 /// @param argc number of command line arguments
 /// @param argv command line arguments
 /// @param detector is the detector to be used
-int runRecCKFTracks(int argc, char* argv[],
-                    std::shared_ptr<ActsExamples::IBaseDetector> detector);
+int runRecCKFTracks(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector);

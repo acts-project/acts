@@ -9,6 +9,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 
 namespace Acts {
 namespace detail {
@@ -48,7 +49,7 @@ struct VoidAuctioneer {
   /// @return The to vCandidates identical list of valid extensions
   template <long unsigned int N>
   std::array<bool, N> operator()(std::array<int, N> vCandidates) const {
-    std::array<bool, N> valids;
+    std::array<bool, N> valids{};
 
     for (unsigned int i = 0; i < vCandidates.size(); i++) {
       valids[i] = (vCandidates[i] > 0) ? true : false;

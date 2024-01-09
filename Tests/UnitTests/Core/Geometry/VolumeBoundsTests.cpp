@@ -11,12 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
-
 BOOST_AUTO_TEST_SUITE(Volumes)
 
 BOOST_AUTO_TEST_CASE(VolumeBoundsTest) {
@@ -46,7 +42,5 @@ BOOST_AUTO_TEST_CASE(VolumeBoundsTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

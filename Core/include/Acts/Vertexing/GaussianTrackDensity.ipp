@@ -19,7 +19,7 @@ Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
     const std::function<BoundTrackParameters(input_track_t)>& extractParameters)
     const {
   auto result = addTracks(state, trackList, extractParameters);
-  if (not result.ok()) {
+  if (!result.ok()) {
     return std::make_pair(0., 0.);
   }
 
@@ -85,7 +85,7 @@ Result<void> Acts::GaussianTrackDensity<input_track_t>::addTracks(
     const double d0 = boundParams.parameters()[BoundIndices::eBoundLoc0];
     const double z0 = boundParams.parameters()[BoundIndices::eBoundLoc1];
     // Get track covariance
-    if (not boundParams.covariance().has_value()) {
+    if (!boundParams.covariance().has_value()) {
       return VertexingError::NoCovariance;
     }
     const auto perigeeCov = *(boundParams.covariance());

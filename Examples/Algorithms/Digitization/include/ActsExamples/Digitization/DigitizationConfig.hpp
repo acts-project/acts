@@ -9,36 +9,36 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <system_error>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class GeometryIdentifier;
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace ActsExamples {
-
-/// Takes as an argument the position, and a random engine
-///  @return drift direction in local 3D coordinates
-using DriftGenerator =
-    std::function<Acts::Vector3(const Acts::Vector3 &, RandomEngine &)>;
-/// Takes as an argument the path length, the drift length, and a random engine
-/// @return a charge to which the threshold can be applied
-using ChargeGenerator = std::function<Acts::ActsScalar(
-    Acts::ActsScalar, Acts::ActsScalar, RandomEngine &)>;
-/// Takes as an argument the clsuter size and an random engine
-/// @return a vector of uncorrelated covariance values
-using VarianceGenerator = std::function<std::vector<Acts::ActsScalar>(
-    size_t, size_t, RandomEngine &)>;
 
 /// Configuration struct for geometric digitization
 ///
@@ -48,35 +48,55 @@ using VarianceGenerator = std::function<std::vector<Acts::ActsScalar>(
 /// are defined by this.
 ///
 struct GeometricConfig {
+  // The dimensions of the measurement
   std::vector<Acts::BoundIndices> indices = {};
+
+  // The (multidimensional) binning definition for the segmentation of the
+  // sensor
   Acts::BinUtility segmentation;
-  /// Drift generation
-  DriftGenerator drift = [](const Acts::Vector3 &,
-                            RandomEngine &) -> Acts::Vector3 {
-    return Acts::Vector3(0., 0., 0.);
-  };
+
+  // The thickness of the sensor
   double thickness = 0.;
-  /// Charge generation
-  ChargeGenerator charge = [](Acts::ActsScalar path, Acts::ActsScalar,
-                              RandomEngine &) -> Acts::ActsScalar {
-    return path;
-  };
+
+  /// The charge smearer
+  ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
+      chargeSmearer = Digitization::Exact{};
+
+  // The threshold below a cell activation is ignored
   double threshold = 0.;
-  /// Position and Covariance generation
+
+  // Whether to assume digital readout (activation is either 0 or 1)
   bool digital = false;
-  VarianceGenerator variances =
-      [](size_t, size_t, RandomEngine &) -> std::vector<Acts::ActsScalar> {
+
+  /// Charge generation (configurable via the chargeSmearer)
+  Acts::ActsScalar charge(Acts::ActsScalar path, RandomEngine &rng) const {
+    if (!chargeSmearer) {
+      return path;
+    }
+    auto res = chargeSmearer(path, rng);
+    if (res.ok()) {
+      return std::max(0.0, res->first);
+    } else {
+      throw std::runtime_error(res.error().message());
+    }
+  }
+
+  /// Position and Covariance generation (currently not implemented)
+  /// Takes as an argument the clsuter size and an random engine
+  /// @return a vector of uncorrelated covariance values
+  std::vector<Acts::ActsScalar> variances(std::size_t /*size0*/,
+                                          std::size_t /*size1*/,
+                                          RandomEngine & /*rng*/) const {
     return {};
   };
 
-  /// Equality operator for basic parameters
-  /// check if the geometry config can be reused from
-  /// @param other, @return a boolean to indicate this
-  bool operator==(const GeometricConfig &other) const {
-    return (indices == other.indices and segmentation == other.segmentation and
-            thickness == other.thickness and threshold == other.threshold and
-            digital == other.digital);
-  }
+  /// Drift generation (currently not implemented)
+  /// Takes as an argument the position, and a random engine
+  ///  @return drift direction in local 3D coordinates
+  Acts::Vector3 drift(const Acts::Vector3 & /*position*/,
+                      RandomEngine & /*rng*/) const {
+    return Acts::Vector3(0., 0., 0.);
+  };
 };
 
 /// Configuration struct for the Digitization algorithm
@@ -87,25 +107,17 @@ struct GeometricConfig {
 struct DigiComponentsConfig {
   GeometricConfig geometricDigiConfig;
   SmearingConfig smearingDigiConfig = {};
-
-  /// Equality operator to check if a digitization configuration
-  /// can be reused from @param other
-  ///
-  /// @return a boolean flag indicating equality
-  bool operator==(const DigiComponentsConfig &other) const {
-    return (geometricDigiConfig == other.geometricDigiConfig and
-            smearingDigiConfig == other.smearingDigiConfig);
-  }
 };
 
 class DigitizationConfig {
  public:
-  DigitizationConfig(const Options::Variables &vars)
-      : DigitizationConfig(
-            vars, Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+  DigitizationConfig(bool merge, double sigma, bool commonCorner)
+      : DigitizationConfig(merge, sigma, commonCorner,
+                           Acts::GeometryHierarchyMap<DigiComponentsConfig>()) {
+  }
 
   DigitizationConfig(
-      const Options::Variables &vars,
+      bool doMerge, double mergeNsigma, bool mergeCommonCorner,
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   DigitizationConfig(
@@ -128,11 +140,17 @@ class DigitizationConfig {
   /// Random numbers tool.
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   /// Do we merge hits or not
-  const bool doMerge;
+  bool doMerge;
   /// How close do parameters have to be to consider merged
   const double mergeNsigma;
   /// Consider clusters that share a corner as merged (8-cell connectivity)
   const bool mergeCommonCorner;
+  /// Energy deposit threshold for accepting a hit
+  /// For a generic readout frontend we assume 1000 e/h pairs, in Si each
+  /// e/h-pair requiers on average an energy of 3.65 eV (PDG  review 2023,
+  /// Table 35.10)
+  /// @NOTE The default is set to 0 because this works only well with Geant4
+  double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
   /// The digitizers per GeometryIdentifiers
   Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 

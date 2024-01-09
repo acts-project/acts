@@ -12,22 +12,32 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <limits>
+#include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Select particles by applying some selection cuts.
-class ParticleSelector final : public BareAlgorithm {
+class ParticleSelector final : public IAlgorithm {
  public:
   struct Config {
     /// The input particles collection.
     std::string inputParticles;
+    /// Input measurement particles map (Optional)
+    std::string inputMeasurementParticlesMap;
     /// The output particles collection.
     std::string outputParticles;
-    // Minimum/maximum distance from the origin in the tranverse plane.
+    // Minimum/maximum distance from the origin in the transverse plane.
     double rhoMin = 0;
     double rhoMax = std::numeric_limits<double>::infinity();
     // Minimum/maximum absolute distance from the origin along z.
@@ -46,16 +56,20 @@ class ParticleSelector final : public BareAlgorithm {
     // Momentum cuts.
     double ptMin = 0;
     double ptMax = std::numeric_limits<double>::infinity();
+    // Rest mass cuts
+    double mMin = 0;
+    double mMax = std::numeric_limits<double>::infinity();
+    /// Measurement number cuts
+    std::size_t measurementsMin = 0;
+    std::size_t measurementsMax = std::numeric_limits<std::size_t>::max();
     /// Remove charged particles.
     bool removeCharged = false;
     /// Remove neutral particles.
     bool removeNeutral = false;
-  };
 
-  /// Add options for the particle selector.
-  static void addOptions(Options::Description& desc);
-  /// Construct particle selector config from user variables.
-  static Config readConfig(const Options::Variables& vars);
+    /// Remove secondaries.
+    bool removeSecondaries = false;
+  };
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);
 
@@ -66,6 +80,13 @@ class ParticleSelector final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMap{
+      this, "InputMeasurementParticlesMap"};
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

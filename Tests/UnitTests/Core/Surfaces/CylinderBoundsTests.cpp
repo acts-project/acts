@@ -11,10 +11,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <stdexcept>
+#include <vector>
 
 namespace Acts {
 
@@ -54,7 +60,7 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsRecreation) {
   // Test construction with radii and default sector
   auto original = CylinderBounds(radius, halfz);
   auto valvector = original.values();
-  std::array<double, CylinderBounds::eSize> values;
+  std::array<double, CylinderBounds::eSize> values{};
   std::copy_n(valvector.begin(), CylinderBounds::eSize, values.begin());
   CylinderBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

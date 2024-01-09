@@ -8,24 +8,30 @@
 
 #include "TrackParametersPrinter.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+
+#include <cstddef>
+#include <ostream>
+#include <stdexcept>
+#include <vector>
 
 ActsExamples::TrackParametersPrinter::TrackParametersPrinter(
-    const Config& cfg, Acts::Logging::Level lvl)
-    : BareAlgorithm("TrackParametersPrinter", lvl), m_cfg(cfg) {
+    const Config& cfg, Acts::Logging::Level level)
+    : IAlgorithm("TrackParametersPrinter", level), m_cfg(cfg) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument(
         "Input track parameters collection is not configured");
   }
+
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackParametersPrinter::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  const auto& trackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  const auto& trackParameters = m_inputTrackParameters(ctx);
 
   ACTS_INFO("event " << ctx.eventNumber << " collection '"
                      << m_cfg.inputTrackParameters << "' contains "

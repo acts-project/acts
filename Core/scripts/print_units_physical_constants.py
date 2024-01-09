@@ -159,7 +159,7 @@ float_constants = [(n, float(v), u) for n, v, u in full_constants]
 
 
 def print_constants(constants):
-    # find largest name first for consistent formatting
+    # find the largest name first for consistent formatting
     max_len_name = max((len(n) for n, *_ in constants))
     line_format = f"{{:>{max_len_name}}}:  {{}} {{}}"
     for name, value, unit in constants:

@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 
 #include <random>
 
@@ -42,14 +42,14 @@ struct GeneralMixture {
                     Particle &particle) const {
     double theta = 0.0;
 
-    if (std::abs(particle.pdg()) != Acts::PdgParticle::eElectron) {
+    if (particle.absolutePdg() != Acts::PdgParticle::eElectron) {
       //----------------------------------------------------------------------------
       // see Mixture models of multiple scattering: computation and simulation.
       // -
       // R.Fruehwirth, M. Liendl. -
       // Computer Physics Communications 141 (2001) 230â246
       //----------------------------------------------------------------------------
-      std::array<double, 4> scattering_params;
+      std::array<double, 4> scattering_params{};
       // Decide which mixture is best
       //   beta² = (p/E)² = p²/(p² + m²) = 1/(1 + (m/p)²)
       // 1/beta² = 1 + (m/p)²
@@ -83,8 +83,8 @@ struct GeneralMixture {
       // for electrons we fall back to the Highland (extension)
       // return projection factor times sigma times gauss random
       const auto theta0 = Acts::computeMultipleScatteringTheta0(
-          slab, particle.pdg(), particle.mass(),
-          particle.charge() / particle.absoluteMomentum(), particle.charge());
+          slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
+          particle.absoluteCharge());
       theta = std::normal_distribution<double>(0.0, theta0)(generator);
     }
     // scale from planar to 3d angle
@@ -95,7 +95,7 @@ struct GeneralMixture {
 
   std::array<double, 4> getGaussian(double beta, double p, double tInX0,
                                     double scale) const {
-    std::array<double, 4> scattering_params;
+    std::array<double, 4> scattering_params{};
     // Total standard deviation of mixture
     scattering_params[0] = 15. / beta / p * std::sqrt(tInX0) * scale;
     scattering_params[1] = 1.0;  // Variance of core
@@ -106,18 +106,19 @@ struct GeneralMixture {
 
   std::array<double, 4> getGaussmix(double beta, double p, double tInX0,
                                     double Z, double scale) const {
-    std::array<double, 4> scattering_params;
+    std::array<double, 4> scattering_params{};
     scattering_params[0] = 15. / beta / p * std::sqrt(tInX0) *
                            scale;  // Total standard deviation of mixture
     double d1 = std::log(tInX0 / (beta * beta));
     double d2 = std::log(std::pow(Z, 2.0 / 3.0) * tInX0 / (beta * beta));
-    double epsi;
+    double epsi = 0;
     double var1 = (-1.843e-3 * d1 + 3.347e-2) * d1 + 8.471e-1;  // Variance of
                                                                 // core
-    if (d2 < 0.5)
+    if (d2 < 0.5) {
       epsi = (6.096e-4 * d2 + 6.348e-3) * d2 + 4.841e-2;
-    else
+    } else {
       epsi = (-5.729e-3 * d2 + 1.106e-1) * d2 - 1.908e-2;
+    }
     scattering_params[1] = var1;                            // Variance of core
     scattering_params[2] = (1 - (1 - epsi) * var1) / epsi;  // Variance of tails
     scattering_params[3] = epsi;  // Mixture weight of tail component
@@ -126,7 +127,7 @@ struct GeneralMixture {
 
   std::array<double, 6> getSemigauss(double beta, double p, double tInX0,
                                      double Z, double scale) const {
-    std::array<double, 6> scattering_params;
+    std::array<double, 6> scattering_params{};
     double N = tInX0 * 1.587E7 * std::pow(Z, 1.0 / 3.0) / (beta * beta) /
                (Z + 1) / std::log(287 / std::sqrt(Z));
     scattering_params[4] = 15. / beta / p * std::sqrt(tInX0) *
@@ -166,10 +167,11 @@ struct GeneralMixture {
     double epsi = scattering_params[3];
     bool ind = udist(generator) > epsi;
     double u = udist(generator);
-    if (ind)
+    if (ind) {
       return std::sqrt(var1) * std::sqrt(-2 * std::log(u)) * sigma_tot;
-    else
+    } else {
       return std::sqrt(var2) * std::sqrt(-2 * std::log(u)) * sigma_tot;
+    }
   }
 
   /// @brief Retrieve the semi-gaussian mixture
@@ -191,10 +193,11 @@ struct GeneralMixture {
     double sigma_tot = scattering_params[4];
     bool ind = udist(generator) > epsi;
     double u = udist(generator);
-    if (ind)
+    if (ind) {
       return std::sqrt(var1) * std::sqrt(-2 * std::log(u)) * sigma_tot;
-    else
+    } else {
       return a * b * std::sqrt((1 - u) / (u * b * b + a * a)) * sigma_tot;
+    }
   }
 };
 

@@ -1,6 +1,7 @@
 import inspect
 import functools
 from typing import Optional, Callable, Dict, Any
+from pathlib import Path
 
 import acts
 
@@ -10,7 +11,7 @@ def _make_config_adapter(fn):
     def wrapped(self, *args, **kwargs):
         if len(args) > 0:
             maybe_config = args[0]
-            if isinstance(maybe_config, type(self).Config):
+            if isinstance(maybe_config, inspect.unwrap(type(self).Config)):
                 # is already config, nothing to do here
                 fn(self, maybe_config, *args[1:], **kwargs)
                 return
@@ -23,11 +24,37 @@ def _make_config_adapter(fn):
         cfg = type(self).Config()
         _kwargs = {}
         for k, v in kwargs.items():
+            if isinstance(v, Path):
+                v = str(v)
+
             if hasattr(cfg, k):
-                setattr(cfg, k, v)
+                try:
+                    setattr(cfg, k, v)
+                except TypeError as e:
+                    raise RuntimeError(
+                        "{}: Failed to set {}={}".format(type(cfg), k, v)
+                    ) from e
             else:
                 _kwargs[k] = v
-        fn(self, cfg, *args, **_kwargs)
+        try:
+            fn(self, cfg, *args, **_kwargs)
+        except TypeError as e:
+            import textwrap
+
+            print("-" * 80)
+            print("Patched config constructor failed for", type(self))
+            message = (
+                "This is most likely because one of the following kwargs "
+                "could not be assigned to the Config object, and the constructor "
+                "did not accept it as an additional argument:"
+            )
+            print("\n".join(textwrap.wrap(message, width=80)))
+            print("->", ", ".join(_kwargs.keys()))
+            members = inspect.getmembers(type(cfg), lambda a: not inspect.isroutine(a))
+            members = [m for m, _ in members if not m.startswith("_")]
+            print(type(cfg), "has the following properties:\n->", ", ".join(members))
+            print("-" * 80)
+            raise e
 
     return wrapped
 
@@ -76,7 +103,7 @@ def _patch_config(m):
 def _detector_create(cls, config_class=None):
     def create(*args, mdecorator=None, **kwargs):
         if mdecorator is not None:
-            if not isinstance(mdecorator, acts.IMaterialDecorator):
+            if not isinstance(mdecorator, inspect.unwrap(acts.IMaterialDecorator)):
                 raise TypeError("Material decorator is not valid")
         if config_class is None:
             cfg = cls.Config()

@@ -15,14 +15,22 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <memory>
-#include <random>
 #include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {
@@ -36,6 +44,17 @@ using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
 using Vector2F = Eigen::Matrix<BoundingBoxScalar, 2, 1>;
 using Vector3F = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
 using AngleAxis3F = Eigen::AngleAxis<BoundingBoxScalar>;
+
+std::filesystem::path tmp_path = []() {
+  auto p = std::filesystem::temp_directory_path() / "acts_unit_tests";
+  std::filesystem::create_directory(p);
+  std::cout << "Writing test output to: " << p << std::endl;
+  return p;
+}();
+
+std::ofstream tmp(const std::string& path) {
+  return std::ofstream{(tmp_path / path).string()};
+}
 
 BOOST_AUTO_TEST_CASE(box_construction) {
   BOOST_TEST_CONTEXT("2D") {
@@ -271,7 +290,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
   BOOST_TEST_CONTEXT("3D visualize") {
     Object o;
 
-    // lets make sure it also works in 3d
+    // let's make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
     Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
     BOOST_CHECK(bb3.intersect(ray3));
@@ -279,7 +298,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     PlyVisualization3D<BoundingBoxScalar> ply;
 
     ray3.draw(ply);
-    std::ofstream os("ray3d.ply");
+    auto os = tmp("ray3d.ply");
     os << ply << std::flush;
     os.close();
   }
@@ -288,7 +307,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     using VertexType3 = ObjectBBox::VertexType;
     Object o;
 
-    // lets make sure it also works in 3d
+    // let's make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
     Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
     BOOST_CHECK(bb3.intersect(ray3));
@@ -441,8 +460,8 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
 BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("2D") {
-    auto make_svg = [](std::string fname, size_t w, size_t h) {
-      std::ofstream os(fname);
+    auto make_svg = [](const std::string& fname, std::size_t w, std::size_t h) {
+      auto os = tmp(fname);
       os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
       os << "<svg width=\"" << w << "\" height=\"" << h
          << "\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n";
@@ -453,8 +472,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     std::ofstream os;
 
-    BoundingBoxScalar w = 1000;
-    size_t n = 10;
+    std::size_t w = 1000;
+    std::size_t n = 10;
 
     // BEGIN VISUAL PARAMETER TEST
 
@@ -462,8 +481,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // os = make_svg("frust2d.svg", w, w);
 
     // BoundingBoxScalar  step = (max - min) / BoundingBoxScalar(n);
-    // for (size_t i = 0; i <= n; i++) {
-    // for (size_t j = 0; j <= n; j++) {
+    // for (std::size_t i = 0; i <= n; i++) {
+    // for (std::size_t j = 0; j <= n; j++) {
     // ActsVector<BoundingBoxScalar,2> dir    = {1, 0};
     // ActsVector<BoundingBoxScalar,2> origin = {min + step * i, min + step *
     // j}; origin.x() *= 1.10;  // visual Eigen::Rotation2D<BoundingBoxScalar>
@@ -493,10 +512,10 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     BoundingBoxScalar stepx = (maxx - minx) / BoundingBoxScalar(n);
     BoundingBoxScalar stepy = (maxy - miny) / BoundingBoxScalar(n);
 
-    std::set<size_t> act_idxs;
+    std::set<std::size_t> act_idxs;
 
     // clang-format off
-    std::vector<std::pair<Frustum2, std::set<size_t>>> fr_exp;
+    std::vector<std::pair<Frustum2, std::set<std::size_t>>> fr_exp;
     fr_exp = {
         {Frustum2({0, 0}, {1, 0}, M_PI / 2.),
          {60,  70,  71,  72,  80,  81,  82,  83,  84,  90,  91,  92,
@@ -565,9 +584,9 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     };
     // clang-format on
 
-    for (size_t l = 0; l < fr_exp.size(); l++) {
+    for (std::size_t l = 0; l < fr_exp.size(); l++) {
       const Frustum2& fr = fr_exp.at(l).first;
-      const std::set<size_t>& exp_idxs = fr_exp.at(l).second;
+      const std::set<std::size_t>& exp_idxs = fr_exp.at(l).second;
       std::stringstream ss;
       ss << "frust2d_test_" << l << ".svg";
       os = make_svg(ss.str(), w, w);
@@ -576,8 +595,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
       std::vector<Box> boxes;
       boxes.reserve((n + 1) * (n + 1));
-      for (size_t i = 0; i <= n; i++) {
-        for (size_t j = 0; j <= n; j++) {
+      for (std::size_t i = 0; i <= n; i++) {
+        for (std::size_t j = 0; j <= n; j++) {
           boxes.emplace_back(&o,
                              Eigen::Matrix<BoundingBoxScalar, 2, 1>{
                                  minx + i * stepx, miny + j * stepy},
@@ -608,14 +627,14 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 3 Sides") {
     using Frustum3 = Frustum<BoundingBoxScalar, 3, 3>;
     std::ofstream os;
-    size_t n = 10;
-    size_t s = 5;
+    std::size_t n = 10;
+    std::size_t s = 5;
     double min = -10, max = 10;
     double step = (max - min) / double(s);
 
     // BEGIN VISUAL PARAMETER TEST
 
-    // size_t n_vtx   = 1;
+    // std::size_t n_vtx   = 1;
     // auto make = [&](double angle, ActsVector<BoundingBoxScalar,3> origin,
     // std::ofstream& os)
     // {
@@ -641,9 +660,9 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     //};
 
     // os = std::ofstreams("frust3d_dir.ply");
-    // for (size_t i = 0; i <= s; i++) {
-    // for (size_t j = 0; j <= s; j++) {
-    // for (size_t k = 0; k <= s; k++) {
+    // for (std::size_t i = 0; i <= s; i++) {
+    // for (std::size_t j = 0; j <= s; j++) {
+    // for (std::size_t k = 0; k <= s; k++) {
     // ActsVector<BoundingBoxScalar,3> origin(
     // min + i * step, min + j * step, min + k * step);
     //// std::cout << origin.transpose() << std::endl;
@@ -653,11 +672,11 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     //}
     // os.close();
 
-    // os = std::ofstream("frust3D_angle.ply");
+    // os = tmp("frust3D_angle.ply");
     // helper.clear();
     // n_vtx             = 1;
     // Eigen::Affine3f rot;
-    // for (size_t i = 0; i <= n; i++) {
+    // for (std::size_t i = 0; i <= n; i++) {
     // ActsVector<BoundingBoxScalar,3> origin(i * 4, 0, 0);
     // rot = Eigen::AngleAxisf(M_PI / BoundingBoxScalar(n) * i,
     // ActsVector<BoundingBoxScalar,3>::UnitY()); BoundingBoxScalar angle =
@@ -671,9 +690,9 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     //// END VISUAL PARAMETER TEST
 
-    std::set<size_t> act_idxs;
+    std::set<std::size_t> act_idxs;
 
-    std::vector<std::pair<Frustum3, std::set<size_t>>> fr_exp;
+    std::vector<std::pair<Frustum3, std::set<std::size_t>>> fr_exp;
     fr_exp = {
         {Frustum3({0, 0, 0}, {1, 0, 0}, M_PI / 2.),
          {
@@ -837,13 +856,13 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
           1088, 1143, 1154, 1165, 1175, 1176, 1186, 1187, 1197, 1198, 1207,
           1208, 1209, 1308, 1319, 1330}}};
 
-    for (size_t l = 0; l < fr_exp.size(); l++) {
+    for (std::size_t l = 0; l < fr_exp.size(); l++) {
       const Frustum3& fr = fr_exp.at(l).first;
-      const std::set<size_t>& exp_idxs = fr_exp.at(l).second;
+      const std::set<std::size_t>& exp_idxs = fr_exp.at(l).second;
       std::stringstream ss;
       ss << "frust3d-3s_test_" << l << ".ply";
 
-      os = std::ofstream(ss.str());
+      os = tmp(ss.str());
 
       helper.clear();
 
@@ -860,11 +879,11 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
       Box::Size size(Eigen::Matrix<BoundingBoxScalar, 3, 1>(2, 2, 2));
 
-      size_t idx = 0;
+      std::size_t idx = 0;
 
-      for (size_t i = 0; i <= n; i++) {
-        for (size_t j = 0; j <= n; j++) {
-          for (size_t k = 0; k <= n; k++) {
+      for (std::size_t i = 0; i <= n; i++) {
+        for (std::size_t j = 0; j <= n; j++) {
+          for (std::size_t k = 0; k <= n; k++) {
             Eigen::Matrix<BoundingBoxScalar, 3, 1> pos(
                 min + i * step, min + j * step, min + k * step);
             Box bb(&o, pos, size);
@@ -891,23 +910,23 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
   BOOST_TEST_CONTEXT("3D - 4 Sides") {
     using Frustum34 = Frustum<BoundingBoxScalar, 3, 4>;
-    size_t n = 10;
+    std::size_t n = 10;
     double min = -10, max = 10;
-    size_t s = 5;
+    std::size_t s = 5;
     double step = (max - min) / double(s);
     std::ofstream os;
 
     // BEGIN VISUAL PARAMETER TEST
 
-    // size_t n_vtx    = 1;
+    // std::size_t n_vtx    = 1;
 
     // helper.clear();
-    // os = std::ofstream("frust3d-4s_dir.ply");
+    // os = tmp("frust3d-4s_dir.ply");
 
     // double angle = M_PI / 4.;
-    // for (size_t i = 0; i <= s; i++) {
-    // for (size_t j = 0; j <= s; j++) {
-    // for (size_t k = 0; k <= s; k++) {
+    // for (std::size_t i = 0; i <= s; i++) {
+    // for (std::size_t j = 0; j <= s; j++) {
+    // for (std::size_t k = 0; k <= s; k++) {
     // ActsVector<BoundingBoxScalar,3> origin(
     // min + i * step, min + j * step, min + k * step);
     // ActsVector<BoundingBoxScalar,3> dir(1, 0, 0);
@@ -928,11 +947,11 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     // os << helper << std::flush;
     // os.close();
-    // os = std::ofstream("frust3d-4s_angle.ply");
+    // os = tmp("frust3d-4s_angle.ply");
     // helper.clear();
 
     // n_vtx    = 1;
-    // for (size_t i = 0; i <= n; i++) {
+    // for (std::size_t i = 0; i <= n; i++) {
     // ActsVector<BoundingBoxScalar,3>  origin(i * 4, 0, 0);
     // Eigen::Affine3f rot;
     // rot   = Eigen::AngleAxisf(M_PI / BoundingBoxScalar(n) * i,
@@ -948,9 +967,9 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     // END VISUAL PARAMETER TEST
 
-    std::set<size_t> act_idxs;
+    std::set<std::size_t> act_idxs;
 
-    std::vector<std::pair<Frustum34, std::set<size_t>>> fr_exp;
+    std::vector<std::pair<Frustum34, std::set<std::size_t>>> fr_exp;
     fr_exp = {
         {Frustum34({0, 0, 0}, {1, 0, 0}, M_PI / 2.),
          {665,  774,  775,  776,  785,  786,  787,  796,  797,  798,  883,
@@ -1101,13 +1120,13 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
           1088, 1143, 1154, 1165, 1175, 1176, 1186, 1187, 1197, 1198, 1209,
           1308, 1319, 1330}}};
 
-    for (size_t l = 0; l < fr_exp.size(); l++) {
+    for (std::size_t l = 0; l < fr_exp.size(); l++) {
       const Frustum34& fr = fr_exp.at(l).first;
-      const std::set<size_t>& exp_idxs = fr_exp.at(l).second;
+      const std::set<std::size_t>& exp_idxs = fr_exp.at(l).second;
       std::stringstream ss;
       ss << "frust3d-4s_test_" << l << ".ply";
 
-      os = std::ofstream(ss.str());
+      os = tmp(ss.str());
 
       helper.clear();
 
@@ -1124,10 +1143,10 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
       Box::Size size(Eigen::Matrix<BoundingBoxScalar, 3, 1>(2, 2, 2));
 
-      size_t idx = 0;
-      for (size_t i = 0; i <= n; i++) {
-        for (size_t j = 0; j <= n; j++) {
-          for (size_t k = 0; k <= n; k++) {
+      std::size_t idx = 0;
+      for (std::size_t i = 0; i <= n; i++) {
+        for (std::size_t j = 0; j <= n; j++) {
+          for (std::size_t k = 0; k <= n; k++) {
             Eigen::Matrix<BoundingBoxScalar, 3, 1> pos(
                 min + i * step, min + j * step, min + k * step);
             Box bb(&o, pos, size);
@@ -1169,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     BOOST_CHECK(bb.intersect(fr));
 
-    std::ofstream os("frust3d-5s.ply");
+    auto os = tmp("frust3d-5s.ply");
     os << ply << std::flush;
     os.close();
   }
@@ -1195,7 +1214,32 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     BOOST_CHECK(bb.intersect(fr));
 
-    std::ofstream os("frust3d-10s.ply");
+    auto os = tmp("frust3d-10s.ply");
+    os << ply << std::flush;
+    os.close();
+  }
+
+  BOOST_TEST_CONTEXT("3D - 4 Sides - Big box") {
+    using Frustum = Frustum<BoundingBoxScalar, 3, 4>;
+    using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
+    using vec3 = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
+
+    Object o;
+
+    PlyVisualization3D<BoundingBoxScalar> ply;
+
+    vec3 pos = {0, 0, 0};
+    vec3 dir = {0, 0, 1};
+    Frustum fr(pos, dir, 0.972419);
+    fr.draw(ply, 10);
+
+    Box::Size size(vec3(100, 100, 2));
+    Box bb(&o, pos + dir * 7, size);
+    bb.draw(ply);
+
+    BOOST_CHECK(bb.intersect(fr));
+
+    auto os = tmp("frust3d-4s-bigbox.ply");
     os << ply << std::flush;
     os.close();
   }

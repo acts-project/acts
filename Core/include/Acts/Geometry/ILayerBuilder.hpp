@@ -33,7 +33,7 @@ class ILayerBuilder {
 
   /// LayerBuilder interface method
   ///
-  /// @param gctx ist the geometry context under
+  /// @param gctx is the geometry context under
   /// which the geometry is built
   ///
   /// @return  the layers at negative side
@@ -42,7 +42,7 @@ class ILayerBuilder {
 
   /// LayerBuilder interface method
   ///
-  /// @param gctx ist the geometry context under
+  /// @param gctx is the geometry context under
   /// which the geometry is built
   ///
   /// @return the layers at the central sector
@@ -51,7 +51,7 @@ class ILayerBuilder {
 
   /// LayerBuilder interface method
   ///
-  /// @param gctx ist the geometry context under
+  /// @param gctx is the geometry context under
   /// which the geometry is built
   ///
   /// @return  the layers at positive side

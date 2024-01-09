@@ -11,10 +11,18 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <array>
+#include <ostream>
+#include <random>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 
@@ -46,7 +54,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsRecreated) {
   TrapezoidBounds original(minHalfX, maxHalfX, halfY);
   // const bool symmetric(false);
   auto valvector = original.values();
-  std::array<double, TrapezoidBounds::eSize> values;
+  std::array<double, TrapezoidBounds::eSize> values{};
   std::copy_n(valvector.begin(), TrapezoidBounds::eSize, values.begin());
   TrapezoidBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
@@ -173,12 +181,12 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
 
 BOOST_DATA_TEST_CASE(
     TrapezoidInsideCheck,
-    bdata::random((bdata::seed = 1,
-                   bdata::distribution = std::uniform_real_distribution<>(-7,
-                                                                          7))) ^
-        bdata::random(
-            (bdata::seed = 2,
-             bdata::distribution = std::uniform_real_distribution<>(-3, 3))) ^
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 21,
+         bdata::distribution = std::uniform_real_distribution<double>(-7, 7))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-3, 3))) ^
         bdata::xrange(1000) * bdata::make({0.0, 0.1, 0.2, 0.3}),
     x, y, index, tol) {
   (void)index;

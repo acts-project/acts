@@ -18,11 +18,19 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
+#include <cstdint>
+#include <limits>
+#include <map>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 
 namespace Acts {
 
 class TrackingGeometry;
+class ISurfaceMaterial;
+class IVolumeMaterial;
 
 using SurfaceMaterialMap =
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
@@ -66,7 +74,7 @@ class JsonMaterialWriter : public IMaterialWriter {
   JsonMaterialWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~JsonMaterialWriter();
+  ~JsonMaterialWriter() override;
 
   /// Write out the material map
   ///

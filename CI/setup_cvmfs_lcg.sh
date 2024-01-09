@@ -11,4 +11,4 @@ else
 fi
 
 dir="$( cd "$( dirname "${this_script}" )" && pwd )"
-source $dir/setup_cvmfs_lcg97.sh
+source $dir/setup_cvmfs_lcg101.sh

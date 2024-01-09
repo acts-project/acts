@@ -10,6 +10,7 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -17,6 +18,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <limits>
 
 namespace ActsFatras {
@@ -45,11 +47,15 @@ struct SimulationActor {
     // type.
     using action_type = SimulationActor;
 
-    template <typename propagator_state_t, typename stepper_t>
-    constexpr bool operator()(propagator_state_t &, const stepper_t &,
-                              const result_type &result) const {
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    constexpr bool operator()(propagator_state_t & /*state*/,
+                              const stepper_t & /*stepper*/,
+                              const navigator_t & /*navigator*/,
+                              const result_type &result,
+                              const Acts::Logger & /*logger*/) const {
       // must return true if the propagation should abort
-      return not result.isAlive;
+      return !result.isAlive;
     }
   };
 
@@ -75,13 +81,28 @@ struct SimulationActor {
   /// @param state is the mutable propagator state object
   /// @param stepper is the propagation stepper object
   /// @param result is the mutable result/cache object
-  template <typename propagator_state_t, typename stepper_t>
+  /// @param logger a logger instance
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t &state, stepper_t &stepper,
-                  result_type &result) const {
+                  navigator_t &navigator, result_type &result,
+                  const Acts::Logger &logger) const {
     assert(generator and "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
-    if (not result.isAlive) {
+    if (!result.isAlive) {
+      return;
+    }
+
+    if (Acts::EndOfWorldReached{}(state, stepper, navigator, logger)) {
+      result.isAlive = false;
+      return;
+    }
+
+    // check if we are still on the start surface and skip if so
+    if ((navigator.startSurface(state.navigation) != nullptr) &&
+        (navigator.startSurface(state.navigation) ==
+         navigator.currentSurface(state.navigation))) {
       return;
     }
 
@@ -92,16 +113,19 @@ struct SimulationActor {
     if (std::isnan(result.properTimeLimit)) {
       // first step is special: there is no previous state and we need to arm
       // the decay simulation for all future steps.
-      result.particle = makeParticle(initialParticle, stepper, state.stepping);
+      result.particle =
+          makeParticle(initialParticle, state, stepper, navigator);
       result.properTimeLimit =
           decay.generateProperTimeLimit(*generator, initialParticle);
     } else {
-      result.particle = makeParticle(result.particle, stepper, state.stepping);
+      result.particle =
+          makeParticle(result.particle, state, stepper, navigator);
     }
 
     // decay check. needs to happen at every step, not just on surfaces.
-    if (result.properTimeLimit - result.particle.properTime() <
-        result.properTimeLimit * properTimeRelativeTolerance) {
+    if (std::isfinite(result.properTimeLimit) &&
+        (result.properTimeLimit - result.particle.properTime() <
+         result.properTimeLimit * properTimeRelativeTolerance)) {
       auto descendants = decay.run(generator, result.particle);
       for (auto &&descendant : descendants) {
         result.generatedParticles.emplace_back(std::move(descendant));
@@ -112,6 +136,7 @@ struct SimulationActor {
 
     // Regulate the step size
     if (std::isfinite(result.properTimeLimit)) {
+      assert(result.particle.mass() > 0.0 && "Particle must have mass");
       //    beta² = p²/E²
       //    gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m = E / m
       //     time = proper-time * gamma
@@ -123,24 +148,24 @@ struct SimulationActor {
       const auto stepSize = properTimeDiff *
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
-      stepper.setStepSize(state.stepping, stepSize,
-                          Acts::ConstrainedStep::user);
+      stepper.updateStepSize(state.stepping, stepSize,
+                             Acts::ConstrainedStep::user);
     }
 
     // arm the point-like interaction limits in the first step
-    if (std::isnan(result.x0Limit) or std::isnan(result.l0Limit)) {
+    if (std::isnan(result.x0Limit) || std::isnan(result.l0Limit)) {
       armPointLikeInteractions(initialParticle, result);
     }
 
     // If we are on target, everything should have been done
-    if (state.navigation.targetReached) {
+    if (navigator.targetReached(state.navigation)) {
       return;
     }
     // If we are not on a surface, there is nothing further for us to do
-    if (not state.navigation.currentSurface) {
+    if (!navigator.currentSurface(state.navigation)) {
       return;
     }
-    const Acts::Surface &surface = *state.navigation.currentSurface;
+    const Acts::Surface &surface = *navigator.currentSurface(state.navigation);
 
     // we need the particle state before and after the interaction for the hit
     // creation. create a copy since the particle will be modified in-place.
@@ -152,7 +177,7 @@ struct SimulationActor {
       //   it should in principle never happen, so probably it would be best
       //   to change to a model using transform() directly
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
-                                            before.unitDirection());
+                                            before.direction());
       if (lpResult.ok()) {
         Acts::Vector2 local = lpResult.value();
         Acts::MaterialSlab slab =
@@ -160,14 +185,15 @@ struct SimulationActor {
         // again: interact only if there is valid material to interact with
         if (slab) {
           // adapt material for non-zero incidence
-          auto normal = surface.normal(state.geoContext, local);
+          auto normal = surface.normal(state.geoContext, before.position(),
+                                       before.direction());
           // dot-product(unit normal, direction) = cos(incidence angle)
           // particle direction is normalized, not sure about surface normal
-          auto cosIncidenceInv =
-              normal.norm() / normal.dot(before.unitDirection());
-          slab.scaleThickness(cosIncidenceInv);
+          auto cosIncidenceInv = normal.norm() / normal.dot(before.direction());
+          // apply abs in case `normal` and `before` produce an angle > 90°
+          slab.scaleThickness(std::abs(cosIncidenceInv));
           // run the interaction simulation
-          interact(slab, result);
+          interact(slab, result);  // MARK: fpeMask(FLTUND, 1, #2346)
         }
       }
     }
@@ -182,36 +208,44 @@ struct SimulationActor {
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
     }
 
+    if (after.absoluteMomentum() == 0.0) {
+      result.isAlive = false;
+      return;
+    }
+
     // continue the propagation with the modified parameters
-    stepper.update(state.stepping, after.position(), after.unitDirection(),
-                   after.absoluteMomentum(), after.time());
+    stepper.update(state.stepping, after.position(), after.direction(),
+                   after.qOverP(), after.time());
   }
 
-  /// Pure observer interface. Does not apply to the Fatras simulator.
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t &, stepper_t &) const {}
-
-  /// Construct the current particle state from the stepper state.
-  template <typename stepper_t>
-  Particle makeParticle(const Particle &previous, const stepper_t &stepper,
-                        const typename stepper_t::State &state) const {
-    // a particle can loose energy and thus its gamma factor is not a constant
+  /// Construct the current particle state from the propagation state.
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  Particle makeParticle(const Particle &previous, propagator_state_t &state,
+                        stepper_t &stepper, navigator_t &navigator) const {
+    // a particle can lose energy and thus its gamma factor is not a constant
     // of motion. since the stepper provides only the lab time, we need to
     // compute the change in proper time for each step separately. this assumes
     // that the gamma factor is constant over one stepper step.
-    const auto deltaLabTime = stepper.time(state) - previous.time();
+    const auto deltaLabTime = stepper.time(state.stepping) - previous.time();
     // proper-time = time / gamma = (1/gamma) * time
     //       beta² = p²/E²
     //       gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m
     //     1/gamma = m / sqrt(m² + p²) = m / E
     const auto gammaInv = previous.mass() / previous.energy();
     const auto properTime = previous.properTime() + gammaInv * deltaLabTime;
+    const Acts::Surface *currentSurface = nullptr;
+    if (navigator.currentSurface(state.navigation) != nullptr) {
+      currentSurface = navigator.currentSurface(state.navigation);
+    }
     // copy all properties and update kinematic state from stepper
     return Particle(previous)
-        .setPosition4(stepper.position(state), stepper.time(state))
-        .setDirection(stepper.direction(state))
-        .setAbsoluteMomentum(stepper.momentum(state))
-        .setProperTime(properTime);
+        .setPosition4(stepper.position(state.stepping),
+                      stepper.time(state.stepping))
+        .setDirection(stepper.direction(state.stepping))
+        .setAbsoluteMomentum(stepper.absoluteMomentum(state.stepping))
+        .setProperTime(properTime)
+        .setReferenceSurface(currentSurface);
   }
 
   /// Prepare limits and process selection for the next point-like interaction.
@@ -292,7 +326,7 @@ struct SimulationActor {
     // do not run if there is no point-like interaction
     if (frac < 1.0f) {
       // select which process to simulate
-      const size_t process =
+      const std::size_t process =
           (fracX0 < fracL0) ? result.x0Process : result.l0Process;
       // simulate the selected point-like process
       if (interactions.runPointLike(*generator, process, result.particle,

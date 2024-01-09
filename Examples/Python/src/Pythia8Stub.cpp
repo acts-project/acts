@@ -9,5 +9,5 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 
 namespace Acts::Python {
-void addPythia8(Context&) {}
+void addPythia8(Context& /*ctx*/) {}
 }  // namespace Acts::Python

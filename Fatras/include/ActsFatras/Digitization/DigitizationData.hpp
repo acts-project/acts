@@ -23,7 +23,7 @@ using Cell = std::pair<unsigned int, Acts::ActsScalar>;
 ///
 /// @tparam signal_t Type of the signal, requires += operator
 /// @tparam kSize Number of channel coordinates
-template <typename signal_t, size_t kSize>
+template <typename signal_t, std::size_t kSize>
 struct Channel {
   /// The cell identification in sizeof..(kParameters) dimensions
   std::array<Cell, kSize> cellId;
@@ -40,7 +40,7 @@ struct Channel {
   /// @param links_ The (optional) links to e.g. truth indices
   Channel(std::array<Cell, kSize> cellId_, signal_t value_,
           std::unordered_set<unsigned int> links_ = {})
-      : cellId(cellId_), value(value_), links(links_) {}
+      : cellId(cellId_), value(value_), links(std::move(links_)) {}
 
   Channel() = delete;
 };
@@ -49,11 +49,11 @@ struct Channel {
 ///
 /// @tparam signal_t Type of the signal carried, see above
 /// @tparam kSize Number of cluster coordinates
-template <typename signal_t, size_t kSize>
+template <typename signal_t, std::size_t kSize>
 struct Cluster {
   using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
-  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
 
   /// Measured parameters.
   ParametersVector parameters = ParametersVector::Zero();

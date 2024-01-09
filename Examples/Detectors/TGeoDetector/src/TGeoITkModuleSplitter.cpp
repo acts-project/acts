@@ -11,13 +11,43 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <sstream>
 
 ActsExamples::TGeoITkModuleSplitter::TGeoITkModuleSplitter(
     const ActsExamples::TGeoITkModuleSplitter::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
-    : m_cfg(cfg), m_logger(std::move(logger)) {}
+    : m_cfg(cfg), m_logger(std::move(logger)) {
+  initSplitCategories();
+}
+
+void ActsExamples::TGeoITkModuleSplitter::initSplitCategories() {
+  m_splitCategories.reserve(m_cfg.splitPatterns.size());
+  for (const std::pair<const std::string, std::string>& pattern_split_category :
+       m_cfg.splitPatterns) {
+    // mark pattern for disc or barrel module splits:
+    bool is_disk = false;
+    if (m_cfg.discMap.find(pattern_split_category.second) !=
+        m_cfg.discMap.end()) {
+      is_disk = true;
+    } else if (m_cfg.barrelMap.find(pattern_split_category.second) ==
+               m_cfg.barrelMap.end()) {
+      ACTS_ERROR(
+          pattern_split_category.second +
+          " is neither a category name for barrel or disk module splits.");
+      continue;
+    }
+    m_splitCategories.push_back(
+        std::make_tuple(std::regex(pattern_split_category.first),
+                        pattern_split_category.second, is_disk));
+  }
+}
 
 /// If applicable, returns a split detector element
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
@@ -28,40 +58,21 @@ ActsExamples::TGeoITkModuleSplitter::split(
   const TGeoNode& node = detElement->tgeoNode();
   auto sensorName = std::string(node.GetName());
 
-  if (sensorName.find("BRL") != std::string::npos) {
-    if (sensorName.find("MS") != std::string::npos) {
-      return ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
-          gctx, detElement, m_cfg.barrelMap.at("MS"));
-    }
-    if (sensorName.find("SS") != std::string::npos) {
-      return ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
-          gctx, detElement, m_cfg.barrelMap.at("SS"));
-    }
-  }
-  if (sensorName.find("EC") != std::string::npos) {
-    if (sensorName.find("Sensor0") != std::string::npos) {
-      return ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
-          gctx, detElement, m_cfg.discMap.at("EC0"));
-    }
-    if (sensorName.find("Sensor1") != std::string::npos) {
-      return ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
-          gctx, detElement, m_cfg.discMap.at("EC1"));
-    }
-    if (sensorName.find("Sensor2") != std::string::npos) {
-      return ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
-          gctx, detElement, m_cfg.discMap.at("EC2"));
-    }
-    if (sensorName.find("Sensor3") != std::string::npos) {
-      return ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
-          gctx, detElement, m_cfg.discMap.at("EC3"));
-    }
-    if (sensorName.find("Sensor4") != std::string::npos) {
-      return ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
-          gctx, detElement, m_cfg.discMap.at("EC4"));
-    }
-    if (sensorName.find("Sensor5") != std::string::npos) {
-      return ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
-          gctx, detElement, m_cfg.discMap.at("EC5"));
+  static const char* category_names[2] = {"barrel", "disc"};
+  for (const std::tuple<std::regex, std::string, bool>& split_category :
+       m_splitCategories) {
+    if (std::regex_match(sensorName, std::get<0>(split_category))) {
+      ACTS_DEBUG("Splitting " +
+                 std::string(category_names[std::get<2>(split_category)]) +
+                 " node " + sensorName + " using split ranges of category " +
+                 std::get<1>(split_category));
+      if (!std::get<2>(split_category)) {
+        return ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
+            gctx, detElement, m_cfg.barrelMap.at(std::get<1>(split_category)));
+      } else {
+        return ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
+            gctx, detElement, m_cfg.discMap.at(std::get<1>(split_category)));
+      }
     }
   }
   ACTS_DEBUG("No matching configuration found. Node " +
@@ -75,13 +86,13 @@ ActsExamples::TGeoITkModuleSplitter::split(
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
 ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
     const Acts::GeometryContext& gctx,
-    std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
+    const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     unsigned int nSegments) const {
-  // Retrive the surface
+  // Retrieve the surface
   auto identifier = detElement->identifier();
   const Acts::Surface& surface = detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();
-  if (bounds.type() != Acts::SurfaceBounds::eRectangle or nSegments <= 1u) {
+  if (bounds.type() != Acts::SurfaceBounds::eRectangle || nSegments <= 1u) {
     ACTS_WARNING("Invalid splitting config for barrel node: " +
                  std::string(detElement->tgeoNode().GetName()) +
                  "! Node will not be slpit.");
@@ -112,7 +123,7 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
              std::to_string(rectBounds->halfLengthX()) + ", " +
              std::to_string(rectBounds->halfLengthY()));
 
-  for (size_t i = 0; i < nSegments; i++) {
+  for (std::size_t i = 0; i < nSegments; i++) {
     Acts::Vector3 globalTranslation =
         surface.localToGlobal(gctx, localTranslation, {}) -
         transform.translation();
@@ -132,10 +143,10 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
 ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
     const Acts::GeometryContext& gctx,
-    std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
+    const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     const std::vector<ActsExamples::TGeoITkModuleSplitter::SplitRange>&
         splitRanges) const {
-  // Retrive the surface
+  // Retrieve the surface
   auto identifier = detElement->identifier();
   const Acts::Surface& surface = detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();
@@ -143,7 +154,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   // Check annulus bounds origin
   auto printOrigin = [&](const Acts::Surface& sf) {
     Acts::Vector3 discOrigin =
-        sf.localToGlobal(gctx, Acts::Vector2(0., 0.), {});
+        sf.localToGlobal(gctx, Acts::Vector2(0., 0.), Acts::Vector3::Zero());
     std::string out =
         "Disc surface origin at: " + std::to_string(discOrigin[0]) + ", " +
         std::to_string(discOrigin[1]) + ", " + std::to_string(discOrigin[2]);
@@ -151,7 +162,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   };
   ACTS_DEBUG(printOrigin(surface));
 
-  if (bounds.type() != Acts::SurfaceBounds::eAnnulus or splitRanges.empty()) {
+  if (bounds.type() != Acts::SurfaceBounds::eAnnulus || splitRanges.empty()) {
     ACTS_WARNING("Invalid splitting config for disk node: " +
                  std::string(detElement->tgeoNode().GetName()) +
                  "! Node will not be slpit.");
@@ -169,10 +180,10 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   double thickness = detElement->thickness();
   const Acts::Transform3& transform = surface.transform(gctx);
   const std::vector<double> boundsValues = bounds.values();
-  std::array<double, Acts::AnnulusBounds::eSize> values;
+  std::array<double, Acts::AnnulusBounds::eSize> values{};
   std::copy_n(boundsValues.begin(), Acts::AnnulusBounds::eSize, values.begin());
 
-  for (size_t i = 0; i < nSegments; i++) {
+  for (std::size_t i = 0; i < nSegments; i++) {
     values[Acts::AnnulusBounds::eMinR] = splitRanges[i].first;
     values[Acts::AnnulusBounds::eMaxR] = splitRanges[i].second;
     auto annulusBounds = std::make_shared<Acts::AnnulusBounds>(values);

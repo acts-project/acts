@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -24,17 +25,17 @@ namespace ActsExamples {
 /// Keeping it small and separate from the actual, potentially large,
 /// measurement data should result in better overall performance.
 /// Using an index instead of e.g. a pointer, means source link and
-/// measurement are decoupled and the measurement represenation can be
+/// measurement are decoupled and the measurement representation can be
 /// easily changed without having to also change the source link.
-class IndexSourceLink final : public Acts::SourceLink {
+class IndexSourceLink final {
  public:
   /// Construct from geometry identifier and index.
   constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx)
-      : SourceLink(gid), m_index(idx) {}
+      : m_geometryId(gid), m_index(idx) {}
 
   // Construct an invalid source link. Must be default constructible to
   /// satisfy SourceLinkConcept.
-  IndexSourceLink() : SourceLink{Acts::GeometryIdentifier{}} {}
+  IndexSourceLink() = default;
   IndexSourceLink(const IndexSourceLink&) = default;
   IndexSourceLink(IndexSourceLink&&) = default;
   IndexSourceLink& operator=(const IndexSourceLink&) = default;
@@ -43,17 +44,29 @@ class IndexSourceLink final : public Acts::SourceLink {
   /// Access the index.
   constexpr Index index() const { return m_index; }
 
- private:
-  Index m_index;
+  Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
 
-  friend constexpr bool operator==(const IndexSourceLink& lhs,
-                                   const IndexSourceLink& rhs) {
-    return (lhs.geometryId() == rhs.geometryId()) and
+  struct SurfaceAccessor {
+    const Acts::TrackingGeometry& trackingGeometry;
+
+    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+      const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
+      return trackingGeometry.findSurface(indexSourceLink.geometryId());
+    }
+  };
+
+ private:
+  Acts::GeometryIdentifier m_geometryId;
+  Index m_index = 0;
+
+  friend bool operator==(const IndexSourceLink& lhs,
+                         const IndexSourceLink& rhs) {
+    return (lhs.geometryId() == rhs.geometryId()) &&
            (lhs.m_index == rhs.m_index);
   }
-  friend constexpr bool operator!=(const IndexSourceLink& lhs,
-                                   const IndexSourceLink& rhs) {
-    return not(lhs == rhs);
+  friend bool operator!=(const IndexSourceLink& lhs,
+                         const IndexSourceLink& rhs) {
+    return !(lhs == rhs);
   }
 };
 
@@ -61,13 +74,21 @@ class IndexSourceLink final : public Acts::SourceLink {
 ///
 /// Since the source links provide a `.geometryId()` accessor, they can be
 /// stored in an ordered geometry container.
-using IndexSourceLinkContainer =
-    GeometryIdMultiset<std::reference_wrapper<const IndexSourceLink>>;
+using IndexSourceLinkContainer = GeometryIdMultiset<IndexSourceLink>;
 /// Accessor for the above source link container
 ///
 /// It wraps up a few lookup methods to be used in the Combinatorial Kalman
 /// Filter
-using IndexSourceLinkAccessor =
-    GeometryIdMultisetAccessor<std::reference_wrapper<const IndexSourceLink>>;
+struct IndexSourceLinkAccessor : GeometryIdMultisetAccessor<IndexSourceLink> {
+  using BaseIterator = GeometryIdMultisetAccessor<IndexSourceLink>::Iterator;
 
+  using Iterator = Acts::SourceLinkAdapterIterator<BaseIterator>;
+
+  // get the range of elements with requested geoId
+  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
+    assert(container != nullptr);
+    auto [begin, end] = container->equal_range(surface.geometryId());
+    return {Iterator{begin}, Iterator{end}};
+  }
+};
 }  // namespace ActsExamples

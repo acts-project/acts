@@ -1,7 +1,7 @@
 # integration tests are different and should not be registered with the
 # preconfigured `tests` target. manually add a separate one.
 add_custom_target(integrationtests)
-# add an integrationtest exectuable w/ default dependencies and register it.
+# add an integrationtest executable w/ default dependencies and register it.
 #
 # the common libraries which are linked to every integrationtest can be
 # extended by setting the `integrationtest_extra_libraries` variables before
@@ -39,6 +39,7 @@ add_integrationtest(PropagationEigenConstant PropagationEigenConstant.cpp)
 add_integrationtest(PropagationStraightLine PropagationStraightLine.cpp)
 add_integrationtest(PropagationCompareAtlasEigenConstant PropagationCompareAtlasEigenConstant.cpp)
 add_integrationtest(PropagationCompareEigenStraightLine PropagationCompareEigenStraightLine.cpp)
+add_integrationtest(PropagationBentTracks PropagationBentTracks.cpp)
 
 add_subdirectory_if(Autodiff ACTS_BUILD_PLUGIN_AUTODIFF)
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)

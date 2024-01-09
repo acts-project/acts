@@ -62,7 +62,7 @@ class PlyVisualization3D : public IVisualization3D {
  private:
   std::vector<std::pair<VertexType, ColorRGB>> m_vertices;
   std::vector<FaceType> m_faces;
-  std::vector<std::pair<std::pair<size_t, size_t>, ColorRGB>> m_edges;
+  std::vector<std::pair<std::pair<std::size_t, std::size_t>, ColorRGB>> m_edges;
 };
 
 #ifndef DOXYGEN

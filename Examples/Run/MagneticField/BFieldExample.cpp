@@ -6,12 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <string>
@@ -45,19 +44,19 @@ int main(int argc, char* argv[]) {
       "(cylinder "
       "coordinates) or x/y (cartesian coordinates)  in [mm]. In case no value "
       "is handed over the whole map will be written out. Please "
-      "hand over by simply seperating the values by space")(
+      "hand over by simply separating the values by space")(
       "bf-zRange", value<ActsExamples::Options::Reals<2>>(),
       "[optional] range which the bfield map should be written out in z in "
       "[mm].In case no value is handed over for 'bf-rRange' and 'bf-zRange the "
       "whole map will be written out. "
-      "Please hand over by simply seperating the values by space")(
-      "bf-rBins", value<size_t>()->default_value(200),
+      "Please hand over by simply separating the values by space")(
+      "bf-rBins", value<std::size_t>()->default_value(200),
       "[optional] The number of bins in r. This parameter only needs to be "
       "specified if 'bf-rRange' and 'bf-zRange' are given.")(
-      "bf-ZBins", value<size_t>()->default_value(300),
+      "bf-ZBins", value<std::size_t>()->default_value(300),
       "[optional] The number of bins in z. This parameter only needs to be "
       "specified if 'bf-rRange' and 'bf-zRange' are given.")(
-      "bf-PhiBins", value<size_t>()->default_value(100),
+      "bf-PhiBins", value<std::size_t>()->default_value(100),
       "[optional] The number of bins in phi. This parameter only needs to be "
       "specified if 'bf-rRange' and 'bf-zRange' are given and 'bf-out-rz' is "
       "turned on.");
@@ -89,7 +88,7 @@ int main(int argc, char* argv[]) {
   writerConfig.fileName = vm["bf-file-out"].template as<std::string>();
   writerConfig.bField = bField;
   std::cout << "setting rBounds" << std::endl;
-  if (vm.count("bf-rRange") && vm.count("bf-zRange")) {
+  if (vm.count("bf-rRange") != 0u && vm.count("bf-zRange") != 0u) {
     auto rBounds =
         vm["bf-rRange"].template as<ActsExamples::Options::Reals<2>>();
     auto zBounds =
@@ -104,9 +103,9 @@ int main(int argc, char* argv[]) {
     writerConfig.rBounds = rBounds;
     writerConfig.zBounds = zBounds;
   }
-  writerConfig.rBins = vm["bf-rBins"].template as<size_t>();
-  writerConfig.zBins = vm["bf-ZBins"].template as<size_t>();
-  writerConfig.phiBins = vm["bf-PhiBins"].template as<size_t>();
+  writerConfig.rBins = vm["bf-rBins"].template as<std::size_t>();
+  writerConfig.zBins = vm["bf-ZBins"].template as<std::size_t>();
+  writerConfig.phiBins = vm["bf-PhiBins"].template as<std::size_t>();
 
   ActsExamples::RootBFieldWriter::run(writerConfig);
 }

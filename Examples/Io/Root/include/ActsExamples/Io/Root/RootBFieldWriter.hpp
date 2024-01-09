@@ -10,20 +10,26 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <array>
+#include <cstddef>
 #include <ios>
+#include <memory>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include <TFile.h>
 #include <TTree.h>
 #include <boost/optional.hpp>
+
+namespace Acts {
+class InterpolatedMagneticField;
+}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -59,15 +65,15 @@ class RootBFieldWriter {
     /// Number of bins in r
     /// @note setting this parameter is optional, in case no bin numbers are
     /// handed over the full magnetic field map will be printed out
-    size_t rBins = 200;
+    std::size_t rBins = 200;
     /// Number of bins in z
     // @note setting this parameter is optional, in case no bin numbers are
     /// handed over the full magnetic field map will be printed out
-    size_t zBins = 300;
+    std::size_t zBins = 300;
     /// Number of bins in phi
     // @note setting this parameter is optional, in case no bin numbers are
     /// handed over the full magnetic field map will be printed out
-    size_t phiBins = 100;
+    std::size_t phiBins = 100;
   };
 
   /// Write down an interpolated magnetic field map

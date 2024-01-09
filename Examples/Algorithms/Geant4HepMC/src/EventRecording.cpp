@@ -10,6 +10,7 @@
 
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 
 #include <iostream>
@@ -21,7 +22,6 @@
 #include <HepMC3/GenParticle.h>
 
 #include "EventAction.hpp"
-#include "G4RunManager.hh"
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
@@ -33,7 +33,7 @@ ActsExamples::EventRecording::~EventRecording() {
 ActsExamples::EventRecording::EventRecording(
     const ActsExamples::EventRecording::Config& config,
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("EventRecording", level),
+    : ActsExamples::IAlgorithm("EventRecording", level),
       m_cfg(config),
       m_runManager(std::make_unique<G4RunManager>()) {
   if (m_cfg.inputParticles.empty()) {
@@ -42,12 +42,18 @@ ActsExamples::EventRecording::EventRecording(
   if (m_cfg.outputHepMcTracks.empty()) {
     throw std::invalid_argument("Missing output event collection");
   }
-  if (m_cfg.detectorConstruction == nullptr) {
+  if (!m_cfg.detectorConstructionFactory) {
     throw std::invalid_argument("Missing detector construction object");
   }
 
-  /// Now set up the Geant4 simulation
-  m_runManager->SetUserInitialization(m_cfg.detectorConstruction);
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputEvents.initialize(m_cfg.outputHepMcTracks);
+
+  // Now set up the Geant4 simulation
+
+  // G4RunManager deals with the lifetime of these objects
+  m_runManager->SetUserInitialization(
+      m_cfg.detectorConstructionFactory->factorize().release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new ActsExamples::Geant4::HepMC3::RunAction());
   m_runManager->SetUserAction(
@@ -66,9 +72,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
   std::lock_guard<std::mutex> guard(m_runManagerLock);
 
   // Retrieve the initial particles
-  const auto initialParticles =
-      context.eventStore.get<ActsExamples::SimParticleContainer>(
-          m_cfg.inputParticles);
+  const auto initialParticles = m_inputParticles(context);
 
   // Storage of events that will be produced
   std::vector<HepMC3::GenEvent> events;
@@ -137,24 +141,27 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
         // vertices
         while (true) {
           bool sane = true;
-          for (auto v : event.vertices()) {
-            if (!v)
+          for (const auto& v : event.vertices()) {
+            if (!v) {
               continue;
+            }
             if (v->particles_out().empty()) {
               event.remove_vertex(v);
               sane = false;
             }
           }
-          for (auto p : event.particles()) {
-            if (!p)
+          for (const auto& p : event.particles()) {
+            if (!p) {
               continue;
+            }
             if (!p->production_vertex()) {
               event.remove_particle(p);
               sane = false;
             }
           }
-          if (sane)
+          if (sane) {
             break;
+          }
         }
         events.push_back(std::move(event));
       }
@@ -165,7 +172,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
   ACTS_INFO(events.size() << " tracks generated");
 
   // Write the recorded material to the event store
-  context.eventStore.add(m_cfg.outputHepMcTracks, std::move(events));
+  m_outputEvents(context, std::move(events));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

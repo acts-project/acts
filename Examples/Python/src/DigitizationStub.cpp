@@ -9,5 +9,5 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 
 namespace Acts::Python {
-void addDigitization(Context&) {}
+void addDigitization(Context& /*ctx*/) {}
 }  // namespace Acts::Python

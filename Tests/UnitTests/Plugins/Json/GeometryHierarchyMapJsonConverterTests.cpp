@@ -8,12 +8,19 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
+#include <algorithm>
 #include <fstream>
-#include <ostream>
+#include <initializer_list>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 namespace {
 
@@ -33,7 +40,7 @@ struct Thing {
   int y = 23;
 
   friend constexpr bool operator==(const Thing& lhs, const Thing& rhs) {
-    return (lhs.x == rhs.x) and (lhs.y == rhs.y);
+    return (lhs.x == rhs.x) && (lhs.y == rhs.y);
   }
 };
 
@@ -54,10 +61,28 @@ std::ostream& operator<<(std::ostream& os, const Thing& t) {
   return os;
 }
 
+class ThingDecorator {
+ public:
+  void decorate(const Thing* a_thing, nlohmann::json& a_json) const {
+    if (a_thing != nullptr) {
+      a_json["product"] = a_thing->x * a_thing->y;
+    }
+  }
+};
+
 using Container = Acts::GeometryHierarchyMap<Thing>;
-using Converter = Acts::GeometryHierarchyMapJsonConverter<Thing>;
+using Converter =
+    Acts::GeometryHierarchyMapJsonConverter<Thing, ThingDecorator>;
 
 }  // namespace
+
+template <>
+void Acts::decorateJson<Thing>(const ThingDecorator* decorator,
+                               const Thing& src, nlohmann::json& dest) {
+  if (decorator != nullptr) {
+    decorator->decorate(&src, dest);
+  }
+}
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(json::iterator)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Container::Iterator)
@@ -65,12 +90,13 @@ BOOST_TEST_DONT_PRINT_LOG_VALUE(Container::Iterator)
 BOOST_AUTO_TEST_SUITE(GeometryHierarchyMapJsonConverter)
 
 BOOST_AUTO_TEST_CASE(ToJson) {
+  ThingDecorator decorator;
   Container c = {
       {makeId(1), {2.0, -3}},
       {makeId(2, 3), {-4.5, 5}},
       {makeId(4, 5, 6), {7.25, -8}},
   };
-  json j = Converter("thing").toJson(c);
+  json j = Converter("thing").toJson(c, &decorator);
 
   BOOST_CHECK(j.is_object());
   // check header
@@ -116,7 +142,7 @@ BOOST_AUTO_TEST_CASE(FromJson) {
   };
   Container c = Converter("thing").fromJson(j);
 
-  BOOST_CHECK(not c.empty());
+  BOOST_CHECK(!c.empty());
   BOOST_CHECK_EQUAL(c.size(), 2);
   {
     auto it = c.find(makeId(2, 3));
@@ -185,12 +211,13 @@ BOOST_AUTO_TEST_CASE(FromJsonMissingEntries) {
 }
 
 BOOST_AUTO_TEST_CASE(Roundtrip) {
+  ThingDecorator decorator;
   Container c0 = {
       {makeId(1), {2.0, -3}},
       {makeId(2, 3), {-4.5, 5}},
       {makeId(4, 5, 6), {7.25, -8}},
   };
-  auto j = Converter("the-identifier").toJson(c0);
+  auto j = Converter("the-identifier").toJson(c0, &decorator);
   auto c1 = Converter("the-identifier").fromJson(j);
 
   BOOST_CHECK_EQUAL(c0.size(), c1.size());
@@ -211,7 +238,7 @@ BOOST_AUTO_TEST_CASE(FromFile) {
   // convert json to container
   Container c = Converter("thing").fromJson(j);
   // check container content
-  BOOST_CHECK(not c.empty());
+  BOOST_CHECK(!c.empty());
   BOOST_CHECK_EQUAL(c.size(), 4);
   BOOST_CHECK_NE(c.find(makeId()), c.end());
   BOOST_CHECK_NE(c.find(makeId(1, 2)), c.end());

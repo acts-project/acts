@@ -39,7 +39,7 @@ class AnyVector {
   }
 
   // Default-construct a null type-erased vector
-  AnyVector() : m_vector{nullptr} {}
+  AnyVector() = default;
 
   // Move-construct a type-erased vector
   AnyVector(AnyVector&& other)
@@ -63,8 +63,9 @@ class AnyVector {
 
   // Delete a type-erased vector
   ~AnyVector() {
-    if (m_vector)
+    if (m_vector != nullptr) {
       m_deleter();
+    }
   }
 
  private:
@@ -72,7 +73,7 @@ class AnyVector {
   AnyVector(void* vector, std::function<void()>&& deleter)
       : m_vector{vector}, m_deleter{std::move(deleter)} {}
 
-  void* m_vector;                   // Casted std::vector<T>*
+  void* m_vector{nullptr};          // Casted std::vector<T>*
   std::function<void()> m_deleter;  // Deletes the underlying vector
 };
 
@@ -154,18 +155,18 @@ using IndexSwapper = std::function<void(std::size_t, std::size_t)>;
 // and in-place, which makes it a good choice for smaller inputs
 void selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
                    const IndexComparator& compare, const IndexSwapper& swap) {
-  using namespace std;
-  for (size_t targetIndex = firstIndex; targetIndex < lastIndex;
+  for (std::size_t targetIndex = firstIndex; targetIndex < lastIndex;
        ++targetIndex) {
-    size_t minIndex = targetIndex;
+    std::size_t minIndex = targetIndex;
     for (std::size_t readIndex = targetIndex + 1; readIndex <= lastIndex;
          ++readIndex) {
       if (compare(readIndex, minIndex) == Ordering::SMALLER) {
         minIndex = readIndex;
       }
     }
-    if (minIndex != targetIndex)
+    if (minIndex != targetIndex) {
       swap(minIndex, targetIndex);
+    }
   }
 }
 
@@ -186,7 +187,7 @@ void quickSort(const std::size_t firstIndex, const std::size_t lastIndex,
   std::size_t pivotIndex = firstIndex + (lastIndex - firstIndex) / 2;
 
   // Partition the data around the pivot using Hoare's scheme
-  std::size_t splitIndex;
+  std::size_t splitIndex = 0;
   {
     // Start with two indices one step beyond each side of the array
     std::size_t i = firstIndex - 1;
@@ -381,8 +382,9 @@ struct BranchComparisonHarness {
     // Setup order-sensitive tree comparison
     result.eventDataEqual = [&tree1Data, &tree2Data]() -> bool {
       for (std::size_t i = 0; i < tree1Data.size(); ++i) {
-        if (compare(tree1Data[i], tree2Data[i]) != Ordering::EQUAL)
+        if (compare(tree1Data[i], tree2Data[i]) != Ordering::EQUAL) {
           return false;
+        }
       }
       return true;
     };
@@ -421,7 +423,7 @@ struct BranchComparisonHarness {
           branch1Data(tree1Data),
           branch2Data(tree2Data) {}
 
-    void operator()() final override {
+    void operator()() override {
       branch1Data.push_back(*branch1Reader);
       branch2Data.push_back(*branch2Reader);
     }

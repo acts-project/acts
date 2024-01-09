@@ -32,22 +32,22 @@ class MaterialPhysicsList final : public G4VUserPhysicsList {
   MaterialPhysicsList(std::unique_ptr<const Acts::Logger> logger =
                           Acts::getDefaultLogger("MaterialPhysicsList",
                                                  Acts::Logging::INFO));
-  ~MaterialPhysicsList() final override = default;
+  ~MaterialPhysicsList() override = default;
 
   /// @brief Interface particle construction method
   ///
   /// This will add only Geantino and ChargedGeantino
-  void ConstructParticle() final override;
+  void ConstructParticle() override;
 
   /// @brief Interface process construction method
   ///
   /// This will add only Transport
-  void ConstructProcess() final override;
+  void ConstructProcess() override;
 
   /// @brief Interface process construction method
   ///
   /// This will add only Transport
-  void SetCuts() final override;
+  void SetCuts() override;
 
  private:
   /// Private access method to the logging instance

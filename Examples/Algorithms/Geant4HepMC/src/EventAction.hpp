@@ -29,16 +29,16 @@ class EventAction final : public G4UserEventAction {
 
   /// Construct the action and ensure singleton usage.
   EventAction(std::vector<std::string> processFilter);
-  ~EventAction() final override;
+  ~EventAction() override;
 
   /// Interface method for begin of the event
   /// @param event is the G4Event to be processed
   /// @note resets the event and step action
-  void BeginOfEventAction(const G4Event* event) final override;
+  void BeginOfEventAction(const G4Event* event) override;
 
   /// Interface method for end of event
   /// @param event is the G4Event to be processed
-  void EndOfEventAction(const G4Event* event) final override;
+  void EndOfEventAction(const G4Event* event) override;
 
   /// Clear the recorded data.
   void clear();

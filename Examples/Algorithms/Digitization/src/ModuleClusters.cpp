@@ -9,6 +9,16 @@
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
+
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
+#include <stdexcept>
+#include <type_traits>
 
 namespace ActsExamples {
 
@@ -19,7 +29,7 @@ void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
   mval.paramVariances = std::move(params.variances);
   mval.sources = {simhit};
 
-  if (m_merge and not params.cluster.channels.empty()) {
+  if (m_merge && !params.cluster.channels.empty()) {
     // Break-up the cluster
     for (auto cell : params.cluster.channels) {
       ModuleValue mval_cell = mval;
@@ -56,50 +66,61 @@ ModuleClusters::digitizedParameters() {
   return retv;
 }
 
-std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>>
-ModuleClusters::createCellMap() {
-  std::unordered_map<size_t, std::pair<ModuleValueAmbi, bool>> cellMap;
+// Needed for clusterization
+int getCellRow(const ModuleValue& mval) {
+  if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
+    return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[0];
+  }
+  throw std::domain_error("ModuleValue does not contain cell!");
+}
+
+int getCellColumn(const ActsExamples::ModuleValue& mval) {
+  if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
+    return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[1];
+  }
+  throw std::domain_error("ModuleValue does not contain cell!");
+}
+
+int& getCellLabel(ActsExamples::ModuleValue& mval) {
+  return mval.label;
+}
+
+void clusterAddCell(std::vector<ModuleValue>& cl, const ModuleValue& ce) {
+  cl.push_back(ce);
+}
+
+std::vector<ModuleValue> ModuleClusters::createCellCollection() {
+  std::vector<ModuleValue> cells;
   for (ModuleValue& mval : m_moduleValues) {
     if (std::holds_alternative<Cluster::Cell>(mval.value)) {
-      Cluster::Cell cell = std::get<Cluster::Cell>(mval.value);
-      size_t index = cell.bin[0] + m_segmentation.bins(0) * cell.bin[1];
-      auto [it, uniq] =
-          cellMap.insert({index, {ModuleValueAmbi(std::move(mval)), false}});
-      if (!uniq) {
-        it->second.first.add(std::move(mval));
-      }
+      cells.push_back(mval);
     }
   }
-  return cellMap;
+  return cells;
 }
 
 void ModuleClusters::merge() {
-  std::unordered_map<size_t, std::pair<ModuleClusters::ModuleValueAmbi, bool>>
-      cellMap = createCellMap();
+  std::vector<ModuleValue> cells = createCellCollection();
 
   std::vector<ModuleValue> newVals;
 
-  if (not cellMap.empty()) {
-    // Case where we actually have geometric clusters; use the
-    // clusterization code from the digitization plugin
-    std::vector<std::vector<ModuleValueAmbi>> merged =
-        Acts::createClusters(cellMap, m_segmentation.bins(0), m_commonCorner);
-    for (std::vector<ModuleValueAmbi>& cellv : merged) {
+  if (!cells.empty()) {
+    // Case where we actually have geometric clusters
+    std::vector<std::vector<ModuleValue>> merged =
+        Acts::Ccl::createClusters<std::vector<ModuleValue>,
+                                  std::vector<std::vector<ModuleValue>>>(
+            cells, Acts::Ccl::DefaultConnect<ModuleValue>(m_commonCorner));
+
+    for (std::vector<ModuleValue>& cellv : merged) {
       // At this stage, the cellv vector contains cells that form a
       // consistent cluster based on a connected component analysis
       // only. Still have to check if they match based on the other
       // indices (a good example of this would a for a timing
       // detector).
 
-      // Since we don't need to care about geometric cells anymore,
-      // unpack the individual cells
-      std::vector<ModuleValue> cellv1;
-      for (auto& sc : cellv) {
-        for (auto& sce : sc.values)
-          cellv1.push_back(std::move(sce));
-      }
-      for (std::vector<ModuleValue>& remerged : mergeParameters(cellv1))
+      for (std::vector<ModuleValue>& remerged : mergeParameters(cellv)) {
         newVals.push_back(squash(remerged));
+      }
     }
     m_moduleValues = std::move(newVals);
   } else {
@@ -112,10 +133,10 @@ void ModuleClusters::merge() {
 }
 
 // ATTN: returns vector of index into `indices'
-std::vector<size_t> ModuleClusters::nonGeoEntries(
+std::vector<std::size_t> ModuleClusters::nonGeoEntries(
     std::vector<Acts::BoundIndices>& indices) {
-  std::vector<size_t> retv;
-  for (size_t i = 0; i < indices.size(); i++) {
+  std::vector<std::size_t> retv;
+  for (std::size_t i = 0; i < indices.size(); i++) {
     auto idx = indices.at(i);
     if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
         m_geoIndices.end()) {
@@ -126,15 +147,15 @@ std::vector<size_t> ModuleClusters::nonGeoEntries(
 }
 
 // Merging based on parameters
-std::vector<std::vector<ModuleClusters::ModuleValue>>
-ModuleClusters::mergeParameters(
-    std::vector<ModuleClusters::ModuleValue> values) {
+std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
+    std::vector<ModuleValue> values) {
   std::vector<std::vector<ModuleValue>> retv;
 
   std::vector<bool> used(values.size(), false);
-  for (size_t i = 0; i < values.size(); i++) {
-    if (used.at(i))
+  for (std::size_t i = 0; i < values.size(); i++) {
+    if (used.at(i)) {
       continue;
+    }
 
     retv.emplace_back();
     std::vector<ModuleValue>& thisvec = retv.back();
@@ -146,10 +167,11 @@ ModuleClusters::mergeParameters(
     // Values previously visited by index `i' have already been added
     // to a cluster or used to seed a new cluster, so start at the
     // next unseen one
-    for (size_t j = i + 1; j < values.size(); j++) {
+    for (std::size_t j = i + 1; j < values.size(); j++) {
       // Still may have already been used, so check it
-      if (used.at(j))
+      if (used.at(j)) {
         continue;
+      }
 
       // Now look for a match between current cluster and value `j' Consider
       // them matched until we find evidence to the contrary. This
@@ -168,7 +190,7 @@ ModuleClusters::mergeParameters(
           Acts::ActsScalar v_i = thisval.paramVariances.at(k);
           Acts::ActsScalar v_j = values.at(j).paramVariances.at(k);
 
-          Acts::ActsScalar left, right;
+          Acts::ActsScalar left = 0, right = 0;
           if (p_i < p_j) {
             left = p_i + m_nsigma * std::sqrt(v_i);
             right = p_j - m_nsigma * std::sqrt(v_j);
@@ -200,8 +222,7 @@ ModuleClusters::mergeParameters(
   return retv;
 }
 
-ModuleClusters::ModuleValue ModuleClusters::squash(
-    std::vector<ModuleClusters::ModuleValue>& values) {
+ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   ModuleValue mval;
   Acts::ActsScalar tot = 0;
   Acts::ActsScalar tot2 = 0;
@@ -219,15 +240,16 @@ ModuleClusters::ModuleValue ModuleClusters::squash(
   }
 
   // Now, go over the non-geometric indices
-  for (size_t i = 0; i < values.size(); i++) {
+  for (std::size_t i = 0; i < values.size(); i++) {
     ModuleValue& other = values.at(i);
-    for (size_t j = 0; j < other.paramIndices.size(); j++) {
+    for (std::size_t j = 0; j < other.paramIndices.size(); j++) {
       auto idx = other.paramIndices.at(j);
       if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
           m_geoIndices.end()) {
         if (std::find(mval.paramIndices.begin(), mval.paramIndices.end(),
-                      idx) == mval.paramIndices.end())
+                      idx) == mval.paramIndices.end()) {
           mval.paramIndices.push_back(idx);
+        }
         if (mval.paramValues.size() < (j + 1)) {
           mval.paramValues.push_back(0);
           mval.paramVariances.push_back(0);
@@ -248,22 +270,22 @@ ModuleClusters::ModuleValue ModuleClusters::squash(
   Acts::Vector2 pos(0., 0.);
   Acts::Vector2 var(0., 0.);
 
-  size_t b0min = SIZE_MAX;
-  size_t b0max = 0;
-  size_t b1min = SIZE_MAX;
-  size_t b1max = 0;
+  std::size_t b0min = SIZE_MAX;
+  std::size_t b0max = 0;
+  std::size_t b1min = SIZE_MAX;
+  std::size_t b1max = 0;
 
-  for (size_t i = 0; i < values.size(); i++) {
+  for (std::size_t i = 0; i < values.size(); i++) {
     ModuleValue& other = values.at(i);
-    if (not std::holds_alternative<Cluster::Cell>(other.value)) {
+    if (!std::holds_alternative<Cluster::Cell>(other.value)) {
       continue;
     }
 
     Cluster::Cell ch = std::get<Cluster::Cell>(other.value);
     auto bin = ch.bin;
 
-    size_t b0 = bin[0];
-    size_t b1 = bin[1];
+    std::size_t b0 = bin[0];
+    std::size_t b1 = bin[1];
 
     b0min = std::min(b0min, b0);
     b0max = std::max(b0max, b0);
@@ -284,7 +306,7 @@ ModuleClusters::ModuleValue ModuleClusters::squash(
 
     clus.channels.push_back(std::move(ch));
 
-    // Will have the right value at last interation Do it here to
+    // Will have the right value at last iteration Do it here to
     // avoid having bogus values when there are no clusters
     clus.sizeLoc0 = b0max - b0min + 1;
     clus.sizeLoc1 = b1max - b1min + 1;
@@ -309,22 +331,6 @@ ModuleClusters::ModuleValue ModuleClusters::squash(
   }
 
   return mval;
-}
-
-double ModuleClusters::ModuleValueAmbi::activation() {
-  double acc = 0;
-  for (ModuleValue& mval : values) {
-    if (std::holds_alternative<Cluster>(mval.value)) {
-      Cluster& clus = std::get<Cluster>(mval.value);
-      for (Cluster::Cell& cell : clus.channels) {
-        acc += cell.activation;
-      }
-    } else {
-      Cluster::Cell& cell = std::get<Cluster::Cell>(mval.value);
-      acc += cell.activation;
-    }
-  }
-  return acc;
 }
 
 }  // namespace ActsExamples

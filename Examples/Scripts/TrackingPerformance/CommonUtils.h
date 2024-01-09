@@ -45,7 +45,7 @@ void setHistStyle(hist_t* hist, short color = 1) {
 ///
 /// @tparam eff_t the efficiency histogram type
 ///
-/// @param eff the effiency histogram
+/// @param eff the efficiency histogram
 /// @param color the color to be set
 template <typename eff_t>
 void setEffStyle(eff_t* eff, short color = 1) {
@@ -56,7 +56,7 @@ void setEffStyle(eff_t* eff, short color = 1) {
   eff->SetMarkerColor(color);
 }
 
-/// Helper function: set color pallette
+/// Helper function: set color palette
 ///
 /// @tparam type of the histogram
 ///
@@ -92,7 +92,7 @@ void adaptColorPalette(hist_t* h, float rmin, float rmax, float rgood,
 /// @tparam eff_t the efficiency histogram type
 ///
 /// @param eff the efficiency histogram
-/// @param minScale the minum of the scale
+/// @param minScale the minimum of the scale
 /// @param maxScale the maximum of the scale
 template <typename eff_t>
 void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
@@ -111,7 +111,7 @@ void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
 ///
 /// This struct allows to define accessors and
 /// cuts for residual and pull analysis in order
-/// to be able to acces them in an ROOT event loop
+/// to be able to access them in an ROOT event loop
 struct ResidualPullHandle {
   /// A tag name
   std::string tag = "";
@@ -212,7 +212,7 @@ struct AcceptCombination {
 
   /// returns true if value is within range
   /// @param entry the entry in the tree
-  bool operator()(ULong64_t entry) { return (one(entry) and two(entry)); }
+  bool operator()(ULong64_t entry) { return (one(entry) && two(entry)); }
 };
 
 /// This Struct is to accept all values - a placeholder
@@ -231,9 +231,9 @@ struct AcceptRange {
   /// returns true if value is within range
   /// @param entry the entry in the tree
   bool operator()(ULong64_t entry) {
-    if (value) {
+    if (value != nullptr) {
       float v = value->at(entry);
-      return (range[0] <= v and range[1] > v);
+      return (range[0] <= v && range[1] > v);
     }
     return false;
   }
@@ -247,7 +247,7 @@ template <typename primitive_t>
 struct DirectAccessor {
   std::vector<primitive_t>* value = nullptr;
 
-  /// Gives direct acces to the underlying parameter
+  /// Gives direct access to the underlying parameter
   ///
   /// @param entry the entry in the tree
   primitive_t operator()(ULong64_t entry) {
@@ -266,11 +266,11 @@ struct DivisionAccessor {
 
   std::vector<primitive_two_t>* two = nullptr;
 
-  /// Gives direct acces to the underlying parameter
+  /// Gives direct access to the underlying parameter
   ///
   /// @param entry the entry in the tree
   primitive_one_t operator()(ULong64_t entry) {
-    if (one and two) {
+    if (one && two) {
       primitive_one_t vo = one->at(entry);
       primitive_two_t vt = two->at(entry);
       return vo / vt;
@@ -289,7 +289,7 @@ struct ResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (value and reference) {
+    if (value != nullptr && reference != nullptr) {
       float v = value->at(entry);
       float r = reference->at(entry);
       return (v - r);
@@ -310,7 +310,8 @@ struct QopResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value and reference_charge and reference_p) {
+    if (qop_value != nullptr && reference_charge != nullptr &&
+        reference_p != nullptr) {
       float v = qop_value->at(entry);
       float q_true = reference_charge->at(entry);
       float p_true = reference_p->at(entry);
@@ -332,7 +333,8 @@ struct PtResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value and theta_value and reference_pt) {
+    if (qop_value != nullptr && theta_value != nullptr &&
+        reference_pt != nullptr) {
       float p = 1. / std::abs(qop_value->at(entry));
       float theta = theta_value->at(entry);
       float pt_true = reference_pt->at(entry);
@@ -354,7 +356,8 @@ struct PtErrorAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value and qop_error and theta_value and theta_error) {
+    if (qop_value != nullptr && qop_error != nullptr &&
+        theta_value != nullptr && theta_error != nullptr) {
       float qop_v = qop_value->at(entry);
       float qop_e = qop_error->at(entry);
       float theta_v = theta_value->at(entry);
@@ -375,7 +378,7 @@ struct PtErrorAccessor {
 /// @param directory the writable directory
 /// @param tree the tree from which is drawn
 /// @param peakEntries the number of entries for the range peak
-/// @param hBarcode a temporary unqiue ROOT barcode for memory managements
+/// @param hBarcode a temporary unique ROOT barcode for memory managements
 template <typename dir_t, typename tree_t>
 void estimateResiudalRange(ResidualPullHandle& handle, dir_t& directory,
                            tree_t& tree, unsigned long peakEntries,
@@ -409,12 +412,11 @@ void estimateResiudalRange(ResidualPullHandle& handle, dir_t& directory,
 /// @param directory the writable directory
 /// @param tree the tree from which is drawn
 /// @param peakEntries the number of entries for the range peak
-/// @param hBarcode a temporary unqiue ROOT barcode for memory managements
+/// @param hBarcode a temporary unique ROOT barcode for memory managements
 template <typename dir_t, typename tree_t>
-void estimateIntegerRange(SingleHandle& handle, dir_t& directory,
-                                  tree_t& tree, unsigned long peakEntries,
-                                  unsigned int startBins, unsigned int addBins,
-                                  unsigned int hBarcode) {
+void estimateIntegerRange(SingleHandle& handle, dir_t& directory, tree_t& tree,
+                          unsigned long peakEntries, unsigned int startBins,
+                          unsigned int addBins, unsigned int hBarcode) {
   // Change into the Directory
   directory.cd();
   TString rangeHist = handle.rangeDrawStr;
@@ -441,14 +443,14 @@ void estimateIntegerRange(SingleHandle& handle, dir_t& directory,
       }
     }
     handle.bins = (nBins + addBins);
-    handle.range = { -0.5, static_cast<float>(handle.bins-0.5) };
+    handle.range = {-0.5, static_cast<float>(handle.bins - 0.5)};
     return;
   }
-  handle.bins = ( startBins );
-  handle.range = { -0.5, static_cast<float>(handle.bins-0.5) };
+  handle.bins = (startBins);
+  handle.range = {-0.5, static_cast<float>(handle.bins - 0.5)};
 }
 
-/// Helper mehtod to book residual and pull histograms
+/// Helper method to book residual and pull histograms
 ///
 /// @param handle the residual/pull handle
 /// @param pullRange the symmetric pull range for plotting
@@ -484,14 +486,14 @@ void bookHistograms(ResidualPullHandle& handle, float pullRange,
 /// @tparam tree_t the type of the tree
 ///
 /// @param tree is the TTree/TChain in question
-/// @param configuredEntries is a configuraiton parameter
+/// @param configuredEntries is a configuration parameter
 ///
 /// @return the number of entries
 template <typename tree_t>
 unsigned long estimateEntries(const tree_t& tree,
                               unsigned long configuredEntries) {
   unsigned long entries = static_cast<unsigned long>(tree.GetEntries());
-  if (configuredEntries > 0 and configuredEntries < entries) {
+  if (configuredEntries > 0 && configuredEntries < entries) {
     entries = configuredEntries;
   }
   return entries;

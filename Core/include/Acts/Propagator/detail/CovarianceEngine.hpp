@@ -12,13 +12,16 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
 #include <functional>
+#include <tuple>
 #include <variant>
 
 namespace Acts {
@@ -27,7 +30,7 @@ namespace Acts {
 /// given Jacobians. The required data is provided by the stepper object
 /// with some additional data. Since this is a purely algebraic problem the
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
-/// As a consequence the methods can be located in a seperate file.
+/// As a consequence the methods can be located in a separate file.
 namespace detail {
 
 /// Create and return the bound state at the current position
@@ -43,22 +46,26 @@ namespace detail {
 /// parameters
 /// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
-/// @param [in] parameters Free, nominal parametrisation
+/// @param [in, out] parameters Free, nominal parametrisation
+/// @param [in] particleHypothesis Particle hypothesis
 /// @param [in] covTransport Decision whether the covariance transport should be
 /// performed
 /// @param [in] accumulatedPath Propagated distance
 /// @param [in] surface Target surface on which the state is represented
+/// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
 ///
 /// @return A bound state:
 ///   - the parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
-    const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
+    const GeometryContext& geoContext, BoundSquareMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
-    const FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface);
+    FreeVector& parameters, const ParticleHypothesis& particleHypothesis,
+    bool covTransport, double accumulatedPath, const Surface& surface,
+    const FreeToBoundCorrection& freeToBoundCorrection =
+        FreeToBoundCorrection(false));
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -72,6 +79,7 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
 /// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] parameters Free, nominal parametrisation
+/// @param [in] particleHypothesis Particle hypothesis
 /// @param [in] covTransport Decision whether the covariance transport should be
 /// performed
 /// @param [in] accumulatedPath Propagated distance
@@ -81,10 +89,11 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
 ///   - the stepweise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
-    BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
+    BoundSquareMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath);
+    const ParticleHypothesis& particleHypothesis, bool covTransport,
+    double accumulatedPath);
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear to
 /// another bound representation.
@@ -96,17 +105,20 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
 /// @param [in, out] freeToPathDerivatives Path length derivatives
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 /// parametrisation to free parameters
-/// @param [in] freeParameters Free, nominal parametrisation
+/// @param [in, out] freeParameters Free, nominal parametrisation
 /// @param [in] surface is the surface to which the covariance is
 ///        forwarded to
+/// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
 ///
 /// @note No check is done if the position is actually on the surface
 ///
 void transportCovarianceToBound(
-    const GeometryContext& geoContext, BoundSymMatrix& boundCovariance,
+    const GeometryContext& geoContext, BoundSquareMatrix& boundCovariance,
     BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeVector& freeParameters, const Surface& surface);
+    FreeVector& freeParameters, const Surface& surface,
+    const FreeToBoundCorrection& freeToBoundCorrection =
+        FreeToBoundCorrection(false));
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear
 /// to a new curvilinear representation.
@@ -119,12 +131,25 @@ void transportCovarianceToBound(
 /// parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
 ///
-void transportCovarianceToCurvilinear(BoundSymMatrix& boundCovariance,
+void transportCovarianceToCurvilinear(BoundSquareMatrix& boundCovariance,
                                       BoundMatrix& fullTransportJacobian,
                                       FreeMatrix& freeTransportJacobian,
                                       FreeVector& freeToPathDerivatives,
                                       BoundToFreeMatrix& boundToFreeJacobian,
                                       const Vector3& direction);
+
+/// Convert bound track parameters to another bound surface.
+/// @pre The @p targetSurface must intersect with the surface attached to
+///      @p boundParameters, and the parameters must be on-surface on the
+///      target surface.
+/// @param gctx The geometry context.
+/// @param boundParameters The bound track parameters to convert.
+/// @param targetSurface The target surface.
+/// @param bField The magnetic field at the target surface.
+/// @return The converted bound track parameters.
+Result<BoundTrackParameters> boundToBoundConversion(
+    const GeometryContext& gctx, const BoundTrackParameters& boundParameters,
+    const Surface& targetSurface, const Vector3& bField = Vector3::Zero());
 
 }  // namespace detail
 }  // namespace Acts

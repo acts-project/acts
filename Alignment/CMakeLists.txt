@@ -1,10 +1,6 @@
 add_library(ActsAlignment SHARED
   src/Kernel/detail/AlignmentEngine.cpp)
 
-target_compile_features(
-  ActsAlignment
-  PUBLIC cxx_std_17)
-
 target_include_directories(
   ActsAlignment
   PUBLIC

@@ -14,13 +14,14 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
+#include <memory>
+#include <vector>
 
 namespace Acts {
 namespace Test {
-
-namespace tt = boost::test_tools;
 
 // Test Cylinder
 BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {

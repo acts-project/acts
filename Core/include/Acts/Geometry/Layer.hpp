@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <utility>
@@ -34,7 +35,6 @@ class VolumeBounds;
 class TrackingVolume;
 class ApproachDescriptor;
 class IMaterialDecorator;
-
 template <typename T>
 struct NavigationOptions;
 
@@ -43,6 +43,7 @@ using SurfaceIntersection = ObjectIntersection<Surface>;
 
 // master typedef
 class Layer;
+
 using LayerPtr = std::shared_ptr<const Layer>;
 using MutableLayerPtr = std::shared_ptr<Layer>;
 using NextLayers = std::pair<const Layer*, const Layer*>;
@@ -65,7 +66,7 @@ enum LayerType { navigation = -1, passive = 0, active = 1 };
 /// subSurfaces.
 /// A pointer to the TrackingVolume (can only be set by such)
 /// An active/passive code :
-/// 0      - activ
+/// 0      - active
 /// 1      - passive
 /// [....] - other
 ///
@@ -125,12 +126,13 @@ class Layer : public virtual GeometryObject {
   /// @note using isOnSurface() with Layer specific tolerance
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the gobal position to be checked
+  /// @param position is the global position to be checked
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
-  virtual bool isOnLayer(const GeometryContext& gctx, const Vector3& position,
-                         const BoundaryCheck& bcheck = true) const;
+  virtual bool isOnLayer(
+      const GeometryContext& gctx, const Vector3& position,
+      const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor* approachDescriptor() const;
@@ -274,17 +276,22 @@ class Layer : public virtual GeometryObject {
   /// Private helper method to close the geometry
   /// - it will assign material to the surfaces if needed
   /// - it will set the layer geometry ID for a unique identification
-  /// - it will also register the internal sub strucutre
+  /// - it will also register the internal sub structure
   ///
   /// @param materialDecorator is a decorator that assigns
   ///        optionally the surface material to where they belong
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
+  /// @param hook Identifier hook to be applied to surfaces
+  /// @param logger A @c Logger instance
+  ///
   void closeGeometry(const IMaterialDecorator* materialDecorator,
-                     const GeometryIdentifier& layerID);
+                     const GeometryIdentifier& layerID,
+                     const GeometryIdentifierHook& hook,
+                     const Logger& logger = getDummyLogger());
 };
 
-/// Layers are constructedd with shared_ptr factories, hence the layer array is
+/// Layers are constructed with shared_ptr factories, hence the layer array is
 /// describes as:
 using LayerArray = BinnedArray<LayerPtr>;
 

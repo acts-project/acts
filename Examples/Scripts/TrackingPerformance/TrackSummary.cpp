@@ -8,27 +8,36 @@
 
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <algorithm>
+#include <array>
+#include <bitset>
+#include <cmath>
 #include <exception>
 #include <iostream>
+#include <limits>
+#include <optional>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include <TApplication.h>
 #include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
 #if ((BOOST_VERSION / 100) % 1000) <= 71
 // Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
 #include <boost/progress.hpp>
+
 using progress_display = boost::progress_display;
 #else
 // Boost >=1.72 can use this as a replacement
 #include <boost/timer/progress_display.hpp>
+
 using progress_display = boost::timer::progress_display;
 #endif
 
 #define NLOHMANN_AVAILABLE 1
-#include <nlohmann/json.hpp>
-
 #include "trackSummaryAnalysis.C"
 
 using namespace boost::program_options;
@@ -51,14 +60,14 @@ int main(int argc, char** argv) {
        "(Optionally) limit number of events to be processed.");
     ao("peak-events,p", value<unsigned long>()->default_value(0),
        "(Optionally) limit number of events for the range peaking.");
-    ao("input,i", value<std::vector<std::string>>(),
+    ao("input,i", value<std::vector<std::string>>()->required(),
        "Input ROOT file(s) containing the input TTree.");
     ao("tree,t", value<std::string>()->default_value("tracksummary"),
        "Input TTree/TChain name.");
     ao("output,o", value<std::string>()->default_value(""),
        "Output ROOT file with histograms");
     ao("hist-bins", value<unsigned int>()->default_value(61),
-       "Numer of bins for the residual/pull histograms");
+       "Number of bins for the residual/pull histograms");
     ao("pull-range", value<float>()->default_value(5.),
        "Number of sigmas for the pull range.");
     ao("eta-bins", value<unsigned int>()->default_value(10),
@@ -71,11 +80,12 @@ int main(int argc, char** argv) {
     ao("phi-range",
        value<Interval>()->value_name("MIN:MAX")->default_value({-M_PI, M_PI}),
        "Range for the phi bins.");
-    ao("pt-borders", value<VariableReals>(), "Transverse momentum borders.");
+    ao("pt-borders", value<VariableReals>()->required(),
+       "Transverse momentum borders.");
     ao("config-output", value<std::string>()->default_value(""),
-       "(Optional) output histrogram configuration json file.");
+       "(Optional) output histogram configuration json file.");
     ao("config-input", value<std::string>()->default_value(""),
-       "(Optional) input histrogram configuration json file.");
+       "(Optional) input histogram configuration json file.");
     // Define all parameters (overwrites individual parameters)
     ao("all", bool_switch(),
        "Process all residual/pull and auxiliary parameters");
@@ -97,12 +107,13 @@ int main(int argc, char** argv) {
     // Set up the variables map
     variables_map vm;
     store(command_line_parser(argc, argv).options(description).run(), vm);
-    notify(vm);
 
-    if (vm.count("help")) {
+    if (vm.count("help") != 0u) {
       std::cout << description;
       return 1;
     }
+
+    notify(vm);
 
     // Events
     unsigned long nEntries = vm["events"].as<unsigned long>();
@@ -137,9 +148,10 @@ int main(int argc, char** argv) {
       ptBorders = {0., std::numeric_limits<double>::infinity()};
     }
 
-    TApplication* tApp = vm["silent"].as<bool>()
-                             ? nullptr
-                             : new TApplication("TrackSummary", 0, 0);
+    TApplication* tApp =
+        vm["silent"].as<bool>()
+            ? nullptr
+            : new TApplication("TrackSummary", nullptr, nullptr);
 
     std::bitset<7> residualPulls;
     std::bitset<5> auxiliaries;

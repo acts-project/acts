@@ -45,21 +45,18 @@ namespace detail {
 ///
 
 struct RealQuadraticEquation {
-  double first;
-  double second;
-  int solutions;
+  double first = 0;
+  double second = 0;
+  int solutions = 0;
 
   /// Constructor
   ///
   /// @param alpha is the first parameter of the quad equation
   /// @param beta is the second parameter of the quad equation
   /// @param gamma is the third parameter of the quad equation
-  RealQuadraticEquation(double alpha, double beta, double gamma)
-      : first(0.), second(0.) {
+  RealQuadraticEquation(double alpha, double beta, double gamma) {
     double discriminant = beta * beta - 4 * alpha * gamma;
-    if (discriminant < 0) {
-      solutions = 0;
-    } else {
+    if (discriminant >= 0) {
       solutions = (discriminant == 0) ? 1 : 2;
       double q = -0.5 * (beta + (beta > 0 ? std::sqrt(discriminant)
                                           : -std::sqrt(discriminant)));

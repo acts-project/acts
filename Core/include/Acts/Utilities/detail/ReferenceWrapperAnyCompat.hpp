@@ -8,7 +8,7 @@
 
 #pragma once
 
-// This workround does not work on libc++. To detect libc++, we include
+// This workaround does not work on libc++. To detect libc++, we include
 // one STL header and then check if _LIBCPP_VERSION is defined.
 
 #include <any>
@@ -23,6 +23,10 @@ namespace std {
 template <>
 struct is_constructible<std::reference_wrapper<const std::any>,
                         const std::reference_wrapper<const std::any>&>
+    : public true_type {};
+template <>
+struct is_constructible<std::reference_wrapper<const std::any>,
+                        std::reference_wrapper<const std::any>&&>
     : public true_type {};
 template <>
 struct is_constructible<std::reference_wrapper<const std::any>,

@@ -44,7 +44,7 @@ class ExternallyAlignedDetectorElement
   struct AlignmentStore {
     // GenericDetector identifiers are sequential
     std::vector<Acts::Transform3> transforms;
-    size_t lastAccessed;
+    std::size_t lastAccessed = 0;
   };
 
   /// @class ContextType
@@ -62,7 +62,7 @@ class ExternallyAlignedDetectorElement
   ///
   /// @note this is called from the surface().transform(gctx)
   const Acts::Transform3& transform(
-      const Acts::GeometryContext& gctx) const final override;
+      const Acts::GeometryContext& gctx) const override;
 };
 
 inline const Acts::Transform3& ExternallyAlignedDetectorElement::transform(

@@ -15,13 +15,16 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
 /// @brief Segmentation Base class
 ///
-/// Segementation class for generic pixel, strixels and strip segmentations
+/// Segmentation class for generic pixel, strixels and strip segmentations
 /// in a cartesian frame, this uses a cartesian X/Y local surface definition
 ///
 /// The calculation can be done in full 3D, i.e. the segments of the path
@@ -29,7 +32,7 @@ namespace Acts {
 /// the planar module are calculated in a 3D model - or in 2D, when the entire
 /// calculation is done on the projective surface. When the 2D option is used,
 /// segmentation surfaces are not created. The 2D calculation is faster and uses
-/// less memory, however, effects witin the sensor volume can not be easily
+/// less memory, however, effects within the sensor volume can not be easily
 /// integrated
 ///
 /// Conventions:
@@ -47,9 +50,9 @@ class CartesianSegmentation : public Segmentation {
   /// @param numCellsX is the number of cells in X
   /// @param numCellsY is the number of cells in Y
   CartesianSegmentation(const std::shared_ptr<const PlanarBounds>& mBounds,
-                        size_t numCellsX, size_t numCellsY = 1);
+                        std::size_t numCellsX, std::size_t numCellsY = 1);
 
-  /// @todo contructor from BinUtilities for more complex readouts
+  /// @todo constructor from BinUtilities for more complex readouts
   ///
   /// @param bUtility is the bin Utility,
   //  it will define the RectangleBounds if none are provided
@@ -57,7 +60,7 @@ class CartesianSegmentation : public Segmentation {
   /// optimisation
   ///
   /// @note if both RectangleBounds and BinUtility are provided, no check is
-  /// done for consitency
+  /// done for consistency
   CartesianSegmentation(std::shared_ptr<const BinUtility> bUtility,
                         std::shared_ptr<const PlanarBounds> mBounds = nullptr);
 

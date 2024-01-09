@@ -17,7 +17,7 @@ namespace {
 /// @param actsParticle Acts particle that will be converted
 /// @return converted particle
 HepMC3::GenParticlePtr actsParticleToGen(
-    std::shared_ptr<ActsExamples::SimParticle> actsParticle) {
+    const std::shared_ptr<ActsExamples::SimParticle>& actsParticle) {
   // Extract momentum and energy from Acts particle for HepMC3::FourVector
   const auto mom4 = actsParticle->fourMomentum();
   const HepMC3::FourVector vec(mom4[0], mom4[1], mom4[2], mom4[3]);
@@ -61,7 +61,7 @@ HepMC3::GenVertexPtr createGenVertex(
 /// @note An Acts vertex does not store a barcode. Therefore the content of
 /// both vertices is compared. The position, time and number of incoming and
 /// outgoing particles will be compared. Since a second vertex could exist in
-/// the record with identical informations (although unlikely), this
+/// the record with identical information (although unlikely), this
 /// comparison could lead to false positive results. On the other hand, a
 /// numerical deviation of the parameters could lead to a false negative.
 /// @param actsVertex Acts vertex
@@ -72,18 +72,24 @@ bool compareVertices(const std::shared_ptr<ActsExamples::SimVertex>& actsVertex,
   // Compare position, time, number of incoming and outgoing particles between
   // both vertices. Return false if one criterium does not match, else true.
   HepMC3::FourVector genVec = genVertex->position();
-  if (actsVertex->position4[0] != genVec.x())
+  if (actsVertex->position4[0] != genVec.x()) {
     return false;
-  if (actsVertex->position4[1] != genVec.y())
+  }
+  if (actsVertex->position4[1] != genVec.y()) {
     return false;
-  if (actsVertex->position4[2] != genVec.z())
+  }
+  if (actsVertex->position4[2] != genVec.z()) {
     return false;
-  if (actsVertex->position4[3] != genVec.t())
+  }
+  if (actsVertex->position4[3] != genVec.t()) {
     return false;
-  if (actsVertex->incoming.size() != genVertex->particles_in().size())
+  }
+  if (actsVertex->incoming.size() != genVertex->particles_in().size()) {
     return false;
-  if (actsVertex->outgoing.size() != genVertex->particles_out().size())
+  }
+  if (actsVertex->outgoing.size() != genVertex->particles_out().size()) {
     return false;
+  }
   return true;
 }
 }  // namespace
@@ -95,16 +101,15 @@ bool compareVertices(const std::shared_ptr<ActsExamples::SimVertex>& actsVertex,
 void ActsExamples::HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
                                              const double momentumUnit) {
   // Check, if the momentum unit fits Acts::UnitConstants::MeV or _GeV
-  HepMC3::Units::MomentumUnit mom;
-  if (momentumUnit == Acts::UnitConstants::MeV)
+  HepMC3::Units::MomentumUnit mom = HepMC3::Units::MomentumUnit::GEV;
+  if (momentumUnit == Acts::UnitConstants::MeV) {
     mom = HepMC3::Units::MomentumUnit::MEV;
-  else if (momentumUnit == Acts::UnitConstants::GeV)
+  } else if (momentumUnit == Acts::UnitConstants::GeV) {
     mom = HepMC3::Units::MomentumUnit::GEV;
-  else {
+  } else {
     // Report invalid momentum unit and set GeV
     std::cout << "Invalid unit of momentum: " << momentumUnit << std::endl;
     std::cout << "Momentum unit [GeV] will be used instead" << std::endl;
-    mom = HepMC3::Units::MomentumUnit::GEV;
   }
   // Set units
   event.set_units(mom, event.length_unit());
@@ -113,16 +118,15 @@ void ActsExamples::HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
 void ActsExamples::HepMC3Event::lengthUnit(HepMC3::GenEvent& event,
                                            const double lengthUnit) {
   // Check, if the length unit fits Acts::UnitConstants::mm or _cm
-  HepMC3::Units::LengthUnit len;
-  if (lengthUnit == Acts::UnitConstants::mm)
+  HepMC3::Units::LengthUnit len = HepMC3::Units::LengthUnit::MM;
+  if (lengthUnit == Acts::UnitConstants::mm) {
     len = HepMC3::Units::LengthUnit::MM;
-  else if (lengthUnit == Acts::UnitConstants::cm)
+  } else if (lengthUnit == Acts::UnitConstants::cm) {
     len = HepMC3::Units::LengthUnit::CM;
-  else {
+  } else {
     // Report invalid length unit and set mm
     std::cout << "Invalid unit of length: " << lengthUnit << std::endl;
     std::cout << "Length unit [mm] will be used instead" << std::endl;
-    len = HepMC3::Units::LengthUnit::MM;
   }
 
   // Set units
@@ -166,13 +170,13 @@ void ActsExamples::HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
 ///
 
 void ActsExamples::HepMC3Event::addParticle(
-    HepMC3::GenEvent& event, std::shared_ptr<SimParticle> particle) {
+    HepMC3::GenEvent& event, const std::shared_ptr<SimParticle>& particle) {
   // Add new particle
   event.add_particle(actsParticleToGen(particle));
 }
 
 void ActsExamples::HepMC3Event::addVertex(
-    HepMC3::GenEvent& event, const std::shared_ptr<SimVertex> vertex) {
+    HepMC3::GenEvent& event, const std::shared_ptr<SimVertex>& vertex) {
   // Add new vertex
   event.add_vertex(createGenVertex(vertex));
 }
@@ -199,12 +203,13 @@ void ActsExamples::HepMC3Event::removeVertex(
     HepMC3::GenEvent& event, const std::shared_ptr<SimVertex>& vertex) {
   const std::vector<HepMC3::GenVertexPtr> genVertices = event.vertices();
   // Walk over every recorded vertex
-  for (auto& genVertex : genVertices)
+  for (auto& genVertex : genVertices) {
     if (compareVertices(vertex, genVertex)) {
       // Remove vertex if it matches actsVertex
       event.remove_vertex(genVertex);
       break;
     }
+  }
 }
 
 ///
@@ -247,9 +252,10 @@ std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Event::particles(
       event.particles();
 
   // Translate all particles
-  for (auto& genParticle : genParticles)
+  for (auto& genParticle : genParticles) {
     actsParticles.push_back(HepMC3Particle::particle(
         std::make_shared<HepMC3::GenParticle>(*genParticle)));
+  }
 
   return actsParticles;
 }
@@ -273,9 +279,10 @@ std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Event::beams(
   const std::vector<HepMC3::ConstGenParticlePtr> genBeams = event.beams();
 
   // Translate beam particles and store the result
-  for (auto& genBeam : genBeams)
+  for (auto& genBeam : genBeams) {
     actsBeams.push_back(HepMC3Particle::particle(
         std::make_shared<HepMC3::GenParticle>(*genBeam)));
+  }
   return actsBeams;
 }
 
@@ -287,9 +294,10 @@ std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Event::finalState(
   // Walk over every vertex
   for (auto& particle : particles) {
     // Collect particles without end vertex
-    if (!particle->end_vertex())
+    if (!particle->end_vertex()) {
       fState.push_back(HepMC3Particle::particle(
           std::make_shared<HepMC3::GenParticle>(*particle)));
+    }
   }
   return fState;
 }

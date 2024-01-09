@@ -42,9 +42,11 @@ class HepMC3AsciiWriter final : public WriterT<std::vector<HepMC3::GenEvent>> {
   /// @param [in] events The recorded HepMC3 events
   ///
   /// @return Code describing whether the writing was successful
-  ProcessCode writeT(
-      const ActsExamples::AlgorithmContext& ctx,
-      const std::vector<HepMC3::GenEvent>& events) final override;
+  ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
+                     const std::vector<HepMC3::GenEvent>& events) override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   /// The configuration of this writer

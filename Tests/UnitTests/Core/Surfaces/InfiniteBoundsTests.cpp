@@ -11,7 +11,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
 namespace Acts {
 
@@ -21,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 BOOST_AUTO_TEST_CASE(InfiniteBoundsConstruction) {
   InfiniteBounds u;
   BOOST_CHECK_EQUAL(u.type(), SurfaceBounds::eBoundless);
-  // InfiniteBounds s(1);  // would act as size_t cast to InfiniteBounds
+  // InfiniteBounds s(1);  // would act as std::size_t cast to InfiniteBounds
   // InfiniteBounds t(s);
   InfiniteBounds v(u);  // implicit
   BOOST_CHECK_EQUAL(v.type(), SurfaceBounds::eBoundless);

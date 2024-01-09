@@ -56,13 +56,13 @@ class AlignmentDecorator : public IContextDecorator {
   static void applyTransform(Acts::Transform3& trf, const Config& cfg,
                              RandomEngine& rng, unsigned int iov) {
     std::normal_distribution<double> gauss(0., 1.);
-    if (iov != 0 or not cfg.firstIovNominal) {
+    if (iov != 0 || !cfg.firstIovNominal) {
       // the shifts in x, y, z
       double tx = cfg.gSigmaX != 0 ? cfg.gSigmaX * gauss(rng) : 0.;
       double ty = cfg.gSigmaY != 0 ? cfg.gSigmaY * gauss(rng) : 0.;
       double tz = cfg.gSigmaZ != 0 ? cfg.gSigmaZ * gauss(rng) : 0.;
       // Add a translation - if there is any
-      if (tx != 0. or ty != 0. or tz != 0.) {
+      if (tx != 0. || ty != 0. || tz != 0.) {
         const auto& tMatrix = trf.matrix();
         auto colX = tMatrix.block<3, 1>(0, 0).transpose();
         auto colY = tMatrix.block<3, 1>(0, 1).transpose();

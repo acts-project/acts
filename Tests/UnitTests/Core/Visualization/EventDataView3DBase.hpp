@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -27,12 +31,10 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
@@ -48,70 +50,29 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace EventDataView3DTest {
 
-using Covariance = BoundSymMatrix;
-template <BoundIndices... params>
-using MeasurementType = Measurement<BoundIndices, params...>;
+using Covariance = BoundSquareMatrix;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
 
-/// Helper method to visualiza all types of surfaces
+/// A function that creates a simple telescope detector with surfaces for the
+/// EventDataView3D tests
 ///
-/// @param helper The visualziation helper
+/// @param helper The visualization helper
+/// @param surfaces Reference to the surfaces, because we need them outside
+/// @param detector The tracking geometry that will be filled
+/// @param nSurfaces Number of surfaces to generate
 ///
 /// @return an overall string including all written output
-static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
-  std::stringstream ss;
-
-  ViewConfig pcolor({20, 120, 20});
-  ViewConfig scolor({235, 198, 52});
-
-  auto gctx = GeometryContext();
-  auto identity = Transform3::Identity();
-
-  // rectangle and plane
-  auto rectangle = std::make_shared<RectangleBounds>(15., 15.);
-  auto plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
-
-  double momentumScale = 0.005;
-  double localErrorScale = 10.;
-  double directionErrorScale = 1000.;
-
-  // now create parameters on this surface
-  // l_x, l_y, phi, theta, q/p (1/p), t
-  std::array<double, 6> pars_array = {
-      {-0.1234, 4.8765, 0.45, 0.128, 0.001, 21.}};
-
-  BoundTrackParameters::ParametersVector pars =
-      BoundTrackParameters::ParametersVector::Zero();
-  pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
-      pars_array[4], pars_array[5];
-
-  BoundSymMatrix cov = BoundSymMatrix::Zero();
-  cov << 0.25, 0.0042, -0.00076, 6.156e-06, -2.11e-07, 0, 0.0042, 0.859,
-      -0.000173, 0.000916, -4.017e-08, 0, -0.00076, -0.000173, 2.36e-04,
-      -2.76e-07, 1.12e-08, 0, 6.15e-06, 0.000916, -2.76e-07, 8.84e-04,
-      -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
-      0, 0, 0, 0, 0, 1;
-
-  EventDataView3D::drawBoundTrackParameters(
-      helper, BoundTrackParameters(plane, pars, std::move(cov)), gctx,
-      momentumScale, localErrorScale, directionErrorScale, pcolor, scolor);
-
-  helper.write("EventData_BoundAtPlaneParameters");
-  helper.write(ss);
-
-  return ss.str();
-}
-
-static inline std::string testMultiTrajectory(IVisualization3D& helper) {
+void createDetector(GeometryContext& tgContext,
+                    std::vector<const Surface*>& surfaces,
+                    std::shared_ptr<const TrackingGeometry>& detector,
+                    const std::size_t nSurfaces = 7) {
   using namespace UnitLiterals;
-  std::stringstream ss;
 
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
-  MagneticFieldContext mfContext = MagneticFieldContext();
-  CalibrationContext calContext = CalibrationContext();
+  if (nSurfaces < 1) {
+    throw std::invalid_argument("At least 1 surfaces needs to be created.");
+  }
 
   // Construct the rotation
   RotationMatrix3 rotation = RotationMatrix3::Identity();
@@ -134,19 +95,15 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   // Set translation vectors
   std::vector<Vector3> translations;
-  translations.reserve(6);
-  translations.push_back({-300_mm, 0., 0.});
-  translations.push_back({-200_mm, 0., 0.});
-  translations.push_back({-100_mm, 0., 0.});
-  translations.push_back({100_mm, 0., 0.});
-  translations.push_back({200_mm, 0., 0.});
-  translations.push_back({300_mm, 0., 0.});
+  translations.reserve(nSurfaces);
+  for (unsigned int i = 0; i < nSurfaces; i++) {
+    translations.push_back({i * 100_mm - 300_mm, 0., 0.});
+  }
 
   // Construct layer configs
   std::vector<CuboidVolumeBuilder::LayerConfig> lConfs;
-  lConfs.reserve(6);
-  unsigned int i;
-  for (i = 0; i < translations.size(); i++) {
+  lConfs.reserve(nSurfaces);
+  for (unsigned int i = 0; i < translations.size(); i++) {
     CuboidVolumeBuilder::SurfaceConfig sConf;
     sConf.position = translations[i];
     sConf.rotation = rotation;
@@ -156,7 +113,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     sConf.thickness = 1._um;
     sConf.detElementConstructor =
         [](const Transform3& trans,
-           std::shared_ptr<const RectangleBounds> bounds, double thickness) {
+           const std::shared_ptr<const RectangleBounds>& bounds,
+           double thickness) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };
     CuboidVolumeBuilder::LayerConfig lConf;
@@ -187,36 +145,166 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
         return cvb.trackingVolume(context, inner, vb);
       });
   TrackingGeometryBuilder tgb(tgbCfg);
-  std::shared_ptr<const TrackingGeometry> detector =
-      tgb.trackingGeometry(tgContext);
+  detector = tgb.trackingGeometry(tgContext);
 
   // Get the surfaces;
-  std::vector<const Surface*> surfaces;
-  surfaces.reserve(6);
+  surfaces.reserve(nSurfaces);
   detector->visitSurfaces([&](const Surface* surface) {
-    if (surface and surface->associatedDetectorElement()) {
+    if (surface != nullptr && surface->associatedDetectorElement() != nullptr) {
       std::cout << "surface " << surface->geometryId() << " placed at: ("
                 << surface->center(tgContext).transpose() << " )" << std::endl;
       surfaces.push_back(surface);
     }
   });
   std::cout << "There are " << surfaces.size() << " surfaces" << std::endl;
+}
+
+/// Helper method to visualize all types of surfaces
+///
+/// @param helper The visualization helper
+///
+/// @return an overall string including all written output
+static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
+  std::stringstream ss;
+
+  ViewConfig pcolor({20, 120, 20});
+  ViewConfig scolor({235, 198, 52});
+
+  auto gctx = GeometryContext();
+  auto identity = Transform3::Identity();
+
+  // rectangle and plane
+  auto rectangle = std::make_shared<RectangleBounds>(15., 15.);
+  auto plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
+
+  double momentumScale = 0.005;
+  double localErrorScale = 10.;
+  double directionErrorScale = 1000.;
+
+  // now create parameters on this surface
+  // l_x, l_y, phi, theta, q/p (1/p), t
+  std::array<double, 6> pars_array = {
+      {-0.1234, 4.8765, 0.45, 0.128, 0.001, 21.}};
+
+  BoundTrackParameters::ParametersVector pars =
+      BoundTrackParameters::ParametersVector::Zero();
+  pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
+      pars_array[4], pars_array[5];
+
+  Covariance cov = Covariance::Zero();
+  cov << 0.25, 0.0042, -0.00076, 6.156e-06, -2.11e-07, 0, 0.0042, 0.859,
+      -0.000173, 0.000916, -4.017e-08, 0, -0.00076, -0.000173, 2.36e-04,
+      -2.76e-07, 1.12e-08, 0, 6.15e-06, 0.000916, -2.76e-07, 8.84e-04,
+      -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
+      0, 0, 0, 0, 0, 1;
+
+  EventDataView3D::drawBoundTrackParameters(
+      helper,
+      BoundTrackParameters(plane, pars, std::move(cov),
+                           ParticleHypothesis::pion()),
+      gctx, momentumScale, localErrorScale, directionErrorScale, pcolor,
+      scolor);
+
+  helper.write("EventData_BoundAtPlaneParameters");
+  helper.write(ss);
+
+  return ss.str();
+}
+
+/// Helper method to visualize measurements
+///
+/// @param helper The visualization helper
+///
+/// @return an overall string including all written output
+static inline std::string testMeasurement(IVisualization3D& helper) {
+  using namespace UnitLiterals;
+  std::stringstream ss;
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
+  // Create a detector
+  const std::size_t nSurfaces = 7;
+  std::vector<const Surface*> surfaces;
+  std::shared_ptr<const TrackingGeometry> detector;
+  createDetector(tgContext, surfaces, detector, nSurfaces);
 
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<Test::TestSourceLink> sourcelinks;
-  sourcelinks.reserve(6);
+  std::vector<detail::Test::TestSourceLink> sourcelinks;
+  sourcelinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
-  SymMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
+  SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(eBoundLoc0, eBoundLoc1, loc, cov2D,
-                             surface->geometryId());
+    sourcelinks.emplace_back(detail::Test::TestSourceLink{
+        eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
+  }
+
+  double localErrorScale = 100.;
+  ViewConfig mcolor({255, 145, 48});
+  mcolor.offset = 0.01;
+
+  // Draw the measurements
+  std::cout << "Draw the measurements" << std::endl;
+  //  auto singleMeasurement = sourcelinks[0];
+  for (auto& singleMeasurement : sourcelinks) {
+    auto cov = singleMeasurement.covariance;
+    auto lposition = singleMeasurement.parameters;
+
+    auto surf = detector->findSurface(singleMeasurement.m_geometryId);
+    auto transf = surf->transform(tgContext);
+
+    EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
+                                     localErrorScale, mcolor);
+  }
+
+  helper.write("EventData_Measurement");
+  helper.write(ss);
+
+  return ss.str();
+}
+
+/// Helper method to visualize a MultiTrajectory
+///
+/// @param helper The visualization helper
+///
+/// @return an overall string including all written output
+static inline std::string testMultiTrajectory(IVisualization3D& helper) {
+  using namespace UnitLiterals;
+  std::stringstream ss;
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
+  CalibrationContext calContext = CalibrationContext();
+
+  // Create a detector
+  const std::size_t nSurfaces = 7;
+  std::vector<const Surface*> surfaces;
+  std::shared_ptr<const TrackingGeometry> detector;
+  createDetector(tgContext, surfaces, detector, nSurfaces);
+
+  // Create measurements (assuming they are for a linear track parallel to
+  // global x-axis)
+  std::cout << "Creating measurements:" << std::endl;
+  std::vector<Acts::SourceLink> sourcelinks;
+  sourcelinks.reserve(nSurfaces);
+  Vector2 lPosCenter{5_mm, 5_mm};
+  Vector2 resolution{200_um, 150_um};
+  SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
+  for (const auto& surface : surfaces) {
+    // 2D measurements
+    Vector2 loc = lPosCenter;
+    loc[0] += resolution[0] * gauss(generator);
+    loc[1] += resolution[1] * gauss(generator);
+    sourcelinks.emplace_back(detail::Test::TestSourceLink{
+        eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
   // The KalmanFitter - we use the eigen stepper for covariance transport
@@ -241,12 +329,12 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       0., 0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
   Vector3 rPos(-350._mm, 100_um * gauss(generator), 100_um * gauss(generator));
   Vector3 rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
-  CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_GeV, 1_e,
-                                    cov);
+  CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_e / 1_GeV,
+                                    cov, ParticleHypothesis::pion());
 
   const Surface* rSurface = &rStart.referenceSurface();
 
-  using KalmanFitter = KalmanFitter<RecoPropagator>;
+  using KalmanFitter = KalmanFitter<RecoPropagator, VectorMultiTrajectory>;
 
   KalmanFitter kFitter(rPropagator);
 
@@ -255,24 +343,35 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
 
-  KalmanFitterExtensions extensions;
-  extensions.calibrator.connect<&Test::testSourceLinkCalibrator>();
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
-      &kfSmoother);
+  KalmanFitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator.connect<
+      &detail::Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.updater
+      .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
+          &kfUpdater);
+  extensions.smoother
+      .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
+          &kfSmoother);
+
+  detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor{*detector};
+  extensions.surfaceAccessor
+      .connect<&detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
+          &surfaceAccessor);
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
-                                LoggerWrapper{*logger},
                                 PropagatorPlainOptions(), rSurface);
 
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
   // Fit the track
-  auto fitRes =
-      kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart, kfOptions);
-  if (not fitRes.ok()) {
+  auto fitRes = kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart,
+                            kfOptions, tracks);
+  if (!fitRes.ok()) {
     std::cout << "Fit failed" << std::endl;
     return ss.str();
   }
-  auto& fittedTrack = *fitRes;
+  auto& track = *fitRes;
 
   // Draw the track
   std::cout << "Draw the fitted track" << std::endl;
@@ -291,9 +390,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   spcolor.offset = -0.04;
 
   EventDataView3D::drawMultiTrajectory(
-      helper, fittedTrack.fittedStates, fittedTrack.lastMeasurementIndex,
-      tgContext, momentumScale, localErrorScale, directionErrorScale, scolor,
-      mcolor, ppcolor, fpcolor, spcolor);
+      helper, tracks.trackStateContainer(), track.tipIndex(), tgContext,
+      momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
+      ppcolor, fpcolor, spcolor);
 
   helper.write("EventData_MultiTrajectory");
   helper.write(ss);

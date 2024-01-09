@@ -11,19 +11,41 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Vertexing/FsmwMode1dFinder.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <random>
+#include <string>
+#include <system_error>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -31,7 +53,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
@@ -40,27 +62,27 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
 // Track theta distribution
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
-std::uniform_real_distribution<> qDist(-1, 1);
+std::uniform_real_distribution<double> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100_um);
+std::uniform_real_distribution<double> resIPDist(0., 100_um);
 // Track angular distribution
-std::uniform_real_distribution<> resAngDist(0., 0.1);
+std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(-0.01, 0.01);
+std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
 
 ///
 /// @brief Unit test for ZScanVertexFinder
@@ -85,8 +107,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    typedef FullBilloirVertexFitter<BoundTrackParameters, Linearizer_t>
-        BilloirFitter;
+    using BilloirFitter =
+        FullBilloirVertexFitter<BoundTrackParameters, Linearizer_t>;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -98,7 +120,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     double z = vZDist(gen);
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0_v = sqrt(x * x + y * y);
+    double d0_v = std::hypot(x, y);
     double z0_v = z;
 
     // Start constructing nTracks tracks in the following
@@ -132,7 +154,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat));
+      tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat),
+                          ParticleHypothesis::pion());
     }
 
     std::vector<const BoundTrackParameters*> tracksPtr;
@@ -210,7 +233,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    typedef FullBilloirVertexFitter<InputTrack, Linearizer_t> BilloirFitter;
+    using BilloirFitter = FullBilloirVertexFitter<InputTrack, Linearizer_t>;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -222,7 +245,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     double z = vZDist(gen);
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0_v = sqrt(x * x + y * y);
+    double d0_v = std::hypot(x, y);
     double z0_v = z;
 
     // Start constructing nTracks tracks in the following
@@ -254,8 +277,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.emplace_back(
-          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+      tracks.emplace_back(BoundTrackParameters(perigeeSurface, paramVec,
+                                               std::move(covMat),
+                                               ParticleHypothesis::pion()));
     }
 
     std::vector<const InputTrack*> tracksPtr;
@@ -279,7 +303,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
     std::function<BoundTrackParameters(InputTrack)> extractParameters =
-        [](InputTrack params) { return params.parameters(); };
+        [](const InputTrack& params) { return params.parameters(); };
 
     VertexFinder finder(cfg, extractParameters);
     VertexFinder::State state;

@@ -8,6 +8,8 @@
 
 #include "Acts/Vertexing/VertexingError.hpp"
 
+#include <string>
+
 namespace {
 
 class VertexingErrorCategory : public std::error_category {

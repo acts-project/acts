@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -71,14 +72,14 @@ int main(int argc, char* argv[]) {
   using BField_type = ConstantBField;
   using Stepper_type = AtlasStepper;
   using Propagator_type = Propagator<Stepper_type>;
-  using Covariance = BoundSymMatrix;
+  using Covariance = BoundSquareMatrix;
 
   auto bField =
       std::make_shared<BField_type>(Vector3{0, 0, BzInT * UnitConstants::T});
   Stepper_type atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 
-  PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<> options(tgContext, mfContext);
   options.pathLimit = maxPathInM * UnitConstants::m;
 
   Covariance cov;
@@ -96,10 +97,11 @@ int main(int argc, char* argv[]) {
     optCov = cov;
   }
   CurvilinearTrackParameters pars(Vector4::Zero(), 0_degree, 90_degree,
-                                  ptInGeV * UnitConstants::GeV, 1_e, optCov);
+                                  1_e / ptInGeV * UnitConstants::GeV, optCov,
+                                  ParticleHypothesis::pion());
 
   double totalPathLength = 0;
-  size_t num_iters = 0;
+  std::size_t num_iters = 0;
   const auto propagation_bench_result = Acts::Test::microBenchmark(
       [&] {
         auto r = propagator.propagate(pars, options).value();

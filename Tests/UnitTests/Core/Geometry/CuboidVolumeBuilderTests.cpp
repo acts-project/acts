@@ -11,49 +11,32 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <cmath>
+#include <functional>
+#include <memory>
+#include <string>
 #include <vector>
 
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
 namespace Test {
-
-struct StepVolumeCollector {
-  ///
-  /// @brief Data container for result analysis
-  ///
-  struct this_result {
-    // Position of the propagator after each step
-    std::vector<Vector3> position;
-    // Volume of the propagator after each step
-    std::vector<TrackingVolume const*> volume;
-  };
-
-  using result_type = this_result;
-
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
-    result.position.push_back(stepper.position(state.stepping));
-    result.volume.push_back(state.navigation.currentVolume);
-  }
-};
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Construct builder
@@ -91,7 +74,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     cfg.detElementConstructor =
         [](const Transform3& trans,
-           std::shared_ptr<const RectangleBounds> bounds, double thickness) {
+           const std::shared_ptr<const RectangleBounds>& bounds,
+           double thickness) {
           return new DetectorElementStub(trans, bounds, thickness);
         };
     surfaceConfig.push_back(cfg);
@@ -103,7 +87,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Test that 4 surfaces can be built
   for (const auto& cfg : surfaceConfig) {
     std::shared_ptr<const Surface> pSur = cvb.buildSurface(tgContext, cfg);
-    BOOST_CHECK_NE(pSur, nullptr);
+    BOOST_REQUIRE_NE(pSur, nullptr);
     CHECK_CLOSE_ABS(pSur->center(tgContext), cfg.position, 1e-9);
     BOOST_CHECK_NE(pSur->surfaceMaterial(), nullptr);
     BOOST_CHECK_NE(pSur->associatedDetectorElement(), nullptr);
@@ -124,7 +108,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Test that 4 layers with surfaces can be built
   for (auto& cfg : layerConfig) {
     LayerPtr layer = cvb.buildLayer(tgContext, cfg);
-    BOOST_CHECK_NE(layer, nullptr);
+    BOOST_REQUIRE_NE(layer, nullptr);
     BOOST_CHECK(!cfg.surfaces.empty());
     BOOST_CHECK_EQUAL(layer->surfaceArray()->surfaces().size(), 1u);
     BOOST_CHECK_EQUAL(layer->layerType(), LayerType::active);
@@ -251,230 +235,6 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
           ->volumeName(),
       volumeConfig2.name);
 }
-
-/*
-BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes) {
-  // Production factory
-  CuboidVolumeBuilder cvb;
-
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
-  MagneticFieldContext mfContext = MagneticFieldContext();
-
-  // Build a volume that confines another volume
-  CuboidVolumeBuilder::VolumeConfig vCfg;
-  vCfg.position = {1. * UnitConstants::m, 0., 0.};
-  vCfg.length = {2. * UnitConstants::m, 1. * UnitConstants::m, 1. *
-UnitConstants::m}; vCfg.name = "Test volume";
-  // Build and add 2 confined volumes
-  CuboidVolumeBuilder::VolumeConfig cvCfg1;
-  cvCfg1.position = {1.1 * UnitConstants::m, 0., 0.};
-  cvCfg1.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. *
-UnitConstants::cm}; cvCfg1.name = "Confined volume1"; cvCfg1.volumeMaterial =
-      std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
-          Material(352.8, 407., 9.012, 4., 1.848e-3)));
-  CuboidVolumeBuilder::VolumeConfig cvCfg2;
-  cvCfg2.position = {0.9 * UnitConstants::m, 0., 0.};
-  cvCfg2.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. *
-UnitConstants::cm}; cvCfg2.name = "Confined volume2"; vCfg.volumeCfg = {cvCfg1,
-cvCfg2};
-
-  // Build detector
-  CuboidVolumeBuilder::Config config;
-  config.position = {1. * UnitConstants::m, 0., 0.};
-  config.length = {2. * UnitConstants::m, 1. * UnitConstants::m, 1. *
-UnitConstants::m}; config.volumeCfg = {vCfg};
-
-  cvb.setConfig(config);
-  TrackingGeometryBuilder::Config tgbCfg;
-  tgbCfg.trackingVolumeBuilders.push_back(
-      [=](const auto& context, const auto& inner, const auto& vb) {
-        return cvb.trackingVolume(context, inner, vb);
-      });
-  TrackingGeometryBuilder tgb(tgbCfg);
-  std::shared_ptr<const TrackingGeometry> detector =
-      tgb.trackingGeometry(tgContext);
-
-  // Test that the right volume is selected
-  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {1. *
-UnitConstants::m, 0., 0.})
-                 ->volumeName(), vCfg.name);
-  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {1.1 *
-UnitConstants::m, 0., 0.})
-          ->volumeName(), cvCfg1.name);
-  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {0.9 *
-UnitConstants::m, 0., 0.})
-          ->volumeName(), cvCfg2.name);
-
-  // Set propagator and navigator
-  PropagatorOptions<ActionList<StepVolumeCollector>> propOpts(tgContext,
-                                                              mfContext);
-  propOpts.maxStepSize = 10. * UnitConstants::mm;
-  StraightLineStepper sls;
-  Navigator navi(detector);
-  navi.resolvePassive = true;
-  navi.resolveMaterial = true;
-  navi.resolveSensitive = true;
-
-  Propagator<StraightLineStepper, Navigator> prop(sls, navi);
-
-  // Set initial parameters for the particle track
-  Vector3 startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
-  CurvilinearTrackParameters sbtp(
-      std::nullopt, startParams, startMom, 1., 0.);
-
-  // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
-  const StepVolumeCollector::this_result& stepResult =
-      result.get<typename StepVolumeCollector::result_type>();
-
-  // Check the identified volumes
-  for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    if (i > 0) {
-      BOOST_CHECK_GT(stepResult.position[i].x(), 0.);
-    }
-    if (stepResult.position[i].x() >= 0.85 * UnitConstants::m &&
-        stepResult.position[i].x() < 0.95 * UnitConstants::m) {
-      BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), cvCfg2.name);
-      BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeMaterial(), nullptr);
-    } else {
-      if (stepResult.position[i].x() >= 1.05 * UnitConstants::m &&
-          stepResult.position[i].x() < 1.15 * UnitConstants::m) {
-        BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), cvCfg1.name);
-        BOOST_CHECK_NE(stepResult.volume[i]->volumeMaterial(), nullptr);
-      } else {
-        if (stepResult.position[i].x() < 2. * UnitConstants::m) {
-          BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), vCfg.name);
-          BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeMaterial(), nullptr);
-        }
-      }
-    }
-  }
-}
-*/
-/** As discussed with the author, disabled for the moment
-BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes_edgecases) {
-  // Production factory
-  CuboidVolumeBuilder cvb;
-
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
-  MagneticFieldContext mfContext = MagneticFieldContext();
-
-  // Build a volume that confines another volume
-  CuboidVolumeBuilder::VolumeConfig vCfg1;
-  vCfg1.position = {1. * UnitConstants::m, 0., 0.};
-  vCfg1.length = {2. * UnitConstants::m, 1. * UnitConstants::m, 1. *
-UnitConstants::m}; vCfg1.name = "Test volume1";
-  // Build and add 4 confined volumes
-  // Volume that is missed and quite orthogonal to the starting position
-  CuboidVolumeBuilder::VolumeConfig cvCfg1;
-  cvCfg1.position = {0.1 * UnitConstants::m, 0.4 * UnitConstants::m, 0.4 *
-UnitConstants::m}; cvCfg1.length = {10. * UnitConstants::cm, 10. *
-UnitConstants::cm, 10. * UnitConstants::cm}; cvCfg1.name = "Confined volume1";
-  cvCfg1.volumeMaterial =
-      std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
-          Material(352.8, 407., 9.012, 4., 1.848e-3)));
-  // Volume that is missed but far away such that it may be hit
-  CuboidVolumeBuilder::VolumeConfig cvCfg2;
-  cvCfg2.position = {1.9 * UnitConstants::m, -0.4 * UnitConstants::m, -0.4 *
-UnitConstants::m}; cvCfg2.length = {10. * UnitConstants::cm, 10. *
-UnitConstants::cm, 10. * UnitConstants::cm}; cvCfg2.name = "Confined volume2";
-  // Volume that is hit but with identical boundary as its mother
-  // TODO: Moved slightly inside the volume since otherwise the navigation
-  // breaks due to overlapping boundary surfaces. The corresponding test below
-  // is changed accordingly.
-  CuboidVolumeBuilder::VolumeConfig cvCfg3;
-  cvCfg3.position = {1.9 * UnitConstants::m, 0., 0.};
-  cvCfg3.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. *
-UnitConstants::cm}; cvCfg3.name = "Confined volume3";
-  // Volume to grind along the boundary
-  CuboidVolumeBuilder::VolumeConfig cvCfg4;
-  cvCfg4.position = {1. * UnitConstants::m, 5. * UnitConstants::cm, 0.};
-  cvCfg4.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. *
-UnitConstants::cm}; cvCfg4.name = "Confined volume4"; vCfg1.volumeCfg = {cvCfg1,
-cvCfg2, cvCfg3, cvCfg4};
-
-  // Build a volume that confines another volume
-  CuboidVolumeBuilder::VolumeConfig vCfg2;
-  vCfg2.position = {2.5 * UnitConstants::m, 0., 0.};
-  vCfg2.length = {1. * UnitConstants::m, 1. * UnitConstants::m, 1. *
-UnitConstants::m}; vCfg2.name = "Test volume2";
-
-  // Build detector
-  CuboidVolumeBuilder::Config config;
-  config.position = {1.5 * UnitConstants::m, 0., 0.};
-  config.length = {3. * UnitConstants::m, 1. * UnitConstants::m, 1. *
-UnitConstants::m}; config.volumeCfg = {vCfg1, vCfg2};
-
-  cvb.setConfig(config);
-  TrackingGeometryBuilder::Config tgbCfg;
-  tgbCfg.trackingVolumeBuilders.push_back(
-      [=](const auto& context, const auto& inner, const auto& vb) {
-        return cvb.trackingVolume(context, inner, vb);
-      });
-  TrackingGeometryBuilder tgb(tgbCfg);
-  std::shared_ptr<const TrackingGeometry> detector =
-      tgb.trackingGeometry(tgContext);
-
-  // Set propagator and navigator
-  PropagatorOptions<ActionList<StepVolumeCollector>>
-propOpts(tgContext, mfContext);
-
-  propOpts.debug = true;
-  propOpts.maxStepSize = 10. * UnitConstants::mm;
-  StraightLineStepper sls;
-
-  Navigator navi(detector);
-  navi.resolvePassive = true;
-  navi.resolveMaterial = true;
-  navi.resolveSensitive = true;
-
-  Propagator<StraightLineStepper, Navigator> prop(sls, navi);
-
-  // Set initial parameters for the particle track
-  Vector3 startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
-  CurvilinearTrackParameters sbtp(
-      std::nullopt, startParams, startMom, 1., 0.);
-
-  // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
-  const StepVolumeCollector::this_result& stepResult =
-      result.get<typename StepVolumeCollector::result_type>();
-
-  // Screen output
-  if (propOpts.debug) {
-    const auto debugString =
-        result.template get<DebugOutput::result_type>().debugString;
-    std::cout << debugString << std::endl;
-  }
-
-  for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    // Check the movement in the right direction
-    if (i > 0) {
-      BOOST_CHECK_GT(stepResult.position[i].x(), 0.);
-    }
-    // Check the identified volumes
-    if (stepResult.position[i].x() >= 0.95 * UnitConstants::m &&
-        stepResult.position[i].x() < 1.05 * UnitConstants::m) {
-      BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), cvCfg4.name);
-    } else {
-      if (stepResult.position[i].x() >= 1.85 * UnitConstants::m &&
-          stepResult.position[i].x() < 1.95 * UnitConstants::m) {
-        BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), cvCfg3.name);
-      } else {
-        if (stepResult.position[i].x() < 2. * UnitConstants::m) {
-          BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), vCfg1.name);
-        } else {
-          if (stepResult.position[i].x() < 3. * UnitConstants::m) {
-            BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), vCfg2.name);
-          }
-        }
-      }
-    }
-  }
-}
-*/
 
 }  // namespace Test
 }  // namespace Acts

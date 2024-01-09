@@ -15,6 +15,8 @@
 
 namespace Acts {
 
+class Surface;
+
 /// Identifier for geometry nodes within the geometry hierarchy.
 ///
 /// An identifier can be split into the following components. They define
@@ -51,8 +53,14 @@ class GeometryIdentifier {
   constexpr Value layer() const { return getBits(kLayerMask); }
   /// Return the approach identifier.
   constexpr Value approach() const { return getBits(kApproachMask); }
+  /// Return the approach identifier.
+  constexpr Value passive() const { return getBits(kApproachMask); }
   /// Return the sensitive identifier.
   constexpr Value sensitive() const { return getBits(kSensitiveMask); }
+  /// Return the extra identifier
+  /// Usage can be experiment-specific, like tagging which kind of detector a
+  /// surface object corresponds to, or which subsystem it belongs to
+  constexpr Value extra() const { return getBits(kExtraMask); }
 
   /// Set the volume identifier.
   constexpr GeometryIdentifier& setVolume(Value volume) {
@@ -70,22 +78,35 @@ class GeometryIdentifier {
   constexpr GeometryIdentifier& setApproach(Value approach) {
     return setBits(kApproachMask, approach);
   }
+  /// Set the approach identifier - shared with Passive
+  constexpr GeometryIdentifier& setPassive(Value approach) {
+    return setBits(kApproachMask, approach);
+  }
   /// Set the sensitive identifier.
   constexpr GeometryIdentifier& setSensitive(Value sensitive) {
     return setBits(kSensitiveMask, sensitive);
   }
+  /// Set the extra identifier
+  constexpr GeometryIdentifier& setExtra(Value extra) {
+    return setBits(kExtraMask, extra);
+  }
 
  private:
-  // (2^8)-1 = 255 volumes
-  static constexpr Value kVolumeMask = 0xff00000000000000;
-  // (2^8)-1 = 255 boundaries
-  static constexpr Value kBoundaryMask = 0x00ff000000000000;
-  // (2^12)-1 = 4096 layers
-  static constexpr Value kLayerMask = 0x0000fff000000000;
-  // (2^8)-1 = 255 approach surfaces
-  static constexpr Value kApproachMask = 0x0000000ff0000000;
-  // (2^28)-1 sensitive surfaces
-  static constexpr Value kSensitiveMask = 0x000000000fffffff;
+  // clang-format off
+  /// (2^8)-1 = 255 volumes
+  static constexpr Value kVolumeMask    = 0xff00000000000000;
+  /// (2^8)-1 = 255 boundaries
+  static constexpr Value kBoundaryMask  = 0x00ff000000000000;
+  /// (2^12)-1 = 4095 layers
+  static constexpr Value kLayerMask     = 0x0000fff000000000;
+  /// (2^8)-1 = 255 approach surfaces
+  static constexpr Value kApproachMask  = 0x0000000ff0000000;
+  static constexpr Value kPassiveMask   = kApproachMask;
+  /// (2^20)-1 = 1048575 sensitive surfaces
+  static constexpr Value kSensitiveMask = 0x000000000fffff00;
+  /// (2^8)-1 = 255 extra values
+  static constexpr Value kExtraMask     = 0x00000000000000ff;
+  // clang-format on
 
   Value m_value = 0;
 
@@ -123,6 +144,14 @@ class GeometryIdentifier {
 };
 
 std::ostream& operator<<(std::ostream& os, GeometryIdentifier id);
+
+/// Base class for hooks that can be used to modify the Geometry Identifier
+/// during construction. Most common use case is setting the extra bit fields.
+struct GeometryIdentifierHook {
+  virtual ~GeometryIdentifierHook() = default;
+  virtual Acts::GeometryIdentifier decorateIdentifier(
+      Acts::GeometryIdentifier identifier, const Acts::Surface& surface) const;
+};
 
 }  // namespace Acts
 

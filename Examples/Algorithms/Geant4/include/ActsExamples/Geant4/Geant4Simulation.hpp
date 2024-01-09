@@ -8,112 +8,206 @@
 
 #pragma once
 
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <cstddef>
 #include <memory>
-#include <mutex>
 #include <string>
-
-#include "G4VUserDetectorConstruction.hh"
+#include <unordered_map>
 
 class G4RunManager;
 class G4VUserPrimaryGeneratorAction;
+class G4VUserDetectorConstruction;
 class G4UserRunAction;
 class G4UserEventAction;
 class G4UserTrackingAction;
 class G4UserSteppingAction;
 class G4MagneticField;
 class G4VUserPhysicsList;
+class G4FieldManager;
+
+namespace Acts {
+class TrackingGeometry;
+class MagneticFieldProvider;
+class Volume;
+}  // namespace Acts
+
+class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 
+class DetectorConstructionFactory;
 class SensitiveSurfaceMapper;
+struct EventStore;
+struct Geant4Handle;
 
-/// Algorithm to run Geant4 simulation in the ActsExamples framework
-///
-/// This algorithm can be configured with the standardard Geant4
-/// components:
-/// - (a) the generator Action
-/// - (b) detector construction and magnetic field
-/// - (c) the user actions
-///
-/// In order to run within the ACTS framework, acces to the
-/// EventData is provided by a EventStoreRegistry which provides
-/// individual slots for the event containers and the store.
-///
-/// The Geant4Simulation algorithm clears those after processing.
-class Geant4Simulation final : public BareAlgorithm {
+/// Abstracts common Geant4 Acts algorithm behaviour.
+class Geant4SimulationBase : public IAlgorithm {
  public:
   /// Nested configuration struct for the Geant4 simulation
   struct Config {
-    // Name of the output collection : hits
-    std::string outputSimHits = "";
+    // Name of the input particle collection
+    std::string inputParticles = "";
 
-    // Name of the output collection : initial particles
-    std::string outputParticlesInitial = "";
-
-    // Name of the output collection : final particles
-    std::string outputParticlesFinal = "";
-
-    // Name of the output collection: material tracks
-    std::string outputMaterialTracks = "";
-
-    // The Geant4 seed being used
-    std::size_t seed = 123;
-
-    /// The G4 run manager
-    std::shared_ptr<G4RunManager> runManager;
-
-    /// User Action: Primary generator action of the simulation
-    G4VUserPrimaryGeneratorAction* primaryGeneratorAction = nullptr;
-
-    /// User Actions: Run
-    std::vector<G4UserRunAction*> runActions = {};
-
-    /// User Actions: Event
-    std::vector<G4UserEventAction*> eventActions = {};
-
-    /// User Actions: Tracking
-    std::vector<G4UserTrackingAction*> trackingActions = {};
-
-    /// User Actions: Stepping
-    std::vector<G4UserSteppingAction*> steppingActions = {};
+    /// Random number service.
+    std::shared_ptr<const RandomNumbers> randomNumbers;
 
     /// Detector construction object.
-    G4VUserDetectorConstruction* detectorConstruction = nullptr;
+    /// G4RunManager will take care of deletion
+    std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory;
 
-    /// The (wrapped) ACTS Magnetic field provider as a Geant4 module
-    G4MagneticField* magneticField = nullptr;
-
-    // The ACTS to Geant4 sensitive wrapper
-    std::shared_ptr<const SensitiveSurfaceMapper> sensitiveSurfaceMapper =
-        nullptr;
+    /// Optional Geant4 instance overwrite.
+    std::shared_ptr<Geant4Handle> geant4Handle;
   };
 
-  /// Constructor with arguments
-  ///
-  /// @param config is the configuration struct
-  /// @param level is the logging level to be used
-  Geant4Simulation(const Config& config,
-                   Acts::Logging::Level level = Acts::Logging::INFO);
-  ~Geant4Simulation();
+  Geant4SimulationBase(const Config& cfg, std::string name,
+                       Acts::Logging::Level level);
+
+  ~Geant4SimulationBase() override;
+
+  /// Initialize the algorithm
+  ProcessCode initialize() final;
 
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
   ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final override;
+      const ActsExamples::AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
-  const Config& config() const { return m_cfg; }
+  virtual const Config& config() const = 0;
+
+  std::shared_ptr<Geant4Handle> geant4Handle() const;
+
+ protected:
+  void commonInitialization();
+
+  G4RunManager& runManager() const;
+
+  EventStore& eventStore() const;
+
+  std::unique_ptr<const Acts::Logger> m_logger;
+
+  std::shared_ptr<EventStore> m_eventStore;
+
+  int m_geant4Level{};
+
+  std::shared_ptr<Geant4Handle> m_geant4Instance;
+
+  /// Detector construction object.
+  /// G4RunManager will take care of deletion
+  G4VUserDetectorConstruction* m_detectorConstruction{};
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+};
+
+/// Algorithm to run Geant4 simulation in the ActsExamples framework
+class Geant4Simulation final : public Geant4SimulationBase {
+ public:
+  struct Config : public Geant4SimulationBase::Config {
+    /// Name of the output collection : hits
+    std::string outputSimHits = "simhits";
+
+    /// Name of the output collection : initial particles
+    std::string outputParticlesInitial = "particles_initial";
+
+    /// Name of the output collection : final particles
+    std::string outputParticlesFinal = "particles_final";
+
+    /// The ACTS tracking geometry
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+
+    /// The ACTS Magnetic field provider
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
+    /// If a physics list has to be instantiated this one is chosen.
+    std::string physicsList = "FTFP_BERT";
+
+    std::vector<std::string> volumeMappings;
+
+    std::vector<std::string> materialMappings = {"Silicon"};
+
+    std::shared_ptr<const Acts::Volume> killVolume;
+    double killAfterTime = std::numeric_limits<double>::infinity();
+    bool killSecondaries = false;
+
+    bool recordHitsOfSecondaries = true;
+
+    bool keepParticlesWithoutHits = true;
+  };
+
+  /// Simulation constructor
+  ///
+  /// @param config is the configuration struct
+  /// @param level is the logging level to be used
+  Geant4Simulation(const Config& cfg,
+                   Acts::Logging::Level level = Acts::Logging::INFO);
+
+  ~Geant4Simulation() override;
+
+  /// Algorithm execute method, called once per event with context
+  ///
+  /// @param ctx the AlgorithmContext for this event
+  ActsExamples::ProcessCode execute(
+      const ActsExamples::AlgorithmContext& ctx) const final;
+
+  /// Readonly access to the configuration
+  const Config& config() const final { return m_cfg; }
 
  private:
   Config m_cfg;
 
-  // Has to be mutable; algorithm interface enforces object constness
-  mutable std::mutex m_runManagerLock;
+  /// The (wrapped) ACTS Magnetic field provider as a Geant4 module
+  std::unique_ptr<G4MagneticField> m_magneticField;
+  std::unique_ptr<G4FieldManager> m_fieldManager;
+
+  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
+      this, "OutputParticlesInitial"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
+      this, "OutputParticlesFinal"};
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHIts"};
+};
+
+class Geant4MaterialRecording final : public Geant4SimulationBase {
+ public:
+  struct Config : public Geant4SimulationBase::Config {
+    /// Name of the output collection: material tracks
+    std::string outputMaterialTracks = "material_tracks";
+
+    /// Materials to exclude from the recording.
+    std::vector<std::string> excludeMaterials = {"Air", "Vacuum"};
+  };
+
+  /// Material recording constructor
+  ///
+  /// @param config is the configuration struct
+  /// @param level is the logging level to be used
+  Geant4MaterialRecording(const Config& cfg,
+                          Acts::Logging::Level level = Acts::Logging::INFO);
+
+  ~Geant4MaterialRecording() override;
+
+  /// Algorithm execute method, called once per event with context
+  ///
+  /// @param ctx the AlgorithmContext for this event
+  ActsExamples::ProcessCode execute(
+      const ActsExamples::AlgorithmContext& ctx) const final;
+
+  /// Readonly access to the configuration
+  const Config& config() const final { return m_cfg; }
+
+ private:
+  Config m_cfg;
+
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
+      m_outputMaterialTracks{this, "OutputMaterialTracks"};
 };
 
 }  // namespace ActsExamples

@@ -2,7 +2,12 @@ from pathlib import Path
 import os
 import json
 import functools
+import tarfile
+import urllib.request
 import subprocess
+import sys
+import re
+import collections
 
 import pytest
 
@@ -11,9 +16,11 @@ from helpers import (
     rootEnabled,
     dd4hepEnabled,
     hepmc3Enabled,
+    pythia8Enabled,
+    exatrkxEnabled,
+    onnxEnabled,
     AssertCollectionExistsAlg,
-    isCI,
-    doHashChecks,
+    failure_threshold,
 )
 
 pytestmark = pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
@@ -24,10 +31,10 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
     AlignedDetector,
-    RootParticleWriter,
 )
 
-from common import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -49,7 +56,7 @@ def assert_csv_output(csv_path, stem):
     assert all([f.stat().st_size > 100 for f in csv_path.iterdir()])
 
 
-def assert_entries(root_file, tree_name, exp):
+def assert_entries(root_file, tree_name, exp=None, non_zero=False):
     __tracebackhide__ = True
     import ROOT
 
@@ -59,11 +66,21 @@ def assert_entries(root_file, tree_name, exp):
     rf = ROOT.TFile.Open(str(root_file))
     keys = [k.GetName() for k in rf.GetListOfKeys()]
     assert tree_name in keys
-    assert rf.Get(tree_name).GetEntries() == exp, f"{root_file}:{tree_name}"
+    print("Entries:", rf.Get(tree_name).GetEntries())
+    if non_zero:
+        assert rf.Get(tree_name).GetEntries() > 0, f"{root_file}:{tree_name}"
+    if exp is not None:
+        assert rf.Get(tree_name).GetEntries() == exp, f"{root_file}:{tree_name}"
+
+
+def assert_has_entries(root_file, tree_name):
+    __tracebackhide__ = True
+    assert_entries(root_file, tree_name, non_zero=True)
 
 
 @pytest.mark.slow
-def test_pythia8(tmp_path, seq):
+@pytest.mark.skipif(not pythia8Enabled, reason="Pythia8 not set up")
+def test_pythia8(tmp_path, seq, assert_root_hash):
     from pythia8 import runPythia8
 
     (tmp_path / "csv").mkdir()
@@ -73,7 +90,7 @@ def test_pythia8(tmp_path, seq):
 
     events = seq.config.events
 
-    runPythia8(str(tmp_path), s=seq).run()
+    runPythia8(str(tmp_path), outputRoot=True, outputCsv=True, s=seq).run()
 
     del seq
 
@@ -81,6 +98,7 @@ def test_pythia8(tmp_path, seq):
     assert fp.exists()
     assert fp.stat().st_size > 2**10 * 50
     assert_entries(fp, "particles", events)
+    assert_root_hash(fp.name, fp)
 
     assert len(list((tmp_path / "csv").iterdir())) > 0
     assert_csv_output(tmp_path / "csv", "particles")
@@ -96,24 +114,17 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 
     root_files = [
         (
-            "fatras_particles_final.root",
+            "particles_simulation.root",
             "particles",
-            nevents,
-        ),
-        (
-            "fatras_particles_initial.root",
-            "particles",
-            nevents,
         ),
         (
             "hits.root",
             "hits",
-            115,
         ),
     ]
 
     assert len(list(csv.iterdir())) == 0
-    for rf, _, _ in root_files:
+    for rf, _ in root_files:
         assert not (tmp_path / rf).exists()
 
     seq = Sequencer(events=nevents)
@@ -124,12 +135,66 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
     assert_csv_output(csv, "particles_final")
     assert_csv_output(csv, "particles_initial")
     assert_csv_output(csv, "hits")
-    for f, tn, exp_entries in root_files:
+    for f, tn in root_files:
         rfp = tmp_path / f
         assert rfp.exists()
         assert rfp.stat().st_size > 2**10 * 10
 
-        assert_entries(rfp, tn, exp_entries)
+        assert_has_entries(rfp, tn)
+        assert_root_hash(f, rfp)
+
+
+@pytest.mark.slow
+@pytest.mark.odd
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_geant4(tmp_path, assert_root_hash):
+    # This test literally only ensures that the geant 4 example can run without erroring out
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    root_files = [
+        "particles_simulation.root",
+        "hits.root",
+    ]
+
+    assert len(list(csv.iterdir())) == 0
+    for rf in root_files:
+        assert not (tmp_path / rf).exists()
+
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "geant4.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script)],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
+
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "hits")
+    for f in root_files:
+        rfp = tmp_path / f
+        assert rfp.exists()
+        assert rfp.stat().st_size > 2**10 * 10
+
         assert_root_hash(f, rfp)
 
 
@@ -147,36 +212,22 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
         (
             "estimatedparams.root",
             "estimatedparams",
-            371,
         ),
         (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-            371,
-        ),
-        (
-            "performance_seeding_hists.root",
+            "performance_seeding.root",
             None,
-            0,
         ),
         (
             "particles.root",
             "particles",
-            seq.config.events,
         ),
         (
-            "fatras_particles_final.root",
+            "particles_simulation.root",
             "particles",
-            seq.config.events,
-        ),
-        (
-            "fatras_particles_initial.root",
-            "particles",
-            seq.config.events,
         ),
     ]
 
-    for fn, _, _ in root_files:
+    for fn, _ in root_files:
         fp = tmp_path / fn
         assert not fp.exists()
 
@@ -186,13 +237,13 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
     del seq
 
-    for fn, tn, exp_entries in root_files:
+    for fn, tn in root_files:
         fp = tmp_path / fn
         assert fp.exists()
         assert fp.stat().st_size > 100
 
         if tn is not None:
-            assert_entries(fp, tn, exp_entries)
+            assert_has_entries(fp, tn)
             assert_root_hash(fn, fp)
 
     assert_csv_output(csv, "particles")
@@ -214,36 +265,22 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
         (
             "estimatedparams.root",
             "estimatedparams",
-            309,
         ),
         (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-            309,
-        ),
-        (
-            "performance_seeding_hists.root",
+            "performance_seeding.root",
             None,
-            0,
         ),
         (
             "particles.root",
             "particles",
-            seq.config.events,
         ),
         (
-            "fatras_particles_final.root",
+            "particles_simulation.root",
             "particles",
-            seq.config.events,
-        ),
-        (
-            "fatras_particles_initial.root",
-            "particles",
-            seq.config.events,
         ),
     ]
 
-    for fn, _, _ in root_files:
+    for fn, _ in root_files:
         fp = tmp_path / fn
         assert not fp.exists()
 
@@ -259,13 +296,13 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
 
     del seq
 
-    for fn, tn, exp_entries in root_files:
+    for fn, tn in root_files:
         fp = tmp_path / fn
         assert fp.exists()
         assert fp.stat().st_size > 100
 
         if tn is not None:
-            assert_entries(fp, tn, exp_entries)
+            assert_has_entries(fp, tn)
             assert_root_hash(fn, fp)
 
     assert_csv_output(csv, "particles")
@@ -273,6 +310,121 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
     assert_csv_output(csv, "particles_initial")
 
 
+def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    seq = Sequencer(events=10, numThreads=1)
+
+    root_files = [
+        (
+            "estimatedparams.root",
+            "estimatedparams",
+        ),
+        (
+            "performance_seeding.root",
+            None,
+        ),
+        (
+            "particles.root",
+            "particles",
+        ),
+        (
+            "particles_simulation.root",
+            "particles",
+        ),
+    ]
+
+    for fn, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    assert len(list(csv.iterdir())) == 0
+
+    rnd = acts.examples.RandomNumbers(seed=42)
+
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        MomentumConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
+
+    addParticleGun(
+        seq,
+        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
+        EtaConfig(-4.0, 4.0, True),
+        ParticleConfig(1, acts.PdgParticle.eMuon, True),
+        outputDirCsv=tmp_path / "csv",
+        outputDirRoot=str(tmp_path),
+        rnd=rnd,
+    )
+
+    addFatras(
+        seq,
+        trk_geo,
+        field,
+        outputDirCsv=tmp_path / "csv",
+        outputDirRoot=str(tmp_path),
+        rnd=rnd,
+    )
+
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+    addDigitization(
+        seq,
+        trk_geo,
+        field,
+        digiConfigFile=srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        rnd=rnd,
+    )
+
+    from acts.examples.reconstruction import (
+        addSeeding,
+        TruthSeedRanges,
+    )
+    from acts.examples.reconstruction import (
+        addSeeding,
+        TruthSeedRanges,
+    )
+    from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
+
+    addSeeding(
+        seq,
+        trk_geo,
+        field,
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4, 4), nHits=(9, None)),
+        *itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
+        acts.logging.VERBOSE,
+        geoSelectionConfigFile=srcdir
+        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        inputParticles="particles_final",  # use this to reproduce the original root_file_hashes.txt - remove to fix
+        outputDirRoot=str(tmp_path),
+    )
+
+    seq.run()
+
+    del seq
+
+    for fn, tn in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 100
+
+        if tn is not None:
+            assert_has_entries(fp, tn)
+            assert_root_hash(fn, fp)
+
+    assert_csv_output(csv, "particles")
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
+
+
+@pytest.mark.slow
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
     from propagation import runPropagation
 
@@ -306,10 +458,10 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
 
 
 @pytest.mark.slow
+@pytest.mark.odd
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_recording(tmp_path, material_recording, assert_root_hash):
-
     root_files = [
         (
             "geant4_material_tracks.root",
@@ -327,11 +479,11 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
 
 
 @pytest.mark.slow
+@pytest.mark.odd
 @pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 def test_event_recording(tmp_path):
-
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
@@ -343,7 +495,17 @@ def test_event_recording(tmp_path):
 
     env = os.environ.copy()
     env["NEVENTS"] = "1"
-    subprocess.check_call([str(script)], cwd=tmp_path, env=env)
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script)],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
     from acts.examples.hepmc3 import HepMC3AsciiReader
 
@@ -374,12 +536,11 @@ def test_event_recording(tmp_path):
     assert alg.events_seen == 1
 
 
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
-def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
-    from truth_tracking import runTruthTracking
-
-    detector, trackingGeometry, _ = getOpenDataDetector()
+def test_truth_tracking_kalman(
+    tmp_path, assert_root_hash, revFiltMomThresh, detector_config
+):
+    from truth_tracking_kalman import runTruthTrackingKalman
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -388,7 +549,6 @@ def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
     root_files = [
         ("trackstates_fitter.root", "trackstates", 19),
         ("tracksummary_fitter.root", "tracksummary", 10),
-        ("performance_track_finder.root", "track_finder_tracks", 19),
         ("performance_track_fitter.root", None, -1),
     ]
 
@@ -396,12 +556,10 @@ def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    runTruthTracking(
-        trackingGeometry,
-        field,
-        digiConfigFile=Path(
-            "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
-        ),
+    runTruthTrackingKalman(
+        trackingGeometry=detector_config.trackingGeometry,
+        field=field,
+        digiConfigFile=detector_config.digiConfigFile,
         outputDir=tmp_path,
         reverseFilteringMomThreshold=revFiltMomThresh,
         s=seq,
@@ -416,7 +574,56 @@ def test_truth_tracking(tmp_path, assert_root_hash, revFiltMomThresh):
         assert fp.exists()
         assert fp.stat().st_size > 1024
         if tn is not None:
-            assert_entries(fp, tn, ee)
+            assert_has_entries(fp, tn)
+            assert_root_hash(fn, fp)
+
+
+def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
+    from truth_tracking_gsf import runTruthTrackingGsf
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    seq = Sequencer(
+        events=10,
+        numThreads=1,
+        fpeMasks=[
+            (
+                "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:197",
+                acts.FpeType.FLTUND,
+                1,
+            ),
+        ],
+    )
+
+    root_files = [
+        ("trackstates_gsf.root", "trackstates"),
+        ("tracksummary_gsf.root", "tracksummary"),
+    ]
+
+    for fn, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    runTruthTrackingGsf(
+        trackingGeometry=detector_config.trackingGeometry,
+        decorators=detector_config.decorators,
+        field=field,
+        digiConfigFile=detector_config.digiConfigFile,
+        outputDir=tmp_path,
+        s=seq,
+    )
+
+    # See https://github.com/acts-project/acts/issues/1300
+    with failure_threshold(acts.logging.FATAL):
+        seq.run()
+
+    del seq
+
+    for fn, tn in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 1024
+        if tn is not None:
             assert_root_hash(fn, fp)
 
 
@@ -445,6 +652,7 @@ def test_particle_gun(tmp_path, assert_root_hash):
 
 
 @pytest.mark.slow
+@pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     map_file = tmp_path / "material-map_tracks.root"
@@ -452,7 +660,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     from material_mapping import runMaterialMapping
 
@@ -461,6 +671,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         decorators,
         outputDir=str(tmp_path),
         inputDir=material_recording,
+        mappingStep=1,
         s=s,
     )
 
@@ -488,11 +699,12 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
     from material_validation import runMaterialValidation
@@ -513,6 +725,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
 
 @pytest.mark.slow
+@pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash):
     map_file = tmp_path / "material-map-volume_tracks.root"
@@ -527,7 +740,8 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         assert json.load(fh)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(geo_map),
     )
 
     from material_mapping import runMaterialMapping
@@ -538,6 +752,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         mapName="material-map-volume",
         outputDir=str(tmp_path),
         inputDir=material_recording,
+        mappingStep=1,
         s=s,
     )
 
@@ -565,11 +780,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
     from material_validation import runMaterialValidation
@@ -598,13 +814,18 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     [
         (GenericDetector.create, 450),
         pytest.param(
-            getOpenDataDetector,
+            functools.partial(getOpenDataDetector, getOpenDataDetectorDirectory()),
             540,
-            marks=pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
+            marks=[
+                pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
+                pytest.mark.slow,
+                pytest.mark.odd,
+            ],
         ),
         (functools.partial(AlignedDetector.create, iovSize=1), 450),
     ],
 )
+@pytest.mark.slow
 def test_geometry_example(geoFactory, nobj, tmp_path):
     detector, trackingGeometry, decorators = geoFactory()
 
@@ -659,8 +880,22 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
         assert material_file.stat().st_size > 200
 
 
-def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
-    from digitization import configureDigitization
+DIGI_SHARE_DIR = (
+    Path(__file__).parent.parent.parent.parent
+    / "Examples/Algorithms/Digitization/share"
+)
+
+
+@pytest.mark.parametrize(
+    "digi_config_file",
+    [
+        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
+        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+    ],
+    ids=["smeared", "geometric"],
+)
+def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_file):
+    from digitization import runDigitization
 
     s = Sequencer(events=10, numThreads=-1)
 
@@ -671,7 +906,9 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
     assert not csv_dir.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    configureDigitization(trk_geo, field, outputDir=tmp_path, s=s)
+    runDigitization(
+        trk_geo, field, outputDir=tmp_path, digiConfigFile=digi_config_file, s=s
+    )
 
     s.run()
 
@@ -680,24 +917,42 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
 
     assert len(list(csv_dir.iterdir())) == 3 * s.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
-    for tn, nev in (
-        (8, 407),
-        (9, 0),
-        (12, 11),
-        (13, 375),
-        (14, 2),
-        (16, 25),
-        (17, 146),
-        (18, 9),
-    ):
-        assert_entries(root_file, f"vol{tn}", nev)
+
+    assert_entries(root_file, "vol9", 0)
+    assert_entries(root_file, "vol14", 0)
+
+    if "smearing" in digi_config_file.name:
+        filled_entries = [f"vol{tn}" for tn in (8, 12, 13, 16, 17, 18)]
+    else:
+        # fmt: off
+        filled_entries = [
+            'vol8', 'vol8_lay2', 'vol12_lay8_mod117', 'vol12_lay10', 'vol12_lay10_mod154',
+            'vol12_lay10_mod163', 'vol12_lay12', 'vol12_lay12_mod150', 'vol13',
+            'vol13_lay2', 'vol16_lay2_mod53', 'vol16_lay4', 'vol16_lay6', 'vol16_lay8',
+            'vol16_lay10', 'vol16_lay12', 'vol17', 'vol17_lay2', 'vol18_lay2',
+            'vol18_lay2_mod1', 'vol18_lay2_mod49', 'vol18_lay2_mod86', 'vol18_lay4',
+        ]
+        # fmt: on
+
+    for entry in filled_entries:
+        assert_has_entries(root_file, entry)
 
     assert_root_hash(root_file.name, root_file)
 
 
-def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
+@pytest.mark.parametrize(
+    "digi_config_file",
+    [
+        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
+        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+    ],
+    ids=["smeared", "geometric"],
+)
+def test_digitization_example_input(
+    trk_geo, tmp_path, assert_root_hash, digi_config_file
+):
     from particle_gun import runParticleGun
-    from digitization import configureDigitization
+    from digitization import runDigitization
 
     ptcl_dir = tmp_path / "ptcl"
     ptcl_dir.mkdir()
@@ -719,12 +974,14 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
     )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    configureDigitization(
+    runDigitization(
         trk_geo,
         field,
         outputDir=tmp_path,
+        digiConfigFile=digi_config_file,
         particlesInput=ptcl_dir / "particles.root",
         s=s,
+        doMerge=True,
     )
 
     s.run()
@@ -734,18 +991,30 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
 
     assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
-    for tn, nev in (
-        (7, 0),
-        (8, 193),
-        (9, 0),
-        (12, 1),
-        (13, 183),
-        (14, 6),
-        (16, 3),
-        (17, 76),
-        (18, 10),
-    ):
-        assert_entries(root_file, f"vol{tn}", nev)
+
+    assert_entries(root_file, "vol7", 0)
+    assert_entries(root_file, "vol9", 0)
+
+    if "smearing" in digi_config_file.name:
+        filled_entries = [f"vol{tn}" for tn in (8, 12, 13, 16, 17, 18)]
+    else:
+        # fmt: off
+        filled_entries = [
+            "vol8", "vol8_lay2", "vol12_lay8_mod120", "vol12_lay10_mod120",
+            "vol12_lay10_mod144", "vol12_lay12", "vol12_lay12_mod111",
+            "vol12_lay12_mod137", "vol12_lay12_mod170", "vol13", "vol13_lay2",
+            "vol14_lay2_mod93", "vol14_lay2_mod102", "vol14_lay2_mod112",
+            "vol14_lay2_mod118", "vol14_lay4_mod112", "vol14_lay4_mod118",
+            "vol14_lay4_mod152", "vol14_lay4_mod161", "vol16_lay4", "vol16_lay6",
+            "vol16_lay8", "vol16_lay10", "vol16_lay12", "vol17", "vol17_lay2",
+            "vol18_lay2", "vol18_lay2_mod71", "vol18_lay4", "vol18_lay6",
+            "vol18_lay8", "vol18_lay10"
+        ]
+        # fmt: on
+
+    for entry in filled_entries:
+        assert_has_entries(root_file, entry)
+
     assert_root_hash(root_file.name, root_file)
 
 
@@ -777,13 +1046,6 @@ def test_digitization_config_example(trk_geo, tmp_path):
 
 
 @pytest.mark.parametrize(
-    "detector",
-    [
-        "generic",
-        "odd",
-    ],
-)
-@pytest.mark.parametrize(
     "truthSmeared,truthEstimated",
     [
         [False, False],
@@ -792,40 +1054,13 @@ def test_digitization_config_example(trk_geo, tmp_path):
     ],
     ids=["full_seeding", "truth_estimated", "truth_smeared"],
 )
+@pytest.mark.slow
 def test_ckf_tracks_example(
-    tmp_path, assert_root_hash, truthSmeared, truthEstimated, detector
+    tmp_path, assert_root_hash, truthSmeared, truthEstimated, detector_config
 ):
     csv = tmp_path / "csv"
 
     assert not csv.exists()
-
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
-    if detector == "generic":
-        detector, trackingGeometry, decorators = GenericDetector.create()
-        geometrySelection = (
-            srcdir
-            / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-        )
-        digiConfigFile = (
-            srcdir
-            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        )
-    elif detector == "odd":
-
-        matDeco = acts.IMaterialDecorator.fromFile(
-            srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
-            level=acts.logging.INFO,
-        )
-        detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
-        digiConfigFile = (
-            srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-        )
-        geometrySelection = (
-            srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
-        )
-
-    else:
-        raise ValueError(f"Invalid detector {detector}")
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     events = 100
@@ -849,8 +1084,8 @@ def test_ckf_tracks_example(
     if not truthSmeared:
         root_files += [
             (
-                "performance_seeding_trees.root",
-                "track_finder_tracks",
+                "performance_seeding.root",
+                None,
             ),
         ]
 
@@ -860,17 +1095,18 @@ def test_ckf_tracks_example(
     from ckf_tracks import runCKFTracks
 
     runCKFTracks(
-        trackingGeometry,
-        decorators,
+        detector_config.trackingGeometry,
+        detector_config.decorators,
         field=field,
         outputCsv=True,
         outputDir=tmp_path,
-        geometrySelection=geometrySelection,
-        digiConfigFile=digiConfigFile,
+        geometrySelection=detector_config.geometrySelection,
+        digiConfigFile=detector_config.digiConfigFile,
         truthSmearedSeeded=truthSmeared,
         truthEstimatedSeeded=truthEstimated,
         s=s,
     )
+
     s.run()
 
     del s  # files are closed in destructors, not great
@@ -882,125 +1118,21 @@ def test_ckf_tracks_example(
         if tn is not None:
             assert_root_hash(rf, rp)
 
-    assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
+    assert (
+        len([f for f in csv.iterdir() if f.name.endswith("tracks_ckf.csv")]) == events
+    )
     assert all([f.stat().st_size > 300 for f in csv.iterdir()])
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.odd
 @pytest.mark.slow
-@pytest.mark.filterwarnings("ignore::UserWarning")
-def test_vertex_fitting(tmp_path):
-    detector, trackingGeometry, decorators = getOpenDataDetector()
-
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    from vertex_fitting import runVertexFitting, VertexFinder
-
-    s = Sequencer(events=100)
-
-    runVertexFitting(
-        field,
-        vertexFinder=VertexFinder.Truth,
-        outputDir=tmp_path,
-        s=s,
-    )
-
-    alg = AssertCollectionExistsAlg(["fittedVertices"], name="check_alg")
-    s.addAlgorithm(alg)
-
-    s.run()
-    assert alg.events_seen == s.config.events
-
-
-import itertools
-
-
-@pytest.mark.parametrize(
-    "finder,inputTracks,entries",
-    [
-        ("Truth", False, 100),
-        # ("Truth", True, 0), # this combination seems to be not working
-        ("Iterative", False, 100),
-        ("Iterative", True, 100),
-        ("AMVF", False, 100),
-        ("AMVF", True, 100),
-    ],
-)
-@pytest.mark.filterwarnings("ignore::UserWarning")
-def test_vertex_fitting_reading(
-    tmp_path, ptcl_gun, rng, finder, inputTracks, entries, assert_root_hash
-):
-
-    ptcl_file = tmp_path / "particles.root"
-
-    detector, trackingGeometry, decorators = GenericDetector.create()
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    from vertex_fitting import runVertexFitting, VertexFinder
-
-    inputTrackSummary = None
-    if inputTracks:
-        from truth_tracking import runTruthTracking
-
-        s2 = Sequencer(numThreads=1, events=100)
-        runTruthTracking(
-            trackingGeometry,
-            field,
-            digiConfigFile=Path(
-                Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-            ),
-            outputDir=tmp_path,
-            s=s2,
-        )
-        s2.run()
-        del s2
-        inputTrackSummary = tmp_path / "tracksummary_fitter.root"
-        assert inputTrackSummary.exists()
-        assert ptcl_file.exists()
-    else:
-        s0 = Sequencer(events=100, numThreads=1)
-        evGen = ptcl_gun(s0)
-        s0.addWriter(
-            RootParticleWriter(
-                level=acts.logging.INFO,
-                inputParticles=evGen.config.outputParticles,
-                filePath=str(ptcl_file),
-            )
-        )
-        s0.run()
-        del s0
-
-        assert ptcl_file.exists()
-
-    finder = VertexFinder[finder]
-
-    s3 = Sequencer(numThreads=1)
-
-    runVertexFitting(
-        field,
-        inputParticlePath=ptcl_file,
-        inputTrackSummary=inputTrackSummary,
-        outputDir=tmp_path,
-        vertexFinder=finder,
-        s=s3,
-    )
-
-    alg = AssertCollectionExistsAlg(["fittedVertices"], name="check_alg")
-    s3.addAlgorithm(alg)
-
-    s3.run()
-
-    vertexing_file = tmp_path / "performance_vertexing.root"
-    assert vertexing_file.exists()
-
-    assert_entries(vertexing_file, "vertexing", entries)
-    assert_root_hash(vertexing_file.name, vertexing_file)
-
-
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
+
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
@@ -1009,4 +1141,167 @@ def test_full_chain_odd_example(tmp_path):
         / "full_chain_odd.py"
     )
     assert script.exists()
-    subprocess.check_call([str(script)], cwd=tmp_path)
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script), "-n1"],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
+
+
+@pytest.mark.skipif(
+    not dd4hepEnabled or not geant4Enabled, reason="DD4hep and/or Geant4 not set up"
+)
+@pytest.mark.slow
+def test_full_chain_odd_example_pythia_geant4(tmp_path):
+    # This test literally only ensures that the full chain example can run without erroring out
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
+
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "full_chain_odd.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
+    try:
+        stdout = subprocess.check_output(
+            [sys.executable, str(script), "-n1", "--geant4", "--ttbar"],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+        stdout = stdout.decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
+
+    # collect and compare known errors
+    errors = []
+    error_regex = re.compile(r"^\d\d:\d\d:\d\d\s+(\w+)\s+ERROR\s+", re.MULTILINE)
+    for match in error_regex.finditer(stdout):
+        (algo,) = match.groups()
+        errors.append(algo)
+    errors = collections.Counter(errors)
+    assert dict(errors) == {}, stdout
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.skipif(not onnxEnabled, reason="ONNX plugin not enabled")
+@pytest.mark.slow
+def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
+    root_file = "performance_ambiML.root"
+    output_dir = "odd_output"
+    assert not (tmp_path / root_file).exists()
+    # This test literally only ensures that the full chain example can run without erroring out
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
+
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "full_chain_odd.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script), "-n5", "--MLSolver"],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
+
+    rfp = tmp_path / output_dir / root_file
+    assert rfp.exists()
+
+    assert_root_hash(root_file, rfp)
+
+
+def test_bfield_writing(tmp_path, seq, assert_root_hash):
+    from bfield_writing import runBFieldWriting
+
+    root_files = [
+        ("solenoid.root", "solenoid", 100),
+        ("solenoid2.root", "solenoid", 100),
+    ]
+
+    for fn, _, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    runBFieldWriting(outputDir=tmp_path, rewrites=1)
+
+    for fn, tn, ee in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 2**10 * 2
+        assert_entries(fp, tn, ee)
+        assert_root_hash(fn, fp)
+
+
+@pytest.mark.parametrize("backend", ["onnx", "torch"])
+@pytest.mark.parametrize("hardware", ["cpu", "gpu"])
+@pytest.mark.skipif(not exatrkxEnabled, reason="ExaTrkX environment not set up")
+def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
+    if backend == "onnx" and hardware == "cpu":
+        pytest.skip("Combination of ONNX and CPU not yet supported")
+
+    root_file = "performance_track_finding.root"
+    assert not (tmp_path / root_file).exists()
+
+    if backend == "onnx":
+        url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
+    else:
+        url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
+
+    tarfile_name = tmp_path / "models.tar"
+    urllib.request.urlretrieve(url, tarfile_name)
+    tarfile.open(tarfile_name).extractall(tmp_path)
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "exatrkx.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+
+    if hardware == "cpu":
+        env["CUDA_VISIBLE_DEVICES"] = ""
+
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script), backend],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
+
+    rfp = tmp_path / root_file
+    assert rfp.exists()
+
+    assert_root_hash(root_file, rfp)

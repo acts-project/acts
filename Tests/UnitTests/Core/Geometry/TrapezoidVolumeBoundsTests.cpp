@@ -9,18 +9,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
-namespace tt = boost::test_tools;
+#include <cmath>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
-
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Volumes)
 
@@ -58,11 +61,14 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 
   for (auto& os : tvbOrientedSurfaces) {
     auto osCenter = os.first->center(geoCtx);
-    auto osNormal = os.first->normal(geoCtx, osCenter);
-    double nDir = (double)os.second;
+    const auto* pSurface =
+        dynamic_cast<const Acts::PlaneSurface*>(os.first.get());
+    BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
+                          "The surface is not a plane surface");
+    auto osNormal = pSurface->normal(geoCtx);
     // Check if you step inside the volume with the oriented normal
-    auto insideTvb = osCenter + nDir * osNormal;
-    auto outsideTvb = osCenter - nDir * osNormal;
+    Vector3 insideTvb = osCenter + os.second * osNormal;
+    Vector3 outsideTvb = osCenter - os.second * osNormal;
     BOOST_CHECK(tvb.inside(insideTvb));
     BOOST_CHECK(!tvb.inside(outsideTvb));
   }
@@ -98,7 +104,5 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

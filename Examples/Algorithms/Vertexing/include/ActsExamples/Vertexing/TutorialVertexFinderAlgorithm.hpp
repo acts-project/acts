@@ -9,17 +9,30 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <memory>
 #include <string>
+#include <vector>
+
+namespace Acts {
+class MagneticFieldProvider;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
-class TutorialVertexFinderAlgorithm final : public BareAlgorithm {
+class TutorialVertexFinderAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Input track parameters collection
+    /// Optional. Input track parameters collection
     std::string inputTrackParameters;
     /// Output proto vertex collection
     std::string outputProtoVertices;
@@ -40,6 +53,12 @@ class TutorialVertexFinderAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
+
+  WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
+      this, "OutputProtoVertices"};
 };
 
 }  // namespace ActsExamples

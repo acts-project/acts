@@ -8,6 +8,8 @@
 
 #include "Acts/TrackFitting/GsfError.hpp"
 
+#include <string>
+
 namespace {
 
 class GsfErrorCategory : public std::error_category {
@@ -20,25 +22,14 @@ class GsfErrorCategory : public std::error_category {
     using Acts::GsfError;
 
     switch (static_cast<GsfError>(c)) {
-      case GsfError::NavigationFailed:
-        return "Navigation failed, forward and backward pass incompatible";
-      case GsfError::ComponentNumberMismatch:
-        return "Component Number changed during two GSF calls";
-      case GsfError::AllComponentsSteppingError:
-        return "Stepping errors occurred in all components";
-      case GsfError::NoComponentCreated:
-        return "No component has been created in the filter step";
-      case GsfError::NoStatesCreated:
-        return "No states where created in the MultiTrajectory";
-      case GsfError::StartParametersNotOnStartSurface:
-        return "Start parameters don't lie in the start surface";
-      case GsfError::PropagationEndedOnWrongSurface:
-        return "The propagation did not reach the correct target surface";
-      case GsfError::LastStepParamsContainNan:
-        return "The parameters to start the last step with contain NAN values";
-      case GsfError::SmoothingFailed:
-        return "Smoothing failed because the difference between fwd and bwd "
-               "was to big";
+      case GsfError::StartParametersHaveNoCovariance:
+        return "Start parameters have no Covariance";
+      case GsfError::NoMeasurementStatesCreatedForward:
+        return "No measurement states found in the forward pass";
+      case GsfError::NoMeasurementStatesCreatedBackward:
+        return "No measurement states found in the backward pass";
+      case GsfError::NoMeasurementStatesCreatedFinal:
+        return "No measurement states in the final trajectory";
       default:
         return "unknown";
     }

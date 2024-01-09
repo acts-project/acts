@@ -8,10 +8,25 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <algorithm>
 #include <bitset>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 using namespace Acts::VectorHelpers;
 
@@ -77,16 +92,16 @@ BOOST_AUTO_TEST_CASE(toString_test_helper) {
   mat << 1, 2, 3, 4, 5, 6, 7, 8, 9;
   std::string out;
   out = toString(mat);
-  BOOST_CHECK(out.size() > 0);
+  BOOST_CHECK(!out.empty());
 
   Translation3 trl{Vector3{1, 2, 3}};
   out = toString(trl);
-  BOOST_CHECK(out.size() > 0);
+  BOOST_CHECK(!out.empty());
 
   Transform3 trf;
   trf = trl;
   out = toString(trf);
-  BOOST_CHECK(out.size() > 0);
+  BOOST_CHECK(!out.empty());
 }
 
 BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
@@ -142,24 +157,24 @@ BOOST_AUTO_TEST_CASE(VectorHelpersPosition) {
   BOOST_CHECK_EQUAL(position(params), Vector3(1, 2, 3));
 }
 
-template <size_t I>
+template <std::size_t I>
 struct functor {
-  static constexpr size_t invoke() { return I * I * I; }
+  static constexpr std::size_t invoke() { return I * I * I; }
 };
 
 BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {
-  constexpr size_t imax = 20;
-  for (size_t i = 0; i < imax; i++) {
-    size_t val = template_switch<functor, 0, imax>(i);
+  constexpr std::size_t imax = 20;
+  for (std::size_t i = 0; i < imax; i++) {
+    std::size_t val = template_switch<functor, 0, imax>(i);
     BOOST_CHECK_EQUAL(val, i * i * i);
   }
 }
 
-typedef std::tuple<std::pair<ActsMatrix<3, 3>, ActsMatrix<3, 3>>,
-                   std::pair<ActsMatrix<4, 4>, ActsMatrix<4, 4>>,
-                   std::pair<ActsMatrix<8, 8>, ActsMatrix<8, 8>>,
-                   std::pair<ActsMatrix<8, 7>, ActsMatrix<7, 4>>>
-    MatrixProductTypes;
+using MatrixProductTypes =
+    std::tuple<std::pair<ActsMatrix<3, 3>, ActsMatrix<3, 3>>,
+               std::pair<ActsMatrix<4, 4>, ActsMatrix<4, 4>>,
+               std::pair<ActsMatrix<8, 8>, ActsMatrix<8, 8>>,
+               std::pair<ActsMatrix<8, 7>, ActsMatrix<7, 4>>>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
                               MatrixProductTypes) {
@@ -179,6 +194,125 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
   }
 }
 
+BOOST_AUTO_TEST_CASE(min_max) {
+  std::vector<ActsScalar> ordered = {-3., -2., -1., 0., 1., 2., 3.};
+  auto [min0, max0] = Acts::min_max(ordered);
+
+  CHECK_CLOSE_ABS(min0, -3., std::numeric_limits<ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(max0, 3., std::numeric_limits<ActsScalar>::epsilon());
+
+  std::vector<ActsScalar> unordered = {3., -3., -2., -1., 0., 1., 2.};
+  auto [min1, max1] = Acts::min_max(unordered);
+
+  CHECK_CLOSE_ABS(min1, -3., std::numeric_limits<ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(max1, 3., std::numeric_limits<ActsScalar>::epsilon());
+}
+
+BOOST_AUTO_TEST_CASE(range_medium) {
+  std::vector<ActsScalar> ordered = {-3., -2., -1., 0., 1., 2., 3.};
+  auto [range0, medium0] = Acts::range_medium(ordered);
+
+  CHECK_CLOSE_ABS(range0, 6., std::numeric_limits<ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(medium0, 0., std::numeric_limits<ActsScalar>::epsilon());
+
+  std::vector<ActsScalar> unordered = {-2., -1., 0., 1., 2., 3., -3.};
+  auto [range1, medium1] = Acts::range_medium(unordered);
+
+  CHECK_CLOSE_ABS(range1, 6., std::numeric_limits<ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(medium1, 0., std::numeric_limits<ActsScalar>::epsilon());
+}
+
+BOOST_AUTO_TEST_CASE(safeInverse) {
+  {
+    auto m = Eigen::Matrix3d::Zero().eval();
+    BOOST_CHECK(!Acts::safeInverse(m));
+  }
+
+  {
+    auto m = Eigen::Matrix3d::Identity().eval();
+    BOOST_CHECK(Acts::safeInverse(m));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
+  RotationMatrix3 ref = RotationMatrix3::Identity();
+
+  // Right angle in both planes
+  for (std::size_t i = 0; i < 3; i++) {
+    Vector3 dir = Vector3::Zero();
+    dir[i] = 1;
+    std::pair<double, double> angles = incidentAngles(dir, ref);
+    double expect = (i < 2) ? 0 : M_PI_2;
+    CHECK_CLOSE_ABS(angles.first, expect,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(angles.second, expect,
+                    std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree on both axes
+  {
+    Vector3 dir = Vector3({1, 1, 1}).normalized();
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree on first axis
+  {
+    Vector3 dir = Vector3({1, 0, 1}).normalized();
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree on second axis
+  {
+    Vector3 dir = Vector3({0, 1, 1}).normalized();
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // Reverse crossing
+  {
+    Vector3 dir = {0, 0, -1};
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, -M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, -M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree but different quadrant
+  {
+    Vector3 dir = {-1, -1, 1};
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, 3 * M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, 3 * M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree but different quadrant & other side
+  {
+    Vector3 dir = {-1, -1, -1};
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, -3 * M_PI_4,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, -3 * M_PI_4,
+                    std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // Rotate the reference frame instead
+  {
+    double s45 = std::sin(M_PI_4);
+    double c45 = std::cos(M_PI_4);
+    RotationMatrix3 ref45;
+    ref45 << c45, 0, s45, 0, 1, 0, -s45, 0, c45;
+    Vector3 dir = {0, 0, 1};
+    auto [a0, a1] = incidentAngles(dir, ref45);
+    CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Test
 }  // namespace Acts

@@ -13,11 +13,14 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
+#include <cstddef>
 #include <functional>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -26,14 +29,14 @@ namespace Acts {
 class MaterialSlab;
 
 using EAxis = Acts::detail::EquidistantAxis;
-using Grid2D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
-using Grid3D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
+using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
+using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =
-    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
+    Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
 using MaterialGrid3D =
-    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
+    Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
+
+using MaterialGridAxisData = std::tuple<double, double, std::size_t>;
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
@@ -44,8 +47,8 @@ using MaterialGrid3D =
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid2D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2);
+Grid2D createGrid(MaterialGridAxisData gridAxis1,
+                  MaterialGridAxisData gridAxis2);
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
@@ -57,9 +60,9 @@ Grid2D createGrid(std::array<double, 3> gridAxis1,
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid3D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2,
-                  std::array<double, 3> gridAxis3);
+Grid3D createGrid(MaterialGridAxisData gridAxis1,
+                  MaterialGridAxisData gridAxis2,
+                  MaterialGridAxisData gridAxis3);
 
 /// @brief return a function that return the coordinate corresponding to type of
 /// bin
@@ -71,7 +74,7 @@ std::function<double(Acts::Vector3)> globalToLocalFromBin(
     Acts::BinningValue& type);
 
 /// @brief Create a 2DGrid using a BinUtility.
-/// Also determine the coresponding global to local transform and grid mapping
+/// Also determine the corresponding global to local transform and grid mapping
 /// function
 ///
 /// @param [in] bins BinUtility of the volume to be mapped
@@ -83,7 +86,7 @@ Grid2D createGrid2D(
     std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal);
 
 /// @brief Create a 3DGrid using a BinUtility.
-/// Also determine the coresponding global to local transform and grid mapping
+/// Also determine the corresponding global to local transform and grid mapping
 /// function
 ///
 /// @param [in] bins BinUtility of the volume to be mapped

@@ -17,7 +17,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
     // Bool to check if removable tracks, that pass selection, still exist
     bool couldRemoveTracks = false;
     for (auto trk : state.tracksToRemove) {
-      if (not state.trackSelectionMap.at(trk)) {
+      if (!state.trackSelectionMap.at(trk)) {
         // Track was never added to grid, so cannot remove it
         continue;
       }
@@ -26,12 +26,11 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
       m_cfg.gridDensity.removeTrackGridFromMainGrid(
           binAndTrackGrid.first, binAndTrackGrid.second, state.mainGrid);
     }
-    if (not couldRemoveTracks) {
+    if (!couldRemoveTracks) {
       // No tracks were removed anymore
       // Return empty seed, i.e. vertex at constraint position
       // (Note: Upstream finder should check for this break condition)
-      std::vector<Vertex<InputTrack_t>> seedVec{
-          vertexingOptions.vertexConstraint};
+      std::vector<Vertex<InputTrack_t>> seedVec{vertexingOptions.constraint};
       return seedVec;
     }
   } else {
@@ -40,7 +39,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_extractParameters(*trk);
       // Take only tracks that fulfill selection criteria
-      if (not doesPassTrackSelection(trkParams)) {
+      if (!doesPassTrackSelection(trkParams)) {
         if (m_cfg.cacheGridStateForTrackRemoval) {
           state.trackSelectionMap[trk] = false;
         }
@@ -60,7 +59,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
   double z = 0;
   double width = 0;
   if (state.mainGrid != MainGridVector::Zero()) {
-    if (not m_cfg.estimateSeedWidth) {
+    if (!m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
       auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);
 
@@ -81,12 +80,11 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
   }
 
   // Construct output vertex
-  Vector3 seedPos =
-      vertexingOptions.vertexConstraint.position() + Vector3(0., 0., z);
+  Vector3 seedPos = vertexingOptions.constraint.position() + Vector3(0., 0., z);
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
-  SymMatrix4 seedCov = vertexingOptions.vertexConstraint.fullCovariance();
+  SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
   if (width != 0.) {
     // Use z-constraint from seed width
@@ -107,7 +105,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
   // Get track covariance
-  if (not trk.covariance().has_value()) {
+  if (!trk.covariance().has_value()) {
     return false;
   }
   const auto perigeeCov = *(trk.covariance());

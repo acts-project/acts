@@ -1,0 +1,11 @@
+uproot
+hist
+typer
+pandas
+pydantic
+pyyaml
+matplotlib
+awkward
+mplhep
+scipy
+rich

@@ -6,20 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
-#include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
 
 namespace Acts {
 
 namespace detail {
 
 FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
+  ActsScalar invSinTheta = 1. / sinTheta;
   // Prepare the jacobian to curvilinear
   FreeToBoundMatrix freeToCurvJacobian = FreeToBoundMatrix::Zero();
   if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
@@ -35,7 +40,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
     const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
     const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
     const ActsScalar z = direction(2);  // == cos(theta)
-    const ActsScalar c = std::sqrt(y * y + z * z);
+    const ActsScalar c = std::hypot(y, z);
     const ActsScalar invC = 1. / c;
     freeToCurvJacobian(eBoundLoc0, eFreePos1) = -z * invC;
     freeToCurvJacobian(eBoundLoc0, eFreePos2) = y * invC;
@@ -57,7 +62,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
 }
 
 BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction) {
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
 
   // Prepare the jacobian to free
@@ -84,7 +89,7 @@ BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction) {
 ActsMatrix<8, 7> anglesToDirectionJacobian(const Vector3& direction) {
   ActsMatrix<8, 7> jacobian = ActsMatrix<8, 7>::Zero();
 
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
 
   jacobian(0, 0) = 1.;
@@ -104,8 +109,9 @@ ActsMatrix<8, 7> anglesToDirectionJacobian(const Vector3& direction) {
 ActsMatrix<7, 8> directionToAnglesJacobian(const Vector3& direction) {
   ActsMatrix<7, 8> jacobian = ActsMatrix<7, 8>::Zero();
 
-  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
+  ActsScalar invSinTheta = 1. / sinTheta;
 
   jacobian(0, 0) = 1.;
   jacobian(1, 1) = 1.;
@@ -134,6 +140,7 @@ BoundMatrix boundToBoundTransportJacobian(
   // Calculate the jacobian from free to bound at the final surface
   FreeToBoundMatrix freeToBoundJacobian =
       surface.freeToBoundJacobian(geoContext, freeParameters);
+  // https://acts.readthedocs.io/en/latest/white_papers/correction-for-transport-jacobian.html
   // Calculate the full jacobian from the local/bound parameters at the start
   // surface to local/bound parameters at the final surface
   return freeToBoundJacobian *
@@ -145,7 +152,7 @@ BoundMatrix boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives) {
-  // Calculate the derivative of path length at the the curvilinear surface
+  // Calculate the derivative of path length at the curvilinear surface
   // w.r.t. free parameters
   FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   freeToPath.segment<3>(eFreePos0) = -1.0 * direction;

@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <vector>
 
@@ -121,6 +122,13 @@ class CuboidVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
+  /// Binning borders in double
+  ///
+  /// @param bValue is the binning schema used
+  ///
+  /// @return float offset to be used for the binning
+  double binningBorder(BinningValue bValue) const final;
+
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
   double get(BoundValues bValue) const { return m_values[bValue]; }
@@ -132,7 +140,7 @@ class CuboidVolumeBounds : public VolumeBounds {
 
  private:
   /// Templated dumpT method
-  /// @tparam stream_t The type fo the dump stream
+  /// @tparam stream_t The type for the dump stream
   /// @param dt The dump stream object
   template <class stream_t>
   stream_t& dumpT(stream_t& dt) const;
@@ -165,7 +173,7 @@ inline std::vector<double> CuboidVolumeBounds::values() const {
 }
 
 inline void CuboidVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthX) <= 0 or get(eHalfLengthY) <= 0 or
+  if (get(eHalfLengthX) <= 0 || get(eHalfLengthY) <= 0 ||
       get(eHalfLengthZ) <= 0.) {
     throw std::invalid_argument(
         "CuboidVolumeBounds: invalid input, zero or negative.");

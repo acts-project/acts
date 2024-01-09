@@ -9,32 +9,43 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
 #include <vector>
+
+namespace Acts {
+class TrackingGeometry;
+class IMaterialDecorator;
+}  // namespace Acts
+
+namespace ActsExamples {
+class IContextDecorator;
+namespace Generic {
+class GenericDetectorElement;
+}  // namespace Generic
+}  // namespace ActsExamples
 
 namespace ActsExamples::Contextual {
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
-class AlignedDetector : public ActsExamples::IBaseDetector {
+class AlignedDetector {
  public:
-  //   using DetectorElement =
-  //       ActsExamples::Contextual::InternallyAlignedDetectorElement;
-  //   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
-  //   using Decorator = ActsExamples::Contextual::InternalAlignmentDecorator;
-  //   using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;
+  using ContextDecorators =
+      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
-    double seed = 1324354657;
+    std::size_t seed = 1324354657;
     /// Size of a valid IOV.
-    size_t iovSize = 100;
+    std::size_t iovSize = 100;
     /// Span until garbage collection is active.
-    size_t flushSize = 200;
+    std::size_t flushSize = 200;
     /// Run the garbage collection?
     bool doGarbageCollection = true;
     /// Sigma of the in-plane misalignment
@@ -54,16 +65,9 @@ class AlignedDetector : public ActsExamples::IBaseDetector {
     Mode mode = Mode::Internal;
   };
 
-  void addOptions(
-      boost::program_options::options_description& opt) const override;
-
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const boost::program_options::variables_map& vm,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
-
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const Config& cfg,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
+      const Config& cfg,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 
   std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>&
   detectorStore() {

@@ -8,14 +8,23 @@
 
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 void Acts::to_json(nlohmann::json& j, const Acts::BinningData& bd) {
   // Common to all bin utilities
   j["min"] = bd.min;
   j["max"] = bd.max;
   j["option"] = (bd.option == Acts::open ? "open" : "closed");
-  j["value"] = Acts::binningValueNames()[bd.binvalue];
+  j["value"] = bd.binvalue;
   int bins = bd.bins();
   // Write sub bin data if present
   if (bd.subBinningData != nullptr) {
@@ -40,58 +49,52 @@ void Acts::to_json(nlohmann::json& j, const Acts::BinningData& bd) {
   j["bins"] = bins;
 }
 
-void Acts::from_json(const nlohmann::json& j, Acts::BinningData& bd) {
+void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
   // Common to all bin utilities
   float min = j["min"];
   float max = j["max"];
   int bins = j["bins"];
   std::string valueName = j["value"];
-  auto valueIter = std::find(Acts::binningValueNames().begin(),
-                             Acts::binningValueNames().end(), valueName);
-  Acts::BinningValue bValue = static_cast<Acts::BinningValue>(
-      valueIter - Acts::binningValueNames().begin());
-  if (bins == 1) {
-    bd = Acts::BinningData(bValue, min, max);
+  auto bValue = j["value"].get<BinningValue>();
+  if (bins == 1 && !(j["type"] == "arbitrary")) {
+    bd = BinningData(bValue, min, max);
     return;
   }
-  Acts::BinningOption bOption =
-      (j["option"] == "open") ? Acts::open : Acts::closed;
+  Acts::BinningOption bOption = (j["option"] == "open") ? open : closed;
   Acts::BinningType bType =
-      (j["type"] == "equidistant") ? Acts::equidistant : Acts::arbitrary;
+      (j["type"] == "equidistant") ? equidistant : arbitrary;
 
-  std::unique_ptr<Acts::BinningData> subBinning = nullptr;
+  std::unique_ptr<BinningData> subBinning = nullptr;
   bool subBinningAdditive = false;
   if (j.find("subdata") != j.end()) {
     subBinningAdditive = j["subadditive"];
   }
 
-  if (bType == Acts::equidistant) {
-    bd = Acts::BinningData(bOption, bValue, bins, min, max,
-                           std::move(subBinning), subBinningAdditive);
+  if (bType == equidistant) {
+    bd = BinningData(bOption, bValue, bins, min, max, std::move(subBinning),
+                     subBinningAdditive);
   } else {
     std::vector<float> boundaries = j["boundaries"];
-    bd = Acts::BinningData(bOption, bValue, boundaries, std::move(subBinning));
+    bd = BinningData(bOption, bValue, boundaries, std::move(subBinning));
   }
 }
 
-void Acts::to_json(nlohmann::json& j, const Acts::BinUtility& bu) {
+void Acts::to_json(nlohmann::json& j, const BinUtility& bu) {
   nlohmann::json jbindata;
   for (const auto& bdata : bu.binningData()) {
     jbindata.push_back(nlohmann::json(bdata));
   }
   j["binningdata"] = jbindata;
-  if (not bu.transform().isApprox(Acts::Transform3::Identity())) {
-    nlohmann::json jtrf;
-    to_json(jtrf, bu.transform());
+  if (!bu.transform().isApprox(Transform3::Identity())) {
+    nlohmann::json jtrf = Transform3JsonConverter::toJson(bu.transform());
     j["transform"] = jtrf;
   }
 }
 
 void Acts::from_json(const nlohmann::json& j, Acts::BinUtility& bu) {
   bu = Acts::BinUtility();
-  if (j.find("transform") != j.end() and not j["transform"].empty()) {
-    Acts::Transform3 trf;
-    from_json(j["transform"], trf);
+  if (j.find("transform") != j.end() && !j["transform"].empty()) {
+    Acts::Transform3 trf = Transform3JsonConverter::fromJson(j["transform"]);
     bu = Acts::BinUtility(trf);
   }
   for (const auto& jdata : j["binningdata"]) {

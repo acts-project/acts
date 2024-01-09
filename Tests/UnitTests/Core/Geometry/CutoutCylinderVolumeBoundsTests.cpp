@@ -9,16 +9,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Visualization/PlyVisualization3D.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 
-#include <fstream>
+#include <algorithm>
+#include <array>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {
@@ -40,7 +45,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsConstruction) {
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsRecreation) {
   CutoutCylinderVolumeBounds original(5, 10, 15, 30, 25);
-  std::array<double, CutoutCylinderVolumeBounds::eSize> values;
+  std::array<double, CutoutCylinderVolumeBounds::eSize> values{};
   std::vector<double> valvector = original.values();
   std::copy_n(valvector.begin(), CutoutCylinderVolumeBounds::eSize,
               values.begin());
@@ -191,11 +196,12 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
 
   for (auto& os : ccvbOrientedSurfaces) {
     auto onSurface = os.first->binningPosition(geoCtx, binR);
-    auto osNormal = os.first->normal(geoCtx, onSurface);
-    double nDir = (double)os.second;
+    auto locPos =
+        os.first->globalToLocal(geoCtx, onSurface, Vector3::Zero()).value();
+    auto osNormal = os.first->normal(geoCtx, locPos);
     // Check if you step inside the volume with the oriented normal
-    auto insideCcvb = onSurface + nDir * osNormal;
-    auto outsideCCvb = onSurface - nDir * osNormal;
+    Vector3 insideCcvb = onSurface + os.second * osNormal;
+    Vector3 outsideCCvb = onSurface - os.second * osNormal;
 
     BOOST_CHECK(ccvb.inside(insideCcvb));
     BOOST_CHECK(!ccvb.inside(outsideCCvb));

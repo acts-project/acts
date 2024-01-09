@@ -42,9 +42,11 @@ class AdaptiveMultiVertexFinder {
   template <typename T, typename = int>
   struct NeedsRemovedTracks : std::false_type {};
 
+#ifndef DOXYGEN
   template <typename T>
   struct NeedsRemovedTracks<T, decltype((void)T::tracksToRemove, 0)>
       : std::true_type {};
+#endif
 
  public:
   /// Configuration struct
@@ -56,14 +58,13 @@ class AdaptiveMultiVertexFinder {
     /// @param ipEst ImpactPointEstimator
     /// @param lin Track linearizer
     /// @param bIn Input magnetic field
-    Config(vfitter_t fitter, const sfinder_t& sfinder,
-           const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
-           const Linearizer_t& lin,
-           std::shared_ptr<const MagneticFieldProvider> bIn)
+    Config(vfitter_t fitter, sfinder_t sfinder,
+           ImpactPointEstimator<InputTrack_t, Propagator_t> ipEst,
+           Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
-          seedFinder(sfinder),
-          ipEstimator(ipEst),
-          linearizer(lin),
+          seedFinder(std::move(sfinder)),
+          ipEstimator(std::move(ipEst)),
+          linearizer(std::move(lin)),
           bField{std::move(bIn)} {}
 
     // Vertex fitter
@@ -80,10 +81,6 @@ class AdaptiveMultiVertexFinder {
 
     std::shared_ptr<const MagneticFieldProvider> bField;
 
-    // Use a beam spot constraint, vertexConstraint in VertexingOptions
-    // has to be set in this case
-    bool useBeamSpotConstraint = true;
-
     // Max z interval used for adding tracks to fit:
     // When adding a new vertex to the multi vertex fit,
     // only the tracks whose z at PCA is closer
@@ -97,8 +94,10 @@ class AdaptiveMultiVertexFinder {
     // consider a lot of tracks which just slow down the fit.
     double tracksMaxZinterval = 3. * Acts::UnitConstants::mm;
 
-    // Maximum allowed significance of track position to vertex seed
-    // to consider track as compatible track for vertex fit
+    // Maximum allowed significance of track position to vertex seed to consider
+    // track as compatible to vertex. If useTime is set to true, the time
+    // coordinate also contributes to the significance and tracksMaxSignificance
+    // needs to be increased.
     double tracksMaxSignificance = 5.;
 
     // Max chi2 value for which tracks are considered compatible with
@@ -136,7 +135,7 @@ class AdaptiveMultiVertexFinder {
     // Include also single track vertices
     bool addSingleTrackVertices = false;
 
-    // Use 3d information fo evaluating the vertex distance significance
+    // Use 3d information for evaluating the vertex distance significance
     // for vertex merging/splitting
     bool do3dSplitting = false;
 
@@ -146,9 +145,9 @@ class AdaptiveMultiVertexFinder {
     // Use seed vertex as a constraint for the fit
     bool useSeedConstraint = true;
 
-    // Diagonal constraint covariance entries in case
-    // no beamspot constraint is provided
-    double looseConstrValue = 1e+8;
+    // Variances of the 4D vertex position before the vertex fit if no beamspot
+    // constraint is provided
+    Vector4 initialVariances = Vector4::Constant(1e+8);
 
     // Default fitQuality for constraint vertex in case no beamspot
     // constraint is provided
@@ -160,6 +159,10 @@ class AdaptiveMultiVertexFinder {
     // So definitely consider setting this to true.
     bool useVertexCovForIPEstimation = false;
 
+    // Use time information when assigning tracks to vertices. If this is set to
+    // true, useTime of the vertex fitter configuration should also be set to
+    // true, and time seeding should be enabled.
+    bool useTime = false;
   };  // Config struct
 
   /// State struct for fulfilling interface
@@ -172,7 +175,7 @@ class AdaptiveMultiVertexFinder {
   template <
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFinder(Config& cfg,
+  AdaptiveMultiVertexFinder(Config cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFinder",
                                                  Logging::INFO))
@@ -188,12 +191,14 @@ class AdaptiveMultiVertexFinder {
   /// object
   /// @param logger The logging instance
   AdaptiveMultiVertexFinder(
-      Config& cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
+
+  AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
 
   /// @brief Function that performs the adaptive
   /// multi-vertex finding
@@ -215,15 +220,15 @@ class AdaptiveMultiVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger& logger() const {
+    return *m_logger;
+  }
 
   /// @brief Calls the seed finder and sets constraints on the found seed
   /// vertex if desired
@@ -246,8 +251,10 @@ class AdaptiveMultiVertexFinder {
   /// @brief Sets constraint vertex after seeding
   ///
   /// @param currentConstraint Vertex constraint
+  /// @param useVertexConstraintInFit Indicates whether constraint is used during vertex fit
   /// @param seedVertex Seed vertex
   void setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
+                                 bool useVertexConstraintInFit,
                                  Vertex<InputTrack_t>& seedVertex) const;
 
   /// @brief Calculates the IP significance of a track to a given vertex
@@ -315,12 +322,13 @@ class AdaptiveMultiVertexFinder {
   /// @param vtx The vertex candidate
   /// @param seedTracks The seed tracks
   /// @param fitterState The vertex fitter state
+  /// @param useVertexConstraintInFit Indicates whether constraint is used in the vertex fit
   ///
   /// @return pair(nCompatibleTracks, isGoodVertex)
   std::pair<int, bool> checkVertexAndCompatibleTracks(
       Vertex<InputTrack_t>& vtx,
       const std::vector<const InputTrack_t*>& seedTracks,
-      FitterState_t& fitterState) const;
+      FitterState_t& fitterState, bool useVertexConstraintInFit) const;
 
   /// @brief Method that removes all tracks that are compatible with
   /// current vertex from seedTracks

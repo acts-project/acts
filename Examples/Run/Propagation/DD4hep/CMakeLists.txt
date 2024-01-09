@@ -3,7 +3,7 @@ add_executable(
   DD4hepPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationDD4hep
-  PRIVATE ${_common_libraries} ActsExamplesDetectorDD4hep)
+  PRIVATE ${_common_libraries} ActsExamplesDD4hepDetectorWithOptions)
 
 install(
   TARGETS ActsExamplePropagationDD4hep

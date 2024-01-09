@@ -8,42 +8,32 @@
 
 #include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
-#include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
-#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/LinearizedTrack.hpp"
-#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFinderConcept.hpp"
-#include "Acts/Vertexing/VertexingOptions.hpp"
-#include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
+#include <stdexcept>
 
 #include "VertexingHelpers.hpp"
 
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
+
 ActsExamples::TutorialVertexFinderAlgorithm::TutorialVertexFinderAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("TutorialVertexFinder", lvl), m_cfg(cfg) {
+    : ActsExamples::IAlgorithm("TutorialVertexFinder", lvl), m_cfg(cfg) {
   if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing input track parameters collection");
+    throw std::invalid_argument("Missing input track parameter collection");
   }
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
   }
+
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
+  m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
 }
 
 ActsExamples::ProcessCode ActsExamples::TutorialVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // retrieve input tracks and convert into the expected format
-  const auto& inputTrackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  const auto& inputTrackParameters = m_inputTrackParameters(ctx);
   const auto& inputTrackPointers =
       makeTrackParametersPointerContainer(inputTrackParameters);
   //* Do not change the code above this line *//

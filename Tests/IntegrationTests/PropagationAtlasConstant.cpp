@@ -15,6 +15,7 @@
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
 

@@ -10,29 +10,28 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
-#include "Acts/Geometry/PlaneLayer.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <limits>
+#include <stdexcept>
+#include <type_traits>
 
 std::shared_ptr<const Acts::Surface> Acts::CuboidVolumeBuilder::buildSurface(
     const GeometryContext& /*gctx*/,
@@ -95,6 +94,8 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   LayerCreator layerCreator(lCfg);
   ProtoLayer pl{gctx, cfg.surfaces};
   pl.envelope[binX] = cfg.envelopeX;
+  pl.envelope[binY] = cfg.envelopeY;
+  pl.envelope[binZ] = cfg.envelopeZ;
   return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
                                  BinningValue::binX, pl, trafo);
 }
@@ -151,27 +152,6 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   auto bounds = std::make_shared<const CuboidVolumeBounds>(
       cfg.length.x() * 0.5, cfg.length.y() * 0.5, cfg.length.z() * 0.5);
 
-  if (cfg.layerCfg.empty()) {
-    // Build dummy layer if no layer is given (tmp solution)
-    SurfaceConfig sCfg;
-    sCfg.position = cfg.position;
-    // Rotation of the surfaces: +pi/2 around axis y
-    Vector3 xPos(0., 0., 1.);
-    Vector3 yPos(0., 1., 0.);
-    Vector3 zPos(-1., 0., 0.);
-    sCfg.rotation.col(0) = xPos;
-    sCfg.rotation.col(1) = yPos;
-    sCfg.rotation.col(2) = zPos;
-    // Bounds
-    sCfg.rBounds = std::make_shared<const RectangleBounds>(
-        RectangleBounds(cfg.length.y() * 0.5, cfg.length.z() * 0.5));
-
-    LayerConfig lCfg;
-    lCfg.surfaceCfg = {sCfg};
-
-    cfg.layerCfg.push_back(lCfg);
-  }
-
   // Gather the layers
   LayerVector layVec;
   if (cfg.layers.empty()) {
@@ -197,9 +177,11 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
                                BinningType::arbitrary, BinningValue::binX));
 
   // Build confined volumes
-  if (cfg.trackingVolumes.empty())
-    for (VolumeConfig vc : cfg.volumeCfg)
+  if (cfg.trackingVolumes.empty()) {
+    for (VolumeConfig vc : cfg.volumeCfg) {
       cfg.trackingVolumes.push_back(buildVolume(gctx, vc));
+    }
+  }
 
   std::shared_ptr<TrackingVolume> trackVolume;
   if (layVec.empty()) {
@@ -217,8 +199,8 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 }
 
 Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
-    const GeometryContext& gctx, Acts::TrackingVolumePtr /*unused*/,
-    Acts::VolumeBoundsPtr /*unused*/) const {
+    const GeometryContext& gctx, Acts::TrackingVolumePtr /*gctx*/,
+    Acts::VolumeBoundsPtr /*bounds*/) const {
   // Build volumes
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
   volumes.reserve(m_cfg.volumeCfg.size());
@@ -262,7 +244,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   std::vector<float> binBoundaries;
   binBoundaries.push_back(volumes[0]->center().x() -
                           m_cfg.volumeCfg[0].length.x() * 0.5);
-  for (size_t i = 0; i < volumes.size(); i++) {
+  for (std::size_t i = 0; i < volumes.size(); i++) {
     binBoundaries.push_back(volumes[i]->center().x() +
                             m_cfg.volumeCfg[i].length.x() * 0.5);
   }

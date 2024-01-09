@@ -14,8 +14,10 @@ namespace Acts {
 
 /// @class DiscBounds
 ///
+/// @image html DiscBounds.gif
+///
 /// common base class for all bounds that are in a r/phi frame
-///  - simply introduced to avoid wrong bound assigments to surfaces
+///  - simply introduced to avoid wrong bound assignments to surfaces
 
 class DiscBounds : public SurfaceBounds {
  public:
@@ -28,7 +30,7 @@ class DiscBounds : public SurfaceBounds {
   /// Return the vertices
   ///
   /// @param lseg the number of segments used to approximate
-  /// and eventually curved line, the number referrs to full 2*PI
+  /// and eventually curved line, the number refers to full 2*PI
   ///
   /// @note that the extremas are given, which may slightly alter the
   /// number of segments returned

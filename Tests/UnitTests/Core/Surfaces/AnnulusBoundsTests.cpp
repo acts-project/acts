@@ -10,15 +10,17 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
+#include <algorithm>
+#include <array>
+#include <stdexcept>
+#include <vector>
 // clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-
-#include <fstream>
-#include <limits>
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts {
 
@@ -32,7 +34,7 @@ double maxPhi = 1.33970;
 
 Vector2 offset(-2., 2.);
 
-// Unit tests for AnnulusBounds constrcuctors
+// Unit tests for AnnulusBounds constructors
 BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
   // Test construction with radii and default sector
   auto original = AnnulusBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
@@ -45,7 +47,7 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsRecreation) {
   // Test construction with radii and default sector
   auto original = AnnulusBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
   auto valvector = original.values();
-  std::array<double, AnnulusBounds::eSize> values;
+  std::array<double, AnnulusBounds::eSize> values{};
   std::copy_n(valvector.begin(), AnnulusBounds::eSize, values.begin());
   AnnulusBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

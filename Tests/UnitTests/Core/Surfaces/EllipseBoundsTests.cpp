@@ -11,10 +11,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <stdexcept>
+#include <vector>
 
 namespace Acts {
 
@@ -50,7 +56,7 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsRecreation) {
   EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
                          averagePhi);
   auto valvector = original.values();
-  std::array<double, EllipseBounds::eSize> values;
+  std::array<double, EllipseBounds::eSize> values{};
   std::copy_n(valvector.begin(), EllipseBounds::eSize, values.begin());
   EllipseBounds recreated(values);
   BOOST_CHECK_EQUAL(recreated, original);

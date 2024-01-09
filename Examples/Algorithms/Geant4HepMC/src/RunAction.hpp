@@ -27,14 +27,14 @@ class RunAction final : public G4UserRunAction {
 
   /// Construct the action and ensure singleton usage.
   RunAction();
-  ~RunAction() final override;
+  ~RunAction() override;
 
   /// Interface method at the begin of the run
   /// @note resets the event action
-  void BeginOfRunAction(const G4Run* /*unused*/) final override;
+  void BeginOfRunAction(const G4Run* run) override;
 
   /// Interface method at the end of the run
-  void EndOfRunAction(const G4Run* /*unused*/) final override;
+  void EndOfRunAction(const G4Run* run) override;
 
  private:
   /// Instance of the EventAction

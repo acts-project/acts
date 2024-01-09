@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -44,7 +43,7 @@ class CsvSpacepointWriter final : public WriterT<SimSpacePointContainer> {
     /// Where to place output files
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
-    size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    std::size_t outputPrecision = std::numeric_limits<float>::max_digits10;
   };
 
   /// Constructor with
@@ -53,10 +52,13 @@ class CsvSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   CsvSpacepointWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~CsvSpacepointWriter() final override;
+  ~CsvSpacepointWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// This implementation holds the actual writing method
@@ -65,7 +67,7 @@ class CsvSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param spacepoints is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimSpacePointContainer& spacepoints) final override;
+                     const SimSpacePointContainer& spacepoints) override;
 
  private:
   Config m_cfg;

@@ -31,7 +31,7 @@ class LayerStub : virtual public SurfaceStub, public Layer {
         Layer(std::move(surfaceArray), thickness, std::move(ad), ltype) {}
 
   /// Destructor
-  ~LayerStub() override {}
+  ~LayerStub() override = default;
 
   /// Assignment is deleted in the Layer baseclass
   LayerStub& operator=(const LayerStub& lay) = delete;

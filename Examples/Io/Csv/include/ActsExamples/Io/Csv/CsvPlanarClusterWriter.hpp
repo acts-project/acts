@@ -10,14 +10,25 @@
 
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <string>
 
+namespace Acts {
+class PlanarModuleCluster;
+class TrackingGeometry;
+}  // namespace Acts
+
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out a planar cluster collection in comma-separated-value format.
 ///
@@ -46,7 +57,7 @@ class CsvPlanarClusterWriter final
     /// Where to place output files
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
-    size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    std::size_t outputPrecision = std::numeric_limits<float>::max_digits10;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
@@ -65,12 +76,14 @@ class CsvPlanarClusterWriter final
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] particles are the particle to be written
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const GeometryIdMultimap<Acts::PlanarModuleCluster>&
-                         clusters) final override;
+  ProcessCode writeT(
+      const AlgorithmContext& ctx,
+      const GeometryIdMultimap<Acts::PlanarModuleCluster>& clusters) override;
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
 };
 
 }  // namespace ActsExamples

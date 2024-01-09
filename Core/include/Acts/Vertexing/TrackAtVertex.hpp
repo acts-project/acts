@@ -22,7 +22,6 @@ namespace Acts {
 /// @tparam input_track_t Track object type
 
 template <typename input_track_t>
-
 struct TrackAtVertex {
   /// Deleted default constructor
   TrackAtVertex() = delete;
@@ -36,10 +35,7 @@ struct TrackAtVertex {
                 const input_track_t* originalTrack)
       : fittedParams(paramsAtVertex),
         originalParams(originalTrack),
-        chi2Track(chi2perTrack),
-        ndf(0.),
-        vertexCompatibility(0.),
-        trackWeight(1.) {}
+        chi2Track(chi2perTrack) {}
 
   /// @brief Constructor with default chi2
   ///
@@ -47,12 +43,7 @@ struct TrackAtVertex {
   /// @param originalTrack Original perigee parameter
   TrackAtVertex(const BoundTrackParameters& paramsAtVertex,
                 const input_track_t* originalTrack)
-      : fittedParams(paramsAtVertex),
-        originalParams(originalTrack),
-        chi2Track(0.),
-        ndf(0.),
-        vertexCompatibility(0.),
-        trackWeight(1.) {}
+      : fittedParams(paramsAtVertex), originalParams(originalTrack) {}
 
   /// Fitted perigee
   BoundTrackParameters fittedParams;
@@ -74,13 +65,33 @@ struct TrackAtVertex {
   double vertexCompatibility = 0;
 
   /// Weight of track in fit
-  double trackWeight = 0;
+  double trackWeight = 1;
 
   /// The linearized state of the track at vertex
   LinearizedTrack linearizedState;
 
   /// Is already linearized
   bool isLinearized = false;
+};
+
+struct TrackAtVertexRef {
+  BoundTrackParameters& fittedParams;
+  double& chi2Track;
+  double& ndf;
+  double& vertexCompatibility;
+  double& trackWeight;
+  LinearizedTrack& linearizedState;
+  bool isLinearized;
+
+  template <typename input_track_t>
+  TrackAtVertexRef(TrackAtVertex<input_track_t>& track)
+      : fittedParams(track.fittedParams),
+        chi2Track(track.chi2Track),
+        ndf(track.ndf),
+        vertexCompatibility(track.vertexCompatibility),
+        trackWeight(track.trackWeight),
+        linearizedState(track.linearizedState),
+        isLinearized(track.isLinearized) {}
 };
 
 }  // namespace Acts

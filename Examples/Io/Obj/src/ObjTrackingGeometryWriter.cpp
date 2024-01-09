@@ -8,13 +8,11 @@
 
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 
-#include <Acts/Geometry/Layer.hpp>
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Visualization/GeometryView3D.hpp>
 #include <Acts/Visualization/ObjVisualization3D.hpp>
-
-#include <iostream>
 
 ActsExamples::ObjTrackingGeometryWriter::ObjTrackingGeometryWriter(
     const ActsExamples::ObjTrackingGeometryWriter::Config& config,
@@ -30,7 +28,7 @@ ActsExamples::ProcessCode ActsExamples::ObjTrackingGeometryWriter::write(
   ACTS_DEBUG(">>Obj: Writer for TrackingGeometry object called.");
 
   auto world = tGeometry.highestTrackingVolume();
-  if (world) {
+  if (world != nullptr) {
     write(context, *world);
   }
   return ActsExamples::ProcessCode::SUCCESS;

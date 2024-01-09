@@ -11,12 +11,6 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
     State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
-  // Determine if we use constraint or not
-  bool useConstraint = false;
-  if (vertexingOptions.vertexConstraint.fullCovariance().determinant() != 0) {
-    useConstraint = true;
-  }
-
   double ZResult = 0.;
   // Prepare the vector of points, on which the 3d mode has later to be
   // calculated
@@ -28,11 +22,11 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
 
     std::pair<double, double> z0AndWeight;
     ImpactParametersAndSigma ipas;
-    if (useConstraint &&
-        vertexingOptions.vertexConstraint.covariance()(0, 0) != 0) {
-      auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
-          params, vertexingOptions.vertexConstraint,
-          vertexingOptions.geoContext, vertexingOptions.magFieldContext);
+    if (vertexingOptions.useConstraintInFit &&
+        vertexingOptions.constraint.covariance()(0, 0) != 0) {
+      auto estRes = m_cfg.ipEstimator.getImpactParameters(
+          params, vertexingOptions.constraint, vertexingOptions.geoContext,
+          vertexingOptions.magFieldContext);
       if (estRes.ok()) {
         ipas = *estRes;
       } else {
@@ -40,13 +34,12 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
       }
     }
 
-    if (ipas.sigmad0 > 0) {
+    if (ipas.sigmaD0 > 0) {
       // calculate z0
-      z0AndWeight.first =
-          ipas.IPz0 + vertexingOptions.vertexConstraint.position().z();
+      z0AndWeight.first = ipas.z0 + vertexingOptions.constraint.position().z();
 
       // calculate chi2 of IP
-      double chi2IP = std::pow(ipas.IPd0 / ipas.sigmad0, 2);
+      double chi2IP = std::pow(ipas.d0 / ipas.sigmaD0, 2);
 
       if (!m_cfg.disableAllWeights) {
         z0AndWeight.second =
@@ -98,9 +91,9 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
   }
 
   // constraint x()/y() equals 0 if no constraint
-  Vector4 output(vertexingOptions.vertexConstraint.position().x(),
-                 vertexingOptions.vertexConstraint.position().y(), ZResult,
-                 vertexingOptions.vertexConstraint.time());
+  Vector4 output(vertexingOptions.constraint.position().x(),
+                 vertexingOptions.constraint.position().y(), ZResult,
+                 vertexingOptions.constraint.time());
   Vertex<InputTrack_t> vtxResult = Vertex<InputTrack_t>(output);
 
   // Vector to be filled with one single vertex

@@ -13,9 +13,12 @@
 #include <Acts/Utilities/Logger.hpp>
 #include <Acts/Visualization/ViewConfig.hpp>
 
+#include <cstddef>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <mutex>
+#include <string>
 
 namespace Acts {
 class TrackingVolume;
@@ -23,6 +26,7 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class ObjTrackingGeometryWriter
 ///
@@ -35,8 +39,8 @@ class ObjTrackingGeometryWriter {
   // The nested config class
   class Config {
    public:
-    double outputScalor = 1.0;   ///< scale output values
-    size_t outputPrecision = 6;  ///< floating point precision
+    double outputScalor = 1.0;        ///< scale output values
+    std::size_t outputPrecision = 6;  ///< floating point precision
     std::string outputDir = ".";
 
     Acts::ViewConfig containerView = Acts::ViewConfig({220, 220, 220});

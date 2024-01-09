@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
 
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 

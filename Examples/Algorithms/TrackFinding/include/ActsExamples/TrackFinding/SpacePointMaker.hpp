@@ -9,7 +9,14 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
 #include <string>
@@ -20,6 +27,7 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Create space point representations from measurements.
 ///
@@ -35,7 +43,7 @@ namespace ActsExamples {
 /// There are no explicit requirements on the content of the input measurements.
 /// If no local positions are measured, the transformed global positions will
 /// always be the position of the module origin.
-class SpacePointMaker final : public BareAlgorithm {
+class SpacePointMaker final : public IAlgorithm {
  public:
   struct Config {
     /// Input source links collection.
@@ -66,13 +74,25 @@ class SpacePointMaker final : public BareAlgorithm {
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
-};
 
+  std::optional<IndexSourceLink::SurfaceAccessor> m_slSurfaceAccessor;
+
+  Acts::SpacePointBuilder<SimSpacePoint> m_spacePointBuilder;
+
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
+
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+
+  WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
+      this, "OutputSpacePoints"};
+};
 }  // namespace ActsExamples

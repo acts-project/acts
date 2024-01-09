@@ -6,16 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsExamples/Printers/HitsPrinter.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
 
-#include <memory>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -28,96 +30,100 @@ using namespace Acts;
 namespace Acts::Python {
 
 void addExampleAlgorithms(Context& ctx) {
-  auto mex = ctx.get("examples");
+  auto [m, mex] = ctx.get("main", "examples");
 
   mex.def("readJsonGeometryList", ActsExamples::readJsonGeometryList);
 
-  {
-    using Config = ActsExamples::FatrasSimulation::Config;
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,
+      outputParticlesInitial, outputParticlesFinal, outputSimHits,
+      imputParametrisationNuclearInteraction, randomNumbers, trackingGeometry,
+      magneticField, pMin, emScattering, emEnergyLossIonisation,
+      emEnergyLossRadiation, emPhotonConversion, generateHitsOnSensitive,
+      generateHitsOnMaterial, generateHitsOnPassive, averageHitsPerParticle);
 
-    auto alg =
-        py::class_<ActsExamples::FatrasSimulation, ActsExamples::BareAlgorithm,
-                   std::shared_ptr<ActsExamples::FatrasSimulation>>(
-            mex, "FatrasSimulation")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config",
-                                   &ActsExamples::FatrasSimulation::config);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
+                                "ParticlesPrinter", inputParticles);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::HitsPrinter, mex, "HitsPrinter", inputClusters,
+      inputMeasurementParticlesMap, inputHitIds, selectIndexStart,
+      selectIndexLength, selectVolume, selectLayer, selectModule);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParametersPrinter, mex,
+                                "TrackParametersPrinter", inputTrackParameters);
+
+  {
+    using Alg = ActsExamples::TrackSelectorAlgorithm;
+    using Config = Alg::Config;
+
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "TrackSelectorAlgorithm")
+                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(outputParticlesInitial);
-    ACTS_PYTHON_MEMBER(outputParticlesFinal);
-    ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(imputParametrisationNuclearInteraction);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(magneticField);
-    ACTS_PYTHON_MEMBER(pMin);
-    ACTS_PYTHON_MEMBER(emScattering);
-    ACTS_PYTHON_MEMBER(emEnergyLossIonisation);
-    ACTS_PYTHON_MEMBER(emEnergyLossRadiation);
-    ACTS_PYTHON_MEMBER(emPhotonConversion);
-    ACTS_PYTHON_MEMBER(generateHitsOnSensitive);
-    ACTS_PYTHON_MEMBER(generateHitsOnMaterial);
-    ACTS_PYTHON_MEMBER(generateHitsOnPassive);
-    ACTS_PYTHON_MEMBER(averageHitsPerParticle);
+    ACTS_PYTHON_MEMBER(inputTracks);
+    ACTS_PYTHON_MEMBER(outputTracks);
+    ACTS_PYTHON_MEMBER(selectorConfig);
     ACTS_PYTHON_STRUCT_END();
   }
 
   {
-    using Alg = ActsExamples::ParticlesPrinter;
+    using EtaBinnedConfig = Acts::TrackSelector::EtaBinnedConfig;
+    using Config = Acts::TrackSelector::Config;
 
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "ParticlesPrinter")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
+    auto tool = py::class_<Acts::TrackSelector>(m, "TrackSelector")
+                    .def(py::init<const Config&>(), py::arg("config"))
+                    .def(py::init<const EtaBinnedConfig&>(), py::arg("config"));
 
-    py::class_<Alg::Config>(alg, "Config")
-        .def(py::init<>())
-        .def_readwrite("inputParticles", &Alg::Config::inputParticles);
-  }
+    {
+      auto c = py::class_<Config>(tool, "Config").def(py::init<>());
 
-  {
-    using Alg = ActsExamples::HitsPrinter;
+      patchKwargsConstructor(c);
 
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "HitsPrinter")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
+      ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+      ACTS_PYTHON_MEMBER(loc0Min);
+      ACTS_PYTHON_MEMBER(loc0Max);
+      ACTS_PYTHON_MEMBER(loc1Min);
+      ACTS_PYTHON_MEMBER(loc1Max);
+      ACTS_PYTHON_MEMBER(timeMin);
+      ACTS_PYTHON_MEMBER(timeMax);
+      ACTS_PYTHON_MEMBER(phiMin);
+      ACTS_PYTHON_MEMBER(phiMax);
+      ACTS_PYTHON_MEMBER(etaMin);
+      ACTS_PYTHON_MEMBER(etaMax);
+      ACTS_PYTHON_MEMBER(absEtaMin);
+      ACTS_PYTHON_MEMBER(absEtaMax);
+      ACTS_PYTHON_MEMBER(ptMin);
+      ACTS_PYTHON_MEMBER(ptMax);
+      ACTS_PYTHON_MEMBER(minMeasurements);
+      ACTS_PYTHON_STRUCT_END();
 
-    auto c = py::class_<Alg::Config>(alg, "Config").def(py::init<>());
+      pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
+      pythonRangeProperty(c, "loc1", &Config::loc1Min, &Config::loc1Max);
+      pythonRangeProperty(c, "time", &Config::timeMin, &Config::timeMax);
+      pythonRangeProperty(c, "phi", &Config::phiMin, &Config::phiMax);
+      pythonRangeProperty(c, "eta", &Config::etaMin, &Config::etaMax);
+      pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
+      pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
+    }
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
-    ACTS_PYTHON_MEMBER(inputClusters);
-    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
-    ACTS_PYTHON_MEMBER(inputHitIds);
-    ACTS_PYTHON_MEMBER(selectIndexStart);
-    ACTS_PYTHON_MEMBER(selectIndexLength);
-    ACTS_PYTHON_MEMBER(selectVolume);
-    ACTS_PYTHON_MEMBER(selectLayer);
-    ACTS_PYTHON_MEMBER(selectModule);
-    ACTS_PYTHON_STRUCT_END();
-  }
+    {
+      auto c = py::class_<EtaBinnedConfig>(tool, "EtaBinnedConfig")
+                   .def(py::init<>())
+                   .def(py::init<const Config&>());
 
-  {
-    using Alg = ActsExamples::TrackParametersPrinter;
+      c.def_property_readonly("nEtaBins", &EtaBinnedConfig::nEtaBins);
 
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackParametersPrinter")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
-
-    py::class_<Alg::Config>(alg, "Config")
-        .def(py::init<>())
-        .def_readwrite("inputTrackParameters",
-                       &Alg::Config::inputTrackParameters);
+      ACTS_PYTHON_STRUCT_BEGIN(c, EtaBinnedConfig);
+      ACTS_PYTHON_MEMBER(cutSets);
+      ACTS_PYTHON_MEMBER(absEtaEdges);
+      ACTS_PYTHON_STRUCT_END();
+    }
   }
 }
-
 }  // namespace Acts::Python

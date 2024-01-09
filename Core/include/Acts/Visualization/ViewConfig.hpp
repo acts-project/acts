@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <string>
 
 namespace Acts {
 
@@ -17,7 +18,7 @@ namespace Acts {
 ///
 using ColorRGB = std::array<int, 3>;
 
-/// @brief Struct to concentrate all visulation configuration
+/// @brief Struct to concentrate all visualization configurations
 /// in order to harmonize visualization interfaces
 struct ViewConfig {
   /// Constructor to switch visibility off

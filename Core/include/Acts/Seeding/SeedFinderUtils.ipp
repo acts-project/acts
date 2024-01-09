@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,9 +8,9 @@
 
 namespace Acts {
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
-                               InternalSpacePoint<external_spacepoint_t>& spM,
-                               bool bottom) {
+inline LinCircle transformCoordinates(
+    const InternalSpacePoint<external_spacepoint_t>& sp,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
@@ -20,13 +20,14 @@ LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
   };
 
   return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      sp, spM, bottom, extractFunction);
+      sp, spM, bottom, std::move(extractFunction));
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               external_spacepoint_t& spM, bool bottom,
-                               callable_t&& extractFunction) {
+inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
+                                      const external_spacepoint_t& spM,
+                                      bool bottom,
+                                      callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
@@ -40,28 +41,35 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
   float deltaX = xSP - xM;
   float deltaY = ySP - yM;
   float deltaZ = zSP - zM;
-  float x = deltaX * cosPhiM + deltaY * sinPhiM;
-  float y = deltaY * cosPhiM - deltaX * sinPhiM;
+  float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+  float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+  float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
   float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
   float iDeltaR = std::sqrt(iDeltaR2);
-  int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
-  float cot_theta = deltaZ * iDeltaR * bottomFactor;
-  LinCircle l;
-  l.cotTheta = cot_theta;
-  l.Zo = zM - rM * cot_theta;
-  l.iDeltaR = iDeltaR;
-  l.U = x * iDeltaR2;
-  l.V = y * iDeltaR2;
-  l.Er = ((varianceZM + varianceZSP) +
-          (cot_theta * cot_theta) * (varianceRM + varianceRSP)) *
-         iDeltaR2;
-  return l;
+  int bottomFactor = bottom ? -1 : 1;
+  float cotTheta = deltaZ * iDeltaR * bottomFactor;
+
+  // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
+  // circle into straight lines in the u/v plane the line equation can
+  // be described in terms of aCoef and bCoef, where v = aCoef * u +
+  // bCoef
+  const float U = xNewFrame * iDeltaR2;
+  const float V = yNewFrame * iDeltaR2;
+
+  // error term for sp-pair without correlation of middle space point
+  const float Er = ((varianceZM + varianceZSP) +
+                    (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
+                   iDeltaR2;
+
+  sp.setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+  return LinCircle(cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame);
 }
 
 template <typename external_spacepoint_t>
-void transformCoordinates(
-    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
-    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+inline void transformCoordinates(
+    Acts::SpacePointData& spacePointData,
+    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
@@ -71,20 +79,29 @@ void transformCoordinates(
     return output;
   };
 
-  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      vec, spM, bottom, linCircleVec, extractFunction);
+  transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
+      spacePointData, vec, spM, bottom, linCircleVec,
+      std::move(extractFunction));
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
-                          external_spacepoint_t& spM, bool bottom,
-                          std::vector<LinCircle>& linCircleVec,
-                          callable_t&& extractFunction) {
+inline void transformCoordinates(Acts::SpacePointData& spacePointData,
+                                 const std::vector<external_spacepoint_t*>& vec,
+                                 const external_spacepoint_t& spM, bool bottom,
+                                 std::vector<LinCircle>& linCircleVec,
+                                 callable_t&& extractFunction) {
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
+
+  // resize + operator[] is faster than reserve and push_back
+  linCircleVec.resize(vec.size());
 
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
-  for (auto sp : vec) {
+
+  int bottomFactor = bottom ? -1 : 1;
+
+  for (std::size_t idx(0); idx < vec.size(); ++idx) {
+    auto& sp = vec[idx];
     auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
 
     float deltaX = xSP - xM;
@@ -94,50 +111,119 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
     // direction as
     // vector origin->spM (x) and projection fraction of spM->sp vector pointing
     // orthogonal to origin->spM (y)
-    float x = deltaX * cosPhiM + deltaY * sinPhiM;
-    float y = deltaY * cosPhiM - deltaX * sinPhiM;
+    float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+    float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
     // 1/(length of M -> SP)
-    float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+    float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
+    float iDeltaR2 = 1. / deltaR2;
     float iDeltaR = std::sqrt(iDeltaR2);
     //
-    int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
     // cot_theta = (deltaZ/deltaR)
-    float cot_theta = deltaZ * iDeltaR * bottomFactor;
-    // VERY frequent (SP^3) access
-    LinCircle l;
-    l.cotTheta = cot_theta;
-    // location on z-axis of this SP-duplet
-    l.Zo = zM - rM * cot_theta;
-    l.iDeltaR = iDeltaR;
+    float cotTheta = deltaZ * iDeltaR * bottomFactor;
     // transformation of circle equation (x,y) into linear equation (u,v)
     // x^2 + y^2 - 2x_0*x - 2y_0*y = 0
     // is transformed into
     // 1 - 2x_0*u - 2y_0*v = 0
     // using the following m_U and m_V
     // (u = A + B*v); A and B are created later on
-    l.U = x * iDeltaR2;
-    l.V = y * iDeltaR2;
+    float U = xNewFrame * iDeltaR2;
+    float V = yNewFrame * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
-    l.Er = ((varianceZM + sp->varianceZ()) +
-            (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
-           iDeltaR2;
+    float Er = ((varianceZM + varianceZSP) +
+                (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
+               iDeltaR2;
 
-    l.x = sp->x();
-    l.y = sp->y();
-    l.z = sp->z();
-    l.r = sp->radius();
+    // Fill Line Circle
+    linCircleVec[idx].cotTheta = cotTheta;
+    linCircleVec[idx].iDeltaR = iDeltaR;
+    linCircleVec[idx].Er = Er;
+    linCircleVec[idx].U = U;
+    linCircleVec[idx].V = V;
+    linCircleVec[idx].x = xNewFrame;
+    linCircleVec[idx].y = yNewFrame;
 
-    linCircleVec.push_back(l);
-    sp->setCotTheta(cot_theta);
+    spacePointData.setDeltaR(sp->index(),
+                             std::sqrt(deltaR2 + (deltaZ * deltaZ)));
   }
-  // sort the SP in order of cotTheta
-  std::sort(vec.begin(), vec.end(),
-            [](external_spacepoint_t* a, external_spacepoint_t* b) -> bool {
-              return (a->cotTheta() < b->cotTheta());
-            });
-  std::sort(linCircleVec.begin(), linCircleVec.end(),
-            [](const LinCircle& a, const LinCircle& b) -> bool {
-              return (a.cotTheta < b.cotTheta);
-            });
+}
+
+template <typename external_spacepoint_t>
+inline bool xyzCoordinateCheck(
+    Acts::SpacePointData& spacePointData,
+    const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
+    const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
+    const double* spacepointPosition, double* outputCoordinates) {
+  // check the compatibility of SPs coordinates in xyz assuming the
+  // Bottom-Middle direction with the strip measurement details
+  bool hasValueStored = spacePointData.hasDynamicVariable();
+  if (!hasValueStored) {
+    return false;
+  }
+
+  std::size_t index = sp.index();
+
+  // prepare variables
+  const Acts::Vector3& topStripVector = spacePointData.getTopStripVector(index);
+  const Acts::Vector3& bottomStripVector =
+      spacePointData.getBottomStripVector(index);
+  const Acts::Vector3& stripCenterDistance =
+      spacePointData.getStripCenterDistance(index);
+
+  const double xTopStripVector = topStripVector[0];
+  const double yTopStripVector = topStripVector[1];
+  const double zTopStripVector = topStripVector[2];
+  const double xBottomStripVector = bottomStripVector[0];
+  const double yBottomStripVector = bottomStripVector[1];
+  const double zBottomStripVector = bottomStripVector[2];
+
+  // cross product between top strip vector and spacepointPosition
+  double d1[3] = {yTopStripVector * spacepointPosition[2] -
+                      zTopStripVector * spacepointPosition[1],
+                  zTopStripVector * spacepointPosition[0] -
+                      xTopStripVector * spacepointPosition[2],
+                  xTopStripVector * spacepointPosition[1] -
+                      yTopStripVector * spacepointPosition[0]};
+
+  // scalar product between bottom strip vector and d1
+  double bd1 = xBottomStripVector * d1[0] + yBottomStripVector * d1[1] +
+               zBottomStripVector * d1[2];
+
+  // compatibility check using distance between strips to evaluate if
+  // spacepointPosition is inside the bottom detector element
+  double s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
+               stripCenterDistance[2] * d1[2]);
+  if (std::abs(s1) > std::abs(bd1) * m_config.toleranceParam) {
+    return false;
+  }
+
+  // cross product between bottom strip vector and spacepointPosition
+  double d0[3] = {yBottomStripVector * spacepointPosition[2] -
+                      zBottomStripVector * spacepointPosition[1],
+                  zBottomStripVector * spacepointPosition[0] -
+                      xBottomStripVector * spacepointPosition[2],
+                  xBottomStripVector * spacepointPosition[1] -
+                      yBottomStripVector * spacepointPosition[0]};
+
+  // compatibility check using distance between strips to evaluate if
+  // spacepointPosition is inside the top detector element
+  double s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
+               stripCenterDistance[2] * d0[2]);
+  if (std::abs(s0) > std::abs(bd1) * m_config.toleranceParam) {
+    return false;
+  }
+
+  // if arrive here spacepointPosition is compatible with strip directions and
+  // detector elements
+
+  const Acts::Vector3& topStripCenterPosition =
+      spacePointData.getTopStripCenterPosition(index);
+
+  // spacepointPosition corrected with respect to the top strip position and
+  // direction and the distance between the strips
+  s0 = s0 / bd1;
+  outputCoordinates[0] = topStripCenterPosition[0] + xTopStripVector * s0;
+  outputCoordinates[1] = topStripCenterPosition[1] + yTopStripVector * s0;
+  outputCoordinates[2] = topStripCenterPosition[2] + zTopStripVector * s0;
+  return true;
 }
 }  // namespace Acts

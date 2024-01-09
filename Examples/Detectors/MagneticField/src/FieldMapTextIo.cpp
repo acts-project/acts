@@ -6,24 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "FieldMapTextIo.hpp"
+#include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
 #include <fstream>
-#include <sstream>
 #include <vector>
 
 namespace {
-constexpr size_t kDefaultSize = 1 << 15;
+constexpr std::size_t kDefaultSize = 1 << 15;
 }
 
 ActsExamples::detail::InterpolatedMagneticField2
 ActsExamples::makeMagneticFieldMapRzFromText(
-    std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)>
+    const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
+                                    std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, Acts::ActsScalar lengthUnit,
+    const std::string& fieldMapFile, Acts::ActsScalar lengthUnit,
     Acts::ActsScalar BFieldUnit, bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
@@ -42,8 +41,9 @@ ActsExamples::makeMagneticFieldMapRzFromText(
   double br = 0., bz = 0.;
   while (std::getline(map_file, line)) {
     if (line.empty() || line[0] == '%' || line[0] == '#' ||
-        line.find_first_not_of(' ') == std::string::npos)
+        line.find_first_not_of(' ') == std::string::npos) {
       continue;
+    }
 
     std::istringstream tmp(line);
     tmp >> r >> z >> br >> bz;
@@ -62,10 +62,10 @@ ActsExamples::makeMagneticFieldMapRzFromText(
 
 ActsExamples::detail::InterpolatedMagneticField3
 ActsExamples::makeMagneticFieldMapXyzFromText(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
+    const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
+                                    std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, Acts::ActsScalar lengthUnit,
+    const std::string& fieldMapFile, Acts::ActsScalar lengthUnit,
     Acts::ActsScalar BFieldUnit, bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
@@ -86,8 +86,9 @@ ActsExamples::makeMagneticFieldMapXyzFromText(
   double bx = 0., by = 0., bz = 0.;
   while (std::getline(map_file, line)) {
     if (line.empty() || line[0] == '%' || line[0] == '#' ||
-        line.find_first_not_of(' ') == std::string::npos)
+        line.find_first_not_of(' ') == std::string::npos) {
       continue;
+    }
 
     std::istringstream tmp(line);
     tmp >> x >> y >> z >> bx >> by >> bz;

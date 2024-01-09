@@ -9,13 +9,24 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/Volume.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <ios>
-#include <iostream>
 #include <stdexcept>
+#include <type_traits>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -39,14 +50,15 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   // Setup ROOT I/O
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath + "'");
   }
 
   m_outputFile->cd();
   m_outputTree =
       new TTree(m_cfg.treeName.c_str(), "TTree from RootMaterialTrackWriter");
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_id", &m_eventId);
@@ -87,6 +99,7 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
     m_outputTree->Branch("sur_x", &m_sur_x);
     m_outputTree->Branch("sur_y", &m_sur_y);
     m_outputTree->Branch("sur_z", &m_sur_z);
+    m_outputTree->Branch("sur_pathCorrection", &m_sur_pathCorrection);
     m_outputTree->Branch("sur_range_min", &m_sur_range_min);
     m_outputTree->Branch("sur_range_max", &m_sur_range_max);
   }
@@ -95,20 +108,26 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   }
 }
 
-ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {}
+ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
-ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::finalize() {
   // write the tree and close the file
   ACTS_INFO("Writing ROOT output File : " << m_cfg.filePath);
+
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
+
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     const AlgorithmContext& ctx,
-    const std::unordered_map<size_t, Acts::RecordedMaterialTrack>&
+    const std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>&
         materialTracks) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -141,13 +160,49 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_sur_x.clear();
     m_sur_y.clear();
     m_sur_z.clear();
+    m_sur_pathCorrection.clear();
     m_sur_range_min.clear();
     m_sur_range_max.clear();
 
     m_vol_id.clear();
 
+    auto materialInteractions = mtrack.second.materialInteractions;
+    if (m_cfg.collapseInteractions) {
+      std::vector<Acts::MaterialInteraction> collapsed;
+
+      Acts::Vector3 positionSum = Acts::Vector3::Zero();
+      double pathCorrectionSum = 0;
+
+      for (std::size_t start = 0, end = 0; end < materialInteractions.size();
+           ++end) {
+        const auto& mintStart = materialInteractions[start];
+        const auto& mintEnd = materialInteractions[end];
+
+        positionSum += mintEnd.position;
+        pathCorrectionSum += mintEnd.pathCorrection;
+
+        const bool same = mintStart.materialSlab.material() ==
+                          mintEnd.materialSlab.material();
+        const bool last = end == materialInteractions.size() - 1;
+
+        if (!same || last) {
+          auto mint = mintStart;
+          mint.position = positionSum / (end - start);
+          mint.pathCorrection = pathCorrectionSum;
+
+          collapsed.push_back(mint);
+
+          start = end;
+          positionSum = Acts::Vector3::Zero();
+          pathCorrectionSum = 0;
+        }
+      }
+
+      materialInteractions = std::move(collapsed);
+    }
+
     // Reserve the vector then
-    size_t mints = mtrack.second.materialInteractions.size();
+    std::size_t mints = materialInteractions.size();
     m_step_sx.reserve(mints);
     m_step_sy.reserve(mints);
     m_step_sz.reserve(mints);
@@ -172,6 +227,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_sur_x.reserve(mints);
     m_sur_y.reserve(mints);
     m_sur_z.reserve(mints);
+    m_sur_pathCorrection.reserve(mints);
     m_sur_range_min.reserve(mints);
     m_sur_range_max.reserve(mints);
 
@@ -196,8 +252,8 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_v_phi = phi(mtrack.first.second);
     m_v_eta = eta(mtrack.first.second);
 
-    // an now loop over the material
-    for (auto& mint : mtrack.second.materialInteractions) {
+    // and now loop over the material
+    for (const auto& mint : materialInteractions) {
       auto direction = mint.direction.normalized();
 
       // The material step position information
@@ -225,27 +281,41 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       // Store surface information
       if (m_cfg.storeSurface) {
         const Acts::Surface* surface = mint.surface;
-        Acts::GeometryIdentifier slayerID;
-        if (surface) {
-          auto sfIntersection = surface->intersect(
-              ctx.geoContext, mint.position, mint.direction, true);
-          slayerID = surface->geometryId();
-          m_sur_id.push_back(slayerID.value());
+        if (mint.intersectionID.value() != 0) {
+          m_sur_id.push_back(mint.intersectionID.value());
+          m_sur_pathCorrection.push_back(mint.pathCorrection);
+          m_sur_x.push_back(mint.intersection.x());
+          m_sur_y.push_back(mint.intersection.y());
+          m_sur_z.push_back(mint.intersection.z());
+        } else if (surface != nullptr) {
+          auto sfIntersection =
+              surface
+                  ->intersect(ctx.geoContext, mint.position, mint.direction,
+                              Acts::BoundaryCheck(true))
+                  .closest();
+          m_sur_id.push_back(surface->geometryId().value());
+          m_sur_pathCorrection.push_back(1.0);
+          m_sur_x.push_back(sfIntersection.position().x());
+          m_sur_y.push_back(sfIntersection.position().y());
+          m_sur_z.push_back(sfIntersection.position().z());
+        } else {
+          m_sur_id.push_back(Acts::GeometryIdentifier().value());
+          m_sur_x.push_back(0);
+          m_sur_y.push_back(0);
+          m_sur_z.push_back(0);
+          m_sur_pathCorrection.push_back(1.0);
+        }
+        if (surface != nullptr) {
           m_sur_type.push_back(surface->type());
-          m_sur_x.push_back(sfIntersection.intersection.position.x());
-          m_sur_y.push_back(sfIntersection.intersection.position.y());
-          m_sur_z.push_back(sfIntersection.intersection.position.z());
-
           const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
           const Acts::RadialBounds* radialBounds =
               dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
           const Acts::CylinderBounds* cylinderBounds =
               dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
-
-          if (radialBounds) {
+          if (radialBounds != nullptr) {
             m_sur_range_min.push_back(radialBounds->rMin());
             m_sur_range_max.push_back(radialBounds->rMax());
-          } else if (cylinderBounds) {
+          } else if (cylinderBounds != nullptr) {
             m_sur_range_min.push_back(
                 -cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ));
             m_sur_range_max.push_back(
@@ -255,17 +325,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
             m_sur_range_max.push_back(0);
           }
         } else {
-          slayerID.setVolume(0);
-          slayerID.setBoundary(0);
-          slayerID.setLayer(0);
-          slayerID.setApproach(0);
-          slayerID.setSensitive(0);
-          m_sur_id.push_back(slayerID.value());
           m_sur_type.push_back(-1);
-
-          m_sur_x.push_back(0);
-          m_sur_y.push_back(0);
-          m_sur_z.push_back(0);
           m_sur_range_min.push_back(0);
           m_sur_range_max.push_back(0);
         }
@@ -273,10 +333,9 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
 
       // store volume information
       if (m_cfg.storeVolume) {
-        const Acts::Volume* volume = mint.volume;
         Acts::GeometryIdentifier vlayerID;
-        if (volume) {
-          vlayerID = volume->geometryId();
+        if (!mint.volume.empty()) {
+          vlayerID = mint.volume.geometryId();
           m_vol_id.push_back(vlayerID.value());
         } else {
           vlayerID.setVolume(0);

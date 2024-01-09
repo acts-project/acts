@@ -1,17 +1,83 @@
-build:
+variables:
+  CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
+  CCACHE_MAXSIZE: 2G
+  CCACHE_KEY_SUFFIX: r1
+  CTEST_OUTPUT_ON_FAILURE: 1
+
+clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
+  image: ghcr.io/acts-project/ubuntu2004:v41
   tags:
-    - docker
+    - large
+  artifacts:
+    paths:
+      - src/clang-tidy/
+    when: always
+    expire_in: 1 week
+  script:
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - >
+        apt-get update
+        && apt-get install -y g++-8 libstdc++-8-dev parallel software-properties-common
+        && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add
+        && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main'
+        && apt-get install -y clang-17 clang-tidy-17
+        && ln -s /usr/bin/clang++-17 /usr/bin/clang++
+        && ln -s /usr/bin/clang-17 /usr/bin/clang
+        && ln -s /usr/bin/clang-tidy-17 /usr/bin/clang-tidy
+        && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
+        && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/
+        && clang++ --gcc-toolchain=/opt -v
+    - >
+        cmake -B build -S .
+        -GNinja
+        -DCMAKE_CXX_COMPILER=clang++
+        -DCMAKE_C_COMPILER=clang
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_CXX_FLAGS="-Werror --gcc-toolchain=/opt"
+        -DACTS_BUILD_EVERYTHING=on
+        -DACTS_RUN_CLANG_TIDY=on
+
+    # Main clang-tidy run during cmake compilation
+    - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
+
+    # Install dependencies for processing scripts
+    - pip install -r CI/clang_tidy/requirements.txt
+
+    # Parse the main clang-tidy run
+    - >
+        CI/clang_tidy/parse_clang_tidy.py
+        clang-tidy/clang-tidy.log
+        clang-tidy/clang-tidy.json
+        --exclude "*thirdparty*"
+        --exclude "*ActsPodioEdm*"
+
+    # Check the combined report against the defined limits
+    - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
+
+    # Generate an html report
+    - codereport clang-tidy/clang-tidy.json clang-tidy/html
+
+build_exatrkx:
+  stage: build
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
+  tags:
+    - large
+
+  cache:
+    key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
+    paths:
+      - ${CI_PROJECT_DIR}/ccache
+
   artifacts:
     paths:
       - build/
-      - src/Examples/Python
-      - src/Examples/Scripts/Python
-      - src/Examples/Algorithms/TrackFinding/share
-      - src/Examples/Algorithms/Digitization/share
     exclude:
       - build/**/*.o
+      - build/bin/ActsIntegrationTest*
+    expire_in: 6 hours
 
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
@@ -22,22 +88,364 @@ build:
     - git checkout $HEAD_SHA
     - cd ..
     - mkdir build
-    - cmake -B build -S src -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-w -DCMAKE_CUDA_FLAGS=-w -DACTS_BUILD_PLUGIN_EXATRKX=ON -DACTS_BUILD_EXAMPLES_EXATRKX=ON -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-    - cmake --build build --
+    - >
+      cmake -B build -S src
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-w
+      -DCMAKE_CUDA_FLAGS=-w
+      -DCMAKE_CUDA_ARCHITECTURES="75;86"
+      -DACTS_BUILD_PLUGIN_EXATRKX=ON
+      -DACTS_BUILD_EXAMPLES_EXATRKX=ON
+      -DACTS_BUILD_UNITTESTS=ON
+      -DACTS_EXATRKX_ENABLE_TORCH=ON
+      -DACTS_EXATRKX_ENABLE_ONNX=ON
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
 
+    - ccache -z
+    - cmake --build build -- -j3
+    - ccache -s
 
-test:
+test_exatrkx_unittests:
   stage: test
-  dependencies:
-    - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v21
+  needs:
+    - build_exatrkx
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
+  tags:
+    - docker-gpu-nvidia
+  script:
+    - ctest --test-dir build -R ExaTrkX
+
+test_exatrkx_python:
+  stage: test
+  needs:
+    - build_exatrkx
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
   tags:
     - docker-gpu-nvidia
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
-    - curl https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar --output models.tar
-    - tar -xf models.tar
+    - source /usr/local/bin/thisroot.sh
     - source build/python/setup.sh
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - pip3 install -r Examples/Python/tests/requirements_ubuntu2004.txt
     - nvidia-smi
-    - python3 src/Examples/Scripts/Python/exatrkx.py
+    - pytest -rFsv -k test_exatrkx
+
+build_linux_ubuntu:
+  stage: build
+  image: ghcr.io/acts-project/ubuntu2204:v41
+
+  cache:
+    key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
+    when: 'always'
+    paths:
+      - ${CI_PROJECT_DIR}/ccache
+
+  artifacts:
+    paths:
+      - build/
+    exclude:
+      - build/bin/ActsUnitTest*
+      - build/bin/ActsIntegrationTest*
+      - build/**/*.o
+    expire_in: 1 day
+
+  script:
+    - echo $PATH
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+
+    - cd ..
+    - mkdir build
+    - >
+      cmake -B build -S src
+      -GNinja
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=17
+      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+      -DACTS_BUILD_EVERYTHING=ON
+      -DACTS_BUILD_ODD=ON
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      -DACTS_BUILD_EXAMPLES_BINARIES=ON
+      -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+      -DACTS_FORCE_ASSERTIONS=ON
+      -DACTS_BUILD_ANALYSIS_APPS=ON
+      -DACTS_BUILD_PLUGIN_ONNX=ON
+      -DACTS_BUILD_PLUGIN_ACTSVG=ON
+
+    - ccache -z
+    - cmake --build build -- -j3
+    - ccache -s
+
+linux_test_examples:
+  stage: test
+  image: ghcr.io/acts-project/ubuntu2204:v41
+  needs: [build_linux_ubuntu]
+
+  script:
+    - apt-get update && apt-get install -y git-lfs
+
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - cd ..
+
+    - /usr/local/bin/geant4-config --install-datasets
+    - "source /usr/local/bin/thisroot.sh || true"
+    - "source /usr/local/bin/thisdd4hep_only.sh || true"
+    - "source /usr/local/bin/geant4.sh || true"
+    - source build/python/setup.sh
+    - export PYTHONPATH=/usr/local/python:$PYTHONPATH
+    - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+    - cd src
+    - pip3 install -r Examples/Python/tests/requirements.txt
+    - pytest -rFsv -k "not exatrkx" -v -n auto
+
+linux_physmon:
+  stage: test
+  image: ghcr.io/acts-project/ubuntu2204:v41
+  needs: [build_linux_ubuntu]
+
+  artifacts:
+    when: always
+    paths:
+      - src/physmon
+    expire_in: 1 week
+
+  script:
+    - apt-get update && apt-get install -y git-lfs
+
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - cd ..
+
+    - git config --global safe.directory "$GITHUB_WORKSPACE"
+    - pip3 install histcmp==0.6.2 spyral-cli==1.1.0 matplotlib
+    - pip3 install -r src/Examples/Scripts/requirements.txt
+    - /usr/local/bin/geant4-config --install-datasets
+    - "source /usr/local/bin/thisroot.sh || true"
+    - "source /usr/local/bin/thisdd4hep_only.sh || true"
+    - "source /usr/local/bin/geant4.sh || true"
+    - source build/python/setup.sh
+    - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+    - cd src
+    - export PYTHONPATH="${PYTHONPATH}":"${PWD}/Examples/Scripts/Python"
+    - CI/physmon/phys_perf_mon.sh all physmon
+
+###############################
+### UBUNTU EXTRA JOB MATRIX ###
+###############################
+
+.linux_ubuntu_extra: &linux_ubuntu_extra
+  variables:
+    INSTALL_DIR: ${CI_PROJECT_DIR}/install
+
+  stage: build
+
+  cache:
+    key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
+    when: 'always'
+    paths:
+      - ${CI_PROJECT_DIR}/ccache
+
+  script:
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+
+    - cd ..
+    - mkdir build
+    - >
+      cmake -B build -S src
+      -GNinja
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+      -DACTS_BUILD_EVERYTHING=ON
+      -DACTS_BUILD_ODD=ON
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+      -DACTS_FORCE_ASSERTIONS=ON
+      -DACTS_BUILD_ANALYSIS_APPS=ON
+      -DACTS_BUILD_PLUGIN_ACTSVG=ON
+
+    - ccache -z
+    - cmake --build build -- -j3
+    - ccache -s
+
+    - ctest --test-dir build -j$(nproc)
+    - cmake --build build --target integrationtests
+
+    # Install main project
+    - cmake --install build
+
+    # Downstream configure
+    - >
+      cmake -B build-downstream -S src/Tests/DownstreamProject
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+    # Downstream build
+    - cmake --build build-downstream
+
+    # Downstream run
+    - ./build-downstream/bin/ShowActsVersion
+
+linux_ubuntu_2004_cpp17:
+  <<: *linux_ubuntu_extra
+  variables:
+    CXXSTD: 17
+  image: ghcr.io/acts-project/ubuntu2004:v41
+
+linux_ubuntu_2204_cpp20:
+  <<: *linux_ubuntu_extra
+  variables:
+    CXXSTD: 20
+  image: ghcr.io/acts-project/ubuntu2204_cpp20:v41
+
+linux_ubuntu_2204_clang:
+  <<: *linux_ubuntu_extra
+  variables:
+    CXXSTD: 17
+  image: ghcr.io/acts-project/ubuntu2204_clang:v41
+
+
+######################
+### LCG JOB MATRIX ###
+######################
+
+.lcg: &lcg_base_job
+  image: ghcr.io/acts-project/${OS}-base:sha-ca76a1f2
+  stage: build
+  tags:
+    - cvmfs
+
+  variables:
+    INSTALL_DIR: ${{ github.workspace }}/install
+
+    SETUP:
+
+  cache:
+    key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
+    when: 'always'
+    paths:
+      - ${CI_PROJECT_DIR}/ccache
+
+  before_script:
+    - 'echo "LCG_VERSION: ${LCG_VERSION}"'
+    - 'echo "COMPILER: ${COMPILER}"'
+
+    # Figure out LCG platform name based on version number and OS
+    - >
+      if [ "$OS" = "alma9"  ]; then
+        if [ "$LCG_VERSION" = "104" ]; then
+          export LCG_PLATFORM="el9"
+        else
+          export LCG_PLATFORM="centos9"
+        fi
+      else
+        export LCG_PLATFORM="$OS"
+      fi
+
+    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
+
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - cd ..
+
+    - ccache --version
+
+  script:
+    - >
+      cmake -B build -S src
+      -GNinja
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=17
+      -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+      -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      -DACTS_FORCE_ASSERTIONS=OFF
+      -DACTS_BUILD_UNITTESTS=ON
+      -DACTS_BUILD_INTEGRATIONTESTS=ON
+      -DACTS_BUILD_BENCHMARKS=ON
+      -DACTS_BUILD_EXAMPLES=ON
+      -DACTS_BUILD_PLUGIN_DD4HEP=OFF
+      -DACTS_BUILD_PLUGIN_TGEO=ON
+      -DACTS_BUILD_PLUGIN_IDENTIFICATION=ON
+      -DACTS_BUILD_PLUGIN_JSON=ON
+      -DACTS_BUILD_FATRAS=ON
+      -DACTS_BUILD_PLUGIN_LEGACY=ON
+      -DACTS_BUILD_PLUGIN_AUTODIFF=OFF
+      -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
+      -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
+      -DACTS_BUILD_EXAMPLES_GEANT4=ON
+      -DACTS_BUILD_EXAMPLES_HEPMC3=ON
+      -DACTS_BUILD_EXAMPLES_PYTHIA8=ON
+      -DACTS_BUILD_FATRAS_GEANT4=ON
+      -DACTS_BUILD_FATRAS=ON
+      -DACTS_BUILD_ALIGNMENT=ON
+      -DACTS_BUILD_ANALYSIS_APPS=ON
+      -DACTS_BUILD_PLUGIN_ACTSVG=ON
+
+    - ccache -z
+    - cmake --build build -- -j3
+    - ccache -s
+
+    - ctest --test-dir build -j$(nproc)
+
+
+lcg_102b:
+  <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: "102b"
+
+  parallel:
+    matrix:
+      - OS: [centos7]
+        COMPILER: [gcc11]
+
+lcg_104:
+  <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: "104"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc13
+          - clang16

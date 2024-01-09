@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -18,13 +20,14 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 
 #include <cmath>
-#include <iostream>
+#include <type_traits>
+#include <utility>
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(
     const CylinderBounds& cBounds, double thickness) noexcept(false)
     : VolumeBounds() {
   double cR = cBounds.get(CylinderBounds::eR);
-  if (thickness <= 0. or (cR - 0.5 * thickness) < 0.) {
+  if (thickness <= 0. || (cR - 0.5 * thickness) < 0.) {
     throw(std::invalid_argument(
         "CylinderVolumeBounds: invalid extrusion thickness."));
   }
@@ -85,24 +88,24 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   // [0] Bottom Disc (negative z)
   auto dSurface = Surface::makeShared<DiscSurface>(transMinZ, m_discBounds);
   oSurfaces.push_back(
-      OrientedSurface(std::move(dSurface), NavigationDirection::Forward));
+      OrientedSurface(std::move(dSurface), Direction::Positive));
   // [1] Top Disc (positive z)
   dSurface = Surface::makeShared<DiscSurface>(transMaxZ, m_discBounds);
   oSurfaces.push_back(
-      OrientedSurface(std::move(dSurface), NavigationDirection::Backward));
+      OrientedSurface(std::move(dSurface), Direction::Negative));
 
   // [2] Outer Cylinder
   auto cSurface =
       Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
   oSurfaces.push_back(
-      OrientedSurface(std::move(cSurface), NavigationDirection::Backward));
+      OrientedSurface(std::move(cSurface), Direction::Negative));
 
   // [3] Inner Cylinder (optional)
   if (m_innerCylinderBounds != nullptr) {
     cSurface =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
     oSurfaces.push_back(
-        OrientedSurface(std::move(cSurface), NavigationDirection::Forward));
+        OrientedSurface(std::move(cSurface), Direction::Positive));
   }
 
   // [4] & [5] - Sectoral planes (optional)
@@ -117,7 +120,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
-        OrientedSurface(std::move(pSurface), NavigationDirection::Forward));
+        OrientedSurface(std::move(pSurface), Direction::Positive));
     // sectorPlane 2 (positive phi)
     const Transform3 sp2Transform =
         Transform3(transform *
@@ -128,7 +131,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
-        OrientedSurface(std::move(pSurface), NavigationDirection::Backward));
+        OrientedSurface(std::move(pSurface), Direction::Negative));
   }
   return oSurfaces;
 }
@@ -158,7 +161,7 @@ std::ostream& Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const {
 Acts::Volume::BoundingBox Acts::CylinderVolumeBounds::boundingBox(
     const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
-  double xmax, xmin, ymax, ymin;
+  double xmax = 0, xmin = 0, ymax = 0, ymin = 0;
   xmax = get(eMaxR);
 
   if (get(eHalfPhiSector) > M_PI / 2.) {

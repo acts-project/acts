@@ -18,20 +18,20 @@ class CudaScalar;
 template <typename var_t>
 class CpuScalar {
  public:
-  CpuScalar(bool pinned = 0) {
+  CpuScalar(bool pinned = false) {
     m_pinned = pinned;
-    if (pinned == 0) {
+    if (!pinned) {
       m_hostPtr = new var_t[1];
-    } else if (pinned == 1) {
+    } else if (pinned) {
       cudaMallocHost(&m_hostPtr, sizeof(var_t));
     }
   }
 
-  CpuScalar(CudaScalar<var_t>* cuScalar, bool pinned = 0) {
+  CpuScalar(CudaScalar<var_t>* cuScalar, bool pinned = false) {
     m_pinned = pinned;
-    if (pinned == 0) {
+    if (!pinned) {
       m_hostPtr = new var_t[1];
-    } else if (pinned == 1) {
+    } else if (pinned) {
       cudaMallocHost(&m_hostPtr, sizeof(var_t));
     }
     cudaMemcpy(m_hostPtr, cuScalar->get(), sizeof(var_t),
@@ -52,7 +52,7 @@ class CpuScalar {
 
  private:
   var_t* m_hostPtr = nullptr;
-  size_t m_size;
+  std::size_t m_size;
   bool m_pinned;
 };
 

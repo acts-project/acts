@@ -7,20 +7,37 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #pragma once
 
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
+
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace Acts {
 class Surface;
-}
+class PlanarModuleCluster;
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Read in a planar cluster collection in comma-separated-value format.
 ///
@@ -59,21 +76,28 @@ class CsvPlanarClusterReader final : public IReader {
   /// @param level is the logging level
   CsvPlanarClusterReader(const Config& config, Acts::Logging::Level level);
 
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
-  std::pair<size_t, size_t> m_eventsRange;
+  std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  WriteDataHandle<GeometryIdMultimap<Acts::PlanarModuleCluster>>
+      m_outputClusters{this, "OutputClusters"};
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_outputMeasurementParticlesMap{this, "OutputMeasurementParticlesMap"};
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+  WriteDataHandle<std::vector<uint64_t>> m_outputHitIds{this, "OutputHitIds"};
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

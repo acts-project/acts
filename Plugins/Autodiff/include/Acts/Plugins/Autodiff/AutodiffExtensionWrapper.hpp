@@ -10,7 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Plugins/Autodiff/AutodiffHelper.hpp"
 
 #include <autodiff/forward/dual.hpp>
 #include <autodiff/forward/dual/eigen.hpp>
@@ -39,41 +40,56 @@ struct AutodiffExtensionWrapper {
   basic_extension_t<double> m_doubleExtension;
 
   // Just call underlying extension
-  template <typename propagator_state_t, typename stepper_t>
-  int bid(const propagator_state_t& ps, const stepper_t& st) const {
-    return m_doubleExtension.bid(ps, st);
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  int bid(const propagator_state_t& ps, const stepper_t& st,
+          const navigator_t& na) const {
+    return m_doubleExtension.bid(ps, st, na);
   }
 
   // Just call underlying extension
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-         const int i = 0, const double h = 0.,
+         const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+         std::array<double, 4>& kQoP, const int i = 0, const double h = 0.,
          const Vector3& kprev = Vector3::Zero()) {
-    return m_doubleExtension.k(state, stepper, knew, bField, kQoP, i, h, kprev);
+    return m_doubleExtension.k(state, stepper, navigator, knew, bField, kQoP, i,
+                               h, kprev);
   }
 
   // Just call underlying extension
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h) const {
-    return m_doubleExtension.finalize(state, stepper, h);
+                const navigator_t& navigator, const double h) const {
+    return m_doubleExtension.finalize(state, stepper, navigator, h);
   }
 
   // Here we call a custom implementation to compute the transport matrix
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, FreeMatrix& D) const {
-    m_doubleExtension.finalize(state, stepper, h);
-    return transportMatrix(state, stepper, h, D);
+                const navigator_t& navigator, const double h,
+                FreeMatrix& D) const {
+#if defined(__GNUC__) && __GNUC__ == 12 && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuse-after-free"
+#endif
+    m_doubleExtension.finalize(state, stepper, navigator, h);
+    return transportMatrix(state, stepper, navigator, h, D);
+#if defined(__GNUC__) && __GNUC__ == 12 && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
   }
 
  private:
   // A fake stepper-state
   struct FakeStepperState {
+    // dummy defaults which will/should be overwritten
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
     AutodiffFreeVector pars;
     AutodiffFreeVector derivative;
-    double q;
     bool covTransport = false;
   };
 
@@ -87,22 +103,30 @@ struct AutodiffExtensionWrapper {
 
   // A fake stepper
   struct FakeStepper {
-    auto charge(const FakeStepperState& s) const { return s.q; }
-    auto momentum(const FakeStepperState& s) const {
-      return s.q / s.pars(eFreeQOverP);
+    auto position(const FakeStepperState& s) const {
+      return s.pars.template segment<3>(eFreePos0);
     }
     auto direction(const FakeStepperState& s) const {
       return s.pars.template segment<3>(eFreeDir0);
     }
-    auto position(const FakeStepperState& s) const {
-      return s.pars.template segment<3>(eFreePos0);
+    auto qOverP(const FakeStepperState& s) const { return s.pars(eFreeQOverP); }
+    auto absoluteMomentum(const FakeStepperState& s) const {
+      return particleHypothesis(s).extractMomentum(qOverP(s));
+    }
+    auto charge(const FakeStepperState& s) const {
+      return particleHypothesis(s).extractCharge(qOverP(s));
+    }
+    auto particleHypothesis(const FakeStepperState& s) const {
+      return s.particleHypothesis;
     }
   };
 
   // Here the autodiff jacobian is computed
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const double h, FreeMatrix& D) const {
+                       const navigator_t& navigator, const double h,
+                       FreeMatrix& D) const {
     // Initialize fake stepper
     using ThisFakePropState =
         FakePropState<decltype(state.options), decltype(state.navigation)>;
@@ -110,30 +134,33 @@ struct AutodiffExtensionWrapper {
     ThisFakePropState fstate{FakeStepperState(), state.options,
                              state.navigation};
 
-    fstate.stepping.q = stepper.charge(state.stepping);
+    fstate.stepping.particleHypothesis =
+        stepper.particleHypothesis(state.stepping);
 
     // Init dependent values for autodiff
     AutodiffFreeVector initial_params;
     initial_params.segment<3>(eFreePos0) = stepper.position(state.stepping);
     initial_params(eFreeTime) = stepper.time(state.stepping);
     initial_params.segment<3>(eFreeDir0) = stepper.direction(state.stepping);
-    initial_params(eFreeQOverP) =
-        (fstate.stepping.q != 0. ? fstate.stepping.q : 1.) /
-        stepper.momentum(state.stepping);
+    initial_params(eFreeQOverP) = stepper.qOverP(state.stepping);
 
     const auto& sd = state.stepping.stepData;
 
     // Compute jacobian
-    D = jacobian([&](const auto& in) { return RKN4step(in, sd, fstate, h); },
-                 wrt(initial_params), at(initial_params))
+    D = jacobian(
+            [&](const auto& in) {
+              return RKN4step(in, sd, fstate, navigator, h);
+            },
+            wrt(initial_params), at(initial_params))
             .template cast<double>();
 
     return true;
   }
 
-  template <typename step_data_t, typename fake_state_t>
+  template <typename step_data_t, typename fake_state_t, typename navigator_t>
   auto RKN4step(const AutodiffFreeVector& in, const step_data_t& sd,
-                fake_state_t state, const double h) const {
+                fake_state_t state, const navigator_t& navigator,
+                const double h) const {
     // Initialize fake stepper
     FakeStepper stepper;
 
@@ -148,13 +175,13 @@ struct AutodiffExtensionWrapper {
 
     // Compute k values. Assume all return true, since these parameters
     // are already validated by the "outer RKN4"
-    ext.k(state, stepper, k[0], sd.B_first, kQoP);
-    ext.k(state, stepper, k[1], sd.B_middle, kQoP, 1, h * 0.5, k[0]);
-    ext.k(state, stepper, k[2], sd.B_middle, kQoP, 2, h * 0.5, k[1]);
-    ext.k(state, stepper, k[3], sd.B_last, kQoP, 3, h, k[2]);
+    ext.k(state, stepper, navigator, k[0], sd.B_first, kQoP);
+    ext.k(state, stepper, navigator, k[1], sd.B_middle, kQoP, 1, h * 0.5, k[0]);
+    ext.k(state, stepper, navigator, k[2], sd.B_middle, kQoP, 2, h * 0.5, k[1]);
+    ext.k(state, stepper, navigator, k[3], sd.B_last, kQoP, 3, h, k[2]);
 
     // finalize
-    ext.finalize(state, stepper, h);
+    ext.finalize(state, stepper, navigator, h);
 
     // Compute RKN4 integration
     AutodiffFreeVector out;
@@ -179,4 +206,5 @@ struct AutodiffExtensionWrapper {
     return out;
   }
 };
+
 }  // namespace Acts

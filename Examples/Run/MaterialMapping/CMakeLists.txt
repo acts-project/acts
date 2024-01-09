@@ -4,8 +4,7 @@ set(_common_libraries
   ActsExamplesCommon
   ActsExamplesIoRoot
   ActsExamplesIoJson
-  ActsExamplesMagneticField
-  Boost::program_options)
+  ActsExamplesMagneticField)
 
 add_executable(
   ActsExampleMaterialValidationGeneric

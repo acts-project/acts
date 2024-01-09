@@ -19,7 +19,7 @@
 using namespace boost::program_options;
 
 boost::program_options::options_description
-ActsExamples::Options::makeDefaultOptions(std::string caption) {
+ActsExamples::Options::makeDefaultOptions(const std::string& caption) {
   std::cout
       << "\n\n======================= DEPRECATION NOTICE "
          "========================\n"
@@ -35,7 +35,7 @@ ActsExamples::Options::makeDefaultOptions(std::string caption) {
 
   opt.add_options()("help,h", "Produce help message");
   opt.add_options()(
-      "loglevel,l", value<size_t>()->default_value(2),
+      "loglevel,l", value<std::size_t>()->default_value(2),
       "The output log level. Please set the wished number (0 = VERBOSE, 1 = "
       "DEBUG, 2 = INFO, 3 = WARNING, 4 = ERROR, 5 = FATAL).");
   opt.add_options()(
@@ -48,10 +48,10 @@ ActsExamples::Options::makeDefaultOptions(std::string caption) {
 void ActsExamples::Options::addSequencerOptions(
     boost::program_options::options_description& opt) {
   // sequencer options
-  opt.add_options()("events,n", value<size_t>(),
+  opt.add_options()("events,n", value<std::size_t>(),
                     "The number of events to process. If not given, all "
                     "available events will be processed.")(
-      "skip", value<size_t>()->default_value(0),
+      "skip", value<std::size_t>()->default_value(0),
       "The number of events to skip")("jobs,j", value<int>()->default_value(-1),
                                       "Number of parallel jobs, negative for "
                                       "automatic.");
@@ -65,11 +65,12 @@ void ActsExamples::Options::addRandomNumbersOptions(
 
 void ActsExamples::Options::addGeometryOptions(
     boost::program_options::options_description& opt) {
-  opt.add_options()("geo-surface-loglevel", value<size_t>()->default_value(3),
+  opt.add_options()("geo-surface-loglevel",
+                    value<std::size_t>()->default_value(3),
                     "The outoput log level for the surface building.")(
-      "geo-layer-loglevel", value<size_t>()->default_value(3),
+      "geo-layer-loglevel", value<std::size_t>()->default_value(3),
       "The output log level for the layer building.")(
-      "geo-volume-loglevel", value<size_t>()->default_value(3),
+      "geo-volume-loglevel", value<std::size_t>()->default_value(3),
       "The output log level "
       "for the volume "
       "building.");
@@ -107,29 +108,35 @@ void ActsExamples::Options::addOutputOptions(
   opt.add_options()("output-dir", value<std::string>()->default_value(""),
                     "Output directory location.");
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Root))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Root)) {
     opt.add_options()("output-root", bool_switch(),
                       "Switch on to write '.root' output file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Csv))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Csv)) {
     opt.add_options()("output-csv", bool_switch(),
                       "Switch on to write '.csv' output file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Obj))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Obj)) {
     opt.add_options()("output-obj", bool_switch(),
-                      "Switch on to write '.obj' ouput file(s).");
+                      "Switch on to write '.obj' output file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Json))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Json)) {
     opt.add_options()("output-json", bool_switch(),
-                      "Switch on to write '.json' ouput file(s).");
+                      "Switch on to write '.json' output file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Cbor))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Cbor)) {
     opt.add_options()("output-cbor", bool_switch(),
-                      "Switch on to write '.cbor' ouput file(s).");
+                      "Switch on to write '.cbor' output file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Txt))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Txt)) {
     opt.add_options()("output-txt", bool_switch(),
-                      "Switch on to write '.txt' ouput file(s).");
+                      "Switch on to write '.txt' output file(s).");
+  }
 }
 
 void ActsExamples::Options::addInputOptions(
@@ -158,7 +165,7 @@ boost::program_options::variables_map ActsExamples::Options::parse(
   store(command_line_parser(argc, argv).options(opt).run(), vm);
   notify(vm);
 
-  if (vm.count("response-file") and
+  if (vm.count("response-file") != 0u and
       not vm["response-file"].template as<std::string>().empty()) {
     // Load the file and tokenize it
     std::ifstream ifs(vm["response-file"].as<std::string>().c_str());
@@ -185,7 +192,7 @@ boost::program_options::variables_map ActsExamples::Options::parse(
   }
 
   // Automatically handle help
-  if (vm.count("help")) {
+  if (vm.count("help") != 0u) {
     std::cout << opt << std::endl;
     vm.clear();
   }
@@ -194,15 +201,15 @@ boost::program_options::variables_map ActsExamples::Options::parse(
 
 Acts::Logging::Level ActsExamples::Options::readLogLevel(
     const boost::program_options::variables_map& vm) {
-  return Acts::Logging::Level(vm["loglevel"].as<size_t>());
+  return Acts::Logging::Level(vm["loglevel"].as<std::size_t>());
 }
 
 ActsExamples::Sequencer::Config ActsExamples::Options::readSequencerConfig(
     const boost::program_options::variables_map& vm) {
   Sequencer::Config cfg;
-  cfg.skip = vm["skip"].as<size_t>();
+  cfg.skip = vm["skip"].as<std::size_t>();
   if (not vm["events"].empty()) {
-    cfg.events = vm["events"].as<size_t>();
+    cfg.events = vm["events"].as<std::size_t>();
   }
   cfg.logLevel = readLogLevel(vm);
   cfg.numThreads = vm["jobs"].as<int>();

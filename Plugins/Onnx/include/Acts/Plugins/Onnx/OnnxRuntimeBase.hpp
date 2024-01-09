@@ -7,14 +7,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
 #include <vector>
 
-#include <core/session/onnxruntime_cxx_api.h>
+#include <Eigen/Dense>
+#include <onnxruntime_cxx_api.h>
 
 namespace Acts {
 
-// General class that sets up the ONNX runtime framework for loading a ML model
+using NetworkBatchInput =
+    Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+// General class that sets up the ONNX runtime framework for loading an ML model
 // and using it for inference.
 class OnnxRuntimeBase {
  public:
@@ -30,7 +33,6 @@ class OnnxRuntimeBase {
   /// @brief Default destructor
   ~OnnxRuntimeBase() = default;
 
- protected:
   /// @brief Run the ONNX inference function
   ///
   /// @param inputTensorValues The input feature values used for prediction
@@ -39,13 +41,31 @@ class OnnxRuntimeBase {
   std::vector<float> runONNXInference(
       std::vector<float>& inputTensorValues) const;
 
+  /// @brief Run the ONNX inference function for a batch of input
+  ///
+  /// @param inputTensorValues Vector of the input feature values of all the inputs used for prediction
+  ///
+  /// @return The vector of output (predicted) values
+  std::vector<std::vector<float>> runONNXInference(
+      NetworkBatchInput& inputTensorValues) const;
+
+  /// @brief Run the multi-output ONNX inference function for a batch of input
+  ///
+  /// @param inputTensorValues Vector of the input feature values of all the inputs used for prediction
+  ///
+  /// @return The vector of output (predicted) values, one for each output
+  std::vector<std::vector<std::vector<float>>> runONNXInferenceMultiOutput(
+      NetworkBatchInput& inputTensorValues) const;
+
  private:
   /// ONNX runtime session / model properties
   std::unique_ptr<Ort::Session> m_session;
+  std::vector<Ort::AllocatedStringPtr> m_inputNodeNamesAllocated;
   std::vector<const char*> m_inputNodeNames;
   std::vector<int64_t> m_inputNodeDims;
+  std::vector<Ort::AllocatedStringPtr> m_outputNodeNamesAllocated;
   std::vector<const char*> m_outputNodeNames;
-  std::vector<int64_t> m_outputNodeDims;
+  std::vector<std::vector<int64_t>> m_outputNodeDims;
 };
 
 }  // namespace Acts

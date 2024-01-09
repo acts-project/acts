@@ -10,13 +10,16 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
-#include "DD4hep/Detector.h"
+#include <stdexcept>
+#include <utility>
+
+#include <DD4hep/Alignments.h>
+#include <DD4hep/DetElement.h>
+#include <DD4hep/Volumes.h>
+#include <RtypesCore.h>
 
 Acts::DD4hepVolumeBuilder::DD4hepVolumeBuilder(
     const Acts::DD4hepVolumeBuilder::Config& config,
@@ -46,7 +49,7 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
   // Resulting volumes
   MutableTrackingVolumeVector volumes;
   // Inner/outer radius and half length of the barrel
-  double rMin, rMax, dz;
+  double rMin = 0, rMax = 0, dz = 0;
 
   // Go through volumes
   for (auto& detElement : m_cfg.centralVolumes) {
@@ -58,9 +61,10 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
 
     if (geoShape != nullptr) {
       TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-      if (tube == nullptr)
+      if (tube == nullptr) {
         ACTS_ERROR(
             "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
+      }
 
       // Extract the boundaries
       rMin = tube->GetRmin() * UnitConstants::cm;

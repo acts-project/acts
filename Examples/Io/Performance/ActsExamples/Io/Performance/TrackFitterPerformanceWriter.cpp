@@ -9,28 +9,37 @@
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <TFile.h>
-#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
+using Acts::VectorHelpers::phi;
 
 ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
     ActsExamples::TrackFitterPerformanceWriter::Config config,
     Acts::Logging::Level level)
-    : WriterT(config.inputTrajectories, "TrackFitterPerformanceWriter", level),
+    : WriterT(config.inputTracks, "TrackFitterPerformanceWriter", level),
       m_cfg(std::move(config)),
       m_resPlotTool(m_cfg.resPlotToolConfig, level),
       m_effPlotTool(m_cfg.effPlotToolConfig, level),
-      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, level)
-
-{
+      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, level) {
   // trajectories collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -42,12 +51,15 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
     throw std::invalid_argument("Missing output filename");
   }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), "RECREATE");
-  if (not m_outputFile) {
+  if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }
 
@@ -62,16 +74,17 @@ ActsExamples::TrackFitterPerformanceWriter::~TrackFitterPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::TrackFitterPerformanceWriter::finalize() {
   // fill residual and pull details into additional hists
   m_resPlotTool.refinement(m_resPlotCache);
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_resPlotTool.write(m_resPlotCache);
     m_effPlotTool.write(m_effPlotCache);
@@ -83,14 +96,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
-    const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
+    const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // Truth particles with corresponding reconstructed tracks
   std::vector<ActsFatras::Barcode> reconParticleIds;
@@ -101,38 +110,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  // Loop over all trajectories
-  for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
-    const auto& traj = trajectories[itraj];
-
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
-      continue;
-    }
-
-    // The trajectory entry indices and the multiTrajectory
-    const auto& trackTips = traj.tips();
-    const auto& mj = traj.multiTrajectory();
-
-    // Check the size of the trajectory entry indices. For track fitting, there
-    // should be at most one trajectory
-    if (trackTips.size() > 1) {
-      ACTS_ERROR("Track fitting should not result in multiple trajectories.");
-      return ProcessCode::ABORT;
-    }
-    // Get the entry index for the single trajectory
-    auto trackTip = trackTips.front();
-
+  // Loop over all tracks
+  for (const auto& track : tracks) {
     // Select reco track with fitted parameters
-    if (not traj.hasTrackParameters(trackTip)) {
+    if (!track.hasReferenceSurface()) {
       ACTS_WARNING("No fitted track parameters.");
       continue;
     }
-    const auto& fittedParameters = traj.trackParameters(trackTip);
+    Acts::BoundTrackParameters fittedParameters =
+        track.createParametersAtReference();
 
     // Get the majority truth particle for this trajectory
-    identifyContributingParticles(hitParticlesMap, traj, trackTip,
-                                  particleHitCounts);
+    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     if (particleHitCounts.empty()) {
       ACTS_WARNING("No truth particle associated with this trajectory.");
       continue;
@@ -147,16 +136,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     // Record this majority particle ID of this trajectory
     reconParticleIds.push_back(ip->particleId());
     // Fill the residual plots
-    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip,
-                       traj.trackParameters(trackTip));
-    // Collect the trajectory summary info
-    auto trajState =
-        Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip, fittedParameters);
     // Fill the trajectory summary info
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                trajState.nStates, trajState.nMeasurements,
-                                trajState.nOutliers, trajState.nHoles,
-                                trajState.nSharedHits);
+                                track.nTrackStates(), track.nMeasurements(),
+                                track.nOutliers(), track.nHoles(),
+                                track.nSharedHits());
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
@@ -170,7 +155,23 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     if (it != reconParticleIds.end()) {
       isReconstructed = true;
     }
-    m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
+    // Loop over all the other truth particle and find the distance to the
+    // closest one
+    double minDeltaR = -1;
+    for (const auto& closeParticle : particles) {
+      if (closeParticle.particleId() == particle.particleId()) {
+        continue;
+      }
+      double p_phi = phi(particle.direction());
+      double p_eta = eta(particle.direction());
+      double c_phi = phi(closeParticle.direction());
+      double c_eta = eta(closeParticle.direction());
+      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
+      if (minDeltaR == -1 || distance < minDeltaR) {
+        minDeltaR = distance;
+      }
+    }
+    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
   }
 
   return ProcessCode::SUCCESS;

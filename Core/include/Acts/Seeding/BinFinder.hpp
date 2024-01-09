@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Holders.hpp"
 
 #include <vector>
 
@@ -25,29 +26,26 @@ template <typename external_spacepoint_t>
 class BinFinder {
  public:
   /// constructor
-  BinFinder();
+  BinFinder() = delete;
 
-  BinFinder(const std::vector<std::pair<int, int> >&& zBinNeighbors,
-            const int&& numPhiNeighbors);
-
-  BinFinder(const std::vector<std::pair<int, int> >& zBinNeighbors,
-            const int& numPhiNeighbors);
-
-  /// destructor
-  ~BinFinder() = default;
+  BinFinder(const std::vector<std::pair<int, int>>& zBinNeighbors,
+            int numPhiNeighbors);
 
   /// Return all bins that could contain space points that can be used with the
   /// space points in the bin with the provided indices to create seeds.
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  boost::container::small_vector<size_t, 10> findBins(
-      size_t phiBin, size_t zBin,
-      const SpacePointGrid<external_spacepoint_t>* binnedSP);
+  boost::container::small_vector<std::size_t, 9> findBins(
+      std::size_t phiBin, std::size_t zBin,
+      const SpacePointGrid<external_spacepoint_t>* binnedSP) const;
 
  private:
-  const std::vector<std::pair<int, int> > m_zBinNeighbors;
-  const int m_numPhiNeighbors;
+  // This vector is provided by the user and is supposed to be a constant for
+  // all events. No point in making a copy
+  Acts::detail::RefHolder<const std::vector<std::pair<int, int>>>
+      m_zBinNeighbors;
+  int m_numPhiNeighbors = 1;
 };
 }  // namespace Acts
 #include "Acts/Seeding/BinFinder.ipp"

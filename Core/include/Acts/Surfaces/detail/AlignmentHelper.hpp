@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
+#include <tuple>
 #include <utility>
 #include <vector>
 

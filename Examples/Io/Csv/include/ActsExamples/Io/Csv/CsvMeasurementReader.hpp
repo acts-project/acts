@@ -10,17 +10,30 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace Acts {
 class Surface;
 }
 
 namespace ActsExamples {
+class IndexSourceLink;
+struct AlgorithmContext;
 
 /// Read in a measurement cluster collection in comma-separated-value format.
 ///
@@ -37,7 +50,7 @@ namespace ActsExamples {
 ///
 /// and each line in the file corresponds to one hit/cluster.
 ///
-/// One file per fevent: thread-safe for parallel event porcessing.
+/// One file per fevent: thread-safe for parallel event processing.
 class CsvMeasurementReader final : public IReader {
  public:
   struct Config {
@@ -51,6 +64,12 @@ class CsvMeasurementReader final : public IReader {
     std::string outputSourceLinks;
     /// Output cluster collection (optional).
     std::string outputClusters;
+
+    /// Input SimHits for measurement-particle map (optional)
+    std::string inputSimHits;
+    /// Output  measurement to particle collection (optional)
+    /// @note Only filled if inputSimHits is given
+    std::string outputMeasurementParticlesMap;
   };
 
   /// Construct the cluster reader.
@@ -59,23 +78,39 @@ class CsvMeasurementReader final : public IReader {
   /// @param level is the logging level
   CsvMeasurementReader(const Config& config, Acts::Logging::Level level);
 
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
-  std::pair<size_t, size_t> m_eventsRange;
+  std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   const Acts::Logger& logger() const { return *m_logger; }
+
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
+      this, "OutputMeasurements"};
+
+  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+      this, "OutputMeasurementSimHitsMap"};
+
+  WriteDataHandle<GeometryIdMultiset<IndexSourceLink>> m_outputSourceLinks{
+      this, "OutputSourceLinks"};
+
+  WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
+
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_outputMeasurementParticlesMap{this, "OutputMeasurementParticlesMap"};
+
+  ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};
 };
 
 }  // namespace ActsExamples

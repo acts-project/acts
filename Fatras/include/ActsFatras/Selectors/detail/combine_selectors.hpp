@@ -29,7 +29,7 @@ class CombineSelectors {
   ///
   /// @tparam Ts the types of the selected inputs
   template <typename... Ts>
-  bool operator()(const Ts &... things) const {
+  bool operator()(const Ts &...things) const {
     static_assert(
         (true && ... && std::is_same_v<bool, decltype(Selectors()(things...))>),
         "Not all selectors conform to the expected interface (bool)(const "
@@ -38,7 +38,7 @@ class CombineSelectors {
   }
 
   /// Access a specific selector by index.
-  template <size_t I>
+  template <std::size_t I>
   std::tuple_element_t<I, std::tuple<Selectors...>> &get() {
     return std::get<I>(m_selectors);
   }
@@ -52,7 +52,7 @@ class CombineSelectors {
   std::tuple<Selectors...> m_selectors;
 
   template <std::size_t... Is, typename... Ts>
-  bool impl(std::index_sequence<Is...>, const Ts &... things) const {
+  bool impl(std::index_sequence<Is...> /*indices*/, const Ts &...things) const {
     Combine combine;
     // compute status for all selectors
     bool status[] = {std::get<Is>(m_selectors)(things...)...};

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,19 +8,36 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
+#include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
+#include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 
 #include <map>
 #include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 namespace Acts {
+class ISurfaceMaterial;
+class ITrackingGeometryJsonDecorator;
+class IVolumeMaterial;
+class IVolumeMaterialJsonDecorator;
+class Surface;
+class TrackingGeometry;
+class TrackingVolume;
 
 using SurfaceAndMaterialWithContext =
     std::tuple<std::shared_ptr<const Acts::Surface>,
@@ -45,7 +62,7 @@ class MaterialMapJsonConverter {
   /// Configuration of the Converter
   class Config {
    public:
-    /// Default geometry context to extract surface tranforms
+    /// Default geometry context to extract surface transforms
     GeometryContext context = GeometryContext();
 
     /// Steering to handle sensitive data
@@ -81,17 +98,23 @@ class MaterialMapJsonConverter {
   /// Convert a DetectorMaterialMaps to json
   ///
   /// @param maps The material map collection
-  nlohmann::json materialMapsToJson(const DetectorMaterialMaps& maps);
+  /// @param decorator nullptr or a decorator to add extra attributes
+  nlohmann::json materialMapsToJson(
+      const DetectorMaterialMaps& maps,
+      const IVolumeMaterialJsonDecorator* decorator = nullptr);
 
   /// Convert a tracking geometry to json.
   /// Can be used to initialise the material mapping process.
   ///
   /// @param tGeometry is the tracking geometry
-  nlohmann::json trackingGeometryToJson(const TrackingGeometry& tGeometry);
+  /// @param decorator nullptr or a decorator to add extra attributes
+  nlohmann::json trackingGeometryToJson(
+      const TrackingGeometry& tGeometry,
+      const ITrackingGeometryJsonDecorator* decorator = nullptr);
 
   /// Go through a volume to find subvolume, layers and surfaces.
   /// Store volumes and surfaces in two vector used to initialised the geometry
-  /// hierachy.
+  /// hierarchy.
   ///
   /// @param volumeHierarchy is a vector of volume to be filled
   /// @param surfaceHierarchy is a vector of surfaces to be filled
@@ -114,19 +137,23 @@ class MaterialMapJsonConverter {
   /// Name of the volume hierarchy
   std::string m_volumeName = "Material Volume Map";
   /// Geometry hierarchy writer for volume material.
-  Acts::GeometryHierarchyMapJsonConverter<const IVolumeMaterial*>
+  Acts::GeometryHierarchyMapJsonConverter<const IVolumeMaterial*,
+                                          Acts::IVolumeMaterialJsonDecorator>
       m_volumeMaterialConverter;
   /// Geometry hierarchy writer for tracking volume.
-  Acts::GeometryHierarchyMapJsonConverter<Acts::TrackingVolumeAndMaterial>
+  Acts::GeometryHierarchyMapJsonConverter<Acts::TrackingVolumeAndMaterial,
+                                          Acts::ITrackingGeometryJsonDecorator>
       m_volumeConverter;
 
   /// Name of the surface hierarchy
   std::string m_surfaceName = "Material Surface Map";
   /// Geometry hierarchy writer for surface material.
-  Acts::GeometryHierarchyMapJsonConverter<const ISurfaceMaterial*>
+  Acts::GeometryHierarchyMapJsonConverter<const ISurfaceMaterial*,
+                                          Acts::IVolumeMaterialJsonDecorator>
       m_surfaceMaterialConverter;
   /// Geometry hierarchy writer for surface.
-  Acts::GeometryHierarchyMapJsonConverter<Acts::SurfaceAndMaterialWithContext>
+  Acts::GeometryHierarchyMapJsonConverter<Acts::SurfaceAndMaterialWithContext,
+                                          Acts::ITrackingGeometryJsonDecorator>
       m_surfaceConverter;
 
   /// Private access to the logging instance

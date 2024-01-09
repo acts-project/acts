@@ -8,10 +8,10 @@
 
 #include "Acts/Surfaces/RadialBounds.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <cmath>
 #include <iomanip>
 #include <iostream>
 

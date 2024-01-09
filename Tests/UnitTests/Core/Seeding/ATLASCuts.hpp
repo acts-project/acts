@@ -1,10 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
 
 #include "Acts/Seeding/IExperimentCuts.hpp"
 
@@ -21,32 +23,32 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// @return seed weight to be added to the seed's weight
   float seedWeight(const InternalSpacePoint<SpacePoint>& bottom,
                    const InternalSpacePoint<SpacePoint>& middle,
-                   const InternalSpacePoint<SpacePoint>& top) const;
+                   const InternalSpacePoint<SpacePoint>& top) const override;
   /// @param weight the current seed weight
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed
   /// @param top top space point of the current seed
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
-  bool singleSeedCut(float weight, const InternalSpacePoint<SpacePoint>& bottom,
-                     const InternalSpacePoint<SpacePoint>&,
-                     const InternalSpacePoint<SpacePoint>&) const;
+  bool singleSeedCut(
+      float weight, const InternalSpacePoint<SpacePoint>& bottom,
+      const InternalSpacePoint<SpacePoint>& /*middle*/,
+      const InternalSpacePoint<SpacePoint>& /*top*/) const override;
 
-  /// @param seeds contains pairs of weight and seed created for one middle
-  /// space
-  /// point
+  /// @param seedCandidates contains collection of seed candidates created for one middle
+  /// space point in a std::tuple format
   /// @return vector of seeds that pass the cut
-  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-  cutPerMiddleSP(
-      std::vector<
-          std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-          seeds) const;
+  std::vector<typename CandidatesForMiddleSp<
+      const InternalSpacePoint<SpacePoint>>::value_type>
+  cutPerMiddleSP(std::vector<typename CandidatesForMiddleSp<
+                     const InternalSpacePoint<SpacePoint>>::value_type>
+                     seedCandidates) const override;
 };
 
 template <typename SpacePoint>
 float ATLASCuts<SpacePoint>::seedWeight(
     const InternalSpacePoint<SpacePoint>& bottom,
-    const InternalSpacePoint<SpacePoint>&,
+    const InternalSpacePoint<SpacePoint>& /*middle*/,
     const InternalSpacePoint<SpacePoint>& top) const {
   float weight = 0;
   if (bottom.radius() > 150) {
@@ -61,30 +63,35 @@ float ATLASCuts<SpacePoint>::seedWeight(
 template <typename SpacePoint>
 bool ATLASCuts<SpacePoint>::singleSeedCut(
     float weight, const InternalSpacePoint<SpacePoint>& b,
-    const InternalSpacePoint<SpacePoint>&,
-    const InternalSpacePoint<SpacePoint>&) const {
+    const InternalSpacePoint<SpacePoint>& /*m*/,
+    const InternalSpacePoint<SpacePoint>& /*t*/) const {
   return !(b.radius() > 150. && weight < 380.);
 }
 
 template <typename SpacePoint>
-std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+std::vector<typename CandidatesForMiddleSp<
+    const InternalSpacePoint<SpacePoint>>::value_type>
 ATLASCuts<SpacePoint>::cutPerMiddleSP(
-    std::vector<
-        std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-        seeds) const {
-  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+    std::vector<typename CandidatesForMiddleSp<
+        const InternalSpacePoint<SpacePoint>>::value_type>
+        seedCandidates) const {
+  std::vector<typename CandidatesForMiddleSp<
+      const InternalSpacePoint<SpacePoint>>::value_type>
       newSeedsVector;
-  if (seeds.size() > 1) {
-    newSeedsVector.push_back(std::move(seeds[0]));
-    size_t itLength = std::min(seeds.size(), size_t(5));
-    // don't cut first element
-    for (size_t i = 1; i < itLength; i++) {
-      if (seeds[i].first > 200. || seeds[i].second->sp[0]->radius() > 43.) {
-        newSeedsVector.push_back(std::move(seeds[i]));
-      }
-    }
-    return newSeedsVector;
+  if (seedCandidates.size() <= 1) {
+    return seedCandidates;
   }
-  return seeds;
+
+  newSeedsVector.push_back(std::move(seedCandidates[0]));
+  std::size_t itLength = std::min(seedCandidates.size(), std::size_t(5));
+  // don't cut first element
+  for (std::size_t i(1); i < itLength; i++) {
+    float weight = seedCandidates[i].weight;
+    const auto& bottom = seedCandidates[i].bottom;
+    if (weight > 200. || bottom->radius() > 43.) {
+      newSeedsVector.push_back(std::move(seedCandidates[i]));
+    }
+  }
+  return newSeedsVector;
 }
 }  // namespace Acts

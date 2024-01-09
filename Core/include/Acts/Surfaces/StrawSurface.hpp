@@ -12,11 +12,19 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
+
+#include <cstddef>
+#include <memory>
+#include <string>
 
 namespace Acts {
 
 class DetectorElementBase;
 struct Polyhedron;
+class LineBounds;
 
 ///  @class StrawSurface
 ///
@@ -26,7 +34,7 @@ struct Polyhedron;
 /// @image html LineSurface.png
 ///
 class StrawSurface : public LineSurface {
-  friend Surface;
+  friend class Surface;
 
  protected:
   /// Constructor from Transform3 and bounds
@@ -63,7 +71,7 @@ class StrawSurface : public LineSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   StrawSurface(const GeometryContext& gctx, const StrawSurface& other,
                const Transform3& shift);
 
@@ -91,7 +99,7 @@ class StrawSurface : public LineSurface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const final;
+                                      std::size_t lseg) const final;
 };
 
 inline Surface::SurfaceType StrawSurface::type() const {
@@ -101,5 +109,7 @@ inline Surface::SurfaceType StrawSurface::type() const {
 inline std::string Acts::StrawSurface::name() const {
   return "Acts::StrawSurface";
 }
+
+ACTS_STATIC_CHECK_CONCEPT(SurfaceConcept, StrawSurface);
 
 }  // namespace Acts

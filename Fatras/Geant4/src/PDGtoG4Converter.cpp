@@ -8,6 +8,9 @@
 
 #include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
 
+#include <cstdlib>
+#include <utility>
+
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTypes.hh"
 
@@ -22,9 +25,9 @@ G4ParticleDefinition* ActsFatras::PDGtoG4Converter::getParticleDefinition(
       it = m_pdgG4ParticleMap.find(pdgCode);
 
   // Find the corresponding particle and return it
-  if (it != m_pdgG4ParticleMap.end())
+  if (it != m_pdgG4ParticleMap.end()) {
     return it->second;
-  else {
+  } else {
     // Rescue mechanism: If the particle is neutral and its anti-particle is
     // stored then return that one instead
     it = m_pdgG4ParticleMap.find(makeAbsolutePdgParticle(pdgCode));
@@ -131,8 +134,9 @@ void ActsFatras::PDGtoG4Converter::fillPredefinedParticles() {
 }
 
 void ActsFatras::PDGtoG4Converter::addParticle(G4ParticleDefinition* pDef) {
-  if (pDef == nullptr)
+  if (pDef == nullptr) {
     return;
+  }
 
   m_pdgG4ParticleMap[static_cast<Acts::PdgParticle>(pDef->GetPDGEncoding())] =
       pDef;

@@ -36,7 +36,7 @@ struct ParticleInfo {
 ///
 struct TreeReader {
   // The constructor
-  TreeReader(TTree* tree_) : tree(tree_){};
+  TreeReader(TTree* tree_) : tree(tree_) {}
 
   // Get entry
   void getEntry(unsigned int i) const {
@@ -57,7 +57,7 @@ struct TreeReader {
 };
 
 /// Struct used for reading track states written out by the
-/// RootTrajectoryStatesWriter
+/// RootTrackStatesWriter
 ///
 struct TrackStatesReader : public TreeReader {
   // Delete the default constructor
@@ -154,7 +154,7 @@ struct TrackStatesReader : public TreeReader {
   }
 
   // The variables
-  uint32_t eventId;
+  uint32_t eventId = 0;
   std::vector<float>* LOC0_prt =
       new std::vector<float>;  ///< predicted parameter local x
   std::vector<float>* LOC1_prt =
@@ -282,11 +282,11 @@ struct TrackStatesReader : public TreeReader {
   std::vector<bool>* filtered = new std::vector<bool>;   ///< filtering status
   std::vector<bool>* smoothed = new std::vector<bool>;   ///< smoothing status
 
-  unsigned int nStates, nMeasurements;
+  unsigned int nStates = 0, nMeasurements = 0;
 };
 
 /// Struct used for reading track summary info written out by the
-/// RootTrajectorySummaryWriter
+/// RootTrackSummaryWriter
 ///
 struct TrackSummaryReader : public TreeReader {
   // Delete the default constructor
@@ -319,8 +319,8 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("t_pT", &t_pT);
     tree->SetBranchAddress("t_d0", &t_d0);
     tree->SetBranchAddress("t_z0", &t_z0);
-    tree->SetBranchAddress("t_charge",&t_charge);
-    tree->SetBranchAddress("t_time",&t_time);
+    tree->SetBranchAddress("t_charge", &t_charge);
+    tree->SetBranchAddress("t_time", &t_time);
 
     tree->SetBranchAddress("eLOC0_fit", &eLOC0_fit);
     tree->SetBranchAddress("eLOC1_fit", &eLOC1_fit);
@@ -347,7 +347,7 @@ struct TrackSummaryReader : public TreeReader {
   }
 
   // The variables
-  uint32_t eventId;
+  uint32_t eventId = 0;
   std::vector<unsigned int>* nStates = new std::vector<unsigned int>;
   std::vector<unsigned int>* nMeasurements = new std::vector<unsigned int>;
   std::vector<unsigned int>* nOutliers = new std::vector<unsigned int>;
@@ -441,8 +441,8 @@ struct ParticleReader : public TreeReader {
     std::string eventNumberStr = std::to_string(eventNumber);
     std::string findStartEntry = "event_id<" + eventNumberStr;
     std::string findParticlesSize = "event_id==" + eventNumberStr;
-    size_t startEntry = tree->GetEntries(findStartEntry.c_str());
-    size_t nParticles = tree->GetEntries(findParticlesSize.c_str());
+    std::size_t startEntry = tree->GetEntries(findStartEntry.c_str());
+    std::size_t nParticles = tree->GetEntries(findParticlesSize.c_str());
     if (nParticles == 0) {
       throw std::invalid_argument(
           "No particles found. Please check the input file.");

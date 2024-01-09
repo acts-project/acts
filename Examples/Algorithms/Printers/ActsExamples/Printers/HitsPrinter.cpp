@@ -9,18 +9,22 @@
 #include "HitsPrinter.hpp"
 
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <algorithm>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 ActsExamples::HitsPrinter::HitsPrinter(
     const ActsExamples::HitsPrinter::Config& cfg, Acts::Logging::Level level)
-    : BareAlgorithm("HitsPrinter", level), m_cfg(cfg) {
+    : IAlgorithm("HitsPrinter", level), m_cfg(cfg) {
   if (m_cfg.inputClusters.empty()) {
     throw std::invalid_argument("Input clusters collection is not configured");
   }
@@ -31,18 +35,17 @@ ActsExamples::HitsPrinter::HitsPrinter(
   if (m_cfg.inputHitIds.empty()) {
     throw std::invalid_argument("Input hit ids collection is not configured");
   }
+
+  m_inputClusters.initialize(m_cfg.inputClusters);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputHitIds.initialize(m_cfg.inputHitIds);
 }
 
 ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using Clusters = ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
-  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-  using HitIds = std::vector<size_t>;
-
-  const auto& clusters = ctx.eventStore.get<Clusters>(m_cfg.inputClusters);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
-  const auto& hitIds = ctx.eventStore.get<HitIds>(m_cfg.inputHitIds);
+  const auto& clusters = m_inputClusters(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& hitIds = m_inputHitIds(ctx);
 
   if (clusters.size() != hitIds.size()) {
     ACTS_ERROR(
@@ -57,18 +60,18 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
 
   // print hits selected by index
   if (0 < m_cfg.selectIndexLength) {
-    size_t ihit = m_cfg.selectIndexStart;
+    std::size_t ihit = m_cfg.selectIndexStart;
     // Saturated addition that does not overflow and exceed SIZE_MAX.
     // From http://locklessinc.com/articles/sat_arithmetic/
-    size_t nend = ihit + m_cfg.selectIndexLength;
-    nend |= -(nend < ihit);
+    std::size_t nend = ihit + m_cfg.selectIndexLength;
+    nend |= -static_cast<int>(nend < ihit);
     // restrict to available hits
     nend = std::min(clusters.size(), nend);
 
     if (nend <= ihit) {
       ACTS_WARNING("event "
                    << ctx.eventNumber << " collection '" << m_cfg.inputClusters
-                   << " hit index selection is outside the available range");
+                   << "' hit index selection is outside the available range");
     } else {
       ACTS_INFO("event " << ctx.eventNumber << " collection '"
                          << m_cfg.inputClusters << "' contains "
@@ -101,15 +104,15 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
 
   // print hits within geometry selection
   auto geoSelection = makeRange(clusters.begin(), clusters.begin());
-  if (m_cfg.selectModule) {
+  if (m_cfg.selectModule != 0u) {
     geoSelection = selectModule(clusters, m_cfg.selectVolume, m_cfg.selectLayer,
                                 m_cfg.selectModule);
-  } else if (m_cfg.selectLayer) {
+  } else if (m_cfg.selectLayer != 0u) {
     geoSelection = selectLayer(clusters, m_cfg.selectVolume, m_cfg.selectLayer);
-  } else if (m_cfg.selectVolume) {
+  } else if (m_cfg.selectVolume != 0u) {
     geoSelection = selectVolume(clusters, m_cfg.selectVolume);
   }
-  if (not geoSelection.empty()) {
+  if (!geoSelection.empty()) {
     ACTS_INFO("event " << ctx.eventNumber << " collection '"
                        << m_cfg.inputClusters << "' contains "
                        << geoSelection.size() << " hits in volume "

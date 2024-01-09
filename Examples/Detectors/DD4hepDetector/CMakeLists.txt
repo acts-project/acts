@@ -1,32 +1,10 @@
 add_library(
   ActsExamplesDetectorDD4hep SHARED
-  src/Demonstrator/DemonstratorBarrel_geo.cpp
-  src/Demonstrator/DemonstratorBeamPipe_geo.cpp
-  src/FCChh/FCChhTrackerTkLayout_Barrel.cpp
-  src/FCChh/FCChhTrackerTkLayout_Beampipe.cpp
-  src/FCChh/FCChhTrackerTkLayout_Endcap.cpp
-  src/IBL/IBLSimpleBarrel_geo.cpp
-  src/Calorimeter/Calorimeter_barrel.cpp
-  src/TestTracker/AirTube_geo.cpp
-  src/TestTracker/Barrel_geo.cpp
-  src/TestTracker/BeamPipe_geo.cpp
-  src/TestTracker/Endcap_geo.cpp
-  src/TestTracker/SimpleLayeredCylinder_geo.cpp
-  src/TestTracker/ZPlanarTracker_geo.cpp
-  src/TKLayout/TKLayoutBarrel_geo.cpp
-  src/TKLayout/TKLayoutEndcap_geo.cpp
   src/DD4hepDetector.cpp
   src/DD4hepDetectorHelper.cpp
   src/DD4hepGeometryService.cpp
   src/DetUtils.cpp)
 
-file(GLOB _odd "${CMAKE_SOURCE_DIR}/thirdparty/OpenDataDetector/factory/tracker/*")
-if(NOT _odd)
-    message(WARNING "The ODD directory seems not to be present. Did you run init the submodule?")
-else()
-  target_compile_definitions(ActsExamplesDetectorDD4hep PUBLIC ODD_ACTS_EXTENSION)
-endif()
-target_sources(ActsExamplesDetectorDD4hep PUBLIC ${_odd})
 
 target_include_directories(
   ActsExamplesDetectorDD4hep
@@ -35,7 +13,7 @@ target_link_libraries(
   ActsExamplesDetectorDD4hep
   PUBLIC
     ActsCore ActsPluginDD4hep
-    ActsExamplesFramework ActsExamplesDetectorsCommon
+    ActsExamplesFramework
     ROOT::Geom ROOT::GenVector)
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)

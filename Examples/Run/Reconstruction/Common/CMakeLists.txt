@@ -3,6 +3,7 @@ add_library(
   RecTruthTracks.cpp
   RecCKFTracks.cpp
   SeedingExample.cpp
+  HoughExample.cpp
   MeasurementsToSpacepoints.cpp
 )
 target_include_directories(
@@ -13,6 +14,7 @@ target_link_libraries(
   PUBLIC
     ActsExamplesFramework
     ActsExamplesCommon
+    ActsExamplesUtilities
     ActsExamplesMagneticField
     ActsExamplesIoPerformance)
 if(ACTS_BUILD_PLUGIN_ONNX)

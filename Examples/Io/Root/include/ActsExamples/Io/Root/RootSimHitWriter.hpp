@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <cstdint>
@@ -19,6 +21,7 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out simulated hits as a flat TTree.
 ///
@@ -31,7 +34,7 @@ namespace ActsExamples {
 class RootSimHitWriter final : public WriterT<SimHitContainer> {
  public:
   struct Config {
-    /// Input particle collection to write.
+    /// Input sim hit collection to write.
     std::string inputSimHits;
     /// Path to the output file.
     std::string filePath;
@@ -48,10 +51,13 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
   RootSimHitWriter(const Config& config, Acts::Logging::Level level);
 
   /// Ensure underlying file is closed.
-  ~RootSimHitWriter() final override;
+  ~RootSimHitWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// Type-specific write implementation.
@@ -59,7 +65,7 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] hits are the hits to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimHitContainer& hits) final override;
+                     const SimHitContainer& hits) override;
 
  private:
   Config m_cfg;
@@ -67,27 +73,27 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
   TFile* m_outputFile = nullptr;
   TTree* m_outputTree = nullptr;
   /// Event identifier.
-  uint32_t m_eventId;
+  uint32_t m_eventId = 0;
   /// Hit surface identifier.
-  uint64_t m_geometryId;
+  uint64_t m_geometryId = 0;
   /// Event-unique particle identifier a.k.a. barcode.
-  uint64_t m_particleId;
+  uint64_t m_particleId = 0;
   /// True global hit position components in mm.
-  float m_tx, m_ty, m_tz;
+  float m_tx = 0, m_ty = 0, m_tz = 0;
   // True global hit time in ns.
-  float m_tt;
+  float m_tt = 0;
   /// True particle four-momentum in GeV at hit position before interaction.
-  float m_tpx, m_tpy, m_tpz, m_te;
+  float m_tpx = 0, m_tpy = 0, m_tpz = 0, m_te = 0;
   /// True change in particle four-momentum in GeV due to interactions.
-  float m_deltapx, m_deltapy, m_deltapz, m_deltae;
+  float m_deltapx = 0, m_deltapy = 0, m_deltapz = 0, m_deltae = 0;
   /// Hit index along the particle trajectory
-  int32_t m_index;
+  int32_t m_index = 0;
   // Decoded hit surface identifier components.
-  uint32_t m_volumeId;
-  uint32_t m_boundaryId;
-  uint32_t m_layerId;
-  uint32_t m_approachId;
-  uint32_t m_sensitiveId;
+  uint32_t m_volumeId = 0;
+  uint32_t m_boundaryId = 0;
+  uint32_t m_layerId = 0;
+  uint32_t m_approachId = 0;
+  uint32_t m_sensitiveId = 0;
 };
 
 }  // namespace ActsExamples

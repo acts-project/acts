@@ -31,8 +31,7 @@ struct ProtoLayer {
   Extent extent;
 
   /// The envelope parameters
-  using Range = std::pair<double, double>;
-  std::vector<Range> envelope{(int)binValues, {0., 0.}};
+  ExtentEnvelope envelope = zeroEnvelopes;
 
   /// Constructor
   ///

@@ -6,22 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "FieldMapRootIo.hpp"
+#include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
+#include <stdexcept>
 #include <vector>
 
+#include <RtypesCore.h>
 #include <TFile.h>
 #include <TTree.h>
 
 ActsExamples::detail::InterpolatedMagneticField2
 ActsExamples::makeMagneticFieldMapRzFromRoot(
-    std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)>
+    const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
+                                    std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, std::string treeName, Acts::ActsScalar lengthUnit,
-    Acts::ActsScalar BFieldUnit, bool firstQuadrant) {
+    const std::string& fieldMapFile, const std::string& treeName,
+    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
+    bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
   std::vector<double> rPos;
@@ -30,11 +33,17 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
   std::vector<Acts::Vector2> bField;
   // [1] Read in file and fill values
   TFile* inputFile = TFile::Open(fieldMapFile.c_str());
-  TTree* tree = (TTree*)inputFile->Get(treeName.c_str());
+  if (inputFile == nullptr) {
+    throw std::runtime_error("file does not exist");
+  }
+  TTree* tree = inputFile->Get<TTree>(treeName.c_str());
+  if (tree == nullptr) {
+    throw std::runtime_error("object not found in file");
+  }
   Int_t entries = tree->GetEntries();
 
-  double r, z;
-  double Br, Bz;
+  double r = 0, z = 0;
+  double Br = 0, Bz = 0;
 
   tree->SetBranchAddress("r", &r);
   tree->SetBranchAddress("z", &z);
@@ -53,7 +62,7 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
     zPos.push_back(z);
     bField.push_back(Acts::Vector2(Br, Bz));
   }
-  inputFile->Close();
+  delete inputFile;
   /// [2] use helper function in core
   return Acts::fieldMapRZ(localToGlobalBin, rPos, zPos, bField, lengthUnit,
                           BFieldUnit, firstQuadrant);
@@ -61,11 +70,12 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
 
 ActsExamples::detail::InterpolatedMagneticField3
 ActsExamples::makeMagneticFieldMapXyzFromRoot(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
+    const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
+                                    std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, std::string treeName, Acts::ActsScalar lengthUnit,
-    Acts::ActsScalar BFieldUnit, bool firstOctant) {
+    const std::string& fieldMapFile, const std::string& treeName,
+    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
+    bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
   std::vector<double> xPos;
@@ -75,11 +85,17 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
   std::vector<Acts::Vector3> bField;
   // [1] Read in file and fill values
   TFile* inputFile = TFile::Open(fieldMapFile.c_str());
-  TTree* tree = (TTree*)inputFile->Get(treeName.c_str());
+  if (inputFile == nullptr) {
+    throw std::runtime_error("file does not exist");
+  }
+  TTree* tree = inputFile->Get<TTree>(treeName.c_str());
+  if (tree == nullptr) {
+    throw std::runtime_error("object not found in file");
+  }
   Int_t entries = tree->GetEntries();
 
-  double x, y, z;
-  double Bx, By, Bz;
+  double x = 0, y = 0, z = 0;
+  double Bx = 0, By = 0, Bz = 0;
 
   tree->SetBranchAddress("x", &x);
   tree->SetBranchAddress("y", &y);
@@ -102,7 +118,7 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
     zPos.push_back(z);
     bField.push_back(Acts::Vector3(Bx, By, Bz));
   }
-  inputFile->Close();
+  delete inputFile;
 
   return Acts::fieldMapXYZ(localToGlobalBin, xPos, yPos, zPos, bField,
                            lengthUnit, BFieldUnit, firstOctant);

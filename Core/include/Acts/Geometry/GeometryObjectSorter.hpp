@@ -15,13 +15,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <functional>
+#include <memory>
 
 namespace Acts {
 
 template <class T>
-class ObjectSorterT : public std::binary_function<T, T, bool> {
+class ObjectSorterT {
  public:
   /// Constructor from a binning value
   ///
@@ -33,7 +35,7 @@ class ObjectSorterT : public std::binary_function<T, T, bool> {
   /// @param one first object
   /// @param two second object
   ///
-  /// @return boolen indicator
+  /// @return boolean indicator
   bool operator()(T one, T two) const {
     using Acts::VectorHelpers::eta;
     using Acts::VectorHelpers::perp;
@@ -43,31 +45,31 @@ class ObjectSorterT : public std::binary_function<T, T, bool> {
     switch (m_binningValue) {
       // compare on x
       case binX: {
-        return (one.x() < two.x());
+        return one.x() < two.x();
       }
       // compare on y
       case binY: {
-        return (one.y() < two.y());
+        return one.y() < two.y();
       }
       // compare on z
       case binZ: {
-        return (one.z() < two.z());
+        return one.z() < two.z();
       }
       // compare on r
       case binR: {
-        return (perp(one) < perp(two));
+        return perp(one) < perp(two);
       }
       // compare on phi
       case binPhi: {
-        return (phi(one) < phi(two));
+        return phi(one) < phi(two);
       }
       // compare on eta
       case binEta: {
-        return (eta(one) < eta(two));
+        return eta(one) < eta(two);
       }
       // default for the moment
       default: {
-        return (one.norm() < two.norm());
+        return one.norm() < two.norm();
       }
     }
   }
@@ -80,7 +82,7 @@ class ObjectSorterT : public std::binary_function<T, T, bool> {
 
 /// This will check on absolute distance
 template <class T>
-class DistanceSorterT : public std::binary_function<T, T, bool> {
+class DistanceSorterT {
  public:
   /// Constructor from a binning value
   ///
@@ -98,7 +100,7 @@ class DistanceSorterT : public std::binary_function<T, T, bool> {
   /// @tparam one first object
   /// @tparam two second object
   ///
-  /// @return boolen indicator
+  /// @return boolean indicator
   bool operator()(T one, T two) const {
     using Acts::VectorHelpers::eta;
     using Acts::VectorHelpers::perp;
@@ -110,43 +112,43 @@ class DistanceSorterT : public std::binary_function<T, T, bool> {
       case binX: {
         double diffOneX = one.x() - m_reference.x();
         double diffTwoX = two.x() - m_reference.x();
-        return (diffOneX * diffOneX < diffTwoX * diffTwoX);
+        return std::abs(diffOneX) < std::abs(diffTwoX);
       }
       // compare on diff y
       case binY: {
         double diffOneY = one.y() - m_reference.y();
         double diffTwoY = two.y() - m_reference.y();
-        return (diffOneY * diffOneY < diffTwoY * diffTwoY);
+        return std::abs(diffOneY) < std::abs(diffTwoY);
       }
       // compare on diff z
       case binZ: {
         double diffOneZ = one.z() - m_reference.z();
         double diffTwoZ = two.z() - m_reference.z();
-        return (diffOneZ * diffOneZ < diffTwoZ * diffTwoZ);
+        return std::abs(diffOneZ) < std::abs(diffTwoZ);
       }
       // compare on r
       case binR: {
         double diffOneR = perp(one) - m_refR;
         double diffTwoR = perp(two) - m_refR;
-        return (diffOneR * diffOneR < diffTwoR * diffTwoR);
+        return std::abs(diffOneR) < std::abs(diffTwoR);
       }
       // compare on phi /// @todo add cyclic value
       case binPhi: {
         double diffOnePhi = phi(one) - m_refPhi;
         double diffTwoPhi = phi(two) - m_refPhi;
-        return (diffOnePhi * diffOnePhi < diffTwoPhi * diffTwoPhi);
+        return std::abs(diffOnePhi) < std::abs(diffTwoPhi);
       }
       // compare on eta
       case binEta: {
         double diffOneEta = eta(one) - m_refEta;
         double diffTwoEta = eta(two) - m_refEta;
-        return (diffOneEta * diffOneEta < diffTwoEta * diffTwoEta);
+        return std::abs(diffOneEta) < std::abs(diffTwoEta);
       }
       // default for the moment
       default: {
         T diffOne(one - m_reference);
         T diffTwo(two - m_reference);
-        return (diffOne.mag2() < diffTwo.mag2());
+        return diffOne.mag2() < diffTwo.mag2();
       }
     }
   }
@@ -160,7 +162,7 @@ class DistanceSorterT : public std::binary_function<T, T, bool> {
 };
 
 template <class T>
-class GeometryObjectSorterT : public std::binary_function<T, T, bool> {
+class GeometryObjectSorterT {
  public:
   /// Constructor from a binning value
   ///
@@ -178,7 +180,7 @@ class GeometryObjectSorterT : public std::binary_function<T, T, bool> {
   /// @tparam one first object
   /// @tparam two second object
   ///
-  /// @return boolen indicator
+  /// @return boolean indicator
   bool operator()(T one, T two) const {
     // get the pos one / pos two
     Vector3 posOne =

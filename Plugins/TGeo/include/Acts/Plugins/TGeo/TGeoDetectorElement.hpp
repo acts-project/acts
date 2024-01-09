@@ -7,11 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
 
 #include <iostream>
+#include <memory>
+#include <string>
 
 #include "TGeoManager.h"
 
@@ -22,13 +26,14 @@ class SurfaceBounds;
 class PlanarBounds;
 class DiscBounds;
 class DigitizationModule;
+class Surface;
 
 /// @class TGeoDetectorElement
 ///
 /// DetectorElement plugin for ROOT TGeo shapes. Added possibility to hand over
 /// transformation matrix.
 ///
-/// @todo what if shape conversion failes? add implementation of more than one
+/// @todo what if shape conversion fails? add implementation of more than one
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what if not used with DD4hep?
 ///
@@ -84,7 +89,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// @param tgThickness the thickness of this detector element
   TGeoDetectorElement(const Identifier& identifier, const TGeoNode& tGeoNode,
                       const Transform3& tgTransform,
-                      std::shared_ptr<const PlanarBounds> tgBounds,
+                      const std::shared_ptr<const PlanarBounds>& tgBounds,
                       double tgThickness = 0.);
 
   /// Constructor with pre-computed disk surface.
@@ -99,7 +104,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// @param tgThickness the thickness of this detector element
   TGeoDetectorElement(const Identifier& identifier, const TGeoNode& tGeoNode,
                       const Transform3& tgTransform,
-                      std::shared_ptr<const DiscBounds> tgBounds,
+                      const std::shared_ptr<const DiscBounds>& tgBounds,
                       double tgThickness = 0.);
 
   ~TGeoDetectorElement() override;
@@ -109,10 +114,15 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3& transform(const GeometryContext& gctx) const final;
+  const Transform3& transform(const GeometryContext& gctx) const override;
 
-  /// Return surface associated with this identifier, which should come from the
-  const Surface& surface() const final;
+  /// Return surface associated with this detector element
+  const Surface& surface() const override;
+
+  /// Return surface associated with this detector element
+  ///
+  /// @note this is the non-const access
+  Surface& surface() override;
 
   /// Retrieve the DigitizationModule
   const std::shared_ptr<const DigitizationModule> digitizationModule()
@@ -121,7 +131,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   };
 
   /// Returns the thickness of the module
-  double thickness() const final;
+  double thickness() const override;
 
   /// Return the TGeoNode for back navigation
   const TGeoNode& tgeoNode() const { return *m_detElement; }
@@ -151,6 +161,10 @@ inline const Transform3& TGeoDetectorElement::transform(
 }
 
 inline const Surface& TGeoDetectorElement::surface() const {
+  return (*m_surface);
+}
+
+inline Surface& TGeoDetectorElement::surface() {
   return (*m_surface);
 }
 

@@ -10,19 +10,30 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
-namespace tt = boost::test_tools;
+#include <array>
+#include <cstddef>
+#include <functional>
+#include <optional>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 using Acts::VectorHelpers::perp;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -54,14 +65,14 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   detail::EquidistantAxis z(-5, 7, 6u);
 
   using Grid_t =
-      detail::Grid<Vector3, detail::EquidistantAxis, detail::EquidistantAxis>;
+      Grid<Vector3, detail::EquidistantAxis, detail::EquidistantAxis>;
   using BField_t = InterpolatedBFieldMap<Grid_t>;
 
   Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
   // set grid values
-  for (size_t i = 1; i <= g.numLocalBins().at(0) + 1; ++i) {
-    for (size_t j = 1; j <= g.numLocalBins().at(1) + 1; ++j) {
+  for (std::size_t i = 1; i <= g.numLocalBins().at(0) + 1; ++i) {
+    for (std::size_t j = 1; j <= g.numLocalBins().at(1) + 1; ++j) {
       Grid_t::index_t indices = {{i, j}};
       const auto& llCorner = g.lowerLeftBinEdge(indices);
       g.atLocalBins(indices) = BField::value(llCorner);
@@ -154,12 +165,11 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
 
   // some field cell tests
-  BOOST_CHECK(not c.isInside(transformPos((pos << 3, 2, -3.7).finished())));
-  BOOST_CHECK(not c.isInside(transformPos((pos << -2, 3, -4.7).finished())));
-  BOOST_CHECK(not c.isInside(transformPos((pos << -2, 3, 4.7).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << 3, 2, -3.7).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << -2, 3, -4.7).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << -2, 3, 4.7).finished())));
   BOOST_CHECK(c.isInside(transformPos((pos << 0, 2, -4.7).finished())));
-  BOOST_CHECK(not c.isInside(transformPos((pos << 5, 2, 14.).finished())));
+  BOOST_CHECK(!c.isInside(transformPos((pos << 5, 2, 14.).finished())));
 }
 }  // namespace Test
-
 }  // namespace Acts

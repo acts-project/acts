@@ -8,29 +8,42 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
 
+#include <array>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <TTree.h>
 
 class TFile;
 class TTree;
+namespace Acts {
+class Surface;
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootMeasurementWriter
 ///
@@ -39,7 +52,7 @@ namespace ActsExamples {
 /// in the root file for optimised data writing speed
 /// The event number is part of the written data.
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
@@ -68,23 +81,25 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
 
     TTree* tree = nullptr;
     // Identification parameters
-    int eventNr;
-    int volumeID;
-    int layerID;
-    int surfaceID;
+    int eventNr = 0;
+    int volumeID = 0;
+    int layerID = 0;
+    int surfaceID = 0;
 
     /// Type 0 - free, 1 - bound
     int measType = 1;
 
     /// Truth parameters
-    float trueBound[Acts::eBoundSize];
+    float trueBound[Acts::eBoundSize] = {};
     float trueGx = 0.;
     float trueGy = 0.;
     float trueGz = 0.;
+    float incidentPhi = 0.;
+    float incidentTheta = 0.;
 
     /// Reconstruction information
-    float recBound[Acts::eBoundSize];
-    float varBound[Acts::eBoundSize];
+    float recBound[Acts::eBoundSize] = {};
+    float varBound[Acts::eBoundSize] = {};
 
     /// Cluster information comprised of
     /// nch :  number of channels
@@ -92,7 +107,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// chId : channel identification
     /// chValue: value/activation of the channel
     int nch = 0;
-    int cSize[2];
+    int cSize[2] = {};
     std::array<std::vector<int>*, 2> chId = {nullptr, nullptr};
     std::vector<float>* chValue = nullptr;
 
@@ -117,6 +132,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       tree->Branch("true_x", &trueGx);
       tree->Branch("true_y", &trueGy);
       tree->Branch("true_z", &trueGz);
+      tree->Branch("true_incident_phi", &incidentPhi);
+      tree->Branch("true_incident_theta", &incidentTheta);
     }
 
     /// Constructor from GeometryIdentifier
@@ -185,7 +202,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// @param xt The true 4D global position
     /// @param dir The true particle direction
     void fillTruthParameters(const Acts::Vector2& lp, const Acts::Vector4& xt,
-                             const Acts::Vector3& dir) {
+                             const Acts::Vector3& dir,
+                             const std::pair<double, double> angles) {
       trueBound[Acts::eBoundLoc0] = lp[Acts::eBoundLoc0];
       trueBound[Acts::eBoundLoc1] = lp[Acts::eBoundLoc1];
       trueBound[Acts::eBoundPhi] = Acts::VectorHelpers::phi(dir);
@@ -195,6 +213,9 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       trueGx = xt[Acts::ePos0];
       trueGy = xt[Acts::ePos1];
       trueGz = xt[Acts::ePos2];
+
+      incidentPhi = angles.first;
+      incidentTheta = angles.second;
     }
 
     /// Convenience function to fill bound parameters
@@ -211,18 +232,14 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       recBound[Acts::eBoundTheta] = fullVect[Acts::eBoundTheta];
       recBound[Acts::eBoundTime] = fullVect[Acts::eBoundTime];
 
-      Acts::BoundSymMatrix fullVar =
+      Acts::BoundSquareMatrix fullVar =
           m.expander() * m.covariance() * m.expander().transpose();
-      varBound[Acts::eBoundLoc0] =
-          std::sqrt(fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0));
-      varBound[Acts::eBoundLoc1] =
-          std::sqrt(fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1));
-      varBound[Acts::eBoundPhi] =
-          std::sqrt(fullVar(Acts::eBoundPhi, Acts::eBoundPhi));
+      varBound[Acts::eBoundLoc0] = fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0);
+      varBound[Acts::eBoundLoc1] = fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1);
+      varBound[Acts::eBoundPhi] = fullVar(Acts::eBoundPhi, Acts::eBoundPhi);
       varBound[Acts::eBoundTheta] =
-          std::sqrt(fullVar(Acts::eBoundTheta, Acts::eBoundTheta));
-      varBound[Acts::eBoundTime] =
-          std::sqrt(fullVar(Acts::eBoundTime, Acts::eBoundTime));
+          fullVar(Acts::eBoundTheta, Acts::eBoundTheta);
+      varBound[Acts::eBoundTime] = fullVar(Acts::eBoundTime, Acts::eBoundTime);
     }
 
     /// Convenience function to fill the cluster information
@@ -246,10 +263,10 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   RootMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~RootMeasurementWriter() final override;
+  ~RootMeasurementWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }
@@ -261,7 +278,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const MeasurementContainer& measurements) final override;
+                     const MeasurementContainer& measurements) override;
 
  private:
   Config m_cfg;
@@ -271,6 +288,11 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       m_outputTrees;  ///< the output trees
   std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
       m_dSurfaces;  ///< All surfaces that could carry measurements
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 
 }  // namespace ActsExamples

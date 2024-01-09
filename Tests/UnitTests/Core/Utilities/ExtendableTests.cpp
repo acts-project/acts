@@ -12,11 +12,10 @@
 
 #include "Acts/Utilities/detail/Extendable.hpp"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
+#include <tuple>
+#include <type_traits>
 
 namespace Acts {
-
 namespace Test {
 
 // This tests the implementation of the ActionList
@@ -35,7 +34,7 @@ BOOST_AUTO_TEST_CASE(Extendable_) {
   };
 
   // Test the empty list
-  detail::Extendable<> nullist;
+  detail::Extendable<> nullist{};
   (void)nullist;
   BOOST_CHECK_EQUAL(std::tuple_size<std::tuple<>>::value, 0u);
 

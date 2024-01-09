@@ -50,7 +50,7 @@ inline void addPropagationOptions(
       "prop-material-collection",
       po::value<std::string>()->default_value("propagation-material"),
       "Propagation material collection.")(
-      "prop-ntests", po::value<size_t>()->default_value(1000),
+      "prop-ntests", po::value<std::size_t>()->default_value(1000),
       "Number of tests performed.")("prop-resolve-material",
                                     po::value<bool>()->default_value(true),
                                     "Resolve all smaterial surfaces.")(
@@ -109,7 +109,7 @@ inline ActsExamples::PropagationAlgorithm::Config readPropagationConfig(
 
   /// Create the config for the Extrapoaltion algorithm
   pAlgConfig.debugOutput = vm["prop-debug"].template as<bool>();
-  pAlgConfig.ntests = vm["prop-ntests"].template as<size_t>();
+  pAlgConfig.ntests = vm["prop-ntests"].template as<std::size_t>();
   pAlgConfig.mode = vm["prop-mode"].template as<int>();
   pAlgConfig.d0Sigma = vm["prop-d0-sigma"].template as<double>() * 1_mm;
   pAlgConfig.z0Sigma = vm["prop-z0-sigma"].template as<double>() * 1_mm;
@@ -148,7 +148,7 @@ inline ActsExamples::PropagationAlgorithm::Config readPropagationConfig(
         pAlgConfig.tSigma * pAlgConfig.tSigma;
 
     // Only if they are properly defined, assign off-diagonals
-    if (vm.count("prop-corr-offd")) {
+    if (vm.count("prop-corr-offd") != 0u) {
       auto readOffd = vm["prop-corr-offd"].template as<Reals<15>>();
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
                               Acts::BoundIndices::eBoundLoc1) = readOffd[0];

@@ -60,14 +60,14 @@ namespace Details {
 ///            @c nMiddleSPs x @c nTopSPs, holding the top spacepoint
 ///            indices for the identified middle-top dublets
 /// @param[in] maxScatteringAngle2 Configuration parameter from
-///            @c Acts::SeedfinderConfig
+///            @c Acts::SeedFinderConfig
 /// @param[in] sigmaScattering Configuration parameter from
-///            @c Acts::SeedfinderConfig
+///            @c Acts::SeedFinderConfig
 /// @param[in] minHelixDiameter2 Configuration parameter from
-///            @c Acts::SeedfinderConfig
+///            @c Acts::SeedFinderConfig
 /// @param[in] pT2perRadius Configuration parameter from
-///            @c Acts::SeedfinderConfig
-/// @param[in] impactMax Configuration parameter from @c Acts::SeedfinderConfig
+///            @c Acts::SeedFinderConfig
+/// @param[in] impactMax Configuration parameter from @c Acts::SeedFinderConfig
 /// @return A 2-D structure holding the parameters of the identified triplets
 ///         for each middle spacepoint
 ///

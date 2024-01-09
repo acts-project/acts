@@ -9,8 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <climits>
+#include <utility>
 
 namespace Acts {
 

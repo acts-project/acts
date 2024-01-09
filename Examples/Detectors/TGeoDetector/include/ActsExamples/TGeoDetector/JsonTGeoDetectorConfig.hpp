@@ -43,7 +43,7 @@ void to_json(nlohmann::json& j,
                      {"geo-tgeo-disc-nr-segs", cdc.discRadialSegments}};
 }
 
-// enum specilization by nlohman library
+// enum specialization by nlohman library
 NLOHMANN_JSON_SERIALIZE_ENUM(Acts::BinningType,
                              {
                                  {Acts::BinningType::equidistant,

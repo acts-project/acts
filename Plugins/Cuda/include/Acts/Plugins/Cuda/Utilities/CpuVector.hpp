@@ -21,22 +21,22 @@ template <typename var_t>
 class CpuVector {
  public:
   CpuVector() = delete;
-  CpuVector(size_t size, bool pinned = 0) {
+  CpuVector(std::size_t size, bool pinned = false) {
     m_size = size;
     m_pinned = pinned;
-    if (pinned == 0) {
+    if (!pinned) {
       m_hostPtr = new var_t[m_size];
-    } else if (pinned == 1) {
+    } else if (pinned) {
       cudaMallocHost(&m_hostPtr, m_size * sizeof(var_t));
     }
   }
 
-  CpuVector(size_t size, CudaVector<var_t>* cuVec, bool pinned = 0) {
+  CpuVector(std::size_t size, CudaVector<var_t>* cuVec, bool pinned = false) {
     m_size = size;
     m_pinned = pinned;
-    if (pinned == 0) {
+    if (!pinned) {
       m_hostPtr = new var_t[m_size];
-    } else if (pinned == 1) {
+    } else if (pinned) {
       cudaMallocHost(&m_hostPtr, m_size * sizeof(var_t));
     }
     cudaMemcpy(m_hostPtr, cuVec->get(), m_size * sizeof(var_t),
@@ -51,16 +51,17 @@ class CpuVector {
     }
   }
 
-  var_t* get(size_t offset = 0) { return m_hostPtr + offset; }
+  var_t* get(std::size_t offset = 0) { return m_hostPtr + offset; }
 
-  void set(size_t offset, var_t val) { m_hostPtr[offset] = val; }
+  void set(std::size_t offset, var_t val) { m_hostPtr[offset] = val; }
 
-  void copyD2H(var_t* devPtr, size_t len, size_t offset) {
+  void copyD2H(var_t* devPtr, std::size_t len, std::size_t offset) {
     cudaMemcpy(m_hostPtr + offset, devPtr, len * sizeof(var_t),
                cudaMemcpyDeviceToHost);
   }
 
-  void copyD2H(var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream) {
+  void copyD2H(var_t* devPtr, std::size_t len, std::size_t offset,
+               cudaStream_t* stream) {
     cudaMemcpyAsync(m_hostPtr + offset, devPtr, len * sizeof(var_t),
                     cudaMemcpyDeviceToHost, *stream);
   }
@@ -69,7 +70,7 @@ class CpuVector {
 
  private:
   var_t* m_hostPtr = nullptr;
-  size_t m_size;
+  std::size_t m_size;
   bool m_pinned;
 };
 

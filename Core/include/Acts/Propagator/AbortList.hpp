@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Propagator/detail/abort_condition_signature_check.hpp"
 #include "Acts/Propagator/detail/abort_list_implementation.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
@@ -32,16 +31,18 @@ namespace Acts {
 template <typename... aborters_t>
 struct AbortList : public detail::Extendable<aborters_t...> {
  private:
-  static_assert(not detail::has_duplicates_v<aborters_t...>,
+  static_assert(!detail::has_duplicates_v<aborters_t...>,
                 "same aborter type specified several times");
 
   using detail::Extendable<aborters_t...>::tuple;
 
  public:
+  /// @cond
   // This uses the type collector
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::action_type_extractor, aborters_t...>,
       hana::template_<AbortList>))::type;
+  /// @endcond
 
   using detail::Extendable<aborters_t...>::get;
 
@@ -91,27 +92,26 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   }
 
   /// This is the call signature for the abort list, it broadcasts the call
-  /// to the tuple() memembers of the list
+  /// to the tuple() members of the list
   ///
-  /// @tparam result_t is the result type from a certain action
   /// @tparam propagator_state_t is the state type of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  /// @tparam result_t is the result type from a certain action
   ///
-  /// @param [in] result is the result object from a certain action
   /// @param [in,out] state is the state object from the propagator
   /// @param [in] stepper Stepper used for the propagation
-  template <typename result_t, typename propagator_state_t, typename stepper_t>
-  bool operator()(const result_t& result, propagator_state_t& state,
-                  const stepper_t& stepper) const {
-    // clang-format off
-    static_assert(detail::all_of_v<Concepts::abort_condition_signature_check_v<
-                        aborters_t,
-                        propagator_state_t, stepper_t>...>,
-                  "not all aborters support the specified input");
-    // clang-format on
-
-    return detail::abort_list_impl<aborters_t...>::check(tuple(), result, state,
-                                                         stepper);
+  /// @param [in] navigator Navigator used for the propagation
+  /// @param [in] result is the result object from a certain action
+  /// @param [in] args are the arguments to be passed to the aborters
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t, typename result_t, typename... Args>
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, const result_t& result,
+                  Args&&... args) const {
+    using impl = detail::abort_list_impl<aborters_t...>;
+    return impl::check(tuple(), state, stepper, navigator, result,
+                       std::forward<Args>(args)...);
   }
 };
 

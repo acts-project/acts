@@ -15,7 +15,7 @@ class IBaseDetector;
 /// @brief The material validation example, it runs a propagation
 /// and then writes out the material information
 ///
-/// @param argc the number of argumetns of the call
+/// @param argc the number of arguments of the call
 /// @param atgv the argument list
 /// @param detector the detector instance
 ///

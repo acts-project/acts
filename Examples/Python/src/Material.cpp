@@ -6,17 +6,34 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
+#include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
+#include <array>
+#include <map>
 #include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class TrackingGeometry;
+}  // namespace Acts
+namespace ActsExamples {
+class IAlgorithm;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -66,14 +83,27 @@ void addMaterial(Context& ctx) {
   }
 
   {
+    py::class_<MappingMaterialDecorator, Acts::IMaterialDecorator,
+               std::shared_ptr<MappingMaterialDecorator>>(
+        m, "MappingMaterialDecorator")
+        .def(py::init<const Acts::TrackingGeometry&, Acts::Logging::Level, bool,
+                      bool>(),
+             py::arg("tGeometry"), py::arg("level"),
+             py::arg("clearSurfaceMaterial") = true,
+             py::arg("clearVolumeMaterial") = true)
+        .def("binningMap", &MappingMaterialDecorator::binningMap)
+        .def("setBinningMap", &MappingMaterialDecorator::setBinningMap);
+  }
+
+  {
     using Alg = ActsExamples::MaterialMapping;
 
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "MaterialMapping")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
+    auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "MaterialMapping")
+                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def("scoringParameters", &Alg::scoringParameters)
+                   .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Alg::Config>(alg, "Config")
                  .def(py::init<const Acts::GeometryContext&,
@@ -111,6 +141,7 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(etaRange);
     ACTS_PYTHON_MEMBER(emptyBinCorrection);
     ACTS_PYTHON_MEMBER(mapperDebugOutput);
+    ACTS_PYTHON_MEMBER(computeVariance);
     ACTS_PYTHON_STRUCT_END();
   }
 

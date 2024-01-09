@@ -9,23 +9,18 @@
 #pragma once
 
 #include <system_error>
+#include <type_traits>
 
 namespace Acts {
 
 enum class GsfError {
-  // ensure all values are non-zero
-  NavigationFailed = 1,
-  ComponentNumberMismatch,
-  AllComponentsSteppingError,
-  NoComponentCreated,
-  NoStatesCreated,
-  StartParametersNotOnStartSurface,
-  PropagationEndedOnWrongSurface,
-  LastStepParamsContainNan,
-  SmoothingFailed
+  StartParametersHaveNoCovariance,
+  NoMeasurementStatesCreatedForward,
+  NoMeasurementStatesCreatedBackward,
+  NoMeasurementStatesCreatedFinal,
 };
 
-std::error_code make_error_code(Acts::GsfError e);
+std::error_code make_error_code(GsfError e);
 
 }  // namespace Acts
 

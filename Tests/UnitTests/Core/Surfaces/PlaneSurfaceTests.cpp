@@ -11,19 +11,29 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <limits>
-
-namespace tt = boost::test_tools;
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -86,14 +96,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
       binningPosition);
   //
   /// Test referenceFrame
-  Vector3 globalPosition{2.0, 2.0, 0.0};
+  Vector3 arbitraryGlobalPosition{2.0, 2.0, 2.0};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
   RotationMatrix3 expectedFrame;
   expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
-  CHECK_CLOSE_OR_SMALL(
-      planeSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
-      expectedFrame, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(planeSurfaceObject->referenceFrame(
+                           tgContext, arbitraryGlobalPosition, momentum),
+                       expectedFrame, 1e-6, 1e-9);
   //
   /// Test normal, given 3D position
   Vector3 normal3D(0., 0., 1.);
@@ -105,7 +115,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test localToGlobal
   Vector2 localPosition{1.5, 1.7};
-  globalPosition =
+  Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   //
   // expected position is the translated one
@@ -139,22 +149,23 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   /// Test isOnSurface
   Vector3 offSurface{0, 1, -2.};
   BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,
-                                              momentum, true));
-  BOOST_CHECK(
-      !planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum, true));
+                                              momentum, BoundaryCheck(true)));
+  BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
+                                               BoundaryCheck(true)));
   //
   // Test intersection
   Vector3 direction{0., 0., 1.};
   auto sfIntersection =
-      planeSurfaceObject->intersect(tgContext, offSurface, direction, true);
+      planeSurfaceObject
+          ->intersect(tgContext, offSurface, direction, BoundaryCheck(true))
+          .closest();
   Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    Intersection3D::Status::reachable};
-  BOOST_CHECK(bool(sfIntersection));
-  BOOST_CHECK_EQUAL(sfIntersection.intersection.position,
-                    expectedIntersect.position);
-  BOOST_CHECK_EQUAL(sfIntersection.intersection.pathLength,
-                    expectedIntersect.pathLength);
-  BOOST_CHECK_EQUAL(sfIntersection.object, planeSurfaceObject.get());
+  BOOST_CHECK(sfIntersection);
+  BOOST_CHECK_EQUAL(sfIntersection.position(), expectedIntersect.position());
+  BOOST_CHECK_EQUAL(sfIntersection.pathLength(),
+                    expectedIntersect.pathLength());
+  BOOST_CHECK_EQUAL(sfIntersection.object(), planeSurfaceObject.get());
   //
 
   /// Test pathCorrection
@@ -228,7 +239,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   CHECK_CLOSE_ABS(planeExtent.min(binY), yPs, s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(planeExtent.max(binY), yPs, s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(planeExtent.min(binR), yPs, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binR), std::sqrt(yPs * yPs + rHy * rHy),
+  CHECK_CLOSE_ABS(planeExtent.max(binR), std::hypot(yPs, rHy),
                   s_onSurfaceTolerance);
 
   // Now rotate

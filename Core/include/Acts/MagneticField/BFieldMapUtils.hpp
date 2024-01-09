@@ -10,17 +10,18 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
+#include <cstddef>
 #include <functional>
 #include <utility>
 #include <vector>
 
-/// Convenience functions to ease creation of and Acts::InterpolatedBFieldMap
-/// and to avoid code duplication. Currently implemented for the two most common
-/// formats: rz and xyz.
+// Convenience functions to ease creation of and Acts::InterpolatedBFieldMap
+// and to avoid code duplication. Currently implemented for the two most common
+// formats: rz and xyz.
 
 namespace Acts {
 
@@ -44,7 +45,7 @@ class SolenoidBField;
 ///
 /// In this case the function would look like:
 /// @code
-/// [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
+/// [](std::array<std::size_t, 2> binsRZ, std::array<std::size_t, 2> nBinsRZ) {
 ///    return (binsRZ.at(0) * nBinsRZ.at(1) + binsRZ.at(1));
 /// }
 /// @endcode
@@ -61,16 +62,17 @@ class SolenoidBField;
 /// @param[in] lengthUnit The unit of the grid points
 /// @param[in] BFieldUnit The unit of the magnetic field
 /// @param[in] firstQuadrant Flag if set to true indicating that only the first
-/// quadrant of the grid points and the BField values has been given and that
-/// the BFieldMap should be created symmetrically for all quadrants.
-/// e.g. we have the grid values r={0,1} with BFieldValues={2,3} on the r axis.
-/// If the flag is set to true the r-axis grid values will be set to {-1,0,1}
-/// and the BFieldValues will be set to {3,2,3}.
+/// quadrant of the grid points and the BField values has been given.
+/// @note If @p firstQuadrant is true will create a field that is symmetric for all quadrants.
+///       e.g. we have the grid values r={0,1} with BFieldValues={2,3} on the r
+///       axis. If the flag is set to true the r-axis grid values will be set to
+///       {-1,0,1} and the BFieldValues will be set to {3,2,3}.
+/// @return A field map instance for use in interpolation.
 Acts::InterpolatedBFieldMap<
-    Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                       Acts::detail::EquidistantAxis>>
-fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                      std::array<size_t, 2> nBinsRZ)>&
+    Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+               Acts::detail::EquidistantAxis>>
+fieldMapRZ(const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
+                                           std::array<std::size_t, 2> nBinsRZ)>&
                localToGlobalBin,
            std::vector<double> rPos, std::vector<double> zPos,
            std::vector<Acts::Vector2> bField,
@@ -79,7 +81,7 @@ fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 
 /// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
-/// global bin of the map magnetic field value
+///                         global bin of the map magnetic field value
 ///
 /// e.g.: we have small grid with the
 /// values: x={2,3}, y={3,4}, z ={4,5}, the corresponding indices are i
@@ -100,43 +102,43 @@ fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 ///
 /// In this case the function would look like:
 /// @code
-/// [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
+/// [](std::array<std::size_t, 3> binsXYZ, std::array<std::size_t, 3> nBinsXYZ)
+/// {
 ///   return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2))
 ///        + binsXYZ.at(1) * nBinsXYZ.at(2)
 ///        + binsXYZ.at(2));
 /// }
 /// @endcode
+/// @note The grid point values @p xPos, @p yPos and @p zPos do not need to be
+///       sorted or unique (this will be done inside the function)
 /// @param[in] xPos Values of the grid points in x
-/// @note The values do not need to be sorted or unique (this will be done
-/// inside the function)
 /// @param[in] yPos Values of the grid points in y
-/// @note The values do not need to be sorted or unique (this will be done
-/// inside the function)
 /// @param[in] zPos Values of the grid points in z
-/// @note The values do not need to be sorted or unique (this will be done
-/// inside the function)
 /// @param[in] bField The magnetic field values inr r and z for all given grid
-/// points stored in a vector
-/// @note The function localToGlobalBin determines how the magnetic field was
-/// stored in the vector in respect to the grid values
+///                   points stored in a vector
+/// @note The function @p localToGlobalBin determines how the magnetic field was
+///       stored in the vector in respect to the grid values
 /// @param[in] lengthUnit The unit of the grid points
 /// @param[in] BFieldUnit The unit of the magnetic field
 /// @param[in] firstOctant Flag if set to true indicating that only the first
-/// octant of the grid points and the BField values has been given and that
-/// the BFieldMap should be created symmetrically for all quadrants.
-/// e.g. we have the grid values z={0,1} with BFieldValues={2,3} on the r axis.
-/// If the flag is set to true the z-axis grid values will be set to {-1,0,1}
-/// and the BFieldValues will be set to {3,2,3}.
-Acts::InterpolatedBFieldMap<Acts::detail::Grid<
-    Acts::Vector3, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
-    Acts::detail::EquidistantAxis>>
-fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                                       std::array<size_t, 3> nBinsXYZ)>&
-                localToGlobalBin,
-            std::vector<double> xPos, std::vector<double> yPos,
-            std::vector<double> zPos, std::vector<Acts::Vector3> bField,
-            double lengthUnit = UnitConstants::mm,
-            double BFieldUnit = UnitConstants::T, bool firstOctant = false);
+/// octant of the grid points and the BField values has been given.
+/// @note If @p firstOctant is true, the function will assume a symmetrical
+///       field for all quadrants.  e.g. we have the grid values z={0,1} with
+///       BFieldValues={2,3} on the r axis.  If the flag is set to true the
+///       z-axis grid values will be set to {-1,0,1} and the BFieldValues will
+///       be set to {3,2,3}.
+/// @return A field map instance for use in interpolation.
+Acts::InterpolatedBFieldMap<
+    Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
+               Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
+fieldMapXYZ(
+    const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
+                                    std::array<std::size_t, 3> nBinsXYZ)>&
+        localToGlobalBin,
+    std::vector<double> xPos, std::vector<double> yPos,
+    std::vector<double> zPos, std::vector<Acts::Vector3> bField,
+    double lengthUnit = UnitConstants::mm, double BFieldUnit = UnitConstants::T,
+    bool firstOctant = false);
 
 /// Function which takes an existing SolenoidBField instance and
 /// creates a field mapper by sampling grid points from the analytical
@@ -147,11 +149,12 @@ fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
 /// @param nbins pair of bin counts
 /// @param field the solenoid field instance
 ///
-/// @return A field mapper instance for use in interpolation.
+/// @return A field map instance for use in interpolation.
 Acts::InterpolatedBFieldMap<
-    Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                       Acts::detail::EquidistantAxis>>
+    Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+               Acts::detail::EquidistantAxis>>
 solenoidFieldMap(std::pair<double, double> rlim, std::pair<double, double> zlim,
-                 std::pair<size_t, size_t> nbins, const SolenoidBField& field);
+                 std::pair<std::size_t, std::size_t> nbins,
+                 const SolenoidBField& field);
 
 }  // namespace Acts

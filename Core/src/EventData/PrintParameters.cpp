@@ -8,12 +8,14 @@
 
 #include "Acts/EventData/detail/PrintParameters.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <array>
 #include <cstddef>
 #include <iomanip>
 #include <ostream>
+#include <string>
 
 namespace {
 
@@ -164,8 +166,8 @@ using CovarianceMap = Eigen::Map<const Acts::ActsDynamicMatrix>;
 void Acts::detail::printBoundParameters(std::ostream& os,
                                         const Acts::Surface& surface,
                                         const Acts::BoundVector& params,
-                                        const Acts::BoundSymMatrix* cov) {
-  if (cov) {
+                                        const Acts::BoundSquareMatrix* cov) {
+  if (cov != nullptr) {
     printParametersCovariance(os, makeBoundNames(), kMonotonic, params, *cov);
   } else {
     printParameters(os, makeBoundNames(), kMonotonic, params);
@@ -177,7 +179,7 @@ void Acts::detail::printBoundParameters(std::ostream& os,
 void Acts::detail::printFreeParameters(std::ostream& os,
                                        const Acts::FreeVector& params,
                                        const Acts::FreeMatrix* cov) {
-  if (cov) {
+  if (cov != nullptr) {
     printParametersCovariance(os, makeFreeNames(), kMonotonic, params, *cov);
   } else {
     printParameters(os, makeFreeNames(), kMonotonic, params);

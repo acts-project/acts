@@ -40,6 +40,7 @@ At the time of writing, there are two aspects to the ACTS examples:
 .. toctree::
    :maxdepth: 2
 
-   howto/howto
-   Analysis Apps <analysis_apps>
    Python bindings <python_bindings>
+   OpenDataDetector full chain <full_chain_odd>
+   alignment
+   How-to guides <howto/howto>

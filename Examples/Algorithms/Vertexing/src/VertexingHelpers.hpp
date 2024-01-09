@@ -11,7 +11,11 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 
+#include <memory>
 #include <vector>
 
 namespace ActsExamples {
@@ -42,20 +46,23 @@ makeTrackParametersPointerContainer(
 /// elements in the given input track parameters container. If that is not the
 /// case the behaviour is undefined.
 inline ProtoVertexContainer makeProtoVertices(
-    const TrackParametersContainer& trackParameters,
+    const std::vector<const Acts::BoundTrackParameters*>& trackParameters,
     const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
   ProtoVertexContainer protoVertices;
   protoVertices.reserve(vertices.size());
 
-  // use pointer arithmetic to compute the position/index of the original
-  // parameters in the input track parameters container.
-  const Acts::BoundTrackParameters* first = trackParameters.data();
   for (const auto& vertex : vertices) {
     ProtoVertex protoVertex;
     protoVertex.reserve(vertex.tracks().size());
 
     for (const auto& track : vertex.tracks()) {
-      protoVertex.push_back(std::distance(first, track.originalParams));
+      auto it = std::find(trackParameters.begin(), trackParameters.end(),
+                          track.originalParams);
+      if (it != trackParameters.end()) {
+        protoVertex.push_back(std::distance(trackParameters.begin(), it));
+      } else {
+        protoVertex.push_back(-1);
+      }
     }
     protoVertices.push_back(std::move(protoVertex));
   }

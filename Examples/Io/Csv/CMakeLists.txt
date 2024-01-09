@@ -1,9 +1,9 @@
+include(ActsTargetLinkLibrariesSystem)
+
 add_library(
   ActsExamplesIoCsv SHARED
   src/CsvMeasurementReader.cpp
   src/CsvMeasurementWriter.cpp
-  src/CsvOptionsReader.cpp
-  src/CsvOptionsWriter.cpp
   src/CsvParticleReader.cpp
   src/CsvParticleWriter.cpp
   src/CsvPlanarClusterReader.cpp
@@ -12,8 +12,14 @@ add_library(
   src/CsvSimHitWriter.cpp
   src/CsvSpacePointReader.cpp
   src/CsvTrackingGeometryWriter.cpp
-  src/CsvMultiTrajectoryWriter.cpp 
-  src/CsvSpacepointWriter.cpp)
+  src/CsvTrackParameterReader.cpp
+  src/CsvTrackParameterWriter.cpp
+  src/CsvSeedWriter.cpp 
+  src/CsvTrackWriter.cpp 
+  src/CsvProtoTrackWriter.cpp
+  src/CsvSpacePointWriter.cpp
+  src/CsvExaTrkXGraphWriter.cpp
+  src/CsvBFieldWriter.cpp)
 target_include_directories(
   ActsExamplesIoCsv
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -22,7 +28,10 @@ target_link_libraries(
   PRIVATE
     ActsCore ActsPluginIdentification
     ActsExamplesFramework ActsExamplesDigitization
-    Threads::Threads Boost::program_options dfelibs)
+    Threads::Threads)
+acts_target_link_libraries_system(
+  ActsExamplesIoCsv
+  PRIVATE dfelibs)
 
 install(
   TARGETS ActsExamplesIoCsv

@@ -7,17 +7,29 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackModifier.hpp"
+#include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
+#include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/Utilities/HitSelector.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
+#include <array>
+#include <cstddef>
 #include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace ActsExamples {
+class IAlgorithm;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -29,30 +41,15 @@ namespace Acts::Python {
 void addTruthTracking(Context& ctx) {
   auto mex = ctx.get("examples");
 
-  {
-    using Alg = ActsExamples::TruthTrackFinder;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TruthTrackFinder")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
-    ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TruthTrackFinder, mex, "TruthTrackFinder", inputParticles,
+      inputMeasurementParticlesMap, outputProtoTracks);
 
   {
     using Alg = ActsExamples::TruthSeedSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TruthSeedSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -90,41 +87,17 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "nHits", &Config::nHitsMin, &Config::nHitsMax);
   }
 
-  {
-    using Alg = ActsExamples::ParticleSmearing;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "ParticleSmearing")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(sigmaD0);
-    ACTS_PYTHON_MEMBER(sigmaD0PtA);
-    ACTS_PYTHON_MEMBER(sigmaD0PtB);
-    ACTS_PYTHON_MEMBER(sigmaZ0);
-    ACTS_PYTHON_MEMBER(sigmaZ0PtA);
-    ACTS_PYTHON_MEMBER(sigmaZ0PtB);
-    ACTS_PYTHON_MEMBER(sigmaT0);
-    ACTS_PYTHON_MEMBER(sigmaPhi);
-    ACTS_PYTHON_MEMBER(sigmaTheta);
-    ACTS_PYTHON_MEMBER(sigmaPRel);
-    ACTS_PYTHON_MEMBER(initialVarInflation);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
+      outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
+      sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPRel,
+      initialSigmas, initialVarInflation, particleHypothesis, randomNumbers);
 
   {
     using Alg = ActsExamples::ParticleSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "ParticleSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -134,6 +107,7 @@ void addTruthTracking(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
+    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(rhoMin);
     ACTS_PYTHON_MEMBER(rhoMax);
@@ -147,10 +121,15 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(etaMax);
     ACTS_PYTHON_MEMBER(absEtaMin);
     ACTS_PYTHON_MEMBER(absEtaMax);
+    ACTS_PYTHON_MEMBER(mMin);
+    ACTS_PYTHON_MEMBER(mMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(measurementsMin);
+    ACTS_PYTHON_MEMBER(measurementsMax);
     ACTS_PYTHON_MEMBER(removeCharged);
     ACTS_PYTHON_MEMBER(removeNeutral);
+    ACTS_PYTHON_MEMBER(removeSecondaries);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
@@ -159,15 +138,18 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "phi", &Config::phiMin, &Config::phiMax);
     pythonRangeProperty(c, "eta", &Config::etaMin, &Config::etaMax);
     pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
+    pythonRangeProperty(c, "m", &Config::mMin, &Config::mMax);
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
+    pythonRangeProperty(c, "measurements", &Config::measurementsMin,
+                        &Config::measurementsMax);
   }
 
   {
-    using Alg = ActsExamples::TrackSelector;
+    using Alg = ActsExamples::TrackParameterSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackSelector")
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "TrackParameterSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Alg::config);
@@ -177,7 +159,6 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputTrackParameters);
     ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrackIndices);
     ACTS_PYTHON_MEMBER(loc0Min);
     ACTS_PYTHON_MEMBER(loc0Max);
     ACTS_PYTHON_MEMBER(loc1Min);
@@ -192,8 +173,6 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(absEtaMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
-    ACTS_PYTHON_MEMBER(removeCharged);
-    ACTS_PYTHON_MEMBER(removeNeutral);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
@@ -205,25 +184,21 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
   }
 
-  {
-    using Alg = ActsExamples::TruthVertexFinder;
-    using Config = Alg::Config;
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputParticles,
+      outputProtoVertices, excludeSecondaries, separateSecondaries);
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TruthVertexFinder")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackModifier, mex,
+                                "TrackModifier", inputTracks, outputTracks,
+                                dropCovariance, covScale, killTime);
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
+      inputParticles, inputMeasurementParticlesMap, inputSpacePoints,
+      outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(outputProtoVertices);
-    ACTS_PYTHON_MEMBER(excludeSecondaries);
-    ACTS_PYTHON_MEMBER(separateSecondaries);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
+                                inputHits, outputHits, maxTime);
 }
 
 }  // namespace Acts::Python

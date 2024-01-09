@@ -24,7 +24,7 @@
 //
 // Test failures are reported in detail, from the floating-point comparison
 // that failed (and the reason why it failed) to the context in which the
-// failure occured (container contents if applicable, source file & line...).
+// failure occurred (container contents if applicable, source file & line...).
 
 // Check if "val" and "ref" are within relative tolerance "tol" of each other.
 #define CHECK_CLOSE_REL(val, ref, reltol) \
@@ -142,7 +142,7 @@ predicate_result matrixCompare(const Eigen::DenseBase<Derived1>& val,
     for (int row = 0; row < val.rows(); ++row) {
       predicate_result res = compareImpl(val(row, col), ref(row, col));
       if (!res) {
-        res.message() << " The failure occured during a matrix comparison,"
+        res.message() << " The failure occurred during a matrix comparison,"
                       << " at index (" << row << ", " << col << ")."
                       << " The value was\n"
                       << val << '\n'
@@ -177,8 +177,8 @@ predicate_result compare(const Container& val, const Container& ref,
                          ScalarComparison&& compareImpl) {
   // Make sure that the two input containers have the same number of items
   // (in order to provide better error reporting when they don't)
-  size_t numVals = std::distance(std::cbegin(val), std::cend(val));
-  size_t numRefs = std::distance(std::cbegin(ref), std::cend(ref));
+  std::size_t numVals = std::distance(std::cbegin(val), std::cend(val));
+  std::size_t numRefs = std::distance(std::cbegin(ref), std::cend(ref));
   if (numVals != numRefs) {
     predicate_result res(false);
     res.message() << "The container size does not match (value has " << numVals
@@ -196,7 +196,7 @@ predicate_result compare(const Container& val, const Container& ref,
     predicate_result res = compareImpl(*valIter, *refIter);
     if (!res) {
       // If content comparison failed, report the container's contents
-      res.message() << " The failure occured during a container comparison,"
+      res.message() << " The failure occurred during a container comparison,"
                     << " at index " << std::distance(valBeg, valIter) << '.'
                     << " The value contained {";
       for (const auto& item : val) {
@@ -296,8 +296,8 @@ boost::test_tools::predicate_result checkCloseCovariance(
                       << val(row, col) << " and its reference " << ref(row, col)
                       << ","
                       << " at index (" << row << ", " << col << "),"
-                      << " is not within tolerance " << tol << '.'
-                      << " The covariance matrix being tested was\n"
+                      << " is not within tolerance " << tol * orderOfMagnitude
+                      << '.' << " The covariance matrix being tested was\n"
                       << val << '\n'
                       << "and the reference covariance matrix was\n"
                       << ref << '\n';

@@ -12,21 +12,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
-#include <limits>
+#include <vector>
 
 #include <Eigen/Geometry>
 
-namespace utf = boost::unit_test;
-
 namespace Acts {
-
 namespace detail {
-
 namespace Test {
-
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
@@ -58,7 +52,6 @@ BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
 }  // namespace detail
 }  // namespace Acts

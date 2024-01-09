@@ -28,8 +28,6 @@ std::ostream& operator<<(std::ostream& os, TrackStatePropMask mask) {
        << "] smoothed";
     os << "\n  [" << (ACTS_CHECK_BIT(mask, PM::Jacobian) ? "x" : " ")
        << "] jacobian";
-    os << "\n  [" << (ACTS_CHECK_BIT(mask, PM::Uncalibrated) ? "x" : " ")
-       << "] uncalibrated";
     os << "\n  [" << (ACTS_CHECK_BIT(mask, PM::Calibrated) ? "x" : " ")
        << "] calibrated";
     os << "\n";

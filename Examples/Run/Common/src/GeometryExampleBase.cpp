@@ -11,13 +11,13 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
-#include "ActsExamples/Io/Json/JsonOptionsWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CsvOptionsWriter.hpp"
+#include "ActsExamples/Options/JsonOptionsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjWriterOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -55,7 +55,7 @@ int processGeometry(int argc, char* argv[],
 
   // Now read the standard options
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
-  size_t nEvents =
+  std::size_t nEvents =
       ActsExamples::Options::readSequencerConfig(vm).events.value_or(1);
 
   // The geometry, material and decoration
@@ -65,25 +65,26 @@ int processGeometry(int argc, char* argv[],
 
   // The detectors
   auto volumeLogLevel =
-      Acts::Logging::Level(vm["geo-volume-loglevel"].as<size_t>());
+      Acts::Logging::Level(vm["geo-volume-loglevel"].as<std::size_t>());
 
-  for (size_t ievt = 0; ievt < nEvents; ++ievt) {
+  for (std::size_t ievt = 0; ievt < nEvents; ++ievt) {
     // Setup the event and algorithm context
     ActsExamples::WhiteBoard eventStore(
         Acts::getDefaultLogger("EventStore#" + std::to_string(ievt), logLevel));
-    size_t ialg = 0;
+    std::size_t ialg = 0;
 
     // The geometry context
     ActsExamples::AlgorithmContext context(ialg, ievt, eventStore);
 
     /// Decorate the context
     for (auto& cdr : contextDecorators) {
-      if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS)
+      if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS) {
         throw std::runtime_error("Failed to decorate event context");
+      }
     }
 
     std::string geoContextStr = "";
-    if (contextDecorators.size() > 0) {
+    if (!contextDecorators.empty()) {
       // We need indeed a context object
       if (nEvents > 1) {
         geoContextStr = "_geoContext" + std::to_string(ievt);
@@ -179,8 +180,7 @@ int processGeometry(int argc, char* argv[],
       }
       jmWriterCfg.writeFormat = format;
 
-      ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg),
-                                               logLevel);
+      ActsExamples::JsonMaterialWriter jmwImpl(jmWriterCfg, logLevel);
 
       jmwImpl.write(*tGeometry);
     }

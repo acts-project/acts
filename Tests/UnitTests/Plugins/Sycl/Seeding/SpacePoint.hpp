@@ -20,7 +20,7 @@ struct SpacePoint {
         m_x(p_x),
         m_y(p_y),
         m_z(p_z),
-        m_r(p_r){};
+        m_r(p_r) {}
 
   float x() const { return m_x; }
   float y() const { return m_y; }

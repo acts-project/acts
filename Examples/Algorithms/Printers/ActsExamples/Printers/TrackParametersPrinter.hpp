@@ -8,14 +8,20 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Print track parameters.
-class TrackParametersPrinter : public BareAlgorithm {
+class TrackParametersPrinter : public IAlgorithm {
  public:
   struct Config {
     /// Input tracks parameters collection.
@@ -24,10 +30,15 @@ class TrackParametersPrinter : public BareAlgorithm {
 
   TrackParametersPrinter(const Config& cfg, Acts::Logging::Level level);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 };
 
 }  // namespace ActsExamples

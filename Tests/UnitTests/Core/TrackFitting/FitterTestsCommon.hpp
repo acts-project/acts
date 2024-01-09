@@ -12,6 +12,11 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -22,6 +27,9 @@
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <iterator>
 
 using namespace Acts::UnitLiterals;
 using namespace Acts::Test;
@@ -41,12 +49,15 @@ struct TestOutlierFinder {
   /// @param state The track state to classify
   /// @retval False if the measurement is not an outlier
   /// @retval True if the measurement is an outlier
-  bool operator()(Acts::MultiTrajectory::ConstTrackStateProxy state) const {
+  template <typename traj_t>
+  bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
-    if (not state.hasCalibrated() or not state.hasPredicted()) {
+    if (!state.hasCalibrated() || !state.hasPredicted()) {
       return false;
     }
-    auto residuals = state.calibrated() - state.projector() * state.predicted();
+    auto residuals = (state.effectiveCalibrated() -
+                      state.effectiveProjector() * state.predicted())
+                         .eval();
     auto distance = residuals.norm();
     return (distanceMax <= distance);
   }
@@ -62,7 +73,8 @@ struct TestReverseFilteringLogic {
   /// @param trackState The trackState of the last measurement
   /// @retval False if we don't use the reverse filtering for the smoothing of the track
   /// @retval True if we use the reverse filtering for the smoothing of the track
-  bool operator()(Acts::MultiTrajectory::ConstTrackStateProxy state) const {
+  template <typename traj_t>
+  bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
     auto momentum = fabs(1 / state.filtered()[Acts::eBoundQOverP]);
     std::cout << "momentum : " << momentum << std::endl;
@@ -72,25 +84,27 @@ struct TestReverseFilteringLogic {
 
 // Construct a straight-line propagator.
 auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
+  Acts::Navigator navigator(
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
-      std::move(stepper), std::move(navigator));
+      stepper, std::move(navigator));
 }
 
 // Construct a propagator using a constant magnetic field along z.
 template <typename stepper_t>
 auto makeConstantFieldPropagator(
     std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
+  Acts::Navigator navigator(
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
   auto field =
       std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   stepper_t stepper(std::move(field));
@@ -112,8 +126,11 @@ struct FitterTester {
   CubicTrackingGeometry geometryStore{geoCtx};
   std::shared_ptr<const Acts::TrackingGeometry> geometry = geometryStore();
 
+  Acts::detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor{
+      *geometry};
+
   // expected number of measurements for the given detector
-  constexpr static size_t nMeasurements = 6u;
+  constexpr static std::size_t nMeasurements = 6u;
 
   // detector resolutions
   MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
@@ -131,6 +148,15 @@ struct FitterTester {
   Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator> simPropagator =
       makeStraightPropagator(geometry);
 
+  static std::vector<Acts::SourceLink> prepareSourceLinks(
+      const std::vector<Acts::detail::Test::TestSourceLink>& sourceLinks) {
+    std::vector<Acts::SourceLink> result;
+    std::transform(sourceLinks.begin(), sourceLinks.end(),
+                   std::back_inserter(result),
+                   [](const auto& sl) { return Acts::SourceLink{sl}; });
+    return result;
+  }
+
   //////////////////////////
   // The testing functions
   //////////////////////////
@@ -140,28 +166,52 @@ struct FitterTester {
                                       fitter_options_t options,
                                       const parameters_t& start, Rng& rng,
                                       const bool expected_reversed,
-                                      const bool expected_smoothed) const {
+                                      const bool expected_smoothed,
+                                      const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
-    // this is the default option. set anyways for consistency
+    // this is the default option. set anyway for consistency
     options.referenceSurface = nullptr;
 
-    auto res =
-        fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
-    BOOST_REQUIRE(res.ok());
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
-    const auto& val = res.value();
-    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-    BOOST_CHECK(not val.fittedParameters);
-    BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
-    // check the output status flags
-    BOOST_CHECK(val.smoothed == expected_smoothed);
-    BOOST_CHECK(val.reversed == expected_reversed);
-    BOOST_CHECK(val.finished);
-    BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
+    auto doTest = [&](bool diag) {
+      Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                  Acts::VectorMultiTrajectory{}};
+      if (diag) {
+        tracks.addColumn<bool>("reversed");
+        tracks.addColumn<bool>("smoothed");
+
+        BOOST_CHECK(tracks.hasColumn("reversed"));
+        BOOST_CHECK(tracks.hasColumn("smoothed"));
+      }
+
+      auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                            options, tracks);
+      BOOST_REQUIRE(res.ok());
+
+      const auto track = res.value();
+      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK(!track.hasReferenceSurface());
+      BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
+      BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+      if (diag) {
+        // check the output status flags
+        BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+        BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+      }
+    };
+
+    if (doDiag) {
+      doTest(true);
+    }               // with reversed & smoothed columns
+    doTest(false);  // without the extra columns
   }
 
   template <typename fitter_t, typename fitter_options_t, typename parameters_t>
@@ -169,39 +219,52 @@ struct FitterTester {
                                         fitter_options_t options,
                                         const parameters_t& start, Rng& rng,
                                         const bool expected_reversed,
-                                        const bool expected_smoothed) const {
+                                        const bool expected_smoothed,
+                                        const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
-    // initial fitter options configured for backward filtereing mode
+    // initial fitter options configured for backward filtering mode
     // backward filtering requires a reference surface
     options.referenceSurface = &start.referenceSurface();
-    // this is the default option. set anyways for consistency
-    options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::Forward;
+    // this is the default option. set anyway for consistency
+    options.propagatorPlainOptions.direction = Acts::Direction::Forward;
 
-    auto res =
-        fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+    tracks.addColumn<bool>("reversed");
+    tracks.addColumn<bool>("smoothed");
+
+    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                          options, tracks);
     BOOST_REQUIRE(res.ok());
 
-    const auto& val = res.value();
-    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-    BOOST_CHECK(val.fittedParameters);
+    const auto& track = res.value();
+    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK(track.hasReferenceSurface());
+    BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
+    BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+    BOOST_CHECK(tracks.hasColumn("reversed"));
+    BOOST_CHECK(tracks.hasColumn("smoothed"));
+
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
+
     // check the output status flags
-    BOOST_CHECK(val.smoothed == expected_smoothed);
-    BOOST_CHECK(val.reversed == expected_reversed);
-    BOOST_CHECK(val.finished);
-    BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
-    BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
+    if (doDiag) {
+      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    }
+
     // count the number of `smoothed` states
-    if (expected_reversed) {
-      size_t nSmoothed = 0;
-      val.fittedStates.visitBackwards(val.lastMeasurementIndex,
-                                      [&nSmoothed](const auto& state) {
-                                        nSmoothed += state.hasSmoothed();
-                                      });
+    if (expected_reversed && expected_smoothed) {
+      std::size_t nSmoothed = 0;
+      for (const auto ts : track.trackStatesReversed()) {
+        nSmoothed += ts.hasSmoothed();
+      }
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
     }
   }
@@ -211,43 +274,52 @@ struct FitterTester {
                                          fitter_options_t options,
                                          const parameters_t& start, Rng& rng,
                                          const bool expected_reversed,
-                                         const bool expected_smoothed) const {
+                                         const bool expected_smoothed,
+                                         const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     // create a track near the tracker exit for outward->inward filtering
     Acts::Vector4 posOuter = start.fourPosition(geoCtx);
     posOuter[Acts::ePos0] = 3_m;
     Acts::CurvilinearTrackParameters startOuter(
-        posOuter, start.unitDirection(), start.absoluteMomentum(),
-        start.charge(), start.covariance());
+        posOuter, start.direction(), start.qOverP(), start.covariance(),
+        Acts::ParticleHypothesis::pion());
 
     options.referenceSurface = &startOuter.referenceSurface();
-    options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::Backward;
+    options.propagatorPlainOptions.direction = Acts::Direction::Backward;
 
-    auto res =
-        fitter.fit(sourceLinks.begin(), sourceLinks.end(), startOuter, options);
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+    tracks.addColumn<bool>("reversed");
+    tracks.addColumn<bool>("smoothed");
+
+    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), startOuter,
+                          options, tracks);
     BOOST_CHECK(res.ok());
 
-    const auto& val = res.value();
-    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-    BOOST_CHECK(val.fittedParameters);
-    BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
+    const auto& track = res.value();
+    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK(track.hasReferenceSurface());
+    BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
+    BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
     // check the output status flags
-    BOOST_CHECK(val.smoothed == expected_smoothed);
-    BOOST_CHECK(val.reversed == expected_reversed);
-    BOOST_CHECK(val.finished);
-    BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
+    if (doDiag) {
+      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    }
+
     // count the number of `smoothed` states
-    if (expected_reversed) {
-      size_t nSmoothed = 0;
-      val.fittedStates.visitBackwards(val.lastMeasurementIndex,
-                                      [&nSmoothed](const auto& state) {
-                                        nSmoothed += state.hasSmoothed();
-                                      });
+    if (expected_reversed && expected_smoothed) {
+      std::size_t nSmoothed = 0;
+      for (const auto ts : track.trackStatesReversed()) {
+        nSmoothed += ts.hasSmoothed();
+      }
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
     }
   }
@@ -257,10 +329,11 @@ struct FitterTester {
                                        fitter_options_t options,
                                        const parameters_t& start, Rng& rng,
                                        const bool expected_reversed,
-                                       const bool expected_smoothed) const {
+                                       const bool expected_smoothed,
+                                       const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     // create a boundless target surface near the tracker exit
@@ -271,71 +344,92 @@ struct FitterTester {
 
     options.referenceSurface = targetSurface.get();
 
-    auto res =
-        fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+    tracks.addColumn<bool>("reversed");
+    tracks.addColumn<bool>("smoothed");
+
+    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                          options, tracks);
     BOOST_REQUIRE(res.ok());
 
-    const auto& val = res.value();
-    BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-    BOOST_CHECK(val.fittedParameters);
-    BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
+    const auto& track = res.value();
+    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK(track.hasReferenceSurface());
+    BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
+    BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
+
     // check the output status flags
-    BOOST_CHECK(val.smoothed == expected_smoothed);
-    BOOST_CHECK(val.reversed == expected_reversed);
-    BOOST_CHECK(val.finished);
-    BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
+    if (doDiag) {
+      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    }
   }
 
   template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldShuffled(const fitter_t& fitter, fitter_options_t options,
                               const parameters_t& start, Rng& rng,
                               const bool expected_reversed,
-                              const bool expected_smoothed) const {
+                              const bool expected_smoothed,
+                              const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     options.referenceSurface = &start.referenceSurface();
 
     Acts::BoundVector parameters = Acts::BoundVector::Zero();
 
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+    tracks.addColumn<bool>("reversed");
+    tracks.addColumn<bool>("smoothed");
+
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
+
     // fit w/ all hits in order
     {
-      auto res =
-          fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
+      auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                            options, tracks);
       BOOST_REQUIRE(res.ok());
 
-      const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-      BOOST_REQUIRE(val.fittedParameters);
-      parameters = val.fittedParameters->parameters();
-      BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
+      const auto& track = res.value();
+      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
+      BOOST_REQUIRE(track.hasReferenceSurface());
+      parameters = track.parameters();
+      BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
       // check the output status flags
-      BOOST_CHECK(val.smoothed == expected_smoothed);
-      BOOST_CHECK(val.reversed == expected_reversed);
-      BOOST_CHECK(val.finished);
-      BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
+      if (doDiag) {
+        BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+        BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      }
     }
     // fit w/ all hits in random order
     {
-      auto shuffledSourceLinks = sourceLinks;
+      decltype(sourceLinks) shuffledSourceLinks = sourceLinks;
       std::shuffle(shuffledSourceLinks.begin(), shuffledSourceLinks.end(), rng);
       auto res = fitter.fit(shuffledSourceLinks.begin(),
-                            shuffledSourceLinks.end(), start, options);
+                            shuffledSourceLinks.end(), start, options, tracks);
       BOOST_REQUIRE(res.ok());
 
-      const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-      BOOST_REQUIRE(val.fittedParameters);
+      const auto& track = res.value();
+      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_REQUIRE(track.hasReferenceSurface());
       // check consistency w/ un-shuffled measurements
-      CHECK_CLOSE_ABS(val.fittedParameters->parameters(), parameters, 1e-5);
-      BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
+      CHECK_CLOSE_ABS(track.parameters(), parameters, 1e-5);
+      BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
       // check the output status flags
-      BOOST_CHECK(val.smoothed == expected_smoothed);
-      BOOST_CHECK(val.reversed == expected_reversed);
-      BOOST_CHECK(val.finished);
-      BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
+      if (doDiag) {
+        BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+        BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      }
     }
   }
 
@@ -343,34 +437,46 @@ struct FitterTester {
   void test_ZeroFieldWithHole(const fitter_t& fitter, fitter_options_t options,
                               const parameters_t& start, Rng& rng,
                               const bool expected_reversed,
-                              const bool expected_smoothed) const {
+                              const bool expected_smoothed,
+                              const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
+
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+    tracks.addColumn<bool>("reversed");
+    tracks.addColumn<bool>("smoothed");
+
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
     // always keep the first and last measurement. leaving those in seems to not
     // count the respective surfaces as holes.
-    for (size_t i = 1u; (i + 1u) < sourceLinks.size(); ++i) {
+    for (std::size_t i = 1u; (i + 1u) < sourceLinks.size(); ++i) {
       // remove the i-th measurement
       auto withHole = sourceLinks;
       withHole.erase(std::next(withHole.begin(), i));
       BOOST_REQUIRE_EQUAL(withHole.size() + 1u, sourceLinks.size());
       BOOST_TEST_INFO("Removed measurement " << i);
 
-      auto res = fitter.fit(withHole.begin(), withHole.end(), start, options);
+      auto res =
+          fitter.fit(withHole.begin(), withHole.end(), start, options, tracks);
       BOOST_REQUIRE(res.ok());
 
-      const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
-      BOOST_CHECK(not val.fittedParameters);
-      BOOST_CHECK_EQUAL(val.measurementStates, withHole.size());
+      const auto& track = res.value();
+      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+      BOOST_REQUIRE(!track.hasReferenceSurface());
+      BOOST_CHECK_EQUAL(track.nMeasurements(), withHole.size());
       // check the output status flags
-      BOOST_CHECK(val.smoothed == expected_smoothed);
-      BOOST_CHECK(val.reversed == expected_reversed);
-      BOOST_CHECK(val.finished);
-      BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 1u);
+      if (doDiag) {
+        BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+        BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      }
+      BOOST_CHECK_EQUAL(track.nHoles(), 1u);
     }
+    BOOST_CHECK_EQUAL(tracks.size(), sourceLinks.size() - 2);
   }
 
   template <typename fitter_t, typename fitter_options_t, typename parameters_t>
@@ -378,43 +484,53 @@ struct FitterTester {
                                   fitter_options_t options,
                                   const parameters_t& start, Rng& rng,
                                   const bool expected_reversed,
-                                  const bool expected_smoothed) const {
+                                  const bool expected_smoothed,
+                                  const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
-    const auto& outlierSourceLinks = measurements.outlierSourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+    auto outlierSourceLinks =
+        prepareSourceLinks(measurements.outlierSourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
     BOOST_REQUIRE_EQUAL(outlierSourceLinks.size(), nMeasurements);
 
-    for (size_t i = 0; i < sourceLinks.size(); ++i) {
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+    tracks.addColumn<bool>("reversed");
+    tracks.addColumn<bool>("smoothed");
+
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
+
+    for (std::size_t i = 0; i < sourceLinks.size(); ++i) {
       // replace the i-th measurement with an outlier
       auto withOutlier = sourceLinks;
       withOutlier[i] = outlierSourceLinks[i];
       BOOST_REQUIRE_EQUAL(withOutlier.size(), sourceLinks.size());
       BOOST_TEST_INFO("Replaced measurement " << i << " with outlier");
 
-      auto res =
-          fitter.fit(withOutlier.begin(), withOutlier.end(), start, options);
+      auto res = fitter.fit(withOutlier.begin(), withOutlier.end(), start,
+                            options, tracks);
       BOOST_REQUIRE(res.ok());
 
-      const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
+      const auto& track = res.value();
+      BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
       // count the number of outliers
-      size_t nOutliers = 0;
-      val.fittedStates.visitBackwards(
-          val.lastMeasurementIndex, [&nOutliers](const auto& state) {
-            nOutliers +=
-                state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
-          });
+      std::size_t nOutliers = 0;
+      for (const auto state : track.trackStatesReversed()) {
+        nOutliers += state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+      }
       BOOST_CHECK_EQUAL(nOutliers, 1u);
-      BOOST_CHECK(not val.fittedParameters);
-      BOOST_CHECK_EQUAL(val.measurementStates, withOutlier.size() - 1u);
+      BOOST_REQUIRE(!track.hasReferenceSurface());
+      BOOST_CHECK_EQUAL(track.nMeasurements(), withOutlier.size() - 1u);
       // check the output status flags
-      BOOST_CHECK(val.smoothed == expected_smoothed);
-      BOOST_CHECK(val.reversed == expected_reversed);
-      BOOST_CHECK(val.finished);
-      BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
+      if (doDiag) {
+        BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+        BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      }
+      BOOST_CHECK_EQUAL(track.nHoles(), 0u);
     }
+    BOOST_CHECK_EQUAL(tracks.size(), sourceLinks.size());
   }
 
   template <typename fitter_t, typename fitter_options_t, typename parameters_t>
@@ -422,31 +538,44 @@ struct FitterTester {
                                           fitter_options_t options,
                                           const parameters_t& start, Rng& rng,
                                           const bool expected_reversed,
-                                          const bool expected_smoothed) const {
+                                          const bool expected_smoothed,
+                                          const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+    tracks.addColumn<bool>("reversed");
+    tracks.addColumn<bool>("smoothed");
+
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
+
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+
     const auto& outlierSourceLinks = measurements.outlierSourceLinks;
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
     BOOST_REQUIRE_EQUAL(outlierSourceLinks.size(), nMeasurements);
-    // create a boundless target surface near the tracker exit
-    Acts::Vector3 center(3._m, 0., 0.);
+
+    // create a boundless target surface near the tracker entry
+    Acts::Vector3 center(-3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
     auto targetSurface =
         Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
 
     options.referenceSurface = targetSurface.get();
 
-    auto res =
-        fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
+    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                          options, tracks);
     BOOST_REQUIRE(res.ok());
-    const auto& val = res.value();
+    const auto& track = res.value();
 
     // Track of 1 GeV with a threshold set at 0.1 GeV, reversed filtering should
     // not be used
-    BOOST_CHECK(val.smoothed == expected_smoothed);
-    BOOST_CHECK(val.reversed == expected_reversed);
-    BOOST_CHECK(val.finished);
+    if (doDiag) {
+      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    }
   }
 
   // TODO this is not really Kalman fitter specific. is probably better tested
@@ -456,27 +585,30 @@ struct FitterTester {
                              const parameters_t& start, Rng& rng) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
-    auto res =
-        fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+
+    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                          options, tracks);
     BOOST_REQUIRE(res.ok());
 
     // Calculate global track parameters covariance matrix
-    const auto& val = res.value();
+    const auto& track = res.value();
     auto [trackParamsCov, stateRowIndices] =
-        Acts::detail::globalTrackParametersCovariance(val.fittedStates,
-                                                      val.lastMeasurementIndex);
+        Acts::detail::globalTrackParametersCovariance(
+            tracks.trackStateContainer(), track.tipIndex());
     BOOST_CHECK_EQUAL(trackParamsCov.rows(),
                       sourceLinks.size() * Acts::eBoundSize);
     BOOST_CHECK_EQUAL(stateRowIndices.size(), sourceLinks.size());
     // Each smoothed track state will have eBoundSize rows/cols in the global
     // covariance. stateRowIndices is a map of the starting row/index with the
     // state tip as the key. Thus, the last track state (i.e. the state
-    // corresponding val.lastMeasurementIndex) has a starting row/index =
+    // corresponding track.tipIndex()) has a starting row/index =
     // eBoundSize * (nMeasurements - 1), i.e. 6*(6-1) = 30.
-    BOOST_CHECK_EQUAL(stateRowIndices.at(val.lastMeasurementIndex),
+    BOOST_CHECK_EQUAL(stateRowIndices.at(track.tipIndex()),
                       Acts::eBoundSize * (nMeasurements - 1));
   }
 };

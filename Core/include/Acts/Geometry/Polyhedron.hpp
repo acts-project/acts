@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Extent.hpp"
 
+#include <cstddef>
 #include <vector>
 
 namespace Acts {
@@ -25,7 +26,7 @@ namespace Acts {
 /// that need to be connected to form a face.
 /// This allows the @c objString method to produce a ready-to-go obj output.
 struct Polyhedron {
-  using FaceType = std::vector<size_t>;
+  using FaceType = std::vector<std::size_t>;
 
   /// Default constructor
   Polyhedron() = default;

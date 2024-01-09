@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include <Acts/Utilities/Logger.hpp>
@@ -41,7 +42,7 @@ constexpr float NaNint = std::numeric_limits<int>::quiet_NaN();
 /// implement the type-specific write method.
 ///
 /// Default no-op implementations for `initialize` and `finalize` are provided
-/// but can be overriden by the user.
+/// but can be overridden by the user.
 template <typename write_data_t>
 class WriterT : public IWriter {
  public:
@@ -52,20 +53,20 @@ class WriterT : public IWriter {
           Acts::Logging::Level level);
 
   /// Provide the name of the writer
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Read the object and call the type-specific member function.
-  ProcessCode write(const AlgorithmContext& context) final override;
+  ProcessCode write(const AlgorithmContext& context) override;
 
   /// No-op default implementation.
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
  protected:
   /// Type-specific write function implementation
   /// this method is implemented in the user implementation
   /// @param [in] context is the algorithm context that guarantees event
   ///        consistency
-  /// @tparam [in] is the templeted collection to be written
+  /// @tparam [in] is the templated collection to be written
   virtual ProcessCode writeT(const AlgorithmContext& context,
                              const write_data_t& t) = 0;
 
@@ -75,6 +76,8 @@ class WriterT : public IWriter {
   std::string m_objectName;
   std::string m_writerName;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  ReadDataHandle<write_data_t> m_inputHandle{this, "InputHandle"};
 };
 
 }  // namespace ActsExamples
@@ -91,6 +94,8 @@ ActsExamples::WriterT<write_data_t>::WriterT(std::string objectName,
   } else if (m_writerName.empty()) {
     throw std::invalid_argument("Missing writer name");
   }
+
+  m_inputHandle.initialize(m_objectName);
 }
 
 template <typename write_data_t>
@@ -99,12 +104,13 @@ inline std::string ActsExamples::WriterT<write_data_t>::name() const {
 }
 
 template <typename write_data_t>
-inline ActsExamples::ProcessCode ActsExamples::WriterT<write_data_t>::endRun() {
+inline ActsExamples::ProcessCode
+ActsExamples::WriterT<write_data_t>::finalize() {
   return ProcessCode::SUCCESS;
 }
 
 template <typename write_data_t>
 inline ActsExamples::ProcessCode ActsExamples::WriterT<write_data_t>::write(
     const AlgorithmContext& context) {
-  return writeT(context, context.eventStore.get<write_data_t>(m_objectName));
+  return writeT(context, m_inputHandle(context));
 }

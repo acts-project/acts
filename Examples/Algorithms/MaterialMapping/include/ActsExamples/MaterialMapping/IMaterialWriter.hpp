@@ -37,7 +37,7 @@ class IMaterialWriter {
   /// Virtual Destructor
   virtual ~IMaterialWriter() = default;
 
-  /// The single wirter class
+  /// The single writer class
   ///
   /// @param detMaterial the detector material maps
   virtual void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) = 0;

@@ -8,19 +8,26 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootParticleReader
 ///
@@ -45,19 +52,18 @@ class RootParticleReader : public IReader {
   RootParticleReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootParticleReader();
+  ~RootParticleReader() override;
 
   /// Framework name() method
-  std::string name() const final override { return "RootParticleReader"; }
+  std::string name() const override { return "RootParticleReader"; }
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(
-      const ActsExamples::AlgorithmContext& context) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -69,19 +75,27 @@ class RootParticleReader : public IReader {
   /// The config class
   Config m_cfg;
 
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
+
+  WriteDataHandle<std::vector<uint32_t>> m_outputPrimaryVertices{
+      this, "OutputPrimaryVertices"};
+  WriteDataHandle<std::vector<uint32_t>> m_outputSecondaryVertices{
+      this, "OutputSecondaryVertices"};
+
   std::unique_ptr<const Acts::Logger> m_logger;
 
   /// mutex used to protect multi-threaded reads
   std::mutex m_read_mutex;
 
   /// The number of events
-  size_t m_events = 0;
+  std::size_t m_events = 0;
 
   /// The input tree name
   TChain* m_inputChain = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId;
+  uint32_t m_eventId = 0;
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)

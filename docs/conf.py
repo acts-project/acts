@@ -2,10 +2,12 @@
 
 import os
 import sys
+import re
 import subprocess
-
-from m2r import MdInclude
-from recommonmark.transform import AutoStructify
+from pathlib import Path
+import shutil
+import datetime
+from typing import List, Tuple
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
@@ -14,47 +16,67 @@ on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
 
 project = "Acts"
 author = "The Acts authors"
-copyright = "2014–2021 CERN for the benefit of the Acts project"
+copyright = (
+    f"2014–{datetime.date.today().year} CERN for the benefit of the Acts project"
+)
 # version = '@PROJECT_VERSION@'
 # release = '@PROJECT_VERSION@'
 
 # -- General ------------------------------------------------------------------
 
+doc_dir = Path(__file__).parent
+
+sys.path.insert(0, str(doc_dir))
+sys.path.insert(0, str(doc_dir / "_extensions"))
+
 extensions = [
     "breathe",
-    "recommonmark",
+    "myst_parser",
     "sphinx.ext.mathjax",
-    "sphinx_markdown_tables",
+    "sphinx.ext.todo",
+    "warnings_filter",
 ]
+
+todo_include_todos = True
+
+warnings_filter_config = str(doc_dir / "known-warnings.txt")
+warnings_filter_silent = True
+
 source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
 }
 master_doc = "index"
 # ensure the in-source build directory is ignored
-exclude_patterns = [
-    "_build",
-]
+exclude_patterns = ["_build", "api/api_stub.rst", "api/api_index.rst"]
 # cpp as default language
 primary_domain = "cpp"
 highlight_language = "cpp"
 smartquotes = True
 numfig = True
 
+myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath", "html_image"]
+myst_heading_anchors = 3
+myst_dmath_allow_labels = True
+
+linkcheck_retries = 5
+linkcheck_ignore = [
+    r"https://doi.org/.*",
+    r"https://cernvm.cern.ch/.*",
+    r"http://eigen.tuxfamily.org.*",
+    r"https://pythia.org.*",
+    r"https://lcginfo.cern.ch/.*",
+    r"https://.*\.?intel.com/.*",
+]
+
 # -- Options for HTML output --------------------------------------------------
 
-# ensure we use the RTD them when building locally
-if not on_readthedocs:
-    import sphinx_rtd_theme
-
-    html_theme = "sphinx_rtd_theme"
-    html_theme_path = [
-        sphinx_rtd_theme.get_html_theme_path(),
-    ]
+html_theme = "sphinx_rtd_theme"
+extensions.append("sphinx_rtd_theme")
 
 html_theme_options = {
     "collapse_navigation": False,
-    "navigation_depth": 3,
+    "navigation_depth": 4,
     "prev_next_buttons_location": None,  # no prev/next links
     "style_external_links": True,
 }
@@ -85,49 +107,72 @@ breathe_default_members = (
     "undoc-members",
 )
 
+nitpicky = True
+nitpick_ignore = [
+    ("cpp:identifier", "Acts"),
+    ("cpp:identifier", "detail"),
+    ("cpp:identifier", "SIZE_MAX"),
+    ("cpp:identifier", "M_PI"),
+    ("cpp:identifier", "eSize"),
+    ("cpp:identifier", "eBoundSize"),
+    ("cpp:identifier", "eFreeSize"),
+    ("cpp:identifier", "open"),
+    ("cpp:identifier", "FreeToBoundCorrection"),
+]
+
+nitpick_ignore_regex = [
+    ("cpp:identifier", r"Eigen.*"),
+    ("cpp:identifier", r"boost.*"),
+    ("cpp:identifier", r"s_.*"),
+    ("cpp:identifier", r"detail::.*"),
+    ("cpp:identifier", ".*::Identity"),
+    ("cpp:identifier", ".*::Zero"),
+    # This blanket ignore only targets the doxygen/breathe auto-generated
+    # references. Explicit references should have specific types.
+    ("cpp:identifier", r".*"),
+]
+
 # -- Automatic API documentation ---------------------------------------------
 
 env = os.environ.copy()
 env["DOXYGEN_WARN_AS_ERROR"] = "NO"
-cwd = os.path.dirname(__file__)
 
 if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
-    print("Executing doxygen in", cwd)
+    print("Executing doxygen in", doc_dir)
     print(
         "Doxygen version:",
         subprocess.check_output(["doxygen", "--version"], encoding="utf-8"),
     )
     sys.stdout.flush()
     subprocess.check_call(
-        ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
+        ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=doc_dir, env=env
     )
 
-if on_readthedocs or tags.has("run_apidoc"):
-    print("Executing breathe apidoc in", cwd)
+api_index_target = doc_dir / "api/api.md"
+
+if tags.has("run_apidoc"):
+    print("Executing breathe apidoc in", doc_dir)
     subprocess.check_call(
         [sys.executable, "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
-        stdout=subprocess.PIPE,
-        cwd=cwd,
+        stdout=subprocess.DEVNULL,
+        cwd=doc_dir,
         env=env,
     )
+    if not api_index_target.exists():
+        shutil.copyfile(doc_dir / "api/api_index.rst", api_index_target)
+    print("breathe apidoc completed")
+
+if tags.has("lazy_autodoc") or on_readthedocs:
+    extensions += ["lazy_autodoc"]
+
+
+import white_papers
+
+white_papers.render()
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 
 
 def setup(app):
-    app.add_config_value(
-        "recommonmark_config",
-        {
-            "enable_math": True,
-            "enable_inline_math": True,
-        },
-        True,
-    )
-    app.add_transform(AutoStructify)
-
-    app.add_config_value("no_underscore_emphasis", False, "env")
-    app.add_config_value("m2r_parse_relative_links", False, "env")
-    app.add_config_value("m2r_anonymous_references", False, "env")
-    app.add_config_value("m2r_disable_inline_math", False, "env")
-    app.add_directive("mdinclude", MdInclude)
+    pass

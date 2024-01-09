@@ -23,9 +23,9 @@ following commands will clone the repository, configure, and build the core
 library
 
 ```sh
-git clone --recursive https://github.com/acts-project/acts <source-dir>
-cmake -B <build-dir> -S <source-dir>
-cmake --build <build-dir>
+git clone https://github.com/acts-project/acts <source>
+cmake -B <build> -S <source>
+cmake --build <build>
 ```
 
 For more details, e.g. specific versions and additional dependencies, have a

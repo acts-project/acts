@@ -14,9 +14,9 @@ class IBaseDetector;
 
 /// The Digitization example
 ///
-/// @param argc the number of argumetns of the call
+/// @param argc the number of arguments of the call
 /// @param argv the argument list
 /// @param detector The detector descriptor instance
 int runDigitizationConfigExample(
     int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector);
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector);

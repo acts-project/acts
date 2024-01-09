@@ -8,13 +8,14 @@
 
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <fstream>
+#include <iomanip>
 #include <ios>
-#include <iostream>
-#include <stdexcept>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 ActsExamples::JsonMaterialWriter::JsonMaterialWriter(
     const ActsExamples::JsonMaterialWriter::Config& config,
@@ -24,7 +25,7 @@ ActsExamples::JsonMaterialWriter::JsonMaterialWriter(
       m_converter{std::make_unique<Acts::MaterialMapJsonConverter>(
           m_cfg.converterCfg, level)} {}
 
-ActsExamples::JsonMaterialWriter::~JsonMaterialWriter() {}
+ActsExamples::JsonMaterialWriter::~JsonMaterialWriter() = default;
 
 void ActsExamples::JsonMaterialWriter::writeMaterial(
     const Acts::DetectorMaterialMaps& detMaterial) {

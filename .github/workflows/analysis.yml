@@ -8,9 +8,19 @@ on:
     branches:
       - main
       - 'release/**'
+      - 'develop/**'
+    paths-ignore:
+      - "docs/**"
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
+  CCACHE_DIR: ${{ github.workspace }}/ccache
+  CCACHE_MAXSIZE: 500M
+  CCACHE_KEY_SUFFIX: r1
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
@@ -18,21 +28,34 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v21
+    container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_
+
       - name: Configure
         run: >
+          ccache -z &&
           cmake -B build -S .
           -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
           -DACTS_BUILD_UNITTESTS=on
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
-        run: cmake --build build --
+        run: cmake --build build
+      - name: ccache stats
+        run: ccache -s
       - name: Unit tests
-        run: cmake --build build -- test
+        run: cmake --build build --target test
       - name: Remove .o files
         run: >
           du -sh build
@@ -40,18 +63,20 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          pip3 install gcovr==5.0
+          pip3 install gcovr==6.0
           && cd build
-          && /usr/bin/python3 ../CI/test_coverage
+          && /usr/bin/python3 ../CI/test_coverage.py
       - name: Upload coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
-          file: ./build/coverage/cov.xml
+          files: ./build/coverage/cov.xml
+
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v21
+    container: ghcr.io/acts-project/ubuntu2204:v41
+    if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install dependencies
         run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
       - name: Configure
@@ -66,7 +91,7 @@ jobs:
         run: cmakeperf collect build/compile_commands.json -o perf.csv
       - name: Results
         run: cmakeperf print perf.csv
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: cmakeperf
           path: perf.csv
@@ -76,7 +101,7 @@ jobs:
     needs: build_performance
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install dependencies
         run: pip3 install git+https://github.com/paulgessinger/headwind.git@eeeaa80
       - uses: actions/download-artifact@v2
@@ -96,4 +121,3 @@ jobs:
           git add -A
           git commit -m"update metrics"
           git push
-

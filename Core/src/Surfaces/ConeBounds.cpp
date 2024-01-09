@@ -8,6 +8,8 @@
 
 #include "Acts/Surfaces/ConeBounds.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>

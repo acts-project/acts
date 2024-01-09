@@ -15,7 +15,13 @@
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace Acts {
@@ -23,6 +29,7 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 namespace Contextual {
 
@@ -49,7 +56,7 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
           "ExternalAlignmentDecorator", Acts::Logging::INFO));
 
   /// Virtual destructor
-  virtual ~ExternalAlignmentDecorator() = default;
+  ~ExternalAlignmentDecorator() override = default;
 
   /// @brief decorates (adds, modifies) the AlgorithmContext
   /// with a geometric rotation per event
@@ -58,10 +65,10 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
   /// added in order.
   ///
   /// @param context the bare (or at least non-const) Event context
-  ProcessCode decorate(AlgorithmContext& context) final override;
+  ProcessCode decorate(AlgorithmContext& context) override;
 
   /// @brief decorator name() for screen output
-  const std::string& name() const final override { return m_name; }
+  const std::string& name() const override { return m_name; }
 
  private:
   Config m_cfg;                                  ///< the configuration class
@@ -78,7 +85,7 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
 
   std::mutex m_iovMutex;
 
-  size_t m_eventsSeen{0};
+  std::size_t m_eventsSeen{0};
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

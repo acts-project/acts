@@ -9,36 +9,43 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
-#include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
-#include "Acts/Material/MaterialMapUtils.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <limits>
+#include <functional>
+#include <map>
+#include <memory>
 #include <random>
+#include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -51,15 +58,19 @@ struct MaterialCollector {
   };
   using result_type = this_result;
 
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
-    if (state.navigation.currentVolume != nullptr) {
+                  const navigator_t& navigator, result_type& result,
+                  const Logger& /*logger*/) const {
+    if (navigator.currentVolume(state.navigation) != nullptr) {
       auto position = stepper.position(state.stepping);
       result.matTrue.push_back(
-          (state.navigation.currentVolume->volumeMaterial() != nullptr)
-              ? state.navigation.currentVolume->volumeMaterial()->material(
-                    position)
+          (navigator.currentVolume(state.navigation)->volumeMaterial() !=
+           nullptr)
+              ? navigator.currentVolume(state.navigation)
+                    ->volumeMaterial()
+                    ->material(position)
               : Material());
 
       result.position.push_back(position);
@@ -127,7 +138,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   /// We need a Navigator, Stepper to build a Propagator
   Navigator navigator({tGeometry});
   StraightLineStepper stepper;
-  VolumeMaterialMapper::StraightLinePropagator propagator(std::move(stepper),
+  VolumeMaterialMapper::StraightLinePropagator propagator(stepper,
                                                           std::move(navigator));
 
   /// The config object
@@ -195,15 +206,15 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(gc);
 
   // Set up the grid axes
-  std::array<double, 3> xAxis{0_m, 3_m, 7};
-  std::array<double, 3> yAxis{-0.5_m, 0.5_m, 7};
-  std::array<double, 3> zAxis{-0.5_m, 0.5_m, 7};
+  Acts::MaterialGridAxisData xAxis{0_m, 3_m, 7};
+  Acts::MaterialGridAxisData yAxis{-0.5_m, 0.5_m, 7};
+  Acts::MaterialGridAxisData zAxis{-0.5_m, 0.5_m, 7};
 
   // Set up a random engine for sampling material
   std::random_device rd;
   std::mt19937 gen(42);
-  std::uniform_real_distribution<> disX(0., 3_m);
-  std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
+  std::uniform_real_distribution<double> disX(0., 3_m);
+  std::uniform_real_distribution<double> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
   RecordedMaterialVolumePoint matRecord;
@@ -227,7 +238,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
     return {pos.x(), pos.y(), pos.z()};
   };
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -250,12 +261,13 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set some start parameters
   Vector4 pos4(0., 0., 0., 42_ns);
   Vector3 dir(1., 0., 0.);
-  NeutralCurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
+  CurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV, std::nullopt,
+                                  ParticleHypothesis::pion0());
 
   MagneticFieldContext mc;
   // Launch propagation and gather result
   PropagatorOptions<ActionList<MaterialCollector>, AbortList<EndOfWorldReached>>
-      po(gc, mc, getDummyLogger());
+      po(gc, mc);
   po.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
 

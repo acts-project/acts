@@ -16,7 +16,7 @@
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
-/// @brief This function allows us to list availabe SYCL platforms and devices.
+/// @brief This function allows us to list available SYCL platforms and devices.
 void listPlatforms() {
   for (const sycl::platform& platform : sycl::platform::get_platforms()) {
     // Print some information about the platform.

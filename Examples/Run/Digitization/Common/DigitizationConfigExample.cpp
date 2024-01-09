@@ -13,6 +13,7 @@
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -27,7 +28,7 @@ using namespace ActsExamples;
 
 int runDigitizationConfigExample(
     int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);

@@ -11,37 +11,50 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <fstream>
-#include <random>
+#include <iomanip>
+#include <iterator>
+#include <memory>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <boost/format.hpp>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
-
-#define CHECK_ROTATION_ANGLE(t, a, tolerance) \
-  {                                           \
-    Vector3 v = (*t) * Vector3(1, 0, 0);      \
-    CHECK_CLOSE_ABS(phi(v), (a), tolerance);  \
-  }
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
@@ -75,14 +88,14 @@ struct SurfaceArrayCreatorFixture {
         std::forward<Args>(args)...);
   }
 
-  SrfVec fullPhiTestSurfacesEC(size_t n = 10, double shift = 0,
+  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
                                double zbase = 0, double r = 10, double w = 2,
                                double h = 1) {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
     double phiStep = 2 * M_PI / n;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
       double phi = std::fma(i, phiStep, shift);
 
@@ -104,14 +117,14 @@ struct SurfaceArrayCreatorFixture {
     return res;
   }
 
-  SrfVec fullPhiTestSurfacesBRL(size_t n = 10, double shift = 0,
+  SrfVec fullPhiTestSurfacesBRL(std::size_t n = 10, double shift = 0,
                                 double zbase = 0, double incl = M_PI / 9.,
                                 double w = 2, double h = 1.5) {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
     double phiStep = 2 * M_PI / n;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       double z = zbase;
       double phi = std::fma(i, phiStep, shift);
 
@@ -135,11 +148,11 @@ struct SurfaceArrayCreatorFixture {
   }
 
   SrfVec straightLineSurfaces(
-      size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
+      std::size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
       const Transform3& pretrans = Transform3::Identity(),
       const Vector3& dir = {0, 0, 1}) {
     SrfVec res;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       Transform3 trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
@@ -195,7 +208,7 @@ struct SurfaceArrayCreatorFixture {
         trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
-        std::shared_ptr<Surface> srfA =
+        std::shared_ptr<PlaneSurface> srfA =
             Surface::makeShared<PlaneSurface>(trans, bounds);
 
         Vector3 nrm = srfA->normal(tgContext);
@@ -217,13 +230,13 @@ struct SurfaceArrayCreatorFixture {
   }
 };
 
-void draw_surfaces(SrfVec surfaces, const std::string& fname) {
+void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
   std::ofstream os;
   os.open(fname);
 
   os << std::fixed << std::setprecision(4);
 
-  size_t nVtx = 0;
+  std::size_t nVtx = 0;
   for (const auto& srfx : surfaces) {
     std::shared_ptr<const PlaneSurface> srf =
         std::dynamic_pointer_cast<const PlaneSurface>(srfx);
@@ -238,7 +251,7 @@ void draw_surfaces(SrfVec surfaces, const std::string& fname) {
 
     // connect them
     os << "f";
-    for (size_t i = 1; i <= bounds->vertices().size(); ++i) {
+    for (std::size_t i = 1; i <= bounds->vertices().size(); ++i) {
       os << " " << nVtx + i;
     }
     os << "\n";
@@ -445,7 +458,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   BOOST_CHECK_EQUAL(axis.bType, equidistant);
 
   // z rows with varying starting point
-  for (size_t i = 0; i <= 20; i++) {
+  for (std::size_t i = 0; i <= 20; i++) {
     double z0 = -10 + 1. * i;
     surfaces = straightLineSurfaces(10, 3, Vector3(0, 0, z0 + 1.5));
     surfacesRaw = unpack_shared_vector(surfaces);
@@ -683,7 +696,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
         1.88496,   2.0944,    2.30383,  2.51327,     2.72271,  3.00831,
         3.14159};
     std::vector<double> zEdgesExp = {-14, -10, -6, -2, 2, 6, 10, 14};
-    size_t i = 0;
+    std::size_t i = 0;
     for (const auto& edge : axes.at(0)->getBinEdges()) {
       BOOST_TEST_INFO("phi edge index " << i);
       auto phiEdge = phiEdgesExp.at(i);
@@ -719,5 +732,4 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
-
 }  // namespace Acts

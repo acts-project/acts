@@ -9,11 +9,16 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <iosfwd>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -67,14 +72,14 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
-  ///  This method cheks if the radius given in the LocalPosition is inside
+  ///  This method checks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
   /// if only tol0 is given and additional in the phi sector is tol1 is given
   /// @param lposition is the local position to be checked (in polar
   /// coordinates)
   /// @param bcheck is the boundary check directive
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck = true) const final;
+              const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
@@ -129,13 +134,13 @@ class DiscTrapezoidBounds : public DiscBounds {
   std::array<double, eSize> m_values;
 
   /// Dreived maximum y value
-  double m_ymax;
+  double m_ymax = 0;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 
-  /// Private helper method to convert a local postion
+  /// Private helper method to convert a local position
   /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates
@@ -192,7 +197,7 @@ inline bool DiscTrapezoidBounds::coversFullAzimuth() const {
 
 inline bool DiscTrapezoidBounds::insideRadialBounds(double R,
                                                     double tolerance) const {
-  return (R + tolerance > get(eMinR) and R - tolerance < get(eMaxR));
+  return (R + tolerance > get(eMinR) && R - tolerance < get(eMaxR));
 }
 
 inline double DiscTrapezoidBounds::binningValueR() const {
@@ -210,10 +215,10 @@ inline std::vector<double> DiscTrapezoidBounds::values() const {
 }
 
 inline void DiscTrapezoidBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) > get(eMaxR)) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("DiscTrapezoidBounds: invalid radial setup.");
   }
-  if (get(eHalfLengthXminR) < 0. or get(eHalfLengthXmaxR) <= 0.) {
+  if (get(eHalfLengthXminR) < 0. || get(eHalfLengthXmaxR) <= 0.) {
     throw std::invalid_argument("DiscTrapezoidBounds: negative length given.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

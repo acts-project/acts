@@ -11,13 +11,14 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
-                                                     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("AlignmentAlgorithm", level),
+                                                     Acts::Logging::Level lvl)
+    : ActsExamples::IAlgorithm("AlignmentAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -36,37 +37,39 @@ ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
     throw std::invalid_argument(
         "Missing output alignment parameters collection");
   }
+
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
+  m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_outputAlignmentParameters.initialize(m_cfg.outputAlignmentParameters);
 }
 
 ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& protoTracks =
-      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
-      m_cfg.inputInitialTrackParameters);
+  const auto& measurements = m_inputMeasurements(ctx);
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  const auto& protoTracks = m_inputProtoTracks(ctx);
+  const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
-    ACTS_FATAL("Inconsistent number of proto tracks and parameters");
+    ACTS_FATAL("Inconsistent number of proto tracks and parameters "
+               << protoTracks.size() << " vs " << initialParameters.size());
     return ProcessCode::ABORT;
   }
 
-  size_t numTracksUsed = protoTracks.size();
-  if (m_cfg.maxNumTracks > 0 and
+  std::size_t numTracksUsed = protoTracks.size();
+  if (m_cfg.maxNumTracks > 0 &&
       m_cfg.maxNumTracks < static_cast<int>(protoTracks.size())) {
     numTracksUsed = m_cfg.maxNumTracks;
   }
 
   // Prepare the input track collection
-  std::vector<std::vector<std::reference_wrapper<const IndexSourceLink>>>
-      sourceLinkTrackContainer;
+  std::vector<std::vector<IndexSourceLink>> sourceLinkTrackContainer;
   sourceLinkTrackContainer.reserve(numTracksUsed);
-  std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
+  std::vector<IndexSourceLink> trackSourceLinks;
   for (std::size_t itrack = 0; itrack < numTracksUsed; ++itrack) {
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
@@ -83,39 +86,41 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
                                   << hitIndex);
         return ProcessCode::ABORT;
       }
-      trackSourceLinks.push_back(std::ref(*sourceLink));
+      trackSourceLinks.push_back(*sourceLink);
     }
     sourceLinkTrackContainer.push_back(trackSourceLinks);
   }
 
   // Prepare the output for alignment parameters
-  std::unordered_map<Acts::DetectorElementBase*, Acts::Transform3>
-      alignedParameters;
+  AlignmentParameters alignedParameters;
 
   // Construct a perigee surface as the target surface for the fitter
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  Acts::KalmanFitterExtensions extensions;
-  MeasurementCalibrator calibrator{measurements};
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
+  PassThroughCalibrator pcalibrator;
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
+      &calibrator);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+  extensions.updater.connect<
+      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.smoother.connect<
+      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
       &kfSmoother);
 
   // Set the KalmanFitter options
   TrackFitterOptions kfOptions(ctx.geoContext, ctx.magFieldContext,
                                ctx.calibContext, extensions,
-                               Acts::LoggerWrapper{logger()},
                                Acts::PropagatorPlainOptions(), &(*pSurface));
 
   // Set the alignment options
   ActsAlignment::AlignmentOptions<TrackFitterOptions> alignOptions(
-      kfOptions, m_cfg.alignedTransformUpdater, Acts::LoggerWrapper{logger()},
-      m_cfg.alignedDetElements, m_cfg.chi2ONdfCutOff, m_cfg.deltaChi2ONdfCutOff,
-      m_cfg.maxNumIterations);
+      kfOptions, m_cfg.alignedTransformUpdater, m_cfg.alignedDetElements,
+      m_cfg.chi2ONdfCutOff, m_cfg.deltaChi2ONdfCutOff, m_cfg.maxNumIterations);
 
   ACTS_DEBUG("Invoke track-based alignment with " << numTracksUsed
                                                   << " input tracks");
@@ -131,7 +136,6 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   }
 
   // add alignment parameters to event store
-  ctx.eventStore.add(m_cfg.outputAlignmentParameters,
-                     std::move(alignedParameters));
+  m_outputAlignmentParameters(ctx, std::move(alignedParameters));
   return ActsExamples::ProcessCode::SUCCESS;
 }

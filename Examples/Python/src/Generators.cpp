@@ -6,25 +6,39 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Generators/MultiplicityGenerators.hpp"
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Generators/VertexGenerators.hpp"
-#include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
+#include <array>
+#include <cassert>
 #include <cmath>
+#include <cstddef>
 #include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace ActsExamples {
+class IReader;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 
 namespace {
 double thetaToEta(double theta) {
+  assert(theta != 0);
   return -1 * std::log(std::tan(theta / 2.));
 }
 double etaToTheta(double eta) {
@@ -82,7 +96,7 @@ void addGenerators(Context& ctx) {
              std::shared_ptr<ActsExamples::GaussianVertexGenerator>>(
       mex, "GaussianVertexGenerator")
       .def(py::init<>())
-      .def(py::init([](Acts::Vector4 stddev, Acts::Vector4 mean) {
+      .def(py::init([](const Acts::Vector4& stddev, const Acts::Vector4& mean) {
              ActsExamples::GaussianVertexGenerator g;
              g.stddev = stddev;
              g.mean = mean;
@@ -97,7 +111,7 @@ void addGenerators(Context& ctx) {
              std::shared_ptr<ActsExamples::FixedVertexGenerator>>(
       mex, "FixedVertexGenerator")
       .def(py::init<>())
-      .def(py::init([](Acts::Vector4 v) {
+      .def(py::init([](const Acts::Vector4& v) {
              ActsExamples::FixedVertexGenerator g;
              g.fixed = v;
              return g;
@@ -130,6 +144,8 @@ void addGenerators(Context& ctx) {
         .def_readwrite("pdg", &Config::pdg)
         .def_readwrite("randomizeCharge", &Config::randomizeCharge)
         .def_readwrite("numParticles", &Config::numParticles)
+        .def_readwrite("mass", &Config::mass)
+        .def_readwrite("charge", &Config::charge)
         .def_property(
             "p",
             [](Config& cfg) {
@@ -174,7 +190,7 @@ void addGenerators(Context& ctx) {
              std::shared_ptr<ActsExamples::FixedMultiplicityGenerator>>(
       mex, "FixedMultiplicityGenerator")
       .def(py::init<>())
-      .def(py::init([](size_t n) {
+      .def(py::init([](std::size_t n) {
              ActsExamples::FixedMultiplicityGenerator g;
              g.n = n;
              return g;

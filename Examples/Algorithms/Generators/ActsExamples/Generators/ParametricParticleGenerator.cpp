@@ -8,16 +8,22 @@
 
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 
-#include "ActsFatras/Utilities/ParticleData.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/ParticleData.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstdint>
 #include <limits>
 #include <random>
+#include <utility>
 
 ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
     const Config& cfg)
     : m_cfg(cfg),
-      m_charge(ActsFatras::findCharge(m_cfg.pdg)),
-      m_mass(ActsFatras::findMass(m_cfg.pdg)),
+      m_charge(cfg.charge.value_or(Acts::findCharge(m_cfg.pdg).value_or(0))),
+      m_mass(cfg.mass.value_or(Acts::findMass(m_cfg.pdg).value_or(0))),
       // since we want to draw the direction uniform on the unit sphere, we must
       // draw from cos(theta) instead of theta. see e.g.
       // https://mathworld.wolfram.com/SpherePointPicking.html
@@ -32,7 +38,7 @@ ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
 
 ActsExamples::SimParticleContainer
 ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
-  using UniformIndex = std::uniform_int_distribution<unsigned int>;
+  using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
   using UniformReal = std::uniform_real_distribution<double>;
 
   // choose between particle/anti-particle if requested
@@ -56,7 +62,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
   particles.reserve(m_cfg.numParticles);
 
   // counter will be reused as barcode particle number which must be non-zero.
-  for (size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
+  for (std::size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
     // all particles are treated as originating from the same primary vertex
     const auto pid = ActsFatras::Barcode(0u).setParticle(ip);
 
@@ -71,7 +77,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
     Acts::Vector3 dir;
     double cosTheta = 0.;
     double sinTheta = 0.;
-    if (not m_cfg.etaUniform) {
+    if (!m_cfg.etaUniform) {
       cosTheta = cosThetaDist(rng);
       sinTheta = std::sqrt(1 - cosTheta * cosTheta);
     } else {

@@ -1,10 +1,10 @@
-Acts Common Tracking Software
+ACTS Common Tracking Software
 =============================
 
-Acts is an experiment-independent toolkit for (charged) particle track
+ACTS is an experiment-independent toolkit for (charged) particle track
 reconstruction in (high energy) physics experiments implemented in modern C++.
 
-The Acts project provides high-level track reconstruction modules that can be
+The ACTS project provides high-level track reconstruction modules that can be
 used for any tracking detector. The tracking detector geometry description is
 optimized for efficient navigation and fast extrapolation of tracks. Converters
 for several common geometry description packages are available. In addition to
@@ -13,25 +13,37 @@ description of track parameters and measurements.
 
 Key features:
 
--   A tracking geometry description which can be constructed manually or from
-    TGeo and DD4Hep input.
--   Simple event data model.
--   Implementations of common algorithms for track propagation and fitting.
--   Implementations of basic seed finding algorithms.
--   Implementations of common vertexing algorithms.
+* A tracking geometry description which can be constructed manually or from
+  TGeo and DD4hep input.
+* Simple event data model.
+* Implementations of common algorithms for track propagation and fitting.
+* Implementations of basic seed finding algorithms.
+* Implementations of common vertexing algorithms.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    getting_started
-   versioning
+   tracking
+   acts_project
    core/core
+   Fast Track Simulation (Fatras) <fatras/fatras>
    plugins/plugins
    examples/examples
-   integration/integration
-   formats/formats
+
+   Contribution guide <contribution/contribution>
+
    api/api
-   contributionguide
+
+   versioning
+   formats/formats
    codeguide
    authors
    license
+
+   white_papers/index.rst
+
+TODOs
+=====
+
+.. todolist::

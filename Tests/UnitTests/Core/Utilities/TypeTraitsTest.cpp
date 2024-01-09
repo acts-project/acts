@@ -11,13 +11,11 @@
 
 #include "Acts/Utilities/TypeTraits.hpp"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
+#include <type_traits>
 
 using namespace Acts::Concepts;
 
 namespace Acts {
-
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -26,15 +24,15 @@ METHOD_TRAIT(foo_method_t, foo);
 METHOD_TRAIT(bar_method_t, bar);
 
 struct E {
-  int bar(const double&) { return 5; }
+  int bar(const double& /*unused*/) { return 5; }
 };
 
 struct E2 {
-  int bar(const double&) const { return 5; }
+  int bar(const double& /*unused*/) const { return 5; }
 };
 
 class E3 {
-  int bar(const double&) { return 5; }
+  int bar(const double& /*unused*/) { return 5; }
 };
 
 BOOST_AUTO_TEST_CASE(TypeTraitsMethods) {
@@ -58,7 +56,7 @@ BOOST_AUTO_TEST_CASE(TypeTraitsMethods) {
   // E does not have a foo method
   static_assert(!has_method<E, int, foo_method_t, const double&>, "failed");
 
-  // E2 doesnt have method like int bar()
+  // E2 doesn't have method like int bar()
   static_assert(!has_method<E2, int, bar_method_t>, "failed");
   // E2 does not have non-const method with signature int bar(const double&)
   // This means that a const method won't fulfill a non-const method
@@ -191,9 +189,9 @@ struct A {
   template <typename U, typename V>
   struct meta {};
 
-  double foo(double, int) { return 5; }
+  double foo(double /*unused*/, int /*unused*/) { return 5; }
 
-  bool bar(double&&) const { return true; }
+  bool bar(double&& /*unused*/) const { return true; }
 };
 
 struct A2 {
@@ -204,23 +202,23 @@ struct A2 {
   template <typename U>
   struct meta {};
 
-  double foo(double, int) { return 5; }
+  double foo(double /*unused*/, int /*unused*/) { return 5; }
 
-  bool bar(double&&) const { return true; }
+  bool bar(double&& /*unused*/) const { return true; }
 };
 
 struct B {
   bool different;
 
-  int foo(double) { return 5; }
+  int foo(double /*unused*/) { return 5; }
 };
 
 struct C {
-  double foo(int) { return 5; }
+  double foo(int /*unused*/) { return 5; }
 };
 
 struct D {
-  double bar(double) { return 5; }
+  double bar(double /*unused*/) { return 5; }
 };
 
 BOOST_AUTO_TEST_CASE(TypeTraitsConcepts) {

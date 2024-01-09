@@ -9,6 +9,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <iosfwd>
 #include <optional>
 #include <vector>
@@ -42,7 +43,7 @@ struct Interval {
 ///
 /// @note Implemented as a subclass so it is distinct from `std::array`
 ///   and we can provide overloads in the same namespace.
-template <size_t kSize>
+template <std::size_t kSize>
 class Reals : public std::array<double, kSize> {};
 
 /// An arbitrary number of revaluesal  as one user option.
@@ -58,7 +59,7 @@ struct VariableReals {
 ///
 /// @note Implemented as a subclass so it is distinct from `std::array`
 ///   and we can provide overloads in the same namespace.
-template <size_t kSize>
+template <std::size_t kSize>
 class Integers : public std::array<int, kSize> {};
 
 /// An arbitrary number of integers as one user option.
@@ -85,9 +86,9 @@ std::istream& operator>>(std::istream& is, Interval& interval);
 std::ostream& operator<<(std::ostream& os, const Interval& interval);
 
 namespace detail {
-void parseDoublesFixed(std::istream& is, size_t size, double* values);
+void parseDoublesFixed(std::istream& is, std::size_t size, double* values);
 void parseDoublesVariable(std::istream& is, std::vector<double>& values);
-void printDoubles(std::ostream& os, size_t size, const double* values);
+void printDoubles(std::ostream& os, std::size_t size, const double* values);
 }  // namespace detail
 
 /// Extract a fixed number of doubles from an input of the form 'x:y:z'.
@@ -95,7 +96,7 @@ void printDoubles(std::ostream& os, size_t size, const double* values);
 /// @note If the values would be separated by whitespace, negative values
 ///   and additional command line both start with `-` and would be
 ///   undistinguishable.
-template <size_t kSize>
+template <std::size_t kSize>
 inline std::istream& operator>>(std::istream& is, Reals<kSize>& values) {
   detail::parseDoublesFixed(is, kSize, values.data());
   return is;
@@ -112,7 +113,7 @@ inline std::istream& operator>>(std::istream& is, VariableReals& values) {
 }
 
 /// Print a fixed number of doubles as `x:y:z`.
-template <size_t kSize>
+template <std::size_t kSize>
 inline std::ostream& operator<<(std::ostream& os, const Reals<kSize>& values) {
   detail::printDoubles(os, kSize, values.data());
   return os;
@@ -125,9 +126,9 @@ inline std::ostream& operator<<(std::ostream& os, const VariableReals& values) {
 }
 
 namespace detail {
-void parseIntegersFixed(std::istream& is, size_t size, int* values);
+void parseIntegersFixed(std::istream& is, std::size_t size, int* values);
 void parseIntegersVariable(std::istream& is, std::vector<int>& values);
-void printIntegers(std::ostream& os, size_t size, const int* values);
+void printIntegers(std::ostream& os, std::size_t size, const int* values);
 }  // namespace detail
 
 /// Extract a fixed number of integers from an input of the form 'x:y:z'.
@@ -135,7 +136,7 @@ void printIntegers(std::ostream& os, size_t size, const int* values);
 /// @note If the values would be separated by whitespace, negative values
 ///   and additional command line both start with `-` and would be
 ///   undistinguishable.
-template <size_t kSize>
+template <std::size_t kSize>
 inline std::istream& operator>>(std::istream& is, Integers<kSize>& values) {
   detail::parseIntegersFixed(is, kSize, values.data());
   return is;
@@ -152,7 +153,7 @@ inline std::istream& operator>>(std::istream& is, VariableIntegers& values) {
 }
 
 /// Print a fixed number of integers as `x:y:z`.
-template <size_t kSize>
+template <std::size_t kSize>
 inline std::ostream& operator<<(std::ostream& os,
                                 const Integers<kSize>& values) {
   detail::printIntegers(os, kSize, values.data());

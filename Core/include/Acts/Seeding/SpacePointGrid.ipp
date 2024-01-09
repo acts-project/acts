@@ -13,20 +13,40 @@
 template <typename SpacePoint>
 std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
 Acts::SpacePointGridCreator::createGrid(
-    const Acts::SpacePointGridConfig& _config) {
-  Acts::SpacePointGridConfig config = _config.toInternalUnits();
+    const Acts::SpacePointGridConfig& config,
+    const Acts::SpacePointGridOptions& options) {
+  if (!config.isInInternalUnits) {
+    throw std::runtime_error(
+        "SpacePointGridConfig not in ACTS internal units in "
+        "SpacePointGridCreator::createGrid");
+  }
+  if (!options.isInInternalUnits) {
+    throw std::runtime_error(
+        "SpacePointGridOptions not in ACTS internal units in "
+        "SpacePointGridCreator::createGrid");
+  }
   using AxisScalar = Acts::Vector3::Scalar;
+  using namespace Acts::UnitLiterals;
 
-  int phiBins;
+  int phiBins = 0;
   // for no magnetic field, create 100 phi-bins
-  if (config.bFieldInZ == 0) {
+  if (options.bFieldInZ == 0) {
     phiBins = 100;
   } else {
     // calculate circle intersections of helix and max detector radius
     float minHelixRadius =
         config.minPt /
-        (300. * config.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T]) =
-                                    // pT[MeV] / (300 *Bz[kT])
+        (1_T * 1e6 *
+         options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
+                              // = pT[MeV] / (300 *Bz[kT])
+
+    // sanity check: if yOuter takes the square root of a negative number
+    if (minHelixRadius < config.rMax / 2) {
+      throw std::domain_error(
+          "The value of minHelixRadius cannot be smaller than rMax / 2. Please "
+          "check the configuration of bFieldInZ and minPt");
+    }
+
     float maxR2 = config.rMax * config.rMax;
     float xOuter = maxR2 / (2 * minHelixRadius);
     float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
@@ -69,16 +89,21 @@ Acts::SpacePointGridCreator::createGrid(
 
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
-    phiBins = std::ceil(2 * M_PI / deltaPhi);
+    phiBins = static_cast<int>(std::ceil(2 * M_PI / deltaPhi));
     // need to scale the number of phi bins accordingly to the number of
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on this
     // number) of the maximum expected azimutal deflection.
+
+    // set protection for large number of bins, by default it is large
+    if (phiBins > config.maxPhiBins) {
+      phiBins = config.maxPhiBins;
+    }
   }
 
   Acts::detail::Axis<detail::AxisType::Equidistant,
                      detail::AxisBoundaryType::Closed>
-      phiAxis(-M_PI, M_PI, phiBins);
+      phiAxis(config.phiMin, config.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
   std::vector<AxisScalar> zValues;
@@ -90,23 +115,24 @@ Acts::SpacePointGridCreator::createGrid(
     // seeds
     // FIXME: zBinSize must include scattering
     float zBinSize = config.cotThetaMax * config.deltaRMax;
-    int zBins =
-        std::max(1, (int)std::floor((config.zMax - config.zMin) / zBinSize));
+    float zBins =
+        std::max(1.f, std::floor((config.zMax - config.zMin) / zBinSize));
 
-    for (int bin = 0; bin <= zBins; bin++) {
-      AxisScalar edge = config.zMin + bin * zBinSize;
+    for (int bin = 0; bin <= static_cast<int>(zBins); bin++) {
+      AxisScalar edge =
+          config.zMin + bin * ((config.zMax - config.zMin) / zBins);
       zValues.push_back(edge);
     }
 
   } else {
     // Use the zBinEdges defined in the config
-    for (auto& bin : config.zBinEdges) {
+    for (float bin : config.zBinEdges) {
       zValues.push_back(bin);
     }
   }
 
   detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
-      zAxis(zValues);
+      zAxis(std::move(zValues));
   return std::make_unique<Acts::SpacePointGrid<SpacePoint>>(
-      std::make_tuple(phiAxis, zAxis));
+      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 }
