@@ -197,7 +197,7 @@ class ChainedGeometryIdGenerator : public IGeometryIdGenerator {
   ///
   /// @tparam gometry_object_t the geometry object type
   ///
-  /// @param the cache object with the array of sub caches
+  /// @param cache object with the array of sub caches
   /// @param object the object to assign the geometry id to
   template <typename gometry_object_t>
   void assign(IGeometryIdGenerator::GeoIdCache& cache,

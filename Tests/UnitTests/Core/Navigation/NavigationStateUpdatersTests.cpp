@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -159,7 +159,6 @@ class MultiGrid2D {
  private:
   std::vector<std::size_t> e = {1u};
 };
-
 }  // namespace Acts
 
 using SingleVolumeUpdater = Acts::Experimental::SingleObjectImpl<
