@@ -1467,8 +1467,8 @@ class CombinatorialKalmanFilter {
     r.stateBuffer = std::make_shared<traj_t>();
 
     auto result = m_propagator.template makeResult(
-        m_propagator.template propagate(propState), propState, propOptions,
-        false);
+        m_propagator.template propagate(propState), std::move(propState),
+        propOptions, false);
 
     if (!result.ok()) {
       ACTS_ERROR("Propagation failed: " << result.error() << " "

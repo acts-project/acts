@@ -113,7 +113,8 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
   // Perform the actual propagation
   auto propagationResult = propagate(state);
 
-  return makeResult(propagationResult, state, options, makeCurvilinear);
+  return makeResult(propagationResult, std::move(state), options,
+                    makeCurvilinear);
 }
 
 template <typename S, typename N>
@@ -134,7 +135,7 @@ auto Acts::Propagator<S, N>::propagate(
   // Perform the actual propagation
   auto propagationResult = propagate(state);
 
-  return makeResult(propagationResult, state, target, options);
+  return makeResult(propagationResult, std::move(state), target, options);
 }
 
 template <typename S, typename N>
@@ -231,7 +232,7 @@ auto Acts::Propagator<S, N>::makeState(
 template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
 auto Acts::Propagator<S, N>::makeResult(Result<void> propagationResult,
-                                        propagator_state_t& state,
+                                        propagator_state_t state,
                                         const propagator_options_t& /*options*/,
                                         bool makeCurvilinear) const
     -> Result<action_list_t_result_t<
@@ -267,13 +268,13 @@ auto Acts::Propagator<S, N>::makeResult(Result<void> propagationResult,
     }
   }
 
-  return Result<ResultType>::success(std::forward<ResultType>(result));
+  return Result<ResultType>::success(std::move(result));
 }
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
 auto Acts::Propagator<S, N>::makeResult(
-    Result<void> propagationResult, propagator_state_t& state,
+    Result<void> propagationResult, propagator_state_t state,
     const Surface& target, const propagator_options_t& /*options*/) const
     -> Result<action_list_t_result_t<
         StepperBoundTrackParameters,
@@ -306,14 +307,14 @@ auto Acts::Propagator<S, N>::makeResult(
   if (state.stepping.covTransport) {
     result.transportJacobian = std::get<Jacobian>(bs);
   }
-  return Result<ResultType>::success(std::forward<ResultType>(result));
+  return Result<ResultType>::success(std::move(result));
 }
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename result_t>
 void Acts::Propagator<S, N>::moveStateToResult(propagator_state_t& state,
                                                result_t& result) const {
-  result.tuple() = std::move(state.tuple());
+  result.tuple() = state.tuple();
 
   result.steps = state.steps;
   result.pathLength = state.pathLength;

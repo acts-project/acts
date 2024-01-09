@@ -1122,7 +1122,7 @@ class KalmanFitter {
     PropagatorOptions<Actors, Aborters> kalmanOptions(
         kfOptions.geoContext, kfOptions.magFieldContext);
 
-    // // Set the trivial propagator options
+    // Set the trivial propagator options
     kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
     // Catch the actor and set the measurements
@@ -1253,10 +1253,6 @@ class KalmanFitter {
       TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
       -> Result<typename TrackContainer<track_container_t, traj_t,
                                         holder_t>::TrackProxy> {
-    typename propagator_t::template action_list_t_result_t<
-        CurvilinearTrackParameters, actor_list_t>
-        inputResult;
-
     auto propagatorState =
         m_propagator.template makeState(sParameters, kalmanOptions);
 
@@ -1265,9 +1261,7 @@ class KalmanFitter {
     kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
-    auto result = m_propagator.template makeResult(
-        m_propagator.template propagate(propagatorState), propagatorState,
-        kalmanOptions, false);
+    auto result = m_propagator.template propagate(propagatorState);
 
     if (!result.ok()) {
       ACTS_ERROR("Propagation failed: " << result.error());
