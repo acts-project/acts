@@ -60,7 +60,7 @@ typename grid_type::point_t castPosition(const Vector3& position,
 /// @param laccess the local accessors
 /// @param ra is the array to be filled
 ///
-/// @note voide function that fill the provided array
+/// @note void function that fills the provided array
 template <typename Array, std::size_t... idx>
 void fillLocal(const Vector2& lposition,
                const std::vector<std::size_t>& laccess, Array& ra,
