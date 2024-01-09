@@ -132,7 +132,7 @@ std::size_t GridGlobalIterator<T, Axes...>::globalBinIndex() const {
 
 template <typename T, class... Axes>
 std::array<std::size_t, GridGlobalIterator<T, Axes...>::DIM>
-GridGlobalIterator<T, Axes...>::localBinsIndexes() const {
+GridGlobalIterator<T, Axes...>::localBinsIndices() const {
   return m_grid->localBinsFromGlobalBin(m_idx);
 }
 
@@ -140,10 +140,10 @@ GridGlobalIterator<T, Axes...>::localBinsIndexes() const {
 template <typename T, class... Axes>
 Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
     const Acts::Grid<T, Axes...>& grid,
-    const std::array<std::size_t, DIM>& indexes)
+    const std::array<std::size_t, DIM>& indices)
     : m_grid(&grid),
       m_numLocalBins(grid.numLocalBins()),
-      m_currentIndex(indexes) {
+      m_currentIndex(indices) {
   // Since the user has not defined a custom navigation pattern, we tell the
   // iterator we want to iterate on all the local bins in ascending order from
   // 1ul to numLocalBin for that specific axis.
@@ -156,11 +156,11 @@ Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
 template <typename T, class... Axes>
 Acts::GridLocalIterator<T, Axes...>::GridLocalIterator(
     const Acts::Grid<T, Axes...>& grid,
-    const std::array<std::size_t, DIM>& indexes,
+    const std::array<std::size_t, DIM>& indices,
     std::array<std::vector<std::size_t>, DIM> navigation)
     : m_grid(&grid),
       m_numLocalBins(grid.numLocalBins()),
-      m_currentIndex(indexes),
+      m_currentIndex(indices),
       m_navigationIndex(std::move(navigation)) {
   // We can allow navigation on only a subset of bins.
   // If the number of specified bins in the navigation for one axis is not
@@ -271,12 +271,12 @@ void GridLocalIterator<T, Axes...>::increment() {
 
 template <typename T, class... Axes>
 std::size_t GridLocalIterator<T, Axes...>::globalBinIndex() const {
-  return m_grid->globalBinFromLocalBins(localBinsIndexes());
+  return m_grid->globalBinFromLocalBins(localBinsIndices());
 }
 
 template <typename T, class... Axes>
 std::array<std::size_t, GridLocalIterator<T, Axes...>::DIM>
-GridLocalIterator<T, Axes...>::localBinsIndexes() const {
+GridLocalIterator<T, Axes...>::localBinsIndices() const {
   std::array<std::size_t, DIM> output{};
   for (std::size_t i(0); i < DIM; ++i) {
     output[i] = m_navigationIndex[i][m_currentIndex[i]];

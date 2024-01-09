@@ -139,9 +139,9 @@ class GridGlobalIterator {
   /// @brief Retrieve the global bin index
   /// @return The current global bin index in the grid
   std::size_t globalBinIndex() const;
-  /// @brief Retrieve the local bins indexes
+  /// @brief Retrieve the local bins indices
   /// @return The current local bins indexed in the grid
-  std::array<std::size_t, DIM> localBinsIndexes() const;
+  std::array<std::size_t, DIM> localBinsIndices() const;
 
  private:
   /// @brief The grid on which we are iterating
@@ -175,29 +175,29 @@ class GridLocalIterator {
   GridLocalIterator() = default;
   /// @brief Constructor taking ownership of the grid is not allowed
   /// @param [in] grid The grid
-  /// @param [in] indexes The local position
+  /// @param [in] indices The local position
   GridLocalIterator(Acts::Grid<T, Axes...>&& grid,
-                    const std::array<std::size_t, DIM>& indexes) = delete;
+                    const std::array<std::size_t, DIM>& indices) = delete;
   /// @brief Constructor taking ownership of the grid is not allowed
   /// @param [in] grid The grid
-  /// @brief [in] indexes The local position
+  /// @brief [in] indices The local position
   /// @brief [in] navigation The custom navigation pattern for each axis
   ///
   /// @pre None of the navigation vectors is allowed to be an empty vector
   GridLocalIterator(Acts::Grid<T, Axes...>&& grid,
-                    const std::array<std::size_t, DIM>& indexes,
+                    const std::array<std::size_t, DIM>& indices,
                     std::array<std::vector<std::size_t>, DIM> navigation) =
       delete;
   /// @brief Constructor
   /// @param [in] grid The grid
-  /// @param [in] indexes The local position
+  /// @param [in] indices The local position
   ///
   /// @pre The local bins must be a valid local position in the grid
   GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
-                    const std::array<std::size_t, DIM>& indexes);
+                    const std::array<std::size_t, DIM>& indices);
   /// @brief Constructor with custom navigation pattern
   /// @param [in] grid The grid
-  /// @param [in] indexes The local position
+  /// @param [in] indices The local position
   /// @param [in] navigation The custom navigation pattern for each axis
   ///
   /// @pre The local bins must be a valid local position in the grid.
@@ -206,7 +206,7 @@ class GridLocalIterator {
   ///
   /// @pre None of the navigation vectors is allowed to be an empty vector
   GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
-                    const std::array<std::size_t, DIM>& indexes,
+                    const std::array<std::size_t, DIM>& indices,
                     std::array<std::vector<std::size_t>, DIM> navigation);
 
   /// @brief Copy constructor
@@ -263,7 +263,7 @@ class GridLocalIterator {
   std::size_t globalBinIndex() const;
   /// @brief Retrieve the local position
   /// @return The current local position in the grid
-  std::array<std::size_t, DIM> localBinsIndexes() const;
+  std::array<std::size_t, DIM> localBinsIndices() const;
 
  private:
   /// @brief Increment the local position
