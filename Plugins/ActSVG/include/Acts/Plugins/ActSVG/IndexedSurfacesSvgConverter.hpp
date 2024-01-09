@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -20,6 +19,7 @@
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/TypeList.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
@@ -246,7 +246,7 @@ ProtoIndexedSurfaceGrid convert(
   ProtoIndexedSurfaceGrid sgi = {pSurfaces, pGrid, indices};
   // Convert if dynamic cast happens to work
   unrollConvert(gctx, surfaces, cOptions, sgi, delegate,
-                Experimental::detail::GridAxisGenerators::PossibleAxes{});
+                GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
   return sgi;
 }
