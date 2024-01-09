@@ -33,9 +33,9 @@ namespace Acts {
 template <typename external_spacepoint_t>
 SeedFinderGbts<external_spacepoint_t>::SeedFinderGbts(
     const SeedFinderGbtsConfig<external_spacepoint_t>& config,
-    const GbtsGeometry<external_spacepoint_t>& Gbtsgeo)
+    const GbtsGeometry<external_spacepoint_t>& gbtsgeo)
     : m_config(config) {
-  m_storage = new GbtsDataStorage(Gbtsgeo);
+  m_storage = new GbtsDataStorage(gbtsgeo);
 }
 
 template <typename external_spacepoint_t>
@@ -48,13 +48,13 @@ SeedFinderGbts<external_spacepoint_t>::~SeedFinderGbts() {
 // define loadspace points function
 template <typename external_spacepoint_t>
 void SeedFinderGbts<external_spacepoint_t>::loadSpacePoints(
-    const std::vector<GbtsSP<external_spacepoint_t>>& GbtsSP_vect) {
-  for (const auto& Gbts_sp : GbtsSP_vect) {
-    bool is_Pixel = Gbts_sp.isPixel();
+    const std::vector<GbtsSP<external_spacepoint_t>>& gbtsSPvect) {
+  for (const auto& gbtssp : gbtsSPvect) {
+    bool is_Pixel = gbtssp.isPixel();
     if (!is_Pixel) {
       continue;
     }
-    m_storage->addSpacePoint(Gbts_sp, (m_config.m_useClusterWidth > 0));
+    m_storage->addSpacePoint(gbtssp, (m_config.m_useClusterWidth > 0));
   }
 
   m_config.m_phiSliceWidth = 2 * M_PI / m_config.m_nMaxPhiSlice;
@@ -68,7 +68,7 @@ template <typename external_spacepoint_t>
 void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
     std::vector<GbtsTrigTracklet<external_spacepoint_t>>& vTracks,
     const Acts::RoiDescriptor& roi,
-    const Acts::GbtsGeometry<external_spacepoint_t>& Gbtsgeo) {
+    const Acts::GbtsGeometry<external_spacepoint_t>& gbtsgeo) {
   const float min_z0 = roi.zedMinus();
   const float max_z0 = roi.zedPlus();
   const float cut_zMinU = min_z0 + m_config.maxOuterRadius * roi.dzdrMinus();
@@ -83,7 +83,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   int currentStage = 0;
 
-  const Acts::GbtsConnector& connector = *(Gbtsgeo.connector());
+  const Acts::GbtsConnector& connector = *(gbtsgeo.connector());
 
   std::vector<Acts::GbtsEdge<external_spacepoint_t>> edgeStorage;
 
@@ -100,7 +100,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
       unsigned int dst = layerGroup.m_dst;  // n1 : inner nodes
 
       const GbtsLayer<external_spacepoint_t>* pL1 =
-          Gbtsgeo.getGbtsLayerByKey(dst);
+          gbtsgeo.getGbtsLayerByKey(dst);
 
       if (pL1 == nullptr) {
         continue;
@@ -112,7 +112,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
         unsigned int src = conn->m_src;  // n2 : the new connectors
 
         const GbtsLayer<external_spacepoint_t>* pL2 =
-            Gbtsgeo.getGbtsLayerByKey(src);
+            gbtsgeo.getGbtsLayerByKey(src);
 
         if (pL2 == nullptr) {
           continue;
@@ -173,10 +173,10 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                 continue;
               }
 
-              float r1 = n1->m_sp_Gbts.SP->r();
-              float x1 = n1->m_sp_Gbts.SP->x();
-              float y1 = n1->m_sp_Gbts.SP->y();
-              float z1 = n1->m_sp_Gbts.SP->z();
+              float r1 = n1->m_spGbts.SP->r();
+              float x1 = n1->m_spGbts.SP->x();
+              float y1 = n1->m_spGbts.SP->y();
+              float z1 = n1->m_spGbts.SP->z();
               float phi1 = std::atan(x1 / y1);
 
               float minPhi = phi1 - deltaPhi;
@@ -206,7 +206,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                   continue;
                 }
 
-                float r2 = n2->m_sp_Gbts.SP->r();
+                float r2 = n2->m_spGbts.SP->r();
 
                 float dr = r2 - r1;
 
@@ -214,7 +214,7 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                   continue;
                 }
 
-                float z2 = n2->m_sp_Gbts.SP->z();
+                float z2 = n2->m_spGbts.SP->z();
 
                 float dz = z2 - z1;
                 float tau = dz / dr;
@@ -250,13 +250,13 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                   }
                 }
 
-                float dx = n2->m_sp_Gbts.SP->x() - x1;
-                float dy = n2->m_sp_Gbts.SP->y() - y1;
+                float dx = n2->m_spGbts.SP->x() - x1;
+                float dy = n2->m_spGbts.SP->y() - y1;
 
                 float L2 = 1 / (dx * dx + dy * dy);
 
                 float D =
-                    (n2->m_sp_Gbts.SP->y() * x1 - y1 * n2->m_sp_Gbts.SP->x()) /
+                    (n2->m_spGbts.SP->y() * x1 - y1 * n2->m_spGbts.SP->x()) /
                     (r1 * r2);
 
                 float kappa = D * D * L2;
@@ -533,9 +533,9 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
       (*sIt)->m_level = -1;  // mark as collected
 
       if (sIt == rs.m_vs.rbegin()) {
-        vSP.push_back(&(*sIt)->m_n1->m_sp_Gbts);
+        vSP.push_back(&(*sIt)->m_n1->m_spGbts);
       }
-      vSP.push_back(&(*sIt)->m_n2->m_sp_Gbts);
+      vSP.push_back(&(*sIt)->m_n2->m_spGbts);
     }
 
     if (vSP.size() < 3) {
@@ -648,14 +648,14 @@ template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderGbts<external_spacepoint_t>::createSeeds(
     const Acts::RoiDescriptor& roi,
-    const Acts::GbtsGeometry<external_spacepoint_t>& Gbtsgeo,
+    const Acts::GbtsGeometry<external_spacepoint_t>& gbtsgeo,
     output_container_t& out_cont) {
   std::vector<GbtsTrigTracklet<external_spacepoint_t>>
       vTracks;  // make empty vector
 
   vTracks.reserve(5000);
 
-  runGbts_TrackFinder(vTracks, roi, Gbtsgeo);  // returns filled vector
+  runGbts_TrackFinder(vTracks, roi, gbtsgeo);  // returns filled vector
 
   if (vTracks.empty()) {
     return;
@@ -710,9 +710,9 @@ template <typename external_spacepoint_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinderGbts<external_spacepoint_t>::createSeeds(
     const Acts::RoiDescriptor& roi,
-    const Acts::GbtsGeometry<external_spacepoint_t>& Gbtsgeo) {
+    const Acts::GbtsGeometry<external_spacepoint_t>& gbtsgeo) {
   std::vector<seed_t> r;
-  createSeeds(roi, Gbtsgeo, r);
+  createSeeds(roi, gbtsgeo, r);
   return r;
 }
 

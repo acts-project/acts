@@ -276,7 +276,7 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
       inputSpacePoints, outputSeeds, seedFilterConfig, seedFinderConfig,
       seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks,
-      trackingGeometry, ACTS_Gbts_Map, fill_module_csv, inputClusters);
+      trackingGeometry, ACTSGbtsMap, fill_module_csv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",

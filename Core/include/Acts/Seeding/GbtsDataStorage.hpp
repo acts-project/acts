@@ -25,10 +25,10 @@ constexpr std::size_t N_SEG_CONNS = 6;          // was 6
 template <typename space_point_t>
 struct GbtsSP {
   const space_point_t *SP;  // want inside to have pointer
-  int GbtsID;
+  int gbtsID;
   int combined_ID;
   GbtsSP(const space_point_t *sp, int id, int combined_id)
-      : SP(sp), GbtsID(id), combined_ID{combined_id} {
+      : SP(sp), gbtsID(id), combined_ID{combined_id} {
     if (SP->sourceLinks().size() == 1) {  // pixels have 1 SL
       m_isPixel = true;
     } else {
@@ -49,13 +49,13 @@ class GbtsNode {
   struct CompareByPhi {
     bool operator()(const GbtsNode<space_point_t> *n1,
                     const GbtsNode<space_point_t> *n2) {
-      return (n1->m_sp_Gbts.phi() < n2->m_sp_Gbts.phi());
+      return (n1->m_spGbts.phi() < n2->m_spGbts.phi());
     }
   };
 
-  GbtsNode(const GbtsSP<space_point_t> &Gbts_sp, float minT = -100.0,
+  GbtsNode(const GbtsSP<space_point_t> &Gbtssp, float minT = -100.0,
            float maxT = 100.0)
-      : m_sp_Gbts(Gbts_sp), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {}
+      : m_spGbts(Gbtssp), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {}
 
   inline void addIn(int i) {
     if (m_in.size() < MAX_SEG_PER_NODE) {
@@ -84,7 +84,7 @@ class GbtsNode {
     }
   }
 
-  const GbtsSP<space_point_t> &m_sp_Gbts;
+  const GbtsSP<space_point_t> &m_spGbts;
 
   std::vector<unsigned int> m_in;  // indices of the edges in the edge storage
   std::vector<unsigned int> m_out;
@@ -116,7 +116,7 @@ class GbtsEtaBin {
       GbtsNode<space_point_t> *pN = m_vn.at(nIdx);
       // float phi = pN->m_sp.phi();
       // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
-      float phi = pN->m_sp_Gbts.phi();
+      float phi = pN->m_spGbts.phi();
       if (phi <= M_PI - dphi) {
         continue;
       }
@@ -127,13 +127,13 @@ class GbtsEtaBin {
 
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       GbtsNode<space_point_t> *pN = m_vn.at(nIdx);
-      float phi = pN->m_sp_Gbts.phi();
+      float phi = pN->m_spGbts.phi();
       m_vPhiNodes.push_back(std::pair<float, unsigned int>(phi, nIdx));
     }
 
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       GbtsNode<space_point_t> *pN = m_vn.at(nIdx);
-      float phi = pN->m_sp_Gbts.phi();
+      float phi = pN->m_spGbts.phi();
       if (phi >= -M_PI + dphi) {
         break;
       }

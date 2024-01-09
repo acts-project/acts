@@ -40,8 +40,8 @@ struct GbtsEdgeState {
 
     // n2->n1
 
-    float dx = pS->m_n1->m_sp_Gbts.SP->x() - pS->m_n2->m_sp_Gbts.SP->x();
-    float dy = pS->m_n1->m_sp_Gbts.SP->y() - pS->m_n2->m_sp_Gbts.SP->y();
+    float dx = pS->m_n1->m_spGbts.SP->x() - pS->m_n2->m_spGbts.SP->x();
+    float dy = pS->m_n1->m_spGbts.SP->y() - pS->m_n2->m_spGbts.SP->y();
     float L = std::sqrt(dx * dx + dy * dy);
 
     m_s = dy / L;
@@ -51,22 +51,22 @@ struct GbtsEdgeState {
     //  x' =  x*m_c + y*m_s
     //  y' = -x*m_s + y*m_c
 
-    m_refY = pS->m_n2->m_sp_Gbts.SP->r();
+    m_refY = pS->m_n2->m_spGbts.SP->r();
     m_refX =
-        pS->m_n2->m_sp_Gbts.SP->x() * m_c + pS->m_n2->m_sp_Gbts.SP->y() * m_s;
+        pS->m_n2->m_spGbts.SP->x() * m_c + pS->m_n2->m_spGbts.SP->y() * m_s;
 
     // X-state: y, dy/dx, d2y/dx2
 
     m_X[0] =
-        -pS->m_n2->m_sp_Gbts.SP->x() * m_s + pS->m_n2->m_sp_Gbts.SP->y() * m_c;
+        -pS->m_n2->m_spGbts.SP->x() * m_s + pS->m_n2->m_spGbts.SP->y() * m_c;
     m_X[1] = 0.0;
     m_X[2] = 0.0;
 
     // Y-state: z, dz/dr
 
-    m_Y[0] = pS->m_n2->m_sp_Gbts.SP->z();
-    m_Y[1] = (pS->m_n1->m_sp_Gbts.SP->z() - pS->m_n2->m_sp_Gbts.SP->z()) /
-             (pS->m_n1->m_sp_Gbts.SP->r() - pS->m_n2->m_sp_Gbts.SP->r());
+    m_Y[0] = pS->m_n2->m_spGbts.SP->z();
+    m_Y[1] = (pS->m_n1->m_spGbts.SP->z() - pS->m_n2->m_spGbts.SP->z()) /
+             (pS->m_n1->m_spGbts.SP->r() - pS->m_n2->m_spGbts.SP->r());
 
     memset(&m_Cx[0][0], 0, sizeof(m_Cx));
     memset(&m_Cy[0][0], 0, sizeof(m_Cy));
@@ -245,7 +245,7 @@ class GbtsTrackingFilter {
     ts.m_Cx[2][2] += sigma_w * sigma_w;
     ts.m_Cx[1][1] += sigma_t * sigma_t;
 
-    int type1 = getLayerType(pS->m_n1->m_sp_Gbts.combined_ID);
+    int type1 = getLayerType(pS->m_n1->m_spGbts.combined_ID);
 
     float t2 = type1 == 0 ? 1.0 + ts.m_Y[1] * ts.m_Y[1]
                           : 1.0 + 1.0 / (ts.m_Y[1] * ts.m_Y[1]);
@@ -265,10 +265,10 @@ class GbtsTrackingFilter {
 
     float x{}, y{}, z{}, r{};
 
-    x = pS->m_n1->m_sp_Gbts.SP->x();
-    y = pS->m_n1->m_sp_Gbts.SP->y();
-    z = pS->m_n1->m_sp_Gbts.SP->z();
-    r = pS->m_n1->m_sp_Gbts.SP->r();
+    x = pS->m_n1->m_spGbts.SP->x();
+    y = pS->m_n1->m_spGbts.SP->y();
+    z = pS->m_n1->m_spGbts.SP->z();
+    r = pS->m_n1->m_spGbts.SP->r();
 
     refX = x * ts.m_c + y * ts.m_s;
     mx = -x * ts.m_s + y * ts.m_c;  // measured X[0]
@@ -282,21 +282,6 @@ class GbtsTrackingFilter {
     X[0] = ts.m_X[0] + ts.m_X[1] * A + ts.m_X[2] * B;
     X[1] = ts.m_X[1] + ts.m_X[2] * A;
     X[2] = ts.m_X[2];
-
-    std::cout << " printing pre  arithmetic error 00 : " << ts.m_Cx[0][0]
-              << std::endl;
-    std::cout << "  printing pre  arithmetic error 01 : " << ts.m_Cx[0][1]
-              << std::endl;
-    std::cout << "  printing pre  arithmetic error 02 : " << ts.m_Cx[0][2]
-              << std::endl;
-    std::cout << "  printing pre  arithmetic error 11 : " << ts.m_Cx[1][1]
-              << std::endl;
-    std::cout << "  printing pre  arithmetic error 12 : " << ts.m_Cx[1][2]
-              << std::endl;
-    std::cout << "  printing pre  arithmetic error 22 : " << ts.m_Cx[2][2]
-              << std::endl;
-    std::cout << " printing pre  arithmetic error A : " << A << std::endl;
-    std::cout << " printing pre  arithmetic error B : " << B << std::endl;
 
     Cx[0][0] = ts.m_Cx[0][0] + 2 * ts.m_Cx[0][1] * A + 2 * ts.m_Cx[0][2] * B +
                A * A * ts.m_Cx[1][1] + 2 * A * B * ts.m_Cx[1][2] +
@@ -318,8 +303,6 @@ class GbtsTrackingFilter {
     Cy[0][1] = Cy[1][0] = ts.m_Cy[0][1] + dr * ts.m_Cy[1][1];
     Cy[1][1] = ts.m_Cy[1][1];
 
-    // std::cout << " printing after where arithmetic error is " << Cx[0][0] <<
-    // std::endl ; chi2 test
     float resid_x = mx - X[0];
     float resid_y = my - Y[0];
 
@@ -328,7 +311,7 @@ class GbtsTrackingFilter {
 
     float sigma_rz = 0.0;
 
-    int type = getLayerType(pS->m_n1->m_sp_Gbts.combined_ID);
+    int type = getLayerType(pS->m_n1->m_spGbts.combined_ID);
 
     if (type == 0) {  // barrel TODO: split into barrel Pixel and barrel SCT
       sigma_rz = sigma_y * sigma_y;
