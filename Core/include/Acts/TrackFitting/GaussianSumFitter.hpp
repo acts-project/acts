@@ -10,15 +10,13 @@
 
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
-#include <fstream>
 
 namespace Acts {
 
