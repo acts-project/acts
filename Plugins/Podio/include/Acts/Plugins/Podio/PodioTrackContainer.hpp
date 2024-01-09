@@ -294,6 +294,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   friend PodioTrackContainerBase;
 
   std::unique_ptr<ActsPodioEdm::TrackCollection> m_collection;
+  std::vector<HashedString> m_dynamicKeys;
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::DynamicColumnBase>>
       m_dynamic;
@@ -336,14 +337,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
 
-    std::vector<HashedString> dynamicKeys;
-    dynamicKeys.reserve(m_dynamic.size());
-    for (const auto& [key, col] : m_dynamic) {
-      dynamicKeys.push_back(key);
-    }
-
-    podio_detail::recoverDynamicColumns(frame, tracksKey, m_dynamic,
-                                        dynamicKeys);
+    podio_detail::recoverDynamicColumns(frame, tracksKey, m_dynamic);
   }
 
   std::any component_impl(HashedString key, IndexType itrack) const {
@@ -390,6 +384,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend, ConstPodioTrackContainer);

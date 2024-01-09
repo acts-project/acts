@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
@@ -109,16 +110,16 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
       nMajorityHits = particleHitCount.front().hitCount;
     }
 
-    static const Acts::ConstTrackAccessor<unsigned int> seedNumber(
+    static const Acts::ConstProxyAccessor<unsigned int> seedNumber(
         "trackGroup");
 
     // track info
     TrackInfo toAdd;
     toAdd.trackId = trackId;
     if (tracks.hasColumn(Acts::hashString("trackGroup"))) {
-      toAdd.seedId = seedNumber(track);
+      toAdd.seedID = seedNumber(track);
     } else {
-      toAdd.seedId = 0;
+      toAdd.seedID = 0;
     }
     toAdd.particleId = majorityParticleId;
     toAdd.nStates = track.nTrackStates();
@@ -199,7 +200,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
     // write the track info
     mos << trajState.trackId << ",";
-    mos << trajState.seedId << ",";
+    mos << trajState.seedID << ",";
     mos << trajState.particleId << ",";
     mos << trajState.nStates << ",";
     mos << trajState.nMajorityHits << ",";
