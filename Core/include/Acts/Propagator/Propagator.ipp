@@ -282,6 +282,9 @@ auto Acts::Propagator<S, N>::makeResult(
   // Type of track parameters produced at the end of the propagation
   using ReturnParameterType = StepperBoundTrackParameters;
 
+  static_assert(std::is_copy_constructible<ReturnParameterType>::value,
+                "return track parameter type must be copy-constructible");
+
   // Type of the full propagation result, including output from actions
   using ResultType =
       action_list_t_result_t<ReturnParameterType,
@@ -314,7 +317,7 @@ template <typename S, typename N>
 template <typename propagator_state_t, typename result_t>
 void Acts::Propagator<S, N>::moveStateToResult(propagator_state_t& state,
                                                result_t& result) const {
-  result.tuple() = state.tuple();
+  result.tuple() = std::move(state.tuple());
 
   result.steps = state.steps;
   result.pathLength = state.pathLength;
