@@ -12,8 +12,8 @@
 
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
-#include "Acts/Seeding/SeedFinderFTF.hpp"
-#include "Acts/Seeding/SeedFinderFTFConfig.hpp"
+#include "Acts/Seeding/SeedFinderGbts.hpp"
+#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 
 // in core
@@ -30,7 +30,7 @@
 
 namespace ActsExamples {
 
-class SeedingFTFAlgorithm final : public IAlgorithm {
+class GbtsSeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     std::vector<std::string> inputSpacePoints;
@@ -38,7 +38,7 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
     std::string outputSeeds;
 
     Acts::SeedFilterConfig seedFilterConfig;
-    Acts::SeedFinderFTFConfig<SimSpacePoint> seedFinderConfig;
+    Acts::SeedFinderGbtsConfig<SimSpacePoint> seedFinderConfig;
     Acts::SeedFinderOptions seedFinderOptions;
 
     std::string layerMappingFile;
@@ -49,7 +49,7 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
 
-    std::map<std::pair<int, int>, std::pair<int, int>> ACTS_FTF_Map;
+    std::map<std::pair<int, int>, std::pair<int, int>> ActsGbtsMap;
 
     bool fill_module_csv = false;
 
@@ -59,7 +59,7 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
   // constructor:
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedingFTFAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   // code to make the algorithm run
   /// @param txt is the algorithm context with event information
@@ -71,9 +71,9 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
   // own class functions
   // make the map
-  std::map<std::pair<int, int>, std::pair<int, int>> Make_ACTS_FTF_Map() const;
+  std::map<std::pair<int, int>, std::pair<int, int>> makeActsGbtsMap() const;
   // make the vector of space points with FTF Info
-  std::vector<Acts::FTF_SP<SimSpacePoint>> Make_FTF_spacePoints(
+  std::vector<Acts::GbtsSP<SimSpacePoint>> MakeGbtsSpacePoints(
       const AlgorithmContext &ctx,
       std::map<std::pair<int, int>, std::pair<int, int>> map) const;
   // layer numbering
@@ -82,7 +82,7 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  std::unique_ptr<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>> mGNNgeo;
+  std::unique_ptr<Acts::GbtsGeometry<SimSpacePoint>> m_gbtsGeo;
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Concepts.hpp"
@@ -179,6 +180,9 @@ class TrackProxy {
   /// Alias for the const version of this track proxy, with the same backends
   using ConstTrackProxy =
       TrackProxy<track_container_t, trajectory_t, holder_t, true>;
+
+  /// Alias for an associated const track proxy, with the same backends
+  using ConstProxyType = ConstTrackProxy;
 
   /// Alias for an associated mutable track state proxy, with the same backends
   using TrackStateProxy = typename Trajectory::TrackStateProxy;
@@ -449,14 +453,14 @@ class TrackProxy {
   /// @return The number of measurements
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nMeasurements() {
-    return component<unsigned int>(hashString("nMeasurements"));
+    return component<unsigned int, hashString("nMeasurements")>();
   }
 
   /// Return a mutable reference to the number of measurements for the track.
   /// Mutable version
   /// @return The number of measurements
   unsigned int nMeasurements() const {
-    return component<unsigned int>(hashString("nMeasurements"));
+    return component<unsigned int, hashString("nMeasurements")>();
   }
 
   /// Return a mutable reference to the number of holes for the track.
@@ -465,13 +469,13 @@ class TrackProxy {
   /// @return The number of holes
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nHoles() {
-    return component<unsigned int>(hashString("nHoles"));
+    return component<unsigned int, hashString("nHoles")>();
   }
 
   /// Return the number of measurements for the track. Const version
   /// @return The number of measurements
   unsigned int nHoles() const {
-    return component<unsigned int>(hashString("nHoles"));
+    return component<unsigned int, hashString("nHoles")>();
   }
 
   /// Return a mutable reference to the number of outliers for the track.
@@ -480,13 +484,13 @@ class TrackProxy {
   /// @return The number of outliers
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nOutliers() {
-    return component<unsigned int>(hashString("nOutliers"));
+    return component<unsigned int, hashString("nOutliers")>();
   }
 
   /// Return the number of outliers for the track. Const version
   /// @return The number of outliers
   unsigned int nOutliers() const {
-    return component<unsigned int>(hashString("nOutliers"));
+    return component<unsigned int, hashString("nOutliers")>();
   }
 
   /// Return a mutable reference to the number of shared hits for the track.
@@ -495,13 +499,13 @@ class TrackProxy {
   /// @return The number of shared hits
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nSharedHits() {
-    return component<unsigned int>(hashString("nSharedHits"));
+    return component<unsigned int, hashString("nSharedHits")>();
   }
 
   /// Return the number of shared hits for the track. Const version
   /// @return The number of shared hits
   unsigned int nSharedHits() const {
-    return component<unsigned int>(hashString("nSharedHits"));
+    return component<unsigned int, hashString("nSharedHits")>();
   }
 
   /// Return a mutable reference to the chi squared
@@ -510,13 +514,13 @@ class TrackProxy {
   /// @return The chi squared
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   float& chi2() {
-    return component<float>(hashString("chi2"));
+    return component<float, hashString("chi2")>();
   }
 
   /// Return the chi squared for the track. Const version
   /// @return The chi squared
   float chi2() const {
-    return component<float>(hashString("chi2"));
+    return component<float, hashString("chi2")>();
   }
 
   /// Return a mutable reference to the number of degrees of freedom for the
@@ -525,13 +529,13 @@ class TrackProxy {
   /// @return The number of degrees of freedom
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nDoF() {
-    return component<unsigned int>(hashString("ndf"));
+    return component<unsigned int, hashString("ndf")>();
   }
 
   /// Return the number of degrees of freedom for the track. Const version
   /// @return The number of degrees of freedom
   unsigned int nDoF() const {
-    return component<unsigned int>(hashString("ndf"));
+    return component<unsigned int, hashString("ndf")>();
   }
 
   /// Return the index of this track in the track container
@@ -555,7 +559,7 @@ class TrackProxy {
     using proxy_t = decltype(m_container->trackStateContainer().getTrackState(
         std::declval<IndexType>()));
 
-    IndexType stem = component<IndexType>(hashString("stemIndex"));
+    IndexType stem = component<IndexType, hashString("stemIndex")>();
     if (stem == kInvalid) {
       return std::optional<proxy_t>{};
     } else {

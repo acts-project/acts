@@ -120,10 +120,17 @@ struct TrackStateTraits {
 ///
 /// @tparam SourceLink Type to link back to an original measurement
 /// @tparam M         Maximum number of measurement dimensions
-/// @tparam ReadOnly  true for read-only access to underlying storage
-template <typename trajectory_t, std::size_t M, bool ReadOnly = true>
+/// @tparam read_only  true for read-only access to underlying storage
+template <typename trajectory_t, std::size_t M, bool read_only = true>
 class TrackStateProxy {
  public:
+  /// Indicates whether this track state proxy is read-only or if it can be
+  /// modified
+  static constexpr bool ReadOnly = read_only;
+
+  /// Alias for an associated const track state proxy, with the same backends
+  using ConstProxyType = TrackStateProxy<trajectory_t, M, true>;
+
   /// Map-type for a bound parameter vector. This has reference semantics, i.e.
   /// points at a matrix by an internal pointer.
   using Parameters = typename TrackStateTraits<M, ReadOnly>::Parameters;
