@@ -50,7 +50,8 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
   // global to local transformation
   auto lpResult = globalToLocal(gctx, position, direction);
   if (lpResult.ok()) {
-    return bcheck.isEnabled() ? bounds().inside(lpResult.value(), bcheck) : true;
+    return bcheck.isEnabled() ? bounds().inside(lpResult.value(), bcheck)
+                              : true;
   }
   return false;
 }
