@@ -11,56 +11,65 @@
 namespace Acts {
 
 template <typename grid_t>
-BinnedGroupIterator<grid_t>::BinnedGroupIterator(const Acts::BinnedGroup<grid_t>& group,
-						 std::array<std::size_t, Acts::BinnedGroupIterator<grid_t>::DIM> index,
-						 std::array<std::vector<std::size_t>, Acts::BinnedGroupIterator<grid_t>::DIM> navigation)
-  : m_group(group),
-    m_gridItr(group.grid(), index, navigation)
-{
+BinnedGroupIterator<grid_t>::BinnedGroupIterator(
+    const Acts::BinnedGroup<grid_t>& group,
+    std::array<std::size_t, Acts::BinnedGroupIterator<grid_t>::DIM> index,
+    std::array<std::vector<std::size_t>, Acts::BinnedGroupIterator<grid_t>::DIM>
+        navigation)
+    : m_group(group), m_gridItr(group.grid(), index, navigation) {
   std::array<std::size_t, DIM> endline{};
-  for (std::size_t i(0ul); i<DIM; ++i) {
+  for (std::size_t i(0ul); i < DIM; ++i) {
     endline[i] = navigation[i].size();
   }
-  m_gridItrEnd =
-    typename grid_t::local_iterator_t(
-				      m_group->grid(), endline, std::move(navigation));
+  m_gridItrEnd = typename grid_t::local_iterator_t(m_group->grid(), endline,
+                                                   std::move(navigation));
   findNotEmptyBin();
 }
 
 template <typename grid_t>
-bool BinnedGroupIterator<grid_t>::operator==(const Acts::BinnedGroupIterator<grid_t>& other) const {
+bool BinnedGroupIterator<grid_t>::operator==(
+    const Acts::BinnedGroupIterator<grid_t>& other) const {
   return m_group.ptr == other.m_group.ptr && m_gridItr == other.m_gridItr;
 }
-  
+
 template <typename grid_t>
-bool BinnedGroupIterator<grid_t>::operator!=(const Acts::BinnedGroupIterator<grid_t>& other) const {
+bool BinnedGroupIterator<grid_t>::operator!=(
+    const Acts::BinnedGroupIterator<grid_t>& other) const {
   return !(*this == other);
 }
 
 template <typename grid_t>
-Acts::BinnedGroupIterator<grid_t>&
-BinnedGroupIterator<grid_t>::operator++() {
+Acts::BinnedGroupIterator<grid_t>& BinnedGroupIterator<grid_t>::operator++() {
   ++m_gridItr;
   findNotEmptyBin();
   return *this;
 }
 
 template <typename grid_t>
-std::tuple<boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>, std::size_t,
-           boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>>
+std::tuple<boost::container::small_vector<
+               std::size_t,
+               Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>,
+           std::size_t,
+           boost::container::small_vector<
+               std::size_t,
+               Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>>
 BinnedGroupIterator<grid_t>::operator*() const {
-  /// Get the global and local position from current iterator. This is the bin with the middle candidate
-  /// And we know this is not an empty bin
+  /// Get the global and local position from current iterator. This is the bin
+  /// with the middle candidate And we know this is not an empty bin
   std::array<std::size_t, DIM> localPosition = m_gridItr.localBinsIndices();
   std::size_t global_index =
-    m_group->grid().globalBinFromLocalBins(localPosition);
+      m_group->grid().globalBinFromLocalBins(localPosition);
 
   /// Get the neighbouring bins
-  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)> bottoms =
-    m_group->m_bottomBinFinder->findBins(localPosition,
-					 m_group->grid());
-  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)> tops =
-    m_group->m_topBinFinder->findBins(localPosition, m_group->grid());
+  boost::container::small_vector<std::size_t,
+                                 Acts::detail::ipow(
+                                     3, Acts::BinnedGroupIterator<grid_t>::DIM)>
+      bottoms =
+          m_group->m_bottomBinFinder->findBins(localPosition, m_group->grid());
+  boost::container::small_vector<std::size_t,
+                                 Acts::detail::ipow(
+                                     3, Acts::BinnedGroupIterator<grid_t>::DIM)>
+      tops = m_group->m_topBinFinder->findBins(localPosition, m_group->grid());
 
   // GCC12+ in Release throws an overread warning here due to the move.
   // This is from inside boost code, so best we can do is to suppress it.
@@ -72,7 +81,7 @@ BinnedGroupIterator<grid_t>::operator*() const {
 #if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
-}  
+}
 
 template <typename grid_t>
 void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
@@ -87,4 +96,4 @@ void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
   }
 }
 
-} // namespace Acts
+}  // namespace Acts

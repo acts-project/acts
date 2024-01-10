@@ -7,8 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename SpacePoint>
-Acts::SpacePointGrid<SpacePoint>
-Acts::SpacePointGridCreator::createGrid(
+Acts::SpacePointGrid<SpacePoint> Acts::SpacePointGridCreator::createGrid(
     const Acts::SpacePointGridConfig& config,
     const Acts::SpacePointGridOptions& options) {
   if (!config.isInInternalUnits) {
@@ -114,7 +113,6 @@ Acts::SpacePointGridCreator::createGrid(
     float zBins =
         std::max(1.f, std::floor((config.zMax - config.zMin) / zBinSize));
 
-
     zValues.reserve(static_cast<int>(zBins));
     for (int bin = 0; bin <= static_cast<int>(zBins); bin++) {
       AxisScalar edge =
@@ -124,7 +122,7 @@ Acts::SpacePointGridCreator::createGrid(
 
   } else {
     // Use the zBinEdges defined in the config
-     zValues.reserve(config.zBinEdges.size());
+    zValues.reserve(config.zBinEdges.size());
     for (float bin : config.zBinEdges) {
       zValues.push_back(bin);
     }
@@ -132,36 +130,38 @@ Acts::SpacePointGridCreator::createGrid(
 
   detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
       zAxis(std::move(zValues));
-  return Acts::SpacePointGrid<SpacePoint>(std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+  return Acts::SpacePointGrid<SpacePoint>(
+      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 }
 
 template <typename external_spacepoint_t,
-	  typename external_spacepoint_iterator_t,
-	  typename callable_t>
-void Acts::SpacePointGridCreator::fillGrid(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-					   const Acts::SeedFinderOptions& options,
-					   Acts::SpacePointGrid<external_spacepoint_t>& grid,
-					   external_spacepoint_iterator_t spBegin, external_spacepoint_iterator_t spEnd,
-					   callable_t&& toGlobal,
-					   Acts::Extent& rRangeSPExtent) {
-  using iterated_value_t = typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
-  using iterated_t = typename std::remove_const<typename std::remove_pointer<iterated_value_t>::type>::type;
+          typename external_spacepoint_iterator_t, typename callable_t>
+void Acts::SpacePointGridCreator::fillGrid(
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    const Acts::SeedFinderOptions& options,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    external_spacepoint_iterator_t spBegin,
+    external_spacepoint_iterator_t spEnd, callable_t&& toGlobal,
+    Acts::Extent& rRangeSPExtent) {
+  using iterated_value_t =
+      typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
+  using iterated_t = typename std::remove_const<
+      typename std::remove_pointer<iterated_value_t>::type>::type;
   static_assert(std::is_pointer<iterated_value_t>::value,
-		"Iterator must contain pointers to space points");
+                "Iterator must contain pointers to space points");
   static_assert(std::is_same<iterated_t, external_spacepoint_t>::value,
                 "Iterator does not contain type this class was templated with");
-  
+
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
-			     "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
+        "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
   }
   if (config.seedFilter == nullptr) {
-    throw std::runtime_error(
-                             "SeedFinderConfig has a null SeedFilter object");
+    throw std::runtime_error("SeedFinderConfig has a null SeedFilter object");
   }
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
-			     "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
+        "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
 
   // get region of interest (or full detector if configured accordingly)
@@ -182,7 +182,8 @@ void Acts::SpacePointGridCreator::fillGrid(const Acts::SeedFinderConfig<external
   boost::container::flat_set<std::size_t> rBinsIndex;
 
   std::size_t counter = 0ul;
-  for (external_spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
+  for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
+       it++, ++counter) {
     if (*it == nullptr) {
       continue;
     }
@@ -229,14 +230,12 @@ void Acts::SpacePointGridCreator::fillGrid(const Acts::SeedFinderConfig<external
       rBinsIndex.insert(grid.globalBinFromPosition(spLocation));
     }
   }
-  
+
   /// sort SPs in R for each filled bin
   for (auto& binIndex : rBinsIndex) {
     auto& rbin = grid.atPosition(binIndex);
-    std::sort(
-        rbin.begin(), rbin.end(),
-        [](const auto& a, const auto& b) {
-          return a->radius() < b->radius();
-        });
+    std::sort(rbin.begin(), rbin.end(), [](const auto& a, const auto& b) {
+      return a->radius() < b->radius();
+    });
   }
 }

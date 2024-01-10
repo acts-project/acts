@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Geometry/Extent.hpp"
 
 #include <memory>
 
@@ -93,7 +93,8 @@ struct SpacePointGridOptions {
 
 template <typename external_spacepoint_t>
 using SpacePointGrid = Grid<
-    std::vector<std::unique_ptr<Acts::InternalSpacePoint<external_spacepoint_t>>>,
+    std::vector<
+        std::unique_ptr<Acts::InternalSpacePoint<external_spacepoint_t>>>,
     detail::Axis<detail::AxisType::Equidistant,
                  detail::AxisBoundaryType::Closed>,
     detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>>;
@@ -106,14 +107,14 @@ class SpacePointGridCreator {
       const Acts::SpacePointGridOptions& _options);
 
   template <typename external_spacepoint_t,
-	    typename external_spacepoint_iterator_t,
-	    typename callable_t>
-  static void fillGrid(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-		       const Acts::SeedFinderOptions& options,
-		       Acts::SpacePointGrid<external_spacepoint_t>& grid,
-		       external_spacepoint_iterator_t spBegin, external_spacepoint_iterator_t spEnd,
-		       callable_t&& toGlobal,
-		       Acts::Extent& rRangeSPExtent);
+            typename external_spacepoint_iterator_t, typename callable_t>
+  static void fillGrid(
+      const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+      const Acts::SeedFinderOptions& options,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      external_spacepoint_iterator_t spBegin,
+      external_spacepoint_iterator_t spEnd, callable_t&& toGlobal,
+      Acts::Extent& rRangeSPExtent);
 };
 }  // namespace Acts
 #include "Acts/Seeding/SpacePointGrid.ipp"

@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Seeding/BinnedGroupIterator.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Seeding/BinnedGroupIterator.hpp"
 
 #include <memory>
 #include <vector>
@@ -21,13 +21,13 @@ namespace Acts {
 
 /// @class BinnedGroup
 /// @tparam grid_t Type of the grid the group owns
-///  
+///
 /// The assumption is that the grid has ownership of the space points and
 /// that the grid value_type (i.e. T in Grid<T, Axes ...>) is an iterable
-/// object of space points, such as a vector< ... >  
+/// object of space points, such as a vector< ... >
 template <typename grid_t>
 class BinnedGroup {
-public:
+ public:
 #ifndef DOXYGEN
   friend BinnedGroupIterator<grid_t>;
 #endif
@@ -39,15 +39,17 @@ public:
 
   /// brief Constructor
   BinnedGroup(grid_t&& grid,
-	      std::shared_ptr<const Acts::GridBinFinder<DIM>> bottomFinder,
-	      std::shared_ptr<const Acts::GridBinFinder<DIM>> topFinder,
-	      std::array<std::vector<std::size_t>, DIM> navigation = std::array<std::vector<std::size_t>, DIM>());
+              std::shared_ptr<const Acts::GridBinFinder<DIM>> bottomFinder,
+              std::shared_ptr<const Acts::GridBinFinder<DIM>> topFinder,
+              std::array<std::vector<std::size_t>, DIM> navigation =
+                  std::array<std::vector<std::size_t>, DIM>());
 
   BinnedGroup(grid_t& grid,
               std::shared_ptr<const Acts::GridBinFinder<DIM>> bottomFinder,
               std::shared_ptr<const Acts::GridBinFinder<DIM>> topFinder,
-              std::array<std::vector<std::size_t>, DIM> navigation = std::array<std::vector<std::size_t>, DIM>()) = delete;
-  
+              std::array<std::vector<std::size_t>, DIM> navigation =
+                  std::array<std::vector<std::size_t>, DIM>()) = delete;
+
   /// @brief Copy constructor
   /// @param [in] other The BinnedGroup to copy
   BinnedGroup(const BinnedGroup<grid_t>& other) = delete;
@@ -62,8 +64,9 @@ public:
   /// @brief Move Assignment
   /// @param [in] other The BinnedGroup to move
   /// @return The moved BinnedGroup
-  BinnedGroup<grid_t>& operator=(BinnedGroup<grid_t>&& other) noexcept = default;
-  
+  BinnedGroup<grid_t>& operator=(BinnedGroup<grid_t>&& other) noexcept =
+      default;
+
   /// @brief Default destructor
   ~BinnedGroup() = default;
 
@@ -80,8 +83,8 @@ public:
   /// @brief Get the end iterator
   /// @return The iterator
   Acts::BinnedGroupIterator<grid_t> end() const;
-  
-private:
+
+ private:
   /// @brief The N-dimentional grid
   grid_t m_grid;
   /// @brief The Grid Bin Finder for bottom candidates
@@ -92,11 +95,12 @@ private:
   std::array<std::vector<std::size_t>, DIM> m_bins{};
 };
 
-} // namespace Acts
+}  // namespace Acts
 
 #include "Acts/Seeding/BinnedGroup.ipp"
 
 namespace Acts {
-  template <typename external_spacepoint_t>
-  using BinnedSPGroup = Acts::BinnedGroup<Acts::SpacePointGrid<external_spacepoint_t>>;
+template <typename external_spacepoint_t>
+using BinnedSPGroup =
+    Acts::BinnedGroup<Acts::SpacePointGrid<external_spacepoint_t>>;
 }
