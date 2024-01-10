@@ -42,11 +42,10 @@ namespace {
 /// Check autorange for a given binning
 ///
 /// @param pBinning the proto binning
-/// @param extent the extent
-/// @param fullPhi indicates whether the full phi range is used
+/// @param extent the extent from which the range is taken
 ///
-void adaptBinningRage(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
-                      const Acts::Extent& extent, bool fullPhiBinning) {
+void adaptBinningRange(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
+                       const Acts::Extent& extent) {
   for (auto& pb : pBinning) {
     // Starting values
     Acts::ActsScalar vmin = pb.edges.front();
@@ -59,10 +58,6 @@ void adaptBinningRage(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
       // Patch the edges values from the range
       vmin = range.min();
       vmax = range.max();
-    } else if (pb.binValue == Acts::binPhi && fullPhiBinning) {
-      vmin = -M_PI;
-      vmax = M_PI;
-      pb.boundaryType = Acts::detail::AxisBoundaryType::Closed;
     }
     // Possibly update the edges
     if (pb.axisType == Acts::detail::AxisType::Equidistant) {
@@ -273,7 +268,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
       // Check if autorange for binning applies
       if (m_cfg.extent.has_value()) {
         ACTS_DEBUG("- adapting the proto binning range to the surface extent.");
-        adaptBinningRage(binnings, m_cfg.extent.value(), m_cfg.fullPhiBinning);
+        adaptBinningRange(binnings, m_cfg.extent.value());
       }
       ACTS_DEBUG("- 1-dimensional surface binning detected.");
       // Capture the binning
@@ -294,7 +289,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
       if (m_cfg.extent.has_value()) {
         ACTS_DEBUG(
             "- adapting the proto binning range(s) to the surface extent.");
-        adaptBinningRage(binnings, m_cfg.extent.value(), m_cfg.fullPhiBinning);
+        adaptBinningRange(binnings, m_cfg.extent.value());
       }
       // Sort the binning for conventions
       std::sort(binnings.begin(), binnings.end(),

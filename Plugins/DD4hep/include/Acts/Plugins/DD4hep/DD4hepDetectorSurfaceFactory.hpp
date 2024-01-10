@@ -82,9 +82,7 @@ class DD4hepDetectorSurfaceFactory {
     /// Convert passive surfaces
     bool convertPassive = true;
     /// Convert material directly
-    bool convertMaterial = true;
-    /// Convert proxy material - overrides convertMaterial if present
-    bool convertProxyMaterial = true;
+    bool convertMaterial = false;
     /// New reference material thickness for surfaces
     ActsScalar surfaceMaterialThickness = 1_mm;
   };
