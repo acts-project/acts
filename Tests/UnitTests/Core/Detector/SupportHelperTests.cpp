@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE(RectangularSupport) {
   auto rectangleSupport =
       Acts::Experimental::detail::SupportHelper::rectangularSupport(
           Acts::Transform3::Identity(), {100., 400});
-  BOOST_CHECK(rectangleSupport.size() == 1u);
-  BOOST_CHECK(rectangleSupport[0u]->type() ==
+  BOOST_CHECK_EQUAL(rectangleSupport.size(), 1u);
+  BOOST_CHECK_EQUAL(rectangleSupport[0u]->type(),
               Acts::Surface::SurfaceType::Plane);
 }
 
