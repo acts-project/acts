@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pattern) {
   std::vector<std::size_t> expectedNeighbours = {3, 3, 4, 4, 2};
 
   for (; startGrid != stopGrid; startGrid++) {
-    std::array<std::size_t, 1ul> locPosition = startGrid.localPosition();
+    std::array<std::size_t, 1ul> locPosition = startGrid.localBinsIndices();
     auto all_neigh = binFinder.findBins(locPosition, grid);
     BOOST_CHECK_EQUAL(all_neigh.size(), expectedNeighbours[counter++]);
   }
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pattern) {
                                      std::move(neighboursY));
 
   for (; startGrid != stopGrid; startGrid++) {
-    std::array<std::size_t, 2ul> locPosition = startGrid.localPosition();
+    std::array<std::size_t, 2ul> locPosition = startGrid.localBinsIndices();
     auto all_neigh = binFinder.findBins(locPosition, grid);
     BOOST_CHECK_EQUAL(all_neigh.size(), expectedNeighbours[counter++]);
   }
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_empty_pattern) {
                                      std::move(neighboursY));
 
   for (; startGrid != stopGrid; startGrid++) {
-    std::array<std::size_t, 2ul> locPosition = startGrid.localPosition();
+    std::array<std::size_t, 2ul> locPosition = startGrid.localBinsIndices();
     auto all_neigh = binFinder.findBins(locPosition, grid);
     BOOST_CHECK_EQUAL(all_neigh.size(), 9ul);
   }
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_mixed) {
   Acts::GridBinFinder<2ul> binFinder(std::move(neighboursX), 1);
 
   for (; startGrid != stopGrid; startGrid++) {
-    std::array<std::size_t, 2ul> locPosition = startGrid.localPosition();
+    std::array<std::size_t, 2ul> locPosition = startGrid.localBinsIndices();
     auto all_neigh = binFinder.findBins(locPosition, grid);
     BOOST_CHECK_EQUAL(all_neigh.size(), expectedNeighbours[counter++]);
   }

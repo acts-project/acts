@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -112,7 +112,7 @@ class GridGlobalIterator {
   /// @return The decremented iterator
   GridGlobalIterator<T, Axes...> operator-(const std::size_t offset) const;
 
-  /// @brief Distance between two GridGlobalIterator
+  /// @brief Distance between two GridGlobalIterators
   /// @param [in] other The other GridGlobalIterator
   /// @return The distance between the two iterators
   ///
@@ -136,12 +136,12 @@ class GridGlobalIterator {
   /// This will increase the global position by one
   GridGlobalIterator<T, Axes...> operator++(int);
 
-  /// @brief Retrieve the global position
-  /// @return The current global position in the grid
-  std::size_t globalPosition() const;
-  /// @brief Retrieve the local position
-  /// @return The current local position in the grid
-  std::array<std::size_t, DIM> localPosition() const;
+  /// @brief Retrieve the global bin index
+  /// @return The current global bin index in the grid
+  std::size_t globalBinIndex() const;
+  /// @brief Retrieve the local bins indices
+  /// @return The current local bins indexed in the grid
+  std::array<std::size_t, DIM> localBinsIndices() const;
 
  private:
   /// @brief The grid on which we are iterating
@@ -175,38 +175,38 @@ class GridLocalIterator {
   GridLocalIterator() = default;
   /// @brief Constructor taking ownership of the grid is not allowed
   /// @param [in] grid The grid
-  /// @param [in] indexes The local position
+  /// @param [in] indices The local position
   GridLocalIterator(Acts::Grid<T, Axes...>&& grid,
-                    const std::array<std::size_t, DIM>& indexes) = delete;
+                    const std::array<std::size_t, DIM>& indices) = delete;
   /// @brief Constructor taking ownership of the grid is not allowed
   /// @param [in] grid The grid
-  /// @brief [in] indexes The local position
-  /// @brief [in] navigation The custom navigation pattern for each axis
+  /// @param [in] indices The local position
+  /// @param [in] navigation The custom navigation pattern for each axis
   ///
   /// @pre None of the navigation vectors is allowed to be an empty vector
   GridLocalIterator(Acts::Grid<T, Axes...>&& grid,
-                    const std::array<std::size_t, DIM>& indexes,
+                    const std::array<std::size_t, DIM>& indices,
                     std::array<std::vector<std::size_t>, DIM> navigation) =
       delete;
   /// @brief Constructor
   /// @param [in] grid The grid
-  /// @param [in] indexes The local position
+  /// @param [in] indices The local position
   ///
-  /// @pre The local bins representing the local bins must be a valid local position in the grid
+  /// @pre The local bins must be a valid local position in the grid
   GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
-                    const std::array<std::size_t, DIM>& indexes);
+                    const std::array<std::size_t, DIM>& indices);
   /// @brief Constructor with custom navigation pattern
   /// @param [in] grid The grid
-  /// @param [in] indexes The local position
+  /// @param [in] indices The local position
   /// @param [in] navigation The custom navigation pattern for each axis
   ///
-  /// @pre The local bins representing the local bins must be a valid local position in the grid.
+  /// @pre The local bins must be a valid local position in the grid.
   /// The navigation pattern must be consistent with the local bins (i.e. size
   /// <= num bins in the axis) in the grid and have no repetitions.
   ///
   /// @pre None of the navigation vectors is allowed to be an empty vector
   GridLocalIterator(const Acts::Grid<T, Axes...>& grid,
-                    const std::array<std::size_t, DIM>& indexes,
+                    const std::array<std::size_t, DIM>& indices,
                     std::array<std::vector<std::size_t>, DIM> navigation);
 
   /// @brief Copy constructor
@@ -258,12 +258,12 @@ class GridLocalIterator {
   /// This will increase the local position by one
   GridLocalIterator<T, Axes...> operator++(int);
 
-  /// @brief Retrieve the global position
-  /// @return The current global position in the grid
-  std::size_t globalPosition() const;
+  /// @brief Retrieve the global bin index
+  /// @return The current global bin index in the grid
+  std::size_t globalBinIndex() const;
   /// @brief Retrieve the local position
   /// @return The current local position in the grid
-  std::array<std::size_t, DIM> localPosition() const;
+  std::array<std::size_t, DIM> localBinsIndices() const;
 
  private:
   /// @brief Increment the local position
@@ -292,7 +292,7 @@ class GridLocalIterator {
   std::array<std::size_t, DIM> m_currentIndex{};
   /// @brief The custom navigation pattern in the grid
   ///
-  /// This allows user to define any custom iteration sequence in all the
+  /// This allows users to define any custom iteration sequence in all the
   /// different axes of the grid. If nothing is defined by the user, then
   /// a std::iota is used as the default starting with the 1ul bin (0ul) is
   /// the under-flow in the axis
