@@ -50,7 +50,7 @@ std::tuple<boost::container::small_vector<std::size_t, 9>, std::size_t,
            boost::container::small_vector<std::size_t, 9>>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
   // Global Index
-  std::array<std::size_t, 2> localPosition = m_gridItr.localPosition();
+  std::array<std::size_t, 2> localPosition = m_gridItr.localBinsIndices();
   std::size_t global_index =
       m_group->m_grid->globalBinFromLocalBins(localPosition);
 
