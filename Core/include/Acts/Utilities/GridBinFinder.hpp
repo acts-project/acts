@@ -98,10 +98,10 @@ class GridBinFinder {
  private:
   using stored_values_t = std::variant<int, std::vector<std::pair<int, int>>>;
   /// @brief the instructions for retrieving the nieghbouring bins for each given axis in the grid
-  /// These values are provided by the user and can be either ints or a vector of
-  /// pair of ints. In the first case, the neighbours will be +/- bins from the
-  /// given local bin In the second case, the user defines how many bins in both
-  /// directions should be provided
+  /// These values are provided by the user and can be either ints or a vector
+  /// of pair of ints. In the first case, the neighbours will be +/- bins from
+  /// the given local bin In the second case, the user defines how many bins in
+  /// both directions should be provided
   ///
   /// @pre The list of entries of the vector of pairs MUST be equal to the number of bins in that specific
   /// axis. Empty vectors are also allowed  but in this case the value will be

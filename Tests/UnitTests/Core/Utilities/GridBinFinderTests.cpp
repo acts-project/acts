@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
   auto upperBoundNeighbours = binFinder.findBins(upperBound, gridBound);
   BOOST_CHECK_EQUAL(upperBoundNeighbours.size(), 2ul);
   BOOST_CHECK_EQUAL(upperBoundNeighbours[0ul], 9ul);
-  BOOST_CHECK_EQUAL(upperBoundNeighbours[1ul], 1ul);
+  BOOST_CHECK_EQUAL(upperBoundNeighbours[1ul], 10ul);
 }
 
 BOOST_AUTO_TEST_CASE(grid_binfinder_constructor) {
