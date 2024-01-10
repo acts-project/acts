@@ -193,7 +193,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
         });
   }
 
-
   // phi axis
   m_bins[INDEX::PHI].resize(m_grid->numLocalBins()[0]);
   std::iota(m_bins[INDEX::PHI].begin(), m_bins[INDEX::PHI].end(), 1ul);
