@@ -243,9 +243,9 @@ BOOST_AUTO_TEST_CASE(addRectangularSupport) {
         lSurfaces, assignToAll, lExtent, Acts::Surface::SurfaceType::Plane,
         sValues, std::nullopt, 1u, sBinning);
 
-    BOOST_CHECK(lSurfaces.size() == 1u);
-    BOOST_CHECK(assignToAll.size() == 1u);
-    BOOST_CHECK(assignToAll[0u] == 0u);
+    BOOST_CHECK_EQUAL(lSurfaces.size(), 1u);
+    BOOST_CHECK_EQUAL(assignToAll.size(), 1u);
+    BOOST_CHECK_EQUAL(assignToAll[0u], 0u);
 
     auto surface = lSurfaces[0u];
     auto boundValues = surface->bounds().values();
