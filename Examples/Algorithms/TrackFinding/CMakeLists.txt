@@ -24,7 +24,7 @@ target_link_libraries(
     ActsExamplesIoJson
     ActsExamplesMagneticField
     
-  PRIVATE  ROOT::Core ROOT::Geom ROOT::Graf ROOT::GenVector ROOT::Hist ROOT::Tree ROOT::TreePlayer
+  PRIVATE  ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
 
 install(
