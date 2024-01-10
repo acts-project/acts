@@ -289,7 +289,7 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != Intersection3D::Status::unreachable && bcheck &&
+  if (intersection.status() != Intersection3D::Status::unreachable && bcheck.isEnabled() &&
       m_bounds != nullptr) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();

@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
   auto testConeIntersection = [&](const Transform3& transform) -> void {
     // A cone surface ready to use
     auto aCone =
-        Surface::makeShared<ConeSurface>(transform, alpha, BoundaryCheck(true));
+        Surface::makeShared<ConeSurface>(transform, alpha, true);
 
     // Linear transform
     auto lTransform = transform.linear();
