@@ -180,8 +180,8 @@ class GridLocalIterator {
                     const std::array<std::size_t, DIM>& indices) = delete;
   /// @brief Constructor taking ownership of the grid is not allowed
   /// @param [in] grid The grid
-  /// @brief [in] indices The local position
-  /// @brief [in] navigation The custom navigation pattern for each axis
+  /// @param [in] indices The local position
+  /// @param [in] navigation The custom navigation pattern for each axis
   ///
   /// @pre None of the navigation vectors is allowed to be an empty vector
   GridLocalIterator(Acts::Grid<T, Axes...>&& grid,
