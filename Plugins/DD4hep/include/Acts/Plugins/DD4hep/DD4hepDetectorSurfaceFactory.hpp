@@ -159,6 +159,8 @@ class DD4hepDetectorSurfaceFactory {
 
   /// Attach surface material if present
   ///
+  /// @param gctx the geometry context
+  /// @param prefix the name prefix for the proto material catching
   /// @param dd4hepElement the detector element
   /// @param surface the surface to attach the material to
   /// @param thickness the thickness of the condensed component
@@ -168,7 +170,9 @@ class DD4hepDetectorSurfaceFactory {
   /// extent of the sensitive surface and register it
   ///
   /// @note void function that also checks the options if the attachment should be applied
-  void attachSurfaceMaterial(const dd4hep::DetElement& dd4hepElement,
+  void attachSurfaceMaterial(const GeometryContext& gctx,
+                             const std::string& prefix,
+                             const dd4hep::DetElement& dd4hepElement,
                              Acts::Surface& surface, ActsScalar thickness,
                              const Options& options) const;
 };
