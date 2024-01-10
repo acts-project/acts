@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(addDiscSupport) {
       lSurfaces, assignToAll, lExtent, Acts::Surface::SurfaceType::Disc,
       sValues, std::nullopt, 1u);
 
-  BOOST_CHECK(lSurfaces.size() == 1u);
+  BOOST_CHECK_EQUAL(lSurfaces.size(), 1u);
   auto surface = lSurfaces[0u];
 
   auto boundValues = surface->bounds().values();
