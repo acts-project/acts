@@ -66,9 +66,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   ProtoSurfaceMaterialT<BinningType>& operator=(
       ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
 
-  /// Scale operator
+  /// Scale operator - dummy implementation
   ///
-  /// @param scale The value to scale this material by
   ProtoSurfaceMaterialT<BinningType>& operator*=(double /*unused*/) final {
     return (*this);
   }

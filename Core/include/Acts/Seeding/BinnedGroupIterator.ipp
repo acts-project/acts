@@ -52,7 +52,7 @@ std::tuple<boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Act
 BinnedGroupIterator<grid_t>::operator*() const {
   /// Get the global and local position from current iterator. This is the bin with the middle candidate
   /// And we know this is not an empty bin
-  std::array<std::size_t, DIM> localPosition = m_gridItr.localPosition();
+  std::array<std::size_t, DIM> localPosition = m_gridItr.localBinsIndices();
   std::size_t global_index =
     m_group->grid().globalBinFromLocalBins(localPosition);
 

@@ -10,9 +10,9 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 namespace {
 
@@ -62,8 +62,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
   auto rzphis =
       detail::CylindricalDetectorHelper::rzphiBoundaries(gctx, rootVolumes);
 
-  using AxesGeneratorType =
-      Acts::Experimental::detail::GridAxisGenerators::VarBoundVarBound;
+  using AxesGeneratorType = Acts::GridAxisGenerators::VarBoundVarBound;
 
   AxesGeneratorType zrAxes{rzphis[1], rzphis[0]};
 

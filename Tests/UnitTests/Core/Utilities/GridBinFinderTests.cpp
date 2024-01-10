@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,6 +17,72 @@
 #include <vector>
 
 namespace Acts::Test {
+
+BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
+  const std::size_t nBins = 10ul;
+  Acts::GridBinFinder<1ul> binFinder(1);
+
+  // take a look at the boundaries of the axes
+  std::array<std::size_t, 1ul> lowerBound({1ul});
+  std::array<std::size_t, 1ul> upperBound({10ul});
+
+  // For Closed Boundary: out-of-bounds lookups wrap-around to the other side of
+  // the axis.
+  Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
+                     Acts::detail::AxisBoundaryType::Closed>
+      xAxisClosed(0, 100, nBins);
+  Acts::Grid<double, decltype(xAxisClosed)> gridClosed(
+      std::make_tuple(std::move(xAxisClosed)));
+
+  auto lowerClosedNeighbours = binFinder.findBins(lowerBound, gridClosed);
+  BOOST_CHECK_EQUAL(lowerClosedNeighbours.size(), 3ul);
+  BOOST_CHECK_EQUAL(lowerClosedNeighbours[0ul], 10ul);
+  BOOST_CHECK_EQUAL(lowerClosedNeighbours[1ul], 1ul);
+  BOOST_CHECK_EQUAL(lowerClosedNeighbours[2ul], 2ul);
+
+  auto upperClosedNeighbours = binFinder.findBins(upperBound, gridClosed);
+  BOOST_CHECK_EQUAL(upperClosedNeighbours.size(), 3ul);
+  BOOST_CHECK_EQUAL(upperClosedNeighbours[0ul], 9ul);
+  BOOST_CHECK_EQUAL(upperClosedNeighbours[1ul], 10ul);
+  BOOST_CHECK_EQUAL(upperClosedNeighbours[2ul], 1ul);
+
+  // For Open Boundary [default]: out-of-bounds lookups resolve to dedicated
+  // underflow and overflow bins.
+  Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
+                     Acts::detail::AxisBoundaryType::Open>
+      xAxisOpen(0, 100, nBins);
+  Acts::Grid<double, decltype(xAxisOpen)> gridOpen(
+      std::make_tuple(std::move(xAxisOpen)));
+
+  auto lowerOpenNeighbours = binFinder.findBins(lowerBound, gridOpen);
+  BOOST_CHECK_EQUAL(lowerOpenNeighbours.size(), 3ul);
+  BOOST_CHECK_EQUAL(lowerOpenNeighbours[0ul], 0ul);
+  BOOST_CHECK_EQUAL(lowerOpenNeighbours[1ul], 1ul);
+  BOOST_CHECK_EQUAL(lowerOpenNeighbours[2ul], 2ul);
+
+  auto upperOpenNeighbours = binFinder.findBins(upperBound, gridOpen);
+  BOOST_CHECK_EQUAL(upperOpenNeighbours.size(), 3ul);
+  BOOST_CHECK_EQUAL(upperOpenNeighbours[0ul], 9ul);
+  BOOST_CHECK_EQUAL(upperOpenNeighbours[1ul], 10ul);
+  BOOST_CHECK_EQUAL(upperOpenNeighbours[2ul], 11ul);
+
+  // For Bound Boundary: out-of-bounds lookups resolve to the closest valid bin.
+  Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
+                     Acts::detail::AxisBoundaryType::Bound>
+      xAxisBound(0, 100, nBins);
+  Acts::Grid<double, decltype(xAxisBound)> gridBound(
+      std::make_tuple(std::move(xAxisBound)));
+
+  auto lowerBoundNeighbours = binFinder.findBins(lowerBound, gridBound);
+  BOOST_CHECK_EQUAL(lowerBoundNeighbours.size(), 2ul);
+  BOOST_CHECK_EQUAL(lowerBoundNeighbours[0ul], 1ul);
+  BOOST_CHECK_EQUAL(lowerBoundNeighbours[1ul], 2ul);
+
+  auto upperBoundNeighbours = binFinder.findBins(upperBound, gridBound);
+  BOOST_CHECK_EQUAL(upperBoundNeighbours.size(), 2ul);
+  BOOST_CHECK_EQUAL(upperBoundNeighbours[0ul], 9ul);
+  BOOST_CHECK_EQUAL(upperBoundNeighbours[1ul], 1ul);
+}
 
 BOOST_AUTO_TEST_CASE(grid_binfinder_constructor) {
   using list_t = std::vector<std::pair<int, int>>;
@@ -172,7 +238,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pattern) {
   std::vector<std::size_t> expectedNeighbours = {3, 3, 4, 4, 2};
 
   for (; startGrid != stopGrid; startGrid++) {
-    std::array<std::size_t, 1ul> locPosition = startGrid.localPosition();
+    std::array<std::size_t, 1ul> locPosition = startGrid.localBinsIndices();
     auto all_neigh = binFinder.findBins(locPosition, grid);
     BOOST_CHECK_EQUAL(all_neigh.size(), expectedNeighbours[counter++]);
   }
@@ -245,7 +311,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pattern) {
                                      std::move(neighboursY));
 
   for (; startGrid != stopGrid; startGrid++) {
-    std::array<std::size_t, 2ul> locPosition = startGrid.localPosition();
+    std::array<std::size_t, 2ul> locPosition = startGrid.localBinsIndices();
     auto all_neigh = binFinder.findBins(locPosition, grid);
     BOOST_CHECK_EQUAL(all_neigh.size(), expectedNeighbours[counter++]);
   }
@@ -276,7 +342,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_empty_pattern) {
                                      std::move(neighboursY));
 
   for (; startGrid != stopGrid; startGrid++) {
-    std::array<std::size_t, 2ul> locPosition = startGrid.localPosition();
+    std::array<std::size_t, 2ul> locPosition = startGrid.localBinsIndices();
     auto all_neigh = binFinder.findBins(locPosition, grid);
     BOOST_CHECK_EQUAL(all_neigh.size(), 9ul);
   }
@@ -318,7 +384,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_mixed) {
   Acts::GridBinFinder<2ul> binFinder(std::move(neighboursX), 1);
 
   for (; startGrid != stopGrid; startGrid++) {
-    std::array<std::size_t, 2ul> locPosition = startGrid.localPosition();
+    std::array<std::size_t, 2ul> locPosition = startGrid.localBinsIndices();
     auto all_neigh = binFinder.findBins(locPosition, grid);
     BOOST_CHECK_EQUAL(all_neigh.size(), expectedNeighbours[counter++]);
   }
