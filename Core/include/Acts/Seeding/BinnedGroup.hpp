@@ -38,14 +38,12 @@ class BinnedGroup {
   BinnedGroup() = delete;
 
   /// brief Constructor
-  BinnedGroup(grid_t&& grid,
-              const Acts::GridBinFinder<DIM>& bottomFinder,
+  BinnedGroup(grid_t&& grid, const Acts::GridBinFinder<DIM>& bottomFinder,
               const Acts::GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
                   std::array<std::vector<std::size_t>, DIM>());
 
-  BinnedGroup(grid_t& grid,
-              const Acts::GridBinFinder<DIM>& bottomFinder,
+  BinnedGroup(grid_t& grid, const Acts::GridBinFinder<DIM>& bottomFinder,
               const Acts::GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
                   std::array<std::vector<std::size_t>, DIM>()) = delete;

@@ -52,10 +52,12 @@ BOOST_AUTO_TEST_CASE(binned_group_constructor) {
   // Costructors
   // We provide a proper navigation
   Acts::BinnedGroup<grid_1d_t> group_1d(std::move(grid_1d), *binFinder_1d.get(),
-                                        *binFinder_1d.get(), std::move(navigation_1d));
+                                        *binFinder_1d.get(),
+                                        std::move(navigation_1d));
   // We provide a partial navigation, the constructor will complete it
   Acts::BinnedGroup<grid_2d_t> group_2d(std::move(grid_2d), *binFinder_2d.get(),
-                                        *binFinder_2d.get(), std::move(navigation_2d));
+                                        *binFinder_2d.get(),
+                                        std::move(navigation_2d));
   // We do not provide navigation, the constructor will define it
   Acts::BinnedGroup<grid_3d_t> group_3d(std::move(grid_3d), *binFinder_3d.get(),
                                         *binFinder_3d.get());
@@ -76,7 +78,8 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_emptyGrid) {
   Acts::detail::EquidistantAxis xAxis(0, 100, 10);
   grid_t grid(std::make_tuple(std::move(xAxis)));
   std::unique_ptr<binfinder_t> binfinder = std::make_unique<binfinder_t>(0);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), *binfinder.get(), *binfinder.get());
+  Acts::BinnedGroup<grid_t> group(std::move(grid), *binfinder.get(),
+                                  *binfinder.get());
 
   Acts::BinnedGroupIterator<grid_t> itrStart = group.begin();
   Acts::BinnedGroupIterator<grid_t> itrStop = group.end();
@@ -99,7 +102,8 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_emptyGrid) {
   Acts::detail::EquidistantAxis yAxis(0, 100, 10);
   grid_t grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
   std::unique_ptr<binfinder_t> binfinder = std::make_unique<binfinder_t>(0, 0);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), *binfinder.get(), *binfinder.get());
+  Acts::BinnedGroup<grid_t> group(std::move(grid), *binfinder.get(),
+                                  *binfinder.get());
 
   Acts::BinnedGroupIterator<grid_t> itrStart = group.begin();
   Acts::BinnedGroupIterator<grid_t> itrStop = group.end();
@@ -127,7 +131,8 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_perFilledGrid) {
 
   std::unique_ptr<binfinder_t> botBinfinder = std::make_unique<binfinder_t>(0);
   std::unique_ptr<binfinder_t> topBinfinder = std::make_unique<binfinder_t>(1);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), *botBinfinder.get(), *topBinfinder.get());
+  Acts::BinnedGroup<grid_t> group(std::move(grid), *botBinfinder.get(),
+                                  *topBinfinder.get());
 
   std::size_t nIterations = 0ul;
   for (const auto [bottom, middle, top] : group) {
@@ -156,7 +161,8 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_perFilledGrid) {
       std::make_unique<binfinder_t>(1, 2);
   std::unique_ptr<binfinder_t> topBinfinder =
       std::make_unique<binfinder_t>(1, 1);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), *botBinfinder.get(), *topBinfinder.get());
+  Acts::BinnedGroup<grid_t> group(std::move(grid), *botBinfinder.get(),
+                                  *topBinfinder.get());
 
   std::size_t nIterations = 0ul;
   for (const auto [bottom, middle, top] : group) {
@@ -182,7 +188,8 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_2d) {
 
   grid_t grid(std::make_tuple(std::move(phiAxis), std::move(zAxis)));
   std::unique_ptr<binfinder_t> binfinder = std::make_unique<binfinder_t>(1, 1);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), *binfinder.get(), *binfinder.get());
+  Acts::BinnedGroup<grid_t> group(std::move(grid), *binfinder.get(),
+                                  *binfinder.get());
 
   /// Fill the grid already owned by the group filling only one bin at a
   /// specific local position
@@ -223,7 +230,8 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_3d) {
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
   std::unique_ptr<binfinder_t> binfinder =
       std::make_unique<binfinder_t>(1, 1, 0);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), *binfinder.get(), *binfinder.get());
+  Acts::BinnedGroup<grid_t> group(std::move(grid), *binfinder.get(),
+                                  *binfinder.get());
 
   /// Fill the grid already owned by the group filling only one bin at a
   /// specific local position

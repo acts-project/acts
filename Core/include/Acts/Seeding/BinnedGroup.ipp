@@ -11,10 +11,8 @@ namespace Acts {
 template <typename grid_t>
 BinnedGroup<grid_t>::BinnedGroup(
     grid_t&& grid,
-    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>&
-        bottomFinder,
-    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>&
-        topFinder,
+    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>& bottomFinder,
+    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>& topFinder,
     std::array<std::vector<std::size_t>, Acts::BinnedGroup<grid_t>::DIM>
         navigation)
     : m_grid(std::move(grid)),
