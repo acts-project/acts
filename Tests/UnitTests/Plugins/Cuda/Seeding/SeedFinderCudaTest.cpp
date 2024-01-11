@@ -233,7 +233,7 @@ int main(int argc, char** argv) {
   };
 
   // setup spacepoint grid config
-  Acts::SpacePointGridConfig gridConf;
+  Acts::CylindricalSpacePointGridConfig gridConf;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
@@ -241,15 +241,15 @@ int main(int argc, char** argv) {
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
   // setup spacepoint grid options
-  Acts::SpacePointGridOptions gridOpts;
+  Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
-  Acts::SpacePointGrid<SpacePoint> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
-  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
+  Acts::CylindricalSpacePointGrid<SpacePoint> grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
                                         spVec.end(), ct, rRangeSPExtent);
 
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
+  auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(
       std::move(grid), *bottomBinFinder.get(), *topBinFinder.get());
 
   auto end_pre = std::chrono::system_clock::now();
@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
       spGroup.grid().localBinsFromGlobalBin(skip);
 
   int group_count;
-  auto groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, localPosition,
+  auto groupIt = Acts::CylindricalBinnedGroupIterator<SpacePoint>(spGroup, localPosition,
                                                          navigation);
 
   //----------- CPU ----------//
@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
 
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
-  groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, localPosition,
+  groupIt = Acts::CylindricalBinnedGroupIterator<SpacePoint>(spGroup, localPosition,
                                                     navigation);
 
   Acts::SpacePointData spacePointData;
