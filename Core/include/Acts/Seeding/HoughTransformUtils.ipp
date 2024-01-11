@@ -330,8 +330,9 @@ void Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<identifier_t>::
   auto nextCand = toExplore.back();
   toExplore.pop_back();
   // check if we are above threshold. Don't add this cell to the island if not
-  if (yieldMap[nextCand] < threshold)
+  if (yieldMap[nextCand] < threshold) {
     return;
+  }
   // This candidate is above threshold and should go on the island!
 
   // add it to the cell list for the island
