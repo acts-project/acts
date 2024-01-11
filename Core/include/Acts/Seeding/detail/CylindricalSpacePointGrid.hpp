@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Utilities/Grid.hpp"
 
 #include <vector>
 
@@ -21,19 +21,23 @@ namespace Acts {
 /// Cylindrical Space Point bin is a 2D grid with (phi, z) bins
 /// It stores a vector of internal space points to external space points
 template <typename external_spacepoint_t>
-using CylindricalSpacePointGrid = Acts::Grid<
-  std::vector<std::unique_ptr<Acts::InternalSpacePoint<external_spacepoint_t>>>,
-  Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-		     Acts::detail::AxisBoundaryType::Closed>,
-  Acts::detail::Axis<Acts::detail::AxisType::Variable, Acts::detail::AxisBoundaryType::Bound>>;
+using CylindricalSpacePointGrid =
+    Acts::Grid<std::vector<std::unique_ptr<
+                   Acts::InternalSpacePoint<external_spacepoint_t>>>,
+               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
+                                  Acts::detail::AxisBoundaryType::Closed>,
+               Acts::detail::Axis<Acts::detail::AxisType::Variable,
+                                  Acts::detail::AxisBoundaryType::Bound>>;
 
 /// Cylindrical Binned Group
 template <typename external_spacepoint_t>
-using CylindricalBinnedGroup = Acts::BinnedGroup<Acts::CylindricalSpacePointGrid<external_spacepoint_t>>;
+using CylindricalBinnedGroup =
+    Acts::BinnedGroup<Acts::CylindricalSpacePointGrid<external_spacepoint_t>>;
 
 template <typename external_spacepoint_t>
-using CylindricalBinnedGroupIterator = Acts::BinnedGroupIterator<Acts::CylindricalSpacePointGrid<external_spacepoint_t>>;
-  
+using CylindricalBinnedGroupIterator = Acts::BinnedGroupIterator<
+    Acts::CylindricalSpacePointGrid<external_spacepoint_t>>;
+
 struct CylindricalSpacePointGridConfig {
   // minimum pT to be found by seedFinder
   float minPt = 0;
@@ -71,7 +75,8 @@ struct CylindricalSpacePointGridConfig {
   CylindricalSpacePointGridConfig toInternalUnits() const {
     if (isInInternalUnits) {
       throw std::runtime_error(
-          "Repeated conversion to internal units for CylindricalSpacePointGridConfig");
+          "Repeated conversion to internal units for "
+          "CylindricalSpacePointGridConfig");
     }
     using namespace Acts::UnitLiterals;
     CylindricalSpacePointGridConfig config = *this;
@@ -93,7 +98,8 @@ struct CylindricalSpacePointGridOptions {
   CylindricalSpacePointGridOptions toInternalUnits() const {
     if (isInInternalUnits) {
       throw std::runtime_error(
-          "Repeated conversion to internal units for CylindricalSpacePointGridOptions");
+          "Repeated conversion to internal units for "
+          "CylindricalSpacePointGridOptions");
     }
     using namespace Acts::UnitLiterals;
     CylindricalSpacePointGridOptions options = *this;
@@ -113,14 +119,14 @@ class CylindricalSpacePointGridCreator {
       const Acts::CylindricalSpacePointGridOptions& _options);
 
   template <typename external_spacepoint_t,
-	    typename external_spacepoint_iterator_t,
-	    typename callable_t>
-  static void fillGrid(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-		       const Acts::SeedFinderOptions& options,
-		       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
-		       external_spacepoint_iterator_t spBegin, external_spacepoint_iterator_t spEnd,
-		       callable_t&& toGlobal,
-		       Acts::Extent& rRangeSPExtent);
+            typename external_spacepoint_iterator_t, typename callable_t>
+  static void fillGrid(
+      const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+      const Acts::SeedFinderOptions& options,
+      Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+      external_spacepoint_iterator_t spBegin,
+      external_spacepoint_iterator_t spEnd, callable_t&& toGlobal,
+      Acts::Extent& rRangeSPExtent);
 };
 
 }  // namespace Acts

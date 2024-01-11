@@ -133,20 +133,23 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
 
   detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
       zAxis(std::move(zValues));
-  return Acts::CylindricalSpacePointGrid<SpacePoint>(std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+  return Acts::CylindricalSpacePointGrid<SpacePoint>(
+      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 }
 
 template <typename external_spacepoint_t,
-	  typename external_spacepoint_iterator_t,
-	  typename callable_t>
-void Acts::CylindricalSpacePointGridCreator::fillGrid(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-					   const Acts::SeedFinderOptions& options,
-					   Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
-					   external_spacepoint_iterator_t spBegin, external_spacepoint_iterator_t spEnd,
-					   callable_t&& toGlobal,
-					   Acts::Extent& rRangeSPExtent) {
-  using iterated_value_t = typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
-  using iterated_t = typename std::remove_const<typename std::remove_pointer<iterated_value_t>::type>::type;
+          typename external_spacepoint_iterator_t, typename callable_t>
+void Acts::CylindricalSpacePointGridCreator::fillGrid(
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    const Acts::SeedFinderOptions& options,
+    Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+    external_spacepoint_iterator_t spBegin,
+    external_spacepoint_iterator_t spEnd, callable_t&& toGlobal,
+    Acts::Extent& rRangeSPExtent) {
+  using iterated_value_t =
+      typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
+  using iterated_t = typename std::remove_const<
+      typename std::remove_pointer<iterated_value_t>::type>::type;
   static_assert(std::is_pointer<iterated_value_t>::value,
                 "Iterator must contain pointers to space points");
   static_assert(std::is_same<iterated_t, external_spacepoint_t>::value,

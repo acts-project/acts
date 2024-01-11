@@ -199,7 +199,10 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderOptions& options,
     const Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
-    boost::container::small_vector<Acts::Neighbour<Acts::CylindricalSpacePointGrid<external_spacepoint_t>>, Acts::detail::ipow(3, Acts::CylindricalSpacePointGrid<external_spacepoint_t>::DIM)>&
+    boost::container::small_vector<
+        Acts::Neighbour<Acts::CylindricalSpacePointGrid<external_spacepoint_t>>,
+        Acts::detail::ipow(
+            3, Acts::CylindricalSpacePointGrid<external_spacepoint_t>::DIM)>&
         otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,

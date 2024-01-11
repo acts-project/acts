@@ -123,11 +123,12 @@ int main(int argc, char* argv[]) {
 
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
-  auto grid = Acts::CylindricalSpacePointGridCreator::createGrid<TestSpacePoint>(
-      gridConfig, gridOpts);
+  auto grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<TestSpacePoint>(
+          gridConfig, gridOpts);
   Acts::CylindricalSpacePointGridCreator::fillGrid(sfConfig, sfOptions, grid,
-						   spView.begin(), spView.end(), ct,
-						   rRangeSPExtent);
+                                                   spView.begin(), spView.end(),
+                                                   ct, rRangeSPExtent);
 
   auto spGroup = Acts::CylindricalBinnedGroup<TestSpacePoint>(
       std::move(grid), *bottomBinFinder.get(), *topBinFinder.get());

@@ -8,7 +8,7 @@
 
 #pragma once
 
-//#include "Acts/Seeding/SpacePointGrid.hpp"
+// #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
 namespace Acts {
@@ -37,15 +37,13 @@ struct Neighbour {
   /// @param grid The grid containing the space points
   /// @param idx The global index of the bin in the grid
   /// @param lowerBound The lower bound of the allowed space points
-  Neighbour(grid_t&& grid, std::size_t idx,
-            const float lowerBound) = delete;
+  Neighbour(grid_t&& grid, std::size_t idx, const float lowerBound) = delete;
 
   /// @brief Constructor
   /// @param grid The grid containing the space points
   /// @param idx The global index of the bin in the grid
   /// @param lowerBound The lower bound of the allowed space point
-  Neighbour(const grid_t& grid,
-            std::size_t idx, const float lowerBound);
+  Neighbour(const grid_t& grid, std::size_t idx, const float lowerBound);
 
   /// The global bin index on the grid
   std::size_t index;
@@ -55,9 +53,8 @@ struct Neighbour {
 };
 
 template <typename grid_t>
-Neighbour<grid_t>::Neighbour(
-    const grid_t& grid, std::size_t idx,
-    const float lowerBound)
+Neighbour<grid_t>::Neighbour(const grid_t& grid, std::size_t idx,
+                             const float lowerBound)
     : index(idx) {
   /// Get the space points in this specific global bin
   const auto& collection = grid.at(idx);
