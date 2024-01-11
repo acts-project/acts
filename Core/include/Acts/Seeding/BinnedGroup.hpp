@@ -39,14 +39,14 @@ class BinnedGroup {
 
   /// brief Constructor
   BinnedGroup(grid_t&& grid,
-              std::shared_ptr<const Acts::GridBinFinder<DIM>> bottomFinder,
-              std::shared_ptr<const Acts::GridBinFinder<DIM>> topFinder,
+              const Acts::GridBinFinder<DIM>& bottomFinder,
+              const Acts::GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
                   std::array<std::vector<std::size_t>, DIM>());
 
   BinnedGroup(grid_t& grid,
-              std::shared_ptr<const Acts::GridBinFinder<DIM>> bottomFinder,
-              std::shared_ptr<const Acts::GridBinFinder<DIM>> topFinder,
+              const Acts::GridBinFinder<DIM>& bottomFinder,
+              const Acts::GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
                   std::array<std::vector<std::size_t>, DIM>()) = delete;
 
@@ -88,9 +88,9 @@ class BinnedGroup {
   /// @brief The N-dimentional grid
   grid_t m_grid;
   /// @brief The Grid Bin Finder for bottom candidates
-  std::shared_ptr<const Acts::GridBinFinder<DIM>> m_bottomBinFinder{nullptr};
+  const Acts::GridBinFinder<DIM>* m_bottomBinFinder{nullptr};
   /// @brief The Grid Bin Finder for top candidates
-  std::shared_ptr<const Acts::GridBinFinder<DIM>> m_topBinFinder{nullptr};
+  const Acts::GridBinFinder<DIM>* m_topBinFinder{nullptr};
   /// @brief Order of bins to loop over when searching for SPs
   std::array<std::vector<std::size_t>, DIM> m_bins{};
 };

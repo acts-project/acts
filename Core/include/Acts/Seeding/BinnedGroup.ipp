@@ -11,19 +11,16 @@ namespace Acts {
 template <typename grid_t>
 BinnedGroup<grid_t>::BinnedGroup(
     grid_t&& grid,
-    std::shared_ptr<const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>>
+    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>&
         bottomFinder,
-    std::shared_ptr<const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>>
+    const Acts::GridBinFinder<Acts::BinnedGroup<grid_t>::DIM>&
         topFinder,
     std::array<std::vector<std::size_t>, Acts::BinnedGroup<grid_t>::DIM>
         navigation)
     : m_grid(std::move(grid)),
-      m_bottomBinFinder(std::move(bottomFinder)),
-      m_topBinFinder(std::move(topFinder)),
+      m_bottomBinFinder(&bottomFinder),
+      m_topBinFinder(&topFinder),
       m_bins(std::move(navigation)) {
-  assert(m_bottomBinFinder != nullptr);
-  assert(m_topBinFinder != nullptr);
-
   /// If navigation is not defined for all axes, then we default that to a
   /// std::iota from 1ul
   std::array<std::size_t, DIM> numLocBins = m_grid.numLocalBins();

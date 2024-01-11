@@ -205,9 +205,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
-  m_bottomBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+  m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
-  m_topBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+  m_topBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
 
   m_cfg.seedFinderConfig.seedFilter =
@@ -260,8 +260,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
   auto spacePointsGrouping =
-      Acts::BinnedSPGroup<SimSpacePoint>(std::move(grid), m_bottomBinFinder,
-                                         m_topBinFinder, std::move(navigation));
+    Acts::BinnedSPGroup<SimSpacePoint>(std::move(grid), *m_bottomBinFinder.get(),
+				       *m_topBinFinder.get(), std::move(navigation));
 
   // safely clamp double to float
   float up = Acts::clampValue<float>(

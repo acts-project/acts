@@ -165,9 +165,9 @@ int main(int argc, char** argv) {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
-  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
@@ -201,7 +201,8 @@ int main(int argc, char** argv) {
   Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
                                         spVec.end(), ct, rRangeSPExtent);
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(std::move(grid),
-                                                 bottomBinFinder, topBinFinder);
+                                                 *bottomBinFinder.get(),
+						 *topBinFinder.get());
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;
