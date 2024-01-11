@@ -46,13 +46,10 @@ Acts::BinnedGroupIterator<grid_t>& BinnedGroupIterator<grid_t>::operator++() {
 }
 
 template <typename grid_t>
-std::tuple<boost::container::small_vector<
-               std::size_t,
-               Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>,
-           std::size_t,
-           boost::container::small_vector<
-               std::size_t,
-               Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>>
+std::tuple<
+	   boost::container::small_vector<std::size_t, Acts::detail::ipow(3, BinnedGroupIterator<grid_t>::DIM)>,
+      std::size_t,
+      boost::container::small_vector<std::size_t, Acts:	:detail::ipow(3, BinnedGroupIterator<grid_t>::DIM)>>
 BinnedGroupIterator<grid_t>::operator*() const {
   /// Get the global and local position from current iterator. This is the bin
   /// with the middle candidate And we know this is not an empty bin
