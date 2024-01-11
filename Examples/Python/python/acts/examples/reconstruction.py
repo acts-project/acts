@@ -11,7 +11,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform FTF",
+    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts",
 )
 
 TruthSeedRanges = namedtuple(
@@ -175,7 +175,7 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
-    fastrack_inputConfigFile: Optional[Union[Path, str]] = None,
+    connector_inputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
@@ -322,10 +322,10 @@ def addSeeding(
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
-        elif seedingAlgorithm == SeedingAlgorithm.FTF:
-            logger.info("Using FTF seeding")
+        elif seedingAlgorithm == SeedingAlgorithm.Gbts:
+            logger.info("Using Gbts seeding")
             # output of algs changed, only one output now
-            seeds = addFTFSeeding(
+            seeds = addGbtsSeeding(
                 s,
                 spacePoints,
                 seedFinderConfigArg,
@@ -335,7 +335,7 @@ def addSeeding(
                 logLevel,
                 layerMappingConfigFile,
                 geoSelectionConfigFile,
-                fastrack_inputConfigFile,
+                connector_inputConfigFile,
             )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
@@ -819,7 +819,7 @@ def addHoughTransformSeeding(
     return ht.config.outputSeeds
 
 
-def addFTFSeeding(
+def addGbtsSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedFinderConfigArg: SeedFinderConfigArg,
@@ -829,19 +829,19 @@ def addFTFSeeding(
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
     geoSelectionConfigFile: Union[Path, str] = None,
-    fastrack_inputConfigFile: Union[Path, str] = None,
+    connector_inputConfigFile: Union[Path, str] = None,
 ):
-    """FTF seeding"""
+    """Gbts seeding"""
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
-    fastrack_inputFile = str(fastrack_inputConfigFile)
-    seedFinderConfig = acts.SeedFinderFTFConfig(
+    connector_inputFile = str(connector_inputConfigFile)
+    seedFinderConfig = acts.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             minPt=seedFinderConfigArg.minPt,
-            fastrack_input_file=fastrack_inputFile,
+            connector_input_file=connector_inputFile,
             m_useClusterWidth=False,
         ),
     )
@@ -877,7 +877,7 @@ def addFTFSeeding(
         )
     )
 
-    seedingAlg = acts.examples.SeedingFTFAlgorithm(
+    seedingAlg = acts.examples.GbtsSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
         outputSeeds="seeds",
