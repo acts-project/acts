@@ -48,7 +48,7 @@ template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
     Acts::SpacePointData& spacePointData,
-    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     const sp_range_t& bottomSPs, const std::size_t middleSPs,
     const sp_range_t& topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
