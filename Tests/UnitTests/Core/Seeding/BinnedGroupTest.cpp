@@ -83,6 +83,7 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_emptyGrid) {
 
   std::size_t nIterations = 0ul;
   for (; itrStart != itrStop; ++itrStart, ++nIterations) {
+    [[maybe_unused]] auto candidates = *itrStart;
   }
 
   BOOST_CHECK_EQUAL(nIterations, 0ul);
@@ -105,6 +106,7 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_emptyGrid) {
 
   std::size_t nIterations = 0ul;
   for (; itrStart != itrStop; ++itrStart, ++nIterations) {
+    [[maybe_unused]] auto candidates = *itrStart;
   }
 
   BOOST_CHECK_EQUAL(nIterations, 0ul);
