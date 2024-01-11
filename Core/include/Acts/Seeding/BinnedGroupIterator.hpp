@@ -123,6 +123,6 @@ class BinnedGroupIterator {
 
 namespace Acts {
 template <typename external_spacepoint_t>
-using BinnedSPGroupIterator = BinnedGroupIterator<
-    Acts::SpacePointGrid<external_spacepoint_t>>;
+using BinnedSPGroupIterator =
+    BinnedGroupIterator<Acts::SpacePointGrid<external_spacepoint_t>>;
 }
