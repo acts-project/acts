@@ -8,11 +8,11 @@
 
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <array>
 #include <memory>

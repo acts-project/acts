@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -135,7 +136,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   tracks.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<unsigned int>("trackGroup");
-  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+  Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
 

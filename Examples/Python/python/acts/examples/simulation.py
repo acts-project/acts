@@ -600,7 +600,7 @@ def addGeant4(
     rnd: acts.examples.RandomNumbers,
     g4DetectorConstructionFactory: Optional[Any] = None,
     volumeMappings: List[str] = [],
-    materialMappings: List[str] = [],
+    materialMappings: List[str] = ["Silicon"],
     inputParticles: str = "particles_input",
     outputParticlesInitial: str = "particles_initial",
     outputParticlesFinal: str = "particles_final",

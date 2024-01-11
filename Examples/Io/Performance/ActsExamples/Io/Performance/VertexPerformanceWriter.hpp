@@ -76,6 +76,8 @@ class VertexPerformanceWriter final
     double truthMatchProbMin = 0.5;
     /// Whether information about tracks is available
     bool useTracks = true;
+    /// minimum track weight for track to be considered as part of the fit
+    double minTrkWeight = 0.1;
   };
 
   /// Constructor

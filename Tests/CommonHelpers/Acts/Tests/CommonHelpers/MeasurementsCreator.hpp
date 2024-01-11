@@ -10,13 +10,13 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -46,8 +46,8 @@ using MeasurementResolutionMap =
 
 /// Result struct for generated measurements and outliers.
 struct Measurements {
-  std::vector<TestSourceLink> sourceLinks;
-  std::vector<TestSourceLink> outlierSourceLinks;
+  std::vector<Acts::detail::Test::TestSourceLink> sourceLinks;
+  std::vector<Acts::detail::Test::TestSourceLink> outlierSourceLinks;
   std::vector<BoundVector> truthParameters;
 };
 

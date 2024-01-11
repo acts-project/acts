@@ -34,7 +34,6 @@ def main():
         "cmake",
         ".git",
         ".github",
-        ".",
         ".idea",
     )
     exclude_files = (
@@ -55,6 +54,9 @@ def main():
         "default-input-config-generic.json",
         "geoSelection-openDataDetector.json",
         "alignment-geo-contextualDetector.json",
+        # TODO Mention these files somewhere?
+        "generate_particle_data_table.py",
+        "lazy_autodoc.py",
     )
 
     suffix_header = (
@@ -105,6 +107,7 @@ def main():
     exit = 0
 
     dirs_base = next(os.walk("."))[1]
+    dirs_base.append(".")
     dirs_base[:] = [d for d in dirs_base if d not in exclude_dirs]
     dirs_base_docs = ("docs",)
     dirs_base_code = [d for d in dirs_base if d not in dirs_base_docs]
@@ -153,26 +156,40 @@ def main():
                 wrong_extension += (str(filepath),)
 
             # Check header files and remove
-            if filepath.suffix in suffix_header + suffix_source:
+            elif filepath.suffix in suffix_header + suffix_source:
                 if file_can_be_removed(filepath.stem, dirs_base_code):
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)
                     os.system(remove_cmd)
 
-            # TODO Find test to check python files
-            if filepath.suffix in suffix_python:
-                continue
+            elif filepath.suffix in suffix_python:
+                # Skip the python tests folder
+                if str(root).find("Examples/Python") != -1:
+                    continue
+
+                if not file_can_be_removed("import .*" + filepath.stem, dirs_base):
+                    continue
+
+                if not file_can_be_removed(
+                    "from " + filepath.stem + " import", dirs_base
+                ):
+                    continue
+
+                if file_can_be_removed(filename, dirs_base):
+                    unused_files += (str(filepath),)
+                    remove_cmd = "rm " + str(filepath)
+                    os.system(remove_cmd)
 
             # Check documentation files (weak tests)
             # TODO find more reliable test for this
-            if filepath.suffix in suffix_doc:
+            elif filepath.suffix in suffix_doc:
                 if file_can_be_removed(filepath.stem, dirs_base_docs):
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)
                     os.system(remove_cmd)
 
             # Check and print other files
-            if filepath.suffix in suffix_image + suffix_other:
+            elif filepath.suffix in suffix_image + suffix_other:
                 if file_can_be_removed(filename, dirs_base):
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)

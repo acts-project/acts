@@ -108,7 +108,11 @@ with tempfile.TemporaryDirectory() as temp:
 
     addAmbiguityResolution(
         s,
-        AmbiguityResolutionConfig(maximumSharedHits=3),
+        AmbiguityResolutionConfig(
+            maximumSharedHits=3,
+            maximumIterations=100000,
+            nMeasurementsMin=6,
+        ),
         outputDirRoot=tp,
     )
 

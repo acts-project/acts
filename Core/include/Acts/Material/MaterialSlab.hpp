@@ -24,23 +24,23 @@ namespace Acts {
 /// @see Material for a description of the available parameters.
 class MaterialSlab {
  public:
-  /// Construct by averaging the material properties over two layers.
+  /// Combine material properties of two layers by averaging them.
   ///
   /// @param layerA Input layer A to average over.
   /// @param layerB Input layer B to average over.
   ///
   /// @return The resulting object has the combined thickness of all layers but just
   ///         one set of appropriately averaged material constants.
-  static MaterialSlab combine(const MaterialSlab& layerA,
-                              const MaterialSlab& layerB);
+  static MaterialSlab averageLayers(const MaterialSlab& layerA,
+                                    const MaterialSlab& layerB);
 
-  /// Construct by averaging the material properties over multiple layers.
+  /// Combine material properties of multiple layers by averaging them.
   ///
   /// @param layers Input layers to average over.
   ///
-  /// @return  The resulting object has the combined thickness of all layers but just
-  ///          one set of appropriately averaged material constants.
-  static MaterialSlab combine(const std::vector<MaterialSlab>& layers);
+  /// @return The resulting object has the combined thickness of all layers but just
+  ///         one set of appropriately averaged material constants.
+  static MaterialSlab averageLayers(const std::vector<MaterialSlab>& layers);
 
   /// Construct vacuum without thickness.
   MaterialSlab() = default;
