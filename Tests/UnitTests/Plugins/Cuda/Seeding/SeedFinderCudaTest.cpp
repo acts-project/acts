@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Cuda/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
