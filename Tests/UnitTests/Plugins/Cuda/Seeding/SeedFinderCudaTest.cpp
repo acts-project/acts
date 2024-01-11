@@ -249,10 +249,8 @@ int main(int argc, char** argv) {
   Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
                                         spVec.end(), ct, rRangeSPExtent);
 
-  std::array<std::vector<std::size_t>, 2ul> navigation;
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
-      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get(),
-      std::move(navigation));
+      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get());
 
   auto end_pre = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
