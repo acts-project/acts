@@ -159,9 +159,9 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
-  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   auto config = setupSeedFinderConfiguration<SpacePoint>();
   config = config.toInternalUnits().calculateDerivedQuantities();
@@ -193,11 +193,11 @@ auto main(int argc, char** argv) -> int {
   auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
   gridConfig = gridConfig.toInternalUnits();
   gridOpts = gridOpts.toInternalUnits();
-  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
+  Acts::SpacePointGrid<SpacePoint> grid =
+    Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
 
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
-      spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,
+						 spVec.begin(), spVec.end(), globalTool, *bottomBinFinder.get(), *topBinFinder.get(),
       std::move(grid), rRangeSPExtent, config, options);
 
   auto end_prep = std::chrono::system_clock::now();
