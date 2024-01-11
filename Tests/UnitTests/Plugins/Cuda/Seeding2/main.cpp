@@ -20,7 +20,7 @@
 
 // Acts include(s).
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -61,9 +61,9 @@ int main(int argc, char* argv[]) {
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   // Create binned groups of these spacepoints.
-  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       numPhiNeighbors, zBinNeighborsBottom);
-  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       numPhiNeighbors, zBinNeighborsTop);
 
   // Set up the seedFinder configuration.
@@ -125,9 +125,12 @@ int main(int argc, char* argv[]) {
   // split the spacepoints into groups according to that grid.
   auto grid = Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(
       gridConfig, gridOpts);
+  Acts::SpacePointGridCreator::fillGrid(sfConfig, sfOptions, grid,
+                                        spView.begin(), spView.end(), ct,
+                                        rRangeSPExtent);
+
   auto spGroup = Acts::BinnedSPGroup<TestSpacePoint>(
-      spView.begin(), spView.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, sfConfig, sfOptions);
+      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get());
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
 
