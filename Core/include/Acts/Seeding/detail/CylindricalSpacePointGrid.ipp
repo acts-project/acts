@@ -1,7 +1,6 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -117,7 +116,6 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     float zBins =
         std::max(1.f, std::floor((config.zMax - config.zMin) / zBinSize));
 
-
     zValues.reserve(static_cast<int>(zBins));
     for (int bin = 0; bin <= static_cast<int>(zBins); bin++) {
       AxisScalar edge =
@@ -127,7 +125,7 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
 
   } else {
     // Use the zBinEdges defined in the config
-     zValues.reserve(config.zBinEdges.size());
+    zValues.reserve(config.zBinEdges.size());
     for (float bin : config.zBinEdges) {
       zValues.push_back(bin);
     }
@@ -150,21 +148,20 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(const Acts::SeedFinderConf
   using iterated_value_t = typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
   using iterated_t = typename std::remove_const<typename std::remove_pointer<iterated_value_t>::type>::type;
   static_assert(std::is_pointer<iterated_value_t>::value,
-		"Iterator must contain pointers to space points");
+                "Iterator must contain pointers to space points");
   static_assert(std::is_same<iterated_t, external_spacepoint_t>::value,
                 "Iterator does not contain type this class was templated with");
-  
+
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
-			     "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
+        "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
   }
   if (config.seedFilter == nullptr) {
-    throw std::runtime_error(
-                             "SeedFinderConfig has a null SeedFilter object");
+    throw std::runtime_error("SeedFinderConfig has a null SeedFilter object");
   }
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
-			     "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
+        "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
 
   // get region of interest (or full detector if configured accordingly)
@@ -185,7 +182,8 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(const Acts::SeedFinderConf
   boost::container::flat_set<std::size_t> rBinsIndex;
 
   std::size_t counter = 0ul;
-  for (external_spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
+  for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
+       it++, ++counter) {
     if (*it == nullptr) {
       continue;
     }
@@ -232,14 +230,12 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(const Acts::SeedFinderConf
       rBinsIndex.insert(grid.globalBinFromPosition(spLocation));
     }
   }
-  
+
   /// sort SPs in R for each filled bin
   for (auto& binIndex : rBinsIndex) {
     auto& rbin = grid.atPosition(binIndex);
-    std::sort(
-        rbin.begin(), rbin.end(),
-        [](const auto& a, const auto& b) {
-          return a->radius() < b->radius();
-        });
+    std::sort(rbin.begin(), rbin.end(), [](const auto& a, const auto& b) {
+      return a->radius() < b->radius();
+    });
   }
 }

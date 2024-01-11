@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -165,9 +165,9 @@ int main(int argc, char** argv) {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
-  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
       Acts::CylindricalSpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
   Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
   auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(std::move(grid),
-							  bottomBinFinder, topBinFinder);
+							  *bottomBinFinder.get(), *topBinFinder.get());
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;

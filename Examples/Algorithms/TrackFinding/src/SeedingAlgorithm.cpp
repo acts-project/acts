@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -205,9 +205,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
-  m_bottomBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+  m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
-  m_topBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+  m_topBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
 
   m_cfg.seedFinderConfig.seedFilter =
@@ -256,8 +256,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
   auto spacePointsGrouping = Acts::CylindricalBinnedGroup<SimSpacePoint>(std::move(grid),
-									 m_bottomBinFinder,
-									 m_topBinFinder,
+									 *m_bottomBinFinder.get(),
+									 *m_topBinFinder.get(),
 									 std::move(navigation));
   
   // safely clamp double to float
