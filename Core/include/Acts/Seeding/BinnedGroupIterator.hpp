@@ -98,9 +98,9 @@ class BinnedGroupIterator {
   ///
   /// @return The collection of all the bins in the grid
   std::tuple<
-    boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>,
+    boost::container::small_vector<std::size_t, Acts::detail::ipow(3, grid_t::DIM)>,
       std::size_t,
-    boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>>
+    boost::container::small_vector<std::size_t, Acts::detail::ipow(3, grid_t::DIM)>>
   operator*() const;
 
  private:
