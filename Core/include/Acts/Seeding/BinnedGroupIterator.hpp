@@ -15,6 +15,7 @@
 
 #include <array>
 #include <memory>
+#include <tuple>
 
 #include <boost/container/small_vector.hpp>
 
