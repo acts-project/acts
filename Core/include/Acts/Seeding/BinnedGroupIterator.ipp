@@ -8,10 +8,8 @@
 
 // Binned SP Group Iterator
 
-namespace Acts {
-
 template <typename grid_t>
-BinnedGroupIterator<grid_t>::BinnedGroupIterator(
+Acts::BinnedGroupIterator<grid_t>::BinnedGroupIterator(
     const Acts::BinnedGroup<grid_t>& group,
     std::array<std::size_t, Acts::BinnedGroupIterator<grid_t>::DIM> index,
     std::array<std::vector<std::size_t>, Acts::BinnedGroupIterator<grid_t>::DIM>
@@ -27,19 +25,19 @@ BinnedGroupIterator<grid_t>::BinnedGroupIterator(
 }
 
 template <typename grid_t>
-bool BinnedGroupIterator<grid_t>::operator==(
+bool Acts::BinnedGroupIterator<grid_t>::operator==(
     const Acts::BinnedGroupIterator<grid_t>& other) const {
   return m_group.ptr == other.m_group.ptr && m_gridItr == other.m_gridItr;
 }
 
 template <typename grid_t>
-bool BinnedGroupIterator<grid_t>::operator!=(
+bool Acts::BinnedGroupIterator<grid_t>::operator!=(
     const Acts::BinnedGroupIterator<grid_t>& other) const {
   return !(*this == other);
 }
 
 template <typename grid_t>
-Acts::BinnedGroupIterator<grid_t>& BinnedGroupIterator<grid_t>::operator++() {
+Acts::BinnedGroupIterator<grid_t>& Acts::BinnedGroupIterator<grid_t>::operator++() {
   ++m_gridItr;
   findNotEmptyBin();
   return *this;
@@ -50,7 +48,7 @@ std::tuple<
       boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>,
       std::size_t,
       boost::container::small_vector<std::size_t, Acts::detail::ipow(3, Acts::BinnedGroupIterator<grid_t>::DIM)>>
-BinnedGroupIterator<grid_t>::operator*() const {
+Acts::BinnedGroupIterator<grid_t>::operator*() const {
   /// Get the global and local position from current iterator. This is the bin
   /// with the middle candidate And we know this is not an empty bin
   std::array<std::size_t, DIM> localPosition = m_gridItr.localBinsIndices();
@@ -81,7 +79,7 @@ BinnedGroupIterator<grid_t>::operator*() const {
 }
 
 template <typename grid_t>
-void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
+void Acts::BinnedGroupIterator<grid_t>::findNotEmptyBin() {
   if (m_gridItr == m_gridItrEnd) {
     return;
   }
@@ -92,5 +90,3 @@ void BinnedGroupIterator<grid_t>::findNotEmptyBin() {
     dimCollection = (*m_gridItr).size();
   }
 }
-
-}  // namespace Acts
