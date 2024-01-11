@@ -189,8 +189,8 @@ int main(int argc, char* argv[]) {
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
       std::array<std::size_t, 2ul> localPosition =
           spGroup.grid().localBinsFromGlobalBin(i);
-      auto spGroup_itr =
-          Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
+      auto spGroup_itr = Acts::BinnedSPGroupIterator<TestSpacePoint>(
+          spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
       }
@@ -228,8 +228,8 @@ int main(int argc, char* argv[]) {
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
     std::array<std::size_t, 2ul> localPosition =
         spGroup.grid().localBinsFromGlobalBin(i);
-    auto spGroup_itr =
-        Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
+    auto spGroup_itr = Acts::BinnedSPGroupIterator<TestSpacePoint>(
+        spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;
     }
