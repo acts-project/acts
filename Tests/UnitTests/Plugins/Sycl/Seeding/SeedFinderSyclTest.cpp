@@ -194,11 +194,15 @@ auto main(int argc, char** argv) -> int {
   gridConfig = gridConfig.toInternalUnits();
   gridOpts = gridOpts.toInternalUnits();
   Acts::SpacePointGrid<SpacePoint> grid =
-    Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
-  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(), spVec.end(), globalTool, rRangeSPExtent);
+      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
+  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
+                                        spVec.end(), globalTool,
+                                        rRangeSPExtent);
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(std::move(grid), *bottomBinFinder.get(), *topBinFinder.get(), std::move(navigation));
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
+      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get(),
+      std::move(navigation));
 
   auto end_prep = std::chrono::system_clock::now();
 

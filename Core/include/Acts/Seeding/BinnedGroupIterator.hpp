@@ -97,10 +97,11 @@ class BinnedGroupIterator {
   /// bins with the possible bottom and top candidates
   ///
   /// @return The collection of all the bins in the grid
-  std::tuple<
-    boost::container::small_vector<std::size_t, Acts::detail::ipow(3, grid_t::DIM)>,
-      std::size_t,
-    boost::container::small_vector<std::size_t, Acts::detail::ipow(3, grid_t::DIM)>>
+  std::tuple<boost::container::small_vector<std::size_t,
+                                            Acts::detail::ipow(3, grid_t::DIM)>,
+             std::size_t,
+             boost::container::small_vector<std::size_t,
+                                            Acts::detail::ipow(3, grid_t::DIM)>>
   operator*() const;
 
  private:

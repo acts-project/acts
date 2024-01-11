@@ -37,17 +37,19 @@ bool Acts::BinnedGroupIterator<grid_t>::operator!=(
 }
 
 template <typename grid_t>
-Acts::BinnedGroupIterator<grid_t>& Acts::BinnedGroupIterator<grid_t>::operator++() {
+Acts::BinnedGroupIterator<grid_t>&
+Acts::BinnedGroupIterator<grid_t>::operator++() {
   ++m_gridItr;
   findNotEmptyBin();
   return *this;
 }
 
 template <typename grid_t>
-std::tuple<
-      boost::container::small_vector<std::size_t, Acts::detail::ipow(3, grid_t::DIM)>,
-      std::size_t,
-      boost::container::small_vector<std::size_t, Acts::detail::ipow(3, grid_t::DIM)>>
+std::tuple<boost::container::small_vector<std::size_t,
+                                          Acts::detail::ipow(3, grid_t::DIM)>,
+           std::size_t,
+           boost::container::small_vector<std::size_t,
+                                          Acts::detail::ipow(3, grid_t::DIM)>>
 Acts::BinnedGroupIterator<grid_t>::operator*() const {
   /// Get the global and local position from current iterator. This is the bin
   /// with the middle candidate And we know this is not an empty bin
@@ -56,15 +58,11 @@ Acts::BinnedGroupIterator<grid_t>::operator*() const {
       m_group->grid().globalBinFromLocalBins(localPosition);
 
   /// Get the neighbouring bins
-  boost::container::small_vector<std::size_t,
-                                 Acts::detail::ipow(
-                                     3, DIM)>
+  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)>
       bottoms =
           m_group->m_bottomBinFinder->findBins(localPosition, m_group->grid());
-  boost::container::small_vector<std::size_t,
-                                 Acts::detail::ipow(
-                                     3, DIM)>
-      tops = m_group->m_topBinFinder->findBins(localPosition, m_group->grid());
+  boost::container::small_vector<std::size_t, Acts::detail::ipow(3, DIM)> tops =
+      m_group->m_topBinFinder->findBins(localPosition, m_group->grid());
 
   // GCC12+ in Release throws an overread warning here due to the move.
   // This is from inside boost code, so best we can do is to suppress it.
