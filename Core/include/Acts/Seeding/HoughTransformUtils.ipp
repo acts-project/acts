@@ -28,8 +28,9 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fill(
     // now we can loop over the bin range to fill the corresponding cells
     for (int yBin = yBinDown; yBin <= yBinUp; ++yBin) {
       // skip 'out of bounds' cases
-      if (yBin >= static_cast<int>(m_cfg.nBinsY) || yBin < 0)
+      if (yBin >= static_cast<int>(m_cfg.nBinsY) || yBin < 0) {
         continue;
+      }
       fillBin(xBin, yBin, identifier, layer, weight);
     }
   }
@@ -51,10 +52,12 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughCell<identifier_t>::reset() {
   // avoid expensive clear calls on empty cells
-  if (m_nLayers > 0)
+  if (m_nLayers > 0) {
     m_layers.clear();
-  if (m_nHits > 0)
+  }
+  if (m_nHits > 0) {
     m_hits.clear();
+  }
   m_nHits = 0;
   m_nLayers = 0;
 }
@@ -132,13 +135,13 @@ bool Acts::HoughTransformUtils::PeakFinders::LayerGuidedCombinatoric<
     identifier_t>::passThreshold(const HoughPlane<identifier_t>& plane,
                                  std::size_t xBin, std::size_t yBin) const {
   // Check if we have sufficient layers for a maximum
-  if (plane.nLayers(xBin, yBin) < m_cfg.threshold)
+  if (plane.nLayers(xBin, yBin) < m_cfg.threshold) {
     return false;
-
+  }
   // if no local maximum is required, this is enough to classify as a max
-  if (m_cfg.localMaxWindowSize == 0)
+  if (m_cfg.localMaxWindowSize == 0) {
     return true;
-
+  }
   // otherwise, check for local maxima by looking at the surrounding cells
 
   /// loop over neighbours
@@ -152,10 +155,12 @@ bool Acts::HoughTransformUtils::PeakFinders::LayerGuidedCombinatoric<
       }
       // out of bounds -> no need to test this bin
       if (static_cast<int>(xBin) + dXbin < 0 ||
-          static_cast<int>(yBin) + dYbin < 0)
+          static_cast<int>(yBin) + dYbin < 0) {
         continue;
-      if (xBin + dXbin >= plane.nBinsX() || yBin + dYbin >= plane.nBinsY())
+      }
+      if (xBin + dXbin >= plane.nBinsX() || yBin + dYbin >= plane.nBinsY()) {
         continue;
+      }
       // if a neighbour with more layers exist, this is not a minimum
       if (plane.nLayers(xBin + dXbin, yBin + dYbin) >
           plane.nLayers(xBin, yBin)) {
@@ -232,8 +237,9 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
   for (auto& cand : candidates) {
     // check the content again (if used in a previous island, this will now
     // report empty)
-    if (yieldMap[cand] < min)
+    if (yieldMap[cand] < min) {
       continue;
+    }
     // translate to parameter space for overlap veto
     CoordType xCand =
         binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), cand.first);
@@ -248,8 +254,9 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
         break;
       }
     }
-    if (!goodSpacing)
+    if (!goodSpacing) {
       continue;
+    }
     // now we can extend the candidate into an island
     toExplore.clear();
     solution.clear();
@@ -261,8 +268,9 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
       extendMaximum(solution, toExplore, min, yieldMap);
     }
     // nothing found? Next candidate!
-    if (solution.empty())
+    if (solution.empty()) {
       continue;
+    }
     // We found an island
     Maximum maximum;
     CoordType max_x = 0;
@@ -286,14 +294,18 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
       max_x += xHit * nHits;
       max_y += yHit * nHits;
       pos_den += nHits;
-      if (xHit > xmax)
+      if (xHit > xmax) {
         xmax = xHit;
-      if (yHit > ymax)
+      }
+      if (yHit > ymax) {
         ymax = yHit;
-      if (xHit < xmin)
+      }
+      if (xHit < xmin) {
         xmin = xHit;
-      if (yHit < ymin)
+      }
+      if (yHit < ymin) {
         ymin = yHit;
+      }
     }
     // calculate mean position
     maximum.x = max_x / pos_den;

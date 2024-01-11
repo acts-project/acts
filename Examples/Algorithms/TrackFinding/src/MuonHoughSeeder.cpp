@@ -205,7 +205,7 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
     legend.SetFillStyle(0);
     legend.Draw();
 
-    if (boxes.size() > 0) {
+    if (!boxes.empty()) {
       legend.AddEntry(markers.back().get(), "Hough maxima");
       legend.AddEntry(boxes.back().get(), "Hough uncertainties");
     }
