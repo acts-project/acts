@@ -122,8 +122,8 @@ template <typename external_spacepoint_t>
 auto setupSpacePointGridConfig(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::SeedFinderOptions& options)
-    -> std::pair<Acts::SpacePointGridConfig, Acts::SpacePointGridOptions> {
-  Acts::SpacePointGridConfig gridConf{};
+    -> std::pair<Acts::CylindricalSpacePointGridConfig, Acts::CylindricalSpacePointGridOptions> {
+  Acts::CylindricalSpacePointGridConfig gridConf{};
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
@@ -131,7 +131,7 @@ auto setupSpacePointGridConfig(
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
 
-  Acts::SpacePointGridOptions gridOpts{};
+  Acts::CylindricalSpacePointGridOptions gridOpts{};
   gridOpts.bFieldInZ = options.bFieldInZ;
   return std::make_pair(gridConf, gridOpts);
 }
@@ -193,14 +193,14 @@ auto main(int argc, char** argv) -> int {
   auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
   gridConfig = gridConfig.toInternalUnits();
   gridOpts = gridOpts.toInternalUnits();
-  Acts::SpacePointGrid<SpacePoint> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
-  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
-                                        spVec.end(), globalTool,
-                                        rRangeSPExtent);
-
+  Acts::CylindricalSpacePointGrid<SpacePoint> grid =
+    Acts::CylindricalSpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
+						   spVec.end(), globalTool,
+						   rRangeSPExtent);
+  
   std::array<std::vector<std::size_t>, 2ul> navigation;
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
+  auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(
       std::move(grid), *bottomBinFinder.get(), *topBinFinder.get(),
       std::move(navigation));
 
