@@ -31,6 +31,9 @@ using CylindricalSpacePointGrid = Acts::Grid<
 template <typename external_spacepoint_t>
 using CylindricalBinnedGroup = Acts::BinnedGroup<Acts::CylindricalSpacePointGrid<external_spacepoint_t>>;
 
+template <typename external_spacepoint_t>
+using CylindricalBinnedGroupIterator = Acts::BinnedGroupIterator<Acts::CylindricalSpacePointGrid<external_spacepoint_t>>;
+  
 struct CylindricalSpacePointGridConfig {
   // minimum pT to be found by seedFinder
   float minPt = 0;
