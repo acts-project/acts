@@ -495,7 +495,7 @@ struct GenericDenseEnvironmentExtension {
     MaterialSlab newMaterial(material, h);
 
     accumulatedMaterial =
-        MaterialSlab::combine(accumulatedMaterial, newMaterial);
+        MaterialSlab::averageLayers(accumulatedMaterial, newMaterial);
 
     // handle multiple scattering
     {
