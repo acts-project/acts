@@ -1,7 +1,7 @@
 # UNIX paths are standard, no need to specify them.
 find_path(mlpack_INCLUDE_DIR
     NAMES mlpack/core.hpp mlpack/prereqs.hpp
-    PATHS /opt/mlpack /usr/mlpack
+    PATHS /opt/mlpack/include /usr/mlpack/include /Applications/mlpack/include
 )
 
 find_package_handle_standard_args(mlpack

@@ -5,12 +5,12 @@
 
 find_library(Pythia8_LIBRARY
   NAMES Pythia8 pythia8
-  HINTS ENV PYTHIA8_DIR PYTHIA8
+  HINTS $ENV{PYTHIA8_DIR}/lib PYTHIA8/lib
   PATHS /opt/pythia8 /usr/local
   DOC "The Pythia8 library")
 find_path(Pythia8_INCLUDE_DIR
   NAMES Pythia8/Pythia.h
-  HINTS ENV PYTHIA8_DIR PYTHIA8
+  HINTS $ENV{PYTHIA8_DIR}/include PYTHIA8/include
   PATHS /opt/pythia8 /usr/local
   DOC "The Pythia8 include directory")
 

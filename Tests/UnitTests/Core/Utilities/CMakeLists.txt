@@ -10,6 +10,7 @@ add_unittest(BinUtility BinUtilityTests.cpp)
 add_unittest(BoundingBox BoundingBoxTest.cpp)
 target_link_libraries(ActsUnitTestBoundingBox PRIVATE std::filesystem)
 
+add_unittest(DBScan DBScanTests.cpp)
 add_unittest(Extendable ExtendableTests.cpp)
 add_unittest(FiniteStateMachine FiniteStateMachineTests.cpp)
 add_unittest(Frustum FrustumTest.cpp)
