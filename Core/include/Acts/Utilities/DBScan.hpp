@@ -149,7 +149,7 @@ class DBScan {
                      const std::vector<std::size_t>& pointsToProcess,
                      std::vector<int>& clusteredPoints, const int clusterID) {
     // Loop over all the points that need to be process.
-    for (const auto& id : pointsToProcess) {
+    for (const auto id : pointsToProcess) {
       // Lets look for the neighbours of the current point.
       const point curentPoint = inputPoints[id];
       std::vector<std::size_t> neighbours;
