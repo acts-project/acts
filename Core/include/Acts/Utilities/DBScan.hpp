@@ -39,26 +39,27 @@ namespace Acts {
 /// of 2 epsilon. An extra cut is used to only keep the neighbours that are
 /// within the epsilon radius.
 ///
-/// @tparam Dims The number of dimensions.
-/// @tparam Scalar The scalar type used to construct position vectors.
-/// @tparam LeafSize The maximum number of points in a leaf node of the KDTree.
-template <std::size_t Dims, typename Scalar = double, std::size_t LeafSize = 4>
+/// @tparam kDims The number of dimensions.
+/// @tparam scalar_t The scalar type used to construct position vectors.
+/// @tparam kLeafSize The maximum number of points in a leaf node of the KDTree.
+template <std::size_t kDims, typename scalar_t = double,
+          std::size_t kLeafSize = 4>
 class DBScan {
  public:
   // The type of coordinates for points.
-  using point = std::array<Scalar, Dims>;
+  using Point = std::array<scalar_t, kDims>;
 
   // The type of a vector of coordinate.
-  using vector_p = std::vector<point>;
+  using VectorPoints = std::vector<Point>;
 
   // The type to pair the points with an ID.
-  using pair = std::pair<point, std::size_t>;
+  using Pair = std::pair<Point, std::size_t>;
 
   // The type of a vector of coordinate-ID pairs.
-  using vector_pair = std::vector<pair>;
+  using VectorPairs = std::vector<Pair>;
 
   // KDTree used before the DBScan algorithm to find the neighbours.
-  using tree_t = KDTree<Dims, std::size_t, Scalar, std::array, LeafSize>;
+  using Tree = KDTree<kDims, std::size_t, scalar_t, std::array, kLeafSize>;
 
   // Remove the default constructor.
   DBScan() = delete;
@@ -69,7 +70,7 @@ class DBScan {
   /// @param minPoints The minimum number of points to form a cluster.
   /// @param onePointCluster If true, all the noise points are considered as
   /// individual one point clusters.
-  DBScan(Scalar epsilon = 1.0, std::size_t minPoints = 1,
+  DBScan(scalar_t epsilon = 1.0, std::size_t minPoints = 1,
          bool onePointCluster = false)
       : m_eps(epsilon),
         m_minPoints(minPoints),
@@ -85,15 +86,16 @@ class DBScan {
   /// @param clusteredPoints Vector containing the cluster ID of each point.
   /// @return The number of clusters (excluding noise if onePointCluster==False).
   ///
-  int cluster(const vector_p& inputPoints, std::vector<int>& clusteredPoints) {
+  int cluster(const VectorPoints& inputPoints,
+              std::vector<int>& clusteredPoints) {
     // Transform the initial vector of input point to a vector of pairs
     // with the index of the point in the initial vector.
-    vector_pair inputPointsWithIndex;
+    VectorPairs inputPointsWithIndex;
     for (std::size_t id = 0; id < inputPoints.size(); id++) {
       inputPointsWithIndex.push_back(std::make_pair(inputPoints[id], id));
     }
     // Build the KDTree with the input points.
-    tree_t tree = tree_t(std::move(inputPointsWithIndex));
+    Tree tree = Tree(std::move(inputPointsWithIndex));
 
     // Initialize the cluster ID to 0.
     int clusterID = 0;
@@ -145,18 +147,18 @@ class DBScan {
   /// @param clusteredPoints Vector containing the cluster ID of each point.
   /// @param clusterID The ID of the current cluster.
   ///
-  void expandCluster(const tree_t& tree, const vector_p& inputPoints,
+  void expandCluster(const Tree& tree, const VectorPoints& inputPoints,
                      const std::vector<std::size_t>& pointsToProcess,
                      std::vector<int>& clusteredPoints, const int clusterID) {
     // Loop over all the points that need to be process.
     for (const auto id : pointsToProcess) {
       // Lets look for the neighbours of the current point.
-      const point currentPoint = inputPoints[id];
+      const Point currentPoint = inputPoints[id];
       std::vector<std::size_t> neighbours;
       // We create the range in which we will look for the neighbours (an
       // hypercube with a length of 2 epsilon).
-      typename tree_t::range_t range;
-      for (std::size_t dim = 0; dim < Dims; dim++) {
+      typename Tree::range_t range;
+      for (std::size_t dim = 0; dim < kDims; dim++) {
         range[dim] = std::make_pair(currentPoint[dim] - m_eps,
                                     currentPoint[dim] + m_eps);
       }
@@ -165,10 +167,10 @@ class DBScan {
       // are within the epsilon radius.
       tree.rangeSearchMapDiscard(
           range, [this, &neighbours, currentPoint](
-                     const typename tree_t::coordinate_t& pos,
-                     const typename tree_t::value_t& val) {
-            Scalar distance = 0;
-            for (std::size_t dim = 0; dim < Dims; dim++) {
+                     const typename Tree::coordinate_t& pos,
+                     const typename Tree::value_t& val) {
+            scalar_t distance = 0;
+            for (std::size_t dim = 0; dim < kDims; dim++) {
               distance += (pos[dim] - currentPoint[dim]) *
                           (pos[dim] - currentPoint[dim]);
             }
@@ -220,7 +222,7 @@ class DBScan {
   }
 
   // The epsilon radius used to find the neighbours.
-  Scalar m_eps;
+  scalar_t m_eps;
   // The minimum number of points to form a cluster.
   std::size_t m_minPoints = 1;
   // If true, all the noise points are considered as individual one point
