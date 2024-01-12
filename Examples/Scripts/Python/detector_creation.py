@@ -29,7 +29,7 @@ if "__main__" == __name__:
 
     # Uncomment if you want to use the geometry id mapping
     # This map can be produced with the 'geometry.py' script
-    geoIdMappingFile = None # "odd-dd4hep-geoid-mapping-wo-extra.json"
+    geoIdMappingFile = None  # "odd-dd4hep-geoid-mapping-wo-extra.json"
     if geoIdMappingFile is not None:
         # Load the geometry id mapping json file
         with open(geoIdMappingFile) as f:
