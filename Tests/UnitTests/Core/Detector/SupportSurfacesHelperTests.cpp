@@ -32,7 +32,7 @@ using namespace Acts::Experimental::detail::SupportSurfacesHelper;
 BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(CylindricalSupportCase) {
-  // This tests the basic functionaly to add a cylindrical support structure
+  // This tests the basic functionally to add a cylindrical support structure
   // and then split it into planar sectors
 
   // As a single cylinder
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(DiscSupportCase) {
 }
 
 BOOST_AUTO_TEST_CASE(addCylinderSupportCase) {
-  // This tests the functionaly to take the surfaces from a cylinder layer,
+  // This tests the functionally to take the surfaces from a cylinder layer,
   // estimate their extend and use this to construct a support structure
   // with some given additional instructuions
   std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(addCylinderSupportCase) {
 }
 
 BOOST_AUTO_TEST_CASE(addDiscSupportCase) {
-  // This tests the functionaly to take the surfaces from a disc layer,
+  // This tests the functionally to take the surfaces from a disc layer,
   // estimate their extend and use this to construct a support structure
   // with some given additional instructuions
   std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;

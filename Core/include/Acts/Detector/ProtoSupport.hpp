@@ -44,7 +44,7 @@ struct ProtoSupport {
 
   /// A given extent from the volume, this allows to set support surfaces
   /// to fit into given volume extensions (flagged by the binning value
-  /// being contrained by this extent)
+  /// being constrained by this extent)
   Extent volumeExtent;
 
   /// The volume envelope/clearance parameters: these are chosen such that the

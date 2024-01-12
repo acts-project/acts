@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   // Redo and let r be estimated by a volume exetent with a [ 2_mm, 1_mm]
   // clearance: z is still from internals, but r is from the volume/external
   //
-  // Second test with one support disc, but external contraint
+  // Second test with one support disc, but external constraint
   supportDisc.internalConstraints = {Acts::binZ};
   supportDisc.volumeExtent.set(Acts::binR, 10., 120.);
   supportDisc.volumeClearance[Acts::binR] = {2., 1.};
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   lsConfig.auxiliary =
       "*** Endcap with 22 surfaces + 1 support disc, "
       "z - pos estimated from internals,  "
-      "r - range from external contraint  *** ";
+      "r - range from external constraint  *** ";
 
   endcapBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   lsConfig.supports = {supportCylinder};
   lsConfig.auxiliary =
       "*** Barrel with 448 surfaces + 1 support cylinder, r evaluated, z given "
-      "by external contraint ***";
+      "by external constraint ***";
 
   barrelBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));

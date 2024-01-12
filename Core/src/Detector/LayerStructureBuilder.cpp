@@ -239,7 +239,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
                                                            << " planes.");
       }
 
-      // The support exent
+      // The support extent
       Extent supportExtent;
       // Let us start with an eventually existing volume extent, but only pick
       // the binning value that are not constrained by the internal surfaces

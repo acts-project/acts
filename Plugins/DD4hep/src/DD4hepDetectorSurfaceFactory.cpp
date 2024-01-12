@@ -111,7 +111,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
     auto sExtent =
         sSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
             .extent();
-    cache.sExtent.value().extend(sExtent, cache.extentContraints);
+    cache.sExtent.value().extend(sExtent, cache.extentConstraints);
   }
 
   attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface.get(),
@@ -139,7 +139,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
     auto sExtent =
         pSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
             .extent();
-    cache.pExtent.value().extend(sExtent, cache.extentContraints);
+    cache.pExtent.value().extend(sExtent, cache.extentConstraints);
   }
   attachSurfaceMaterial(gctx, "acts_passive_surface", dd4hepElement,
                         *pSurface.get(), thickness, options);

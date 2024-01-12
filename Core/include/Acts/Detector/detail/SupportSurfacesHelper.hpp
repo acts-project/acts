@@ -36,7 +36,7 @@ namespace SupportSurfacesHelper {
 using SupportSurfaceComponents =
     std::tuple<Surface::SurfaceType, std::vector<ActsScalar>, Acts::Transform3>;
 
-/// @brief  A suuport creator turns an extend into a vector of bound values
+/// @brief  A support creator turns an extend into a vector of bound values
 using SurfaceComponentsCreator =
     std::function<SupportSurfaceComponents(const Extent&)>;
 
