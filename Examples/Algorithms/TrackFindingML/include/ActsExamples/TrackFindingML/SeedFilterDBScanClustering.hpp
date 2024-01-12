@@ -20,7 +20,7 @@ namespace Acts {
 /// momentum using DBScan
 ///
 /// @param input : Input parameters for the clustering (phi, eta, z, Pt)
-/// @param epsilon : Maximum distance between 2 tracks to be clustered
+/// @param epsilon : Maximum distance between 2 seed to be clustered
 /// @param minPoints : Minimum number of seed to create a cluster
 /// @return an unordered map representing the clusters, the keys the ID of the primary seed of each cluster and the stored value a vector of seed IDs.
 std::vector<std::vector<std::size_t>> dbscanSeedClustering(
@@ -30,7 +30,7 @@ std::vector<std::vector<std::size_t>> dbscanSeedClustering(
   using DBSCAN = Acts::DBScan<4, double, 4>;
   DBSCAN dbscan(epsilon, minPoints, true);
 
-  // create a chrono to measure the time
+  // Cluster track with DBScan
   std::vector<int> clusterAssignments;
   std::size_t clusterNb = dbscan.cluster(input, clusterAssignments);
 
