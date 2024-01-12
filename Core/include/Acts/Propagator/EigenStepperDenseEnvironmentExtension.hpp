@@ -12,16 +12,11 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/EigenStepperExtensionBase.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
-
-#include <array>
-#include <cmath>
 
 namespace Acts {
 
@@ -30,10 +25,15 @@ namespace Acts {
 /// ioninisation, bremsstrahlung, pair production and photonuclear interaction
 /// in the propagation and the jacobian. These effects will only occur if the
 /// propagation is in a TrackingVolume with attached material.
-struct DenseEnvironmentExtension {
-  using Scalar = ActsScalar;
+struct EigenStepperDenseEnvironmentExtension
+    : public EigenStepperExtensionBase<ActsScalar,
+                                       EigenStepperDenseEnvironmentExtension> {
+  using Base = EigenStepperExtensionBase<ActsScalar,
+                                         EigenStepperDenseEnvironmentExtension>;
+
+  using Scalar = Base::Scalar;
   /// @brief Vector3 replacement for the custom scalar type
-  using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
+  using ThisVector3 = Base::ThisVector3;
 
   /// Momentum at a certain point
   Scalar currentMomentum = 0.;
@@ -398,7 +398,7 @@ struct DenseEnvironmentExtension {
 
     energy[0] = std::hypot(initialMomentum, mass);
     // use unit length as thickness to compute the energy loss per unit length
-    Acts::MaterialSlab slab(material, 1);
+    MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.stepping.dense.meanEnergyLoss) {
       g = -computeEnergyLossMean(slab, absPdg, mass, static_cast<float>(qop[0]),

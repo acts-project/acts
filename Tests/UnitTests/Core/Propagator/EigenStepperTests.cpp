@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
@@ -34,15 +33,13 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/DefaultExtension.hpp"
-#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
+#include "Acts/Propagator/EigenStepperDenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StepperExtensionList.hpp"
-#include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -54,15 +51,11 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <functional>
 #include <limits>
-#include <map>
 #include <memory>
 #include <optional>
 #include <string>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -369,7 +362,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
     copy.geoContext = state.geoContext;
     copy.extension = state.extension;
-    copy.auctioneer = state.auctioneer;
     copy.stepData = state.stepData;
 
     return copy;
@@ -585,9 +577,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 1_GeV,
                                         cov, ParticleHypothesis::pion());
 
-  using Stepper = EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>;
+  using Stepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
   using Propagator = Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -619,9 +609,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
     CHECK_CLOSE_ABS(mom, startMom, 1_keV);
   }
 
-  using DefStepper = EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>;
+  using DefStepper = EigenStepper<EigenStepperDefaultExtension>;
   using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
   using DefPropagatorOptions =
       DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -684,9 +672,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 5_GeV,
                                         cov, ParticleHypothesis::pion());
 
-  using Stepper = EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>;
+  using Stepper = EigenStepper<EigenStepperDefaultExtension>;
   using Propagator = Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -727,9 +713,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
     }
   }
 
-  using DenseStepper =
-      EigenStepper<StepperExtensionList<DenseEnvironmentExtension>,
-                   detail::HighestValidAuctioneer>;
+  using DenseStepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
   using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
   using DensePropagatorOptions =
       DensePropagator::Options<ActionList<StepCollector>,
@@ -834,9 +818,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
                                   1_e / 5_GeV, Covariance::Identity(),
                                   ParticleHypothesis::pion());
 
-  using Stepper = EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>;
+  using Stepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -890,7 +872,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through vacuum
   // Set options for propagator
 
-  using DefStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
+  using DefStepper = EigenStepper<EigenStepperDefaultExtension>;
   using DefPropagator = Acts::Propagator<DefStepper, Navigator>;
   using DefPropagatorOptions =
       DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
@@ -940,8 +922,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set initial parameters for the particle track by using the result of the
   // first volume
 
-  using DenseStepper = EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>>;
+  using DenseStepper = EigenStepper<EigenStepperDenseEnvironmentExtension>;
   using DensePropagator = Acts::Propagator<DenseStepper, Navigator>;
   using DensePropagatorOptions =
       DensePropagator::Options<ActionList<StepCollector>,
@@ -1071,9 +1052,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
                                   1_e / 1_GeV, Covariance::Identity(),
                                   ParticleHypothesis::pion());
 
-  using Stepper = EigenStepper<
-      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
-      detail::HighestValidAuctioneer>;
+  using Stepper = EigenStepper<EigenStepperDefaultExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
   using PropagatorOptions =
       Propagator::Options<ActionList<StepCollector, MaterialInteractor>,

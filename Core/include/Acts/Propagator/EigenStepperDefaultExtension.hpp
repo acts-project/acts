@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Propagator/EigenStepperExtensionBase.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
@@ -18,24 +19,15 @@ namespace Acts {
 
 /// @brief Default evaluater of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This is a pure implementation by textbook.
-struct DefaultExtension {
-  using Scalar = ActsScalar;
-  /// @brief Vector3 replacement for the custom scalar type
-  using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
+struct EigenStepperDefaultExtension
+    : public EigenStepperExtensionBase<ActsScalar,
+                                       EigenStepperDefaultExtension> {
+  using Base =
+      EigenStepperExtensionBase<ActsScalar, EigenStepperDefaultExtension>;
 
-  /// @brief Control function if the step evaluation would be valid
-  ///
-  /// @tparam propagator_state_t Type of the state of the propagator
-  /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
-  ///
-  /// @return Boolean flag if the step would be valid
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  int bid(const propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-          const navigator_t& /*navigator*/) const {
-    return 1;
-  }
+  using Scalar = Base::Scalar;
+  /// @brief Vector3 replacement for the custom scalar type
+  using ThisVector3 = Base::ThisVector3;
 
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up qop, too.
