@@ -51,7 +51,7 @@ class DBScan {
   using vector_p = std::vector<point>;
 
   // The type to pair the points with an ID.
-  using pair = std::pair<point, size_t>;
+  using pair = std::pair<point, std::size_t>;
 
   // The type of a vector of coordinate-ID pairs.
   using vector_pair = std::vector<pair>;
@@ -106,7 +106,7 @@ class DBScan {
         continue;
       }
       // If not we try to build a new cluster
-      std::vector<size_t> pointToProcess{id};
+      std::vector<std::size_t> pointToProcess{id};
       expendCluster(tree, inputPoints, pointToProcess, clusteredPoints,
                     clusterID);
       // If the cluster has been created, increment the cluster ID.
@@ -145,7 +145,7 @@ class DBScan {
   /// @param clusterID The ID of the current cluster.
   ///
   void expendCluster(const tree_t& tree, const vector_p& inputPoints,
-                     const std::vector<size_t>& pointToProcess,
+                     const std::vector<std::size_t>& pointToProcess,
                      std::vector<int>& clusteredPoints, int clusterID) {
     // Loop over all the points that need to be process.
     for (auto& id : pointToProcess) {
@@ -176,7 +176,7 @@ class DBScan {
               neighbours.push_back(val);
             }
           });
-      size_t nNeighbours = neighbours.size();
+      std::size_t nNeighbours = neighbours.size();
       // If a cluster as already been started we add the neighbours to it
       if (clusteredPoints[id] != -1) {
         updateNeighbours(neighbours, clusteredPoints, clusterID);
