@@ -151,26 +151,26 @@ class DBScan {
     // Loop over all the points that need to be process.
     for (const auto id : pointsToProcess) {
       // Lets look for the neighbours of the current point.
-      const point curentPoint = inputPoints[id];
+      const point currentPoint = inputPoints[id];
       std::vector<std::size_t> neighbours;
       // We create the range in which we will look for the neighbours (an
       // hypercube with a length of 2 epsilon).
       typename tree_t::range_t range;
       for (std::size_t dim = 0; dim < Dims; dim++) {
-        range[dim] =
-            std::make_pair(curentPoint[dim] - m_eps, curentPoint[dim] + m_eps);
+        range[dim] = std::make_pair(currentPoint[dim] - m_eps,
+                                    currentPoint[dim] + m_eps);
       }
       // We use the KDTree to find the neighbours.
       // An extra cut needs to be applied to only keep the neighbours that
       // are within the epsilon radius.
       tree.rangeSearchMapDiscard(
-          range, [this, &neighbours, curentPoint](
+          range, [this, &neighbours, currentPoint](
                      const typename tree_t::coordinate_t& pos,
                      const typename tree_t::value_t& val) {
             Scalar distance = 0;
             for (std::size_t dim = 0; dim < Dims; dim++) {
-              distance +=
-                  (pos[dim] - curentPoint[dim]) * (pos[dim] - curentPoint[dim]);
+              distance += (pos[dim] - currentPoint[dim]) *
+                          (pos[dim] - currentPoint[dim]);
             }
             if (distance <= m_eps * m_eps) {
               neighbours.push_back(val);
