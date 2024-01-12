@@ -12,7 +12,7 @@
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
-#include "Acts/Detector/detail/SupportHelper.hpp"
+#include "Acts/Detector/detail/SupportSurfacesHelper.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
@@ -238,21 +238,52 @@ Acts::Experimental::LayerStructureBuilder::construct(
         ACTS_VERBOSE("  Support surface is modelled with " << support.splits
                                                            << " planes.");
       }
-      // To correctly attach the support structures, estimate the extent
-      Extent internalExtent;
-      if (m_cfg.extent.has_value()) {
-        internalExtent = m_cfg.extent.value();
-      } else {
+
+      // The support exent
+      Extent supportExtent;
+      // Let us start with an eventually existing volume extent, but only pick
+      // the binning value that are not constrained by the internal surfaces
+      for (const auto& bv : s_binningValues) {
+        if (support.volumeExtent.constrains(bv) &&
+            std::find(support.internalConstraints.begin(),
+                      support.internalConstraints.end(),
+                      bv) == support.internalConstraints.end()) {
+          ACTS_VERBOSE("  Support surface is constrained by volume extent in "
+                       << binningValueNames()[bv]);
+          supportExtent.set(bv, support.volumeExtent.min(bv),
+                            support.volumeExtent.max(bv));
+        }
+      }
+
+      // Now add the internal constraints
+      if (!support.internalConstraints.empty()) {
         // Estimate the extent from the surfaces
         for (const auto& s : internalSurfaces) {
           auto sPolyhedron = s->polyhedronRepresentation(gctx, m_cfg.nSegments);
-          internalExtent.extend(sPolyhedron.extent(), support.constraints);
+          supportExtent.extend(sPolyhedron.extent(), support.constraints);
         }
       }
-      // Use the support bulder helper to add support surfaces
-      detail::SupportHelper::addSupport(
-          internalSurfaces, assignToAll, internalExtent, support.type,
-          support.values, support.transform, support.splits);
+
+      // Add cylindrical support
+      if (support.type == Surface::SurfaceType::Cylinder) {
+        detail::SupportSurfacesHelper::CylindricalSupport cSupport{
+            support.offset, support.volumeClearance[binZ],
+            support.volumeClearance[binPhi]};
+        detail::SupportSurfacesHelper::addSupport(internalSurfaces, assignToAll,
+                                                  supportExtent, cSupport,
+                                                  support.splits);
+      } else if (support.type == Surface::SurfaceType::Disc) {
+        // Add disc support
+        detail::SupportSurfacesHelper::DiscSupport dSupport{
+            support.offset, support.volumeClearance[binR],
+            support.volumeClearance[binPhi]};
+        detail::SupportSurfacesHelper::addSupport(internalSurfaces, assignToAll,
+                                                  supportExtent, dSupport,
+                                                  support.splits);
+      } else {
+        throw std::invalid_argument(
+            "LayerStructureBuilder: support surface type not supported.");
+      }
     }
   }
 
