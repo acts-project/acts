@@ -19,4 +19,5 @@ find_package_handle_standard_args(Pythia8
 add_library(Pythia8 SHARED IMPORTED)
 set_property(TARGET Pythia8 PROPERTY IMPORTED_LOCATION ${Pythia8_LIBRARY})
 set_property(TARGET Pythia8 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Pythia8_INCLUDE_DIR})
+
 mark_as_advanced(Pythia8_FOUND Pythia8_INCLUDE_DIR Pythia8_LIBRARY)
