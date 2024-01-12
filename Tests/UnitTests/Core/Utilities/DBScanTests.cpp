@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,8 @@
 #include <vector>
 
 namespace {
+// Test vector of 2D points generated from the make_blobs function of
+// scikit-learn to correspond to 4 clusters with a standard deviation of 0.3
 std::vector<std::array<double, 2>> test_vector{
     {-2.83739915, 2.62792556},  {-2.02847331, -1.90722196},
     {4.42609249, -2.42439165},  {-2.54167208, -1.31586441},
@@ -70,7 +72,7 @@ std::vector<std::array<double, 2>> test_vector{
     {6.92208545, -8.46326386},  {4.58953972, -3.22764749},
     {-3.36912131, 2.58470911},  {5.28526348, -2.55723196},
     {6.55276593, -7.81387909},  {-1.79854507, -2.10170986}};
-}
+}  // namespace
 
 namespace Acts {
 namespace Test {

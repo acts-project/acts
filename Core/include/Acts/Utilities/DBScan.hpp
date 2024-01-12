@@ -20,13 +20,13 @@
 #include <vector>
 
 namespace Acts {
-/// @brief A general implementation of a N dimensional DBScan clustering algorithm.
+/// @brief A general implementation of an N dimensional DBScan clustering algorithm.
 ///
-/// This is a general implementation of a N dimensional DBScan clustering
+/// This is a general implementation of an N dimensional DBScan clustering
 /// algorithm. The DBScan algorithm uses density information to cluster together
 /// points that are close to each other.
 ///
-/// For each points we will look for the neighbours that are within the epsilon
+/// For each point, we will look for the neighbours that are within the epsilon
 /// radius. If the number of neighbours is greater than the minimum number of
 /// points, we will start a new cluster and assign the current point to it. We
 /// will then look for the neighbours of the neighbours and assign them to the
@@ -41,6 +41,7 @@ namespace Acts {
 ///
 /// @tparam Dims The number of dimensions.
 /// @tparam Scalar The scalar type used to construct position vectors.
+/// @tparam LeafSize The maximum number of points in a leaf node of the KDTree.
 template <std::size_t Dims, typename Scalar = double, std::size_t LeafSize = 4>
 class DBScan {
  public:
@@ -76,7 +77,7 @@ class DBScan {
 
   /// @brief Cluster the input points.
   ///
-  /// This function implement the main loop of the DBScan algorithm.
+  /// This function implements the main loop of the DBScan algorithm.
   /// It loops over all the point and will try to start new cluster
   /// if it finds points that have yet to be clustered.
   ///
@@ -107,7 +108,7 @@ class DBScan {
       }
       // If not we try to build a new cluster
       std::vector<std::size_t> pointToProcess{id};
-      expendCluster(tree, inputPoints, pointToProcess, clusteredPoints,
+      expandCluster(tree, inputPoints, pointToProcess, clusteredPoints,
                     clusterID);
       // If the cluster has been created, increment the cluster ID.
       if (clusteredPoints[id] != -1) {
@@ -139,18 +140,18 @@ class DBScan {
   ///
   /// @param tree The KDTree containing all the points.
   /// @param inputPoints The vector containing the input points.
-  /// @param pointToProcess The vector containing the ids of the points that need to be
+  /// @param pointsToProcess The vector containing the ids of the points that need to be
   /// processed.
   /// @param clusteredPoints Vector containing the cluster ID of each point.
   /// @param clusterID The ID of the current cluster.
   ///
-  void expendCluster(const tree_t& tree, const vector_p& inputPoints,
-                     const std::vector<std::size_t>& pointToProcess,
-                     std::vector<int>& clusteredPoints, int clusterID) {
+  void expandCluster(const tree_t& tree, const vector_p& inputPoints,
+                     const std::vector<std::size_t>& pointsToProcess,
+                     std::vector<int>& clusteredPoints, const int clusterID) {
     // Loop over all the points that need to be process.
-    for (auto& id : pointToProcess) {
+    for (const auto& id : pointsToProcess) {
       // Lets look for the neighbours of the current point.
-      point curentPoint = inputPoints[id];
+      const point curentPoint = inputPoints[id];
       std::vector<std::size_t> neighbours;
       // We create the range in which we will look for the neighbours (an
       // hypercube with a length of 2 epsilon).
@@ -160,7 +161,7 @@ class DBScan {
             std::make_pair(curentPoint[dim] - m_eps, curentPoint[dim] + m_eps);
       }
       // We use the KDTree to find the neighbours.
-      // An extra cut the need to be applied to only keep the neighbours that
+      // An extra cut needs to be applied to only keep the neighbours that
       // are within the epsilon radius.
       tree.rangeSearchMapDiscard(
           range, [this, &neighbours, curentPoint](
@@ -171,13 +172,12 @@ class DBScan {
               distance +=
                   (pos[dim] - curentPoint[dim]) * (pos[dim] - curentPoint[dim]);
             }
-            distance = std::sqrt(distance);
-            if (distance <= m_eps) {
+            if (distance <= m_eps * m_eps) {
               neighbours.push_back(val);
             }
           });
       std::size_t nNeighbours = neighbours.size();
-      // If a cluster as already been started we add the neighbours to it
+      // If a cluster has already been started we add the neighbours to it
       if (clusteredPoints[id] != -1) {
         updateNeighbours(neighbours, clusteredPoints, clusterID);
       }
@@ -190,7 +190,7 @@ class DBScan {
           updateNeighbours(neighbours, clusteredPoints, clusterID);
         }
         // Try to extend the cluster with the neighbours.
-        expendCluster(tree, inputPoints, neighbours, clusteredPoints,
+        expandCluster(tree, inputPoints, neighbours, clusteredPoints,
                       clusterID);
       }
     }
@@ -206,7 +206,8 @@ class DBScan {
   /// @param clusterID The ID of the current cluster.
   ///
   void updateNeighbours(std::vector<std::size_t>& neighbours,
-                        std::vector<int>& clusteredPoints, int clusterID) {
+                        std::vector<int>& clusteredPoints,
+                        const int clusterID) {
     neighbours.erase(std::remove_if(neighbours.begin(), neighbours.end(),
                                     [&clusteredPoints](int i) {
                                       return clusteredPoints[i] != -1;

@@ -19,9 +19,9 @@ namespace Acts {
 /// Clusters seed based on their direction, their Z impact parameter and their
 /// momentum using DBScan
 ///
-/// @param input : Input parameters for the clustering (phi, eta, z, Pt)
-/// @param epsilon : Maximum distance between 2 seed to be clustered
-/// @param minPoints : Minimum number of seed to create a cluster
+/// @param input Input parameters for the clustering (phi, eta, z, Pt)
+/// @param epsilon Maximum distance between 2 seed to be clustered
+/// @param minPoints Minimum number of seeds to create a cluster
 /// @return an unordered map representing the clusters, the keys the ID of the primary seed of each cluster and the stored value a vector of seed IDs.
 std::vector<std::vector<std::size_t>> dbscanSeedClustering(
     const std::vector<std::array<double, 4>>& input, float epsilon = 0.03,
