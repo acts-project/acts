@@ -9,7 +9,7 @@
 #pragma once
 
 // TODO: update to C++17 style
-#include "Acts/TrackFinding/FasTrackConnector.hpp"
+#include "Acts/TrackFinding/GbtsConnector.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -35,9 +35,9 @@ class TrigInDetSiLayer {
 };
 
 template <typename space_point_t>
-class TrigFTF_GNN_Layer {
+class GbtsLayer {
  public:
-  TrigFTF_GNN_Layer(const TrigInDetSiLayer &ls, float ew, int bin0)
+  GbtsLayer(const TrigInDetSiLayer &ls, float ew, int bin0)
       : m_layer(ls), m_etaBinWidth(ew) {
     if (m_layer.m_type == 0) {  // barrel
       m_r1 = m_layer.m_refCoord;
@@ -180,7 +180,7 @@ class TrigFTF_GNN_Layer {
 
   int num_bins() const { return m_bins.size(); }
 
-  bool verifyBin(const TrigFTF_GNN_Layer<space_point_t> *pL, int b1, int b2,
+  bool verifyBin(const GbtsLayer<space_point_t> *pL, int b1, int b2,
                  float min_z0, float max_z0) const {
     float z1min = m_minBinCoord.at(b1);
     float z1max = m_maxBinCoord.at(b1);
@@ -260,39 +260,35 @@ class TrigFTF_GNN_Layer {
 };
 
 template <typename space_point_t>
-class TrigFTF_GNN_Geometry {
+class GbtsGeometry {
  public:
-  TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer> &layers,
-                       std::unique_ptr<Acts::FasTrackConnector> &conn)
+  GbtsGeometry(const std::vector<TrigInDetSiLayer> &layers,
+               std::unique_ptr<Acts::GbtsConnector> &conn)
 
-      : m_fastrack(std::move(conn)) {
+      : m_connector(std::move(conn)) {
     const float min_z0 = -168.0;
     const float max_z0 = 168.0;
 
-    m_etaBinWidth = m_fastrack->m_etaBin;
+    m_etaBinWidth = m_connector->m_etaBin;
     for (const auto &layer : layers) {
-      const TrigFTF_GNN_Layer<space_point_t> *pL =
-          addNewLayer(layer, m_nEtaBins);
+      const GbtsLayer<space_point_t> *pL = addNewLayer(layer, m_nEtaBins);
       m_nEtaBins += pL->num_bins();
     }
 
     // calculating bin tables in the connector...
 
-    for (std::map<int, std::vector<FasTrackConnection *>>::const_iterator it =
-             m_fastrack->m_connMap.begin();
-         it != m_fastrack->m_connMap.end(); ++it) {
-      const std::vector<FasTrackConnection *> &vConn = (*it).second;
+    for (std::map<int, std::vector<GbtsConnection *>>::const_iterator it =
+             m_connector->m_connMap.begin();
+         it != m_connector->m_connMap.end(); ++it) {
+      const std::vector<GbtsConnection *> &vConn = (*it).second;
 
-      for (std::vector<FasTrackConnection *>::const_iterator cIt =
-               vConn.begin();
+      for (std::vector<GbtsConnection *>::const_iterator cIt = vConn.begin();
            cIt != vConn.end(); ++cIt) {
         unsigned int src = (*cIt)->m_src;  // n2 : the new connectors
         unsigned int dst = (*cIt)->m_dst;  // n1
 
-        const TrigFTF_GNN_Layer<space_point_t> *pL1 =
-            getTrigFTF_GNN_LayerByKey(dst);
-        const TrigFTF_GNN_Layer<space_point_t> *pL2 =
-            getTrigFTF_GNN_LayerByKey(src);
+        const GbtsLayer<space_point_t> *pL1 = getGbtsLayerByKey(dst);
+        const GbtsLayer<space_point_t> *pL2 = getGbtsLayerByKey(src);
 
         if (pL1 == nullptr) {
           std::cout << " skipping invalid dst layer " << dst << std::endl;
@@ -320,14 +316,14 @@ class TrigFTF_GNN_Geometry {
     }
   }
 
-  TrigFTF_GNN_Geometry() = default;
+  GbtsGeometry() = default;
 
   // for safety to prevent passing as copy
-  TrigFTF_GNN_Geometry(const TrigFTF_GNN_Geometry &) = delete;
-  TrigFTF_GNN_Geometry &operator=(const TrigFTF_GNN_Geometry &) = delete;
+  GbtsGeometry(const GbtsGeometry &) = delete;
+  GbtsGeometry &operator=(const GbtsGeometry &) = delete;
 
-  ~TrigFTF_GNN_Geometry() {
-    for (typename std::vector<TrigFTF_GNN_Layer<space_point_t> *>::iterator it =
+  ~GbtsGeometry() {
+    for (typename std::vector<GbtsLayer<space_point_t> *>::iterator it =
              m_layArray.begin();
          it != m_layArray.end(); ++it) {
       delete (*it);
@@ -337,11 +333,9 @@ class TrigFTF_GNN_Geometry {
     m_layArray.clear();
   }
 
-  const TrigFTF_GNN_Layer<space_point_t> *getTrigFTF_GNN_LayerByKey(
-      unsigned int key) const {
-    typename std::map<unsigned int,
-                      TrigFTF_GNN_Layer<space_point_t> *>::const_iterator it =
-        m_layMap.find(key);
+  const GbtsLayer<space_point_t> *getGbtsLayerByKey(unsigned int key) const {
+    typename std::map<unsigned int, GbtsLayer<space_point_t> *>::const_iterator
+        it = m_layMap.find(key);
     if (it == m_layMap.end()) {
       return nullptr;
     }
@@ -349,38 +343,36 @@ class TrigFTF_GNN_Geometry {
     return (*it).second;
   }
 
-  const TrigFTF_GNN_Layer<space_point_t> *getTrigFTF_GNN_LayerByIndex(
-      int idx) const {
+  const GbtsLayer<space_point_t> *getGbtsLayerByIndex(int idx) const {
     return m_layArray.at(idx);
   }
 
   int num_bins() const { return m_nEtaBins; }
 
-  Acts::FasTrackConnector *fastrack() const { return m_fastrack.get(); }
+  Acts::GbtsConnector *connector() const { return m_connector.get(); }
 
  protected:
-  const TrigFTF_GNN_Layer<space_point_t> *addNewLayer(const TrigInDetSiLayer &l,
-                                                      int bin0) {
+  const GbtsLayer<space_point_t> *addNewLayer(const TrigInDetSiLayer &l,
+                                              int bin0) {
     unsigned int layerKey = l.m_subdet;  // this should be combined ID
     float ew = m_etaBinWidth;
 
-    TrigFTF_GNN_Layer<space_point_t> *pHL =
-        new TrigFTF_GNN_Layer<space_point_t>(l, ew, bin0);
+    GbtsLayer<space_point_t> *pHL = new GbtsLayer<space_point_t>(l, ew, bin0);
 
-    m_layMap.insert(std::pair<unsigned int, TrigFTF_GNN_Layer<space_point_t> *>(
-        layerKey, pHL));
+    m_layMap.insert(
+        std::pair<unsigned int, GbtsLayer<space_point_t> *>(layerKey, pHL));
     m_layArray.push_back(pHL);
     return pHL;
   }
 
   float m_etaBinWidth{};
 
-  std::map<unsigned int, TrigFTF_GNN_Layer<space_point_t> *> m_layMap;
-  std::vector<TrigFTF_GNN_Layer<space_point_t> *> m_layArray;
+  std::map<unsigned int, GbtsLayer<space_point_t> *> m_layMap;
+  std::vector<GbtsLayer<space_point_t> *> m_layArray;
 
   int m_nEtaBins{0};
 
-  std::unique_ptr<Acts::FasTrackConnector> m_fastrack;
+  std::unique_ptr<Acts::GbtsConnector> m_connector;
 };
 
 }  // namespace Acts
