@@ -70,14 +70,15 @@ struct AutodiffExtensionWrapper {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& navigator, const double h,
-                FreeMatrix& D) const {
+                const navigator_t& navigator, const double h, FreeMatrix& D,
+                std::optional<FreeMatrix>& additionalFreeCovariance) const {
 #if defined(__GNUC__) && __GNUC__ == 12 && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuse-after-free"
 #endif
     m_doubleExtension.finalize(state, stepper, navigator, h);
-    return transportMatrix(state, stepper, navigator, h, D);
+    return transportMatrix(state, stepper, navigator, h, D,
+                           additionalFreeCovariance);
 #if defined(__GNUC__) && __GNUC__ == 12 && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
