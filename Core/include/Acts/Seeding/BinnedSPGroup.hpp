@@ -121,10 +121,6 @@ class BinnedSPGroup {
     return *m_grid.get();
   }
 
-  std::size_t skipZMiddleBin() {
-    return m_skipZMiddleBin;
-  }
-
  private:
   // grid with ownership of all InternalSpacePoint
   std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_grid{nullptr};
@@ -138,8 +134,6 @@ class BinnedSPGroup {
 
   // Order of z bins to loop over when searching for SPs
   std::array<std::vector<std::size_t>, 2> m_bins{};
-  // Number of Z bins to skip the search for middle SP
-  std::size_t m_skipZMiddleBin{0ul};
 };
 
 }  // namespace Acts
