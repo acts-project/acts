@@ -136,6 +136,10 @@ struct GenericDenseEnvironmentExtension {
 
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
+      if (!firstQOverP) {
+        firstQOverP = (double)stepper.qOverP(state.stepping);
+      }
+
       // Set up container for energy loss
       auto volumeMaterial = navigator.currentVolumeMaterial(state.navigation);
       ThisVector3 position = stepper.position(state.stepping);
