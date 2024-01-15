@@ -76,7 +76,6 @@ void addEDM4hep(Context& ctx);
 void addSvg(Context& ctx);
 void addObj(Context& ctx);
 void addOnnx(Context& ctx);
-void addOnnxMlpack(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
 
 }  // namespace Acts::Python
@@ -127,6 +126,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addObj(ctx);
   addSvg(ctx);
   addOnnx(ctx);
-  addOnnxMlpack(ctx);
   addOnnxNeuralCalibrator(ctx);
 }
