@@ -40,11 +40,6 @@ struct GenericDenseEnvironmentExtension {
   /// @brief Vector3 replacement for the custom scalar type
   using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
 
-  PdgParticle absPdg = PdgParticle::eInvalid;
-  float mass{};
-  float absQ{};
-  float initialQOverP{};
-
   /// Momentum at a certain point
   Scalar currentMomentum = 0.;
   /// Particles momentum at k1
@@ -90,10 +85,11 @@ struct GenericDenseEnvironmentExtension {
   int bid(const propagator_state_t& state, const stepper_t& stepper,
           const navigator_t& navigator) const {
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
+    float absQ = particleHypothesis.absoluteCharge();
+    float mass = particleHypothesis.mass();
 
     // Check for valid particle properties
-    if (particleHypothesis.absoluteCharge() == 0. ||
-        particleHypothesis.mass() == 0. ||
+    if (absQ == 0. || mass == 0. ||
         stepper.absoluteMomentum(state.stepping) <
             state.options.momentumCutOff) {
       return 0;
@@ -134,18 +130,12 @@ struct GenericDenseEnvironmentExtension {
     // using because of autodiff
     using std::hypot;
 
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
+    float absQ = particleHypothesis.absoluteCharge();
+    float mass = particleHypothesis.mass();
+
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
-      const auto& particleHypothesis =
-          stepper.particleHypothesis(state.stepping);
-      absPdg = particleHypothesis.absolutePdg();
-      mass = particleHypothesis.mass();
-      absQ = particleHypothesis.absoluteCharge();
-      initialQOverP = stepper.qOverP(state.stepping);
-      if (!firstQOverP) {
-        firstQOverP = initialQOverP;
-      }
-
       // Set up container for energy loss
       auto volumeMaterial = navigator.currentVolumeMaterial(state.navigation);
       ThisVector3 position = stepper.position(state.stepping);
@@ -153,7 +143,7 @@ struct GenericDenseEnvironmentExtension {
       initialMomentum = stepper.absoluteMomentum(state.stepping);
       currentMomentum = initialMomentum;
       qop[0] = stepper.qOverP(state.stepping);
-      initializeEnergyLoss(state);
+      initializeEnergyLoss(state, stepper);
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
       // Evaluate k for the time propagation
@@ -200,6 +190,9 @@ struct GenericDenseEnvironmentExtension {
                 const navigator_t& /*navigator*/, double h) const {
     // using because of autodiff
     using std::hypot;
+
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
+    float mass = particleHypothesis.mass();
 
     // Evaluate the new momentum
     auto newMomentum =
@@ -303,6 +296,8 @@ struct GenericDenseEnvironmentExtension {
 
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
+    float mass = particleHypothesis.mass();
 
     D = FreeMatrix::Identity();
     double half_h = h * 0.5;
@@ -413,12 +408,19 @@ struct GenericDenseEnvironmentExtension {
   ///        loss of a particle in material
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   ///
   /// @param [in] state Deliverer of configurations
-  template <typename propagator_state_t>
-  void initializeEnergyLoss(const propagator_state_t& state) {
+  template <typename propagator_state_t, typename stepper_t>
+  void initializeEnergyLoss(const propagator_state_t& state,
+                            const stepper_t& stepper) {
     // using because of autodiff
     using std::hypot;
+
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
+    PdgParticle absPdg = particleHypothesis.absolutePdg();
+    float absQ = particleHypothesis.absoluteCharge();
+    float mass = particleHypothesis.mass();
 
     energy[0] = hypot(initialMomentum, mass);
     // use unit length as thickness to compute the energy loss per unit length
@@ -472,6 +474,9 @@ struct GenericDenseEnvironmentExtension {
     // using because of autodiff
     using std::hypot;
 
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
+    float mass = particleHypothesis.mass();
+
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
     energy[i] = hypot(currentMomentum, mass);
@@ -491,6 +496,12 @@ struct GenericDenseEnvironmentExtension {
                                       const stepper_t& stepper, double h,
                                       const FreeMatrix& /*D*/,
                                       FreeMatrix& additionalFreeCovariance) {
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
+    PdgParticle absPdg = particleHypothesis.absolutePdg();
+    float absQ = particleHypothesis.absoluteCharge();
+    float mass = particleHypothesis.mass();
+    double qOverP = stepper.qOverP(state.stepping);
+
     MaterialSlab newMaterial(material, h);
 
     accumulatedMaterial =
@@ -548,7 +559,7 @@ struct GenericDenseEnvironmentExtension {
     // handle energy loss covariance
     {
       float qOverPSigma = computeEnergyLossLandauSigmaQOverP(
-          accumulatedMaterial, mass, initialQOverP, absQ);
+          accumulatedMaterial, mass, qOverP, absQ);
 
       additionalFreeCovariance(eFreeQOverP, eFreeQOverP) =
           qOverPSigma * qOverPSigma;
