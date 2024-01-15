@@ -88,13 +88,12 @@ struct GenericDenseEnvironmentExtension {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   int bid(const propagator_state_t& state, const stepper_t& stepper,
-          const navigator_t& navigator) {
+          const navigator_t& navigator) const {
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    mass = particleHypothesis.mass();
-    absQ = particleHypothesis.absoluteCharge();
 
     // Check for valid particle properties
-    if (absQ == 0. || mass == 0. ||
+    if (particleHypothesis.absoluteCharge() == 0. ||
+        particleHypothesis.mass() == 0. ||
         stepper.absoluteMomentum(state.stepping) <
             state.options.momentumCutOff) {
       return 0;
