@@ -130,8 +130,8 @@ struct GenericDenseEnvironmentExtension {
             typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
-         std::array<Scalar, 4>& kQoP, int i, double h,
-         const ThisVector3& kprev) {
+         std::array<Scalar, 4>& kQoP, int i = 0, double h = 0.,
+         const ThisVector3& kprev = ThisVector3::Zero()) {
     // using because of autodiff
     using std::hypot;
 

@@ -61,8 +61,8 @@ struct GenericDefaultExtension {
             typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          const navigator_t& /*navigator*/, ThisVector3& knew,
-         const Vector3& bField, std::array<Scalar, 4>& kQoP, int i, double h,
-         const ThisVector3& kprev) {
+         const Vector3& bField, std::array<Scalar, 4>& kQoP, int i = 0,
+         double h = 0., const ThisVector3& kprev = ThisVector3::Zero()) {
     auto qop = stepper.qOverP(state.stepping);
     // First step does not rely on previous data
     if (i == 0) {
