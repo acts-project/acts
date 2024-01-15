@@ -79,7 +79,8 @@ void addGeometry(Context& ctx) {
         .def("boundary", &Acts::GeometryIdentifier::boundary)
         .def("approach", &Acts::GeometryIdentifier::approach)
         .def("sensitive", &Acts::GeometryIdentifier::sensitive)
-        .def("extra", &Acts::GeometryIdentifier::extra);
+        .def("extra", &Acts::GeometryIdentifier::extra)
+        .def("value", &Acts::GeometryIdentifier::value);
   }
 
   {

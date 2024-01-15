@@ -111,7 +111,7 @@ The detector object is the holder class of all geometry objects, it has to conta
 - a volume finder delegate (as `Acts::Experimental::DetectorVolumeFinder`) that allows to uniquely associate a point in space with a contained volume of the detector.
 
 :::{note}
-When the detector is constructed, name duplicates are checked for and if found a `std::exception` is thrown. Similarly, when sensitive surfaces are provided and duplicate `Acts::GeometryIdentifier` objects are found during detector construction a `std::exception` is thrown. The latter can be avoided by using an appropriate (set of) `Acts::GeometyIdGenerator` tool(s) which will guarantee some level of uniqueness.
+When the detector is constructed, name duplicates are checked for and if found a `std::exception` is thrown. Similarly, when sensitive surfaces are provided and duplicate `Acts::GeometryIdentifier` objects are found during detector construction a `std::exception` is thrown. The latter can be avoided by using an appropriate (set of) `Acts::GeometryIdGenerator` tool(s) which will guarantee some level of uniqueness.
 :::
 
 :::{figure} ../figures/ODD_Detector.png
