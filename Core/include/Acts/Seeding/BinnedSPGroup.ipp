@@ -50,7 +50,7 @@ std::tuple<boost::container::small_vector<std::size_t, 9>, std::size_t,
            boost::container::small_vector<std::size_t, 9>>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
   // Global Index
-  std::array<std::size_t, 2> localPosition = m_gridItr.localPosition();
+  std::array<std::size_t, 2> localPosition = m_gridItr.localBinsIndices();
   std::size_t global_index =
       m_group->m_grid->globalBinFromLocalBins(localPosition);
 
@@ -197,22 +197,17 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;
 
-  m_skipZMiddleBin = config.skipZMiddleBinSearch;
-
   // phi axis
   m_bins[INDEX::PHI].resize(m_grid->numLocalBins()[0]);
   std::iota(m_bins[INDEX::PHI].begin(), m_bins[INDEX::PHI].end(), 1ul);
 
   // z axis
   if (config.zBinsCustomLooping.empty()) {
-    std::size_t nZbins = m_grid->numLocalBins()[1] - m_skipZMiddleBin;
+    std::size_t nZbins = m_grid->numLocalBins()[INDEX::Z];
     m_bins[INDEX::Z] = std::vector<std::size_t>(nZbins);
-    std::iota(m_bins[INDEX::Z].begin(), m_bins[INDEX::Z].end(),
-              1ul + m_skipZMiddleBin);
+    std::iota(m_bins[INDEX::Z].begin(), m_bins[INDEX::Z].end(), 1ul);
   } else {
-    m_bins[INDEX::Z] = std::vector<std::size_t>(
-        config.zBinsCustomLooping.begin() + m_skipZMiddleBin,
-        config.zBinsCustomLooping.end());
+    m_bins[INDEX::Z] = config.zBinsCustomLooping;
   }
 }
 
