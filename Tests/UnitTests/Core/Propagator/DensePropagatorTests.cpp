@@ -141,8 +141,7 @@ BOOST_DATA_TEST_CASE(dense_propagator_test,
   double qOverP = particleHypothesis.qOverP(p, q);
   CurvilinearTrackParameters startParams(
       Vector4(-1.5_m, 0, 0, 0), Vector3(1, 0, 0), qOverP,
-      Eigen::Vector<double, 6>::Constant(1e-16).asDiagonal(),
-      particleHypothesis);
+      BoundVector::Constant(1e-16).asDiagonal(), particleHypothesis);
 
   DenseStepperPropagatorOptions<> options(geoCtx, magCtx);
   options.maxStepSize = 1_m;
