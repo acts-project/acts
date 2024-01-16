@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <array>
@@ -74,10 +75,11 @@ class SpacePointUtility {
   /// @param par local position
   /// @param cov local covariance
   /// @return vectors of the global coordinates and covariance of the SourceLink
-  std::pair<Vector3, Vector2> globalCoords(
-      const GeometryContext& gctx, const SourceLink& slink,
-      const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
-      const BoundSquareMatrix& cov) const;
+  std::tuple<Vector3, std::optional<ActsScalar>, Vector2,
+             std::optional<ActsScalar>>
+  globalCoords(const GeometryContext& gctx, const SourceLink& slink,
+               const SourceLinkSurfaceAccessor& surfaceAccessor,
+               const BoundVector& par, const BoundSquareMatrix& cov) const;
 
   /// @brief Get rho and z covariance from the local position and covariance
   /// @param gctx The current geometry context object, e.g. alignment
@@ -98,13 +100,12 @@ class SpacePointUtility {
   /// @param globalPos global position
   /// @param theta The angle between the two strips
   /// @return (rho, z) components of the global covariance
-  Vector2 calcRhoZVars(
-      const GeometryContext& gctx, const SourceLink& slinkFront,
-      const SourceLink& slinkBack,
-      const SourceLinkSurfaceAccessor& surfaceAccessor,
-      const std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
-          SourceLink)>& paramCovAccessor,
-      const Vector3& globalPos, const double theta) const;
+  Vector2 calcRhoZVars(const GeometryContext& gctx,
+                       const SourceLink& slinkFront,
+                       const SourceLink& slinkBack,
+                       const SourceLinkSurfaceAccessor& surfaceAccessor,
+                       const ParamCovAccessor& paramCovAccessor,
+                       const Vector3& globalPos, const double theta) const;
 
   /// @brief This function performs a straight forward calculation of a space
   /// point and returns whether it was successful or not.
