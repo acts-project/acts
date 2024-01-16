@@ -238,12 +238,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   // construct the seeding tools
   // covariance tool, extracts covariances per spacepoint as required
-  auto extractGlobalQuantities =
-      [=](const SimSpacePoint& sp, float, float,
-          float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto extractGlobalQuantities = [=](const SimSpacePoint& sp, float, float,
+                                     float) {
     Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
     Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
-    return std::make_pair(position, covariance);
+    return std::make_tuple(position, covariance, sp.t());
   };
 
   // extent used to store r range for middle spacepoint
