@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -154,7 +154,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
   Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridStop =
       grid.end();
   std::size_t numIterations = 0ul;
-  for (; gridStart != gridStop; ++gridStart) {
+  for (; gridStart != gridStop; gridStart++) {
+    BOOST_CHECK_EQUAL(gridStart.globalBinIndex(), numIterations);
+    const std::array<std::size_t, 1ul> locPosition =
+        gridStart.localBinsIndices();
+    BOOST_CHECK_EQUAL(numIterations, locPosition[0ul]);
     ++numIterations;
   }
   BOOST_CHECK_EQUAL(numIterations, grid.size(true));
@@ -184,6 +188,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global) {
       gridStop = grid.end();
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
+    BOOST_CHECK_EQUAL(gridStart.globalBinIndex(), numIterations);
     ++numIterations;
   }
   BOOST_CHECK_EQUAL(numIterations, grid.size(true));
@@ -220,6 +225,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_global) {
       gridStop = grid.end();
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
+    BOOST_CHECK_EQUAL(gridStart.globalBinIndex(), numIterations);
     ++numIterations;
   }
   BOOST_CHECK_EQUAL(numIterations, grid.size(true));
@@ -264,8 +270,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_operators) {
   BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBins - 2ul);
 
   [[maybe_unused]] double value = *gridStart;
-  std::array<std::size_t, 1ul> locPos = gridStart.localPosition();
+  std::array<std::size_t, 1ul> locPos = gridStart.localBinsIndices();
   BOOST_CHECK_EQUAL(locPos[0ul], 3ul);
+
+  std::size_t globPos = gridStart.globalBinIndex();
+  BOOST_CHECK_EQUAL(globPos, 3ul);
 
   Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridDefault;
   Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridDummy(
@@ -328,7 +337,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local_operators) {
   BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBinsX * nBinsY - 2ul);
 
   [[maybe_unused]] double value = *gridStart;
-  std::array<std::size_t, 2ul> locPos = gridStart.localPosition();
+  std::array<std::size_t, 2ul> locPos = gridStart.localBinsIndices();
   BOOST_CHECK_EQUAL(locPos[0ul], 1ul);
   BOOST_CHECK_EQUAL(locPos[1ul], 3ul);
 
@@ -430,7 +439,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local) {
                           Acts::detail::EquidistantAxis>
       gridStop = grid.end(navigation);
   std::size_t numIterations = 0ul;
-  for (; gridStart != gridStop; ++gridStart) {
+  for (; gridStart != gridStop; gridStart++) {
     ++numIterations;
   }
   BOOST_CHECK_EQUAL(numIterations, grid.size(false));
@@ -635,7 +644,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_norepetitions) {
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
     ++numIterations;
-    std::array<std::size_t, 3ul> locPos = gridStart.localPosition();
+    std::array<std::size_t, 3ul> locPos = gridStart.localBinsIndices();
     std::size_t globPos = grid.globalBinFromLocalBins(locPos);
     BOOST_CHECK_EQUAL(
         visited_global_bins.find(globPos) != visited_global_bins.end(), false);

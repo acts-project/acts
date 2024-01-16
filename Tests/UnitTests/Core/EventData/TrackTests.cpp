@@ -13,6 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -260,8 +261,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t.setReferenceSurface(surface);
   BOOST_CHECK_EQUAL(surface.get(), &t.referenceSurface());
 
-  TrackAccessor<unsigned int> accNMeasuements("nMeasurements");
-  ConstTrackAccessor<unsigned int> caccNMeasuements("nMeasurements");
+  ProxyAccessor<unsigned int> accNMeasuements("nMeasurements");
+  ConstProxyAccessor<unsigned int> caccNMeasuements("nMeasurements");
 
   t.nMeasurements() = 42;
   BOOST_CHECK_EQUAL(t2.nMeasurements(), 42);
