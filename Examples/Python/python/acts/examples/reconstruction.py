@@ -11,7 +11,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform FTF",
+    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts",
 )
 
 TruthSeedRanges = namedtuple(
@@ -41,7 +41,6 @@ SeedFinderConfigArg = namedtuple(
         "maxPtScattering",
         "zBinEdges",
         "zBinsCustomLooping",
-        "skipZMiddleBinSearch",
         "rRangeMiddleSP",
         "useVariableMiddleSPRange",
         "binSizeR",
@@ -57,7 +56,7 @@ SeedFinderConfigArg = namedtuple(
         "z",  # (min,max)
         "zOutermostLayers",  # (min,max)
     ],
-    defaults=[None] * 19 + [(None, None)] * 8,
+    defaults=[None] * 18 + [(None, None)] * 8,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -175,7 +174,7 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
-    fastrack_inputConfigFile: Optional[Union[Path, str]] = None,
+    connector_inputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
@@ -221,7 +220,7 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, skipZMiddleBinSearch, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
@@ -322,10 +321,10 @@ def addSeeding(
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
-        elif seedingAlgorithm == SeedingAlgorithm.FTF:
-            logger.info("Using FTF seeding")
+        elif seedingAlgorithm == SeedingAlgorithm.Gbts:
+            logger.info("Using Gbts seeding")
             # output of algs changed, only one output now
-            seeds = addFTFSeeding(
+            seeds = addGbtsSeeding(
                 s,
                 spacePoints,
                 seedFinderConfigArg,
@@ -335,7 +334,7 @@ def addSeeding(
                 logLevel,
                 layerMappingConfigFile,
                 geoSelectionConfigFile,
-                fastrack_inputConfigFile,
+                connector_inputConfigFile,
             )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
@@ -600,7 +599,6 @@ def addStandardSeeding(
             maxPtScattering=seedFinderConfigArg.maxPtScattering,
             zBinEdges=seedFinderConfigArg.zBinEdges,
             zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
-            skipZMiddleBinSearch=seedFinderConfigArg.skipZMiddleBinSearch,
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
             binSizeR=seedFinderConfigArg.binSizeR,
@@ -819,7 +817,7 @@ def addHoughTransformSeeding(
     return ht.config.outputSeeds
 
 
-def addFTFSeeding(
+def addGbtsSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedFinderConfigArg: SeedFinderConfigArg,
@@ -829,19 +827,19 @@ def addFTFSeeding(
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
     geoSelectionConfigFile: Union[Path, str] = None,
-    fastrack_inputConfigFile: Union[Path, str] = None,
+    connector_inputConfigFile: Union[Path, str] = None,
 ):
-    """FTF seeding"""
+    """Gbts seeding"""
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
-    fastrack_inputFile = str(fastrack_inputConfigFile)
-    seedFinderConfig = acts.SeedFinderFTFConfig(
+    connector_inputFile = str(connector_inputConfigFile)
+    seedFinderConfig = acts.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             minPt=seedFinderConfigArg.minPt,
-            fastrack_input_file=fastrack_inputFile,
+            connector_input_file=connector_inputFile,
             m_useClusterWidth=False,
         ),
     )
@@ -877,7 +875,7 @@ def addFTFSeeding(
         )
     )
 
-    seedingAlg = acts.examples.SeedingFTFAlgorithm(
+    seedingAlg = acts.examples.GbtsSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
         outputSeeds="seeds",
@@ -953,7 +951,7 @@ def addSeedFilterML(
     outputDirCsv: Optional[Union[Path, str]] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)()
-    from acts.examples.onnx.mlpack import SeedFilterMLAlgorithm
+    from acts.examples.onnx import SeedFilterMLAlgorithm
 
     inputParticles = "particles"
     selectedParticles = "truth_seeds_selected"
