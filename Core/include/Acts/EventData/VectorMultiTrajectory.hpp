@@ -182,6 +182,7 @@ class VectorMultiTrajectoryBase {
     for (const auto& [key, value] : other.m_dynamic) {
       m_dynamic.insert({key, value->clone()});
     }
+    m_dynamicKeys = other.m_dynamicKeys;
   };
 
   VectorMultiTrajectoryBase(VectorMultiTrajectoryBase&& other) = default;
@@ -333,6 +334,7 @@ class VectorMultiTrajectoryBase {
   // be handled in a smart way by moving but not sure.
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
+  std::vector<HashedString> m_dynamicKeys;
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
 };

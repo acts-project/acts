@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <array>
 #include <fstream>
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(GridJsonConversion)
 
 BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   // Bound equidistant
-  using EqBound = Acts::Experimental::detail::GridAxisGenerators::EqBound;
+  using EqBound = Acts::GridAxisGenerators::EqBound;
 
   EqBound eqBound{{0., 5.}, 5};
   // Create the grid with the provided axis generator
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   BOOST_CHECK_EQUAL(eqBoundGridRead.at(5u), 5u);
 
   // Bound variable
-  using VarBound = Acts::Experimental::detail::GridAxisGenerators::VarBound;
+  using VarBound = Acts::GridAxisGenerators::VarBound;
 
   VarBound varBound{{10., 11., 22., 333., 4444., 55555.}};
   // Create the grid with the provided axis generator
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
   BOOST_CHECK_EQUAL(varBoundGridRead.at(5u), 5u);
 
   // Closed equidistant
-  using EqClosed = Acts::Experimental::detail::GridAxisGenerators::EqClosed;
+  using EqClosed = Acts::GridAxisGenerators::EqClosed;
 
   EqClosed eqClosed{{0., 5.}, 5};
   // Create the grid with the provided axis generator
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(Grid1DSingleEntry) {
 
 BOOST_AUTO_TEST_CASE(Grid1DArrayEntry) {
   // Bound equidistant
-  using EqBound = Acts::Experimental::detail::GridAxisGenerators::EqBound;
+  using EqBound = Acts::GridAxisGenerators::EqBound;
 
   EqBound eqBound{{0., 5.}, 5};
   // Create the grid with the provided axis generator
@@ -141,8 +141,7 @@ BOOST_AUTO_TEST_CASE(Grid1DArrayEntry) {
 }
 
 BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBound) {
-  using EqBoundEqBound =
-      Acts::Experimental::detail::GridAxisGenerators::EqBoundEqBound;
+  using EqBoundEqBound = Acts::GridAxisGenerators::EqBoundEqBound;
 
   EqBoundEqBound eqBound2{{0., 5.}, 5, {0., 2.}, 2};
   // Create the grid with the provided axis generator
@@ -195,8 +194,7 @@ BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBound) {
 }
 
 BOOST_AUTO_TEST_CASE(Grid2DSingleEntryBoundClosed) {
-  using EqBoundEqClosed =
-      Acts::Experimental::detail::GridAxisGenerators::EqBoundEqClosed;
+  using EqBoundEqClosed = Acts::GridAxisGenerators::EqBoundEqClosed;
 
   EqBoundEqClosed eqBoundEqClosed{{-6., 6.}, 3, {-M_PI, M_PI}, 3};
   // Create the grid with the provided axis generator

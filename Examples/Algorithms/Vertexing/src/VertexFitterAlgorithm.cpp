@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
@@ -45,7 +45,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
 
   // Setup the propagator with void navigator
   auto propagator = std::make_shared<Propagator>(
-      stepper, Acts::detail::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
+      stepper, Acts::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;

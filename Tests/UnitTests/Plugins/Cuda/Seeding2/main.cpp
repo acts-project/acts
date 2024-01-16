@@ -109,11 +109,11 @@ int main(int argc, char* argv[]) {
   gridOpts.bFieldInZ = sfOptions.bFieldInZ;
 
   // Covariance tool, sets covariances per spacepoint as required.
-  auto ct = [=](const TestSpacePoint& sp, float, float,
-                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto ct = [=](const TestSpacePoint& sp, float, float, float)
+      -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.m_varianceR, sp.m_varianceZ);
-    return std::make_pair(position, covariance);
+    return std::make_tuple(position, covariance, std::nullopt);
   };
 
   // extent used to store r range for middle spacepoint
@@ -174,11 +174,20 @@ int main(int argc, char* argv[]) {
   // Create the result object.
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_host;
 
+  std::array<std::vector<std::size_t>, 2ul> navigation;
+  navigation[0ul].resize(spGroup.grid().numLocalBins()[0ul]);
+  navigation[1ul].resize(spGroup.grid().numLocalBins()[1ul]);
+  std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
+  std::iota(navigation[1ul].begin(), navigation[1ul].end(), 1ul);
+
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
     decltype(seedFinder_host)::SeedingState state;
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-      auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+      std::array<std::size_t, 2ul> localPosition =
+          spGroup.grid().localBinsFromGlobalBin(i);
+      auto spGroup_itr =
+          Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
       }
@@ -214,7 +223,10 @@ int main(int argc, char* argv[]) {
 
   // Perform the seed finding.
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-    auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+    std::array<std::size_t, 2ul> localPosition =
+        spGroup.grid().localBinsFromGlobalBin(i);
+    auto spGroup_itr =
+        Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;
     }
