@@ -69,6 +69,19 @@ Acts::Experimental::Detector::Detector(
 
     for (const auto* s : v->surfaces()) {
       auto sgeoID = s->geometryId();
+
+      // ---------------------------------------------------------------
+      // Check for undefined geometry id
+      if (sgeoID.value() == 0u) {
+        std::stringstream ss;
+        ss << s->name();
+        throw std::invalid_argument(
+            "Detector: surface '" + ss.str() + "' with undefined geometry id '" +
+            "' detected in volume '" + v->name() + 
+            "'. Make sure a GeometryIdGenerator is used.");
+      }
+      // ---------------------------------------------------------------
+
       if (surfaceGeoIdMap.find(sgeoID) != surfaceGeoIdMap.end()) {
         std::stringstream ss;
         ss << sgeoID;
