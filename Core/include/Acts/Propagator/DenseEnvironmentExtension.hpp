@@ -41,7 +41,7 @@ struct DenseStepperPropagatorOptions
   bool meanEnergyLoss = true;
 
   /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
-  bool includeGgradient = true;
+  bool includeGradient = true;
 
   /// Cut-off value for the momentum in SI units
   double momentumCutOff = 0.;
@@ -66,7 +66,7 @@ struct DenseStepperPropagatorOptions
 
     // Copy dense environment specific parameters
     eoptions.meanEnergyLoss = meanEnergyLoss;
-    eoptions.includeGgradient = includeGgradient;
+    eoptions.includeGradient = includeGradient;
     eoptions.momentumCutOff = momentumCutOff;
 
     // And return the options

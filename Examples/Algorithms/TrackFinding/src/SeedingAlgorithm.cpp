@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,13 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Range1D.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -205,10 +205,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
-  m_bottomBinFinder = std::make_shared<const Acts::BinFinder<SimSpacePoint>>(
-      m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors);
-  m_topBinFinder = std::make_shared<const Acts::BinFinder<SimSpacePoint>>(
-      m_cfg.zBinNeighborsTop, m_cfg.numPhiNeighbors);
+  m_bottomBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+      m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
+  m_topBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+      m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
 
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
@@ -238,12 +238,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   // construct the seeding tools
   // covariance tool, extracts covariances per spacepoint as required
-  auto extractGlobalQuantities =
-      [=](const SimSpacePoint& sp, float, float,
-          float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto extractGlobalQuantities = [=](const SimSpacePoint& sp, float, float,
+                                     float) {
     Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
     Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
-    return std::make_pair(position, covariance);
+    return std::make_tuple(position, covariance, sp.t());
   };
 
   // extent used to store r range for middle spacepoint

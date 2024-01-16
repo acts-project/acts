@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -55,13 +55,10 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
       m_group->m_grid->globalBinFromLocalBins(localPosition);
 
   boost::container::small_vector<std::size_t, 9> bottoms =
-      m_group->m_bottomBinFinder->findBins(localPosition[INDEX::PHI],
-                                           localPosition[INDEX::Z],
-                                           m_group->m_grid.get());
+      m_group->m_bottomBinFinder->findBins(localPosition,
+                                           *m_group->m_grid.get());
   boost::container::small_vector<std::size_t, 9> tops =
-      m_group->m_topBinFinder->findBins(localPosition[INDEX::PHI],
-                                        localPosition[INDEX::Z],
-                                        m_group->m_grid.get());
+      m_group->m_topBinFinder->findBins(localPosition, *m_group->m_grid.get());
 
   // GCC12+ in Release throws an overread warning here due to the move.
   // This is from inside boost code, so best we can do is to suppress it.
@@ -95,12 +92,15 @@ template <typename spacepoint_iterator_t, typename callable_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
     callable_t&& toGlobal,
-    std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> botBinFinder,
-    std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> tBinFinder,
+    std::shared_ptr<const Acts::GridBinFinder<2ul>> botBinFinder,
+    std::shared_ptr<const Acts::GridBinFinder<2ul>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
     Acts::Extent& rRangeSPExtent,
     const SeedFinderConfig<external_spacepoint_t>& config,
-    const SeedFinderOptions& options) {
+    const SeedFinderOptions& options)
+    : m_grid(std::move(grid)),
+      m_topBinFinder(std::move(tBinFinder)),
+      m_bottomBinFinder(std::move(botBinFinder)) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
@@ -138,7 +138,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
     const external_spacepoint_t& sp = **it;
-    const auto& [spPosition, variance] =
+    const auto& [spPosition, variance, spTime] =
         toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
     float spX = spPosition[0];
@@ -158,7 +158,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     }
 
     auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        counter, sp, spPosition, options.beamPos, variance);
+        counter, sp, spPosition, options.beamPos, variance, spTime);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     std::size_t rIndex =
@@ -171,20 +171,20 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     // fill rbins into grid
     Acts::Vector2 spLocation(isp->phi(), isp->z());
     std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-        rbin = grid->atPosition(spLocation);
+        rbin = m_grid->atPosition(spLocation);
     rbin.push_back(std::move(isp));
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
     if (rbin.size() > 1) {
-      rBinsIndex.insert(grid->globalBinFromPosition(spLocation));
+      rBinsIndex.insert(m_grid->globalBinFromPosition(spLocation));
     }
   }
 
   // sort SPs in R for each filled (z, phi) bin
   for (auto& binIndex : rBinsIndex) {
     std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-        rbin = grid->atPosition(binIndex);
+        rbin = m_grid->atPosition(binIndex);
     std::sort(
         rbin.begin(), rbin.end(),
         [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
@@ -193,26 +193,17 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
         });
   }
 
-  m_grid = std::move(grid);
-  m_bottomBinFinder = botBinFinder;
-  m_topBinFinder = tBinFinder;
-
-  m_skipZMiddleBin = config.skipZMiddleBinSearch;
-
   // phi axis
   m_bins[INDEX::PHI].resize(m_grid->numLocalBins()[0]);
   std::iota(m_bins[INDEX::PHI].begin(), m_bins[INDEX::PHI].end(), 1ul);
 
   // z axis
   if (config.zBinsCustomLooping.empty()) {
-    std::size_t nZbins = m_grid->numLocalBins()[1] - m_skipZMiddleBin;
+    std::size_t nZbins = m_grid->numLocalBins()[INDEX::Z];
     m_bins[INDEX::Z] = std::vector<std::size_t>(nZbins);
-    std::iota(m_bins[INDEX::Z].begin(), m_bins[INDEX::Z].end(),
-              1ul + m_skipZMiddleBin);
+    std::iota(m_bins[INDEX::Z].begin(), m_bins[INDEX::Z].end(), 1ul);
   } else {
-    m_bins[INDEX::Z] = std::vector<std::size_t>(
-        config.zBinsCustomLooping.begin() + m_skipZMiddleBin,
-        config.zBinsCustomLooping.end());
+    m_bins[INDEX::Z] = config.zBinsCustomLooping;
   }
 }
 
