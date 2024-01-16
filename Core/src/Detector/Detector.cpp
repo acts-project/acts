@@ -75,18 +75,16 @@ Acts::Experimental::Detector::Detector(
     auto vgeoID = v->geometryId();
     // Check for undefined geometry id
     if (vgeoID.value() == 0u) {
-      throw std::invalid_argument(
-          "Detector: volume '" + v->name() +  
-          "' with undefined geometry id detected"   +
-          ". Make sure a GeometryIdGenerator is used.");
+      throw std::invalid_argument("Detector: volume '" + v->name() +
+                                  "' with undefined geometry id detected" +
+                                  ". Make sure a GeometryIdGenerator is used.");
     }
     if (volumeGeoIdMap.find(vgeoID) != volumeGeoIdMap.end()) {
       std::stringstream ss;
       ss << vgeoID;
-      throw std::invalid_argument(
-          "Detector: duplicate volume geometry id '" + ss.str() +
-          "' detected" +
-          ". Make sure a GeometryIdGenerator is used.");
+      throw std::invalid_argument("Detector: duplicate volume geometry id '" +
+                                  ss.str() + "' detected" +
+                                  ". Make sure a GeometryIdGenerator is used.");
     }
     volumeGeoIdMap.emplace(vgeoID, v.get());
     // ---------------------------------------------------------------
@@ -101,7 +99,7 @@ Acts::Experimental::Detector::Detector(
         ss << s->name();
         throw std::invalid_argument(
             "Detector: surface '" + ss.str() + "' with undefined geometry id " +
-            "detected in volume '" + v->name() + 
+            "detected in volume '" + v->name() +
             "'. Make sure a GeometryIdGenerator is used.");
       }
       // ---------------------------------------------------------------
