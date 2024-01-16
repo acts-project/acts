@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,11 +20,11 @@
 
 // Acts include(s).
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 
 // System include(s).
 #include <cassert>
@@ -61,10 +61,10 @@ int main(int argc, char* argv[]) {
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   // Create binned groups of these spacepoints.
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
-      zBinNeighborsBottom, numPhiNeighbors);
-  auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
-      zBinNeighborsTop, numPhiNeighbors);
+  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      numPhiNeighbors, zBinNeighborsBottom);
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      numPhiNeighbors, zBinNeighborsTop);
 
   // Set up the seedFinder configuration.
   Acts::SeedFinderConfig<TestSpacePoint> sfConfig;
