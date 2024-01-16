@@ -176,7 +176,7 @@ Acts::Layer::compatibleSurfaces(
     if (!acceptSurface(sf, sensitive)) {
       return;
     }
-    bool boundaryCheck = options.boundaryCheck;
+    bool boundaryCheck = options.boundaryCheck.isEnabled();
     if (std::find(options.externalSurfaces.begin(),
                   options.externalSurfaces.end(),
                   sf.geometryId()) != options.externalSurfaces.end()) {

@@ -242,7 +242,7 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
       [&](const Vector3& solution,
           Intersection3D::Status status) -> Intersection3D::Status {
     // No check to be done, return current status
-    if (!bcheck) {
+    if (!bcheck.isEnabled()) {
       return status;
     }
     const auto& cBounds = bounds();
