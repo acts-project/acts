@@ -85,6 +85,7 @@ class SeedingAlgorithm final : public IAlgorithm {
   Acts::SeedFinder<SimSpacePoint> m_seedFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
+
   Config m_cfg;
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>

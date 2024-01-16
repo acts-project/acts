@@ -3,4 +3,3 @@ target_link_libraries(ActsUnitTestSeedFinder PRIVATE ActsCore Boost::boost)
 
 add_unittest(EstimateTrackParamsFromSeedTest EstimateTrackParamsFromSeedTest.cpp)
 add_unittest(BinnedGroupTest BinnedGroupTest.cpp)
-

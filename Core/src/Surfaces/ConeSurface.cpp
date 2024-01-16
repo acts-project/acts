@@ -306,7 +306,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
 
-  if (bcheck && !isOnSurface(gctx, solution1, direction, bcheck)) {
+  if (bcheck.isEnabled() && !isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection3D::Status::missed;
   }
 
@@ -315,7 +315,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
   Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
-  if (bcheck && !isOnSurface(gctx, solution2, direction, bcheck)) {
+  if (bcheck.isEnabled() && !isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection3D::Status::missed;
   }
 

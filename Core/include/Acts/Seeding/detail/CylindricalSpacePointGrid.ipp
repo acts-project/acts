@@ -191,7 +191,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
       continue;
     }
     const external_spacepoint_t& sp = **it;
-    const auto& [spPosition, variance] =
+    const auto& [spPosition, variance, spTime] =
         toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
     float spX = spPosition[0];
@@ -211,7 +211,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     }
 
     auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        counter, sp, spPosition, options.beamPos, variance);
+        counter, sp, spPosition, options.beamPos, variance, spTime);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     std::size_t rIndex =

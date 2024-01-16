@@ -951,7 +951,7 @@ def addSeedFilterML(
     outputDirCsv: Optional[Union[Path, str]] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)()
-    from acts.examples.onnx.mlpack import SeedFilterMLAlgorithm
+    from acts.examples.onnx import SeedFilterMLAlgorithm
 
     inputParticles = "particles"
     selectedParticles = "truth_seeds_selected"
