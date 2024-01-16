@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,6 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <chrono>
@@ -28,6 +28,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -159,10 +160,10 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
+  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   auto config = setupSeedFinderConfiguration<SpacePoint>();
   config = config.toInternalUnits().calculateDerivedQuantities();
   auto options = setupSeedFinderOptions();
@@ -183,12 +184,12 @@ auto main(int argc, char** argv) -> int {
   Acts::Sycl::SeedFinder<SpacePoint> syclSeedFinder(
       config, options, deviceAtlasCuts, queue, resource, &device_resource);
   Acts::SeedFinder<SpacePoint> normalSeedFinder(config);
-  auto globalTool =
-      [=](const SpacePoint& sp, float /*unused*/, float /*unused*/,
-          float_t /*unused*/) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto globalTool = [=](const SpacePoint& sp, float /*unused*/,
+                        float /*unused*/, float /*unused*/)
+      -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
-    return std::make_pair(position, covariance);
+    return std::make_tuple(position, covariance, std::nullopt);
   };
   auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
   gridConfig = gridConfig.toInternalUnits();
