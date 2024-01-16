@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <map>
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -88,6 +89,24 @@ void attachDetectorVolumeUpdaters(
 /// @return a vector of attached volumes
 std::vector<std::shared_ptr<DetectorVolume>> attachedDetectorVolumes(
     Portal& portal) noexcept(false);
+
+/// @brief Method that strips out attached volumes from portals and
+/// provides them back to the caller.
+///
+/// @param pContainers the portal containers to be resolved
+/// @param sides the sides to be handled
+/// @param selectedOnly the selected only volumes, e.g. for complex containers
+/// to chose only outside skins,
+/// @param logLevel the logging level
+///
+std::map<unsigned int,
+         std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
+stripSideVolumes(
+    const std::vector<std::map<unsigned int, std::shared_ptr<Portal>>>&
+        pContainers,
+    const std::vector<unsigned int>& sides,
+    const std::vector<unsigned int>& selectedOnly = {},
+    Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
 }  // namespace PortalHelper
 }  // namespace detail
