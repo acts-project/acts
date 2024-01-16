@@ -42,19 +42,18 @@ BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction);
 /// @brief This function calculates the full transport jacobian from a bound
 ///        curvilinear representation to a new bound representation
 ///
-/// @note Modifications of the jacobian related to the
-/// projection onto a surface is considered. Since a variation of the start
-/// parameters within a given uncertainty would lead to a variation of the end
-/// parameters, these need to be propagated onto the target surface. This an
-/// approximated approach to treat the (assumed) small change.
+/// @note Modifications of the jacobian related to the projection onto a surface is
+/// considered. Since a variation of the start parameters within a given
+/// uncertainty would lead to a variation of the end parameters, these need to
+/// be propagated onto the target surface. This an approximated approach to
+/// treat the (assumed) small change.
 ///
 /// @param [in] geoContext The geometry Context
 /// @param [in] surface Target surface
 /// @param [in] freeParameters Free, nominal parametrisation
 /// @param [in] boundToFreeJacobian Jacobian from bound to free at start
 /// @param [in] freeTransportJacobian Transport jacobian free to free
-/// @param [in] freeToPathDerivatives Path length derivatives for free
-///        parameters
+/// @param [in] freeToPathDerivatives Path length derivatives for free parameters
 /// @param [out] fullTransportJacobian A 6x6 transport jacobian from bound to bound
 ///
 /// @note jac(locA->locB) = jac(gloB->locB)*(1+
@@ -66,6 +65,34 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
                                    const FreeMatrix& freeTransportJacobian,
                                    const FreeVector& freeToPathDerivatives,
                                    BoundMatrix& fullTransportJacobian);
+
+/// TODO this should be removed but Athena depends on it
+///
+/// @brief This function calculates the full transport jacobian from a bound
+///        curvilinear representation to a new bound representation
+///
+/// @note Modifications of the jacobian related to the projection onto a surface is
+/// considered. Since a variation of the start parameters within a given
+/// uncertainty would lead to a variation of the end parameters, these need to
+/// be propagated onto the target surface. This an approximated approach to
+/// treat the (assumed) small change.
+///
+/// @param [in] geoContext The geometry Context
+/// @param [in] freeParameters Free, nominal parametrisation
+/// @param [in] boundToFreeJacobian Jacobian from bound to free at start
+/// @param [in] freeTransportJacobian Transport jacobian free to free
+/// @param [in] freeToPathDerivatives Path length derivatives for free parameters
+/// @param [in] surface Target surface
+///
+/// @note jac(locA->locB) = jac(gloB->locB)*(1+
+/// pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
+///
+/// @return a 6x6 transport jacobian from bound to bound
+BoundMatrix boundToBoundTransportJacobian(
+    const GeometryContext& geoContext, const FreeVector& freeParameters,
+    const BoundToFreeMatrix& boundToFreeJacobian,
+    const FreeMatrix& freeTransportJacobian,
+    const FreeVector& freeToPathDerivatives, const Surface& surface);
 
 /// @brief This function calculates the full jacobian from a given
 /// bound/curvilinear parameterisation from a surface to new curvilinear
@@ -80,8 +107,7 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
 /// @param [in] direction Normalised direction vector
 /// @param [in] boundToFreeJacobian Jacobian from bound to free at start
 /// @param [in] freeTransportJacobian Transport jacobian free to free
-/// @param [in] freeToPathDerivatives Path length derivatives for free
-///        parameters
+/// @param [in] freeToPathDerivatives Path length derivatives for free parameters
 /// @param [out] fullTransportJacobian A 6x6 transport jacobian from curilinear to bound
 ///
 /// @note The parameter @p surface is only required if projected to bound

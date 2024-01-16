@@ -112,6 +112,18 @@ void detail::boundToBoundTransportJacobian(
       freeTransportJacobian * boundToFreeJacobian;
 }
 
+BoundMatrix detail::boundToBoundTransportJacobian(
+    const GeometryContext& geoContext, const FreeVector& freeParameters,
+    const BoundToFreeMatrix& boundToFreeJacobian,
+    const FreeMatrix& freeTransportJacobian,
+    const FreeVector& freeToPathDerivatives, const Surface& surface) {
+  BoundMatrix result;
+  detail::boundToBoundTransportJacobian(
+      geoContext, surface, freeParameters, boundToFreeJacobian,
+      freeTransportJacobian, freeToPathDerivatives, result);
+  return result;
+}
+
 void detail::boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
