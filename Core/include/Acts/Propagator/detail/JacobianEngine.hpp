@@ -105,7 +105,7 @@ BoundToFreeMatrix boundToFreeTransportJacobian(
     const FreeMatrix& freeTransportJacobian);
 
 /// @brief This function calculates the full jacobian from a given
-/// free parameterisation to a new curvilinear bound parameterisation.
+/// free parametrisation to a new curvilinear bound parametrisation.
 ///
 /// @note Modifications of the jacobian related to the
 /// projection onto the target surface is considered. Since a variation of
