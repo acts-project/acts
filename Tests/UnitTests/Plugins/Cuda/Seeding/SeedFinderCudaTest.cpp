@@ -20,6 +20,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <utility>
 
@@ -225,11 +226,11 @@ int main(int argc, char** argv) {
   Acts::SeedFinder<SpacePoint, Acts::Cuda> seedFinder_cuda(config, options);
 
   // covariance tool, sets covariances per spacepoint as required
-  auto ct = [=](const SpacePoint& sp, float, float,
-                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto ct = [=](const SpacePoint& sp, float, float, float)
+      -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 variance(sp.varianceR, sp.varianceZ);
-    return std::make_pair(position, variance);
+    return std::make_tuple(position, variance, std::nullopt);
   };
 
   // setup spacepoint grid config
