@@ -143,7 +143,12 @@ FreeToBoundMatrix freeToCurvilinearTransportJacobian(
     const FreeVector& freeToPathDerivatives);
 
 /// @brief This function reinitialises the state members required for the
-///        covariance transport
+///        covariance transport for usual surfaces
+///
+/// Reinitialize jacobian components:
+/// ->The transportJacobian is reinitialized to Identity
+/// ->The derivatives is reinitialized to Zero
+/// ->The boundToFreeJacobian is initialized to that at the current surface
 ///
 /// @param [in] geoContext The geometry context
 /// @param [in] surface The reference surface of the local parametrisation
@@ -162,7 +167,13 @@ Result<void> reinitializeJacobians(const GeometryContext& geoContext,
                                    const FreeVector& freeParameters);
 
 /// @brief This function reinitialises the state members required for the
-///        covariance transport
+///        covariance transport for curvilinear surfaces
+///
+/// Reinitialize jacobian components:
+/// ->The free transportJacobian is reinitialized to Identity
+/// ->The path derivatives is reinitialized to Zero
+/// ->The boundToFreeJacobian is reinitialized to that at the current
+/// curvilinear surface
 ///
 /// @param [in, out] freeTransportJacobian The transport jacobian from start
 ///        free to final free parameters
