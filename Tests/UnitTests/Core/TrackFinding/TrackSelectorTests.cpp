@@ -9,6 +9,13 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
 
 #include <limits>
@@ -41,6 +48,32 @@ struct MockTrack {
   std::size_t nOutliers() const { return m_nOutliers; }
   std::size_t nSharedHits() const { return m_nSharedHits; }
   float chi2() const { return m_chi2; }
+
+  // To comply with concept, not actually used
+ private:
+  struct MockTrackState {
+    const Surface& referenceSurface() const {
+      static const auto srf =
+          Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ());
+      return *srf;
+    }
+
+    ConstTrackStateType typeFlags() const {
+      static const ConstTrackStateType::raw_type raw{0};
+      return {raw};
+    }
+  };
+
+  struct TrackStateRange {
+    auto begin() const { return m_trackStates.begin(); }
+    auto end() const { return m_trackStates.end(); }
+
+   private:
+    std::vector<MockTrackState> m_trackStates;
+  };
+
+ public:
+  TrackStateRange trackStatesReversed() const { return {}; }
 };
 
 double thetaFromEta(double eta) {
@@ -569,6 +602,77 @@ BOOST_AUTO_TEST_CASE(TestConstructor) {
     BOOST_CHECK_EQUAL(cfg.getCuts(3.5).loc0Min, -3.0);
     BOOST_CHECK_EQUAL(cfg.getCuts(3.5).loc0Max, 3.0);
   }
+}
+
+BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
+  auto makeSurface = [](GeometryIdentifier id) {
+    auto srf =
+        Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ());
+
+    srf->assignGeometryId(id);
+    return srf;
+  };
+
+  auto addTrackState = [](auto& track, const auto& surface,
+                          TrackStateFlag flag) {
+    auto ts = track.appendTrackState();
+    ts.setReferenceSurface(surface);
+    ts.typeFlags().set(flag);
+    return ts;
+  };
+
+  auto addMeasurement = [&](auto& track, const auto& surface) {
+    return addTrackState(track, surface, TrackStateFlag::MeasurementFlag);
+  };
+
+  auto addMaterial = [&](auto& track, const auto& surface) {
+    return addTrackState(track, surface, TrackStateFlag::MaterialFlag);
+  };
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+  auto track = tc.makeTrack();
+
+  using namespace Acts::UnitLiterals;
+
+  track.parameters() << 0, 0, M_PI / 2, M_PI / 2, 1 / 1_GeV, 0;
+  auto perigee = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+  track.setReferenceSurface(perigee);
+
+  auto vol7_lay3_sen2 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(3).setSensitive(2));
+  auto vol7_lay4 = makeSurface(GeometryIdentifier{}.setVolume(7).setLayer(4));
+  auto vol7_lay3_sen8 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(3).setSensitive(8));
+  auto vol7_lay5_sen11 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(5).setSensitive(11));
+  auto vol7_lay5_sen12 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(5).setSensitive(12));
+  auto vol7_lay6_sen3 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(6).setSensitive(3));
+
+  auto vol8_lay8_sen1 = makeSurface(
+      GeometryIdentifier{}.setVolume(8).setLayer(8).setSensitive(1));
+  auto vol8_lay8_sen2 = makeSurface(
+      GeometryIdentifier{}.setVolume(8).setLayer(8).setSensitive(2));
+  auto vol8_lay9_sen1 = makeSurface(
+      GeometryIdentifier{}.setVolume(8).setLayer(9).setSensitive(1));
+
+  // 1 hit in vol7
+  addMeasurement(track, vol7_lay3_sen2);
+  addMaterial(track, vol7_lay4);
+
+  TrackSelector::Config cfg;
+  cfg.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(7)}, 3);
+  TrackSelector selector{cfg};
+
+  BOOST_CHECK(!selector.isValidTrack(track));
+  addMeasurement(track, vol7_lay5_sen11);
+  BOOST_CHECK(!selector.isValidTrack(track));
+
+  // Now we should have enough hits
+  addMeasurement(track, vol7_lay6_sen3);
+  BOOST_CHECK(selector.isValidTrack(track));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

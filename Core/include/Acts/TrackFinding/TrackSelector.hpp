@@ -8,11 +8,19 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackStateType.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+
 #include <cmath>
 #include <functional>
+#include <iostream>
 #include <limits>
+#include <numeric>
 #include <ostream>
 #include <vector>
+
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -23,6 +31,26 @@ class TrackSelector {
   static constexpr double inf = std::numeric_limits<double>::infinity();
 
  public:
+  struct MeasurementCounter {
+    // Combination of a geometry hierarchy map and a minimum hit count
+    using CounterElement =
+        std::pair<GeometryHierarchyMap<unsigned int>, unsigned int>;
+
+    boost::container::small_vector<CounterElement, 4> counters;
+
+    template <typename track_proxy_t>
+    bool isValidTrack(const track_proxy_t& track) const;
+
+    void addCounter(const std::vector<GeometryIdentifier>& identifiers,
+                    unsigned int threshold) {
+      std::vector<GeometryHierarchyMap<unsigned int>::InputElement> elements;
+      for (const auto& id : identifiers) {
+        elements.emplace_back(id, 0);
+      }
+      counters.emplace_back(std::move(elements), threshold);
+    }
+  };
+
   /// Configuration of a set of cuts for a single eta bin
   /// Default construction yields a set of cuts that accepts everything.
   struct Config {
@@ -50,6 +78,9 @@ class TrackSelector {
     std::size_t maxOutliers = std::numeric_limits<std::size_t>::max();
     std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
     double maxChi2 = inf;
+
+    // Defaults to: no cut
+    MeasurementCounter measurementCounter;
 
     // Helper factory functions to produce a populated config object more
     // conveniently
@@ -395,7 +426,8 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
          checkMax(track.nHoles(), cuts.maxHoles) &&
          checkMax(track.nOutliers(), cuts.maxOutliers) &&
          checkMax(track.nSharedHits(), cuts.maxSharedHits) &&
-         checkMax(track.chi2(), cuts.maxChi2);
+         checkMax(track.chi2(), cuts.maxChi2) &&
+         cuts.measurementCounter.isValidTrack(track);
 }
 
 inline TrackSelector::TrackSelector(
@@ -433,4 +465,50 @@ inline TrackSelector::TrackSelector(
 inline TrackSelector::TrackSelector(const Config& config)
     : TrackSelector{EtaBinnedConfig{config}} {}
 
+template <typename track_proxy_t>
+bool TrackSelector::MeasurementCounter::isValidTrack(
+    const track_proxy_t& track) const {
+  // No hit cuts, accept everything
+  if (counters.empty()) {
+    return true;
+  }
+
+  // Make a copy so we can update it
+  // @TODO: Internally, the hierarchy map uses vectors, so copying is not very efficient
+  boost::container::small_vector<unsigned int, 4> counterValues;
+  counterValues.resize(counters.size(), 0);
+
+  for (const auto& ts : track.trackStatesReversed()) {
+    std::cout << "No measurement" << std::endl;
+    if (!ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      continue;
+    }
+
+    const auto geoId = ts.referenceSurface().geometryId();
+    std::cout << "Track Measurement on :" << geoId << std::endl;
+
+    for (std::size_t i = 0; i < counters.size(); i++) {
+      const auto& [counterMap, threshold] = counters[i];
+      const auto it = counterMap.find(geoId);
+      if (it == counterMap.end()) {
+        continue;
+      }
+
+      std::cout << " -> accepted" << std::endl;
+      counterValues[i]++;
+    }
+  }
+
+  for (std::size_t i = 0; i < counters.size(); i++) {
+    const auto& [counterMap, threshold] = counters[i];
+    std::cout << " -> #" << i << " => " << counterValues[i] << " / "
+              << threshold << std::endl;
+    const unsigned int value = counterValues[i];
+    if (value < threshold) {
+      return false;
+    }
+  }
+
+  return true;
+}
 }  // namespace Acts
