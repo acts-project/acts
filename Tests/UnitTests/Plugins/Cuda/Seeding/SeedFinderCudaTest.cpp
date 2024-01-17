@@ -1,13 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Cuda/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
@@ -15,11 +14,13 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 
 #include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <utility>
 
@@ -213,10 +214,10 @@ int main(int argc, char** argv) {
   config.nAvgTrplPerSpBLimit = nAvgTrplPerSpBLimit;
 
   // binfinder
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
+  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
@@ -225,11 +226,11 @@ int main(int argc, char** argv) {
   Acts::SeedFinder<SpacePoint, Acts::Cuda> seedFinder_cuda(config, options);
 
   // covariance tool, sets covariances per spacepoint as required
-  auto ct = [=](const SpacePoint& sp, float, float,
-                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto ct = [=](const SpacePoint& sp, float, float, float)
+      -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 variance(sp.varianceR, sp.varianceZ);
-    return std::make_pair(position, variance);
+    return std::make_tuple(position, variance, std::nullopt);
   };
 
   // setup spacepoint grid config
