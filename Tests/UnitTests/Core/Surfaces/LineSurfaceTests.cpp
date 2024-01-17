@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -36,13 +37,12 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <vector>
-
-namespace utf = boost::unit_test;
 
 namespace Acts {
 class AssertionFailureException;
@@ -51,8 +51,6 @@ namespace Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
-
-// using boost::test_tools::output_test_stream;
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -118,22 +116,26 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
   //
   // intersection
-  const Vector3 direction{0., 1., 2.};
-  BoundaryCheck bcheck(false);
-  auto sfIntersection =
-      line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck);
-  BOOST_CHECK(bool(sfIntersection));
-  Vector3 expectedIntersection(0, 1., 2.);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position, expectedIntersection,
-                  1e-6);  // need more tests..
-  BOOST_CHECK_EQUAL(sfIntersection.object, &line);
+  {
+    const Vector3 direction{0., 1., 2.};
+    BoundaryCheck bcheck(false);
+    auto sfIntersection =
+        line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck)
+            .closest();
+    BOOST_CHECK(sfIntersection);
+    Vector3 expectedIntersection(0, 1., 2.);
+    CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
+                    1e-6);  // need more tests..
+    BOOST_CHECK_EQUAL(sfIntersection.object(), &line);
+  }
   //
   // isOnSurface
   const Vector3 insidePosition{0., 2.5, 0.};
   BOOST_CHECK(line.isOnSurface(tgContext, insidePosition, mom,
-                               false));  // need better test here
+                               BoundaryCheck(false)));  // need better test here
   const Vector3 outsidePosition{100., 100., 200.};
-  BOOST_CHECK(!line.isOnSurface(tgContext, outsidePosition, mom, true));
+  BOOST_CHECK(
+      !line.isOnSurface(tgContext, outsidePosition, mom, BoundaryCheck(true)));
   //
   // localToGlobal
   Vector3 returnedGlobalPosition{0., 0., 0.};
@@ -162,13 +164,36 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   output << line.name();
   BOOST_CHECK(output.is_equal("Acts::LineSurface"));
   //
-  // normal does not exist without known momentum direction for line surface
-  BOOST_CHECK_THROW(line.normal(tgContext), std::runtime_error);
+  // normal
+  {
+    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector3 direction{1, 0, 0};
+    CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
+                    1e-6);
+  }
+  {
+    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector3 direction = Vector3{1, 0, 0.1}.normalized();
+    CHECK_CLOSE_ABS(line.normal(tgContext, position, direction),
+                    Vector3::UnitX(), 1e-6);
+  }
+  {
+    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector3 direction{-1, 0, 0};
+    CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
+                    1e-6);
+  }
+  {
+    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector3 direction{0, 1, 0};
+    CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
+                    1e-6);
+  }
   //
-  // pathCorrection is always 1 for the line surface
-  CHECK_CLOSE_ABS(
-      line.pathCorrection(tgContext, Vector3::Zero(), Vector3::UnitX()), 1,
-      1e-6);
+  // pathCorrection
+  Vector3 any3DVector = Vector3::Random();
+  CHECK_CLOSE_REL(line.pathCorrection(tgContext, any3DVector, any3DVector), 1.,
+                  1e-6);
 }
 
 /// Unit test for testing LineSurface assignment
@@ -227,8 +252,8 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
   LineSurfaceStub surface(Transform3::Identity());
 
   auto roundTrip = [&surface](const Vector3& pos, const Vector3& dir) {
-    auto intersection = surface.intersect(tgContext, pos, dir);
-    Vector3 global = intersection.intersection.position;
+    auto intersection = surface.intersect(tgContext, pos, dir).closest();
+    Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
     Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
     return std::make_tuple(global, local, global2);
@@ -264,9 +289,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
     Vector3 dir = makeDirectionFromPhiEta(M_PI_2, eta);
     Vector3 pos = pca + dir;
 
-    auto intersection = surface.intersect(tgContext, pos, dir);
+    auto intersection = surface.intersect(tgContext, pos, dir).closest();
 
-    Vector3 global = intersection.intersection.position;
+    Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
     Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
 
@@ -288,12 +313,14 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 
   auto surface = std::make_shared<LineSurfaceStub>(Transform3::Identity());
 
-  BoundTrackParameters initialParams{surface, boundVector, 1};
+  BoundTrackParameters initialParams{surface, boundVector, std::nullopt,
+                                     ParticleHypothesis::pion()};
 
   Propagator<StraightLineStepper> propagator({});
 
-  CurvilinearTrackParameters displacedParameters{Vector4::Zero(),
-                                                 Vector3::Zero(), 1};
+  CurvilinearTrackParameters displacedParameters{
+      Vector4::Zero(), Vector3::Zero(), 1, std::nullopt,
+      ParticleHypothesis::pion()};
   {
     PropagatorOptions<> options(tgContext, {});
     options.direction = Acts::Direction::Backward;
@@ -307,11 +334,14 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   }
 
   auto intersection =
-      surface->intersect(tgContext, displacedParameters.position(tgContext),
-                         displacedParameters.direction());
-  CHECK_CLOSE_ABS(intersection.intersection.pathLength, pathLimit, eps);
+      surface
+          ->intersect(tgContext, displacedParameters.position(tgContext),
+                      displacedParameters.direction())
+          .closest();
+  CHECK_CLOSE_ABS(intersection.pathLength(), pathLimit, eps);
 
-  BoundTrackParameters endParameters{surface, BoundVector::Zero(), 1};
+  BoundTrackParameters endParameters{surface, BoundVector::Zero(), std::nullopt,
+                                     ParticleHypothesis::pion()};
   {
     PropagatorOptions<> options(tgContext, {});
     options.direction = Acts::Direction::Forward;
@@ -328,7 +358,5 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

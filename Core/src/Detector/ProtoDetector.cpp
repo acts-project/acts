@@ -55,8 +55,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
   std::vector<BinningValue> otherConstrains;
 
   // Deal with the constituents
-  if (container.has_value() and
-      not container.value().constituentVolumes.empty()) {
+  if (container.has_value() && !container.value().constituentVolumes.empty()) {
     auto& cts = container.value();
 
     if (cts.constituentBinning.empty()) {
@@ -84,13 +83,13 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
 
     // The volumes should be harmonized in all other constraining values
     for (auto obValue : s_binningValues) {
-      if (obValue != binValue and extent.constrains(obValue)) {
+      if (obValue != binValue && extent.constrains(obValue)) {
         otherConstrains.push_back(obValue);
       }
     }
 
     // Legacy conversion - layers are kept untouched
-    if (not layersPresent) {
+    if (!layersPresent) {
       // Set the outer boundaries
       fVolume.extent.set(binValue, extent.min(binValue),
                          fVolume.extent.max(binValue));
@@ -113,7 +112,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
       }
       borders.push_back(cts.constituentVolumes.back().extent.max(binValue));
 
-    } else if (layersPresent and not legacy) {
+    } else if (layersPresent && !legacy) {
       // Count the gaps
       std::size_t gaps = 0;
       std::vector<float> boundaries = {};
@@ -158,7 +157,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         borders.push_back(static_cast<float>(containerMax));
       }
       cts.constituentVolumes = updatedConstituents;
-    } else if (legacy and layersPresent) {
+    } else if (legacy && layersPresent) {
       borders = {0., 1.};
     }
     cts.constituentBinning = {
@@ -180,7 +179,7 @@ std::string Acts::ProtoVolume::toString(const std::string& indent) const {
   ss << extent.toString(indent) << '\n';
   if (container.has_value()) {
     auto& cts = container.value();
-    if (not cts.constituentVolumes.empty()) {
+    if (!cts.constituentVolumes.empty()) {
       ss << indent << "  container of " << cts.constituentVolumes.size()
          << " constituents. " << '\n';
       ss << indent << "  constituent binning:" << '\n';

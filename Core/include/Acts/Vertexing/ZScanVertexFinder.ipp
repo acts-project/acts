@@ -24,7 +24,7 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
     ImpactParametersAndSigma ipas;
     if (vertexingOptions.useConstraintInFit &&
         vertexingOptions.constraint.covariance()(0, 0) != 0) {
-      auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
+      auto estRes = m_cfg.ipEstimator.getImpactParameters(
           params, vertexingOptions.constraint, vertexingOptions.geoContext,
           vertexingOptions.magFieldContext);
       if (estRes.ok()) {
@@ -34,13 +34,12 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
       }
     }
 
-    if (ipas.sigmad0 > 0) {
+    if (ipas.sigmaD0 > 0) {
       // calculate z0
-      z0AndWeight.first =
-          ipas.IPz0 + vertexingOptions.constraint.position().z();
+      z0AndWeight.first = ipas.z0 + vertexingOptions.constraint.position().z();
 
       // calculate chi2 of IP
-      double chi2IP = std::pow(ipas.IPd0 / ipas.sigmad0, 2);
+      double chi2IP = std::pow(ipas.d0 / ipas.sigmaD0, 2);
 
       if (!m_cfg.disableAllWeights) {
         z0AndWeight.second =

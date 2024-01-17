@@ -130,8 +130,9 @@ class Layer : public virtual GeometryObject {
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
-  virtual bool isOnLayer(const GeometryContext& gctx, const Vector3& position,
-                         const BoundaryCheck& bcheck = true) const;
+  virtual bool isOnLayer(
+      const GeometryContext& gctx, const Vector3& position,
+      const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor* approachDescriptor() const;

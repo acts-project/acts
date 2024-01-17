@@ -17,9 +17,9 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -180,14 +180,15 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       // Check if DD4hep pre-defines the surface binning
       bool hasSurfaceBinning =
           getParamOr<bool>("surface_binning", detElement, true);
-      size_t nPhi = 1;
-      size_t nR = 1;
+      std::size_t nPhi = 1;
+      std::size_t nR = 1;
       if (hasSurfaceBinning) {
         if (params.contains("surface_binning_n_phi")) {
-          nPhi = static_cast<size_t>(params.get<int>("surface_binning_n_phi"));
+          nPhi = static_cast<std::size_t>(
+              params.get<int>("surface_binning_n_phi"));
         }
         if (params.contains("surface_binning_n_r")) {
-          nR = static_cast<size_t>(params.get<int>("surface_binning_n_r"));
+          nR = static_cast<std::size_t>(params.get<int>("surface_binning_n_r"));
         }
         hasSurfaceBinning = nR * nPhi > 1;
       }
@@ -392,7 +393,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =
       new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
-                                      isDisc, nullptr, nullptr);
+                                      isDisc, nullptr);
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();

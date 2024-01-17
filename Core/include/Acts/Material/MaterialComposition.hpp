@@ -39,9 +39,8 @@ class ElementFraction {
   constexpr ElementFraction(unsigned int e, float f)
       : m_element(static_cast<uint8_t>(e)),
         m_fraction(static_cast<uint8_t>(f * UINT8_MAX)) {
-    assert((0u < e) and ("The atomic number must be positive"));
-    assert((0.0f <= f) and (f <= 1.0f) and
-           "Relative fraction must be in [0,1]");
+    assert((0u < e) && ("The atomic number must be positive"));
+    assert((0.0f <= f) && (f <= 1.0f) && "Relative fraction must be in [0,1]");
   }
   /// Construct from atomic number and integer weight.
   ///
@@ -50,8 +49,8 @@ class ElementFraction {
   constexpr explicit ElementFraction(unsigned int e, unsigned int w)
       : m_element(static_cast<uint8_t>(e)),
         m_fraction(static_cast<uint8_t>(w)) {
-    assert((0u < e) and ("The atomic number must be positive"));
-    assert((w < 256u) and "Integer weight must be in [0,256)");
+    assert((0u < e) && ("The atomic number must be positive"));
+    assert((w < 256u) && "Integer weight must be in [0,256)");
   }
 
   /// Must always be created with valid data.
@@ -76,7 +75,7 @@ class ElementFraction {
   uint8_t m_fraction;
 
   friend constexpr bool operator==(ElementFraction lhs, ElementFraction rhs) {
-    return (lhs.m_fraction == rhs.m_fraction) and
+    return (lhs.m_fraction == rhs.m_fraction) &&
            (lhs.m_element == rhs.m_element);
   }
   /// Sort by fraction for fastest access to the most probable element.

@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(Construct) {
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), Particle::Scalar(0));
   BOOST_CHECK_EQUAL(particle.absoluteMomentum(), Particle::Scalar(0));
   // particle is created at rest and thus not alive
-  BOOST_CHECK(not particle.isAlive());
+  BOOST_CHECK(!particle.isAlive());
 }
 
 BOOST_AUTO_TEST_CASE(CorrectEnergy) {
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_CHECK_EQUAL(particle.energy(), particle.mass());
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
   // particle is not alive anymore
-  BOOST_CHECK(not particle.isAlive());
+  BOOST_CHECK(!particle.isAlive());
 
   // lossing even more energy does nothing
   particle.correctEnergy(-10_GeV);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_CHECK_EQUAL(particle.energy(), particle.mass());
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
   // particle is still not alive
-  BOOST_CHECK(not particle.isAlive());
+  BOOST_CHECK(!particle.isAlive());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

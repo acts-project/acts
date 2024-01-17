@@ -90,10 +90,10 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
       continue;
     }
     // only interested in final, visible particles
-    if (not genParticle.isFinal()) {
+    if (!genParticle.isFinal()) {
       continue;
     }
-    if (not genParticle.isVisible()) {
+    if (!genParticle.isVisible()) {
       continue;
     }
 

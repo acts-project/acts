@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,12 +11,12 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <chrono>
@@ -27,6 +27,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -113,7 +114,7 @@ auto setupSeedFinderConfiguration()
 
 auto setupSeedFinderOptions() {
   Acts::SeedFinderOptions options;
-  options.bFieldInZ = 1.99724_T;
+  options.bFieldInZ = 2_T;
   options.beamPos = {-.5_mm, -.5_mm};
   return options;
 }
@@ -173,10 +174,10 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-      Acts::BinFinder<value_type>(zBinNeighborsBottom, numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-      Acts::BinFinder<value_type>(zBinNeighborsTop, numPhiNeighbors));
+  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   auto config = setupSeedFinderConfiguration<value_type>();
   config = config.toInternalUnits().calculateDerivedQuantities();
   auto options = setupSeedFinderOptions();
@@ -196,8 +197,8 @@ auto main(int argc, char** argv) -> int {
   vecmem::sycl::device_memory_resource device_resource(queue.getQueue());
   Acts::Sycl::SeedFinder<value_type> syclSeedFinder(
       config, options, deviceAtlasCuts, queue, resource, &device_resource);
-  Acts::SeedFinder<value_type> normalSeedFinder(config);
 
+  Acts::SeedFinder<value_type> normalSeedFinder(config);
   auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
   gridConfig = gridConfig.toInternalUnits();
   gridOpts = gridOpts.toInternalUnits();
@@ -292,7 +293,7 @@ auto main(int argc, char** argv) -> int {
       nSeed_sycl += outVec.size();
     }
 
-    for (size_t i = 0; i < seedVector_cpu.size(); i++) {
+    for (std::size_t i = 0; i < seedVector_cpu.size(); i++) {
       auto regionVec_cpu = seedVector_cpu[i];
       auto regionVec_sycl = seedVector_sycl[i];
 

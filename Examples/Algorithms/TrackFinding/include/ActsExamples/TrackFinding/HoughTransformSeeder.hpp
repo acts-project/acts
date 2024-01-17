@@ -185,7 +185,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     // one simple example, one may consider that hits with z < 50 mm belong to
     // one subregion, and hits with z > -50 mm belong to a second subregion.
     // Note that hits even in this toy example belong to more than one
-    // subregions. But since not all hits are considered this provides a way to
+    // subregion. But since not all hits are considered this provides a way to
     // reduce potential combinatorics
 
     std::vector<int> subRegions = {
@@ -298,8 +298,9 @@ class HoughTransformSeeder final : public IAlgorithm {
 
   ///////////////////////////////////////////////////////////////////////
   // Helpers
-  std::pair<unsigned, unsigned> yToXBins(size_t yBin_min, size_t yBin_max,
-                                         double r, double phi,
+  std::pair<unsigned, unsigned> yToXBins(std::size_t yBin_min,
+                                         std::size_t yBin_max, double r,
+                                         double phi,
                                          unsigned layer)
       const;  // given y bins, return x bins passed that need to be filled in
               // the HoughHist, including extensions
@@ -309,7 +310,7 @@ class HoughTransformSeeder final : public IAlgorithm {
                      unsigned y) const;  // did we pass extensions?
   void drawHoughHist(HoughHist const& houghHist,
                      std::string const& name);  // for making pretty plots
-  std::vector<std::vector<int>> getComboIndices(std::vector<size_t>& sizes)
+  std::vector<std::vector<int>> getComboIndices(std::vector<std::size_t>& sizes)
       const;  // useful to find all candidates from given bins that pass
               // (looping over hit combinatorics)
 

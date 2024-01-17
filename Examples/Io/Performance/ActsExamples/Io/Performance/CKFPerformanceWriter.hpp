@@ -37,21 +37,22 @@ class Barcode;
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// Write out the performance of CombinatorialKalmanFilter (CKF), e.g.
-/// track efficiency, fake rate etc.
+/// Write out the performance of CombinatorialKalmanFilter (CKF), e.g. track
+/// efficiency, fake rate etc.
+///
 /// @TODO: add duplication plots
 ///
-/// A common file can be provided for the writer to attach his TTree,
-/// this is done by setting the Config::rootFile pointer to an existing file
+/// A common file can be provided for the writer to attach his TTree, this is
+/// done by setting the Config::rootFile pointer to an existing file.
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
+class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
  public:
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
   struct Config {
-    /// Input (found) trajectories collection.
-    std::string inputTrajectories;
+    /// Input (found) tracks collection.
+    std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
@@ -66,10 +67,17 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     DuplicationPlotTool::Config duplicationPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
 
+    /// Whether to do double matching or not
+    bool doubleMatching = false;
+
     /// Min reco-truth matching probability
     double truthMatchProbMin = 0.5;
 
-    /// function to check if neural network predicted track label is duplicate
+    /// Write additional matching details to a TTree
+    bool writeMatchingDetails = false;
+
+    /// function to check if neural network predicted track label is
+    /// duplicate
     std::function<bool(std::vector<float>&)> duplicatedPredictor = nullptr;
   };
 
@@ -85,7 +93,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) override;
+                     const ConstTrackContainer& tracks) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.
@@ -104,15 +112,23 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
 
+  /// For optional output of the matching details
+  TTree* m_matchingTree{nullptr};
+
+  /// Variables to fill in the TTree
+  uint32_t m_treeEventNr{};
+  uint64_t m_treeParticleId{};
+  bool m_treeIsMatched{};
+
   // Adding numbers for efficiency, fake, duplicate calculations
-  size_t m_nTotalTracks = 0;
-  size_t m_nTotalMatchedTracks = 0;
-  size_t m_nTotalFakeTracks = 0;
-  size_t m_nTotalDuplicateTracks = 0;
-  size_t m_nTotalParticles = 0;
-  size_t m_nTotalMatchedParticles = 0;
-  size_t m_nTotalDuplicateParticles = 0;
-  size_t m_nTotalFakeParticles = 0;
+  std::size_t m_nTotalTracks = 0;
+  std::size_t m_nTotalMatchedTracks = 0;
+  std::size_t m_nTotalFakeTracks = 0;
+  std::size_t m_nTotalDuplicateTracks = 0;
+  std::size_t m_nTotalParticles = 0;
+  std::size_t m_nTotalMatchedParticles = 0;
+  std::size_t m_nTotalDuplicateParticles = 0;
+  std::size_t m_nTotalFakeParticles = 0;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{

@@ -105,22 +105,22 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Bail out if charged & configured to do so
   G4double absCharge = std::abs(track->GetParticleDefinition()->GetPDGCharge());
-  if (not m_cfg.charged and absCharge > 0.) {
+  if (!m_cfg.charged && absCharge > 0.) {
     return;
   }
 
   // Bail out if neutral & configured to do so
-  if (not m_cfg.neutral and absCharge == 0.) {
+  if (!m_cfg.neutral && absCharge == 0.) {
     return;
   }
 
   // Bail out if it is a primary & configured to be ignored
-  if (not m_cfg.primary and primaryParticle != nullptr) {
+  if (!m_cfg.primary && primaryParticle != nullptr) {
     return;
   }
 
   // Bail out if it is a secondary & configured to be ignored
-  if (not m_cfg.secondary and primaryParticle == nullptr) {
+  if (!m_cfg.secondary && primaryParticle == nullptr) {
     return;
   }
 
@@ -161,7 +161,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Extract if we are at volume boundaries
   const bool preOnBoundary = preStepPoint->GetStepStatus() == fGeomBoundary;
-  const bool postOnBoundary = postStepPoint->GetStepStatus() == fGeomBoundary or
+  const bool postOnBoundary = postStepPoint->GetStepStatus() == fGeomBoundary ||
                               postStepPoint->GetStepStatus() == fWorldBoundary;
   const bool particleStopped = (postStepPoint->GetKineticEnergy() == 0.0);
   const bool particleDecayed =
@@ -189,7 +189,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Case A: The step starts at the entry of the volume and ends at the exit.
   // Add hit to collection.
-  if (preOnBoundary and postOnBoundary) {
+  if (preOnBoundary && postOnBoundary) {
     ACTS_VERBOSE("-> merge single step to hit");
     ++eventStore().particleHitCount[particleId];
     eventStore().hits.push_back(
@@ -203,7 +203,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Case B: The step ends at the exit of the volume. Add hit to hit buffer, and
   // then combine hit buffer
-  if (postOnBoundary or particleStopped or particleDecayed) {
+  if (postOnBoundary || particleStopped || particleDecayed) {
     ACTS_VERBOSE("-> merge buffer to hit");
     auto& buffer = eventStore().hitBuffer;
     buffer.push_back(
@@ -234,7 +234,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // Case C: The step doesn't end at the exit of the volume. Add the hit to the
   // hit buffer.
-  if (not postOnBoundary) {
+  if (!postOnBoundary) {
     // ACTS_VERBOSE("-> add hit to buffer");
     eventStore().hitBuffer.push_back(
         hitFromStep(preStepPoint, postStepPoint, particleId, geoId, -1));

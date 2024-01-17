@@ -16,8 +16,11 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -38,21 +41,12 @@ class DetectorElementBase;
 /// since it builds the surfaces of all TrackingVolumes at container level
 /// for a cylindrical tracking geometry.
 ///
-/// @image html figures/CylinderSurface.png
+/// @image html CylinderSurface.png
 
-class CylinderSurface : public Surface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+class CylinderSurface : public RegularSurface {
+  friend class Surface;
 
  protected:
-  /// Constructor from DetectorElementBase: Element proxy
-  ///
-  /// @param cbounds are the provided cylinder bounds (shared)
-  /// @param detelement is the linked detector element to this surface
-  CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
-                  const DetectorElementBase& detelement);
-
   /// Constructor from Transform3 and CylinderBounds
   ///
   /// @param transform The transform to position the surface
@@ -72,7 +66,14 @@ class CylinderSurface : public Surface {
   /// @param cbounds is a shared pointer to a cylindeer bounds object,
   /// it must exist (assert test)
   CylinderSurface(const Transform3& transform,
-                  const std::shared_ptr<const CylinderBounds>& cbounds);
+                  std::shared_ptr<const CylinderBounds> cbounds);
+
+  /// Constructor from DetectorElementBase: Element proxy
+  ///
+  /// @param cbounds are the provided cylinder bounds (shared)
+  /// @param detelement is the linked detector element to this surface
+  CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
+                  const DetectorElementBase& detelement);
 
   /// Copy constructor
   ///
@@ -144,8 +145,10 @@ class CylinderSurface : public Surface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector3& position) const final;
 
-  /// Normal vector return without argument
-  using Surface::normal;
+  // Use overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
+  using RegularSurface::normal;
 
   /// Return method for the rotational symmetry axis
   ///
@@ -161,24 +164,21 @@ class CylinderSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
@@ -192,9 +192,10 @@ class CylinderSurface : public Surface {
   /// If possible returns both solutions for the cylinder
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceIntersection intersect(
+  SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track
@@ -219,7 +220,7 @@ class CylinderSurface : public Surface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+                                      std::size_t lseg) const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
@@ -285,5 +286,7 @@ class CylinderSurface : public Surface {
       const Transform3& transform, const Vector3& position,
       const Vector3& direction) const;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, CylinderSurface);
 
 }  // namespace Acts

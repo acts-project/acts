@@ -65,16 +65,16 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   enum class SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
 
   struct Config {
-    /// Optional. Input track parameters collection
+    /// Input track parameters collection
     std::string inputTrackParameters;
-    /// Optional. Input trajectories container.
-    std::string inputTrajectories;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
     /// Enum member determining the choice of the vertex seed finder
     SeedFinder seedFinder;
+    /// Use time information in vertex seeder, finder, and fitter
+    bool useTime = false;
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
@@ -104,15 +104,13 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
-
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};
 
   WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
 };
+
 }  // namespace ActsExamples

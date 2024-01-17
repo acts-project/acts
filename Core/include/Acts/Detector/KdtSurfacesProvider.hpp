@@ -29,8 +29,9 @@ namespace Experimental {
 /// It also deals with the conversion from global query to
 /// KDTree lookup positions
 ///
-template <size_t kDIM = 2u, size_t bSize = 100u,
-          typename reference_generator = detail::PolyhedronReferenceGenerator>
+template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
+          typename reference_generator =
+              detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfaces {
  public:
   /// Broadcast the surface KDT type
@@ -49,11 +50,11 @@ class KdtSurfaces {
   /// @param surfaces the surfaces to be filled into the tree
   /// @param casts the cast list from global position into kdtree local
   /// @param rgen the reference point generator
-  KdtSurfaces(
-      const GeometryContext& gctx,
-      const std::vector<std::shared_ptr<Surface>>& surfaces,
-      const std::array<BinningValue, kDIM>& casts,
-      const reference_generator& rgen = detail::PolyhedronReferenceGenerator{})
+  KdtSurfaces(const GeometryContext& gctx,
+              const std::vector<std::shared_ptr<Surface>>& surfaces,
+              const std::array<BinningValue, kDIM>& casts,
+              const reference_generator& rgen =
+                  detail::PolyhedronReferenceGenerator<1u, false>{})
       : m_kdt(nullptr), m_casts(casts), m_rGenerator(rgen) {
     // Simple check if the dimension is correct
     if (kDIM == 0u) {
@@ -66,11 +67,16 @@ class KdtSurfaces {
     for (auto& s : surfaces) {
       // Generate the references and the center of gravity from it
       const auto references = m_rGenerator.references(gctx, *s);
-      const auto ref = cog(references);
-      //  Now cast into the correct fill position
-      std::array<ActsScalar, kDIM> fill = {};
-      fillCasts(ref, fill, std::make_integer_sequence<std::size_t, kDIM>{});
-      kdtEntries.push_back({fill, s});
+      std::vector<Query> castedReferences;
+      castedReferences.reserve(references.size());
+      for (const auto& r : references) {
+        //  Now cast into the correct fill position
+        Query rc = {};
+        fillCasts(r, rc, std::make_integer_sequence<std::size_t, kDIM>{});
+        castedReferences.push_back(rc);
+      }
+      // Calculate the center of gravity in casted frame
+      kdtEntries.push_back({cog(castedReferences), s});
     }
     // Create the KDTree
     m_kdt = std::make_unique<KDTS>(std::move(kdtEntries));
@@ -123,22 +129,30 @@ class KdtSurfaces {
     ((a[idx] = VectorHelpers::cast(position, m_casts[idx])), ...);
   }
 
-  /// Helper method to calculate the center of gravity
+  /// Helper method to calculate the center of gravity in the
+  /// casted frame (i.e. query frame)
   ///
-  /// @param positions are the reference positions that go in
+  /// @param cQueries are the casted query positions
   /// @note will do nothing if vector size is equal to 1
   ///
-  /// @note no checking on positions.empty() is done as the
+  /// @note no checking on qQueries.empty() is done as the
   /// positions are to be provided by a generator which itself
   /// is tested for consistency
   ///
-  /// @return the center of gravity
-  Vector3 cog(const std::vector<Vector3>& positions) const {
+  /// @return the center of gravity as a query object
+  Query cog(const std::vector<Query>& cQueries) const {
+    // If there is only one position, return it
+    if (cQueries.size() == 1) {
+      return cQueries.front();
+    }
     // Build the center of gravity of the n positions
-    Vector3 c(0., 0., 0.);
-    ActsScalar weight = 1. / positions.size();
-    std::for_each(positions.begin(), positions.end(),
-                  [&](const auto& p) { c += weight * p; });
+    Query c{};
+    float weight = 1. / cQueries.size();
+    for (auto& q : cQueries) {
+      std::transform(c.begin(), c.end(), q.begin(), c.begin(),
+                     std::plus<ActsScalar>());
+    }
+    std::for_each(c.begin(), c.end(), [&](auto& v) { v *= weight; });
     return c;
   }
 };
@@ -147,8 +161,9 @@ class KdtSurfaces {
 ///
 /// This allows to create small region based callable structs at
 /// configuration level that are then connected to an InternalStructureBuilder
-template <size_t kDIM = 2u, size_t bSize = 100u,
-          typename reference_generator = detail::PolyhedronReferenceGenerator>
+template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
+          typename reference_generator =
+              detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfacesProvider : public ISurfacesProvider {
  public:
   /// The prefilled surfaces in a KD tree structure, it is generally shared

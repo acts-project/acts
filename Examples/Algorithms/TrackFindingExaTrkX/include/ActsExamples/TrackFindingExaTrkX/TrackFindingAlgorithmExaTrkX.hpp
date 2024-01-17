@@ -8,16 +8,24 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <mutex>
 #include <string>
 #include <vector>
+
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
 
 namespace ActsExamples {
 
@@ -35,8 +43,18 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     /// * cluster size in local y
     std::string inputClusters;
 
+    /// Input simhits (Optional).
+    std::string inputSimHits;
+    /// Input measurement simhit map (Optional).
+    std::string inputParticles;
+    /// Input measurement simhit map (Optional).
+    std::string inputMeasurementSimhitsMap;
+
     /// Output protoTracks collection.
     std::string outputProtoTracks;
+
+    /// Output graph (optional)
+    std::string outputGraph;
 
     std::shared_ptr<Acts::GraphConstructionBase> graphConstructor;
 
@@ -52,6 +70,13 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     float cellSumScale = 1.f;
     float clusterXScale = 1.f;
     float clusterYScale = 1.f;
+
+    /// Remove track candidates with 2 or less hits
+    bool filterShortTracks = false;
+
+    /// Target graph properties
+    std::size_t targetMinHits = 3;
+    double targetMinPT = 500 * Acts::UnitConstants::MeV;
   };
 
   /// Constructor of the track finding algorithm
@@ -69,14 +94,26 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final;
 
+  /// Finalize and print timing
+  ActsExamples::ProcessCode finalize() final;
+
   const Config& config() const { return m_cfg; }
 
  private:
-  std::vector<std::vector<int>> runPipeline(
-      std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const;
-
-  // configuration
   Config m_cfg;
+
+  Acts::ExaTrkXPipeline m_pipeline;
+  mutable std::mutex m_mutex;
+
+  using Accumulator = boost::accumulators::accumulator_set<
+      float, boost::accumulators::features<boost::accumulators::tag::mean,
+                                           boost::accumulators::tag::variance>>;
+
+  mutable struct {
+    Accumulator graphBuildingTime;
+    std::vector<Accumulator> classifierTimes;
+    Accumulator trackBuildingTime;
+  } m_timing;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
@@ -84,6 +121,14 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
+  WriteDataHandle<Acts::TorchGraphStoreHook::Graph> m_outputGraph{
+      this, "OutputGraph"};
+
+  // for truth graph
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementMap{
+      this, "InputMeasurementMap"};
 };
 
 }  // namespace ActsExamples

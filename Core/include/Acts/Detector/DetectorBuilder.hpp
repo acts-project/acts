@@ -18,6 +18,8 @@
 namespace Acts {
 namespace Experimental {
 
+class IGeometryIdGenerator;
+
 /// @brief Standard generic Detector builder that calls
 /// the top level component builder and transfers the
 /// result into a detector object
@@ -33,6 +35,8 @@ class DetectorBuilder final : public IDetectorBuilder {
     std::string name = "unnamed";
     /// An external builder
     std::shared_ptr<const IDetectorComponentBuilder> builder = nullptr;
+    /// A geometry id generator
+    std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// Auxiliary information
     std::string auxiliary = "";
   };

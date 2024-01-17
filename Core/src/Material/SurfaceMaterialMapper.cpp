@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
@@ -128,7 +129,7 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
           surface.surfaceMaterialSharedPtr();
     }
     auto geoID = surface.geometryId();
-    size_t volumeID = geoID.volume();
+    std::size_t volumeID = geoID.volume();
     ACTS_DEBUG("Material surface found with volumeID " << volumeID);
     ACTS_DEBUG("       - surfaceID is " << geoID);
 
@@ -137,7 +138,7 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
     auto psm = dynamic_cast<const ProtoSurfaceMaterial*>(surfaceMaterial);
 
     // Get the bin utility: try proxy material first
-    const BinUtility* bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;
+    const BinUtility* bu = (psm != nullptr) ? (&psm->binning()) : nullptr;
     if (bu != nullptr) {
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning is " << *bu);
@@ -231,9 +232,10 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   std::map<GeometryIdentifier, unsigned int> assignedMaterial;
   using VectorHelpers::makeVector4;
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
-                                          mTrack.first.second,
-                                          1 / mTrack.first.second.norm());
+  NeutralCurvilinearTrackParameters start(
+      makeVector4(mTrack.first.first, 0), mTrack.first.second,
+      1 / mTrack.first.second.norm(), std::nullopt,
+      NeutralParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
@@ -282,10 +284,12 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   auto currentAccMaterial = mState.accumulatedMaterial.end();
 
   // To remember the bins of this event
-  using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<size_t, 3>>;
+  using MapBin =
+      std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
   using MaterialBin = std::pair<AccumulatedSurfaceMaterial*,
                                 std::shared_ptr<const ISurfaceMaterial>>;
-  std::map<AccumulatedSurfaceMaterial*, std::array<size_t, 3>> touchedMapBins;
+  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>
+      touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
       touchedMaterialBin;
   if (sfIter != mappingSurfaces.end() &&
@@ -382,7 +386,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
     // get the current Surface ID
     currentID = sfIter->surface->geometryId();
     // We have work to do: the assignment surface has changed
-    if (not(currentID == lastID)) {
+    if (!(currentID == lastID)) {
       // Let's (re-)assess the information
       lastID = currentID;
       currentPos = (sfIter)->position;
@@ -419,7 +423,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
 
   // After mapping this track, average the touched bins
   for (auto tmapBin : touchedMapBins) {
-    std::vector<std::array<size_t, 3>> trackBins = {tmapBin.second};
+    std::vector<std::array<std::size_t, 3>> trackBins = {tmapBin.second};
     if (m_cfg.computeVariance) {
       tmapBin.first->trackVariance(
           trackBins, touchedMaterialBin[tmapBin.first]->materialSlab(
@@ -461,8 +465,10 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
 
 void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
     State& mState, std::vector<MaterialInteraction>& rMaterial) const {
-  using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<size_t, 3>>;
-  std::map<AccumulatedSurfaceMaterial*, std::array<size_t, 3>> touchedMapBins;
+  using MapBin =
+      std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
+  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>
+      touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
       touchedMaterialBin;
 
@@ -490,7 +496,7 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
 
   // After mapping this track, average the touched bins
   for (auto tmapBin : touchedMapBins) {
-    std::vector<std::array<size_t, 3>> trackBins = {tmapBin.second};
+    std::vector<std::array<std::size_t, 3>> trackBins = {tmapBin.second};
     if (m_cfg.computeVariance) {
       tmapBin.first->trackVariance(
           trackBins,

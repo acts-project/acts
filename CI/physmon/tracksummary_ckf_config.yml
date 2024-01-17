@@ -167,7 +167,6 @@ histograms:
 
 exclude:
   - event_nr
+  - track_nr
   - hasFittedParams
   - majorityParticleId
-  - multiTraj_nr
-  - subTraj_nr

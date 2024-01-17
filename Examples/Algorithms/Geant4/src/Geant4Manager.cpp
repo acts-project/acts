@@ -53,8 +53,8 @@ Geant4Handle::Geant4Handle(int _logLevel,
 
 Geant4Handle::~Geant4Handle() = default;
 
-void Geant4Handle::tweekLogging(int level) const {
-  Geant4Manager::tweekLogging(*runManager, level);
+void Geant4Handle::tweakLogging(int level) const {
+  Geant4Manager::tweakLogging(*runManager, level);
 }
 
 Geant4Manager& Geant4Manager::instance() {
@@ -62,7 +62,7 @@ Geant4Manager& Geant4Manager::instance() {
   return manager;
 }
 
-void Geant4Manager::tweekLogging(G4RunManager& runManager, int level) {
+void Geant4Manager::tweakLogging(G4RunManager& runManager, int level) {
   runManager.SetVerboseLevel(level);
   G4EventManager::GetEventManager()->SetVerboseLevel(level);
   G4EventManager::GetEventManager()->GetTrackingManager()->SetVerboseLevel(
@@ -75,6 +75,10 @@ void Geant4Manager::tweekLogging(G4RunManager& runManager, int level) {
   G4HadronicProcessStore::Instance()->SetVerbose(0);
   G4EmParameters::Instance()->SetIsPrintedFlag(true);
 #endif
+}
+
+std::shared_ptr<Geant4Handle> Geant4Manager::currentHandle() const {
+  return m_handle.lock();
 }
 
 std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(

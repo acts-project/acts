@@ -12,7 +12,9 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -166,15 +168,77 @@ DetectorComponent::PortalContainer wrapInZR(
 /// @brief Helper method to extract r,z,phi boundaries for
 /// eventual grid volume search
 ///
+/// @tparam volume_container_t the type of the container
+///
 /// @param gctx the geometry context of the call
 /// @param volumes the volumes at input
+/// @param precision the precision to be used for (optionally)
 /// @param logLevel is the screen logging level
 ///
 /// @return extracted boundary values
+template <typename volume_container_t>
 std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
-    const GeometryContext& gctx,
-    const std::vector<const DetectorVolume*>& volumes,
-    Acts::Logging::Level logLevel = Acts::Logging::INFO);
+    const GeometryContext& gctx, const volume_container_t& volumes,
+    double precision = 0.,
+    Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
+
+  ACTS_DEBUG("Estimate R/z/phi boundaries of  " << volumes.size()
+                                                << " volumes.");
+
+  // The return boundaries
+  std::array<std::set<ActsScalar>, 3u> uniqueBoundaries;
+  auto insertWithPrecision = [&](std::size_t is, ActsScalar value) -> void {
+    if (precision == 0.) {
+      uniqueBoundaries[is].insert(value);
+      return;
+    }
+    uniqueBoundaries[is].insert(std::round(value / precision) * precision);
+  };
+
+  // Loop over the volumes and collect boundaries
+  for (const auto& v : volumes) {
+    if (v->volumeBounds().type() == VolumeBounds::BoundsType::eCylinder) {
+      const auto& bValues = v->volumeBounds().values();
+      // The min/max values
+      ActsScalar rMin = bValues[CylinderVolumeBounds::BoundValues::eMinR];
+      ActsScalar rMax = bValues[CylinderVolumeBounds::BoundValues::eMaxR];
+      ActsScalar zCenter = v->transform(gctx).translation().z();
+      ActsScalar zHalfLength =
+          bValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ];
+      ActsScalar zMin = zCenter - zHalfLength;
+      ActsScalar zMax = zCenter + zHalfLength;
+      ActsScalar phiCenter =
+          bValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
+      ActsScalar phiSector =
+          bValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
+      ActsScalar phiMin = phiCenter - phiSector;
+      ActsScalar phiMax = phiCenter + phiSector;
+      // Fill the sets
+      insertWithPrecision(0u, rMin);
+      insertWithPrecision(0u, rMax);
+      insertWithPrecision(1u, zMin);
+      insertWithPrecision(1u, zMax);
+      insertWithPrecision(2u, phiMin);
+      insertWithPrecision(2u, phiMax);
+    }
+  }
+
+  ACTS_VERBOSE("- did yield " << uniqueBoundaries[0u].size()
+                              << " boundaries in R.");
+  ACTS_VERBOSE("- did yield " << uniqueBoundaries[1u].size()
+                              << " boundaries in z.");
+  ACTS_VERBOSE("- did yield " << uniqueBoundaries[2u].size()
+                              << " boundaries in phi.");
+
+  return {{std::vector<ActsScalar>(uniqueBoundaries[0].begin(),
+                                   uniqueBoundaries[0].end()),
+           std::vector<ActsScalar>(uniqueBoundaries[1].begin(),
+                                   uniqueBoundaries[1].end()),
+           std::vector<ActsScalar>(uniqueBoundaries[2].begin(),
+                                   uniqueBoundaries[2].end())}};
+}
 
 }  // namespace CylindricalDetectorHelper
 }  // namespace detail

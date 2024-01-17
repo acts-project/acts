@@ -189,7 +189,7 @@ inline std::vector<double> TrapezoidVolumeBounds::values() const {
 }
 
 inline void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthXnegY) < 0. or get(eHalfLengthXposY) < 0.) {
+  if (get(eHalfLengthXnegY) < 0. || get(eHalfLengthXposY) < 0.) {
     throw std::invalid_argument(
         "TrapezoidVolumeBounds: invalid trapezoid parameters in x.");
   }

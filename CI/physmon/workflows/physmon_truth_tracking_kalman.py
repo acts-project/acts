@@ -15,16 +15,13 @@ with tempfile.TemporaryDirectory() as temp:
         events=10000,
         numThreads=-1,
         logLevel=acts.logging.INFO,
-        fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
-            Path(__file__).parent.parent / "fpe_masks.yml"
-        ),
     )
 
     tp = Path(temp)
     runTruthTrackingKalman(
         setup.trackingGeometry,
         setup.field,
-        digiConfigFile=setup.digiConfig,
+        setup.digiConfig,
         outputDir=tp,
         s=s,
     )

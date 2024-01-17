@@ -17,12 +17,12 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -43,6 +43,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 using StraightPropagator =
@@ -55,6 +56,8 @@ using KalmanUpdater = Acts::GainMatrixUpdater;
 using KalmanSmoother = Acts::GainMatrixSmoother;
 using KalmanFitter =
     Acts::KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
+
+static const auto pion = Acts::ParticleHypothesis::pion();
 
 KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
@@ -72,18 +75,18 @@ Acts::CurvilinearTrackParameters makeParameters() {
   Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
-  return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree, 1_GeV,
-                                          1_e, cov);
+  return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree,
+                                          1_e / 1_GeV, cov, pion);
 }
 
 // Instantiate the tester
 const FitterTester tester;
 
 // reconstruction propagator and fitter
-const auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
+auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
 const auto kfZeroPropagator =
     makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
-const auto kfZero = KalmanFitter(kfZeroPropagator);
+const auto kfZero = KalmanFitter(kfZeroPropagator, std::move(kfLogger));
 
 std::default_random_engine rng(42);
 
@@ -95,9 +98,9 @@ auto makeDefaultKalmanFitterOptions() {
       &kfUpdater);
   extensions.smoother
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
-  extensions.surfaceAccessor
-      .connect<&Acts::Test::TestSourceLink::SurfaceAccessor::operator()>(
-          &tester.surfaceAccessor);
+  extensions.surfaceAccessor.connect<
+      &Acts::detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
+      &tester.surfaceAccessor);
 
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
                              extensions, PropagatorPlainOptions());

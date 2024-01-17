@@ -281,13 +281,15 @@ std::array<Particle, 2> PhotonConversion::generateChildren(
           .setPosition4(photon.fourPosition())
           .setDirection(childDirection)
           .setAbsoluteMomentum(momentum1)
-          .setProcess(ProcessType::ePhotonConversion),
+          .setProcess(ProcessType::ePhotonConversion)
+          .setReferenceSurface(photon.referenceSurface()),
       Particle(photon.particleId().makeDescendant(1), Acts::ePositron, 1_e,
                kElectronMass)
           .setPosition4(photon.fourPosition())
           .setDirection(childDirection)
           .setAbsoluteMomentum(momentum2)
-          .setProcess(ProcessType::ePhotonConversion),
+          .setProcess(ProcessType::ePhotonConversion)
+          .setReferenceSurface(photon.referenceSurface()),
   };
   return children;
 }

@@ -34,25 +34,26 @@ BOOST_AUTO_TEST_SUITE(Detector)
 BOOST_AUTO_TEST_CASE(CenterReference) {
   // Simply return the cetner
   auto center = CenterReferenceGenerator{}.references(tContext, *pSurface);
-  BOOST_CHECK(center.size() == 1u);
+  BOOST_CHECK_EQUAL(center.size(), 1u);
   BOOST_CHECK(center.front().isApprox(Acts::Vector3(20., 20., 100.)));
 }
 
 BOOST_AUTO_TEST_CASE(BinningPositionReference) {
   // Simply return binning position, we test only the behavior of the generator
   // not the output
-  auto binningPosition = BinningValueReferenceGenerator{Acts::binZ}.references(
-      tContext, *pSurface);
-  BOOST_CHECK(binningPosition.size() == 1u);
+  auto binningPosition =
+      BinningValueReferenceGenerator<Acts::binZ>{}.references(tContext,
+                                                              *pSurface);
+  BOOST_CHECK_EQUAL(binningPosition.size(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(PolyhedronReference) {
   // Simply return binning position, we test only the behavior of the generator
   // not the output
   auto referencePositions =
-      PolyhedronReferenceGenerator{}.references(tContext, *pSurface);
+      PolyhedronReferenceGenerator<>{}.references(tContext, *pSurface);
   // 4 corners with center of gravity
-  BOOST_CHECK(referencePositions.size() == 5u);
+  BOOST_CHECK_EQUAL(referencePositions.size(), 5u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

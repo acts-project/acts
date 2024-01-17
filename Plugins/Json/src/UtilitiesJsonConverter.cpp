@@ -56,7 +56,7 @@ void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
   int bins = j["bins"];
   std::string valueName = j["value"];
   auto bValue = j["value"].get<BinningValue>();
-  if (bins == 1 and not(j["type"] == "arbitrary")) {
+  if (bins == 1 && !(j["type"] == "arbitrary")) {
     bd = BinningData(bValue, min, max);
     return;
   }
@@ -85,7 +85,7 @@ void Acts::to_json(nlohmann::json& j, const BinUtility& bu) {
     jbindata.push_back(nlohmann::json(bdata));
   }
   j["binningdata"] = jbindata;
-  if (not bu.transform().isApprox(Transform3::Identity())) {
+  if (!bu.transform().isApprox(Transform3::Identity())) {
     nlohmann::json jtrf = Transform3JsonConverter::toJson(bu.transform());
     j["transform"] = jtrf;
   }
@@ -93,7 +93,7 @@ void Acts::to_json(nlohmann::json& j, const BinUtility& bu) {
 
 void Acts::from_json(const nlohmann::json& j, Acts::BinUtility& bu) {
   bu = Acts::BinUtility();
-  if (j.find("transform") != j.end() and not j["transform"].empty()) {
+  if (j.find("transform") != j.end() && !j["transform"].empty()) {
     Acts::Transform3 trf = Transform3JsonConverter::fromJson(j["transform"]);
     bu = Acts::BinUtility(trf);
   }

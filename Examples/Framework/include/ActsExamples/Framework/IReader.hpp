@@ -27,7 +27,7 @@ class IReader : public SequenceElement {
   /// Provide range of available events or [0, SIZE_MAX) if undefined.
   ///
   /// The upper limit is exclusive, i.e. [0,3) means events 0, 1, and 2.
-  virtual std::pair<size_t, size_t> availableEvents() const = 0;
+  virtual std::pair<std::size_t, std::size_t> availableEvents() const = 0;
 
   /// Read data for the requested event and write it into the event store.
   ///

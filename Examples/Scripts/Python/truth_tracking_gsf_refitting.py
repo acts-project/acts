@@ -44,18 +44,10 @@ s.addAlgorithm(
     )
 )
 
-s.addAlgorithm(
-    acts.examples.TracksToTrajectories(
-        level=acts.logging.INFO,
-        inputTracks="gsfTracks",
-        outputTrajectories="gsfTrajectories",
-    )
-)
-
 s.addWriter(
     acts.examples.TrackFitterPerformanceWriter(
         level=acts.logging.INFO,
-        inputTrajectories="trajectories",
+        inputTracks="tracks",
         inputParticles="truth_seeds_selected",
         inputMeasurementParticlesMap="measurement_particles_map",
         filePath=str(outputDir / "performance_refitter.root"),

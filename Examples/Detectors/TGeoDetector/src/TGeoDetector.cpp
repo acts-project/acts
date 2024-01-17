@@ -66,7 +66,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 
     // configure surface autobinning
     std::vector<std::pair<double, double>> binTolerances(
-        static_cast<size_t>(Acts::binValues), {0., 0.});
+        static_cast<std::size_t>(Acts::binValues), {0., 0.});
     binTolerances[Acts::binR] = {volume.binToleranceR.lower.value_or(0.),
                                  volume.binToleranceR.upper.value_or(0.)};
     binTolerances[Acts::binZ] = {volume.binToleranceZ.lower.value_or(0.),
@@ -284,7 +284,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
         -> void {
       for (const auto& lcfg : lConfigs) {
         for (const auto& scfg : lcfg.splitConfigs) {
-          if (scfg.first == Acts::binR and scfg.second > 0.) {
+          if (scfg.first == Acts::binR && scfg.second > 0.) {
             volumeConfig.ringTolerance =
                 std::max(volumeConfig.ringTolerance, scfg.second);
             volumeConfig.checkRingLayout = true;
@@ -295,7 +295,6 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     ringLayoutConfiguration(lbc.layerConfigurations[0]);
     ringLayoutConfiguration(lbc.layerConfigurations[2]);
     volumeConfig.layerBuilder = layerBuilder;
-    volumeConfig.volumeSignature = 0;
     auto volumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
         volumeConfig, logger.clone(lbc.configurationName + "VolumeBuilder",
                                    config.volumeLogLevel));
@@ -374,10 +373,10 @@ auto TGeoDetector::finalize(
   TrackingGeometryPtr tgeoTrackingGeometry = buildTGeoDetector(
       cfg, tGeoContext, detectorStore, std::move(mdecorator), *logger);
 
-  ContextDecorators tgeoContextDeocrators = {};
+  ContextDecorators tgeoContextDecorators = {};
   // Return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(tgeoTrackingGeometry), std::move(tgeoContextDeocrators));
+      std::move(tgeoTrackingGeometry), std::move(tgeoContextDecorators));
 }
 
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {

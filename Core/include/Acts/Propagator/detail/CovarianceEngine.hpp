@@ -47,6 +47,7 @@ namespace detail {
 /// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in, out] parameters Free, nominal parametrisation
+/// @param [in] particleHypothesis Particle hypothesis
 /// @param [in] covTransport Decision whether the covariance transport should be
 /// performed
 /// @param [in] accumulatedPath Propagated distance
@@ -61,8 +62,8 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
     const GeometryContext& geoContext, BoundSquareMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
-    FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface,
+    FreeVector& parameters, const ParticleHypothesis& particleHypothesis,
+    bool covTransport, double accumulatedPath, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection =
         FreeToBoundCorrection(false));
 
@@ -78,6 +79,7 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
 /// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] parameters Free, nominal parametrisation
+/// @param [in] particleHypothesis Particle hypothesis
 /// @param [in] covTransport Decision whether the covariance transport should be
 /// performed
 /// @param [in] accumulatedPath Propagated distance
@@ -90,7 +92,8 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
     BoundSquareMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath);
+    const ParticleHypothesis& particleHypothesis, bool covTransport,
+    double accumulatedPath);
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear to
 /// another bound representation.
@@ -134,6 +137,19 @@ void transportCovarianceToCurvilinear(BoundSquareMatrix& boundCovariance,
                                       FreeVector& freeToPathDerivatives,
                                       BoundToFreeMatrix& boundToFreeJacobian,
                                       const Vector3& direction);
+
+/// Convert bound track parameters to another bound surface.
+/// @pre The @p targetSurface must intersect with the surface attached to
+///      @p boundParameters, and the parameters must be on-surface on the
+///      target surface.
+/// @param gctx The geometry context.
+/// @param boundParameters The bound track parameters to convert.
+/// @param targetSurface The target surface.
+/// @param bField The magnetic field at the target surface.
+/// @return The converted bound track parameters.
+Result<BoundTrackParameters> boundToBoundConversion(
+    const GeometryContext& gctx, const BoundTrackParameters& boundParameters,
+    const Surface& targetSurface, const Vector3& bField = Vector3::Zero());
 
 }  // namespace detail
 }  // namespace Acts

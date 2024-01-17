@@ -27,7 +27,7 @@
 using namespace ActsExamples;
 using namespace Acts::Test;
 
-BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
+BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
   IndexSourceLinkContainer sourceLinksOriginal;
   MeasurementContainer measOriginal;
   ClusterContainer clusterOriginal;
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
   Acts::GeometryIdentifier someGeoId{298453};
 
   std::mt19937 gen(23);
-  std::uniform_int_distribution<unsigned> disti(1, 10);
+  std::uniform_int_distribution<std::uint32_t> disti(1, 10);
   std::uniform_real_distribution<double> distf(0.0, 1.0);
 
   for (auto i = 0ul; i < nMeasurements; ++i) {
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
 
     // NOTE this fails:
     // auto m = Acts::makeMeasurement(sl, p, c, eBoundLoc0, eBoundTime)
-    // because we dont support non-consecutive parameters here for now
+    // because we don't support non-consecutive parameters here for now
     auto m = Acts::makeMeasurement(Acts::SourceLink{sl}, p, c, Acts::eBoundLoc0,
                                    Acts::eBoundLoc1);
 
@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
 
     ActsExamples::Cluster cl;
 
-    using Bin2D = ActsFatras::Channelizer::Bin2D;
-    using Seg2D = ActsFatras::Channelizer::Segment2D;
+    using Bin2D = ActsFatras::Segmentizer::Bin2D;
+    using Seg2D = ActsFatras::Segmentizer::Segment2D;
 
     // We have two cluster shapes which are displaced randomly
     const auto o = disti(gen);

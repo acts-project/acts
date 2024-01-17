@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Plugins/ExaTrkX/detail/CantorEdge.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
@@ -16,6 +17,8 @@
 
 #include <Eigen/Core>
 #include <torch/torch.h>
+
+using CantorPair = Acts::detail::CantorEdge<int>;
 
 #define PRINT 0
 
@@ -26,24 +29,6 @@ float distance(const at::Tensor &a, const at::Tensor &b) {
   return std::sqrt(((a - b) * (a - b)).sum().item().to<float>());
 }
 
-struct CantorPair {
-  int value;
-
-  CantorPair(int x, int y) : value(y + ((x + y) * (x + y + 1)) / 2) {}
-
-  std::pair<int, int> inverse() const {
-    auto f = [](int w) -> int { return (w * (w + 1)) / 2; };
-    auto q = [](int w) -> int {
-      return std::floor((std::sqrt(8 * w + 1) - 1) / 2);
-    };
-
-    auto y = value - f(q(value));
-    auto x = q(value) - y;
-
-    return {x, y};
-  }
-};
-
 #if PRINT
 std::ostream &operator<<(std::ostream &os, CantorPair p) {
   auto [a, b] = p.inverse();
@@ -51,14 +36,6 @@ std::ostream &operator<<(std::ostream &os, CantorPair p) {
   return os;
 }
 #endif
-
-bool operator<(CantorPair a, CantorPair b) {
-  return a.value < b.value;
-}
-
-bool operator==(CantorPair a, CantorPair b) {
-  return a.value == b.value;
-}
 
 template <typename edge_builder_t>
 void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
@@ -89,9 +66,9 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
       *std::max_element(edge_counts.begin(), edge_counts.end());
 
   // If this is not the case, the test is ill-formed
-  // knn specifies how many edges can be found by the function at max. Thus we
+  // knn specifies how many edges can be found by the function at max. Thus, we
   // should design the test in a way, that our brute-force test algorithm does
-  // not find more edges then the algorithm that we test against it can find
+  // not find more edges than the algorithm that we test against it can find
   BOOST_REQUIRE(max_edges <= knn);
 
   // Run the edge building
@@ -126,7 +103,7 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
 #endif
 
   // Check
-  BOOST_CHECK(edges_ref_cantor.size() == edges_test_cantor.size());
+  BOOST_CHECK_EQUAL(edges_ref_cantor.size(), edges_test_cantor.size());
   BOOST_CHECK(std::equal(edges_test_cantor.begin(), edges_test_cantor.end(),
                          edges_ref_cantor.begin()));
 }
@@ -134,9 +111,18 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
 BOOST_AUTO_TEST_CASE(test_cantor_pair_functions) {
   int a = 345;
   int b = 23;
-  const auto [aa, bb] = CantorPair(a, b).inverse();
-  BOOST_CHECK(a == aa);
-  BOOST_CHECK(b == bb);
+  // Use non-sorted cantor pair to make this work
+  const auto [aa, bb] = CantorPair(a, b, false).inverse();
+  BOOST_CHECK_EQUAL(a, aa);
+  BOOST_CHECK_EQUAL(b, bb);
+}
+
+BOOST_AUTO_TEST_CASE(test_cantor_pair_sorted) {
+  int a = 345;
+  int b = 23;
+  CantorPair c1(a, b);
+  CantorPair c2(b, a);
+  BOOST_CHECK_EQUAL(c1.value(), c2.value());
 }
 
 const int emb_dim = 3;
@@ -202,7 +188,7 @@ BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
   };
   // clang-format on
 
-  BOOST_CHECK(ref == postEdges);
+  BOOST_CHECK_EQUAL(ref, postEdges);
 }
 
 BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
@@ -239,7 +225,7 @@ BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
   };
   // clang-format on
 
-  BOOST_CHECK(ref == postEdges);
+  BOOST_CHECK_EQUAL(ref, postEdges);
 }
 
 BOOST_AUTO_TEST_CASE(test_random_flip) {
@@ -269,7 +255,7 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
       flipped.data_ptr<int64_t>(),
       flipped.data_ptr<int64_t>() + flipped.numel());
 
-  BOOST_CHECK(postEdges.size() == edges.size());
+  BOOST_CHECK_EQUAL(postEdges.size(), edges.size());
   for (auto preIt = edges.begin(); preIt != edges.end(); preIt += 2) {
     int found = 0;
 
@@ -281,6 +267,6 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
       found += (flp or noflp);
     }
 
-    BOOST_CHECK(found == 1);
+    BOOST_CHECK_EQUAL(found, 1);
   }
 }

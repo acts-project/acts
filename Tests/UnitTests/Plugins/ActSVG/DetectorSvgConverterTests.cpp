@@ -14,12 +14,13 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/ActSVG/DetectorSvgConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -158,10 +159,14 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
       detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));
 
   // Detector builder
+  auto gigConfig = GeometryIdGenerator::Config();
+  auto gig = std::make_shared<GeometryIdGenerator>(gigConfig);
+
   Acts::Experimental::DetectorBuilder::Config dCfg;
   dCfg.auxiliary = "*** Test : Cylindrical Detector ***";
   dCfg.name = "CylindricalDetector";
   dCfg.builder = containerBuilder;
+  dCfg.geoIdGenerator = gig;
 
   auto detector = DetectorBuilder(dCfg).construct(tContext);
 

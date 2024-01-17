@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -30,8 +30,8 @@
 #include <vector>
 
 namespace Acts {
-template <typename external_spacepoint_t>
-class BinFinder;
+template <std::size_t>
+class GridBinFinder;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -68,7 +68,7 @@ class SeedingAlgorithm final : public IAlgorithm {
     std::vector<std::pair<int, int>> zBinNeighborsBottom;
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
-    int numPhiNeighbors = 0;
+    int numPhiNeighbors = 1;
   };
 
   /// Construct the seeding algorithm.
@@ -92,8 +92,8 @@ class SeedingAlgorithm final : public IAlgorithm {
       Acts::detail::RefHolder>::ConstSpacePointProxyType;
 
   Acts::SeedFinder<SpacePointProxy_t> m_seedFinder;
-  std::shared_ptr<const Acts::BinFinder<SpacePointProxy_t>> m_bottomBinFinder;
-  std::shared_ptr<const Acts::BinFinder<SpacePointProxy_t>> m_topBinFinder;
+  std::shared_ptr<const Acts::BinFinder<2ul>> m_bottomBinFinder;
+  std::shared_ptr<const Acts::BinFinder<2ul>> m_topBinFinder;
   Config m_cfg;
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>

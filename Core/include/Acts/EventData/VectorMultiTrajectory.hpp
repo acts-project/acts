@@ -14,6 +14,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -57,7 +58,7 @@ class VectorMultiTrajectoryBase {
 
     hist_t hist;
 
-    void toStream(std::ostream& os, size_t n = 1);
+    void toStream(std::ostream& os, std::size_t n = 1);
   };
 
   template <typename T>
@@ -98,8 +99,8 @@ class VectorMultiTrajectoryBase {
       h("index", isMeas, weight(sizeof(IndexData)));
 
       using scalar = typename decltype(ts.predicted())::Scalar;
-      size_t par_size = eBoundSize * sizeof(scalar);
-      size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
+      std::size_t par_size = eBoundSize * sizeof(scalar);
+      std::size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
 
       const IndexData& index = m_index[i];
       if (ts.hasPredicted() &&
@@ -124,8 +125,8 @@ class VectorMultiTrajectoryBase {
         weight(sizeof(decltype(m_measCovOffset)::value_type)));
       if (ts.hasCalibrated() &&
           ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Calibrated)) {
-        size_t meas_size = ts.calibratedSize() * sizeof(scalar);
-        size_t meas_cov_size =
+        std::size_t meas_size = ts.calibratedSize() * sizeof(scalar);
+        std::size_t meas_cov_size =
             ts.calibratedSize() * ts.calibratedSize() * sizeof(scalar);
 
         h("meas", isMeas, weight(meas_size));
@@ -145,14 +146,13 @@ class VectorMultiTrajectoryBase {
 
  protected:
   struct IndexData {
-    IndexType iprevious = kInvalid;
     IndexType ipredicted = kInvalid;
     IndexType ifiltered = kInvalid;
     IndexType ismoothed = kInvalid;
     IndexType ijacobian = kInvalid;
     IndexType iprojector = kInvalid;
 
-    double chi2 = 0;
+    float chi2 = 0;
     double pathLength = 0;
     TrackStateType::raw_type typeFlags{};
 
@@ -168,6 +168,7 @@ class VectorMultiTrajectoryBase {
   VectorMultiTrajectoryBase(const VectorMultiTrajectoryBase& other)
       : m_index{other.m_index},
         m_previous{other.m_previous},
+        m_next{other.m_next},
         m_params{other.m_params},
         m_cov{other.m_cov},
         m_meas{other.m_meas},
@@ -181,6 +182,7 @@ class VectorMultiTrajectoryBase {
     for (const auto& [key, value] : other.m_dynamic) {
       m_dynamic.insert({key, value->clone()});
     }
+    m_dynamicKeys = other.m_dynamicKeys;
   };
 
   VectorMultiTrajectoryBase(VectorMultiTrajectoryBase&& other) = default;
@@ -209,6 +211,7 @@ class VectorMultiTrajectoryBase {
         return instance.m_sourceLinks[instance.m_index[istate].iuncalibrated]
             .has_value();
       case "previous"_hash:
+      case "next"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
       case "chi2"_hash:
@@ -230,7 +233,9 @@ class VectorMultiTrajectoryBase {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "previous"_hash:
-        return &instance.m_index[istate].iprevious;
+        return &instance.m_previous[istate];
+      case "next"_hash:
+        return &instance.m_next[istate];
       case "predicted"_hash:
         return &instance.m_index[istate].ipredicted;
       case "filtered"_hash:
@@ -272,6 +277,7 @@ class VectorMultiTrajectoryBase {
       case "jacobian"_hash:
       case "projector"_hash:
       case "previous"_hash:
+      case "next"_hash:
       case "uncalibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
@@ -282,6 +288,11 @@ class VectorMultiTrajectoryBase {
       default:
         return instance.m_dynamic.find(key) != instance.m_dynamic.end();
     }
+  }
+
+ public:
+  detail::DynamicKeyRange<detail::DynamicColumnBase> dynamicKeys_impl() const {
+    return {m_dynamic.begin(), m_dynamic.end()};
   }
 
   // END INTERFACE HELPER
@@ -303,6 +314,7 @@ class VectorMultiTrajectoryBase {
   /// index to map track states to the corresponding
   std::vector<IndexData> m_index;
   std::vector<IndexType> m_previous;
+  std::vector<IndexType> m_next;
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
 
@@ -322,6 +334,7 @@ class VectorMultiTrajectoryBase {
   // be handled in a smart way by moving but not sure.
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
+  std::vector<HashedString> m_dynamicKeys;
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
 };
@@ -379,27 +392,27 @@ class VectorMultiTrajectory final
     return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   TrackStateProxy::Measurement<measdim> measurement_impl(IndexType istate) {
     IndexType offset = m_measOffset[istate];
     return TrackStateProxy::Measurement<measdim>{&m_meas[offset]};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
     return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   TrackStateProxy::MeasurementCovariance<measdim> measurementCovariance_impl(
       IndexType istate) {
     IndexType offset = m_measCovOffset[istate];
     return TrackStateProxy::MeasurementCovariance<measdim>{&m_measCov[offset]};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
   measurementCovariance_impl(IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
@@ -441,15 +454,15 @@ class VectorMultiTrajectory final
 
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
-    m_dynamic.insert(
-        {hashString(key), std::make_unique<detail::DynamicColumn<T>>()});
+    Acts::HashedString hashedKey = hashString(key);
+    m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
   constexpr bool hasColumn_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
 
-  void allocateCalibrated_impl(IndexType istate, size_t measdim) {
+  void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
     throw_assert(measdim > 0 && measdim <= eBoundSize,
                  "Invalid measurement dimension detected");
 
@@ -476,6 +489,9 @@ class VectorMultiTrajectory final
                                 std::shared_ptr<const Surface> surface) {
     m_referenceSurfaces[istate] = std::move(surface);
   }
+
+  void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
+                            const std::any& srcPtr);
 
   // END INTERFACE
 };
@@ -528,14 +544,14 @@ class ConstVectorMultiTrajectory final
     return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
     return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
   }
 
-  template <size_t measdim>
+  template <std::size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
   measurementCovariance_impl(IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];

@@ -67,7 +67,7 @@ struct CylindricalTrackingGeometry {
   ///
   /// @return A vector of Surfaces
   std::vector<const Surface*> surfacesRing(
-      DetectorStore& detStore, double moduleHalfXminY, double moudleHalfXmaxY,
+      DetectorStore& detStore, double moduleHalfXminY, double moduleHalfXmaxY,
       double moduleHalfY, double moduleThickness, double moduleTilt,
       double ringRadius, double ringZ, double zStagger, int nPhi) {
     std::vector<const Surface*> layerSurfaces;
@@ -82,11 +82,11 @@ struct CylindricalTrackingGeometry {
 
     // The rectangle/trapezoid bounds for all modules
     std::shared_ptr<PlanarBounds> mBounds = nullptr;
-    if (moduleHalfXminY == moudleHalfXmaxY) {
+    if (moduleHalfXminY == moduleHalfXmaxY) {
       mBounds = std::make_shared<RectangleBounds>(moduleHalfXminY, moduleHalfY);
     } else {
       mBounds = std::make_shared<TrapezoidBounds>(moduleHalfXminY,
-                                                  moudleHalfXmaxY, moduleHalfY);
+                                                  moduleHalfXmaxY, moduleHalfY);
     }
 
     double phiStep = 2 * M_PI / nPhi;
@@ -192,12 +192,12 @@ struct CylindricalTrackingGeometry {
     double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
     double zStep = 2 * std::abs(zStart) / (nZbins - 1);
     // loop over the bins
-    for (size_t zBin = 0; zBin < size_t(nZbins); ++zBin) {
+    for (std::size_t zBin = 0; zBin < std::size_t(nZbins); ++zBin) {
       // prepare z and r
       double moduleZ = zStart + zBin * zStep;
       double moduleR =
           (zBin % 2) != 0u ? radius - 0.5 * zStagger : radius + 0.5 * zStagger;
-      for (size_t phiBin = 0; phiBin < size_t(nPhiBins); ++phiBin) {
+      for (std::size_t phiBin = 0; phiBin < std::size_t(nPhiBins); ++phiBin) {
         // calculate the current phi value
         double modulePhi = minPhi + phiBin * phiStep;
         mPositions.push_back(Vector3(moduleR * cos(modulePhi),
@@ -259,7 +259,6 @@ struct CylindricalTrackingGeometry {
     bpvConfig.layerBuilder = beamPipeBuilder;
     bpvConfig.layerEnvelopeR = {1_mm, 1_mm};
     bpvConfig.buildToRadiusZero = true;
-    bpvConfig.volumeSignature = 0;
     auto beamPipeVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
         bpvConfig, getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
 
@@ -288,7 +287,7 @@ struct CylindricalTrackingGeometry {
 
     std::vector<LayerPtr> pLayers;
 
-    for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
+    for (std::size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
       std::vector<const Surface*> layerSurfaces =
           surfacesCylinder(detectorStore, pModuleHalfX[ilp], pModuleHalfY[ilp],
                            pModuleThickness[ilp], pModuleTiltPhi[ilp],

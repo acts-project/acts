@@ -64,20 +64,17 @@ class EigenStepper {
 
     /// Constructor from the initial bound track parameters
     ///
-    /// @tparam charge_t Type of the bound parameter charge
-    ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] fieldCacheIn is the cache object for the magnetic field
     /// @param [in] par The track parameters at start
     /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    MagneticFieldProvider::Cache fieldCacheIn,
-                   const GenericBoundTrackParameters<charge_t>& par,
+                   const BoundTrackParameters& par,
                    double ssize = std::numeric_limits<double>::max())
-        : absCharge(std::abs(par.charge())),
+        : particleHypothesis(par.particleHypothesis()),
           stepSize(ssize),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
@@ -100,8 +97,8 @@ class EigenStepper {
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
-    /// The absolute charge as the free vector can be 1/p or q/p
-    double absCharge = UnitConstants::e;
+    /// Particle hypothesis
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
@@ -158,10 +155,9 @@ class EigenStepper {
   EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField,
                double overstepLimit = 100 * UnitConstants::um);
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const GenericBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   double ssize = std::numeric_limits<double>::max()) const;
 
   /// @brief Resets the state
@@ -210,8 +206,7 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double absoluteMomentum(const State& state) const {
-    auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qOverP(state));
+    return particleHypothesis(state).extractMomentum(qOverP(state));
   }
 
   /// Momentum accessor
@@ -225,7 +220,14 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return std::copysign(state.absCharge, qOverP(state));
+    return particleHypothesis(state).extractCharge(qOverP(state));
+  }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  const ParticleHypothesis& particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
   }
 
   /// Time access
@@ -240,17 +242,18 @@ class EigenStepper {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, Direction navDir,
-      const BoundaryCheck& bcheck,
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryCheck& bcheck,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
-        *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
+        *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size
@@ -265,19 +268,18 @@ class EigenStepper {
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
+                      Direction /*direction*/, bool release = true) const {
     detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitly with a double
+  /// Update step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
   /// @param release [in] Do we release the step size?
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor,
-                   bool release = true) const {
+  void updateStepSize(State& state, double stepSize,
+                      ConstrainedStep::Type stype, bool release = true) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
@@ -293,8 +295,9 @@ class EigenStepper {
   /// Release the Step size
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
-    state.stepSize.release(ConstrainedStep::actor);
+  /// @param [in] stype The step size type to be released
+  void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
+    state.stepSize.release(stype);
   }
 
   /// Output the Step Size - single component
@@ -305,7 +308,10 @@ class EigenStepper {
   }
 
   /// Overstep limit
-  double overstepLimit(const State& /*state*/) const {
+  ///
+  /// @param state The stepping state (thread-local cache)
+  double overstepLimit(const State& state) const {
+    (void)state;
     // A dynamic overstep limit could sit here
     return -m_overstepLimit;
   }

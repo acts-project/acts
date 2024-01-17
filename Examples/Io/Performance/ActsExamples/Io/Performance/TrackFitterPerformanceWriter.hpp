@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -39,14 +40,13 @@ struct AlgorithmContext;
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class TrackFitterPerformanceWriter final
-    : public WriterT<TrajectoriesContainer> {
+class TrackFitterPerformanceWriter final : public WriterT<ConstTrackContainer> {
  public:
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
   struct Config {
-    /// Input (fitted) trajectories collection.
-    std::string inputTrajectories;
+    /// Input (fitted) track collection.
+    std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
@@ -74,7 +74,7 @@ class TrackFitterPerformanceWriter final
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) override;
+                     const ConstTrackContainer& tracks) override;
 
   Config m_cfg;
 

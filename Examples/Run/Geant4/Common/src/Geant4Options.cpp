@@ -27,6 +27,6 @@ void ActsExamples::Options::addGeant4Options(
   opt("g4-loglevel", value<unsigned int>()->default_value(2),
       "Screen output log level for Geant4 actions.");
 
-  opt("g4-seed", value<size_t>()->default_value(12348777),
+  opt("g4-seed", value<std::size_t>()->default_value(12348777),
       "Random seed for G4 RNG");
 }

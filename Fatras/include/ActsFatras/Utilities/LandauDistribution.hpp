@@ -42,10 +42,10 @@ class LandauDistribution {
 
     /// Parameters should be EqualityComparable
     friend bool operator==(const param_type &lhs, const param_type &rhs) {
-      return (lhs.location == rhs.location) and (lhs.scale == rhs.scale);
+      return (lhs.location == rhs.location) && (lhs.scale == rhs.scale);
     }
     friend bool operator!=(const param_type &lhs, const param_type &rhs) {
-      return not(lhs == rhs);
+      return !(lhs == rhs);
     }
   };
   /// The type of the generated values.

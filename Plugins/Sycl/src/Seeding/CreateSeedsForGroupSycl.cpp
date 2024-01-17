@@ -536,7 +536,7 @@ void createSeedsForGroupSycl(
       copy.setup(*curvImpactBuffer);
       copy.setup(*seedArrayBuffer);
       // Reserve memory in advance for seed indices and weight
-      // Other way around would allocating it inside the loop
+      // Other way around would allocate it inside the loop
       // -> less memory usage, but more frequent allocation and deallocation
 
       // Counting the seeds in the second kernel allows us to copy back the

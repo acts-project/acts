@@ -70,8 +70,9 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
       &seedFilterConfig.impactWeightFactor);
   CudaScalar<float> filterDeltaRMin_cuda(&seedFilterConfig.deltaRMin);
   CudaScalar<float> compatSeedWeight_cuda(&seedFilterConfig.compatSeedWeight);
-  CudaScalar<size_t> compatSeedLimit_cuda(&seedFilterConfig.compatSeedLimit);
-  CpuScalar<size_t> compatSeedLimit_cpu(&compatSeedLimit_cuda);
+  CudaScalar<std::size_t> compatSeedLimit_cuda(
+      &seedFilterConfig.compatSeedLimit);
+  CpuScalar<std::size_t> compatSeedLimit_cpu(&compatSeedLimit_cuda);
   //---------------------------------
   // Algorithm 0. Matrix Flattening
   //---------------------------------

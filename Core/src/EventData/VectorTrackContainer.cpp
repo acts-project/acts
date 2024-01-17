@@ -8,6 +8,9 @@
 
 #include "Acts/EventData/VectorTrackContainer.hpp"
 
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Utilities/HashedString.hpp"
+
 #include <iterator>
 
 namespace Acts {
@@ -17,6 +20,8 @@ namespace detail_vtc {
 VectorTrackContainerBase::VectorTrackContainerBase(
     const VectorTrackContainerBase& other)
     : m_tipIndex{other.m_tipIndex},
+      m_stemIndex{other.m_stemIndex},
+      m_particleHypothesis{other.m_particleHypothesis},
       m_params{other.m_params},
       m_cov{other.m_cov},
       m_referenceSurfaces{other.m_referenceSurfaces},
@@ -29,6 +34,7 @@ VectorTrackContainerBase::VectorTrackContainerBase(
   for (const auto& [key, value] : other.m_dynamic) {
     m_dynamic.insert({key, value->clone()});
   }
+  m_dynamicKeys = other.m_dynamicKeys;
   assert(checkConsistency());
 }
 }  // namespace detail_vtc
@@ -37,7 +43,9 @@ VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
   assert(checkConsistency());
 
   m_tipIndex.emplace_back(kInvalid);
+  m_stemIndex.emplace_back(kInvalid);
 
+  m_particleHypothesis.emplace_back(ParticleHypothesis::pion());
   m_params.emplace_back();
   m_cov.emplace_back();
   m_referenceSurfaces.emplace_back();
@@ -70,6 +78,7 @@ void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
   };
 
   erase(m_tipIndex);
+  erase(m_stemIndex);
 
   erase(m_params);
   erase(m_cov);
@@ -89,17 +98,16 @@ void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
   }
 }
 
-void VectorTrackContainer::copyDynamicFrom_impl(
-    IndexType dstIdx, const VectorTrackContainerBase& src, IndexType srcIdx) {
-  for (const auto& [key, value] : src.m_dynamic) {
-    auto it = m_dynamic.find(key);
-    if (it == m_dynamic.end()) {
-      throw std::invalid_argument{
-          "Destination container does not have matching dynamic column"};
-    }
-
-    it->second->copyFrom(dstIdx, *value, srcIdx);
+void VectorTrackContainer::copyDynamicFrom_impl(IndexType dstIdx,
+                                                HashedString key,
+                                                const std::any& srcPtr) {
+  auto it = m_dynamic.find(key);
+  if (it == m_dynamic.end()) {
+    throw std::invalid_argument{
+        "Destination container does not have matching dynamic column"};
   }
+
+  it->second->copyFrom(dstIdx, srcPtr);
 }
 
 void VectorTrackContainer::ensureDynamicColumns_impl(
@@ -113,7 +121,9 @@ void VectorTrackContainer::ensureDynamicColumns_impl(
 
 void VectorTrackContainer::reserve(IndexType size) {
   m_tipIndex.reserve(size);
+  m_stemIndex.reserve(size);
 
+  m_particleHypothesis.reserve(size);
   m_params.reserve(size);
   m_cov.reserve(size);
   m_referenceSurfaces.reserve(size);
@@ -134,7 +144,9 @@ void VectorTrackContainer::reserve(IndexType size) {
 
 void VectorTrackContainer::clear() {
   m_tipIndex.clear();
+  m_stemIndex.clear();
 
+  m_particleHypothesis.clear();
   m_params.clear();
   m_cov.clear();
   m_referenceSurfaces.clear();

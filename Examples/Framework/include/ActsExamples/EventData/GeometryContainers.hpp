@@ -192,8 +192,8 @@ template <typename T>
 inline Range<typename GeometryIdMultiset<T>::const_iterator>
 selectLowestNonZeroGeometryObject(const GeometryIdMultiset<T>& container,
                                   Acts::GeometryIdentifier geoId) {
-  assert((geoId.boundary() == 0u) and "Boundary component must be zero");
-  assert((geoId.approach() == 0u) and "Approach component must be zero");
+  assert((geoId.boundary() == 0u) && "Boundary component must be zero");
+  assert((geoId.approach() == 0u) && "Approach component must be zero");
 
   if (geoId.sensitive() != 0u) {
     return selectModule(container, geoId);

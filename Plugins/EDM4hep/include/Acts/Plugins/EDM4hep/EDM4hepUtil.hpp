@@ -13,11 +13,11 @@
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -40,7 +40,9 @@ static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 namespace detail {
 struct Parameters {
   Acts::ActsVector<6> values;
-  std::optional<Acts::ActsSquareMatrix<6>> covariance;
+  // Dummy default
+  ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
+  std::optional<Acts::BoundSquareMatrix> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
 
@@ -52,11 +54,11 @@ ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
 void unpackCovariance(const float* from, ActsSquareMatrix<6>& to);
 void packCovariance(const ActsSquareMatrix<6>& from, float* to);
 
-Parameters convertTrackParametersToEdm4hep(
-    const Acts::GeometryContext& gctx, double Bz,
-    const GenericBoundTrackParameters<SinglyCharged>& params);
+Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
+                                           double Bz,
+                                           const BoundTrackParameters& params);
 
-GenericBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
+BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
 }  // namespace detail
@@ -93,7 +95,7 @@ void writeTrack(
 
   ACTS_VERBOSE("Converting " << track.nTrackStates() << " track states");
 
-  for (const auto& state : track.trackStates()) {
+  for (const auto& state : track.trackStatesReversed()) {
     auto typeFlags = state.typeFlags();
     if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       continue;
@@ -102,10 +104,9 @@ void writeTrack(
     edm4hep::TrackState& trackState = outTrackStates.emplace_back();
     trackState.location = edm4hep::TrackState::AtOther;
 
-    // This makes the hard assumption that |q| = 1
-    GenericBoundTrackParameters<SinglyCharged> params{
-        state.referenceSurface().getSharedPtr(), state.parameters(),
-        state.covariance()};
+    BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
+                                state.parameters(), state.covariance(),
+                                track.particleHypothesis()};
 
     // Convert to LCIO track parametrization expected by EDM4hep
     detail::Parameters converted =
@@ -134,9 +135,9 @@ void writeTrack(
   auto& ipState = outTrackStates.emplace_back();
 
   // Convert the track parameters at the IP
-  GenericBoundTrackParameters<SinglyCharged> trackParams{
-      track.referenceSurface().getSharedPtr(), track.parameters(),
-      track.covariance()};
+  BoundTrackParameters trackParams{track.referenceSurface().getSharedPtr(),
+                                   track.parameters(), track.covariance(),
+                                   track.particleHypothesis()};
 
   // Convert to LCIO track parametrization expected by EDM4hep
   auto converted =
@@ -165,6 +166,7 @@ void writeTrack(
     to.addToTrackStates(trackState);
   }
 }
+
 template <typename track_container_t, typename track_state_container_t,
           template <typename> class holder_t>
 void readTrack(const edm4hep::Track& from,
@@ -204,8 +206,8 @@ void readTrack(const edm4hep::Track& from,
                           << " track states (including IP state)");
   // We write the trackstates out outside in, need to reverse iterate to get the
   // same order
-  for (size_t i = from.trackStates_size() - 1; i <= from.trackStates_size();
-       i--) {
+  for (std::size_t i = from.trackStates_size() - 1;
+       i <= from.trackStates_size(); i--) {
     auto trackState = from.getTrackStates(i);
     if (trackState.location == edm4hep::TrackState::AtIP) {
       ipState = trackState;
@@ -246,5 +248,6 @@ void readTrack(const edm4hep::Track& from,
   track.nDoF() = from.getNdf();
   track.nMeasurements() = track.nTrackStates();
 }
+
 }  // namespace EDM4hepUtil
 }  // namespace Acts

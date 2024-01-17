@@ -17,7 +17,7 @@ namespace detail {
 /// - Bound: out-of-bounds positions resolve to first/last bin
 /// respectively
 /// - Closed: out-of-bounds positions resolve to the outermost
-/// bin on the oppsite side
+/// bin on the opposite side
 enum class AxisBoundaryType { Open, Bound, Closed };
 
 /// Enum which determines the binning type of the axis

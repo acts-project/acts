@@ -32,8 +32,8 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
-#include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
-#include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
+#include "Acts/TrackFitting/GlobalChiSquareFitterError.hpp"
+#include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -45,6 +45,10 @@
 
 namespace Acts {
 namespace Experimental {
+
+namespace Gx2fConstants {
+constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
+}  // namespace Gx2fConstants
 
 /// Extension struct which holds delegates to customize the KF behavior
 template <typename traj_t>
@@ -78,12 +82,12 @@ struct Gx2FitterExtensions {
   /// Retrieves the associated surface from a source link
   SourceLinkSurfaceAccessor surfaceAccessor;
 
-  // TODO get an own Calibrator and Updater
   /// Default constructor which connects the default void components
   Gx2FitterExtensions() {
-    calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
-    updater.template connect<&voidKalmanUpdater<traj_t>>();
-    outlierFinder.template connect<&voidOutlierFinder<traj_t>>();
+    calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
+    updater.template connect<&detail::voidFitterUpdater<traj_t>>();
+    outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
+    surfaceAccessor.connect<&detail::voidSurfaceAccessor>();
   }
 };
 
@@ -104,6 +108,8 @@ struct Gx2FitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   /// @param nUpdateMax_ Max number of iterations for updating the parameters
+  /// @param zeroField_ Disables the QoP fit in case of missing B-field
+  /// @param relChi2changeCutOff_ Check for convergence (abort condition). Set to 0 to skip.
   Gx2FitterOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
                    std::reference_wrapper<const CalibrationContext> cctx,
@@ -113,7 +119,9 @@ struct Gx2FitterOptions {
                    bool eLoss = false,
                    const FreeToBoundCorrection& freeToBoundCorrection_ =
                        FreeToBoundCorrection(false),
-                   const size_t nUpdateMax_ = 5)
+                   const std::size_t nUpdateMax_ = 5,
+                   const bool zeroField_ = false,
+                   double relChi2changeCutOff_ = 1e-5)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -123,7 +131,9 @@ struct Gx2FitterOptions {
         multipleScattering(mScattering),
         energyLoss(eLoss),
         freeToBoundCorrection(freeToBoundCorrection_),
-        nUpdateMax(nUpdateMax_) {}
+        nUpdateMax(nUpdateMax_),
+        zeroField(zeroField_),
+        relChi2changeCutOff(relChi2changeCutOff_) {}
 
   /// Contexts are required and the options must not be default-constructible.
   Gx2FitterOptions() = delete;
@@ -153,8 +163,14 @@ struct Gx2FitterOptions {
   /// transformation
   FreeToBoundCorrection freeToBoundCorrection;
 
-  /// Max number of iterations during the fit
-  size_t nUpdateMax = 5;
+  /// Max number of iterations during the fit (abort condition)
+  std::size_t nUpdateMax = 5;
+
+  /// Disables the QoP fit in case of missing B-field
+  bool zeroField = false;
+
+  /// Check for convergence (abort condition). Set to 0 to skip.
+  double relChi2changeCutOff = 1e-7;
 };
 
 template <typename traj_t>
@@ -166,28 +182,28 @@ struct Gx2FitterResult {
   // This corresponds to the last measurement state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
-  size_t lastMeasurementIndex = Acts::MultiTrajectoryTraits::kInvalid;
+  std::size_t lastMeasurementIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   // This is the index of the 'tip' of the states stored in multitrajectory.
   // This corresponds to the last state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
-  size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
+  std::size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   // The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
 
   // Counter for states with non-outlier measurements
-  size_t measurementStates = 0;
+  std::size_t measurementStates = 0;
 
   // Counter for measurements holes
   // A hole correspond to a surface with an associated detector element with no
   // associated measurement. Holes are only taken into account if they are
   // between the first and last measurements.
-  size_t measurementHoles = 0;
+  std::size_t measurementHoles = 0;
 
-  // Counter for handled states
-  size_t processedStates = 0;
+  // Counter for handled measurements
+  std::size_t processedMeasurements = 0;
 
   // Indicator if track fitting has been done
   bool finished = false;
@@ -202,15 +218,77 @@ struct Gx2FitterResult {
   Result<void> result{Result<void>::success()};
 
   // collectors
-  std::vector<ActsVector<2>> collectorResiduals;
-  std::vector<ActsSquareMatrix<2>> collectorCovariance;
-  std::vector<BoundMatrix> collectorJacobians;
+  std::vector<ActsScalar> collectorResiduals;
+  std::vector<ActsScalar> collectorCovariances;
+  std::vector<BoundVector> collectorProjectedJacobians;
 
   BoundMatrix jacobianFromStart = BoundMatrix::Identity();
 
   // Count how many surfaces have been hit
-  size_t surfaceCount = 0;
+  std::size_t surfaceCount = 0;
 };
+
+/// Collector for the GX2F Actor
+/// The collector prepares each measurement for the actual fitting process. Each
+/// n-dimensional measurement is split into n 1-dimensional linearly independent
+/// measurements. Then the collector saves the following information:
+/// - Residual: Calculated from measurement and prediction
+/// - Covariance: The covariance of the measurement
+/// - Projected Jacobian: This implicitly contains the measurement type
+/// It also checks if the covariance is above a threshold, to detect and avoid
+/// too small covariances for a stable fit.
+///
+/// @tparam measDim Number of dimensions of the measurement
+/// @tparam traj_t The trajectory type
+///
+/// @param trackStateProxy is the current track state
+/// @param result is the mutable result/cache object
+/// @param logger a logger instance
+template <std::size_t measDim, typename traj_t>
+void collector(typename traj_t::TrackStateProxy& trackStateProxy,
+               Gx2FitterResult<traj_t>& result, const Logger& logger) {
+  auto predicted = trackStateProxy.predicted();
+  auto measurement = trackStateProxy.template calibrated<measDim>();
+  auto covarianceMeasurement =
+      trackStateProxy.template calibratedCovariance<measDim>();
+  // Project Jacobian and predicted measurements into the measurement dimensions
+  auto projJacobian = (trackStateProxy.projector()
+                           .template topLeftCorner<measDim, eBoundSize>() *
+                       result.jacobianFromStart)
+                          .eval();
+  auto projPredicted = (trackStateProxy.projector()
+                            .template topLeftCorner<measDim, eBoundSize>() *
+                        predicted)
+                           .eval();
+
+  ACTS_VERBOSE("Processing and collecting measurements in Actor:"
+               << "\n    Measurement:\t" << measurement.transpose()
+               << "\n    Predicted:\t" << predicted.transpose()
+               << "\n    Projector:\t" << trackStateProxy.effectiveProjector()
+               << "\n    Projected Jacobian:\t" << projJacobian
+               << "\n    Covariance Measurements:\t" << covarianceMeasurement);
+
+  // Collect residuals, covariances, and projected jacobians
+  for (std::size_t i = 0; i < measDim; i++) {
+    if (covarianceMeasurement(i, i) < 1e-10) {
+      ACTS_WARNING("Invalid covariance of measurement: cov(" << i << "," << i
+                                                             << ") ~ 0")
+      continue;
+    }
+
+    result.collectorResiduals.push_back(measurement[i] - projPredicted[i]);
+    result.collectorCovariances.push_back(covarianceMeasurement(i, i));
+    result.collectorProjectedJacobians.push_back(projJacobian.row(i));
+
+    ACTS_VERBOSE("    Splitting the measurement:"
+                 << "\n        Residual:\t" << measurement[i] - projPredicted[i]
+                 << "\n        Covariance:\t" << covarianceMeasurement(i, i)
+                 << "\n        Projected Jacobian:\t" << projJacobian.row(i));
+  }
+}
+
+BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
+                                 const BoundVector& bVector);
 
 /// Global Chi Square fitter (GX2F) implementation.
 ///
@@ -291,6 +369,13 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
+    /// The current iteration of the fitter.
+    /// The variable is updated in fit().
+    /// The actor needs to know the current iteration for adding new
+    /// trackStates. During the first iteration, each measurement surfaces will
+    /// be added to the track.
+    std::size_t nUpdate = Acts::MultiTrajectoryTraits::kInvalid;
+
     /// @brief Gx2f actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagator state
@@ -312,92 +397,131 @@ class Gx2Fitter {
         return;
       }
 
-      // Add the measurement surface as external surface to navigator.
-      // We will try to hit those surface by ignoring boundary checks.
-      if constexpr (not isDirectNavigator) {
-        if (result.processedStates == 0) {
-          for (auto measurementIt = inputMeasurements->begin();
-               measurementIt != inputMeasurements->end(); measurementIt++) {
-            navigator.insertExternalSurface(state.navigation,
-                                            measurementIt->first);
-          }
-        }
-      }
-
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
       //      std::string direction = state.stepping.navDir.toString();
       if (surface != nullptr) {
         ++result.surfaceCount;
-        ACTS_VERBOSE("Measurement surface " << surface->geometryId()
-                                            << " detected.");
+        ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
 
         // check if measurement surface
         auto sourcelink_it = inputMeasurements->find(surface->geometryId());
 
         if (sourcelink_it != inputMeasurements->end()) {
+          ACTS_VERBOSE("Measurement surface " << surface->geometryId()
+                                              << " detected.");
+
+          // Transport the covariance to the surface
           stepper.transportCovarianceToBound(state.stepping, *surface,
                                              freeToBoundCorrection);
-          auto res = stepper.boundState(state.stepping, *surface, false,
-                                        freeToBoundCorrection);
-          if (!res.ok()) {
-            std::cout << "dbgActor: res = stepper.boundState res not ok"
-                      << std::endl;
-            return;
-          }
-          auto& [boundParams, jacobian, pathLength] = *res;
-          result.jacobianFromStart = jacobian * result.jacobianFromStart;
 
-          // add a full TrackState entry multi trajectory
-          // (this allocates storage for all components, we will set them later)
-          auto fittedStates = *result.fittedStates;
-          const auto newTrackIndex = fittedStates.addTrackState(
-              TrackStatePropMask::All, result.lastTrackIndex);
+          ACTS_VERBOSE(
+              "Actor - indices before processing:"
+              << "\n    "
+              << "result.lastMeasurementIndex: " << result.lastMeasurementIndex
+              << "\n    "
+              << "result.lastTrackIndex: " << result.lastTrackIndex << "\n    "
+              << "result.fittedStates->size(): " << result.fittedStates->size())
+
+          // TODO generalize the update of the currentTrackIndex
+          auto& fittedStates = *result.fittedStates;
+
+          // Mask for the track states. We don't need Smoothed and Filtered
+          TrackStatePropMask mask =
+              ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered);
+
+          ACTS_VERBOSE("    processSurface: addTrackState");
+
+          // Add a <mask> TrackState entry multi trajectory. This allocates
+          // storage for all components, which we will set later.
+          std::size_t currentTrackIndex =
+              fittedStates.addTrackState(mask, result.lastTrackIndex);
 
           // now get track state proxy back
-          auto trackStateProxy = fittedStates.getTrackState(newTrackIndex);
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-          // assign the source link to the track state
-          trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
+          typename traj_t::TrackStateProxy trackStateProxy =
+              fittedStates.getTrackState(currentTrackIndex);
 
-          // Fill the track state
-          trackStateProxy.predicted() = std::move(boundParams.parameters());
-          auto predicted = trackStateProxy.predicted();
+          // Set the trackStateProxy components with the state from the ongoing
+          // propagation
+          {
+            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+            // Bind the transported state to the current surface
+            auto res = stepper.boundState(state.stepping, *surface, false,
+                                          freeToBoundCorrection);
+            if (!res.ok()) {
+              result.result = res.error();
+              return;
+            }
+            auto& [boundParams, jacobian, pathLength] = *res;
+
+            // Fill the track state
+            trackStateProxy.predicted() = std::move(boundParams.parameters());
+            if (boundParams.covariance().has_value()) {
+              trackStateProxy.predictedCovariance() =
+                  std::move(*boundParams.covariance());
+            }
+
+            trackStateProxy.jacobian() = std::move(jacobian);
+            trackStateProxy.pathLength() = std::move(pathLength);
+          }
 
           // We have predicted parameters, so calibrate the uncalibrated input
           // measurement
           extensions.calibrator(state.geoContext, *calibrationContext,
                                 sourcelink_it->second, trackStateProxy);
 
-          const size_t measdimPlaceholder = 2;
-          auto measurement =
-              trackStateProxy.template calibrated<measdimPlaceholder>();
-          auto covarianceMeasurement =
-              trackStateProxy
-                  .template calibratedCovariance<measdimPlaceholder>();
-          // calculate residuals and return with covariances and jacobians
-          ActsVector<2> residual;
-          for (long i = 0; i < measurement.size(); i++) {
-            residual[i] = measurement[i] - predicted[i];
-          }
-          ACTS_VERBOSE("Measurement in Actor:\n" << measurement);
-          result.collectorResiduals.push_back(residual);
-          result.collectorCovariance.push_back(covarianceMeasurement);
-
-          if (boundParams.covariance().has_value()) {
-            trackStateProxy.predictedCovariance() =
-                std::move(*boundParams.covariance());
+          // Get and set the type flags
+          auto typeFlags = trackStateProxy.typeFlags();
+          typeFlags.set(TrackStateFlag::ParameterFlag);
+          if (surface->surfaceMaterial() != nullptr) {
+            typeFlags.set(TrackStateFlag::MaterialFlag);
           }
 
-          result.collectorJacobians.push_back(result.jacobianFromStart);
+          result.jacobianFromStart =
+              trackStateProxy.jacobian() * result.jacobianFromStart;
 
-          trackStateProxy.jacobian() = std::move(jacobian);
-          trackStateProxy.pathLength() = std::move(pathLength);
+          // Collect:
+          // - Residuals
+          // - Covariances
+          // - ProjectedJacobians
+          if (trackStateProxy.calibratedSize() == 1) {
+            collector<1>(trackStateProxy, result, *actorLogger);
+          } else if (trackStateProxy.calibratedSize() == 2) {
+            collector<2>(trackStateProxy, result, *actorLogger);
+          } else {
+            ACTS_WARNING(
+                "Only measurements of 1 and 2 dimensions are implemented yet.");
+          }
+
+          // Set the measurement type flag
+          typeFlags.set(TrackStateFlag::MeasurementFlag);
+          // We count the processed measurement
+          ++result.processedMeasurements;
+          ACTS_VERBOSE("Actor - indices after processing, before over writing:"
+                       << "\n    "
+                       << "result.lastMeasurementIndex: "
+                       << result.lastMeasurementIndex << "\n    "
+                       << "trackStateProxy.index(): " << trackStateProxy.index()
+                       << "\n    "
+                       << "result.lastTrackIndex: " << result.lastTrackIndex
+                       << "\n    "
+                       << "currentTrackIndex: " << currentTrackIndex)
+          result.lastMeasurementIndex = currentTrackIndex;
+          result.lastTrackIndex = currentTrackIndex;
+        } else {
+          ACTS_INFO("Actor: This case is not implemented yet")
         }
       }
+      ACTS_DEBUG("result.processedMeasurements: "
+                 << result.processedMeasurements << "\n"
+                 << "inputMeasurements.size()" << inputMeasurements->size())
+      if (result.processedMeasurements >= inputMeasurements->size()) {
+        ACTS_INFO("Actor: finish: all measurements found.");
+        result.finished = true;
+      }
 
-      if (result.surfaceCount > 11) {
+      if (result.surfaceCount > 900) {
         ACTS_INFO("Actor: finish due to limit. Result might be garbage.");
         result.finished = true;
       }
@@ -416,7 +540,7 @@ class Gx2Fitter {
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
-      if (!result.result.ok() or result.finished) {
+      if (!result.result.ok() || result.finished) {
         return true;
       }
       return false;
@@ -478,12 +602,17 @@ class Gx2Fitter {
 
     using PropagatorOptions = Acts::PropagatorOptions<Actors, Aborters>;
 
-    const size_t reducedMatrixSize = 4;
-    Acts::CurvilinearTrackParameters params = sParameters;
+    start_parameters_t params = sParameters;
     BoundVector deltaParams = BoundVector::Zero();
     double chi2sum = 0;
+    double oldChi2sum = std::numeric_limits<double>::max();
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
+
+    // Create an index of the 'tip' of the track stored in multitrajectory. It
+    // is needed outside the update loop. It will be updated with each iteration
+    // and used for the final track
+    std::size_t tipIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
     ACTS_VERBOSE("params:\n" << params);
 
@@ -492,7 +621,9 @@ class Gx2Fitter {
 
     // Iterate the fit and improve result. Abort after n steps or after
     // convergence
-    for (size_t nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
+    // nUpdate is initialized outside to save its state for the track
+    std::size_t nUpdate = 0;
+    for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       ACTS_VERBOSE("nUpdate = " << nUpdate + 1 << "/"
                                 << gx2fOptions.nUpdateMax);
 
@@ -510,6 +641,7 @@ class Gx2Fitter {
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
+      gx2fActor.nUpdate = nUpdate;
 
       typename propagator_t::template action_list_t_result_t<
           CurvilinearTrackParameters, Actors>
@@ -517,51 +649,42 @@ class Gx2Fitter {
 
       auto& r = inputResult.template get<Gx2FitterResult<traj_t>>();
 
+      // Clear the track container. It could be more performant to update the
+      // existing states, but this needs some more thinking.
+      trackContainer.clear();
       r.fittedStates = &trackContainer.trackStateContainer();
       // propagate with params and return jacobians and residuals
-      auto result = m_propagator.template propagate(params, propagatorOptions,
-                                                    std::move(inputResult));
+      auto result = m_propagator.template propagate(
+          params, propagatorOptions, true, std::move(inputResult));
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
       auto& propRes = *result;
-      auto gx2fResult = std::move(propRes.template get<GX2FResult>());
+      GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
       ACTS_VERBOSE("gx2fResult.collectorResiduals.size() = "
                    << gx2fResult.collectorResiduals.size());
-      ACTS_VERBOSE("gx2fResult.collectorCovariance.size() = "
-                   << gx2fResult.collectorCovariance.size());
-      ACTS_VERBOSE("gx2fResult.collectorJacobians.size() = "
-                   << gx2fResult.collectorJacobians.size());
+      ACTS_VERBOSE("gx2fResult.collectorCovariances.size() = "
+                   << gx2fResult.collectorCovariances.size());
+      ACTS_VERBOSE("gx2fResult.collectorProjectedJacobians.size() = "
+                   << gx2fResult.collectorProjectedJacobians.size());
 
       chi2sum = 0;
       aMatrix = BoundMatrix::Zero();
       bVector = BoundVector::Zero();
 
       // TODO generalize for non-2D measurements
-      for (size_t iMeas = 0; iMeas < gx2fResult.collectorResiduals.size();
+      for (std::size_t iMeas = 0; iMeas < gx2fResult.collectorResiduals.size();
            iMeas++) {
-        ActsMatrix<2, eBoundSize> proj;
-
-        for (size_t i_ = 0; i_ < 2; i_++) {
-          for (size_t j_ = 0; j_ < eBoundSize; j_++) {
-            proj(i_, j_) = 0;
-          }
-        }
-        proj(0, 0) = 1;
-        proj(1, 1) = 1;
-
         const auto ri = gx2fResult.collectorResiduals[iMeas];
-        const auto covi = gx2fResult.collectorCovariance[iMeas];
-        const auto coviInv = covi.inverse();
+        const auto covi = gx2fResult.collectorCovariances[iMeas];
         const auto projectedJacobian =
-            proj * gx2fResult.collectorJacobians[iMeas];
+            gx2fResult.collectorProjectedJacobians[iMeas];
 
-        const double chi2meas = (ri.transpose() * coviInv * ri).eval()(0);
+        const double chi2meas = ri / covi * ri;
         const BoundMatrix aMatrixMeas =
-            projectedJacobian.transpose() * coviInv * projectedJacobian;
-        const BoundVector bVectorMeas =
-            projectedJacobian.transpose() * coviInv * ri;
+            projectedJacobian * projectedJacobian.transpose() / covi;
+        const BoundVector bVectorMeas = projectedJacobian / covi * ri;
 
         chi2sum += chi2meas;
         aMatrix += aMatrixMeas;
@@ -569,58 +692,103 @@ class Gx2Fitter {
       }
 
       // calculate delta params [a] * delta = b
-      deltaParams = BoundVector::Zero();
-      const ActsVector<reducedMatrixSize> deltaParamsReduced =
-          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-              .colPivHouseholderQr()
-              .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+      deltaParams =
+          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
 
-      for (size_t idp = 0; idp < reducedMatrixSize; idp++) {
-        deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
+      ACTS_VERBOSE("aMatrix:\n"
+                   << aMatrix << "\n"
+                   << "bVector:\n"
+                   << bVector << "\n"
+                   << "deltaParams:\n"
+                   << deltaParams << "\n"
+                   << "oldChi2sum = " << oldChi2sum << "\n"
+                   << "chi2sum = " << chi2sum);
+
+      tipIndex = gx2fResult.lastMeasurementIndex;
+
+      if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
+          (std::abs(chi2sum / oldChi2sum - 1) <
+           gx2fOptions.relChi2changeCutOff)) {
+        ACTS_VERBOSE("Abort with relChi2changeCutOff after "
+                     << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
+                     << " iterations.");
+        break;
       }
 
-      ACTS_VERBOSE("chi2sum = " << chi2sum);
-      ACTS_VERBOSE("aMatrix:\n" << aMatrix);
-      ACTS_VERBOSE("bVector:\n" << bVector);
-      ACTS_VERBOSE("deltaParams:\n" << deltaParams);
+      // TODO investigate further
+      if (chi2sum > oldChi2sum + 1e-5) {
+        ACTS_DEBUG("chi2 not converging monotonically");
+      }
 
-      // TODO check delta params and abort
-      // similar to:
-      // if (sum(delta_params) < 1e-3) {
-      //   break;
-      // }
+      oldChi2sum = chi2sum;
     }
     ACTS_DEBUG("Finished to iterate");
+    ACTS_VERBOSE("final params:\n" << params);
     /// Finish Fitting /////////////////////////////////////////////////////////
 
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
-    if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-            .determinant() != 0) {
-      fullCovariancePredicted
-          .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-              .inverse();
-    } else if (gx2fOptions.nUpdateMax > 0) {
-      // TODO
-      std::cout << "det(a) == 0. This shouldn't happen. Implement real ERROR"
-                << std::endl;
+    bool aMatrixIsInvertible = false;
+    if (gx2fOptions.zeroField) {
+      constexpr std::size_t reducedMatrixSize = 4;
+
+      auto safeReducedCovariance = safeInverse(
+          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+      if (safeReducedCovariance) {
+        aMatrixIsInvertible = true;
+        fullCovariancePredicted
+            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            *safeReducedCovariance;
+      }
+    } else {
+      constexpr std::size_t reducedMatrixSize = 5;
+
+      auto safeReducedCovariance = safeInverse(
+          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+      if (safeReducedCovariance) {
+        aMatrixIsInvertible = true;
+        fullCovariancePredicted
+            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            *safeReducedCovariance;
+      }
+    }
+
+    if (!aMatrixIsInvertible && gx2fOptions.nUpdateMax > 0) {
+      ACTS_ERROR("aMatrix is not invertible.");
+      return Experimental::GlobalChiSquareFitterError::AIsNotInvertible;
+    }
+
+    ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
+
+    if (!trackContainer.hasColumn(
+            Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
+      trackContainer.template addColumn<std::size_t>("Gx2fnUpdateColumn");
     }
 
     // Prepare track for return
     auto track = trackContainer.getTrack(trackContainer.addTrack());
+    track.tipIndex() = tipIndex;
     track.parameters() = params.parameters();
     track.covariance() = fullCovariancePredicted;
-    // TODO track.tipIndex() = gx2fResult.lastMeasurementIndex;
-    // TODO track.setReferenceSurface(params.referenceSurface().getSharedPtr());
-    // TODO track.nMeasurements() = gx2fResult.measurementStates;
-    // TODO track.nHoles() = gx2fResult.measurementHoles;
-    calculateTrackQuantities(
-        track);  // TODO write test for calculateTrackQuantities
+    track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+
+    if (trackContainer.hasColumn(
+            Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
+      ACTS_DEBUG("Add nUpdate to track")
+      track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
+    }
+
+    // TODO write test for calculateTrackQuantities
+    calculateTrackQuantities(track);
+
+    // Set the chi2sum for the track summary manually, since we don't calculate
+    // it for each state
+    track.chi2() = chi2sum;
 
     // Return the converted Track
     return track;
   }
 };
+
 }  // namespace Experimental
 }  // namespace Acts

@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -77,15 +75,10 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     if (!m_cfg.inputAssociatedTruthParticles.empty()) {
       m_inputAssociatedTruthParticles.initialize(
           m_cfg.inputAssociatedTruthParticles);
-      if (!m_cfg.inputTrackParameters.empty()) {
-        m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
-      } else {
-        m_inputTrajectories.initialize(m_cfg.inputTrajectories);
-      }
     } else {
       m_inputMeasurementParticlesMap.initialize(
           m_cfg.inputMeasurementParticlesMap);
-      m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+      m_inputTracks.initialize(m_cfg.inputTracks);
     }
   }
 
@@ -93,7 +86,7 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + path);
+    throw std::ios_base::failure("Could not open '" + path + "'");
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
@@ -101,6 +94,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     throw std::bad_alloc();
   } else {
     // I/O parameters.
+    m_outputTree->Branch("event_nr", &m_eventNr);
+
     // Branches related to the 4D vertex position
     m_outputTree->Branch("truthX", &m_truthX);
     m_outputTree->Branch("truthY", &m_truthY);
@@ -160,6 +155,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("trk_pullThetaFitted", &m_pullThetaFitted);
     m_outputTree->Branch("trk_pullQOverP", &m_pullQOverP);
     m_outputTree->Branch("trk_pullQOverPFitted", &m_pullQOverPFitted);
+
+    m_outputTree->Branch("trk_weight", &m_trkWeight);
 
     m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
     m_outputTree->Branch("nTracksRecoVtx", &m_nTracksOnRecoVertex);
@@ -264,26 +261,23 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   ACTS_VERBOSE("Total number of detector-accepted truth primary vertices : "
                << m_nVtxDetAcceptance);
 
-  std::vector<Acts::BoundTrackParameters> trackParameters;
+  TrackParametersContainer trackParameters;
   std::vector<SimParticle> associatedTruthParticles;
+
+  // Get the event number
+  m_eventNr = ctx.eventNumber;
 
   // The i-th entry in associatedTruthParticles corresponds to the i-th entry in
   // trackParameters. If we know the truth particles associated to the track
   // parameters a priori:
   if (m_cfg.useTracks) {
     if (!m_cfg.inputAssociatedTruthParticles.empty()) {
-      if (!m_cfg.inputTrackParameters.empty()) {
-        trackParameters = m_inputTrackParameters(ctx);
-      } else {
-        const auto& inputTrajectories = m_inputTrajectories(ctx);
-
-        for (const auto& trajectories : inputTrajectories) {
-          for (auto tip : trajectories.tips()) {
-            if (!trajectories.hasTrackParameters(tip)) {
-              continue;
-            }
-            trackParameters.push_back(trajectories.trackParameters(tip));
-          }
+      for (const auto& track : m_inputTracks(ctx)) {
+        if (!track.hasReferenceSurface()) {
+          ACTS_ERROR("Track " << track.tipIndex()
+                              << " has no reference surface");
+        } else {
+          trackParameters.push_back(track.createParametersAtReference());
         }
       }
 
@@ -320,47 +314,47 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // case. Equivalently, one could say that not all tracksAtVertex will be
     // assigned to a truth particle.
     else {
-      // Get active tips
-      const auto& inputTrajectories = m_inputTrajectories(ctx);
-
       std::vector<ParticleHitCount> particleHitCounts;
 
       const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
-      for (const auto& trajectories : inputTrajectories) {
-        for (auto tip : trajectories.tips()) {
-          if (!trajectories.hasTrackParameters(tip)) {
-            continue;
-          }
-
-          identifyContributingParticles(hitParticlesMap, trajectories, tip,
-                                        particleHitCounts);
-          ActsFatras::Barcode majorityParticleId =
-              particleHitCounts.front().particleId;
-          size_t nMajorityHits = particleHitCounts.front().hitCount;
-
-          auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-              trajectories.multiTrajectory(), tip);
-
-          if (nMajorityHits * 1. / trajState.nMeasurements <
-              m_cfg.truthMatchProbMin) {
-            continue;
-          }
-
-          auto it = std::find_if(allTruthParticles.begin(),
-                                 allTruthParticles.end(), [&](const auto& tp) {
-                                   return tp.particleId() == majorityParticleId;
-                                 });
-
-          if (it == allTruthParticles.end()) {
-            continue;
-          }
-
-          const auto& majorityParticle = *it;
-          trackParameters.push_back(trajectories.trackParameters(tip));
-          associatedTruthParticles.push_back(majorityParticle);
+      for (const auto& track : m_inputTracks(ctx)) {
+        if (!track.hasReferenceSurface()) {
+          continue;
         }
+
+        identifyContributingParticles(hitParticlesMap, track,
+                                      particleHitCounts);
+        ActsFatras::Barcode majorityParticleId =
+            particleHitCounts.front().particleId;
+        std::size_t nMajorityHits = particleHitCounts.front().hitCount;
+
+        if (nMajorityHits * 1. / track.nMeasurements() <
+            m_cfg.truthMatchProbMin) {
+          continue;
+        }
+
+        auto it = std::find_if(allTruthParticles.begin(),
+                               allTruthParticles.end(), [&](const auto& tp) {
+                                 return tp.particleId() == majorityParticleId;
+                               });
+
+        if (it == allTruthParticles.end()) {
+          continue;
+        }
+
+        trackParameters.push_back(track.createParametersAtReference());
+        const auto& majorityParticle = *it;
+        associatedTruthParticles.push_back(majorityParticle);
       }
+    }
+
+    if (trackParameters.size() != associatedTruthParticles.size()) {
+      ACTS_ERROR(
+          "Number of track parameters and associated truth particles do not "
+          "match. ("
+          << trackParameters.size() << " != " << associatedTruthParticles.size()
+          << ").");
     }
   } else {
     // if not using tracks, then all truth particles
@@ -416,7 +410,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         for (std::size_t i = 0; i < trackParameters.size(); ++i) {
           const auto& params = trackParameters[i].parameters();
 
-          if (origTrack.parameters() == params) {
+          if (origTrack.parameters() == params &&
+              trk.trackWeight > m_cfg.minTrkWeight) {
             // We expect that the i-th associated truth particle corresponds to
             // the i-th track parameters
             const auto& particle = associatedTruthParticles[i];
@@ -461,11 +456,18 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }
     }
 
+    // Get number of contributing tracks (i.e., tracks with a weight above
+    // threshold)
+    auto weightHighEnough = [this](const auto& trkAtVtx) {
+      return trkAtVtx.trackWeight > m_cfg.minTrkWeight;
+    };
+    unsigned int nTracksOnRecoVertex =
+        std::count_if(tracksAtVtx.begin(), tracksAtVtx.end(), weightHighEnough);
     // Match reconstructed and truth vertex if the tracks of the truth vertex
     // make up at least minTrackVtxMatchFraction of the tracks at the
     // reconstructed vertex.
     double trackVtxMatchFraction =
-        (m_cfg.useTracks ? (double)fmap[maxOccurrenceId] / tracksAtVtx.size()
+        (m_cfg.useTracks ? (double)fmap[maxOccurrenceId] / nTracksOnRecoVertex
                          : 1.0);
     if (trackVtxMatchFraction > m_cfg.minTrackVtxMatchFraction) {
       int count = 0;
@@ -501,6 +503,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       auto& innerPullPhiFitted = m_pullPhiFitted.emplace_back();
       auto& innerPullThetaFitted = m_pullThetaFitted.emplace_back();
       auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
+
+      auto& innerTrkWeight = m_trkWeight.emplace_back();
 
       for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
         const auto& particle = associatedTruthParticles[j];
@@ -590,7 +594,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreeTime));
 
             m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
-            m_nTracksOnRecoVertex.push_back(tracksAtVtx.size());
+            m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
 
             m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
           }
@@ -602,21 +606,22 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Perigee at the true vertex position
           const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
               Acts::Surface::makeShared<Acts::PerigeeSurface>(truePos.head(3));
-          // Setting the geometry/magnetic field context context for the event
+          // Setting the geometry/magnetic field context for the event
           Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
           // Lambda for propagating the tracks to the PCA
           auto propagateToVtx = [&](const auto& params)
-              -> std::optional<
-                  Acts::GenericBoundTrackParameters<Acts::SinglyCharged>> {
-            auto intersection = perigeeSurface->intersect(
-                ctx.geoContext, params.position(ctx.geoContext),
-                params.direction(), false);
+              -> std::optional<Acts::BoundTrackParameters> {
+            auto intersection =
+                perigeeSurface
+                    ->intersect(ctx.geoContext, params.position(ctx.geoContext),
+                                params.direction(), Acts::BoundaryCheck(false))
+                    .closest();
             pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
-                intersection.intersection.pathLength);
+                intersection.pathLength());
 
             auto result =
                 propagator->propagate(params, *perigeeSurface, pOptions);
-            if (not result.ok()) {
+            if (!result.ok()) {
               ACTS_ERROR("Propagation to true vertex position failed.");
               return std::nullopt;
             }
@@ -630,6 +635,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // We save the momenta if we find a match.
           for (const auto& trk : tracksAtVtx) {
             if (trk.originalParams->parameters() == params) {
+              innerTrkWeight.push_back(trk.trackWeight);
               const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
               trueMom.head(2) = Acts::makePhiThetaFromDirection(trueUnitDir);
@@ -673,7 +679,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
               // Save track parameters after the vertex fit
               const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
-              if (paramsAtVtxFitted != std::nullopt) {
+              if (paramsAtVtxFitted != std::nullopt &&
+                  trk.trackWeight > m_cfg.minTrkWeight) {
                 Acts::ActsVector<3> recoMomFitted =
                     paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
                 const Acts::ActsMatrix<3, 3>& momCovFitted =
@@ -763,6 +770,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_pullThetaFitted.clear();
   m_pullQOverP.clear();
   m_pullQOverPFitted.clear();
+
+  m_trkWeight.clear();
 
   m_nTracksOnTruthVertex.clear();
   m_nTracksOnRecoVertex.clear();

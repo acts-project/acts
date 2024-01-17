@@ -30,34 +30,35 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
 Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                        const CylinderSurface& other,
                                        const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+    : GeometryObject(),
+      RegularSurface(gctx, other, shift),
+      m_bounds(other.m_bounds) {}
 
 Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
                                        double radius, double halfz,
                                        double halfphi, double avphi,
                                        double bevelMinZ, double bevelMaxZ)
-    : Surface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const CylinderBounds>(
           radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
-    const Acts::DetectorElementBase& detelement)
-    : Surface(detelement), m_bounds(std::move(cbounds)) {
+    const DetectorElementBase& detelement)
+    : RegularSurface(detelement), m_bounds(std::move(cbounds)) {
   /// surfaces representing a detector element must have bounds
-  assert(cbounds);
+  throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    const Transform3& transform,
-    const std::shared_ptr<const CylinderBounds>& cbounds)
-    : Surface(transform), m_bounds(cbounds) {
-  throw_assert(cbounds, "CylinderBounds must not be nullptr");
+    const Transform3& transform, std::shared_ptr<const CylinderBounds> cbounds)
+    : RegularSurface(transform), m_bounds(std::move(cbounds)) {
+  throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
 
 Acts::CylinderSurface& Acts::CylinderSurface::operator=(
@@ -108,8 +109,7 @@ Acts::Surface::SurfaceType Acts::CylinderSurface::type() const {
 }
 
 Acts::Vector3 Acts::CylinderSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*direction*/) const {
+    const GeometryContext& gctx, const Vector2& lposition) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -119,7 +119,7 @@ Acts::Vector3 Acts::CylinderSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::CylinderSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/, double tolerance) const {
+    double tolerance) const {
   double inttol = tolerance;
   if (tolerance == s_onSurfaceTolerance) {
     // transform default value!
@@ -147,7 +147,7 @@ Acts::Vector3 Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2& lposition) const {
   double phi = lposition[Acts::eBoundLoc0] / m_bounds->get(CylinderBounds::eR);
   Vector3 localNormal(cos(phi), sin(phi), 0.);
-  return Vector3(transform(gctx).matrix().block<3, 3>(0, 0) * localNormal);
+  return transform(gctx).linear() * localNormal;
 }
 
 Acts::Vector3 Acts::CylinderSurface::normal(
@@ -157,7 +157,7 @@ Acts::Vector3 Acts::CylinderSurface::normal(
   Vector3 pos3D = sfTransform.inverse() * position;
   // set the z coordinate to 0
   pos3D.z() = 0.;
-  // normalize and rotate back into global if needed
+  // normalize and rotate back into global
   return sfTransform.linear() * pos3D.normalized();
 }
 
@@ -174,7 +174,7 @@ const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   auto ctrans = transform(gctx);
 
   // Prepare vertices and faces
@@ -217,7 +217,7 @@ Acts::detail::RealQuadraticEquation Acts::CylinderSurface::intersectionSolver(
   return detail::RealQuadraticEquation(a, b, c);
 }
 
-Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
@@ -228,7 +228,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return SurfaceIntersection();
+    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
   }
 
   // Check the validity of the first solution
@@ -242,11 +242,11 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
       [&](const Vector3& solution,
           Intersection3D::Status status) -> Intersection3D::Status {
     // No check to be done, return current status
-    if (!bcheck) {
+    if (!bcheck.isEnabled()) {
       return status;
     }
     const auto& cBounds = bounds();
-    if (cBounds.coversFullAzimuth() and
+    if (cBounds.coversFullAzimuth() &&
         bcheck.type() == BoundaryCheck::Type::eAbsolute) {
       // Project out the current Z value via local z axis
       // Built-in local to global for speed reasons
@@ -267,9 +267,8 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   status1 = boundaryCheck(solution1, status1);
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
-  SurfaceIntersection cIntersection(first, this);
   if (qe.solutions == 1) {
-    return cIntersection;
+    return {{first, first}, this};
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
@@ -279,21 +278,11 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   // Check first solution for boundary compatibility
   status2 = boundaryCheck(solution2, status2);
   Intersection3D second(solution2, qe.second, status2);
-  // Check one if its valid or neither is valid
-  bool check1 = status1 != Intersection3D::Status::missed or
-                (status1 == Intersection3D::Status::missed and
-                 status2 == Intersection3D::Status::missed);
-  // Check and (eventually) go with the first solution
-  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
-      status2 == Intersection3D::Status::missed) {
-    // And add the alternative
-    cIntersection.alternative = second;
-  } else {
-    // And add the alternative
-    cIntersection.alternative = first;
-    cIntersection.intersection = second;
+  // Order based on path length
+  if (first.pathLength() <= second.pathLength()) {
+    return {{first, second}, this};
   }
-  return cIntersection;
+  return {{second, first}, this};
 }
 
 Acts::AlignmentToPathMatrix Acts::CylinderSurface::alignmentToPathDerivative(

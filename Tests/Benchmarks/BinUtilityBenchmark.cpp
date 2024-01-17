@@ -70,9 +70,9 @@ int main(int argc, char* argv[]) {
   Acts::Vector3 low = Acts::Vector3(1.5, 0., 0.);
   Acts::Vector3 high = Acts::Vector3(4.5, 0., 0.);
 
-  size_t st = 0;
-  size_t gt = 0;
-  size_t num_iters = 0;
+  std::size_t st = 0;
+  std::size_t gt = 0;
+  std::size_t num_iters = 0;
   const auto bin_utility_benchmark_small = Acts::Test::microBenchmark(
       [&] {
         auto bin = (num_iters % 2) != 0u ? small.bin(low) : small.bin(high);

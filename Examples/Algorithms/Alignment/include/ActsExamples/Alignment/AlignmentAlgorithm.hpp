@@ -50,7 +50,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
   /// Create the alignment function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
+  /// contains shared_ptr anyway.
   static std::shared_ptr<AlignmentFunction> makeAlignmentFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
@@ -77,9 +77,9 @@ class AlignmentAlgorithm final : public IAlgorithm {
     /// Cutoff value for average chi2/ndf
     double chi2ONdfCutOff = 0.10;
     /// Cutoff value for delta of average chi2/ndf within a couple of iterations
-    std::pair<size_t, double> deltaChi2ONdfCutOff = {10, 0.00001};
+    std::pair<std::size_t, double> deltaChi2ONdfCutOff = {10, 0.00001};
     /// Maximum number of iterations
-    size_t maxNumIterations = 100;
+    std::size_t maxNumIterations = 100;
     /// Number of tracks to be used for alignment
     int maxNumTracks = -1;
   };
@@ -93,7 +93,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
   /// Framework execute method of the alignment algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
-  /// @return a process code to steer the algporithm flow
+  /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const override;
 

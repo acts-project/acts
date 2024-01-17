@@ -94,7 +94,7 @@ class GroupBy {
     }
     friend constexpr bool operator!=(const GroupIterator& lhs,
                                      const GroupEndIterator& rhs) {
-      return not(lhs == rhs);
+      return !(lhs == rhs);
     }
   };
 

@@ -103,6 +103,10 @@ def main(
             h = histograms.get(col)
             values = awkward.flatten(df[col], axis=None)
 
+            if len(values) == 0:
+                print(f"WARNING: Branch '{col}' is empty. Skipped.")
+                continue
+
             if h is None:
                 # try to find config
                 found = None

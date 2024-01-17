@@ -59,8 +59,6 @@ class VertexFitterAlgorithm final : public IAlgorithm {
   struct Config {
     /// Optional. Input track parameters collection
     std::string inputTrackParameters;
-    /// Optional. Input trajectories container.
-    std::string inputTrajectories;
     /// Input proto vertex collection
     std::string inputProtoVertices;
     /// Output vertex collection
@@ -94,11 +92,8 @@ class VertexFitterAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
-
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 
   ReadDataHandle<ProtoVertexContainer> m_inputProtoVertices{
       this, "InputProtoVertices"};

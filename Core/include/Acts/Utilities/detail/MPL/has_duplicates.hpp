@@ -32,7 +32,7 @@ struct has_duplicates<first, second, others...> {
   static constexpr bool _second = has_duplicates<second, others...>::value;
 
  public:
-  static constexpr bool value = _first or _second;
+  static constexpr bool value = _first || _second;
 };
 
 template <typename first, typename... others>

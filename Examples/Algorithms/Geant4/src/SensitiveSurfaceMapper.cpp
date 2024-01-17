@@ -71,11 +71,16 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
 
   std::string volumeName = g4LogicalVolume->GetName();
   std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
-  if (g4SensitiveDetector == nullptr or
+
+  bool isSensitive = g4SensitiveDetector != nullptr;
+  bool isMappedMaterial =
       std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
-                volumeMaterialName) != m_cfg.materialMappings.end() or
+                volumeMaterialName) != m_cfg.materialMappings.end();
+  bool isMappedVolume =
       std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
-                volumeName) != m_cfg.volumeMappings.end()) {
+                volumeName) != m_cfg.volumeMappings.end();
+
+  if (isSensitive || isMappedMaterial || isMappedVolume) {
     // Find the associated ACTS object
     auto actsLayer = m_cfg.trackingGeometry->associatedLayer(
         Acts::GeometryContext(), g4AbsPosition);
@@ -83,9 +88,9 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
     // Prepare the mapped surface
     const Acts::Surface* mappedSurface = nullptr;
 
-    if (actsLayer != nullptr and actsLayer->surfaceArray() != nullptr) {
+    if (actsLayer != nullptr && actsLayer->surfaceArray() != nullptr) {
       auto actsSurfaces = actsLayer->surfaceArray()->at(g4AbsPosition);
-      if (not actsSurfaces.empty()) {
+      if (!actsSurfaces.empty()) {
         // Fast matching: search
         for (const auto& as : actsSurfaces) {
           if (as->center(Acts::GeometryContext()).isApprox(g4AbsPosition)) {

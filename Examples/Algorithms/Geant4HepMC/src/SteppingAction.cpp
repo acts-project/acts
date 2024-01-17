@@ -77,7 +77,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
   auto postParticle = std::make_shared<::HepMC3::GenParticle>(
       mom4, track->GetDynamicParticle()->GetPDGcode());
 
-  // The process the led to the current state
+  // The process that led to the current state
   auto process = std::make_shared<::HepMC3::StringAttribute>(
       step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName());
 

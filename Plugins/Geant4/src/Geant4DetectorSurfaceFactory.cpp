@@ -41,12 +41,12 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
   }
 
   // Check if the volume is accepted by a sensitive or passive selector
-  bool sensitive = option.sensitiveSurfaceSelector != nullptr and
+  bool sensitive = option.sensitiveSurfaceSelector != nullptr &&
                    option.sensitiveSurfaceSelector->select(g4PhysVol);
-  bool passive = option.passiveSurfaceSelector != nullptr and
+  bool passive = option.passiveSurfaceSelector != nullptr &&
                  option.passiveSurfaceSelector->select(g4PhysVol);
 
-  if (sensitive or passive) {
+  if (sensitive || passive) {
     // Conversion and selection code
     ++cache.matchedG4Volumes;
 

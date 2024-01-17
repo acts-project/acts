@@ -36,14 +36,12 @@
 #include <tuple>
 #include <utility>
 
-namespace tt = boost::test_tools;
 using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace Test {
 
 using Covariance = BoundSquareMatrix;
-using Jacobian = BoundMatrix;
 
 /// @brief Simplified propagator state
 struct PropState {
@@ -56,7 +54,6 @@ struct PropState {
   StraightLineStepper::State stepping;
   /// Propagator options which only carry the particle's mass
   struct {
-    double mass = 42.;
     Direction direction = Direction::Forward;
   } options;
 };
@@ -82,7 +79,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   double charge = -1.;
 
   // Test charged parameters without covariance matrix
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, absMom, charge);
+  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
+                                std::nullopt, ParticleHypothesis::pion());
   StraightLineStepper::State slsState(tgContext, mfContext, cp, stepSize,
                                       tolerance);
 
@@ -105,16 +103,15 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK_EQUAL(slsState.tolerance, tolerance);
 
   // Test without charge and covariance matrix
-  NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
-                                        1 / absMom);
+  CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
+                                 std::nullopt, ParticleHypothesis::pion0());
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, stepSize,
                                         tolerance);
-  BOOST_CHECK_EQUAL(slsState.absCharge, 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
-                                          1 / absMom, cov);
+  ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
+                                   ParticleHypothesis::pion0());
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, stepSize,
                                         tolerance);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -140,7 +137,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                cov);
+                                cov, ParticleHypothesis::pion());
 
   // Build the state and the stepper
   StraightLineStepper::State slsState(tgContext, mfContext, cp, stepSize,
@@ -159,11 +156,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
 
-  sls.setStepSize(slsState, -1337.);
+  sls.updateStepSize(slsState, -1337., ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(slsState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), -1337.);
 
-  sls.releaseStepSize(slsState);
+  sls.releaseStepSize(slsState, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(sls.outputStepSize(slsState), originalStepSize);
 
@@ -238,8 +235,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
-                                 charge2, cov2);
+  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
+                                 charge2 / absMom2, cov2,
+                                 ParticleHypothesis::pion());
   BOOST_CHECK(cp2.covariance().has_value());
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
@@ -325,17 +323,17 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, dir);
-  auto bp =
-      BoundTrackParameters::create(plane, tgContext, makeVector4(pos, time),
-                                   dir, charge / absMom, cov)
-          .value();
+  auto bp = BoundTrackParameters::create(
+                plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
+                cov, ParticleHypothesis::pion())
+                .value();
   slsState =
       StraightLineStepper::State(tgContext, mfContext, cp, stepSize, tolerance);
 
   // Test the intersection in the context of a surface
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
-  sls.updateSurfaceStatus(slsState, *targetSurface, navDir,
+  sls.updateSurfaceStatus(slsState, *targetSurface, 0, navDir,
                           BoundaryCheck(false));
   CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   1e-6);
@@ -343,16 +341,20 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Test the step size modification in the context of a surface
   sls.updateStepSize(
       slsState,
-      targetSurface->intersect(slsState.geoContext, sls.position(slsState),
-                               navDir * sls.direction(slsState), false),
-      false);
+      targetSurface
+          ->intersect(slsState.geoContext, sls.position(slsState),
+                      navDir * sls.direction(slsState), BoundaryCheck(false))
+          .closest(),
+      navDir, false);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
-  slsState.stepSize.setValue(navDir * stepSize);
+  slsState.stepSize.setUser(navDir * stepSize);
   sls.updateStepSize(
       slsState,
-      targetSurface->intersect(slsState.geoContext, sls.position(slsState),
-                               navDir * sls.direction(slsState), false),
-      true);
+      targetSurface
+          ->intersect(slsState.geoContext, sls.position(slsState),
+                      navDir * sls.direction(slsState), BoundaryCheck(false))
+          .closest(),
+      navDir, true);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
 
   // Test the bound state construction

@@ -14,12 +14,12 @@ void ActsExamples::Options::addJsonWriterOptions(
     ActsExamples::Options::Description& desc) {
   using namespace boost::program_options;
 
-  desc.add_options()(
-      "json-output-precision",
-      value<size_t>()->default_value(std::numeric_limits<float>::max_digits10),
-      "Floating number output precision.")("json-write-sf-boundaries",
-                                           bool_switch(),
-                                           "Write tracking boundary surfaces.")(
+  desc.add_options()("json-output-precision",
+                     value<std::size_t>()->default_value(
+                         std::numeric_limits<float>::max_digits10),
+                     "Floating number output precision.")(
+      "json-write-sf-boundaries", bool_switch(),
+      "Write tracking boundary surfaces.")(
       "json-write-sf-approach", bool_switch(),
       "Write tracking geometry approach surfaces.")(
       "json-write-sf-layer", bool_switch(),
@@ -37,7 +37,7 @@ ActsExamples::Options::readJsonSurfacesWriterConfig(
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
-  cfg.outputPrecision = vm["json-output-precision"].as<size_t>();
+  cfg.outputPrecision = vm["json-output-precision"].as<std::size_t>();
   cfg.writeLayer = vm["json-write-sf-layer"].as<bool>();
   cfg.writeApproach = vm["json-write-sf-approach"].as<bool>();
   cfg.writeSensitive = vm["json-write-sf-sensitive"].as<bool>();

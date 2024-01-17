@@ -31,7 +31,7 @@ namespace Acts {
 ///  The cone can open to both sides, steered by \f$ z_min \f$ and \f$ z_max
 ///  \f$.
 ///
-///  @image html figures/ConeBounds.gif
+///  @image html ConeBounds.gif
 ///
 
 class ConeBounds : public SurfaceBounds {
@@ -90,7 +90,7 @@ class ConeBounds : public SurfaceBounds {
   /// @param bcheck is the boundary check directive
   /// @return is a boolean indicating if the position is inside
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck = true) const final;
+              const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
 
   /// Output Method for std::ostream
   ///
@@ -140,14 +140,14 @@ inline std::vector<double> ConeBounds::values() const {
 }
 
 inline void ConeBounds::checkConsistency() noexcept(false) {
-  if (get(eAlpha) < 0. or get(eAlpha) >= M_PI) {
+  if (get(eAlpha) < 0. || get(eAlpha) >= M_PI) {
     throw std::invalid_argument("ConeBounds: invalid open angle.");
   }
-  if (get(eMinZ) > get(eMaxZ) or
+  if (get(eMinZ) > get(eMaxZ) ||
       std::abs(get(eMinZ) - get(eMaxZ)) < s_epsilon) {
     throw std::invalid_argument("ConeBounds: invalid z range setup.");
   }
-  if (get(eHalfPhiSector) < 0. or abs(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || abs(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("ConeBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

@@ -19,8 +19,8 @@ StraightLineStepper::boundState(
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars,
-      state.covTransport and transportCov, state.pathAccumulated, surface,
+      state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.covTransport && transportCov, state.pathAccumulated, surface,
       freeToBoundCorrection);
 }
 
@@ -28,8 +28,8 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.covTransport and transportCov,
-      state.pathAccumulated);
+      state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.covTransport && transportCov, state.pathAccumulated);
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& freeParams,

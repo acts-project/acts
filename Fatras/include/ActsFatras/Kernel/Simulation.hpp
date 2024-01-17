@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -43,6 +44,10 @@ template <typename propagator_t, typename interactions_t,
 struct SingleParticleSimulation {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
+  /// Absolute maximum step size
+  double maxStepSize = std::numeric_limits<double>::max();
+  /// Absolute maximum path length
+  double pathLimit = std::numeric_limits<double>::max();
   /// Decay module.
   decay_t decay;
   /// Interaction list containing the simulated interactions.
@@ -82,8 +87,8 @@ struct SingleParticleSimulation {
 
     // Construct per-call options.
     PropagatorOptions options(geoCtx, magCtx);
-    options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
-    options.mass = particle.mass();
+    options.maxStepSize = maxStepSize;
+    options.pathLimit = pathLimit;
     // setup the interactor as part of the propagator options
     auto &actor = options.actionList.template get<Actor>();
     actor.generator = &generator;
@@ -91,16 +96,23 @@ struct SingleParticleSimulation {
     actor.interactions = interactions;
     actor.selectHitSurface = selectHitSurface;
     actor.initialParticle = particle;
-    // use AnyCharge to be able to handle neutral and charged parameters
-    Acts::GenericCurvilinearTrackParameters<Acts::AnyCharge> start(
-        particle.fourPosition(), particle.direction(),
-        particle.absoluteMomentum(), particle.charge());
-    auto result = propagator.propagate(start, options);
-    if (not result.ok()) {
+
+    if (particle.hasReferenceSurface()) {
+      auto result = propagator.propagate(
+          particle.boundParameters(geoCtx).value(), options);
+      if (!result.ok()) {
+        return result.error();
+      }
+      auto &value = result.value().template get<Result>();
+      return std::move(value);
+    }
+
+    auto result =
+        propagator.propagate(particle.curvilinearParameters(), options);
+    if (!result.ok()) {
       return result.error();
     }
     auto &value = result.value().template get<Result>();
-
     return std::move(value);
   }
 };
@@ -184,7 +196,7 @@ struct Simulation {
       output_particles_t &simulatedParticlesInitial,
       output_particles_t &simulatedParticlesFinal, hits_t &hits) const {
     assert(
-        (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) and
+        (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) &&
         "Inconsistent initial sizes of the simulated particle containers");
 
     using SingleParticleSimulationResult = Acts::Result<SimulationResult>;
@@ -193,11 +205,11 @@ struct Simulation {
 
     for (const Particle &inputParticle : inputParticles) {
       // only consider simulatable particles
-      if (not selectParticle(inputParticle)) {
+      if (!selectParticle(inputParticle)) {
         continue;
       }
       // required to allow correct particle id numbering for secondaries later
-      if ((inputParticle.particleId().generation() != 0u) or
+      if ((inputParticle.particleId().generation() != 0u) ||
           (inputParticle.particleId().subParticle() != 0u)) {
         return detail::SimulationError::eInvalidInputParticleId;
       }
@@ -226,7 +238,7 @@ struct Simulation {
           result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
         }
 
-        if (not result.ok()) {
+        if (!result.ok()) {
           // remove particle from output container since it was not simulated.
           simulatedParticlesInitial.erase(
               std::next(simulatedParticlesInitial.begin(), iinitial));

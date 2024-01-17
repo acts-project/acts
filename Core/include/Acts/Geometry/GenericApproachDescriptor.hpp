@@ -12,6 +12,7 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -28,10 +29,6 @@ class Surface;
 ///
 /// Class to decide and return which approaching surface to be taken,
 /// it's a generic descriptor for n surfaces
-///
-/// It is templated in order to allow for BoundarySurfaces from
-/// representing volumes of layers to be re-used
-
 class GenericApproachDescriptor : public ApproachDescriptor {
  public:
   /// A generic approach descriptor for new Acts::Surface objects
@@ -60,11 +57,16 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @param position The global position to start the approach from
   /// @param direction The momentum vector
   /// @param bcheck The boundary check prescription
+  /// @param nearLimit The minimum distance for an intersection to be considered
+  /// @param farLimit The maximum distance for an intersection to be considered
   ///
-  /// @return : a SurfaceIntersection
-  ObjectIntersection<Surface> approachSurface(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck) const override;
+  /// @return : a @c SurfaceIntersection
+  SurfaceIntersection approachSurface(const GeometryContext& gctx,
+                                      const Vector3& position,
+                                      const Vector3& direction,
+                                      const BoundaryCheck& bcheck,
+                                      double nearLimit,
+                                      double farLimit) const override;
 
   /// return all contained surfaces of this approach descriptor
   const std::vector<const Surface*>& containedSurfaces() const override;

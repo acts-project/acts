@@ -21,7 +21,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -34,6 +34,8 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 class Surface;
@@ -90,7 +92,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigator) {
   // define start parameters
   Acts::Vector4 pos(0, 0, -5, 0);
   Acts::Vector3 mom(0, 0, 10);
-  Acts::CurvilinearTrackParameters start(pos, mom, mom.norm(), +1);
+  Acts::CurvilinearTrackParameters start(pos, mom, +1_e / mom.norm(),
+                                         std::nullopt,
+                                         Acts::ParticleHypothesis::pion());
   // propagate to the cylinder surface
   propagator.propagate(start, options);
 }

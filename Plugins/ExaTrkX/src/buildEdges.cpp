@@ -66,7 +66,7 @@ torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
                                            float rVal, int kVal,
                                            bool flipDirections) {
 #ifndef ACTS_EXATRKX_CPUONLY
-  torch::Device device(torch::kCUDA);
+  const auto device = embedFeatures.device();
 
   const int64_t numSpacepoints = embedFeatures.size(0);
   const int dim = embedFeatures.size(1);

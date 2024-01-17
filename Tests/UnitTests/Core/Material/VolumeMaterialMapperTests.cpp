@@ -213,8 +213,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set up a random engine for sampling material
   std::random_device rd;
   std::mt19937 gen(42);
-  std::uniform_real_distribution<> disX(0., 3_m);
-  std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
+  std::uniform_real_distribution<double> disX(0., 3_m);
+  std::uniform_real_distribution<double> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
   RecordedMaterialVolumePoint matRecord;
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
     return {pos.x(), pos.y(), pos.z()};
   };
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -261,7 +261,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set some start parameters
   Vector4 pos4(0., 0., 0., 42_ns);
   Vector3 dir(1., 0., 0.);
-  NeutralCurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
+  CurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV, std::nullopt,
+                                  ParticleHypothesis::pion0());
 
   MagneticFieldContext mc;
   // Launch propagation and gather result

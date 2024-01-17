@@ -28,7 +28,7 @@
 #include <cmath>
 #include <functional>
 
-// This is based original stepper code from the ATLAS RungeKuttePropagagor
+// This is based original stepper code from the ATLAS RungeKuttaPropagator
 namespace Acts {
 
 /// @brief the AtlasStepper implementation for the
@@ -59,7 +59,8 @@ class AtlasStepper {
           MagneticFieldProvider::Cache fieldCacheIn, const Parameters& pars,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
-        : field(0., 0., 0.),
+        : particleHypothesis(pars.particleHypothesis()),
+          field(0., 0., 0.),
           stepSize(ssize),
           tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
@@ -227,8 +228,7 @@ class AtlasStepper {
       state_ready = true;
     }
 
-    /// The absolute charge as the free vector can be 1/p or q/p
-    double absCharge = UnitConstants::e;
+    ParticleHypothesis particleHypothesis;
 
     // optimisation that init is not called twice
     bool state_ready = false;
@@ -286,17 +286,16 @@ class AtlasStepper {
     bool debug = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
-    size_t debugPfxWidth = 30;
-    size_t debugMsgWidth = 50;
+    std::size_t debugPfxWidth = 30;
+    std::size_t debugMsgWidth = 50;
   };
 
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
-      : m_bField(std::move(bField)){};
+      : m_bField(std::move(bField)) {}
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const GenericBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
     return State{gctx, m_bField->makeCache(mctx), par, ssize, stolerance};
@@ -350,8 +349,11 @@ class AtlasStepper {
 
   double qOverP(const State& state) const { return state.pVector[7]; }
 
+  /// Absolute momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   double absoluteMomentum(const State& state) const {
-    return 1. / std::abs(qOverP(state));
+    return particleHypothesis(state).extractMomentum(qOverP(state));
   }
 
   Vector3 momentum(const State& state) const {
@@ -359,12 +361,26 @@ class AtlasStepper {
   }
 
   /// Charge access
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return qOverP(state) > 0. ? 1. : -1.;
+    return particleHypothesis(state).extractCharge(qOverP(state));
+  }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  const ParticleHypothesis& particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
   }
 
   /// Overstep limit
-  double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
+  ///
+  /// @param state The stepping state (thread-local cache)
+  double overstepLimit(const State& state) const {
+    (void)state;
+    return -m_overstepLimit;
+  }
 
   /// Time access
   double time(const State& state) const { return state.pVector[3]; }
@@ -378,17 +394,18 @@ class AtlasStepper {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger Logger instance to use
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, Direction navDir,
-      const BoundaryCheck& bcheck,
+      State& state, const Surface& surface, std::uint8_t index,
+      Direction navDir, const BoundaryCheck& bcheck,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
-        *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
+        *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size
@@ -401,19 +418,18 @@ class AtlasStepper {
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
+                      Direction /*direction*/, bool release = true) const {
     detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitly with a double
+  /// Update step size - explicitly with a double
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] stepSize The step size value
   /// @param [in] stype The step size type to be set
   /// @param release [in] Do we release the step size?
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor,
-                   bool release = true) const {
+  void updateStepSize(State& state, double stepSize,
+                      ConstrainedStep::Type stype, bool release = true) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
@@ -429,8 +445,9 @@ class AtlasStepper {
   /// Release the Step size
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
-    state.stepSize.release(ConstrainedStep::actor);
+  /// @param [in] stype The step size type to be released
+  void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
+    state.stepSize.release(stype);
   }
 
   /// Output the Step Size - single component
@@ -480,9 +497,9 @@ class AtlasStepper {
     }
 
     // Fill the end parameters
-    auto parameters =
-        BoundTrackParameters::create(surface.getSharedPtr(), state.geoContext,
-                                     pos4, dir, qOverP, std::move(covOpt));
+    auto parameters = BoundTrackParameters::create(
+        surface.getSharedPtr(), state.geoContext, pos4, dir, qOverP,
+        std::move(covOpt), state.particleHypothesis);
     if (!parameters.ok()) {
       return parameters.error();
     }
@@ -527,7 +544,8 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
+    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt),
+                                          state.particleHypothesis);
 
     Jacobian jacobian(state.jacobian);
 
@@ -1137,7 +1155,7 @@ class AtlasStepper {
     bool Helix = false;
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
-    size_t nStepTrials = 0;
+    std::size_t nStepTrials = 0;
     while (h != 0.) {
       // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
@@ -1219,10 +1237,10 @@ class AtlasStepper {
           2. * h *
           (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4)) +
            std::abs((C1 + C6) - (C3 + C4)));
-      if (std::abs(EST) > std::abs(state.options.tolerance)) {
+      if (std::abs(EST) > std::abs(state.options.stepTolerance)) {
         h = h * .5;
         // neutralize the sign of h again
-        state.stepping.stepSize.setValue(h * state.options.direction);
+        state.stepping.stepSize.setAccuracy(h * state.options.direction);
         //        dltm = 0.;
         nStepTrials++;
         continue;
@@ -1252,17 +1270,17 @@ class AtlasStepper {
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
+      double mass = particleHypothesis(state.stepping).mass();
+
       // Evaluate the time propagation
-      double dtds =
-          std::hypot(1, state.options.mass / absoluteMomentum(state.stepping));
+      double dtds = std::hypot(1, mass / absoluteMomentum(state.stepping));
       state.stepping.pVector[3] += h * dtds;
       state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
-        double dtdl = h * state.options.mass * state.options.mass *
-                      charge(state.stepping) /
+        double dtdl = h * mass * mass * charge(state.stepping) /
                       (absoluteMomentum(state.stepping) * dtds);
         state.stepping.pVector[43] += dtdl;
 
@@ -1416,7 +1434,7 @@ class AtlasStepper {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = -100 * UnitConstants::um;
+  double m_overstepLimit = 100 * UnitConstants::um;
 };
 
 }  // namespace Acts

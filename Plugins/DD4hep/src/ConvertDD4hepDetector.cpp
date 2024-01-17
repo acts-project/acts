@@ -22,9 +22,9 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -101,7 +101,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     auto volBuilder = volumeBuilder_dd4hep(
         subDetector, logger, bTypePhi, bTypeR, bTypeZ, layerEnvelopeR,
         layerEnvelopeZ, defaultLayerThickness);
-    if (volBuilder) {
+    if (volBuilder != nullptr) {
       // distinguish beam pipe
       if (volBuilder->getConfiguration().buildToRadiusZero) {
         // check if beam pipe is already present
@@ -122,7 +122,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     }
   }
   // Finally add the beam pipe
-  if (beamPipeVolumeBuilder) {
+  if (beamPipeVolumeBuilder != nullptr) {
     volumeBuilders.push_back(beamPipeVolumeBuilder);
   }
 
@@ -161,11 +161,11 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
   auto volumeHelper = cylinderVolumeHelper_dd4hep(logger);
   // create local logger for conversion
   ACTS_VERBOSE("Processing detector element:  " << subDetector.name());
-
   dd4hep::DetType subDetType{subDetector.typeFlag()};
   ACTS_VERBOSE("SubDetector type is: ["
                << subDetType << "], compound: "
                << (subDetector.type() == "compound" ? "yes" : "no"));
+
   if (subDetector.type() == "compound") {
     ACTS_VERBOSE("Subdetector : '" << subDetector.name()
                                    << "' has type compound ");
@@ -382,7 +382,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.layerEnvelopeR = std::make_pair(layerEnvelopeR, layerEnvelopeR);
     cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
     cvbConfig.trackingVolumeHelper = volumeHelper;
-    cvbConfig.volumeSignature = 0;
     cvbConfig.volumeName = subDetector.name();
     cvbConfig.layerBuilder = dd4hepLayerBuilder;
     auto cylinderVolumeBuilder =
@@ -438,7 +437,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     // the configuration object of the volume builder
     Acts::CylinderVolumeBuilder::Config cvbConfig;
     cvbConfig.trackingVolumeHelper = volumeHelper;
-    cvbConfig.volumeSignature = 0;
     cvbConfig.volumeName = subDetector.name();
     cvbConfig.layerBuilder = pcLayerBuilder;
     cvbConfig.layerEnvelopeR = {layerEnvelopeR, layerEnvelopeR};
@@ -522,7 +520,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.layerEnvelopeR = std::make_pair(layerEnvelopeR, layerEnvelopeR);
     cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
     cvbConfig.trackingVolumeHelper = volumeHelper;
-    cvbConfig.volumeSignature = 0;
     cvbConfig.volumeName = subDetector.name();
     cvbConfig.layerBuilder = dd4hepLayerBuilder;
     cvbConfig.ctVolumeBuilder = dd4hepVolumeBuilder;
@@ -591,8 +588,13 @@ void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
     dd4hep::DetElement childDetElement = child.second;
     dd4hep::DetType type{childDetElement.typeFlag()};
     if (childDetElement.type() == "compound") {
-      subdetectors.push_back(childDetElement);
-      continue;
+      // Check if the compound is excluded from assembly
+      // This is needed to eventually exclude compounds of pixel, strip, etc.
+      // from barrel / endcap parsing
+      if (getParamOr<bool>("acts_legacy_assembly", childDetElement, true)) {
+        subdetectors.push_back(childDetElement);
+        continue;
+      }
     }
 
     if (type.is(dd4hep::DetType::TRACKER)) {

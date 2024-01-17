@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(Neutral) {
   CHECK_CLOSE_REL(q.extractMomentum(1 / 128_MeV), 128_MeV, eps);
 
   // negative inputs should not occur for neutral particles
-  // the result is not defined but we check it anyways
+  // the result is not defined, but we check it anyway
   // update: this is asserted now
   // CHECK_CLOSE_REL(q.extractMomentum(-1 / 128_MeV), -128_MeV, eps);
 
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(AnyChargeNeutral) {
   CHECK_CLOSE_REL(q.extractMomentum(1 / 128_MeV), 128_MeV, eps);
 
   // negative inputs should not occur for neutral particles
-  // the result is not defined but we check it anyways
+  // the result is not defined, but we check it anyway
   CHECK_CLOSE_REL(q.extractMomentum(-1 / 128_MeV), -128_MeV, eps);
 
   BOOST_CHECK(q == Acts::AnyCharge(0_e));

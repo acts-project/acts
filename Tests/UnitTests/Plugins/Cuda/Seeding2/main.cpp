@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,11 +22,11 @@
 // Acts include(s).
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 
 // System include(s).
 #include <cassert>
@@ -70,10 +70,10 @@ int main(int argc, char* argv[]) {
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   // Create binned groups of these spacepoints.
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-      zBinNeighborsBottom, numPhiNeighbors);
-  auto topBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-      zBinNeighborsTop, numPhiNeighbors);
+  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      numPhiNeighbors, zBinNeighborsBottom);
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      numPhiNeighbors, zBinNeighborsTop);
 
   // Set up the seedFinder configuration.
   Acts::SeedFinderConfig<value_type> sfConfig;
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
   sfConfig.minPt = 500._MeV;
   sfConfig.impactMax = 10._mm;
   Acts::SeedFinderOptions sfOptions;
-  sfOptions.bFieldInZ = 1.99724_T;
+  sfOptions.bFieldInZ = 2_T;
   sfOptions.beamPos = {-.5_mm, -.5_mm};
 
   // Use a size slightly smaller than what modern GPUs are capable of. This is
@@ -175,11 +175,20 @@ int main(int argc, char* argv[]) {
   // Create the result object.
   std::vector<std::vector<seed_type>> seeds_host;
 
+  std::array<std::vector<std::size_t>, 2ul> navigation;
+  navigation[0ul].resize(spGroup.grid().numLocalBins()[0ul]);
+  navigation[1ul].resize(spGroup.grid().numLocalBins()[1ul]);
+  std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
+  std::iota(navigation[1ul].begin(), navigation[1ul].end(), 1ul);
+
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
     decltype(seedFinder_host)::SeedingState state;
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-      auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+      std::array<std::size_t, 2ul> localPosition =
+          spGroup.grid().localBinsFromGlobalBin(i);
+      auto spGroup_itr =
+          Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
       }
@@ -213,7 +222,10 @@ int main(int argc, char* argv[]) {
 
   // Perform the seed finding.
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-    auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+    std::array<std::size_t, 2ul> localPosition =
+        spGroup.grid().localBinsFromGlobalBin(i);
+    auto spGroup_itr =
+        Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;
     }
@@ -249,7 +261,7 @@ int main(int argc, char* argv[]) {
   double matchPercentage = 0.0;
   if (!cmdl.onlyGPU) {
     assert(seeds_host.size() == seeds_device.size());
-    for (size_t i = 0; i < seeds_host.size(); i++) {
+    for (std::size_t i = 0; i < seeds_host.size(); i++) {
       // Access the seeds for this region.
       const auto& seeds_in_host_region = seeds_host[i];
       const auto& seeds_in_device_region = seeds_device[i];

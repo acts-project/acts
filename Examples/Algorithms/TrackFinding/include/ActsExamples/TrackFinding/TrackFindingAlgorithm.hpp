@@ -71,7 +71,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   /// Create the track finder function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
+  /// contains shared_ptr anyway.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
@@ -97,6 +97,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
     /// Run backward finding
     bool backward = false;
+    /// Maximum number of propagation steps
+    unsigned int maxSteps = 100000;
   };
 
   /// Constructor of the track finding algorithm
@@ -136,8 +138,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 
-  mutable std::atomic<size_t> m_nTotalSeeds{0};
-  mutable std::atomic<size_t> m_nFailedSeeds{0};
+  mutable std::atomic<std::size_t> m_nTotalSeeds{0};
+  mutable std::atomic<std::size_t> m_nFailedSeeds{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {
@@ -162,8 +164,8 @@ void TrackFindingAlgorithm::computeSharedHits(
       sourceLinks.size(), std::numeric_limits<std::size_t>::max());
 
   for (auto track : tracks) {
-    for (auto state : track.trackStates()) {
-      if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    for (auto state : track.trackStatesReversed()) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         continue;
       }
 
@@ -188,8 +190,7 @@ void TrackFindingAlgorithm::computeSharedHits(
                             .container()
                             .trackStateContainer()
                             .getTrackState(indexFirstState);
-      if (not firstState.typeFlags().test(
-              Acts::TrackStateFlag::SharedHitFlag)) {
+      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
         firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
       }
 

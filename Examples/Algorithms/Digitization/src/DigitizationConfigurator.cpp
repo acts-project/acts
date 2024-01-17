@@ -43,8 +43,8 @@ bool digiConfigMaybeEqual(ActsExamples::DigiComponentsConfig &a,
   // Check geometric config
   const auto &ag = a.geometricDigiConfig;
   const auto &bg = b.geometricDigiConfig;
-  return (ag.indices == bg.indices and ag.segmentation == bg.segmentation and
-          ag.thickness == bg.thickness and ag.threshold == bg.threshold and
+  return (ag.indices == bg.indices && ag.segmentation == bg.segmentation &&
+          ag.thickness == bg.thickness && ag.threshold == bg.threshold &&
           ag.digital == bg.digital);
 }
 }  // namespace
@@ -59,7 +59,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
       DigiComponentsConfig dOutputConfig;
       dOutputConfig.smearingDigiConfig = dInputConfig->smearingDigiConfig;
 
-      if (not dInputConfig->geometricDigiConfig.indices.empty()) {
+      if (!dInputConfig->geometricDigiConfig.indices.empty()) {
         // Copy over what can be done
         dOutputConfig.geometricDigiConfig.indices =
             dInputConfig->geometricDigiConfig.indices;
@@ -88,7 +88,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
               outputSegmentation +=
                   Acts::BinUtility(nBins, minX, maxX, Acts::open, Acts::binX);
             }
-            if (inputSegmentation.binningData()[0].binvalue == Acts::binY or
+            if (inputSegmentation.binningData()[0].binvalue == Acts::binY ||
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
@@ -113,7 +113,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
               outputSegmentation +=
                   Acts::BinUtility(nBins, -maxX, maxX, Acts::open, Acts::binX);
             }
-            if (inputSegmentation.binningData()[0].binvalue == Acts::binY or
+            if (inputSegmentation.binningData()[0].binvalue == Acts::binY ||
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
@@ -137,7 +137,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
               outputSegmentation +=
                   Acts::BinUtility(nBins, minR, maxR, Acts::open, Acts::binR);
             }
-            if (inputSegmentation.binningData()[0].binvalue == Acts::binPhi or
+            if (inputSegmentation.binningData()[0].binvalue == Acts::binPhi ||
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
@@ -169,7 +169,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
               outputSegmentation +=
                   Acts::BinUtility(nBins, minR, maxR, Acts::open, Acts::binR);
             }
-            if (inputSegmentation.binningData()[0].binvalue == Acts::binPhi or
+            if (inputSegmentation.binningData()[0].binvalue == Acts::binPhi ||
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
@@ -201,7 +201,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
               outputSegmentation +=
                   Acts::BinUtility(nBins, minR, maxR, Acts::open, Acts::binR);
             }
-            if (inputSegmentation.binningData()[0].binvalue == Acts::binPhi or
+            if (inputSegmentation.binningData()[0].binvalue == Acts::binPhi ||
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
@@ -237,7 +237,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
             Acts::GeometryIdentifier().setVolume(geoId.volume());
 
         auto volRep = volumeLayerComponents.find(volGeoId);
-        if (volRep != volumeLayerComponents.end() and
+        if (volRep != volumeLayerComponents.end() &&
             digiConfigMaybeEqual(dOutputConfig, volRep->second)) {
           // return if the volume representation already covers this one
           return;
@@ -251,7 +251,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
             Acts::GeometryIdentifier(volGeoId).setLayer(geoId.layer());
         auto volLayRep = volumeLayerComponents.find(volLayGeoId);
 
-        if (volLayRep != volumeLayerComponents.end() and
+        if (volLayRep != volumeLayerComponents.end() &&
             digiConfigMaybeEqual(dOutputConfig, volLayRep->second)) {
           return;
         } else {

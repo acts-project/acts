@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -18,7 +17,8 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <tuple>
 
@@ -34,7 +34,7 @@ CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 IndexedSurfacesConverter::Options generateDrawOptions() {
   // The converter options
   IndexedSurfacesConverter::Options isOptions;
-  // Sensitive surface stuyle
+  // Sensitive surface style
   Style sensitiveStyle;
   sensitiveStyle.fillColor = {51, 153, 255};
   sensitiveStyle.fillOpacity = 0.9;
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
       rSurfaces, {}, {binPhi}};
 
   GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
-  PolyhedronReferenceGenerator rGenerator{true, 1};
+  PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
   // The displaying
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
       rSurfaces, {rSurfaces.size() - 1u}, {binPhi}};
 
   GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
-  PolyhedronReferenceGenerator rGenerator{true, 1};
+  PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
   // The displaying
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
 
   GridAxisGenerators::VarBoundEqClosed aGenerator{
       {24., 74., 110.}, {-M_PI, M_PI}, 44u};
-  PolyhedronReferenceGenerator rGenerator{true, 1};
+  PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
   // The displaying
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {24., 152}, 8u, {-M_PI, M_PI}, 88u};
 
-  PolyhedronReferenceGenerator rGenerator{true, 1};
+  PolyhedronReferenceGenerator<1u, true> rGenerator;
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
   // The displaying
   auto pIndexedRing = IndexedSurfacesConverter::convert(
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {24., 152}, 8u, {-M_PI, M_PI}, 88u};
-  PolyhedronReferenceGenerator rGenerator{true, 1};
+  PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
   // The displaying
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {-500., 500}, 28, {-M_PI, M_PI}, 52u};
-  PolyhedronReferenceGenerator rGenerator{true, 1};
+  PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedCylinder = icSurfaces(tContext, aGenerator, rGenerator);
   // The displaying

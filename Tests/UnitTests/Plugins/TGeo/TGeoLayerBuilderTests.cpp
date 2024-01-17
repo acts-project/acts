@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
 
   auto positiveLayers = tglb.positiveLayers(tgContext);
   // Check that it's split into two layers
-  size_t ipl = 0;
+  std::size_t ipl = 0;
   BOOST_CHECK_EQUAL(positiveLayers.size(), 2u);
   BOOST_CHECK_EQUAL(tglb.detectorElements().size(), 14u + 16u);
   for (const auto& pLayer : positiveLayers) {

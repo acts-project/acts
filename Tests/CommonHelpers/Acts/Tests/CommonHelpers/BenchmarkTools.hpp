@@ -183,7 +183,7 @@ inline void assumeWritten(T& clobber) {
 struct MicroBenchmarkResult {
   using Duration = std::chrono::duration<double, std::nano>;
 
-  size_t iters_per_run = 0;
+  std::size_t iters_per_run = 0;
   std::vector<Duration> run_timings;
 
   // Total benchmark running time
@@ -248,7 +248,7 @@ struct MicroBenchmarkResult {
   Duration runTimeMedian() const {
     assert(!run_timings.empty());
     const std::vector<Duration> sorted_timings = sortedRunTimes();
-    const size_t midpoint = sorted_timings.size() / 2;
+    const std::size_t midpoint = sorted_timings.size() / 2;
     if (sorted_timings.size() % 2 == 0) {
       return (sorted_timings[midpoint - 1] + sorted_timings[midpoint]) / 2;
     } else {
@@ -274,9 +274,9 @@ struct MicroBenchmarkResult {
     //
     assert(run_timings.size() >= 2);
     const std::vector<Duration> sorted_timings = sortedRunTimes();
-    const size_t first_point = (sorted_timings.size() - 2) / 4;
-    const size_t offset = (sorted_timings.size() - 2) % 4;
-    const size_t third_point = (sorted_timings.size() - 1) - first_point;
+    const std::size_t first_point = (sorted_timings.size() - 2) / 4;
+    const std::size_t offset = (sorted_timings.size() - 2) % 4;
+    const std::size_t third_point = (sorted_timings.size() - 1) - first_point;
     if (offset == 0) {
       return {sorted_timings[first_point], sorted_timings[third_point]};
     } else {
@@ -424,8 +424,9 @@ struct MicroBenchmarkIter<Callable, void> {
 
 // Common logic between iteration-based and data-based microBenchmark
 template <typename Callable>
-MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
-                                        size_t num_runs,
+MicroBenchmarkResult microBenchmarkImpl(Callable&& run,
+                                        std::size_t iters_per_run,
+                                        std::size_t num_runs,
                                         std::chrono::milliseconds warmup_time) {
   using Clock = std::chrono::steady_clock;
 
@@ -438,7 +439,7 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
     run();
   }
 
-  for (size_t i = 0; i < num_runs; ++i) {
+  for (std::size_t i = 0; i < num_runs; ++i) {
     const auto start = Clock::now();
     run();
     result.run_timings[i] = Clock::now() - start;
@@ -496,7 +497,7 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 // is appropriate for the run timings distribution otherwise.
 //
 // You shouldn't usually need to adjust the number of runs and warmup time, but
-// here are some guidelines for those times where you need to:
+// here are some guidelines for those times when you need to:
 // - `num_runs` is a somewhat delicate compromise between several concerns:
 //       * Quality of error bars (many runs mean more precise error bars)
 //       * Outlier rejection (many runs mean better outlier rejection)
@@ -518,11 +519,12 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 
 template <typename Callable>
 MicroBenchmarkResult microBenchmark(
-    Callable&& iteration, size_t iters_per_run, size_t num_runs = 20000,
+    Callable&& iteration, std::size_t iters_per_run,
+    std::size_t num_runs = 20000,
     std::chrono::milliseconds warmup_time = std::chrono::milliseconds(2000)) {
   return benchmark_tools_internal::microBenchmarkImpl(
       [&] {
-        for (size_t iter = 0; iter < iters_per_run; ++iter) {
+        for (std::size_t iter = 0; iter < iters_per_run; ++iter) {
           benchmark_tools_internal::MicroBenchmarkIter<Callable>::iter(
               iteration);
         }
@@ -539,7 +541,7 @@ MicroBenchmarkResult microBenchmark(
 template <typename Callable, typename Input>
 MicroBenchmarkResult microBenchmark(
     Callable&& iterationWithInput, const std::vector<Input>& inputs,
-    size_t num_runs = 20000,
+    std::size_t num_runs = 20000,
     std::chrono::milliseconds warmup_time = std::chrono::milliseconds(2000)) {
   return benchmark_tools_internal::microBenchmarkImpl(
       [&] {

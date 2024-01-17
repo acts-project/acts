@@ -67,7 +67,7 @@ Acts::Vector2 Acts::SolenoidBField::multiCoilField(const Vector2& pos,
                                                    double scale) const {
   // iterate over all coils
   Vector2 resultField(0, 0);
-  for (size_t coil = 0; coil < m_cfg.nCoils; coil++) {
+  for (std::size_t coil = 0; coil < m_cfg.nCoils; coil++) {
     Vector2 shiftedPos =
         Vector2(pos[0], pos[1] + m_cfg.length * 0.5 - m_dz * (coil + 0.5));
     resultField += singleCoilField(shiftedPos, scale);

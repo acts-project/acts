@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
   double rmin = 10.;
   double rmax = 11;
   double hz = 40.;
-  double phimin = -45.;
-  double phimax = 45.;
+  double phimin = 45.;
+  double phimax = -45.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -74,15 +74,16 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
       gGeoManager->MakeTubs("Tube", med, rmin, rmax, hz, phimin, phimax);
   gGeoManager->CloseGeometry();
 
-  size_t icyl = 0;
+  std::size_t icyl = 0;
   for (const auto &axes : allowedAxes) {
-    auto cylinder = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                    *gGeoIdentity, axes, 1);
-    BOOST_CHECK_NE(cylinder, nullptr);
+    auto [cylinder, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
+    BOOST_REQUIRE_NE(cylinder, nullptr);
     BOOST_CHECK_EQUAL(cylinder->type(), Surface::Cylinder);
+    CHECK_CLOSE_ABS(thickness, rmax - rmin, s_epsilon);
 
     auto bounds = dynamic_cast<const CylinderBounds *>(&(cylinder->bounds()));
-    BOOST_CHECK_NE(bounds, nullptr);
+    BOOST_REQUIRE_NE(bounds, nullptr);
     double bR = bounds->get(CylinderBounds::eR);
     double bhZ = bounds->get(CylinderBounds::eHalfLengthZ);
 
@@ -107,14 +108,15 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
     objVis.clear();
 
     if (icyl < 2) {
-      auto cylinderSegment = TGeoSurfaceConverter::toSurface(
+      auto [cylinderSegment, cThickness] = TGeoSurfaceConverter::toSurface(
           *vols->GetShape(), *gGeoIdentity, axes, 1);
-      BOOST_CHECK_NE(cylinderSegment, nullptr);
+      BOOST_REQUIRE_NE(cylinderSegment, nullptr);
       BOOST_CHECK_EQUAL(cylinderSegment->type(), Surface::Cylinder);
+      CHECK_CLOSE_ABS(cThickness, rmax - rmin, s_epsilon);
 
       auto boundsSegment =
           dynamic_cast<const CylinderBounds *>(&(cylinderSegment->bounds()));
-      BOOST_CHECK_NE(boundsSegment, nullptr);
+      BOOST_REQUIRE_NE(boundsSegment, nullptr);
       bR = boundsSegment->get(CylinderBounds::eR);
       bhZ = boundsSegment->get(CylinderBounds::eHalfLengthZ);
       double hphi = boundsSegment->get(CylinderBounds::eHalfPhiSector);
@@ -158,8 +160,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
   double rmin = 5.;
   double rmax = 25;
   double hz = 2.;
-  double phimin = -45.;
-  double phimax = 45.;
+  double phimin = 45.;
+  double phimax = -45.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -172,15 +174,16 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
       gGeoManager->MakeTubs("Tube", med, rmin, rmax, hz, phimin, phimax);
   gGeoManager->CloseGeometry();
 
-  size_t idisc = 0;
+  std::size_t idisc = 0;
   for (const auto &axes : allowedAxes) {
-    auto disc = TGeoSurfaceConverter::toSurface(*vol->GetShape(), *gGeoIdentity,
-                                                axes, 1);
-    BOOST_CHECK_NE(disc, nullptr);
+    auto [disc, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
+    BOOST_REQUIRE_NE(disc, nullptr);
     BOOST_CHECK_EQUAL(disc->type(), Surface::Disc);
+    CHECK_CLOSE_ABS(thickness, 2 * hz, s_epsilon);
 
     auto bounds = dynamic_cast<const RadialBounds *>(&(disc->bounds()));
-    BOOST_CHECK_NE(bounds, nullptr);
+    BOOST_REQUIRE_NE(bounds, nullptr);
     double bminr = bounds->get(RadialBounds::eMinR);
     double bmaxr = bounds->get(RadialBounds::eMaxR);
 
@@ -201,14 +204,15 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
     objVis.clear();
 
     if (idisc < 2) {
-      auto discSegment = TGeoSurfaceConverter::toSurface(
+      auto [discSegment, dThickness] = TGeoSurfaceConverter::toSurface(
           *vols->GetShape(), *gGeoIdentity, axes, 1);
-      BOOST_CHECK_NE(discSegment, nullptr);
+      BOOST_REQUIRE_NE(discSegment, nullptr);
       BOOST_CHECK_EQUAL(discSegment->type(), Surface::Disc);
+      CHECK_CLOSE_ABS(dThickness, 2 * hz, s_epsilon);
 
       auto boundsSegment =
           dynamic_cast<const RadialBounds *>(&(discSegment->bounds()));
-      BOOST_CHECK_NE(boundsSegment, nullptr);
+      BOOST_REQUIRE_NE(boundsSegment, nullptr);
       bminr = boundsSegment->get(RadialBounds::eMinR);
       bmaxr = boundsSegment->get(RadialBounds::eMaxR);
       double hphi = boundsSegment->get(RadialBounds::eHalfPhiSector);

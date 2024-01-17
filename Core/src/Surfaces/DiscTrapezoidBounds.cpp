@@ -64,10 +64,13 @@ std::vector<Acts::Vector2> Acts::DiscTrapezoidBounds::vertices(
     unsigned int /*lseg*/) const {
   Vector2 cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
   Vector2 nAxis(cAxis.y(), -cAxis.x());
-  return {get(eMinR) * cAxis - get(eHalfLengthXminR) * nAxis,
-          get(eMinR) * cAxis + get(eHalfLengthXminR) * nAxis,
-          m_ymax * cAxis + get(eHalfLengthXmaxR) * nAxis,
-          m_ymax * cAxis - get(eHalfLengthXmaxR) * nAxis};
+  auto ymin = std::sqrt(get(eMinR) * get(eMinR) -
+                        get(eHalfLengthXminR) * get(eHalfLengthXminR));
+  auto halfY = (m_ymax - ymin) / 2;
+  return {-halfY * cAxis - get(eHalfLengthXminR) * nAxis,
+          -halfY * cAxis + get(eHalfLengthXminR) * nAxis,
+          halfY * cAxis + get(eHalfLengthXmaxR) * nAxis,
+          halfY * cAxis - get(eHalfLengthXmaxR) * nAxis};
 }
 
 // ostream operator overload

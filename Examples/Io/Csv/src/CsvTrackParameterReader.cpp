@@ -46,7 +46,7 @@ ActsExamples::CsvTrackParameterReader::CsvTrackParameterReader::name() const {
   return "CsvTrackParameterReader";
 }
 
-std::pair<size_t, size_t>
+std::pair<std::size_t, std::size_t>
 ActsExamples::CsvTrackParameterReader::availableEvents() const {
   return m_eventsRange;
 }
@@ -70,8 +70,6 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
     params[Acts::eBoundPhi] = d.phi;
     params[Acts::eBoundTheta] = d.theta;
     params[Acts::eBoundQOverP] = d.qop;
-
-    int q = params[Acts::eBoundQOverP] >= 0 ? 1 : -1;
 
     Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
     cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = d.var_d0;
@@ -106,7 +104,9 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
     cov(Acts::eBoundQOverP, Acts::eBoundPhi) = d.cov_qopphi;
     cov(Acts::eBoundQOverP, Acts::eBoundTheta) = d.cov_qoptheta;
 
-    trackParameters.emplace_back(surface, params, q, cov);
+    // TODO we do not have a hypothesis at hand here. defaulting to pion
+    trackParameters.emplace_back(surface, params, cov,
+                                 Acts::ParticleHypothesis::pion());
   }
 
   m_outputTrackParameters(ctx, std::move(trackParameters));

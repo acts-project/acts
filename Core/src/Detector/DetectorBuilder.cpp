@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
 #include <stdexcept>
@@ -28,12 +29,21 @@ std::shared_ptr<const Acts::Experimental::Detector>
 Acts::Experimental::DetectorBuilder::construct(
     const GeometryContext& gctx) const {
   // Screen printout of the auxiliary information
-  if (not m_cfg.auxiliary.empty()) {
+  if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
   ACTS_DEBUG("Building a detector with name " << m_cfg.name);
 
   auto [volumes, portals, roots] = m_cfg.builder->construct(gctx);
+
+  if (m_cfg.geoIdGenerator != nullptr) {
+    ACTS_DEBUG("Assigning geometry ids to the detector");
+    auto cache = m_cfg.geoIdGenerator->generateCache();
+    std::for_each(roots.volumes.begin(), roots.volumes.end(), [&](auto& v) {
+      ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
+      m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+    });
+  }
 
   return Detector::makeShared(m_cfg.name, std::move(roots.volumes),
                               std::move(roots.volumeFinder));

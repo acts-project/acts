@@ -8,7 +8,7 @@ This plugin contains a track finding module based on Graph Neural Networks (GNNs
 The Exa.TrkX pipeline is a multi-stage GNN-based algorithm. In principle, there are three types of stages:
 
 1) **Graph construction**: This stage constructs the initial graph from the space points. Currently, there is only a metric-learning based approach implemented: A neural network tries to learn a mapping that minimizes the distance between points of the same track in the embedded space. In this embedded space then a graph is built using a fixed nearest-neighbor search.
-2) **Edge classification**: In this stage, a graph is taken from the previous stage, and a edge-classification is performed on the edges. This can be done either by a simple feed forward network or by a GNN.
+2) **Edge classification**: In this stage, a graph is taken from the previous stage, and an edge-classification is performed on the edges. This can be done either by a simple feed forward network or by a GNN.
 3) **Track building stage**: In this stage, track candidates are built from the edges and the scores of the previous edge classification stage. Currently, there are simple track building algorithms built on top of a *weakly connected components* algorithm available.
 
 A typical pipeline consists e.g. of 4 stages:

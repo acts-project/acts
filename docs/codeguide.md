@@ -6,7 +6,7 @@ All guidelines have a short identifier label, e.g. N.1, for easier reference in 
 
 For cases and constructs not explicitly mentioned here, code should fall back to the [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
 
-## Acts-specific
+## ACTS-specific
 
 ### A.indices: Always use enum values to access vector/matrix components
 
@@ -100,7 +100,7 @@ Example:
 ```cpp
 // VertexSomething should be abbreviated as
 struct VtxSomething; // not VTXSomething.
-// This is bad example since the name should not be abbreviated here anyways.
+// This is bad example since the name should not be abbreviated here anyway.
 ```
 
 ### N.3: Functions and methods use mixedCase
@@ -201,7 +201,7 @@ Example:
 
 ### N.9: Files use CamelCase
 
-Files use CamelCase with upper case initial. If the file defines a single class/struct, the filename must match the typename. Otherwise, a common name describing the shared intend should be used.
+Files use CamelCase with upper case initial. If the file defines a single class/struct, the filename must match the typename. Otherwise, a common name describing the shared intent should be used.
 
 Source files use the `.cpp` extension, Header files use the `.hpp` extension, inline implementation files use the `.ipp` extensions.
 

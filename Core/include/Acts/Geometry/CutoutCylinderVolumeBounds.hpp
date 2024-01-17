@@ -149,13 +149,13 @@ inline std::vector<double> CutoutCylinderVolumeBounds::values() const {
 }
 
 inline void CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. or get(eMedR) <= 0. or get(eMaxR) <= 0. or
-      get(eMinR) >= get(eMedR) or get(eMinR) >= get(eMaxR) or
+  if (get(eMinR) < 0. || get(eMedR) <= 0. || get(eMaxR) <= 0. ||
+      get(eMinR) >= get(eMedR) || get(eMinR) >= get(eMaxR) ||
       get(eMedR) >= get(eMaxR)) {
     throw std::invalid_argument(
         "CutoutCylinderVolumeBounds: invalid radial input.");
   }
-  if (get(eHalfLengthZ) <= 0 or get(eHalfLengthZcutout) <= 0. or
+  if (get(eHalfLengthZ) <= 0 || get(eHalfLengthZcutout) <= 0. ||
       get(eHalfLengthZcutout) > get(eHalfLengthZ)) {
     throw std::invalid_argument(
         "CutoutCylinderVolumeBounds: invalid longitudinal input.");

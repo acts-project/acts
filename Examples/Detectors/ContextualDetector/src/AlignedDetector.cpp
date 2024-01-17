@@ -30,7 +30,7 @@ auto AlignedDetector::finalize(
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   ContextDecorators aContextDecorators;
 
-  // Let's create a reandom number service
+  // Let's create a random number service
   ActsExamples::RandomNumbers::Config randomNumberConfig;
   randomNumberConfig.seed = cfg.seed;
   auto randomNumberSvc =

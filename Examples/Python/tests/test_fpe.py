@@ -33,7 +33,7 @@ _types = [
     pytest.param(acts.FpeType.FLTINV, id="FLTINV"),
 ]
 
-_src = (Path(__file__).parent / "../src/ModuleEntry.cpp").resolve()
+_src = (Path(__file__).parent / "../src/Framework.cpp").resolve()
 _locs = {}
 with _src.open() as fh:
     _name_to_type = {v.lower(): k for k, v in _names.items()}

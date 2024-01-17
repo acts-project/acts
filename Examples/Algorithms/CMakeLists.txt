@@ -5,6 +5,7 @@ add_subdirectory_if(Geant4HepMC ACTS_BUILD_EXAMPLES_GEANT4 AND ACTS_BUILD_EXAMPL
 add_subdirectory_if(Geant4 ACTS_BUILD_EXAMPLES_GEANT4)
 add_subdirectory(Generators)
 add_subdirectory_if(GeneratorsPythia8 ACTS_BUILD_EXAMPLES_PYTHIA8)
+add_subdirectory(Geometry)
 add_subdirectory(MaterialMapping)
 add_subdirectory(Printers)
 add_subdirectory(Propagation)

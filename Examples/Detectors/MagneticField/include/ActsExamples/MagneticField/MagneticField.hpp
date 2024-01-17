@@ -13,10 +13,10 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 #include "ActsExamples/MagneticField/ScalableBField.hpp"
 
@@ -28,13 +28,12 @@ namespace ActsExamples {
 namespace detail {
 
 using InterpolatedMagneticField2 = Acts::InterpolatedBFieldMap<
-    Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                       Acts::detail::EquidistantAxis>>;
+    Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
+               Acts::detail::EquidistantAxis>>;
 
-using InterpolatedMagneticField3 =
-    Acts::InterpolatedBFieldMap<Acts::detail::Grid<
-        Acts::Vector3, Acts::detail::EquidistantAxis,
-        Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>;
+using InterpolatedMagneticField3 = Acts::InterpolatedBFieldMap<
+    Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
+               Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>;
 
 }  // namespace detail
 

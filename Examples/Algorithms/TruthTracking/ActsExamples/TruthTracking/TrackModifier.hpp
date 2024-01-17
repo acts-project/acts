@@ -25,18 +25,10 @@ struct AlgorithmContext;
 class TrackModifier final : public IAlgorithm {
  public:
   struct Config {
-    /// Optional. Input trajectories container. Mutually exclusive with track
-    /// parameters input.
-    std::string inputTrajectories;
-    /// Optional. Input track parameters collection. Mutually exclusive with
-    /// trajectories input.
-    std::string inputTrackParameters;
-    /// Optional. Output trajectories container. Will only be set if
-    /// trajectories input was set
-    std::string outputTrajectories;
-    /// Optional. Output track parameters collection. Will only be set if track
-    /// parameters input was set.
-    std::string outputTrackParameters;
+    /// Input track collection.
+    std::string inputTracks;
+    /// Output track collection.
+    std::string outputTracks;
 
     /// When turned on, only keep the diagonal of the cov matrix.
     bool dropCovariance{false};
@@ -56,15 +48,9 @@ class TrackModifier final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
-      this, "InputTrackParameters"};
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
 
-  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
-      this, "OutputTrackParameters"};
-  WriteDataHandle<TrajectoriesContainer> m_outputTrajectories{
-      this, "OutputTrajectories"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

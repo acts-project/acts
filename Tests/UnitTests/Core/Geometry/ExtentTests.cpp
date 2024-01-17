@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   const auto& vHist = gExtHist.valueHistograms();
   auto xVals = vHist[binX];
 
-  BOOST_CHECK(xVals.size() == 6u);
+  BOOST_CHECK_EQUAL(xVals.size(), 6u);
   std::vector<ActsScalar> reference = {15_mm, 18_mm, 15_mm,
                                        15_mm, 18_mm, 15_mm};
   BOOST_CHECK(xVals == reference);
@@ -141,16 +141,16 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   CHECK_CLOSE_ABS(gExt.min(binR), 0_mm, 1e-6);
   CHECK_CLOSE_ABS(gExt.max(binR), 18_mm, 1e-6);
 
-  // Take an Extent and add an xonstrain
+  // Take an Extent and add a constraint
   Extent gExtConst;
   gExtConst.set(binR, 0., 5.);
   Extent gExtNonConst;
-  BOOST_CHECK(not gExtNonConst.constrains(binR));
+  BOOST_CHECK(!gExtNonConst.constrains(binR));
   gExtNonConst.addConstrain(gExtConst);
   BOOST_CHECK(gExtNonConst.constrains(binR));
 
   std::string tString = gExtConst.toString();
-  BOOST_CHECK(not tString.empty());
+  BOOST_CHECK(!tString.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

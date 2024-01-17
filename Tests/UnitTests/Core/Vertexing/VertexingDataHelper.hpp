@@ -22,9 +22,6 @@ namespace Test {
 using namespace Acts::UnitLiterals;
 using Covariance = BoundSquareMatrix;
 
-// Create a test context
-GeometryContext geoCtx = GeometryContext();
-
 enum VertexCsvData { BeamSpotData, VerticesData, TracksData };
 
 /// @brief Helper struct to store reference vertex related information
@@ -116,7 +113,9 @@ readTracksAndVertexCSV(const std::string& toolString,
         std::stod(row[16]), std::stod(row[20]), std::stod(row[23]),
         std::stod(row[25]) * 1. / (1_MeV), std::stod(row[26]);
 
-    tracks.emplace_back(perigeeSurface, params, std::move(covMat));
+    // TODO we do not have a hypothesis at hand here. defaulting to pion
+    tracks.emplace_back(perigeeSurface, params, std::move(covMat),
+                        ParticleHypothesis::pion());
   }
 
   // Read in reference vertex data

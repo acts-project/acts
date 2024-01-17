@@ -149,11 +149,11 @@ def runMaterialMappingVariance(
     readCachedSurfaceInformation=False,
 ):
     """
-    Run the material mapping and compute the variance for each bin of each surfaces
+    Run the material mapping and compute the variance for each bin of each surface
     Return a dict with the GeometryId value of the surface as a key that stores
     a list of pairs corresponding to the variance and number of tracks associated with each bin of the surface
 
-    binMap : Map containning the binning for each surfaces
+    binMap : Map containing the binning for each surface
     events : Number of event to use in the mapping
     job : ID of the job
     inputPath : Directory containing the input geantino track and the json geometry
@@ -326,7 +326,7 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
     key : Id of the surface corresponding to this experiment
     nbJobs : Total number of jobs to be executed simultaneously
     pathDB : Path to the databases
-    pathResult : Path to the write the result of the optimisation
+    pathResult : Path to write the result of the optimisation
     pipeBin : Pipe use to send the experiment binning to the main python instance
     pipeResult : Pipe to receive the result of the optimisation
     doPloting : true if we want to plot the result of the optimisation and obtain the optimal material map

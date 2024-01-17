@@ -19,16 +19,14 @@ struct AlgorithmContext;
 ActsExamples::TutorialVertexFinderAlgorithm::TutorialVertexFinderAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("TutorialVertexFinder", lvl), m_cfg(cfg) {
-  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
-    throw std::invalid_argument(
-        "You have to either provide track parameters or trajectories");
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing input track parameter collection");
   }
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
   }
 
-  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
 }
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -33,9 +33,6 @@
 #include "TGeoVolume.h"
 #include "TView.h"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
 
 namespace Test {
@@ -57,7 +54,11 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   TGeoMedium *med = new TGeoMedium("MED", 1, mat);
   TGeoVolume *top = gGeoManager->MakeBox("TOP", med, 100, 100, 100);
   gGeoManager->SetTopVolume(top);
-  TGeoArb8 *arb = new TGeoArb8(1);
+  // The one parameter at construction is dZ, when the
+  // TGeoArb8 is spanning from -dZ to +dZ:
+  // - hence, the thickness is 2 * dZ
+  ActsScalar dZ = 1.;
+  TGeoArb8 *arb = new TGeoArb8(dZ);
   arb->SetVertex(0, -30, -25);
   arb->SetVertex(1, -25, 25);
   arb->SetVertex(2, 5, 25);
@@ -74,12 +75,13 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   std::vector<std::string> allowedAxes = {"XY*", "xy*", "Xy*", "xY*",
                                           "YX*", "yx*", "Yx*", "yX*"};
 
-  size_t iarb8 = 0;
+  std::size_t iarb8 = 0;
   for (const auto &axes : allowedAxes) {
-    auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                 *gGeoIdentity, axes, 1);
-    BOOST_CHECK_NE(plane, nullptr);
+    auto [plane, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
+    BOOST_REQUIRE_NE(plane, nullptr);
     BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
+    BOOST_CHECK_EQUAL(thickness, dZ * 2.);
 
     auto bounds =
         dynamic_cast<const ConvexPolygonBounds<4> *>(&(plane->bounds()));

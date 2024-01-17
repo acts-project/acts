@@ -12,19 +12,16 @@ setup = makeSetup()
 
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
-        events=500,
+        events=10000,
         numThreads=-1,
         logLevel=acts.logging.INFO,
-        fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
-            Path(__file__).parent.parent / "fpe_masks.yml"
-        ),
     )
 
     tp = Path(temp)
     runTruthTrackingGsf(
         setup.trackingGeometry,
-        setup.digiConfig,
         setup.field,
+        setup.digiConfig,
         outputDir=tp,
         s=s,
     )

@@ -41,7 +41,7 @@ struct DenseStepperPropagatorOptions
   bool meanEnergyLoss = true;
 
   /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
-  bool includeGgradient = true;
+  bool includeGradient = true;
 
   /// Cut-off value for the momentum in SI units
   double momentumCutOff = 0.;
@@ -56,27 +56,19 @@ struct DenseStepperPropagatorOptions
       extended_aborter_list_t aborters) const {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
         eoptions(this->geoContext, this->magFieldContext);
-    // Copy the options over
-    eoptions.direction = this->direction;
-    eoptions.absPdgCode = this->absPdgCode;
-    eoptions.mass = this->mass;
-    eoptions.maxSteps = this->maxSteps;
-    eoptions.maxStepSize = this->maxStepSize;
-    eoptions.targetTolerance = this->targetTolerance;
-    eoptions.pathLimit = this->pathLimit;
-    eoptions.loopProtection = this->loopProtection;
-    eoptions.loopFraction = this->loopFraction;
 
-    // Stepper options
-    eoptions.tolerance = this->tolerance;
-    eoptions.stepSizeCutOff = this->stepSizeCutOff;
+    // Copy the options over
+    eoptions.setPlainOptions(*this);
+
     // Action / abort list
-    eoptions.actionList = this->actionList;
+    eoptions.actionList = std::move(this->actionList);
     eoptions.abortList = std::move(aborters);
+
     // Copy dense environment specific parameters
     eoptions.meanEnergyLoss = meanEnergyLoss;
-    eoptions.includeGgradient = includeGgradient;
+    eoptions.includeGradient = includeGradient;
     eoptions.momentumCutOff = momentumCutOff;
+
     // And return the options
     return eoptions;
   }

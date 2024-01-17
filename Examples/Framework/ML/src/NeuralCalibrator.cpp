@@ -8,6 +8,7 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include <ActsExamples/EventData/NeuralCalibrator.hpp>
 
 #include <TFile.h>
@@ -15,8 +16,8 @@
 namespace detail {
 
 template <typename Array>
-size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
-                        size_t size0 = 7u, size_t size1 = 7u) {
+std::size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
+                             std::size_t size0 = 7u, std::size_t size1 = 7u) {
   // First, rescale the activations to sum to unity. This promotes
   // numerical stability in the index computation
   double totalAct = 0;
@@ -30,7 +31,7 @@ size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
 
   double acc0 = 0;
   double acc1 = 0;
-  for (size_t i = 0; i < cluster.channels.size(); i++) {
+  for (std::size_t i = 0; i < cluster.channels.size(); i++) {
     acc0 += cluster.channels.at(i).bin[0] * weights.at(i);
     acc1 += cluster.channels.at(i).bin[1] * weights.at(i);
   }
@@ -60,8 +61,8 @@ size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
 }  // namespace detail
 
 ActsExamples::NeuralCalibrator::NeuralCalibrator(
-    const std::filesystem::path& modelPath, size_t nComponents,
-    std::vector<size_t> volumeIds)
+    const std::filesystem::path& modelPath, std::size_t nComponents,
+    std::vector<std::size_t> volumeIds)
     : m_env(ORT_LOGGING_LEVEL_WARNING, "NeuralCalibrator"),
       m_model(m_env, modelPath.c_str()),
       m_nComponents{nComponents},
@@ -89,15 +90,15 @@ void ActsExamples::NeuralCalibrator::calibrate(
   auto input = inputBatch(0, Eigen::all);
 
   // TODO: Matrix size should be configurable perhaps?
-  size_t matSize0 = 7u;
-  size_t matSize1 = 7u;
-  size_t iInput = ::detail::fillChargeMatrix(
+  std::size_t matSize0 = 7u;
+  std::size_t matSize1 = 7u;
+  std::size_t iInput = ::detail::fillChargeMatrix(
       input, (*clusters)[idxSourceLink.index()], matSize0, matSize1);
 
   input[iInput++] = idxSourceLink.geometryId().volume();
   input[iInput++] = idxSourceLink.geometryId().layer();
-  input[iInput++] = trackState.parameters()[Acts::eBoundPhi];
-  input[iInput++] = trackState.parameters()[Acts::eBoundTheta];
+
+  const Acts::Surface& referenceSurface = trackState.referenceSurface();
 
   std::visit(
       [&](const auto& measurement) {
@@ -107,6 +108,24 @@ void ActsExamples::NeuralCalibrator::calibrate(
         Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
             E * measurement.covariance() * E.transpose();
 
+        Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(
+            fpar[Acts::eBoundPhi], fpar[Acts::eBoundTheta]);
+        Acts::Vector3 globalPosition = referenceSurface.localToGlobal(
+            gctx, fpar.segment<2>(Acts::eBoundLoc0), dir);
+
+        // Rotation matrix. When applied to global coordinates, they
+        // are rotated into the local reference frame of the
+        // surface. Note that this such a rotation can be found by
+        // inverting a matrix whose columns correspond to the
+        // coordinate axes of the local coordinate system.
+        Acts::RotationMatrix3 rot =
+            referenceSurface.referenceFrame(gctx, globalPosition, dir)
+                .inverse();
+        std::pair<double, double> angles =
+            Acts::VectorHelpers::incidentAngles(dir, rot);
+
+        input[iInput++] = angles.first;
+        input[iInput++] = angles.second;
         input[iInput++] = fpar[Acts::eBoundLoc0];
         input[iInput++] = fpar[Acts::eBoundLoc1];
         input[iInput++] = fcov(Acts::eBoundLoc0, Acts::eBoundLoc0);
@@ -124,7 +143,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
         // [           0,    nComponent[ --> priors
         // [  nComponent,  3*nComponent[ --> means
         // [3*nComponent,  5*nComponent[ --> variances
-        size_t nParams = 5 * m_nComponents;
+        std::size_t nParams = 5 * m_nComponents;
         if (output.size() != nParams) {
           throw std::runtime_error(
               "Got output vector of size " + std::to_string(output.size()) +
@@ -132,21 +151,21 @@ void ActsExamples::NeuralCalibrator::calibrate(
         }
 
         // Most probable value computation of mixture density
-        size_t iMax = 0;
+        std::size_t iMax = 0;
         if (m_nComponents > 1) {
           iMax = std::distance(
               output.begin(),
               std::max_element(output.begin(), output.begin() + m_nComponents));
         }
-        size_t iLoc0 = m_nComponents + iMax * 2;
-        size_t iVar0 = 3 * m_nComponents + iMax * 2;
+        std::size_t iLoc0 = m_nComponents + iMax * 2;
+        std::size_t iVar0 = 3 * m_nComponents + iMax * 2;
 
         fpar[Acts::eBoundLoc0] = output[iLoc0];
         fpar[Acts::eBoundLoc1] = output[iLoc0 + 1];
         fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = output[iVar0];
         fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = output[iVar0 + 1];
 
-        constexpr size_t kSize =
+        constexpr std::size_t kSize =
             std::remove_reference_t<decltype(measurement)>::size();
         std::array<Acts::BoundIndices, kSize> indices = measurement.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;

@@ -22,7 +22,6 @@ namespace Acts {
 /// @tparam input_track_t Track object type
 
 template <typename input_track_t>
-
 struct TrackAtVertex {
   /// Deleted default constructor
   TrackAtVertex() = delete;
@@ -73,6 +72,26 @@ struct TrackAtVertex {
 
   /// Is already linearized
   bool isLinearized = false;
+};
+
+struct TrackAtVertexRef {
+  BoundTrackParameters& fittedParams;
+  double& chi2Track;
+  double& ndf;
+  double& vertexCompatibility;
+  double& trackWeight;
+  LinearizedTrack& linearizedState;
+  bool isLinearized;
+
+  template <typename input_track_t>
+  TrackAtVertexRef(TrackAtVertex<input_track_t>& track)
+      : fittedParams(track.fittedParams),
+        chi2Track(track.chi2Track),
+        ndf(track.ndf),
+        vertexCompatibility(track.vertexCompatibility),
+        trackWeight(track.trackWeight),
+        linearizedState(track.linearizedState),
+        isLinearized(track.isLinearized) {}
 };
 
 }  // namespace Acts

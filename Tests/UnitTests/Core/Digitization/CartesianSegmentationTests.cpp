@@ -14,6 +14,7 @@
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -22,15 +23,13 @@
 #include <cstdlib>
 #include <memory>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
 namespace Test {
 
-size_t nbinsx = 100;
-size_t nbinsy = 200;
+std::size_t nbinsx = 100;
+std::size_t nbinsy = 200;
 double hThickness = 75_um;
 double lAngle = 0.1;
 
@@ -56,8 +55,8 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   BOOST_CHECK_EQUAL(boundariesPZL.size(), 6u);
 
   // There's one less because of the boundary and lorentz plane
-  BOOST_CHECK_EQUAL(segSurfacesXPZL.size(), size_t(nbinsx - 1));
-  BOOST_CHECK_EQUAL(segSurfacesYPZL.size(), size_t(nbinsy - 1));
+  BOOST_CHECK_EQUAL(segSurfacesXPZL.size(), std::size_t(nbinsx - 1));
+  BOOST_CHECK_EQUAL(segSurfacesYPZL.size(), std::size_t(nbinsy - 1));
 
   // Check the boundary surfaces are thickness away
   auto centerReadoutPZL = boundariesPZL[0]->center(tgContext);
@@ -79,8 +78,8 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   BOOST_CHECK_EQUAL(boundariesNZL.size(), 6u);
 
   // There's one less because of the boundary and lorentz plane
-  BOOST_CHECK_EQUAL(segSurfacesXNZL.size(), size_t(nbinsx - 1));
-  BOOST_CHECK_EQUAL(segSurfacesYNZL.size(), size_t(nbinsy - 1));
+  BOOST_CHECK_EQUAL(segSurfacesXNZL.size(), std::size_t(nbinsx - 1));
+  BOOST_CHECK_EQUAL(segSurfacesYNZL.size(), std::size_t(nbinsy - 1));
 
   // Check the boundary surfaces are thickness away
   auto centerReadoutNZL = boundariesNZL[0]->center(tgContext);
@@ -106,18 +105,21 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   BOOST_CHECK_EQUAL(boundariesPL.size(), 6u);
 
   // There's one less because of the boundary and lorentz plane
-  BOOST_CHECK_EQUAL(segSurfacesXPL.size(), size_t(nbinsx - 1));
-  BOOST_CHECK_EQUAL(segSurfacesYPL.size(), size_t(nbinsy - 1));
+  BOOST_CHECK_EQUAL(segSurfacesXPL.size(), std::size_t(nbinsx - 1));
+  BOOST_CHECK_EQUAL(segSurfacesYPL.size(), std::size_t(nbinsy - 1));
 
   // Check the boundary surfaces are thickness away
   auto centerReadoutPL = boundariesPL[0]->center(tgContext);
-  auto centerCoutnerPL = boundariesPL[1]->center(tgContext);
-  double thicknessPL = abs((centerReadoutPL - centerCoutnerPL).z());
+  auto centerCounterPL = boundariesPL[1]->center(tgContext);
+  double thicknessPL = abs((centerReadoutPL - centerCounterPL).z());
 
   CHECK_CLOSE_REL(thicknessPL, 2 * hThickness, 10e-6);
 
   // check the lorentz angle - let's take the second one
-  auto nLorentzPlane = segSurfacesXPL[2]->normal(tgContext);
+  const auto* pSurface =
+      dynamic_cast<const Acts::PlaneSurface*>(segSurfacesXPL[2].get());
+  BOOST_REQUIRE(pSurface != nullptr);
+  auto nLorentzPlane = pSurface->normal(tgContext);
 
   Vector3 nNominal(1., 0., 0.);
   double tAngle = acos(nLorentzPlane.dot(nNominal));

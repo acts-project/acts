@@ -14,11 +14,13 @@
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -79,6 +81,32 @@ class InternalSurfaceBuilder : public IInternalStructureBuilder {
   bounds_type m_bounds;
 };
 
+class SurfaceGeoIdGenerator : public Acts::Experimental::IGeometryIdGenerator {
+ public:
+  Acts::Experimental::IGeometryIdGenerator::GeoIdCache generateCache()
+      const final {
+    return std::any();
+  }
+
+  void assignGeometryId(
+      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Acts::Experimental::DetectorVolume& dVolume) const final {
+    for (auto [is, s] : Acts::enumerate(dVolume.surfacePtrs())) {
+      Acts::GeometryIdentifier geoID;
+      geoID.setPassive(is + 1);
+      s->assignGeometryId(geoID);
+    }
+  }
+
+  void assignGeometryId(
+      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Acts::Experimental::Portal& /*portal*/) const final {}
+
+  void assignGeometryId(
+      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Acts::Surface& /*surface*/) const final {}
+};
+
 /// @brief  Mockup internal surface builder
 /// @tparam surface_type the surface type to be constructed
 /// @tparam bounds_type the bounds type that is constructed
@@ -130,19 +158,32 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_EmptyVolume) {
   dvCfg.externalsBuilder = cBuilder;
   dvCfg.internalsBuilder = nullptr;
 
+  // Assign proto material to
+  dvCfg.portalMaterialBinning[2u] = BinningDescription{
+      {ProtoBinning(binZ, Acts::detail::AxisBoundaryType::Bound, 50),
+       ProtoBinning(binPhi, Acts::detail::AxisBoundaryType::Closed, -M_PI, M_PI,
+                    12)}};
+
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.size(), 1u);
   BOOST_CHECK(volumes.front()->surfaces().empty());
   BOOST_CHECK(volumes.front()->volumes().empty());
 
-  BOOST_CHECK(portals.size() == 4u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
 
-  BOOST_CHECK(roots.volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 1u);
   BOOST_CHECK(roots.volumeFinder.connected());
+
+  // Check that the outside portal has material
+  BOOST_CHECK_NE(portals[2u]->surface().surfaceMaterial(), nullptr);
+  // While all the others have none
+  BOOST_CHECK_EQUAL(portals[0u]->surface().surfaceMaterial(), nullptr);
+  BOOST_CHECK_EQUAL(portals[1u]->surface().surfaceMaterial(), nullptr);
+  BOOST_CHECK_EQUAL(portals[3u]->surface().surfaceMaterial(), nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithSurface) {
@@ -160,19 +201,23 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithSurface) {
   dvCfg.name = "CylinderWithSurface";
   dvCfg.externalsBuilder = cBuilder;
   dvCfg.internalsBuilder = sBuilder;
+  dvCfg.geoIdGenerator = std::make_shared<SurfaceGeoIdGenerator>();
 
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
-  BOOST_CHECK(volumes.front()->surfaces().size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.size(), 1u);
+  BOOST_CHECK_EQUAL(volumes.front()->surfaces().size(), 1u);
+
+  BOOST_CHECK_EQUAL(volumes.front()->surfaces().front()->geometryId().passive(),
+                    1u);
   BOOST_CHECK(volumes.front()->volumes().empty());
 
-  BOOST_CHECK(portals.size() == 4u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
 
-  BOOST_CHECK(roots.volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 1u);
   BOOST_CHECK(roots.volumeFinder.connected());
 }
 
@@ -197,9 +242,9 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolume) {
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
-  BOOST_CHECK(portals.size() == 4u);
-  BOOST_CHECK(roots.volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.size(), 1u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
@@ -224,13 +269,13 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
 
   auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.size(), 1u);
   BOOST_CHECK(volumes.front()->surfaces().empty());
-  BOOST_CHECK(volumes.front()->volumes().size() == 1u);
+  BOOST_CHECK_EQUAL(volumes.front()->volumes().size(), 1u);
 
-  BOOST_CHECK(portals.size() == 4u);
+  BOOST_CHECK_EQUAL(portals.size(), 4u);
 
-  BOOST_CHECK(roots.volumes.size() == 2u);
+  BOOST_CHECK_EQUAL(roots.volumes.size(), 2u);
   BOOST_CHECK(roots.volumeFinder.connected());
 }
 

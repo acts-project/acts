@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
@@ -132,10 +133,11 @@ Acts::Vector3 Acts::LineSurface::binningPosition(
   return center(gctx);
 }
 
-Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& /*gctx*/,
-                                        const Vector2& /*lpos*/) const {
-  throw std::runtime_error(
-      "LineSurface: normal is undefined without known direction");
+Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& gctx,
+                                        const Vector3& pos,
+                                        const Vector3& direction) const {
+  auto ref = referenceFrame(gctx, pos, direction);
+  return ref.col(2);
 }
 
 const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
@@ -145,7 +147,7 @@ const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
   return s_noBounds;
 }
 
-Acts::SurfaceIntersection Acts::LineSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
@@ -168,9 +170,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
   // small number so `u` does not explode
   if (std::abs(denom) < std::abs(tolerance)) {
     // return a false intersection
-    return {Intersection3D(position, std::numeric_limits<double>::max(),
-                           Intersection3D::Status::unreachable),
-            this};
+    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
   }
 
   double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
@@ -181,19 +181,19 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
   Vector3 result = ma + u * ea;
   // Evaluate the boundary check if requested
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
-  if (bcheck and m_bounds) {
+  if (bcheck.isEnabled() && m_bounds) {
     // At closest approach: check inside R or and inside Z
     Vector3 vecLocal = result - mb;
     double cZ = vecLocal.dot(eb);
     double hZ = m_bounds->get(LineBounds::eHalfLengthZ) + tolerance;
-    if ((std::abs(cZ) > std::abs(hZ)) or
+    if ((std::abs(cZ) > std::abs(hZ)) ||
         ((vecLocal - cZ * eb).norm() >
          m_bounds->get(LineBounds::eR) + tolerance)) {
       status = Intersection3D::Status::missed;
     }
   }
 
-  return {Intersection3D(result, u, status), this};
+  return {{Intersection3D(result, u, status), Intersection3D::invalid()}, this};
 }
 
 Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
@@ -205,11 +205,6 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = freeParams.segment<3>(eFreeDir0);
-  // Get the sines and cosines directly
-  double cosTheta = std::cos(boundParams[eBoundTheta]);
-  double sinTheta = std::sin(boundParams[eBoundTheta]);
-  double cosPhi = std::cos(boundParams[eBoundPhi]);
-  double sinPhi = std::sin(boundParams[eBoundPhi]);
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
 
@@ -221,12 +216,13 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacToGlobal(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
-  jacToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
-  jacToGlobal(eFreeDir2, eBoundTheta) = -sinTheta;
+  jacToGlobal.block<3, 2>(eFreeDir0, eBoundPhi) =
+      sphericalToFreeDirectionJacobian(direction);
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
+
+  // For the derivative of global position with bound angles, refer the
+  // following white paper:
+  // https://acts.readthedocs.io/en/latest/white_papers/line-surface-jacobian.html
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));

@@ -25,13 +25,27 @@ namespace Acts {
 class SurfaceBoundsStub : public SurfaceBounds {
  public:
   /// Implement ctor and pure virtual methods of SurfaceBounds
-  explicit SurfaceBoundsStub(size_t nValues = 0) : m_values(nValues, 0) {
+  explicit SurfaceBoundsStub(std::size_t nValues = 0) : m_values(nValues, 0) {
     std::iota(m_values.begin(), m_values.end(), 0);
   }
 
+#if defined(__GNUC__) && __GNUC__ == 13 && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+  SurfaceBoundsStub(const SurfaceBoundsStub& other) = default;
+#if defined(__GNUC__) && __GNUC__ == 13 && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
   ~SurfaceBoundsStub() override = default;
-  BoundsType type() const final { return SurfaceBounds::eOther; }
-  std::vector<double> values() const override { return m_values; }
+  BoundsType type() const final {
+    return SurfaceBounds::eOther;
+  }
+  std::vector<double> values() const override {
+    return m_values;
+  }
   bool inside(const Vector2& /*lpos*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
@@ -51,7 +65,7 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant SurfaceBounds object
 BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
   SurfaceBoundsStub u;
-  SurfaceBoundsStub s(1);  // would act as size_t cast to SurfaceBounds
+  SurfaceBoundsStub s(1);  // would act as std::size_t cast to SurfaceBounds
   SurfaceBoundsStub t(s);
   SurfaceBoundsStub v(u);
 }

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,14 +8,13 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -50,13 +49,11 @@ class VertexPerformanceWriter final
     std::string inputAllTruthParticles;
     /// Selected input truth particle collection.
     std::string inputSelectedTruthParticles;
-    /// Optional. Input track parameters.
-    std::string inputTrackParameters;
+    /// Tracks object from track finidng.
+    std::string inputTracks;
     /// Optional. Truth particles associated to tracks. Using 1:1 matching if
     /// given.
     std::string inputAssociatedTruthParticles;
-    /// Optional. Trajectories object from track finidng.
-    std::string inputTrajectories;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
@@ -77,6 +74,8 @@ class VertexPerformanceWriter final
     double truthMatchProbMin = 0.5;
     /// Whether information about tracks is available
     bool useTracks = true;
+    /// minimum track weight for track to be considered as part of the fit
+    double minTrkWeight = 0.1;
   };
 
   /// Constructor
@@ -106,6 +105,9 @@ class VertexPerformanceWriter final
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
+
+  /// The event number
+  std::uint32_t m_eventNr{0};
 
   // True 4D vertex position
   std::vector<double> m_truthX;
@@ -185,6 +187,10 @@ class VertexPerformanceWriter final
   std::vector<std::vector<double>> m_pullQOverP;
   std::vector<std::vector<double>> m_pullQOverPFitted;
 
+  // Track weights from vertex fit, will be set to 1 if we do unweighted vertex
+  // fitting
+  std::vector<std::vector<double>> m_trkWeight;
+
   // Number of tracks associated with truth/reconstructed vertex
   std::vector<int> m_nTracksOnTruthVertex;
   std::vector<int> m_nTracksOnRecoVertex;
@@ -212,11 +218,7 @@ class VertexPerformanceWriter final
   ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
       this, "InputSelectedTruthParticles"};
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
-
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
 
   ReadDataHandle<SimParticleContainer> m_inputAssociatedTruthParticles{
       this, "InputAssociatedTruthParticles"};

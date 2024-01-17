@@ -45,39 +45,39 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   auto sensor = m_detElement->GetVolume();
   auto tgShape = sensor->GetShape();
 
-  auto cylinderComps = TGeoSurfaceConverter::cylinderComponents(
-      *tgShape, rotation, translation, axes, scalor);
-  auto cylinderBounds = std::get<0>(cylinderComps);
-  if (cylinderBounds != nullptr) {
-    m_transform = std::get<1>(cylinderComps);
-    m_bounds = cylinderBounds;
-    m_thickness = std::get<2>(cylinderComps);
-    m_surface = Surface::makeShared<CylinderSurface>(cylinderBounds, *this);
+  auto [cBounds, cTransform, cThickness] =
+      TGeoSurfaceConverter::cylinderComponents(*tgShape, rotation, translation,
+                                               axes, scalor);
+  if (cBounds != nullptr) {
+    m_transform = cTransform;
+    m_bounds = cBounds;
+    m_thickness = cThickness;
+    m_surface = Surface::makeShared<CylinderSurface>(cBounds, *this);
   }
 
   // Check next if you do not have a surface
   if (m_surface == nullptr) {
-    auto discComps = TGeoSurfaceConverter::discComponents(
-        *tgShape, rotation, translation, axes, scalor);
-    auto discBounds = std::get<0>(discComps);
-    if (discBounds != nullptr) {
-      m_bounds = discBounds;
-      m_transform = std::get<1>(discComps);
-      m_thickness = std::get<2>(discComps);
-      m_surface = Surface::makeShared<DiscSurface>(discBounds, *this);
+    auto [dBounds, dTransform, dThickness] =
+        TGeoSurfaceConverter::discComponents(*tgShape, rotation, translation,
+                                             axes, scalor);
+    if (dBounds != nullptr) {
+      m_bounds = dBounds;
+      m_transform = dTransform;
+      m_thickness = dThickness;
+      m_surface = Surface::makeShared<DiscSurface>(dBounds, *this);
     }
   }
 
   // Check next if you do not have a surface
   if (m_surface == nullptr) {
-    auto planeComps = TGeoSurfaceConverter::planeComponents(
-        *tgShape, rotation, translation, axes, scalor);
-    auto planeBounds = std::get<0>(planeComps);
-    if (planeBounds != nullptr) {
-      m_bounds = planeBounds;
-      m_transform = std::get<1>(planeComps);
-      m_thickness = std::get<2>(planeComps);
-      m_surface = Surface::makeShared<PlaneSurface>(planeBounds, *this);
+    auto [pBounds, pTransform, pThickness] =
+        TGeoSurfaceConverter::planeComponents(*tgShape, rotation, translation,
+                                              axes, scalor);
+    if (pBounds != nullptr) {
+      m_bounds = pBounds;
+      m_transform = pTransform;
+      m_thickness = pThickness;
+      m_surface = Surface::makeShared<PlaneSurface>(pBounds, *this);
     }
   }
 

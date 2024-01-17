@@ -51,11 +51,11 @@ struct can_interpolate {
 
   static const bool value =
       std::is_same<std::true_type,
-                   decltype(value_type_test<Value>(nullptr))>::value and
+                   decltype(value_type_test<Value>(nullptr))>::value &&
       std::is_same<std::true_type,
-                   decltype(point_type_test<Point1>(nullptr))>::value and
+                   decltype(point_type_test<Point1>(nullptr))>::value &&
       std::is_same<std::true_type,
-                   decltype(point_type_test<Point2>(nullptr))>::value and
+                   decltype(point_type_test<Point2>(nullptr))>::value &&
       std::is_same<std::true_type,
                    decltype(point_type_test<Point3>(nullptr))>::value;
 };
@@ -63,16 +63,16 @@ struct can_interpolate {
 /// @brief determine number of dimension from power of 2
 ///
 /// @tparam N power of 2
-template <size_t N>
+template <std::size_t N>
 struct get_dimension {
   /// exponent @c d such that \f$2^d = N \f$
-  static constexpr size_t value = get_dimension<(N >> 1)>::value + 1u;
+  static constexpr std::size_t value = get_dimension<(N >> 1)>::value + 1u;
 };
 
 /// @cond
 template <>
 struct get_dimension<2u> {
-  static constexpr size_t value = 1u;
+  static constexpr std::size_t value = 1u;
 };
 /// @endcond
 
@@ -94,14 +94,14 @@ struct get_dimension<2u> {
 /// - @c N is the number of hyper box corners which is \f$2^d\f$ where \f$d\f$
 /// is the dimensionality of the hyper box. The dimensionality must be
 /// consistent with the provided @c Point types.
-template <typename T, class Point1, class Point2, class Point3, size_t D,
-          size_t N>
+template <typename T, class Point1, class Point2, class Point3, std::size_t D,
+          std::size_t N>
 struct interpolate_impl;
 
 /// @cond
 // recursive implementation of linear interpolation in multiple dimensions
-template <typename T, class Point1, class Point2, class Point3, size_t D,
-          size_t N>
+template <typename T, class Point1, class Point2, class Point3, std::size_t D,
+          std::size_t N>
 struct interpolate_impl {
   static T run(const Point1& pos, const Point2& lowerLeft,
                const Point3& upperRight, const std::array<T, N>& fields) {
@@ -109,7 +109,7 @@ struct interpolate_impl {
     const double f = (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
 
     std::array<T, (N >> 1)> newFields{};
-    for (size_t i = 0; i < N / 2; ++i) {
+    for (std::size_t i = 0; i < N / 2; ++i) {
       newFields.at(i) = (1 - f) * fields.at(2 * i) + f * fields.at(2 * i + 1);
     }
 
@@ -119,7 +119,7 @@ struct interpolate_impl {
 };
 
 // simple linear interpolation in 1D
-template <typename T, class Point1, class Point2, class Point3, size_t D>
+template <typename T, class Point1, class Point2, class Point3, std::size_t D>
 struct interpolate_impl<T, Point1, Point2, Point3, D, 2u> {
   static T run(const Point1& pos, const Point2& lowerLeft,
                const Point3& upperRight, const std::array<T, 2u>& fields) {

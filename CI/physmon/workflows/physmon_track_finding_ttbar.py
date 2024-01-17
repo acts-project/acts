@@ -9,7 +9,6 @@ from acts.examples.simulation import (
     addFatras,
     addDigitization,
 )
-
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
@@ -34,51 +33,10 @@ setup = makeSetup()
 
 
 with tempfile.TemporaryDirectory() as temp:
-    fpeMasks = acts.examples.Sequencer.FpeMask.fromFile(
-        Path(__file__).parent.parent / "fpe_masks.yml"
-    ) + [
-        acts.examples.Sequencer.FpeMask(
-            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
-            (172, 173),
-            acts.FpeType.FLTINV,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
-            (172, 173),
-            acts.FpeType.FLTOVF,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Examples/Io/Root/src/RootTrajectorySummaryWriter.cpp",
-            (371, 372),
-            acts.FpeType.FLTINV,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Core/src/Utilities/AnnealingUtility.cpp",
-            (38, 39),
-            acts.FpeType.FLTUND,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp",
-            (110, 111),
-            acts.FpeType.FLTINV,
-            1,
-        ),
-        acts.examples.Sequencer.FpeMask(
-            "Fatras/include/ActsFatras/Kernel/Simulation.hpp",
-            (98, 99),
-            acts.FpeType.FLTOVF,
-            1,
-        ),
-    ]
     s = acts.examples.Sequencer(
         events=3,
         numThreads=-1,
         logLevel=acts.logging.INFO,
-        fpeMasks=fpeMasks,
     )
 
     tp = Path(temp)
@@ -119,9 +77,8 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-        ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
         SeedFinderConfigArg(
-            r=(None, 200 * u.mm),  # rMin=default, 33mm
+            r=(33 * u.mm, 200 * u.mm),
             deltaR=(1 * u.mm, 60 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
@@ -131,11 +88,9 @@ with tempfile.TemporaryDirectory() as temp:
             minPt=500 * u.MeV,
             impactMax=3 * u.mm,
         ),
-        SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
-        TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
+        SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
         seedingAlgorithm=SeedingAlgorithm.Default,
         geoSelectionConfigFile=setup.geoSel,
-        rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         outputDirRoot=tp,
     )
 
@@ -153,17 +108,30 @@ with tempfile.TemporaryDirectory() as temp:
 
     addAmbiguityResolution(
         s,
-        AmbiguityResolutionConfig(maximumSharedHits=3),
+        AmbiguityResolutionConfig(
+            maximumSharedHits=3,
+            maximumIterations=100000,
+            nMeasurementsMin=6,
+        ),
         outputDirRoot=tp,
+    )
+
+    s.addAlgorithm(
+        acts.examples.TracksToParameters(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTrackParameters="trackParameters",
+        )
     )
 
     addVertexFitting(
         s,
         setup.field,
-        seeder=acts.VertexSeedFinder.GaussianSeeder,
-        associatedParticles=None,
+        tracks="tracks",
+        trackParameters="trackParameters",
         outputProtoVertices="amvf_protovertices",
         outputVertices="amvf_fittedVertices",
+        seeder=acts.VertexSeedFinder.GaussianSeeder,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf",
     )
@@ -171,10 +139,11 @@ with tempfile.TemporaryDirectory() as temp:
     addVertexFitting(
         s,
         setup.field,
-        seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
-        associatedParticles=None,
+        tracks="tracks",
+        trackParameters="trackParameters",
         outputProtoVertices="amvf_gridseeder_protovertices",
         outputVertices="amvf_gridseeder_fittedVertices",
+        seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gridseeder",
     )

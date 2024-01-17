@@ -101,6 +101,12 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     double newChi2 = 0;
     BilloirVertex billoirVertex;
 
+    Vector3 linPointPos = VectorHelpers::position(linPoint);
+    // Make Perigee surface at linPointPos, transverse plane of Perigee
+    // corresponds the global x-y plane
+    const std::shared_ptr<PerigeeSurface> perigeeSurface =
+        Surface::makeShared<PerigeeSurface>(linPointPos);
+
     // iterate over all tracks
     for (std::size_t iTrack = 0; iTrack < nTracks; ++iTrack) {
       const input_track_t* trackContainer = paramVector[iTrack];
@@ -108,8 +114,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       const auto& trackParams = extractParameters(*trackContainer);
 
       auto result = linearizer.linearizeTrack(
-          trackParams, linPoint, vertexingOptions.geoContext,
-          vertexingOptions.magFieldContext, state.linearizerState);
+          trackParams, linPoint[3], *perigeeSurface,
+          vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+          state.linearizerState);
       if (!result.ok()) {
         return result.error();
       }
@@ -201,7 +208,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       invCovV += vertexingOptions.constraint.fullCovariance().inverse();
     }
 
-    // Covariance matrix of the 4D vertex position
+    // Covariance matrix of the 4D vertex position, see Ref. (3)
     SquareMatrix4 covV = invCovV.inverse();
     // Update of the vertex position
     Vector4 deltaV = covV * deltaVFac;
@@ -254,11 +261,11 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       transMat(5, 3) = 1.;
 
       // cov(V,P)
-      // TODO: This is incorrect (see Ref. (2)), but it will not be needed
-      // anyways once we replace fittedParams with fittedMomentum
+      // TODO: This is incorrect (see Ref. (3)), but it will not be needed
+      // anyway once we replace fittedParams with fittedMomentum
       ActsMatrix<4, 3> covVP = billoirTrack.B;
 
-      // cov(P,P), 3x3 matrix
+      // cov(P,P), 3x3 matrix, see Ref. (3)
       ActsSquareMatrix<3> covP =
           billoirTrack.Cinv +
           billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
@@ -291,6 +298,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     }
 
     if (!std::isnormal(newChi2)) {
+      ACTS_ERROR("Encountered non-normal chi2 value during the fit.");
       return VertexingError::NumericFailure;
     }
 
@@ -320,8 +328,10 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         paramVec[eBoundTheta] = trackMomenta[iTrack](1);
         paramVec[eBoundQOverP] = trackMomenta[iTrack](2);
         paramVec[eBoundTime] = linPoint[FreeIndices::eFreeTime];
-        BoundTrackParameters refittedParams(perigee, paramVec,
-                                            covDeltaP[iTrack]);
+        BoundTrackParameters refittedParams(
+            perigee, paramVec, covDeltaP[iTrack],
+            extractParameters(*billoirTrack.originalTrack)
+                .particleHypothesis());
         TrackAtVertex<input_track_t> trackAtVertex(
             billoirTrack.chi2, refittedParams, billoirTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackAtVertex));

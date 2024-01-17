@@ -132,18 +132,18 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @param direction for this evaluatoin
 ///
 /// @return cos(phi), sin(phi), cos(theta), sin(theta), 1/sin(theta)
-inline std::array<ActsScalar, 5> evaluateTrigonomics(const Vector3& direction) {
+inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
   const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
   const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
   const ActsScalar z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const ActsScalar cosTheta = z;
-  const ActsScalar sinTheta = std::hypot(x, y);
+  const ActsScalar sinTheta = std::sqrt(1 - z * z);
   const ActsScalar invSinTheta = 1. / sinTheta;
   const ActsScalar cosPhi = x * invSinTheta;
   const ActsScalar sinPhi = y * invSinTheta;
 
-  return {cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta};
+  return {cosPhi, sinPhi, cosTheta, sinTheta};
 }
 
 /// Helper method to extract the binning value from a 3D vector.
@@ -171,7 +171,7 @@ inline double cast(const Vector3& position, BinningValue bval) {
     case binMag:
       return position.norm();
     default:
-      assert(false and "Invalid BinningValue enum value");
+      assert(false && "Invalid BinningValue enum value");
       return std::numeric_limits<double>::quiet_NaN();
   }
 }
@@ -214,6 +214,22 @@ inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
   vec4[ePos2] = vec3[ePos2];
   vec4[eTime] = w;
   return vec4;
+}
+
+/// Calculate the incident angles of a vector with in a given reference frame
+/// @tparam Derived Eigen derived concrete type
+/// @param direction The crossing direction in the global frame
+/// @param globalToLocal Rotation from global to local frame
+/// @return The angles of incidence in the two normal planes
+inline std::pair<double, double> incidentAngles(
+    const Acts::Vector3& direction,
+    const Acts::RotationMatrix3& globalToLocal) {
+  Acts::Vector3 trfDir = globalToLocal * direction;
+  // The angles are defined with respect to the measurement axis
+  // i.e. "head-on" == pi/2, parallel = 0
+  double phi = std::atan2(trfDir[2], trfDir[0]);
+  double theta = std::atan2(trfDir[2], trfDir[1]);
+  return {phi, theta};
 }
 
 }  // namespace VectorHelpers

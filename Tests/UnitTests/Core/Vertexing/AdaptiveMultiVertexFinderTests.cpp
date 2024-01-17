@@ -117,10 +117,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
+                              ipEstimator, std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -189,15 +189,19 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
+  double relTol = 1e-2;
+  double small = 1e-3;
   for (int i = 0; i < expNRecoVertices; i++) {
     auto recoVtx = allVertices[i];
     auto expVtx = verticesInfo[i];
-    CHECK_CLOSE_ABS(recoVtx.position(), expVtx.position, 0.001_mm);
-    CHECK_CLOSE_ABS(recoVtx.covariance(), expVtx.covariance, 0.001_mm);
+    CHECK_CLOSE_OR_SMALL(recoVtx.position(), expVtx.position, relTol, small);
+    CHECK_CLOSE_OR_SMALL(recoVtx.covariance(), expVtx.covariance, relTol,
+                         small);
     BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
-    CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight, 0.003);
-    CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility, expVtx.trk1Comp,
-                    0.003);
+    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight,
+                         relTol, small);
+    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].vertexCompatibility,
+                         expVtx.trk1Comp, relTol, small);
   }
 }
 
@@ -270,11 +274,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
+                              ipEstimator, std::move(linearizer), bField);
   Finder::State state;
 
-  Finder finder(finderConfig, extractParameters);
+  Finder finder(std::move(finderConfig), extractParameters);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -347,15 +351,19 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
+  double relTol = 1e-2;
+  double small = 1e-3;
   for (int i = 0; i < expNRecoVertices; i++) {
     auto recoVtx = allVertices[i];
     auto expVtx = verticesInfo[i];
-    CHECK_CLOSE_ABS(recoVtx.position(), expVtx.position, 0.001_mm);
-    CHECK_CLOSE_ABS(recoVtx.covariance(), expVtx.covariance, 0.001_mm);
+    CHECK_CLOSE_OR_SMALL(recoVtx.position(), expVtx.position, relTol, small);
+    CHECK_CLOSE_OR_SMALL(recoVtx.covariance(), expVtx.covariance, relTol,
+                         small);
     BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
-    CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight, 0.003);
-    CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility, expVtx.trk1Comp,
-                    0.003);
+    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight,
+                         relTol, small);
+    CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].vertexCompatibility,
+                         expVtx.trk1Comp, relTol, small);
   }
 }
 
@@ -410,10 +418,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -487,7 +495,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
     double diffZ = 1e5;
     int foundVtxIdx = -1;
     for (int i = 0; i < expNRecoVertices; i++) {
-      if (not vtxFound[i]) {
+      if (!vtxFound[i]) {
         if (std::abs(vtxZ - verticesInfo[i].position[2]) < diffZ) {
           diffZ = std::abs(vtxZ - verticesInfo[i].position[2]);
           foundVtxIdx = i;
@@ -550,18 +558,26 @@ BOOST_AUTO_TEST_CASE(
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = AdaptiveGridDensityVertexFinder<55>;
-  SeedFinder::Config seedFinderCfg(0.05);
+  // Grid density used during vertex seed finding
+  AdaptiveGridTrackDensity::Config gridDensityCfg;
+  // force track to have exactly spatialTrkGridSize spatial bins for testing
+  // purposes
+  gridDensityCfg.spatialTrkGridSizeRange = {55, 55};
+  gridDensityCfg.spatialBinExtent = 0.05;
+  AdaptiveGridTrackDensity gridDensity(gridDensityCfg);
+
+  using SeedFinder = AdaptiveGridDensityVertexFinder<>;
+  SeedFinder::Config seedFinderCfg(gridDensity);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
 
   SeedFinder seedFinder(seedFinderCfg);
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
-  Finder finder(finderConfig);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -634,7 +650,7 @@ BOOST_AUTO_TEST_CASE(
     double diffZ = 1e5;
     int foundVtxIdx = -1;
     for (int i = 0; i < expNRecoVertices; i++) {
-      if (not vtxFound[i]) {
+      if (!vtxFound[i]) {
         if (std::abs(vtxZ - verticesInfo[i].position[2]) < diffZ) {
           diffZ = std::abs(vtxZ - verticesInfo[i].position[2]);
           foundVtxIdx = i;

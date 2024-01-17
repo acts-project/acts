@@ -91,23 +91,23 @@ std::array<value_type, kDIM> to_array(const std::vector<value_type>& vecvals) {
 /// @brief Dispatch a call based on a runtime value on a function taking the
 /// value at compile time.
 ///
-/// This function allows to write a templated functor, which accepts a @c size_t
+/// This function allows to write a templated functor, which accepts a @c std::size_t
 /// like parameter at compile time. It is then possible to make a call to the
 /// corresponding instance of the functor based on a runtime value. To achieve
 /// this, the function essentially created a if cascade between @c N and @c
 /// NMAX, attempting to find the right instance. Because the cascade is visible
 /// to the compiler entirely, it should be able to optimize.
 ///
-/// @tparam Callable Type which takes a size_t as a compile time param
+/// @tparam Callable Type which takes a std::size_t as a compile time param
 /// @tparam N Value from which to start the dispatch chain, i.e. 0 in most cases
 /// @tparam NMAX Maximum value up to which to attempt a dispatch
 /// @param v The runtime value to dispatch on
 /// @param args Additional arguments passed to @c Callable::invoke().
 /// @note @c Callable is expected to have a static member function @c invoke
 /// that is callable with @c Args
-template <template <size_t> class Callable, size_t N, size_t NMAX,
-          typename... Args>
-auto template_switch(size_t v, Args&&... args) {
+template <template <std::size_t> class Callable, std::size_t N,
+          std::size_t NMAX, typename... Args>
+auto template_switch(std::size_t v, Args&&... args) {
   if (v == N) {
     return Callable<N>::invoke(std::forward<Args>(args)...);
   }
@@ -132,10 +132,10 @@ auto template_switch(size_t v, Args&&... args) {
 /// @param v The runtime value to dispatch on
 /// @param func The lambda to invoke
 /// @param args Additional arguments passed to @p func
-template <size_t N, size_t NMAX, typename Lambda, typename... Args>
-auto template_switch_lambda(size_t v, Lambda&& func, Args&&... args) {
+template <std::size_t N, std::size_t NMAX, typename Lambda, typename... Args>
+auto template_switch_lambda(std::size_t v, Lambda&& func, Args&&... args) {
   if (v == N) {
-    return func(std::integral_constant<size_t, N>{},
+    return func(std::integral_constant<std::size_t, N>{},
                 std::forward<Args>(args)...);
   }
   if (v == 0) {

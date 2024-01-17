@@ -15,6 +15,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
@@ -102,6 +103,13 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
   for (const auto& outside : outsides) {
     BOOST_CHECK(!box.inside(outside, s_onSurfaceTolerance));
   }
+
+  // Check the binning value positions
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::binX), hx, s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::binY), hy, s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::binZ), hz, s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::binR), std::sqrt(hx * hx + hy * hy),
+                  s_epsilon);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
@@ -114,7 +122,11 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
 
   for (auto& os : cvbOrientedSurfaces) {
     auto osCenter = os.first->center(geoCtx);
-    auto osNormal = os.first->normal(geoCtx);
+    const auto* pSurface =
+        dynamic_cast<const Acts::PlaneSurface*>(os.first.get());
+    BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
+                          "The surface is not a plane surface");
+    auto osNormal = pSurface->normal(geoCtx);
     // Check if you step inside the volume with the oriented normal
     Vector3 insideBox = osCenter + os.second * osNormal;
     Vector3 outsideBox = osCenter - os.second * osNormal;

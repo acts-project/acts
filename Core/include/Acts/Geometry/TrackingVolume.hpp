@@ -68,13 +68,20 @@ using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
-// Intersection with Layer
-using LayerIntersection = ObjectIntersection<Layer, Surface>;
+/// Intersection with @c Layer
+using LayerIntersection = std::pair<SurfaceIntersection, const Layer*>;
+/// Multi-intersection with @c Layer
+using LayerMultiIntersection =
+    std::pair<SurfaceMultiIntersection, const Layer*>;
 
 /// BoundarySurface of a volume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
 /// Intersection with a @c BoundarySurface
-using BoundaryIntersection = ObjectIntersection<BoundarySurface, Surface>;
+using BoundaryIntersection =
+    std::pair<SurfaceIntersection, const BoundarySurface*>;
+/// Multi-intersection with a @c BoundarySurface
+using BoundaryMultiIntersection =
+    std::pair<SurfaceMultiIntersection, const BoundarySurface*>;
 
 /// @class TrackingVolume
 ///
@@ -459,7 +466,7 @@ class TrackingVolume : public Volume {
   void closeGeometry(
       const IMaterialDecorator* materialDecorator,
       std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-      size_t& vol, const GeometryIdentifierHook& hook,
+      std::size_t& vol, const GeometryIdentifierHook& hook,
       const Logger& logger = getDummyLogger());
 
   /// interlink the layers in this TrackingVolume

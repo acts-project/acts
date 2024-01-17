@@ -47,7 +47,7 @@ class Extent {
   bool operator==(const Extent& e) const;
 
   /// Define a comparison operator
-  bool operator!=(const Extent& e) const { return (not operator==(e)); }
+  bool operator!=(const Extent& e) const { return (!operator==(e)); }
 
   /// Extend with a position vertex
   ///

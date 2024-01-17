@@ -18,7 +18,7 @@ namespace Acts {
 
 std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
     std::any, std::any edges, std::any edge_weights,
-    std::vector<int> &spacepointIDs) {
+    std::vector<int> &spacepointIDs, int) {
   auto numSpacepoints = spacepointIDs.size();
   auto edgesAfterFiltering = std::any_cast<std::vector<int64_t>>(edges);
   auto numEdgesAfterF = edgesAfterFiltering.size() / 2;

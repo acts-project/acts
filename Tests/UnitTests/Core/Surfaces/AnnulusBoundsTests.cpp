@@ -34,7 +34,7 @@ double maxPhi = 1.33970;
 
 Vector2 offset(-2., 2.);
 
-// Unit tests for AnnulusBounds constrcuctors
+// Unit tests for AnnulusBounds constructors
 BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
   // Test construction with radii and default sector
   auto original = AnnulusBounds(minRadius, maxRadius, minPhi, maxPhi, offset);

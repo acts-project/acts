@@ -96,12 +96,12 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
       actsvg::proto::surface<std::vector<Acts::Vector3>> projSurface;
       projSurface._vertices = sf->polyhedronRepresentation(gctx, 1u).vertices;
       // Draw only if they fall into the range restriction - for phi
-      if (phi >= cOptions.phiRange[0] and phi <= cOptions.phiRange[1]) {
+      if (phi >= cOptions.phiRange[0] && phi <= cOptions.phiRange[1]) {
         std::string m_zr_id = std::string("zr_") + std::to_string(m++);
         zr_layer.add_object(Acts::Svg::View::zr(projSurface, m_zr_id));
       }
       // for z
-      if (z >= cOptions.zRange[0] and z <= cOptions.zRange[1]) {
+      if (z >= cOptions.zRange[0] && z <= cOptions.zRange[1]) {
         std::string m_xy_id = std::string("xy_") + std::to_string(m++);
         xy_layer.add_object(Acts::Svg::View::xy(projSurface, m_xy_id));
       }

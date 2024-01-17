@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,15 +11,15 @@
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Range1D.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -52,16 +52,17 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
       std::stringstream ss(line);
       std::string linetype;
       ss >> linetype;
-      float x = 0, y = 0, z = 0, r = 0, varianceR = 0, varianceZ = 0;
       if (linetype == "lxyz") {
+        float x = 0, y = 0, z = 0, varianceR = 0, varianceZ = 0;
+        std::optional<float> t, varianceT;
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-        r = std::hypot(x, y);
-        float f22 = varianceR;
-        float wid = varianceZ;
-        float cov = wid * wid * .08333;
-        if (cov < f22) {
-          cov = f22;
+        const float r = std::hypot(x, y);
+
+        float cov = varianceZ * varianceZ * .08333;
+        if (cov < varianceR) {
+          cov = varianceR;
         }
+
         if (std::abs(z) > 450.) {
           varianceZ = 9. * cov;
           varianceR = .06;
@@ -69,8 +70,9 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
           varianceR = 9. * cov;
           varianceZ = .06;
         }
-        SpacePoint* sp =
-            new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
+
+        SpacePoint* sp = new SpacePoint{
+            x, y, z, r, layer, varianceR, varianceZ, t, varianceT};
         //     if(r < 200.){
         //       sp->setClusterList(1,0);
         //     }
@@ -181,10 +183,10 @@ int main(int argc, char** argv) {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-      Acts::BinFinder<value_type>(zBinNeighborsBottom, numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-      Acts::BinFinder<value_type>(zBinNeighborsTop, numPhiNeighbors));
+  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
   config.seedFilter = std::make_shared<Acts::SeedFilter<value_type>>(

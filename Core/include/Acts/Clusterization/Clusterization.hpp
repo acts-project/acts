@@ -16,8 +16,8 @@ namespace Acts::Ccl {
 using Label = int;
 constexpr Label NO_LABEL = 0;
 
-// When looking for a cell connected to a reference cluster, the the
-// code always loops backward, starting from the reference cell. Since
+// When looking for a cell connected to a reference cluster, the code
+// always loops backward, starting from the reference cell. Since
 // the cells are globally sorted column-wise, the connection function
 // can therefore tell when the search should be stopped.
 enum class ConnectResult {
@@ -42,7 +42,7 @@ struct Connect1D {
 };
 
 // Default connection type based on GridDim
-template <typename Cell, size_t GridDim = 2>
+template <typename Cell, std::size_t GridDim = 2>
 struct DefaultConnect {
   static_assert(GridDim != 1 && GridDim != 2,
                 "Only grid dimensions of 1 or 2 are supported");
@@ -67,7 +67,7 @@ struct DefaultConnect<Cell, 1> : public Connect1D<Cell> {};
 ///
 /// @param [in] cells the cell collection to be labeled
 /// @param [in] connect the connection type (see DefaultConnect)
-template <typename CellCollection, size_t GridDim = 2,
+template <typename CellCollection, std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
 void labelClusters(CellCollection& cells, Connect connect = Connect());
@@ -80,13 +80,14 @@ void labelClusters(CellCollection& cells, Connect connect = Connect());
 ///   void clusterAddCell(Cluster&, const Cell&)
 ///
 /// @return nothing
-template <typename CellCollection, typename ClusterCollection, size_t GridDim>
+template <typename CellCollection, typename ClusterCollection,
+          std::size_t GridDim>
 ClusterCollection mergeClusters(CellCollection& /*cells*/);
 
 /// @brief createClusters
 /// Convenience function which runs both labelClusters and createClusters.
 template <typename CellCollection, typename ClusterCollection,
-          size_t GridDim = 2,
+          std::size_t GridDim = 2,
           typename Connect =
               DefaultConnect<typename CellCollection::value_type, GridDim>>
 ClusterCollection createClusters(CellCollection& cells,

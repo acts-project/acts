@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -37,6 +38,14 @@ ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
   }
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing output tracks parameters collection");
+  }
+  if (m_cfg.randomNumbers == nullptr) {
+    throw std::invalid_argument("Missing random numbers tool");
+  }
+
+  if (m_cfg.particleHypothesis) {
+    ACTS_INFO("Override truth particle hypothesis with "
+              << *m_cfg.particleHypothesis);
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
@@ -68,6 +77,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const auto pt = particle.transverseMomentum();
       const auto p = particle.absoluteMomentum();
       const auto q = particle.charge();
+      const auto particleHypothesis =
+          m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
       // compute momentum-dependent resolutions
       const double sigmaD0 =
@@ -96,7 +107,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       params[Acts::eBoundTheta] = newTheta;
       // compute smeared absolute momentum vector
       const double newP = std::max(0.0, p + sigmaP * stdNormal(rng));
-      params[Acts::eBoundQOverP] = (q != 0) ? (q / newP) : (1 / newP);
+      params[Acts::eBoundQOverP] = particleHypothesis.qOverP(newP, q);
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
       ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
@@ -116,22 +127,31 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
       // build the track covariance matrix using the smearing sigmas
       Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
-      cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-          m_cfg.initialVarInflation[Acts::eBoundLoc0] * sigmaD0 * sigmaD0;
-      cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-          m_cfg.initialVarInflation[Acts::eBoundLoc1] * sigmaZ0 * sigmaZ0;
-      cov(Acts::eBoundTime, Acts::eBoundTime) =
-          m_cfg.initialVarInflation[Acts::eBoundTime] * sigmaT0 * sigmaT0;
-      cov(Acts::eBoundPhi, Acts::eBoundPhi) =
-          m_cfg.initialVarInflation[Acts::eBoundPhi] * sigmaPhi * sigmaPhi;
-      cov(Acts::eBoundTheta, Acts::eBoundTheta) =
-          m_cfg.initialVarInflation[Acts::eBoundTheta] * sigmaTheta *
-          sigmaTheta;
-      cov(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-          m_cfg.initialVarInflation[Acts::eBoundQOverP] * sigmaQOverP *
-          sigmaQOverP;
+      if (m_cfg.initialSigmas) {
+        // use the initial sigmas if set
+        for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+          cov(i, i) = m_cfg.initialVarInflation[i] * (*m_cfg.initialSigmas)[i] *
+                      (*m_cfg.initialSigmas)[i];
+        }
+      } else {
+        // otherwise use the smearing sigmas
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
+            m_cfg.initialVarInflation[Acts::eBoundLoc0] * sigmaD0 * sigmaD0;
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =
+            m_cfg.initialVarInflation[Acts::eBoundLoc1] * sigmaZ0 * sigmaZ0;
+        cov(Acts::eBoundTime, Acts::eBoundTime) =
+            m_cfg.initialVarInflation[Acts::eBoundTime] * sigmaT0 * sigmaT0;
+        cov(Acts::eBoundPhi, Acts::eBoundPhi) =
+            m_cfg.initialVarInflation[Acts::eBoundPhi] * sigmaPhi * sigmaPhi;
+        cov(Acts::eBoundTheta, Acts::eBoundTheta) =
+            m_cfg.initialVarInflation[Acts::eBoundTheta] * sigmaTheta *
+            sigmaTheta;
+        cov(Acts::eBoundQOverP, Acts::eBoundQOverP) =
+            m_cfg.initialVarInflation[Acts::eBoundQOverP] * sigmaQOverP *
+            sigmaQOverP;
+      }
 
-      parameters.emplace_back(perigee, params, q, cov);
+      parameters.emplace_back(perigee, params, cov, particleHypothesis);
     }
   }
 

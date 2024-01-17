@@ -61,7 +61,7 @@ struct Neutral {
   ///
   /// This constructor is only provided to allow consistent construction.
   constexpr Neutral(float absQ) noexcept {
-    assert((absQ == 0) and "Input charge must be zero");
+    assert((absQ == 0) && "Input charge must be zero");
     (void)absQ;
   }
 
@@ -80,7 +80,7 @@ struct Neutral {
 
   template <typename P, typename Q>
   constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
-    assert((signedQ != 0) and "charge must be 0");
+    assert((signedQ != 0) && "charge must be 0");
     (void)signedQ;
     return 1.0f / momentum;
   }
@@ -106,7 +106,7 @@ struct SinglyCharged {
   ///
   /// This constructor is only provided to allow consistent construction.
   constexpr SinglyCharged(float absQ) noexcept {
-    assert((absQ == UnitConstants::e) and "Input charge magnitude must be e");
+    assert((absQ == UnitConstants::e) && "Input charge magnitude must be e");
     (void)absQ;
   }
 
@@ -151,7 +151,7 @@ class NonNeutralCharge {
  public:
   /// Construct with the magnitude of the input charge.
   constexpr NonNeutralCharge(float absQ) noexcept : m_absQ{absQ} {
-    assert((0 < absQ) and "Input charge magnitude must be positive");
+    assert((0 < absQ) && "Input charge magnitude must be positive");
   }
   constexpr NonNeutralCharge(SinglyCharged /*unused*/) noexcept
       : m_absQ{UnitConstants::e} {}
@@ -200,7 +200,7 @@ class AnyCharge {
  public:
   /// Construct with the magnitude of the input charge.
   constexpr AnyCharge(float absQ) noexcept : m_absQ{absQ} {
-    assert((0 <= absQ) and "Input charge magnitude must be zero or positive");
+    assert((0 <= absQ) && "Input charge magnitude must be zero or positive");
   }
   constexpr AnyCharge(SinglyCharged /*unused*/) noexcept
       : m_absQ{UnitConstants::e} {}

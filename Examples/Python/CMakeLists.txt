@@ -9,6 +9,7 @@ set(_python_install_dir "python/acts")
 
 pybind11_add_module(ActsPythonBindings 
   src/ModuleEntry.cpp
+  src/Framework.cpp
   src/Base.cpp
   src/Detector.cpp
   src/Material.cpp
@@ -25,6 +26,7 @@ pybind11_add_module(ActsPythonBindings
   src/TrackFinding.cpp
   src/Vertexing.cpp
   src/AmbiguityResolution.cpp
+  src/EventData.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 
@@ -35,6 +37,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsCore 
   ActsPythonUtilities
   ActsExamplesFramework
+  ActsExamplesGeometry
   ActsExamplesDetectorGeneric
   ActsExamplesDetectorContextual
   ActsExamplesDetectorTGeo
@@ -172,16 +175,8 @@ if(ACTS_BUILD_PLUGIN_ONNX)
   target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibrator.cpp)
   list(APPEND py_files examples/onnx/__init__.py)
 
-  if(ACTS_BUILD_PLUGIN_MLPACK)
-    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpack.cpp)
-    list(APPEND py_files examples/onnx/mlpack.py)
-  else()
-    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
-  endif()
-
 else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
-  target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
   target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 

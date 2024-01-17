@@ -41,9 +41,6 @@ def run_vertexing(fitter, mu, events):
             events=events,
             numThreads=-1,
             logLevel=acts.logging.INFO,
-            fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
-                Path(__file__).parent.parent / "fpe_masks.yml"
-            ),
         )
 
         tp = Path(temp)
@@ -118,7 +115,11 @@ def run_vertexing(fitter, mu, events):
 
         addAmbiguityResolution(
             s,
-            AmbiguityResolutionConfig(maximumSharedHits=3),
+            AmbiguityResolutionConfig(
+                maximumSharedHits=3,
+                maximumIterations=10000,
+                nMeasurementsMin=6,
+            ),
         )
 
         addVertexFitting(

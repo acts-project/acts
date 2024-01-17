@@ -371,7 +371,6 @@ async def pr_action(
     token: Optional[str] = typer.Option(None, envvar="GH_TOKEN"),
     repo: Optional[str] = typer.Option(None, envvar="GH_REPO"),
 ):
-
     print("::group::Information")
 
     context = os.environ.get("GITHUB_CONTEXT")
@@ -437,7 +436,6 @@ async def pr_action(
         exit_code = 0
 
         if existing_release is not None or existing_tag is not None:
-
             if current_version == next_version:
                 body += (
                     "## :no_entry_sign: Merging this will not result in a new version (no `fix`, "

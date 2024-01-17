@@ -54,7 +54,7 @@ class AccumulatedMaterialSlab {
   /// @param useEmptyTrack indicate whether to consider an empty track store
   ///
   /// The material variance can be used to optimised the mapping process as it
-  /// should be inversly proportionnal to the map quality
+  /// should be inversely proportional to the map quality
   void trackVariance(MaterialSlab slabReference, bool useEmptyTrack = false);
 
   /// Add the accumulated material for the current track to the total average.
@@ -88,7 +88,7 @@ class AccumulatedMaterialSlab {
   /// Only contains the information up to the last `.trackVariance(...)` call.
   /// If there have been additional calls to `.accumulate(...)` afterwards, the
   /// information is not part of the total average. The number of tracks is only
-  /// opdated on the call of `.trackAverage(...)`
+  /// updated on the call of `.trackAverage(...)`
   std::pair<float, unsigned int> totalVariance() const;
 
  private:

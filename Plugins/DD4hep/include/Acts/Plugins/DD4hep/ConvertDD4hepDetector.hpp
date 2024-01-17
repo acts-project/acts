@@ -76,7 +76,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 ///       However, to allow material layers (not containing surfaces) to be
 ///       attached to each other, this default thickness is needed. In this
 ///       way, the layer will be thin (with space to the next layer), but
-///       the material will have the'real' thickness.
+///       the material will have the 'real' thickness.
 /// @attention The default thickness should be set thin enough that no
 ///            touching or overlapping with the next layer can happen.
 /// @param [in] sortSubDetectors @c std::function which should be used in order to
@@ -146,7 +146,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 ///       However, to allow material layers (not containing surfaces) to be
 ///       attached to each other, this default thickness is needed. In this
 ///       way, the layer will be thin (with space to the next layer), but
-///       the material will have the'real' thickness.
+///       the material will have the 'real' thickness.
 /// @attention The default thickness should be set thin enough that no
 ///            touching or overlapping with the next layer can happen.
 /// @return std::shared_ptr the Acts::CylinderVolumeBuilder which can be used to

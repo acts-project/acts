@@ -73,6 +73,12 @@ endif()
 if(PluginActSVG IN_LIST Acts_COMPONENTS)
   find_dependency(actsvg @actsvg_VERSION@ CONFIG EXACT)
 endif()
+if(PluginEDM4hep IN_LIST Acts_COMPONENTS)
+  find_dependency(EDM4HEP @EDM4HEP_VERSION@ CONFIG EXACT)
+endif()
+if(PluginPodio IN_LIST Acts_COMPONENTS)
+  find_dependency(podio @podio_VERSION@ CONFIG EXACT)
+endif()
 
 # dependencies that we have built ourselves but cannot be
 # straightforwardly handed to cmake
@@ -90,6 +96,10 @@ if(PluginSycl IN_LIST Acts_COMPONENTS)
   find_package(SYCL REQUIRED)
 endif()
 
+if(PluginPodio IN_LIST Acts_COMPONENTS)
+  include(${CMAKE_CURRENT_LIST_DIR}/ActsPodioEdmTargets.cmake)
+endif()
+
 # load **all** available components. we can not just include the requested
 # components since there can be interdependencies between them.
 if(NOT Acts_FIND_QUIETLY)
@@ -102,3 +112,4 @@ foreach(_component ${Acts_COMPONENTS})
   # include the targets file to create the imported targets for the user
   include(${CMAKE_CURRENT_LIST_DIR}/Acts${_component}Targets.cmake)
 endforeach()
+

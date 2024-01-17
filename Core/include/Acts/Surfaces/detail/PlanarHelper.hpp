@@ -43,7 +43,7 @@ inline Intersection3D intersect(const Transform3& transform,
     // Return the intersection
     return Intersection3D{(position + path * direction), path, status};
   }
-  return Intersection3D();
+  return Intersection3D::invalid();
 }
 
 }  // namespace PlanarHelper

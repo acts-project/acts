@@ -14,13 +14,14 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -303,9 +304,14 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
       std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(
           detCompBuilderCfg);
 
+  auto gigConfig = Acts::Experimental::GeometryIdGenerator::Config();
+  auto gig =
+      std::make_shared<Acts::Experimental::GeometryIdGenerator>(gigConfig);
+
   Acts::Experimental::DetectorBuilder::Config detBuilderCfg;
   detBuilderCfg.name = "Detector";
   detBuilderCfg.builder = detCompBuilder;
+  detBuilderCfg.geoIdGenerator = gig;
 
   auto detBuilder =
       std::make_shared<Acts::Experimental::DetectorBuilder>(detBuilderCfg);
@@ -331,7 +337,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   auto detectorIn =
       Acts::DetectorJsonConverter::fromJson(tContext, jDetectorIn);
 
-  BOOST_CHECK(detectorIn->name() == detector->name());
+  BOOST_CHECK_EQUAL(detectorIn->name(), detector->name());
 
   auto jDetectorInOut =
       Acts::DetectorJsonConverter::toJson(tContext, *detectorIn);

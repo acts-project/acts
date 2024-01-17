@@ -36,8 +36,6 @@
 #include <type_traits>
 #include <utility>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -121,9 +119,9 @@ Transform3 createPlanarTransform(const Vector3& nposition,
 BoundToFreeMatrix convertToMatrix(const std::array<double, 60> P) {
   // initialize to zero
   BoundToFreeMatrix jMatrix = BoundToFreeMatrix::Zero();
-  for (size_t j = 0; j < eBoundSize; ++j) {
-    for (size_t i = 0; i < eFreeSize; ++i) {
-      size_t ijc = eFreeSize + j * eFreeSize + i;
+  for (std::size_t j = 0; j < eBoundSize; ++j) {
+    for (std::size_t i = 0; i < eFreeSize; ++i) {
+      std::size_t ijc = eFreeSize + j * eFreeSize + i;
       jMatrix(i, j) = P[ijc];
     }
   }
@@ -159,7 +157,8 @@ BOOST_AUTO_TEST_CASE(JacobianCurvilinearToGlobalTest) {
   cov << 10_mm, 0, 0, 0, 0, 0, 0, 10_mm, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0,
       0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0, 0, 0;
   CurvilinearTrackParameters curvilinear(Vector4(341., 412., 93., 0.),
-                                         Vector3(1.2, 8.3, 0.45), 10.0, 1, cov);
+                                         Vector3(1.2, 8.3, 0.45), 1 / 10.0, cov,
+                                         ParticleHypothesis::pion());
 
   // run the test
   testJacobianToGlobal(curvilinear);
@@ -178,7 +177,8 @@ BOOST_AUTO_TEST_CASE(JacobianCylinderToGlobalTest) {
   BoundVector pars;
   pars << 182.34, -82., 0.134, 0.85, 1. / (100_GeV), 0;
 
-  BoundTrackParameters atCylinder(cSurface, pars, std::move(cov));
+  BoundTrackParameters atCylinder(cSurface, pars, std::move(cov),
+                                  ParticleHypothesis::pion());
 
   // run the test
   testJacobianToGlobal(atCylinder);
@@ -198,7 +198,8 @@ BOOST_AUTO_TEST_CASE(JacobianDiscToGlobalTest) {
   BoundVector pars;
   pars << 192.34, 1.823, 0.734, 0.235, 1. / (100_GeV), 0;
 
-  BoundTrackParameters atDisc(dSurface, pars, std::move(cov));
+  BoundTrackParameters atDisc(dSurface, pars, std::move(cov),
+                              ParticleHypothesis::pion());
 
   // run the test
   testJacobianToGlobal(atDisc);
@@ -220,7 +221,8 @@ BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest) {
   BoundVector pars;
   pars << 12.34, -8722., 2.134, 0.85, 1. / (100_GeV), 0;
 
-  BoundTrackParameters atPlane(pSurface, pars, std::move(cov));
+  BoundTrackParameters atPlane(pSurface, pars, std::move(cov),
+                               ParticleHypothesis::pion());
 
   // run the test
   testJacobianToGlobal(atPlane);
@@ -237,7 +239,8 @@ BOOST_AUTO_TEST_CASE(JacobianPerigeeToGlobalTest) {
   BoundVector pars;
   pars << -3.34, -822., -0.734, 0.85, 1. / (100_GeV), 0;
 
-  BoundTrackParameters perigee(pSurface, pars, std::move(cov));
+  BoundTrackParameters perigee(pSurface, pars, std::move(cov),
+                               ParticleHypothesis::pion());
 
   // run the test
   testJacobianToGlobal(perigee);
@@ -256,7 +259,8 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   BoundVector pars;
   pars << -8.34, 812., 0.734, 0.25, 1. / (100_GeV), 0;
 
-  BoundTrackParameters atStraw(sSurface, pars, std::move(cov));
+  BoundTrackParameters atStraw(sSurface, pars, std::move(cov),
+                               ParticleHypothesis::pion());
 
   // run the test
   testJacobianToGlobal(atStraw);

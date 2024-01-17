@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,14 +12,14 @@
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Range1D.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <chrono>
@@ -77,7 +77,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
-  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax and
+  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax &&
       m_cfg.allowSeparateRMax == false) {
     throw std::invalid_argument(
         "Inconsistent config rMax: using different values in gridConfig and "
@@ -168,7 +168,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
     // check if zBinsCustomLooping contains numbers from 1 to the total number
     // of bin in zBinEdges
-    for (size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
+    for (std::size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
       if (std::find(m_cfg.seedFinderConfig.zBinsCustomLooping.begin(),
                     m_cfg.seedFinderConfig.zBinsCustomLooping.end(),
                     i) == m_cfg.seedFinderConfig.zBinsCustomLooping.end()) {
@@ -184,11 +184,11 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
       Acts::detail::RefHolder>::ConstSpacePointProxyType;
 
   m_bottomBinFinder =
-      std::make_shared<const Acts::BinFinder<SpacePointProxy_type>>(
-          m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors);
+      std::make_shared<const Acts::GridBinFinder<2ul>>(
+						       m_m_cfg.numPhiNeighbors, cfg.zBinNeighborsBottom);
   m_topBinFinder =
-      std::make_shared<const Acts::BinFinder<SpacePointProxy_type>>(
-          m_cfg.zBinNeighborsTop, m_cfg.numPhiNeighbors);
+      std::make_shared<const Acts::GridBinFinder<2ul>>(
+						       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
 
   m_cfg.seedFinderConfig.seedFilter =
       std::make_shared<Acts::SeedFilter<SpacePointProxy_type>>(
@@ -201,7 +201,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
-  size_t nSpacePoints = 0;
+  std::size_t nSpacePoints = 0;
   for (const auto& isp : m_inputSpacePoints) {
     nSpacePoints += (*isp)(ctx).size();
   }

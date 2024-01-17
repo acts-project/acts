@@ -8,8 +8,9 @@
 
 #pragma once
 
+#include "Acts/Surfaces/Surface.hpp"
+
 namespace bdata = boost::unit_test::data;
-using Box = Acts::Volume::BoundingBox;
 using Ray = Acts::Ray<double, 3>;
 
 GeometryContext tgContext = GeometryContext();
@@ -22,21 +23,22 @@ auto tg = grid.trackingGeometry;
 
 BOOST_DATA_TEST_CASE(
     bvhnavigation_test,
-    bdata::random((bdata::seed = 7, bdata::engine = std::mt19937(),
-                   bdata::distribution = std::uniform_real_distribution<>(-5,
-                                                                          5))) ^
-        bdata::random((bdata::seed = 2, bdata::engine = std::mt19937(),
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 7,
+         bdata::distribution = std::uniform_real_distribution<double>(-5, 5))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 3, bdata::engine = std::mt19937(),
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-100, 100))) ^
-        bdata::random((bdata::seed = 4, bdata::engine = std::mt19937(),
+                           std::uniform_real_distribution<double>(-100, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-100, 100))) ^
-        bdata::random((bdata::seed = 5, bdata::engine = std::mt19937(),
+                           std::uniform_real_distribution<double>(-100, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-100, 100))) ^
+                           std::uniform_real_distribution<double>(-100, 100))) ^
         bdata::xrange(NTESTS),
     eta, phi, x, y, z, index) {
   using namespace Acts::UnitLiterals;
@@ -57,20 +59,23 @@ BOOST_DATA_TEST_CASE(
     // collect all surfaces that are hit
     for (const auto& bndSrf : bndSurfaces) {
       const auto& srf = bndSrf->surfaceRepresentation();
-      auto sri = srf.intersect(tgContext, ray.origin(), ray.dir(), true);
-      if (sri and sri.intersection.pathLength >= s_onSurfaceTolerance) {
-        // does intersect
-        hits.push_back(std::move(sri));
+      auto srmi = srf.intersect(tgContext, ray.origin(), ray.dir(),
+                                Acts::BoundaryCheck(true));
+      for (const auto& sri : srmi.split()) {
+        if (sri && sri.pathLength() >= s_onSurfaceTolerance) {
+          // does intersect
+          hits.push_back(sri);
+        }
       }
     }
   }
 
   // sort by path length
-  std::sort(hits.begin(), hits.end());
+  std::sort(hits.begin(), hits.end(), SurfaceIntersection::forwardOrder);
   std::vector<const Surface*> expHits;
   expHits.reserve(hits.size());
   for (const auto& hit : hits) {
-    expHits.push_back(hit.object);
+    expHits.push_back(hit.object());
   }
 
   // now do the same through a propagator
@@ -93,7 +98,8 @@ BOOST_DATA_TEST_CASE(
   Acts::Vector4 pos4 = Acts::Vector4::Zero();
   pos4.segment<3>(Acts::ePos0) = ray.origin();
   // momentum value should be irrelevant.
-  Acts::CurvilinearTrackParameters startPar(pos4, ray.dir(), 50_GeV, 1_e);
+  Acts::CurvilinearTrackParameters startPar(
+      pos4, ray.dir(), 1_e / 50_GeV, std::nullopt, ParticleHypothesis::pion());
 
   const auto result = propagator.propagate(startPar, options).value();
 
@@ -113,7 +119,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   BOOST_CHECK_EQUAL(expHits.size(), actHits.size());
-  for (size_t i = 0; i < expHits.size(); i++) {
+  for (std::size_t i = 0; i < expHits.size(); i++) {
     const Surface* exp = expHits[i];
     const Surface* act = actHits[i];
 

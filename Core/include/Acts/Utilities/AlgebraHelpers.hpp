@@ -36,7 +36,7 @@ MatrixType bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime *
 
   MatrixType m;
   auto* p = m.data();
-  for (size_t i = 0; i < rows * cols; i++) {
+  for (std::size_t i = 0; i < rows * cols; i++) {
     p[i] = bs[rows * cols - 1 - i];
   }
   return m;
@@ -51,13 +51,13 @@ MatrixType bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime *
 template <typename Derived>
 auto matrixToBitset(const Eigen::PlainObjectBase<Derived>& m) {
   using MatrixType = Eigen::PlainObjectBase<Derived>;
-  constexpr size_t rows = MatrixType::RowsAtCompileTime;
-  constexpr size_t cols = MatrixType::ColsAtCompileTime;
+  constexpr std::size_t rows = MatrixType::RowsAtCompileTime;
+  constexpr std::size_t cols = MatrixType::ColsAtCompileTime;
 
   std::bitset<rows * cols> res;
 
   auto* p = m.data();
-  for (size_t i = 0; i < rows * cols; i++) {
+  for (std::size_t i = 0; i < rows * cols; i++) {
     res[rows * cols - 1 - i] = static_cast<bool>(p[i]);
   }
 
@@ -170,13 +170,15 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 /// FPE "safe" functions
 ///
 /// Our main motivation for this is that users might have a strict FPE policy
-/// which would flag every single occurrence as a failure and then sombody has
+/// which would flag every single occurrence as a failure and then somebody has
 /// to investigate. Since we are processing a high number of events and floating
 /// point numbers sometimes work in mysterious ways the caller of this function
 /// might want to hide FPEs and handle them in a more controlled way.
 
 /// Calculate the inverse of an Eigen matrix after checking if it can be
 /// numerically inverted. This allows to catch potential FPEs before they occur.
+/// For matrices up to 4x4, the inverse is computed directly. For larger
+/// matrices, the FullPivLU is used.
 ///
 /// @tparam Derived Eigen derived concrete type
 /// @tparam Result Eigen result type defaulted to input type
@@ -186,10 +188,24 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 /// @return The theta value
 template <typename MatrixType, typename ResultType = MatrixType>
 std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
+  constexpr int rows = MatrixType::RowsAtCompileTime;
+  constexpr int cols = MatrixType::ColsAtCompileTime;
+
+  static_assert(rows == cols);
+  static_assert(rows != -1);
+
   ResultType result;
   bool invertible = false;
 
-  m.computeInverseWithCheck(result, invertible);
+  if constexpr (rows > 4) {
+    Eigen::FullPivLU<MatrixType> mFullPivLU(m);
+    if (mFullPivLU.isInvertible()) {
+      invertible = true;
+      result = mFullPivLU.inverse();
+    }
+  } else {
+    m.computeInverseWithCheck(result, invertible);
+  }
 
   if (invertible) {
     return result;
@@ -198,21 +214,35 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
   return std::nullopt;
 }
 
+/// Specialization of the exponent limit to be used for safe exponential,
+/// depending on the floating point type.
+/// See https://godbolt.org/z/z53Er6Mzf for reasoning for the concrete numbers.
+template <typename T>
+struct ExpSafeLimit {};
+template <>
+struct ExpSafeLimit<double> {
+  constexpr static double value = 500.0;
+};
+template <>
+struct ExpSafeLimit<float> {
+  constexpr static float value = 50.0;
+};
+
 /// Calculate the exponential function while avoiding FPEs.
-/// @note The boundary values of -50.0 and 50.0 might need to be adapted when
-/// using this function with doubles
 ///
 /// @param val argument for which the exponential function should be evaluated.
 ///
 /// @return 0 in the case of underflow, std::numeric_limits<T>::infinity in the
 /// case of overflow, std::exp(val) else
 template <typename T>
-T safeExp(T val) noexcept {
-  if (val < -50.0) {
+constexpr T safeExp(T val) noexcept {
+  constexpr T maxExponent = ExpSafeLimit<T>::value;
+  constexpr T minExponent = -maxExponent;
+  if (val < minExponent) {
     return 0.0;
   }
 
-  if (val > 50.0) {
+  if (val > maxExponent) {
     return std::numeric_limits<T>::infinity();
   }
 

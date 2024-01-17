@@ -33,7 +33,7 @@ auto ActsExamples::Geant4::Geant4Detector::constructDetector(
 
   ACTS_INFO("Building an Acts::Detector called '"
             << cfg.name << "' from the Geant4PhysVolume '"
-            << cfg.g4World->GetName());
+            << cfg.g4World->GetName() << "'");
 
   DetectorPtr detector = nullptr;
   ContextDecorators decorators = {};
@@ -54,13 +54,13 @@ auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
 
   ACTS_INFO("Building an Acts::TrackingGeometry called '"
             << cfg.name << "' from the Geant4PhysVolume '"
-            << cfg.g4World->GetName());
+            << cfg.g4World->GetName() << "'");
 
   ContextDecorators decorators = {};
 
   auto [surfaces, elements] = convertGeant4Volumes(cfg, logger);
 
-  // Surface array creatorr
+  // Surface array creator
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
       Acts::SurfaceArrayCreator::Config(), logger.clone("SurfaceArrayCreator"));
   // Layer Creator

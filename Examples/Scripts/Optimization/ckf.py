@@ -115,7 +115,6 @@ def runCKFTracks(
     DeltaRMin=1.0,
     DeltaRMax=60.0,
 ):
-
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
@@ -204,7 +203,7 @@ def runCKFTracks(
             minPt=500 * u.MeV,
             impactMax=ImpactMax * u.mm,
         ),
-        SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0, 0)),
+        SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0, 0)),
         TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared
         if truthSmearedSeeded

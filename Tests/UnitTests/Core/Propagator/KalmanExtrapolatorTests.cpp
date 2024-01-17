@@ -69,7 +69,7 @@ struct StepWiseActor {
 
   /// @brief Kalman sequence operation
   ///
-  /// @tparam propagator_state_t is the type of Propagagor state
+  /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper used for the propagation
   /// @tparam navigator_t Type of the navigator used for the propagation
   ///
@@ -84,16 +84,16 @@ struct StepWiseActor {
                   const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = navigator.currentSurface(state.navigation);
-    if (surface and surface->associatedDetectorElement()) {
+    if (surface && surface->associatedDetectorElement()) {
       // Create a bound state and log the jacobian
       auto boundState = stepper.boundState(state.stepping, *surface).value();
       result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
       result.paths.push_back(std::get<double>(boundState));
     }
     // Also store the jacobian and full path
-    if ((navigator.navigationBreak(state.navigation) or
-         navigator.targetReached(state.navigation)) and
-        not result.finalized) {
+    if ((navigator.navigationBreak(state.navigation) ||
+         navigator.targetReached(state.navigation)) &&
+        !result.finalized) {
       // Set the last stepping parameter
       result.paths.push_back(state.stepping.pathAccumulated);
       // Set the full parameter
@@ -133,7 +133,8 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
       0, 0;
   // The start parameters
   CurvilinearTrackParameters start(Vector4(-3_m, 0, 0, 42_ns), 0_degree,
-                                   90_degree, 1_GeV, 1_e, cov);
+                                   90_degree, 1_e / 1_GeV, cov,
+                                   ParticleHypothesis::pion());
 
   // Create the ActionList and AbortList
   using StepWiseResult = StepWiseActor::result_type;

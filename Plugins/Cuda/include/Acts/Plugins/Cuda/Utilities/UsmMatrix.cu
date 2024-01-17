@@ -23,7 +23,7 @@ template <typename var_t>
 class UsmMatrix {
  public:
   UsmMatrix() = delete;
-  UsmMatrix(size_t nRows, size_t nCols) {
+  UsmMatrix(std::size_t nRows, std::size_t nCols) {
     m_setSize(nRows, nCols);
     ACTS_CUDA_ERROR_CHECK(cudaMallocManaged((var_t**)&m_devPtr,
                                             m_nRows * m_nCols * sizeof(var_t)));
@@ -35,13 +35,13 @@ class UsmMatrix {
     cudaFree(m_devPtr);
   }
 
-  var_t* get(size_t row = 0, size_t col = 0) {
+  var_t* get(std::size_t row = 0, std::size_t col = 0) {
     int offset = row + col * m_nRows;
     return m_devPtr + offset;
   }
 
-  void set(size_t row, size_t col, var_t val) {
-    size_t offset = row + col * m_nRows;
+  void set(std::size_t row, std::size_t col, var_t val) {
+    std::size_t offset = row + col * m_nRows;
     m_devPtr[offset] = val;
   }
 
@@ -49,11 +49,11 @@ class UsmMatrix {
 
  private:
   var_t* m_devPtr;
-  size_t m_nCols;
-  size_t m_nRows;
-  size_t m_size;
+  std::size_t m_nCols;
+  std::size_t m_nRows;
+  std::size_t m_size;
 
-  void m_setSize(size_t row, size_t col) {
+  void m_setSize(std::size_t row, std::size_t col) {
     m_nRows = row;
     m_nCols = col;
     m_size = m_nRows * m_nCols;

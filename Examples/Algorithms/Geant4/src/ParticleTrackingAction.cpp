@@ -39,29 +39,30 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
   // nicer to investigate, if we can handle all particle stop conditions in the
   // SensitiveSteppingAction... This seems to happen O(1) times in a ttbar
   // event, so seems not to be too problematic
-  if (not eventStore().hitBuffer.empty()) {
+  if (!eventStore().hitBuffer.empty()) {
     eventStore().hitBuffer.clear();
     ACTS_WARNING("Hit buffer not empty after track");
   }
 
-  auto particleId = makeParticleId(aTrack->GetTrackID(), aTrack->GetParentID());
+  auto barcode = makeParticleId(aTrack->GetTrackID(), aTrack->GetParentID());
 
-  // There is already a warning printed in the makeParticleId function
-  if (not particleId) {
+  // There is already a warning printed in the makeParticleId function if this
+  // indicates a failure
+  if (!barcode) {
     return;
   }
 
-  auto [it, success] =
-      eventStore().particlesInitial.insert(convert(*aTrack, *particleId));
+  auto particle = convert(*aTrack, *barcode);
+  auto [it, success] = eventStore().particlesInitial.insert(particle);
 
   // Only register particle at the initial state AND if there is no particle ID
   // collision
   if (success) {
-    eventStore().trackIdMapping[aTrack->GetTrackID()] = *particleId;
+    eventStore().trackIdMapping[aTrack->GetTrackID()] = particle.particleId();
   } else {
     eventStore().particleIdCollisionsInitial++;
     ACTS_WARNING("Particle ID collision with "
-                 << *particleId
+                 << particle.particleId()
                  << " detected for initial particles. Skip particle");
   }
 }
@@ -72,16 +73,18 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   // collision
   if (eventStore().trackIdMapping.find(aTrack->GetTrackID()) ==
       eventStore().trackIdMapping.end()) {
+    ACTS_WARNING("Particle ID for track ID " << aTrack->GetTrackID()
+                                             << " not registered. Skip");
     return;
   }
 
   const auto barcode = eventStore().trackIdMapping.at(aTrack->GetTrackID());
 
   auto hasHits = eventStore().particleHitCount.find(barcode) !=
-                     eventStore().particleHitCount.end() and
+                     eventStore().particleHitCount.end() &&
                  eventStore().particleHitCount.at(barcode) > 0;
 
-  if (not m_cfg.keepParticlesWithoutHits and not hasHits) {
+  if (!m_cfg.keepParticlesWithoutHits && !hasHits) {
     [[maybe_unused]] auto n = eventStore().particlesInitial.erase(
         ActsExamples::SimParticle{barcode, Acts::PdgParticle::eInvalid});
     assert(n == 1);
@@ -91,7 +94,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   auto particle = convert(*aTrack, barcode);
   auto [it, success] = eventStore().particlesFinal.insert(particle);
 
-  if (not success) {
+  if (!success) {
     eventStore().particleIdCollisionsFinal++;
     ACTS_WARNING("Particle ID collision with "
                  << particle.particleId()
@@ -132,7 +135,7 @@ ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
   // or we are making a final particle state)
   if (eventStore().trackIdMapping.find(trackId) !=
       eventStore().trackIdMapping.end()) {
-    return eventStore().trackIdMapping.at(trackId);
+    return std::nullopt;
   }
 
   if (eventStore().trackIdMapping.find(parentId) ==

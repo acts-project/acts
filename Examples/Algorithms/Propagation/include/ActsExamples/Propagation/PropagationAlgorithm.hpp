@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -87,7 +88,7 @@ class PropagationAlgorithm : public IAlgorithm {
     bool recordMaterialInteractions = true;
 
     /// number of particles
-    size_t ntests = 100;
+    std::size_t ntests = 100;
     /// d0 gaussian sigma
     double d0Sigma = 15 * Acts::UnitConstants::um;
     /// z0 gaussian sigma
@@ -107,6 +108,9 @@ class PropagationAlgorithm : public IAlgorithm {
     /// pt range
     std::pair<double, double> ptRange = {100 * Acts::UnitConstants::MeV,
                                          100 * Acts::UnitConstants::GeV};
+    /// particle hypothesis
+    Acts::ParticleHypothesis particleHypothesis =
+        Acts::ParticleHypothesis::pion();
     /// looper protection
     double ptLoopers = 500 * Acts::UnitConstants::MeV;
 
@@ -149,7 +153,7 @@ class PropagationAlgorithm : public IAlgorithm {
   WriteDataHandle<std::vector<std::vector<Acts::detail::Step>>>
       m_outpoutPropagationSteps{this, "OutputPropagationSteps"};
 
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_recordedMaterial{this, "RecordedMaterial"};
 
   /// Private helper method to create a corrleated covariance matrix

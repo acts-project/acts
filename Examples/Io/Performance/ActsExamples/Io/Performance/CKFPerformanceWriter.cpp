@@ -13,6 +13,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -26,8 +27,12 @@
 #include <utility>
 
 #include <TFile.h>
+#include <TTree.h>
 #include <TVectorFfwd.h>
 #include <TVectorT.h>
+
+using Acts::VectorHelpers::eta;
+using Acts::VectorHelpers::phi;
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -35,13 +40,13 @@ struct AlgorithmContext;
 
 ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
     ActsExamples::CKFPerformanceWriter::Config cfg, Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTrajectories, "CKFPerformanceWriter", lvl),
+    : WriterT(cfg.inputTracks, "CKFPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
       m_fakeRatePlotTool(m_cfg.fakeRatePlotToolConfig, lvl),
       m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl),
       m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl) {
-  // trajectories collection name is already checked by base ctor
+  // tracks collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
@@ -61,6 +66,14 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + m_cfg.filePath + "'");
+  }
+
+  if (m_cfg.writeMatchingDetails) {
+    m_matchingTree = new TTree("matchingdetails", "matchingdetails");
+
+    m_matchingTree->Branch("event_nr", &m_treeEventNr);
+    m_matchingTree->Branch("particle_id", &m_treeParticleId);
+    m_matchingTree->Branch("matched", &m_treeIsMatched);
   }
 
   // initialize the plot tools
@@ -128,25 +141,35 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
     write_float(eff_particle, "eff_particles");
     write_float(fakeRate_particle, "fakerate_particles");
     write_float(duplicationRate_particle, "duplicaterate_particles");
+
+    if (m_matchingTree != nullptr) {
+      m_matchingTree->Write();
+    }
+
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
-    const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
+    const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // The number of majority particle hits and fitted track parameters
-  using RecoTrackInfo = std::pair<size_t, Acts::BoundTrackParameters>;
+  using RecoTrackInfo = std::pair<std::size_t, Acts::BoundTrackParameters>;
   using Acts::VectorHelpers::perp;
 
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
+  std::map<ActsFatras::Barcode, std::size_t> particleTruthHitCount;
+  for (const auto& [_, pid] : hitParticlesMap) {
+    particleTruthHitCount[pid]++;
+  }
+
   // Counter of truth-matched reco tracks
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
   // Counter of truth-unmatched reco tracks
-  std::map<ActsFatras::Barcode, size_t> unmatched;
+  std::map<ActsFatras::Barcode, std::size_t> unmatched;
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
 
@@ -156,80 +179,78 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // Vector of input features for neural network classification
   std::vector<float> inputFeatures(3);
 
-  // Loop over all trajectories
-  for (std::size_t iTraj = 0; iTraj < trajectories.size(); ++iTraj) {
-    const auto& traj = trajectories[iTraj];
-    const auto& mj = traj.multiTrajectory();
-    for (auto trackTip : traj.tips()) {
-      // @TODO: Switch to using this directly from the track
-      auto trajState =
-          Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
-
-      // Check if the reco track has fitted track parameters
-      if (not traj.hasTrackParameters(trackTip)) {
-        ACTS_WARNING(
-            "No fitted track parameters for trajectory with entry index = "
-            << trackTip);
-        continue;
-      }
-      const auto& fittedParameters = traj.trackParameters(trackTip);
-      // Fill the trajectory summary info
-      m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                  trajState.nStates, trajState.nMeasurements,
-                                  trajState.nOutliers, trajState.nHoles,
-                                  trajState.nSharedHits);
-
-      // Get the majority truth particle to this track
-      identifyContributingParticles(hitParticlesMap, traj, trackTip,
-                                    particleHitCounts);
-      if (particleHitCounts.empty()) {
-        ACTS_WARNING(
-            "No truth particle associated with this trajectory with entry "
-            "index = "
-            << trackTip);
-        continue;
-      }
-      // Get the majority particleId and majority particle counts
-      // Note that the majority particle might be not in the truth seeds
-      // collection
-      ActsFatras::Barcode majorityParticleId =
-          particleHitCounts.front().particleId;
-      size_t nMajorityHits = particleHitCounts.front().hitCount;
-
-      // Check if the trajectory is matched with truth.
-      // If not, it will be classified as 'fake'
-      bool isFake = false;
-      if (nMajorityHits * 1. / trajState.nMeasurements >=
-          m_cfg.truthMatchProbMin) {
-        matched[majorityParticleId].push_back(
-            {nMajorityHits, fittedParameters});
-      } else {
-        isFake = true;
-        unmatched[majorityParticleId]++;
-      }
-      // Fill fake rate plots
-      m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
-
-      // Use neural network classification for duplication rate plots
-      // Currently, the network used for this example can only handle
-      // good/duplicate classification, so need to manually exclude fake tracks
-      if (m_cfg.duplicatedPredictor && !isFake) {
-        inputFeatures[0] = trajState.nMeasurements;
-        inputFeatures[1] = trajState.nOutliers;
-        inputFeatures[2] = trajState.chi2Sum * 1.0 / trajState.NDF;
-        // predict if current trajectory is 'duplicate'
-        bool isDuplicated = m_cfg.duplicatedPredictor(inputFeatures);
-        // Add to number of duplicated particles
-        if (isDuplicated) {
-          m_nTotalDuplicateTracks++;
-        }
-        // Fill the duplication rate
-        m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
-                                   isDuplicated);
-      }
-      // Counting number of total trajectories
-      m_nTotalTracks++;
+  for (const auto& track : tracks) {
+    // Check if the reco track has fitted track parameters
+    if (!track.hasReferenceSurface()) {
+      ACTS_WARNING("No fitted track parameters for track with tip index = "
+                   << track.tipIndex());
+      continue;
     }
+    Acts::BoundTrackParameters fittedParameters =
+        track.createParametersAtReference();
+    // Fill the trajectory summary info
+    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
+                                track.nTrackStates(), track.nMeasurements(),
+                                track.nOutliers(), track.nHoles(),
+                                track.nSharedHits());
+
+    // Get the majority truth particle to this track
+    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
+    if (particleHitCounts.empty()) {
+      ACTS_DEBUG(
+          "No truth particle associated with this trajectory with tip index = "
+          << track.tipIndex());
+      continue;
+    }
+    // Get the majority particleId and majority particle counts
+    // Note that the majority particle might be not in the truth seeds
+    // collection
+    ActsFatras::Barcode majorityParticleId =
+        particleHitCounts.front().particleId;
+    std::size_t nMajorityHits = particleHitCounts.front().hitCount;
+
+    // Check if the trajectory is matched with truth.
+    // If not, it will be class ified as 'fake'
+    const bool recoMatched =
+        static_cast<float>(nMajorityHits) / track.nMeasurements() >=
+        m_cfg.truthMatchProbMin;
+    const bool truthMatched =
+        static_cast<float>(nMajorityHits) /
+            particleTruthHitCount.at(majorityParticleId) >=
+        m_cfg.truthMatchProbMin;
+
+    bool isFake = false;
+    if (!m_cfg.doubleMatching && recoMatched) {
+      matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
+    } else if (m_cfg.doubleMatching && recoMatched && truthMatched) {
+      matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
+    } else {
+      isFake = true;
+      unmatched[majorityParticleId]++;
+    }
+
+    // Fill fake rate plots
+    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
+
+    // Use neural network classification for duplication rate plots
+    // Currently, the network used for this example can only handle
+    // good/duplicate classification, so need to manually exclude fake tracks
+    if (m_cfg.duplicatedPredictor && !isFake) {
+      inputFeatures[0] = track.nMeasurements();
+      inputFeatures[1] = track.nOutliers();
+      inputFeatures[2] = track.chi2() * 1.0 / track.nDoF();
+      // predict if current trajectory is 'duplicate'
+      bool isDuplicated = m_cfg.duplicatedPredictor(inputFeatures);
+      // Add to number of duplicated particles
+      if (isDuplicated) {
+        m_nTotalDuplicateTracks++;
+      }
+      // Fill the duplication rate
+      m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
+                                 isDuplicated);
+    }
+    // Counting number of total trajectories
+    m_nTotalTracks++;
   }
 
   // Use truth-based classification for duplication rate plots
@@ -242,7 +263,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
                 [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
                   return lhs.first > rhs.first;
                 });
-      for (size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
+      for (std::size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
         const auto& [nMajorityHits, fittedParameters] =
             matchedTracks.at(itrack);
         // The tracks with maximum number of majority hits is taken as the
@@ -264,7 +285,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   for (const auto& particle : particles) {
     auto particleId = particle.particleId();
     // Investigate the truth-matched tracks
-    size_t nMatchedTracks = 0;
+    std::size_t nMatchedTracks = 0;
     bool isReconstructed = false;
     auto imatched = matched.find(particleId);
     if (imatched != matched.end()) {
@@ -279,14 +300,30 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       }
       isReconstructed = true;
     }
+    // Loop over all the other truth particle and find the distance to the
+    // closest one
+    double minDeltaR = -1;
+    for (const auto& closeParticle : particles) {
+      if (closeParticle.particleId() == particleId) {
+        continue;
+      }
+      double p_phi = phi(particle.direction());
+      double p_eta = eta(particle.direction());
+      double c_phi = phi(closeParticle.direction());
+      double c_eta = eta(closeParticle.direction());
+      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
+      if (minDeltaR == -1 || distance < minDeltaR) {
+        minDeltaR = distance;
+      }
+    }
     // Fill efficiency plots
-    m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
+    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
     // Fill number of duplicated tracks for this particle
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedTracks - 1);
 
     // Investigate the fake (i.e. truth-unmatched) tracks
-    size_t nFakeTracks = 0;
+    std::size_t nFakeTracks = 0;
     auto ifake = unmatched.find(particleId);
     if (ifake != unmatched.end()) {
       nFakeTracks = ifake->second;
@@ -300,6 +337,17 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
                             nFakeTracks);
     m_nTotalParticles += 1;
   }  // end all truth particles
+
+  // Write additional stuff to TTree
+  if (m_cfg.writeMatchingDetails && m_matchingTree != nullptr) {
+    for (const auto& p : particles) {
+      m_treeEventNr = ctx.eventNumber;
+      m_treeParticleId = p.particleId().value();
+      m_treeIsMatched = (matched.find(p.particleId()) != matched.end());
+
+      m_matchingTree->Fill();
+    }
+  }
 
   return ProcessCode::SUCCESS;
 }

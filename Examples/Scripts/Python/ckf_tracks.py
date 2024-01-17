@@ -17,13 +17,12 @@ def runCKFTracks(
     digiConfigFile: Path,
     field,
     outputDir: Path,
+    outputCsv=True,
     truthSmearedSeeded=False,
     truthEstimatedSeeded=False,
-    outputCsv=True,
     inputParticlePath: Optional[Path] = None,
     s=None,
 ):
-
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
@@ -107,7 +106,7 @@ def runCKFTracks(
             minPt=500 * u.MeV,
             impactMax=3 * u.mm,
         ),
-        SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
+        SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
         TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared
         if truthSmearedSeeded
@@ -149,9 +148,9 @@ if "__main__" == __name__:
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        outputCsv=True,
         truthSmearedSeeded=False,
         truthEstimatedSeeded=False,
         inputParticlePath=inputParticlePath,
         outputDir=Path.cwd(),
+        outputCsv=True,
     ).run()

@@ -12,10 +12,11 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include <Acts/EventData/Charge.hpp>
-#include <Acts/EventData/MultiComponentBoundTrackParameters.hpp>
+#include <Acts/EventData/MultiComponentTrackParameters.hpp>
 #include <Acts/Surfaces/PlaneSurface.hpp>
 
 #include <algorithm>
@@ -26,6 +27,8 @@
 #include <vector>
 
 using namespace Acts;
+
+static const auto particleHypothesis = ParticleHypothesis::pion();
 
 BOOST_AUTO_TEST_CASE(test_constructors) {
   std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> a;
@@ -38,12 +41,16 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Ones(), Vector3::Ones().normalized());
 
-  const auto ap = MultiComponentBoundTrackParameters<SinglyCharged>(surface, a);
-  const auto bp = MultiComponentBoundTrackParameters<SinglyCharged>(surface, b);
-  const auto aps = MultiComponentBoundTrackParameters<SinglyCharged>(
-      surface, std::get<1>(a.front()), std::get<2>(a.front()));
-  const auto bps = MultiComponentBoundTrackParameters<SinglyCharged>(
-      surface, std::get<1>(b.front()), std::get<2>(b.front()));
+  const auto ap =
+      MultiComponentBoundTrackParameters(surface, a, particleHypothesis);
+  const auto bp =
+      MultiComponentBoundTrackParameters(surface, b, particleHypothesis);
+  const auto aps = MultiComponentBoundTrackParameters(
+      surface, std::get<1>(a.front()), std::get<2>(a.front()),
+      particleHypothesis);
+  const auto bps = MultiComponentBoundTrackParameters(
+      surface, std::get<1>(b.front()), std::get<2>(b.front()),
+      particleHypothesis);
 
   BOOST_CHECK(b == ap.components());
   BOOST_CHECK(ap.components() == bp.components());
@@ -58,8 +65,8 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Vector3::Ones(), Vector3::Ones().normalized());
 
-    const GenericBoundTrackParameters<SinglyCharged> single_pars(
-        surface, BoundVector::Ones(), cov);
+    const BoundTrackParameters single_pars(surface, BoundVector::Ones(), cov,
+                                           particleHypothesis);
 
     const auto multi_pars = [&]() {
       std::vector<
@@ -68,7 +75,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
       for (int i = 0; i < 4; ++i) {
         a.push_back({0.25, single_pars.parameters(), single_pars.covariance()});
       }
-      return MultiComponentBoundTrackParameters<SinglyCharged>(surface, a);
+      return MultiComponentBoundTrackParameters(surface, a, particleHypothesis);
     }();
 
     BOOST_CHECK_EQUAL(multi_pars.absoluteMomentum(),
@@ -88,7 +95,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     if (cov && *cov != BoundSquareMatrix::Zero()) {
       BOOST_CHECK_EQUAL(*multi_pars.covariance(), *single_pars.covariance());
     } else {
-      BOOST_CHECK(not multi_pars.covariance());
+      BOOST_CHECK(!multi_pars.covariance());
     }
   }
 }

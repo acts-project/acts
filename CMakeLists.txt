@@ -35,6 +35,7 @@ option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
+option(ACTS_BUILD_PLUGIN_PODIO "Build Podio plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
@@ -46,7 +47,6 @@ option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
-option(ACTS_BUILD_PLUGIN_MLPACK "Build MLpack plugin" OFF)
 option(ACTS_SETUP_VECMEM "Explicitly set up vecmem for the project" OFF)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
@@ -129,6 +129,9 @@ set_option_if(
   ACTS_BUILD_PLUGIN_EDM4HEP
   ACTS_BUILD_EXAMPLES_EDM4HEP OR ACTS_BUILD_EVERYTHING)
 set_option_if(
+  ACTS_BUILD_PLUGIN_PODIO
+  ACTS_BUILD_EVERYTHING)
+set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
     ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)  
 set_option_if(
@@ -136,7 +139,7 @@ set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
   ACTS_BUILD_PLUGIN_IDENTIFICATION
-  ACTS_BUILD_PLUGIN_TGEO OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_PLUGIN_TGEO OR ACTS_BUILD_PLUGIN_PODIO OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
   ACTS_BUILD_PLUGIN_JSON
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
@@ -182,18 +185,17 @@ endif()
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.35)
+set(_acts_actsvg_version 0.4.39)
 set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
 set(_acts_edm4hep_version 0.7)
-set(_acts_podio_version 0.6)
+set(_acts_podio_version 0.16)
 set(_acts_doxygen_version 1.9.4)
 set(_acts_eigen3_version 3.3.7)
 set(_acts_hepmc3_version 3.2.1)
 set(_acts_nlohmanjson_version 3.2.0)
 set(_acts_onnxruntime_version 1.12.0)
-set(_acts_mlpack_version 3.1.1)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
@@ -305,9 +307,6 @@ if(ACTS_BUILD_PLUGIN_JSON)
     add_subdirectory(thirdparty/nlohmann_json)
   endif()
 endif()
-if(ACTS_BUILD_PLUGIN_MLPACK)
-  find_package(mlpack ${_acts_mlpack_version} REQUIRED)
-endif()
 if(ACTS_BUILD_PLUGIN_SYCL)
   find_package(SYCL REQUIRED)
 endif()
@@ -344,8 +343,11 @@ endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
   find_package(OnnxRuntime ${_acts_onnxruntime_version} REQUIRED)
 endif()
-if(ACTS_BUILD_PLUGIN_EDM4HEP)
+if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
   find_package(podio ${_acts_podio_version} REQUIRED CONFIG)
+  find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core)
+endif()
+if(ACTS_BUILD_PLUGIN_EDM4HEP)
   find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)

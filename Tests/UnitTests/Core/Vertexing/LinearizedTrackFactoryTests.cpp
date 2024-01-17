@@ -62,33 +62,33 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
 // Vertex time distribution
-std::uniform_real_distribution<> vTDist(-1_ns, 1_ns);
+std::uniform_real_distribution<double> vTDist(-1_ns, 1_ns);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
 // Track theta distribution
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
-std::uniform_real_distribution<> qDist(-1, 1);
+std::uniform_real_distribution<double> qDist(-1, 1);
 // Track time distribution
-std::uniform_real_distribution<> tDist(-0.002_ns, 0.002_ns);
+std::uniform_real_distribution<double> tDist(-0.002_ns, 0.002_ns);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100_um);
+std::uniform_real_distribution<double> resIPDist(0., 100_um);
 // Track angular distribution
-std::uniform_real_distribution<> resAngDist(0., 0.1);
+std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(0.0, 0.1);
+std::uniform_real_distribution<double> resQoPDist(0.0, 0.1);
 // Track time resolution distribution
-std::uniform_real_distribution<> resTDist(0.1_ns, 0.2_ns);
+std::uniform_real_distribution<double> resTDist(0.1_ns, 0.2_ns);
 
 ///
 /// @brief Test HelicalTrackLinearizer by comparing it to NumericalTrackLinearizer.
@@ -165,7 +165,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., resT * resT;
-    tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat));
+    tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat),
+                        ParticleHypothesis::pion());
   }
 
   // Linearizer for constant field and corresponding state
@@ -191,71 +192,75 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Lambda for comparing outputs of the two linearization methods
   // We compare the linearization result at the PCA to "linPoint"
-  auto checkLinearizers =
-      [](auto& lin1, auto& linState1, auto& lin2, auto& linState2,
-         const BoundTrackParameters& track, const Vector4& linPoint,
-         const auto& geometryContext, const auto& fieldContext) {
-        // In addition to comparing the output of the linearizers, we check that
-        // they return non-zero quantities
-        BoundVector vecBoundZero = BoundVector::Zero();
-        BoundSquareMatrix matBoundZero = BoundSquareMatrix::Zero();
-        ActsMatrix<eBoundSize, 4> matBound2SPZero =
-            ActsMatrix<eBoundSize, 4>::Zero();
-        ActsMatrix<eBoundSize, 3> matBound2MomZero =
-            ActsMatrix<eBoundSize, 3>::Zero();
+  auto checkLinearizers = [](auto& lin1, auto& linState1, auto& lin2,
+                             auto& linState2, const BoundTrackParameters& track,
+                             const Vector4& linPoint,
+                             const auto& geometryContext,
+                             const auto& fieldContext) {
+    // In addition to comparing the output of the linearizers, we check that
+    // they return non-zero quantities
+    BoundVector vecBoundZero = BoundVector::Zero();
+    BoundSquareMatrix matBoundZero = BoundSquareMatrix::Zero();
+    ActsMatrix<eBoundSize, 4> matBound2SPZero =
+        ActsMatrix<eBoundSize, 4>::Zero();
+    ActsMatrix<eBoundSize, 3> matBound2MomZero =
+        ActsMatrix<eBoundSize, 3>::Zero();
 
-        // We check that the entries of the output quantities either
-        // -) have a relative difference of less than "relTol"
-        // or
-        // -) are both smaller than "small"
-        double relTol = 5e-4;
-        double small = 5e-4;
+    // We check that the entries of the output quantities either
+    // -) have a relative difference of less than "relTol"
+    // or
+    // -) are both smaller than "small"
+    double relTol = 5e-4;
+    double small = 5e-4;
 
-        const LinearizedTrack linTrack1 =
-            lin1.linearizeTrack(track, linPoint, geometryContext, fieldContext,
-                                linState1)
-                .value();
-        const LinearizedTrack linTrack2 =
-            lin2.linearizeTrack(track, linPoint, geometryContext, fieldContext,
-                                linState2)
-                .value();
+    std::shared_ptr<PerigeeSurface> perigee =
+        Surface::makeShared<PerigeeSurface>(VectorHelpers::position(linPoint));
 
-        // There should be no problem here because both linearizers compute
-        // "parametersAtPCA" the same way
-        CHECK_CLOSE_OR_SMALL(linTrack1.parametersAtPCA,
-                             linTrack2.parametersAtPCA, relTol, small);
-        BOOST_CHECK_NE(linTrack1.parametersAtPCA, vecBoundZero);
-        BOOST_CHECK_NE(linTrack2.parametersAtPCA, vecBoundZero);
+    const LinearizedTrack linTrack1 =
+        lin1.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
+                            fieldContext, linState1)
+            .value();
+    const LinearizedTrack linTrack2 =
+        lin2.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
+                            fieldContext, linState2)
+            .value();
 
-        // Compare position Jacobians
-        CHECK_CLOSE_OR_SMALL((linTrack1.positionJacobian),
-                             (linTrack2.positionJacobian), relTol, small);
-        BOOST_CHECK_NE(linTrack1.positionJacobian, matBound2SPZero);
-        BOOST_CHECK_NE(linTrack2.positionJacobian, matBound2SPZero);
+    // There should be no problem here because both linearizers compute
+    // "parametersAtPCA" the same way
+    CHECK_CLOSE_OR_SMALL(linTrack1.parametersAtPCA, linTrack2.parametersAtPCA,
+                         relTol, small);
+    BOOST_CHECK_NE(linTrack1.parametersAtPCA, vecBoundZero);
+    BOOST_CHECK_NE(linTrack2.parametersAtPCA, vecBoundZero);
 
-        // Compare momentum Jacobians
-        CHECK_CLOSE_OR_SMALL((linTrack1.momentumJacobian),
-                             (linTrack2.momentumJacobian), relTol, small);
-        BOOST_CHECK_NE(linTrack1.momentumJacobian, matBound2MomZero);
-        BOOST_CHECK_NE(linTrack2.momentumJacobian, matBound2MomZero);
+    // Compare position Jacobians
+    CHECK_CLOSE_OR_SMALL((linTrack1.positionJacobian),
+                         (linTrack2.positionJacobian), relTol, small);
+    BOOST_CHECK_NE(linTrack1.positionJacobian, matBound2SPZero);
+    BOOST_CHECK_NE(linTrack2.positionJacobian, matBound2SPZero);
 
-        // Again, both methods compute "covarianceAtPCA" the same way => this
-        // check should always work
-        CHECK_CLOSE_OR_SMALL(linTrack1.covarianceAtPCA,
-                             linTrack2.covarianceAtPCA, relTol, small);
-        BOOST_CHECK_NE(linTrack1.covarianceAtPCA, matBoundZero);
-        BOOST_CHECK_NE(linTrack2.covarianceAtPCA, matBoundZero);
+    // Compare momentum Jacobians
+    CHECK_CLOSE_OR_SMALL((linTrack1.momentumJacobian),
+                         (linTrack2.momentumJacobian), relTol, small);
+    BOOST_CHECK_NE(linTrack1.momentumJacobian, matBound2MomZero);
+    BOOST_CHECK_NE(linTrack2.momentumJacobian, matBound2MomZero);
 
-        // Check whether "linPoint" is saved correctly in the LinearizerTrack
-        // objects
-        BOOST_CHECK_EQUAL(linTrack1.linearizationPoint, linPoint);
-        BOOST_CHECK_EQUAL(linTrack2.linearizationPoint, linPoint);
+    // Again, both methods compute "covarianceAtPCA" the same way => this
+    // check should always work
+    CHECK_CLOSE_OR_SMALL(linTrack1.covarianceAtPCA, linTrack2.covarianceAtPCA,
+                         relTol, small);
+    BOOST_CHECK_NE(linTrack1.covarianceAtPCA, matBoundZero);
+    BOOST_CHECK_NE(linTrack2.covarianceAtPCA, matBoundZero);
 
-        CHECK_CLOSE_OR_SMALL(linTrack1.constantTerm, linTrack2.constantTerm,
-                             relTol, small);
-        BOOST_CHECK_NE(linTrack1.constantTerm, vecBoundZero);
-        BOOST_CHECK_NE(linTrack2.constantTerm, vecBoundZero);
-      };
+    // Check whether "linPoint" is saved correctly in the LinearizerTrack
+    // objects
+    BOOST_CHECK_EQUAL(linTrack1.linearizationPoint, linPoint);
+    BOOST_CHECK_EQUAL(linTrack2.linearizationPoint, linPoint);
+
+    CHECK_CLOSE_OR_SMALL(linTrack1.constantTerm, linTrack2.constantTerm, relTol,
+                         small);
+    BOOST_CHECK_NE(linTrack1.constantTerm, vecBoundZero);
+    BOOST_CHECK_NE(linTrack2.constantTerm, vecBoundZero);
+  };
 
   // Compare linearizers for all tracks
   for (const BoundTrackParameters& trk : tracks) {

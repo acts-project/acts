@@ -133,7 +133,7 @@ class AnnulusBounds : public DiscBounds {
   std::vector<Vector2> corners() const;
 
   /// This method returns the xy coordinates of the four corners of the
-  /// bounds in module coorindates (in x/y)
+  /// bounds in module coordinates (in x/y)
   /// Starting from the upper right (max R, pos locX) and proceeding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
@@ -194,7 +194,7 @@ class AnnulusBounds : public DiscBounds {
   virtual bool inside(const Vector2& lposition, double tolR,
                       double tolPhi) const final;
 
-  /// Transform the strip cartesien
+  /// Transform the strip cartesian
   /// into the module polar system
   ///
   /// @param vStripXY the position in the cartesian strip system
@@ -236,7 +236,7 @@ inline bool AnnulusBounds::coversFullAzimuth() const {
 
 inline bool AnnulusBounds::insideRadialBounds(double R,
                                               double tolerance) const {
-  return ((R + tolerance) > get(eMinR) and (R - tolerance) < get(eMaxR));
+  return ((R + tolerance) > get(eMinR) && (R - tolerance) < get(eMaxR));
 }
 
 inline double AnnulusBounds::binningValueR() const {
@@ -254,12 +254,12 @@ inline std::vector<double> AnnulusBounds::values() const {
 }
 
 inline void AnnulusBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. or get(eMaxR) < 0. or get(eMinR) > get(eMaxR) or
+  if (get(eMinR) < 0. || get(eMaxR) < 0. || get(eMinR) > get(eMaxR) ||
       std::abs(get(eMinR) - get(eMaxR)) < s_epsilon) {
     throw std::invalid_argument("AnnulusBounds: invalid radial setup.");
   }
-  if (get(eMinPhiRel) != detail::radian_sym(get(eMinPhiRel)) or
-      get(eMaxPhiRel) != detail::radian_sym(get(eMaxPhiRel)) or
+  if (get(eMinPhiRel) != detail::radian_sym(get(eMinPhiRel)) ||
+      get(eMaxPhiRel) != detail::radian_sym(get(eMaxPhiRel)) ||
       get(eMinPhiRel) > get(eMaxPhiRel)) {
     throw std::invalid_argument("AnnulusBounds: invalid phi boundary setup.");
   }

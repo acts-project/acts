@@ -26,9 +26,15 @@ export PYTHONPATH=$python_dir:$PYTHONPATH
 # Make ODD available if possible
 # This seems to be only reliable on Linux for now, not on MacOS
 odd_dir=$python_dir/../thirdparty/OpenDataDetector/factory
-if [ -d "$odd_dir" ] && [[ "$(uname -s)" -eq "Linux" ]]; then
-    echo "INFO:    Found OpenDataDetector and set it up"
-    export LD_LIBRARY_PATH=$odd_dir:$LD_LIBRARY_PATH
+if [ -d "$odd_dir" ]; then
+    if [[ "$(uname -s)" == "Linux" ]]; then
+        echo "INFO:    Found OpenDataDetector and set it up"
+        export LD_LIBRARY_PATH=$odd_dir:$LD_LIBRARY_PATH
+    fi
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        echo "INFO:    Found OpenDataDetector and set it up"
+        export DYLD_LIBRARY_PATH=$odd_dir:$DYLD_LIBRARY_PATH
+    fi
 fi
 
 # This message might seem excessive, but the Acts bindings are only installed

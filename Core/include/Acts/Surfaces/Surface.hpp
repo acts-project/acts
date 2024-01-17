@@ -46,6 +46,8 @@ class Surface;
 
 /// Typedef of the surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
+/// Typedef of the surface multi-intersection
+using SurfaceMultiIntersection = ObjectMultiIntersection<Surface>;
 
 /// @class Surface
 ///
@@ -187,41 +189,16 @@ class Surface : public virtual GeometryObject,
   /// @return center position by value
   virtual Vector3 center(const GeometryContext& gctx) const;
 
-  /// Return method for the normal vector of the surface
-  /// The normal vector can only be generally defined at a given local position
-  /// It requires a local position to be given (in general)
-  ///
+  /// Return the surface normal at a given @p position and @p direction.
+  /// This method is fully generic, and valid for all surface types.
+  /// @note For some surface types, the @p direction is ignored, but
+  ///       it is **not safe** to pass in a zero vector!
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lposition is the local position where the normal vector is
-  /// constructed
-  ///
-  /// @return normal vector by value
-  virtual Vector3 normal(const GeometryContext& gctx,
-                         const Vector2& lposition) const = 0;
-
-  /// Return method for the normal vector of the surface
-  /// The normal vector can only be generally defined at a given local position
-  /// It requires a local position to be given (in general)
-  ///
-  /// @param position is the global position where the normal vector is
-  /// constructed
-  /// @param gctx The current geometry context object, e.g. alignment
-
-  ///
-  /// @return normal vector by value
-  virtual Vector3 normal(const GeometryContext& gctx,
-                         const Vector3& position) const;
-
-  /// Return method for the normal vector of the surface
-  ///
-  /// It will return a normal vector at the center() position
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  //
-  /// @return normal vector by value
-  virtual Vector3 normal(const GeometryContext& gctx) const {
-    return normal(gctx, center(gctx));
-  }
+  /// @param pos The position at which to calculate the normal
+  /// @param direction The direction at which to calculate the normal
+  /// @return The normal vector at the given position and direction
+  virtual Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
+                         const Vector3& direction) const = 0;
 
   /// Return method for SurfaceBounds
   /// @return SurfaceBounds by reference
@@ -277,15 +254,16 @@ class Surface : public virtual GeometryObject,
   /// @return boolean indication if operation was successful
   bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
                    const Vector3& direction,
-                   const BoundaryCheck& bcheck = true) const;
+                   const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// The insideBounds method for local positions
   ///
   /// @param lposition The local position to check
   /// @param bcheck BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
-  virtual bool insideBounds(const Vector2& lposition,
-                            const BoundaryCheck& bcheck = true) const;
+  virtual bool insideBounds(
+      const Vector2& lposition,
+      const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
@@ -390,8 +368,9 @@ class Surface : public virtual GeometryObject,
   /// Calucation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position global 3D position - considered to be on surface but not
-  /// inside bounds (check is done)
+  /// @param position global 3D position
+  /// @note The @p position is either ignored, or it is coerced to be on the surface,
+  ///       depending on the surface type.
   /// @param direction global 3D momentum direction
   ///
   /// @return Path correction with respect to the nominal incident.
@@ -407,10 +386,11 @@ class Surface : public virtual GeometryObject,
   /// @param bcheck the Boundary Check
   /// @param tolerance the tolerance used for the intersection
   ///
-  /// @return SurfaceIntersection object (contains intersection & surface)
-  virtual SurfaceIntersection intersect(
+  /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
+  virtual SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
@@ -441,7 +421,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return A list of vertices and a face/facett description of it
   virtual Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                              size_t lseg) const = 0;
+                                              std::size_t lseg) const = 0;
 
   /// The derivative of bound track parameters w.r.t. alignment
   /// parameters of its reference surface (i.e. local frame origin in

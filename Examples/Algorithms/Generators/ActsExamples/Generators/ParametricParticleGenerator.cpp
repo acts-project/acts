@@ -14,6 +14,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstdint>
 #include <limits>
 #include <random>
 #include <utility>
@@ -37,7 +38,7 @@ ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
 
 ActsExamples::SimParticleContainer
 ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
-  using UniformIndex = std::uniform_int_distribution<unsigned int>;
+  using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
   using UniformReal = std::uniform_real_distribution<double>;
 
   // choose between particle/anti-particle if requested
@@ -61,7 +62,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
   particles.reserve(m_cfg.numParticles);
 
   // counter will be reused as barcode particle number which must be non-zero.
-  for (size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
+  for (std::size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
     // all particles are treated as originating from the same primary vertex
     const auto pid = ActsFatras::Barcode(0u).setParticle(ip);
 
@@ -76,7 +77,7 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
     Acts::Vector3 dir;
     double cosTheta = 0.;
     double sinTheta = 0.;
-    if (not m_cfg.etaUniform) {
+    if (!m_cfg.etaUniform) {
       cosTheta = cosThetaDist(rng);
       sinTheta = std::sqrt(1 - cosTheta * cosTheta);
     } else {

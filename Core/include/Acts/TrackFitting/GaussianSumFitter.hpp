@@ -28,22 +28,13 @@ namespace detail {
 /// to inspect its charge representation if not TODO this probably gives an ugly
 /// error message if detectCharge does not compile
 template <typename T>
-struct IsMultiComponentBoundParameters : public std::false_type {
-  template <template <class> class U, class V>
-  static auto detectCharge(const U<V>& /*unused*/) {
-    return V{};
-  }
+struct IsMultiComponentBoundParameters : public std::false_type {};
 
-  using Charge = decltype(detectCharge(std::declval<T>()));
-};
-
-template <typename T>
-struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters<T>>
+template <>
+struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters>
     : public std::true_type {};
 
 }  // namespace detail
-
-namespace Experimental {
 
 /// Gaussian Sum Fitter implementation.
 /// @tparam propagator_t The propagator type on which the algorithm is built on
@@ -85,6 +76,20 @@ struct GaussianSumFitter {
   /// The actor type
   using GsfActor = detail::GsfActor<bethe_heitler_approx_t, traj_t>;
 
+  /// This allows to break the propagation by setting the navigationBreak
+  /// TODO refactor once we can do this more elegantly
+  struct NavigationBreakAborter {
+    NavigationBreakAborter() = default;
+
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
+                    const navigator_t& navigator,
+                    const Logger& /*logger*/) const {
+      return navigator.navigationBreak(state.navigation);
+    }
+  };
+
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t,
             typename track_container_t, template <typename> class holder_t>
@@ -101,7 +106,7 @@ struct GaussianSumFitter {
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
       using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
-      using Aborters = AbortList<>;
+      using Aborters = AbortList<NavigationBreakAborter>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
                                                       opts.magFieldContext);
@@ -118,8 +123,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector,
-                                DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       std::vector<const Surface*> backwardSequence(
@@ -157,7 +161,7 @@ struct GaussianSumFitter {
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
-      using Aborters = AbortList<EndOfWorldReached>;
+      using Aborters = AbortList<EndOfWorldReached, NavigationBreakAborter>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
                                                       opts.magFieldContext);
@@ -170,7 +174,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [this](const auto& opts) {
-      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
@@ -190,7 +194,7 @@ struct GaussianSumFitter {
 
   /// The generic implementation of the fit function.
   /// TODO check what this function does with the referenceSurface is e.g. the
-  /// first measuerementSurface
+  /// first measurementSurface
   template <typename source_link_it_t, typename start_parameters_t,
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t,
             typename track_container_t, template <typename> class holder_t>
@@ -221,17 +225,17 @@ struct GaussianSumFitter {
         sParameters.referenceSurface()
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
-                       sParameters.direction(), true)
-            .intersection.status;
+                       sParameters.direction(), BoundaryCheck(true))
+            .closest()
+            .status();
 
     if (intersectionStatusStartSurface != Intersection3D::Status::onSurface) {
-      ACTS_ERROR(
-          "Surface intersection of start parameters with bound-check failed");
-      return GsfError::StartParametersNotOnStartSurface;
+      ACTS_DEBUG(
+          "Surface intersection of start parameters WITH bound-check failed");
     }
 
     // To be able to find measurements later, we put them into a map
-    // We need to copy input SourceLinks anyways, so the map can own them.
+    // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(begin, end)
                               << " input measurements");
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
@@ -242,7 +246,7 @@ struct GaussianSumFitter {
     }
 
     ACTS_VERBOSE(
-        "Gsf: Final measuerement map size: " << inputMeasurements.size());
+        "Gsf: Final measurement map size: " << inputMeasurements.size());
 
     if (sParameters.covariance() == std::nullopt) {
       return GsfError::StartParametersHaveNoCovariance;
@@ -273,26 +277,26 @@ struct GaussianSumFitter {
           detail::IsMultiComponentBoundParameters<start_parameters_t>;
 
       typename propagator_t::template action_list_t_result_t<
-          CurvilinearTrackParameters, decltype(fwdPropOptions.actionList)>
+          MultiComponentCurvilinearTrackParameters,
+          decltype(fwdPropOptions.actionList)>
           inputResult;
 
-      auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
+      auto& r = inputResult.template get<typename GsfActor::result_type>();
 
       r.fittedStates = &trackContainer.trackStateContainer();
 
       // This allows the initialization with single- and multicomponent start
       // parameters
-      if constexpr (not IsMultiParameters::value) {
-        using Charge = typename IsMultiParameters::Charge;
-
-        MultiComponentBoundTrackParameters<Charge> params(
+      if constexpr (!IsMultiParameters::value) {
+        MultiComponentBoundTrackParameters params(
             sParameters.referenceSurface().getSharedPtr(),
-            sParameters.parameters(), sParameters.covariance());
+            sParameters.parameters(), *sParameters.covariance(),
+            sParameters.particleHypothesis());
 
-        return m_propagator.propagate(params, fwdPropOptions,
+        return m_propagator.propagate(params, fwdPropOptions, false,
                                       std::move(inputResult));
       } else {
-        return m_propagator.propagate(sParameters, fwdPropOptions,
+        return m_propagator.propagate(sParameters, fwdPropOptions, false,
                                       std::move(inputResult));
       }
     }();
@@ -301,7 +305,8 @@ struct GaussianSumFitter {
       return return_error_or_abort(fwdResult.error());
     }
 
-    auto& fwdGsfResult = fwdResult->template get<detail::GsfResult<traj_t>>();
+    const auto& fwdGsfResult =
+        fwdResult->template get<typename GsfActor::result_type>();
 
     if (!fwdGsfResult.result.ok()) {
       return return_error_or_abort(fwdGsfResult.result.error());
@@ -314,7 +319,10 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("Finished forward propagation");
     ACTS_VERBOSE("- visited surfaces: " << fwdGsfResult.visitedSurfaces.size());
     ACTS_VERBOSE("- processed states: " << fwdGsfResult.processedStates);
-    ACTS_VERBOSE("- measuerement states: " << fwdGsfResult.measurementStates);
+    ACTS_VERBOSE("- measurement states: " << fwdGsfResult.measurementStates);
+
+    std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler.val();
+    double maxPathXOverX0 = fwdGsfResult.maxPathXOverX0.val();
 
     //////////////////
     // Backward pass
@@ -342,21 +350,22 @@ struct GaussianSumFitter {
       using PM = TrackStatePropMask;
 
       typename propagator_t::template action_list_t_result_t<
-          BoundTrackParameters, decltype(bwdPropOptions.actionList)>
+          MultiComponentBoundTrackParameters,
+          decltype(bwdPropOptions.actionList)>
           inputResult;
 
       // Unfortunately we must construct the result type here to be able to
       // return an error code
       using ResultType =
           decltype(m_propagator.template propagate<
-                   MultiComponentBoundTrackParameters<SinglyCharged>,
-                   decltype(bwdPropOptions), MultiStepperSurfaceReached>(
-              std::declval<MultiComponentBoundTrackParameters<SinglyCharged>>(),
+                   MultiComponentBoundTrackParameters, decltype(bwdPropOptions),
+                   MultiStepperSurfaceReached>(
+              std::declval<MultiComponentBoundTrackParameters>(),
               std::declval<Acts::Surface&>(),
               std::declval<decltype(bwdPropOptions)>(),
               std::declval<decltype(inputResult)>()));
 
-      auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
+      auto& r = inputResult.template get<typename GsfActor::result_type>();
 
       r.fittedStates = &trackContainer.trackStateContainer();
 
@@ -387,7 +396,8 @@ struct GaussianSumFitter {
       return return_error_or_abort(bwdResult.error());
     }
 
-    auto& bwdGsfResult = bwdResult->template get<detail::GsfResult<traj_t>>();
+    auto& bwdGsfResult =
+        bwdResult->template get<typename GsfActor::result_type>();
 
     if (!bwdGsfResult.result.ok()) {
       return return_error_or_abort(bwdGsfResult.result.error());
@@ -396,6 +406,25 @@ struct GaussianSumFitter {
     if (bwdGsfResult.measurementStates == 0) {
       return return_error_or_abort(
           GsfError::NoMeasurementStatesCreatedBackward);
+    }
+
+    // For the backward pass we want the counters at in end (= at the
+    // interaction point) and not at the last measurement surface
+    bwdGsfResult.nInvalidBetheHeitler.update();
+    bwdGsfResult.maxPathXOverX0.update();
+    bwdGsfResult.sumPathXOverX0.update();
+    nInvalidBetheHeitler += bwdGsfResult.nInvalidBetheHeitler.val();
+    maxPathXOverX0 =
+        std::max(maxPathXOverX0, bwdGsfResult.maxPathXOverX0.val());
+
+    if (nInvalidBetheHeitler > 0) {
+      ACTS_WARNING("Encountered " << nInvalidBetheHeitler
+                                  << " cases where x/X0 exceeds the range "
+                                     "of the Bethe-Heitler-Approximation. The "
+                                     "maximum x/X0 encountered was "
+                                  << maxPathXOverX0
+                                  << ". Enable DEBUG output "
+                                     "for more information.");
     }
 
     ////////////////////////////////////
@@ -411,7 +440,7 @@ struct GaussianSumFitter {
 
     // TODO should this be warning level? it happens quite often... Investigate!
     if (bwdGsfResult.measurementStates != fwdGsfResult.measurementStates) {
-      ACTS_DEBUG("Fwd and bwd measuerement states do not match");
+      ACTS_DEBUG("Fwd and bwd measurement states do not match");
     }
 
     // Go through the states and assign outliers / unset smoothed if surface not
@@ -419,11 +448,11 @@ struct GaussianSumFitter {
     const auto& foundBwd = bwdGsfResult.surfacesVisitedBwdAgain;
     std::size_t measurementStatesFinal = 0;
 
-    for (auto state :
-         fwdGsfResult.fittedStates->trackStateRange(fwdGsfResult.currentTip)) {
+    for (auto state : fwdGsfResult.fittedStates->reverseTrackStateRange(
+             fwdGsfResult.currentTip)) {
       const bool found = std::find(foundBwd.begin(), foundBwd.end(),
                                    &state.referenceSurface()) != foundBwd.end();
-      if (not found && state.typeFlags().test(MeasurementFlag)) {
+      if (!found && state.typeFlags().test(MeasurementFlag)) {
         state.typeFlags().set(OutlierFlag);
         state.typeFlags().reset(MeasurementFlag);
         state.unset(TrackStatePropMask::Smoothed);
@@ -442,28 +471,41 @@ struct GaussianSumFitter {
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
-      track.parameters() = params.parameters();
-      track.covariance() = params.covariance().value();
+
+      const auto [finalPars, finalCov] = detail::mergeGaussianMixture(
+          params.components(), params.referenceSurface(),
+          options.componentMergeMethod, [](auto& t) {
+            return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
+          });
+
+      track.parameters() = finalPars;
+      track.covariance() = finalCov;
+
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
 
       if (trackContainer.hasColumn(
               hashString(GsfConstants::kFinalMultiComponentStateColumn))) {
-        ACTS_DEBUG("Add final multi-component state to track")
-        const auto& fsr = bwdResult->template get<
-            Acts::detail::FinalStateCollector::result_type>();
+        ACTS_DEBUG("Add final multi-component state to track");
         track.template component<GsfConstants::FinalMultiComponentState>(
-            GsfConstants::kFinalMultiComponentStateColumn) = fsr.pars;
+            GsfConstants::kFinalMultiComponentStateColumn) = std::move(params);
       }
     }
 
-    calculateTrackQuantities(track);
+    if (trackContainer.hasColumn(
+            hashString(GsfConstants::kFwdMaxMaterialXOverX0))) {
+      track.template component<double>(GsfConstants::kFwdMaxMaterialXOverX0) =
+          fwdGsfResult.maxPathXOverX0.val();
+    }
+    if (trackContainer.hasColumn(
+            hashString(GsfConstants::kFwdSumMaterialXOverX0))) {
+      track.template component<double>(GsfConstants::kFwdSumMaterialXOverX0) =
+          fwdGsfResult.sumPathXOverX0.val();
+    }
 
-    track.nMeasurements() = measurementStatesFinal;
-    track.nHoles() = fwdGsfResult.measurementHoles;
+    calculateTrackQuantities(track);
 
     return track;
   }
 };
 
-}  // namespace Experimental
 }  // namespace Acts

@@ -19,7 +19,6 @@ def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
     @param[in] CKS_files: DataFrame contain the data from each track files (1 file per events usually)
     @return: combined DataFrame containing all the track, ordered by events and then by truth particle ID in each event 
     """
-    globalindex = 0
     data = []
     for f in CKS_files:
         datafile = pd.read_csv(f)
@@ -157,9 +156,9 @@ sys.setrecursionlimit(10**6)
 CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-tracks_ckf.csv"))
 data = readDataSet(CKF_files)
 
-# Data of each events after clustering
+# Data of each event after clustering
 clusteredData = []
-# data of each events after ambiguity resolution
+# data of each event after ambiguity resolution
 cleanedData = []
 
 t1 = time.time()

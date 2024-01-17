@@ -152,7 +152,8 @@ Measurement EDM4hepUtil::readMeasurement(
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  IndexSourceLink sourceLink{geometryId, from.id()};
+  IndexSourceLink sourceLink{
+      geometryId, static_cast<Index>(podioObjectIDToInteger(from.id()))};
 
   auto pos = from.getPosition();
   auto cov = from.getCovMatrix();
@@ -181,12 +182,12 @@ Measurement EDM4hepUtil::readMeasurement(
       // TODO get EDM4hep fixed
       // misusing some fields to store ACTS specific information
       // don't ask ...
-      ActsFatras::Channelizer::Bin2D bin{
+      ActsFatras::Segmentizer::Bin2D bin{
           static_cast<unsigned int>(c.getType()),
           static_cast<unsigned int>(c.getQuality())};
-      ActsFatras::Channelizer::Segment2D path2D;
+      ActsFatras::Segmentizer::Segment2D path2D;
       double activation = c.getTime();
-      ActsFatras::Channelizer::ChannelSegment cell{bin, path2D, activation};
+      ActsFatras::Segmentizer::ChannelSegment cell{bin, path2D, activation};
 
       toCluster->channels.push_back(cell);
     }
@@ -253,6 +254,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
 void EDM4hepUtil::writeTrajectory(
     const Acts::GeometryContext& gctx, double Bz, const Trajectories& from,
     edm4hep::MutableTrack to, std::size_t fromIndex,
+    const Acts::ParticleHypothesis& particleHypothesis,
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap) {
   const auto& multiTrajectory = from.multiTrajectory();
   auto trajectoryState =
@@ -278,10 +280,9 @@ void EDM4hepUtil::writeTrajectory(
 
     edm4hep::TrackState trackState;
 
-    // This makes the hard assumption that |q| = 1
-    Acts::GenericBoundTrackParameters<Acts::SinglyCharged> parObj{
-        state.referenceSurface().getSharedPtr(), state.parameters(),
-        state.covariance()};
+    Acts::BoundTrackParameters parObj{state.referenceSurface().getSharedPtr(),
+                                      state.parameters(), state.covariance(),
+                                      particleHypothesis};
 
     // Convert to LCIO track parametrization expected by EDM4hep
     // This will create an ad-hoc perigee surface if the input parameters are

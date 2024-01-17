@@ -69,7 +69,7 @@ namespace ActsExamples {
 ///
 /// It therefore saves the mapping state/cache as a private member variable
 /// and is designed to be executed in a single threaded mode.
-class MaterialMapping : public ActsExamples::IAlgorithm {
+class MaterialMapping : public IAlgorithm {
  public:
   /// @class nested Config class
   /// of the MaterialMapping algorithm
@@ -134,9 +134,9 @@ class MaterialMapping : public ActsExamples::IAlgorithm {
       m_mappingStateVol;  //!< Material mapping state
                           //
 
-  ReadDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  ReadDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_inputMaterialTracks{this, "InputMaterialTracks"};
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "OutputMaterialTracks"};
 };
 

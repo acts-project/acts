@@ -20,8 +20,6 @@ from helpers import (
     exatrkxEnabled,
     onnxEnabled,
     AssertCollectionExistsAlg,
-    isCI,
-    doHashChecks,
     failure_threshold,
 )
 
@@ -33,7 +31,6 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
     AlignedDetector,
-    RootParticleWriter,
 )
 
 from acts.examples.odd import getOpenDataDetector
@@ -117,11 +114,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 
     root_files = [
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
         (
@@ -165,8 +158,7 @@ def test_geant4(tmp_path, assert_root_hash):
     csv.mkdir()
 
     root_files = [
-        "particles_final.root",
-        "particles_initial.root",
+        "particles_simulation.root",
         "hits.root",
     ]
 
@@ -230,11 +222,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
     ]
@@ -287,11 +275,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
     ]
@@ -348,11 +332,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
     ]
@@ -569,7 +549,6 @@ def test_truth_tracking_kalman(
     root_files = [
         ("trackstates_fitter.root", "trackstates", 19),
         ("tracksummary_fitter.root", "tracksummary", 10),
-        ("performance_track_finder.root", "track_finder_tracks", 19),
         ("performance_track_fitter.root", None, -1),
     ]
 
@@ -608,11 +587,6 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         events=10,
         numThreads=1,
         fpeMasks=[
-            (
-                "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:177",
-                acts.FpeType.FLTUND,
-                1,
-            ),
             (
                 "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:197",
                 acts.FpeType.FLTUND,
@@ -952,9 +926,9 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     else:
         # fmt: off
         filled_entries = [
-            'vol8', 'vol8_lay2', 'vol12_lay8_mod147', 'vol12_lay10', 'vol12_lay10_mod124',
-            'vol12_lay10_mod133', 'vol12_lay12', 'vol12_lay12_mod120', 'vol13',
-            'vol13_lay2', 'vol16_lay2_mod78', 'vol16_lay4', 'vol16_lay6', 'vol16_lay8',
+            'vol8', 'vol8_lay2', 'vol12_lay8_mod117', 'vol12_lay10', 'vol12_lay10_mod154',
+            'vol12_lay10_mod163', 'vol12_lay12', 'vol12_lay12_mod150', 'vol13',
+            'vol13_lay2', 'vol16_lay2_mod53', 'vol16_lay4', 'vol16_lay6', 'vol16_lay8',
             'vol16_lay10', 'vol16_lay12', 'vol17', 'vol17_lay2', 'vol18_lay2',
             'vol18_lay2_mod1', 'vol18_lay2_mod49', 'vol18_lay2_mod86', 'vol18_lay4',
         ]
@@ -1026,9 +1000,9 @@ def test_digitization_example_input(
     else:
         # fmt: off
         filled_entries = [
-            "vol8", "vol8_lay2", "vol12_lay8_mod150", "vol12_lay10_mod114",
-            "vol12_lay10_mod150", "vol12_lay12", "vol12_lay12_mod140",
-            "vol12_lay12_mod141", "vol12_lay12_mod167", "vol13", "vol13_lay2",
+            "vol8", "vol8_lay2", "vol12_lay8_mod120", "vol12_lay10_mod120",
+            "vol12_lay10_mod144", "vol12_lay12", "vol12_lay12_mod111",
+            "vol12_lay12_mod137", "vol12_lay12_mod170", "vol13", "vol13_lay2",
             "vol14_lay2_mod93", "vol14_lay2_mod102", "vol14_lay2_mod112",
             "vol14_lay2_mod118", "vol14_lay4_mod112", "vol14_lay4_mod118",
             "vol14_lay4_mod152", "vol14_lay4_mod161", "vol16_lay4", "vol16_lay6",

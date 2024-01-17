@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -23,7 +24,7 @@ namespace Acts {
 
 /// Track parameters bound to a reference surface for a single track.
 ///
-/// @tparam charge_t Helper type to interpret the particle charge/momentum
+/// @tparam particle_hypothesis_t Helper type to interpret the particle charge/momentum
 ///
 /// This is intended as a user-facing data class that adds additional accessors
 /// and charge/momentum interpretation on top of the pure parameters vector. All
@@ -32,55 +33,45 @@ namespace Acts {
 /// defined by the associated surface.
 ///
 /// @note This class holds shared ownership on its reference surface.
-template <class charge_t>
+template <class particle_hypothesis_t>
 class GenericBoundTrackParameters {
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSquareMatrix;
+  using ParticleHypothesis = particle_hypothesis_t;
 
   /// Construct from a parameters vector on the surface and particle charge.
   ///
   /// @param surface Reference surface the parameters are defined on
   /// @param params Bound parameters vector
-  /// @param q Particle charge
   /// @param cov Bound parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
   ///
   /// In principle, only the charge magnitude is needed her to allow unambiguous
   /// extraction of the absolute momentum. The particle charge is required as
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
   /// debug builds to check for consistency with the q/p parameter.
-  GenericBoundTrackParameters(
-      std::shared_ptr<const Surface> surface, const ParametersVector& params,
-      Scalar q, std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericBoundTrackParameters(std::shared_ptr<const Surface> surface,
+                              const ParametersVector& params,
+                              std::optional<CovarianceMatrix> cov,
+                              ParticleHypothesis particleHypothesis)
       : m_params(params),
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
-        m_chargeInterpreter(std::abs(q)) {
-    assert((0 <= (params[eBoundQOverP] * q)) and
-           "Inconsistent q/p and q signs");
+        m_particleHypothesis(std::move(particleHypothesis)) {
     assert(m_surface);
     normalizePhiTheta();
   }
 
-  /// Construct from a parameters vector on the surface.
-  ///
-  /// @param surface Reference surface the parameters are defined on
-  /// @param params Bound parameters vector
-  /// @param cov Bound parameters covariance matrix
-  ///
-  /// This constructor is only available if there are no potential charge
-  /// ambiguities, i.e. the charge type is default-constructible.
-  template <typename T = charge_t,
-            std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
+  /// Converts a bound track parameter with a different hypothesis.
+  template <typename other_particle_hypothesis_t>
   GenericBoundTrackParameters(
-      std::shared_ptr<const Surface> surface, const ParametersVector& params,
-      std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_params(params), m_cov(std::move(cov)), m_surface(std::move(surface)) {
-    assert(m_surface);
-    normalizePhiTheta();
-  }
+      const GenericBoundTrackParameters<other_particle_hypothesis_t>& other)
+      : GenericBoundTrackParameters(other.referenceSurface().getSharedPtr(),
+                                    other.parameters(), other.covariance(),
+                                    other.particleHypothesis()) {}
 
   /// Factory to construct from four-position, direction, absolute momentum, and
   /// charge.
@@ -88,58 +79,31 @@ class GenericBoundTrackParameters {
   /// @param surface Reference surface the parameters are defined on
   /// @param geoCtx Geometry context for the local-to-global transformation
   /// @param pos4 Track position/time four-vector
-  /// @param dir Track direction three-vector; normalization is ignored.
-  /// @param p Absolute momentum
-  /// @param q Particle charge
+  /// @param dir Track direction three-vector; normalization is ignored
+  /// @param qOverP Charge over momentum
   /// @param cov Bound parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  /// @param tolerance Tolerance used for globalToLocal
   ///
   /// @note The returned result indicates whether the free parameters could
   /// successfully be converted to on-surface parameters.
-  static Result<GenericBoundTrackParameters<charge_t>> create(
-      std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
-      const Vector4& pos4, const Vector3& dir, Scalar p, Scalar q,
-      std::optional<CovarianceMatrix> cov = std::nullopt) {
-    Result<BoundVector> bound = detail::transformFreeToBoundParameters(
-        pos4.segment<3>(ePos0), pos4[eTime], dir,
-        (q != Scalar(0)) ? (q / p) : (1 / p), *surface, geoCtx);
-
-    if (!bound.ok()) {
-      return bound.error();
-    }
-
-    return GenericBoundTrackParameters<charge_t>{std::move(surface), *bound, q,
-                                                 std::move(cov)};
-  }
-
-  /// Factory to construct from four-position, direction, and
-  /// charge-over-momentum.
-  ///
-  /// @param surface Reference surface the parameters are defined on
-  /// @param geoCtx Geometry context for the local-to-global transformation
-  /// @param pos4 Track position/time four-vector
-  /// @param dir Track direction three-vector; normalization is ignored.
-  /// @param qOverP Charge-over-momentum-like parameter
-  /// @param cov Bound parameters covariance matrix
-  ///
-  /// @note This factory is only available if there are no potential charge
-  /// ambiguities, i.e. the charge type is default-constructible. The
-  /// position must be located on the surface.
-  /// @note The returned result indicates whether the free parameters could
-  /// successfully be converted to on-surface parameters.
-  template <typename T = charge_t,
-            std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  static Result<GenericBoundTrackParameters<charge_t>> create(
+  static Result<GenericBoundTrackParameters> create(
       std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
       const Vector4& pos4, const Vector3& dir, Scalar qOverP,
-      std::optional<CovarianceMatrix> cov = std::nullopt) {
+      std::optional<CovarianceMatrix> cov,
+      ParticleHypothesis particleHypothesis,
+      ActsScalar tolerance = s_onSurfaceTolerance) {
     Result<BoundVector> bound = detail::transformFreeToBoundParameters(
-        pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface, geoCtx);
+        pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface, geoCtx,
+        tolerance);
+
     if (!bound.ok()) {
       return bound.error();
     }
 
-    return GenericBoundTrackParameters<charge_t>{std::move(surface), *bound,
-                                                 std::move(cov)};
+    return GenericBoundTrackParameters{std::move(surface), std::move(*bound),
+                                       std::move(cov),
+                                       std::move(particleHypothesis)};
   }
 
   /// Parameters are not default constructible due to the charge type.
@@ -156,10 +120,46 @@ class GenericBoundTrackParameters {
   ParametersVector& parameters() { return m_params; }
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
+  /// Vector of spatial impact parameters (i.e., d0 and z0)
+  ActsVector<2> spatialImpactParameters() const { return m_params.head<2>(); }
+  /// Vector of spatial and temporal impact parameters (i.e., d0, z0, and t)
+  ActsVector<3> impactParameters() const {
+    ActsVector<3> ip;
+    ip.template head<2>() = m_params.template head<2>();
+    ip(2) = m_params(eBoundTime);
+    return ip;
+  }
+
   /// Optional covariance matrix.
   std::optional<CovarianceMatrix>& covariance() { return m_cov; }
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
+  /// Covariance matrix of the spatial impact parameters (i.e., of d0 and z0)
+  std::optional<ActsSquareMatrix<2>> spatialImpactParameterCovariance() const {
+    if (!m_cov.has_value()) {
+      return std::nullopt;
+    }
+
+    return m_cov.value().template topLeftCorner<2, 2>();
+  }
+
+  /// Covariance matrix of the spatial and temporal impact parameters (i.e., of
+  /// d0, z0, and t)
+  std::optional<ActsSquareMatrix<3>> impactParameterCovariance() const {
+    if (!m_cov.has_value()) {
+      return std::nullopt;
+    }
+
+    ActsSquareMatrix<3> ipCov;
+    ipCov.template topLeftCorner<2, 2>() =
+        m_cov.value().template topLeftCorner<2, 2>();
+    ipCov.template block<2, 1>(0, 2) =
+        m_cov.value().template block<2, 1>(0, eBoundTime);
+    ipCov.template block<1, 2>(2, 0) =
+        m_cov.value().template block<1, 2>(eBoundTime, 0);
+    ipCov(2, 2) = m_cov.value()(eBoundTime, eBoundTime);
+    return ipCov;
+  }
 
   /// Access a single parameter value identified by its index.
   ///
@@ -217,7 +217,7 @@ class GenericBoundTrackParameters {
   }
   /// Absolute momentum.
   Scalar absoluteMomentum() const {
-    return m_chargeInterpreter.extractMomentum(m_params[eBoundQOverP]);
+    return m_particleHypothesis.extractMomentum(m_params[eBoundQOverP]);
   }
   /// Transverse momentum.
   Scalar transverseMomentum() const {
@@ -228,7 +228,12 @@ class GenericBoundTrackParameters {
 
   /// Particle electric charge.
   Scalar charge() const {
-    return m_chargeInterpreter.extractCharge(get<eBoundQOverP>());
+    return m_particleHypothesis.extractCharge(get<eBoundQOverP>());
+  }
+
+  /// Particle hypothesis.
+  const ParticleHypothesis& particleHypothesis() const {
+    return m_particleHypothesis;
   }
 
   /// Reference surface onto which the parameters are bound.
@@ -251,7 +256,7 @@ class GenericBoundTrackParameters {
   /// reference surface
   std::shared_ptr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20
-  charge_t m_chargeInterpreter;
+  ParticleHypothesis m_particleHypothesis;
 
   /// Ensure phi and theta angles are within bounds.
   void normalizePhiTheta() {
@@ -271,16 +276,16 @@ class GenericBoundTrackParameters {
   ///   of equality in different contexts. None of that can be handled by
   ///   this operator. Users should think really hard if this is what they
   ///   want and we might decided that we will remove this in the future.
-  friend bool operator==(const GenericBoundTrackParameters<charge_t>& lhs,
-                         const GenericBoundTrackParameters<charge_t>& rhs) {
-    return (lhs.m_params == rhs.m_params) and (lhs.m_cov == rhs.m_cov) and
-           (lhs.m_surface == rhs.m_surface) and
-           (lhs.m_chargeInterpreter == rhs.m_chargeInterpreter);
+  friend bool operator==(const GenericBoundTrackParameters& lhs,
+                         const GenericBoundTrackParameters& rhs) {
+    return (lhs.m_params == rhs.m_params) && (lhs.m_cov == rhs.m_cov) &&
+           (lhs.m_surface == rhs.m_surface) &&
+           (lhs.m_particleHypothesis == rhs.m_particleHypothesis);
   }
   /// Compare two bound track parameters for bitwise in-equality.
-  friend bool operator!=(const GenericBoundTrackParameters<charge_t>& lhs,
-                         const GenericBoundTrackParameters<charge_t>& rhs) {
-    return not(lhs == rhs);
+  friend bool operator!=(const GenericBoundTrackParameters& lhs,
+                         const GenericBoundTrackParameters& rhs) {
+    return !(lhs == rhs);
   }
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,

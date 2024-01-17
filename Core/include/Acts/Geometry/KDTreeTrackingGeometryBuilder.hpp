@@ -89,7 +89,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
 
   /// Private construction cache
   struct Cache {
-    size_t surfaceCounter = 0;
+    std::size_t surfaceCounter = 0;
   };
 
   /// Translate a proto tracking volume into a Acts::TrackingVolume

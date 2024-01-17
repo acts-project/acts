@@ -46,21 +46,24 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   for (auto& sSurface : stepSurfaces) {
     // try it out by intersecting, but do not force the direction
     auto sIntersection =
-        sSurface->intersect(gctx, startPoint, trackDirection, true);
-    if (bool(sIntersection)) {
+        sSurface
+            ->intersect(gctx, startPoint, trackDirection, BoundaryCheck(true))
+            .closest();
+    if (sIntersection) {
       // now record
-      stepIntersections.push_back(sIntersection.intersection);
+      stepIntersections.push_back(sIntersection.intersection());
       ACTS_VERBOSE("Boundary Surface intersected with = "
-                   << sIntersection.intersection.position.x() << ", "
-                   << sIntersection.intersection.position.y() << ", "
-                   << sIntersection.intersection.position.z());
+                   << sIntersection.position().x() << ", "
+                   << sIntersection.position().y() << ", "
+                   << sIntersection.position().z());
     }
   }
   // Last one is also valid - now sort
   stepIntersections.push_back(
       Intersection3D(endPoint, (startPoint - endPoint).norm(),
                      Intersection3D::Status::reachable));
-  std::sort(stepIntersections.begin(), stepIntersections.end());
+  std::sort(stepIntersections.begin(), stepIntersections.end(),
+            Intersection3D::forwardOrder);
 
   Vector3 lastPosition = startPoint;
   // reserve the right amount
@@ -68,8 +71,8 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   for (auto& sIntersection : stepIntersections) {
     // create the new digitization step
     cSteps.push_back(
-        dmodule.digitizationStep(lastPosition, sIntersection.position));
-    lastPosition = sIntersection.position;
+        dmodule.digitizationStep(lastPosition, sIntersection.position()));
+    lastPosition = sIntersection.position();
   }
   // return all the steps
   return cSteps;
@@ -84,7 +87,7 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   // intersect them - fast exit for cases where
   // readout and counter readout are hit
   Vector3 intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
-  size_t attempts = 0;
+  std::size_t attempts = 0;
   // the collected intersections
   std::vector<Acts::Intersection3D> boundaryIntersections;
   // run them - and check for the fast exit
@@ -92,15 +95,17 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
     // count as an attempt
     ++attempts;
     // try it out by intersecting, but do not force the direction
-    auto bIntersection =
-        bSurface->intersect(gctx, intersection3D, trackDirection, true);
-    if (bool(bIntersection)) {
+    auto bIntersection = bSurface
+                             ->intersect(gctx, intersection3D, trackDirection,
+                                         BoundaryCheck(true))
+                             .closest();
+    if (bIntersection) {
       // now record
-      boundaryIntersections.push_back(bIntersection.intersection);
+      boundaryIntersections.push_back(bIntersection.intersection());
       ACTS_VERBOSE("Boundary Surface intersected with = "
-                   << bIntersection.intersection.position.x() << ", "
-                   << bIntersection.intersection.position.y() << ", "
-                   << bIntersection.intersection.position.z());
+                   << bIntersection.position().x() << ", "
+                   << bIntersection.position().y() << ", "
+                   << bIntersection.position().z());
     }
     // fast break in case of readout/counter surface hit
     // the first two attempts are the module faces, if they are hit,
@@ -115,13 +120,14 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
     ACTS_VERBOSE(
         "More than 2 Boundary Surfaces intersected, this is an edge "
         "case, resolving ... ");
-    std::sort(boundaryIntersections.begin(), boundaryIntersections.end());
+    std::sort(boundaryIntersections.begin(), boundaryIntersections.end(),
+              Intersection3D::forwardOrder);
   }
   // if for some reason the intersection does not work
   if (boundaryIntersections.empty()) {
     return std::vector<Acts::DigitizationStep>();
   }
   // return
-  return cellSteps(gctx, dmodule, boundaryIntersections[0].position,
-                   boundaryIntersections[1].position);
+  return cellSteps(gctx, dmodule, boundaryIntersections[0].position(),
+                   boundaryIntersections[1].position());
 }

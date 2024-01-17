@@ -58,27 +58,27 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
 // Track theta distribution
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
 // Track charge helper distribution
-std::uniform_real_distribution<> qDist(-1, 1);
+std::uniform_real_distribution<double> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100_um);
+std::uniform_real_distribution<double> resIPDist(0., 100_um);
 // Track angular distribution
-std::uniform_real_distribution<> resAngDist(0., 0.1);
+std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(-0.01, 0.01);
+std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
 
 ///
 /// @brief Unit test for KalmanVertexTrackUpdater
@@ -150,13 +150,17 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat));
+    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat),
+                                ParticleHypothesis::pion());
+
+    std::shared_ptr<PerigeeSurface> perigee =
+        Surface::makeShared<PerigeeSurface>(Vector3::Zero());
 
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, Vector4::Zero(), geoContext,
-                            magFieldContext, linState)
+            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
+                            linState)
             .value();
 
     // Create TrackAtVertex
@@ -164,6 +168,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
+    trkAtVtx.isLinearized = true;
 
     // Copy parameters for later comparison of old and new version
     auto fittedParamsCopy = trkAtVtx.fittedParams;
@@ -173,18 +178,18 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     Vertex<BoundTrackParameters> vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexTrackUpdater::update<BoundTrackParameters>(trkAtVtx, vtx);
+    KalmanVertexTrackUpdater::update(trkAtVtx, vtx.fullPosition(),
+                                     vtx.fullCovariance(), 3);
 
     // The old distance
     double oldDistance =
-        ip3dEst.calculate3dDistance(geoContext, fittedParamsCopy, vtxPos, state)
+        ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos, state)
             .value();
 
     // The new distance after update
     double newDistance =
         ip3dEst
-            .calculate3dDistance(geoContext, trkAtVtx.fittedParams, vtxPos,
-                                 state)
+            .calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos, state)
             .value();
     if (debug) {
       std::cout << "Old distance: " << oldDistance << std::endl;
@@ -195,7 +200,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
 
     // After update, track should be closer to the vertex
-    BOOST_CHECK(newDistance < oldDistance);
+    BOOST_CHECK_LT(newDistance, oldDistance);
 
   }  // end for loop
 

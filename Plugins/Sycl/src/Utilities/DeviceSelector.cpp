@@ -15,7 +15,7 @@
 namespace Acts::Sycl {
 DeviceSelector::DeviceSelector(const std::string& deviceName)
     : m_defaultSelector(cl::sycl::default_selector()),
-      m_deviceName(deviceName){};
+      m_deviceName(deviceName) {}
 
 int DeviceSelector::operator()(const cl::sycl::device& d) const {
   // Under no circumstances do we accept any NVidia OpenCL devices.

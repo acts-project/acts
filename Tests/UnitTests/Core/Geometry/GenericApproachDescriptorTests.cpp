@@ -7,11 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
@@ -23,14 +23,12 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <vector>
 
 #include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
-
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
 
 namespace Acts {
 
@@ -68,6 +66,8 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   };
   Vector3 zDir{0., 0., 1.};
   BoundaryCheck bcheck{true};
+  double nearLimit = -100 * UnitConstants::um;
+  double farLimit = std::numeric_limits<double>::max();
   //
   std::vector<std::shared_ptr<const Surface>> someSurfaces{
       Surface::makeShared<SurfaceStub>(), Surface::makeShared<SurfaceStub>()};
@@ -76,16 +76,15 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   // registerLayer()
   BOOST_CHECK_NO_THROW(approachDescriptor.registerLayer(aLayer));
   // approachSurface
-  SurfaceIntersection surfIntersection =
-      approachDescriptor.approachSurface(tgContext, origin, zDir, bcheck);
+  SurfaceIntersection surfIntersection = approachDescriptor.approachSurface(
+      tgContext, origin, zDir, bcheck, nearLimit, farLimit);
   double expectedIntersection = 20.0;  // property of SurfaceStub
-  CHECK_CLOSE_REL(surfIntersection.intersection.pathLength,
-                  expectedIntersection, 1e-6);
+  CHECK_CLOSE_REL(surfIntersection.pathLength(), expectedIntersection, 1e-6);
   // containedSurfaces()
   BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
                     someSurfaces.size());
 
-  for (size_t i = 0; i < someSurfaces.size(); i++) {
+  for (std::size_t i = 0; i < someSurfaces.size(); i++) {
     BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().at(i),
                       someSurfaces.at(i).get());
   }
@@ -98,6 +97,8 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
   Vector3 origin{0., -0.5, 1.};
   Vector3 direction{0., 1., 0.};
   BoundaryCheck bcheck{true};
+  double nearLimit = -100 * UnitConstants::um;
+  double farLimit = std::numeric_limits<double>::max();
 
   auto conCyl =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 10., 20.);
@@ -106,19 +107,14 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 
   GenericApproachDescriptor gad(approachSurface);
 
-  auto sfIntersection =
-      gad.approachSurface(GeometryContext(), origin, direction, bcheck);
+  auto sfIntersection = gad.approachSurface(
+      GeometryContext(), origin, direction, bcheck, nearLimit, farLimit);
 
   // No overstepping allowed, the preferred solution should be the forward one
-  CHECK_CLOSE_ABS(sfIntersection.intersection.pathLength, 10.5, s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position.x(), 0., s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position.y(), 10., s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position.z(), 1., s_epsilon);
-
-  CHECK_CLOSE_ABS(sfIntersection.alternative.pathLength, -9.5, s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.alternative.position.x(), 0., s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.alternative.position.y(), -10., s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.alternative.position.z(), 1., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.pathLength(), 10.5, s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.position().x(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.position().y(), 10., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.position().z(), 1., s_epsilon);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -39,9 +39,9 @@ BOOST_AUTO_TEST_CASE(Geant4DetectorElement_construction) {
   Acts::Geant4DetectorElement g4DetElement(rSurface, *g4physVol.get(),
                                            rTransform, 0.1);
 
-  BOOST_CHECK(g4DetElement.thickness() == 0.1);
-  BOOST_CHECK(&g4DetElement.surface() == rSurface.get());
-  BOOST_CHECK(&g4DetElement.g4PhysicalVolume() == g4physVol.get());
+  BOOST_CHECK_EQUAL(g4DetElement.thickness(), 0.1);
+  BOOST_CHECK_EQUAL(&g4DetElement.surface(), rSurface.get());
+  BOOST_CHECK_EQUAL(&g4DetElement.g4PhysicalVolume(), g4physVol.get());
   BOOST_CHECK(
       g4DetElement.transform(tContext).isApprox(rSurface->transform(tContext)));
 }

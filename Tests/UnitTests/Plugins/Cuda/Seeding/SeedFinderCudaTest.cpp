@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,16 +9,17 @@
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Plugins/Cuda/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 
 #include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <utility>
 
@@ -205,7 +206,7 @@ int main(int argc, char** argv) {
   config = config.toInternalUnits();
 
   Acts::SeedFinderOptions options;
-  options.bFieldInZ = 1.99724_T;
+  options.bFieldInZ = 2_T;
   options.beamPos = {-.5_mm, -.5_mm};
   options = options.toInternalUnits().calculateDerivedQuantities(config);
 
@@ -229,10 +230,10 @@ int main(int argc, char** argv) {
   config.nAvgTrplPerSpBLimit = nAvgTrplPerSpBLimit;
 
   // binfinder
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-      Acts::BinFinder<value_type>(zBinNeighborsBottom, numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-      Acts::BinFinder<value_type>(zBinNeighborsTop, numPhiNeighbors));
+  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
+  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
@@ -269,8 +270,18 @@ int main(int argc, char** argv) {
 
   auto start_cpu = std::chrono::system_clock::now();
 
+  std::array<std::vector<std::size_t>, 2ul> navigation;
+  navigation[0ul].resize(spGroup.grid().numLocalBins()[0ul]);
+  navigation[1ul].resize(spGroup.grid().numLocalBins()[1ul]);
+  std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
+  std::iota(navigation[1ul].begin(), navigation[1ul].end(), 1ul);
+
+  std::array<std::size_t, 2ul> localPosition =
+      spGroup.grid().localBinsFromGlobalBin(skip);
+
   int group_count;
-  auto groupIt = Acts::BinnedSPGroupIterator<value_type>(spGroup, skip);
+  auto groupIt = Acts::BinnedSPGroupIterator<value_type>(spGroup, localPosition,
+                                                         navigation);
 
   //----------- CPU ----------//
   group_count = 0;
@@ -305,8 +316,14 @@ int main(int argc, char** argv) {
   auto start_cuda = std::chrono::system_clock::now();
 
   group_count = 0;
+
   std::vector<std::vector<seed_type>> seedVector_cuda;
-  groupIt = Acts::BinnedSPGroupIterator<value_type>(spGroup, skip);
+  groupIt = Acts::BinnedSPGroupIterator<value_type>(spGroup, localPosition,
+                                                    navigation);
+
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spVec.size());
+>>>>>>> upstream/main
 
   for (; groupIt != spGroup.end(); ++groupIt) {
     const auto [bottom, middle, top] = *groupIt;
@@ -362,14 +379,14 @@ int main(int argc, char** argv) {
 
   int nMatch = 0;
 
-  for (size_t i = 0; i < seedVector_cpu.size(); i++) {
+  for (std::size_t i = 0; i < seedVector_cpu.size(); i++) {
     auto regionVec_cpu = seedVector_cpu[i];
     auto regionVec_cuda = seedVector_cuda[i];
 
     std::vector<std::vector<value_type>> seeds_cpu;
     std::vector<std::vector<value_type>> seeds_cuda;
 
-    // for (size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
+    // for (std::size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
     for (auto sd : regionVec_cpu) {
       std::vector<value_type> seed_cpu;
       seed_cpu.push_back(*(sd.sp()[0]));
