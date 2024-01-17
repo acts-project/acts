@@ -12,7 +12,7 @@
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -40,14 +40,16 @@ struct AlgorithmContext;
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
+
+  using SpacePointProxy_type = typename Acts::SpacePointContainer<
+      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      Acts::detail::RefHolder>::ConstSpacePointProxyType;
+
   // Seed Finder config requires Seed Filter object before conversion to
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_shared<Acts::SeedFilter<typename Acts::SpacePointContainer<
-          ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-          Acts::detail::RefHolder>::ConstSpacePointProxyType>>(
-          m_cfg.seedFilterConfig);
+    std::make_shared<Acts::SeedFilter<SpacePointProxy_type>>(m_cfg.seedFilterConfig);
 
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
@@ -240,13 +242,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-  auto grid = Acts::SpacePointGridCreator::createGrid<value_type>(
+  Acts::SpacePointGrid<value_type> grid = Acts::SpacePointGridCreator::createGrid<value_type>(
       m_cfg.gridConfig, m_cfg.gridOptions);
 
+  Acts::SpacePointGridCreator::fillGrid(
+      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
+      spContainer.begin(), spContainer.end(),
+      rRangeSPExtent);
+
+  std::array<std::vector<std::size_t>, 2ul> navigation;
+  navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
   auto spacePointsGrouping = Acts::BinnedSPGroup<value_type>(
-      spContainer.begin(), spContainer.end(), m_bottomBinFinder, m_topBinFinder,
-      std::move(grid), rRangeSPExtent, m_cfg.seedFinderConfig,
-      m_cfg.seedFinderOptions);
+      std::move(grid), *m_bottomBinFinder.get(), *m_topBinFinder.get(),
+      std::move(navigation));
 
   // safely clamp double to float
   float up = Acts::clampValue<float>(

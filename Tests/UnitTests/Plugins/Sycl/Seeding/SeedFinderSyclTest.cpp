@@ -11,7 +11,8 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -174,9 +175,9 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
-  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   auto config = setupSeedFinderConfiguration<value_type>();
   config = config.toInternalUnits().calculateDerivedQuantities();
@@ -202,12 +203,17 @@ auto main(int argc, char** argv) -> int {
   auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
   gridConfig = gridConfig.toInternalUnits();
   gridOpts = gridOpts.toInternalUnits();
-  std::unique_ptr<Acts::SpacePointGrid<value_type>> grid =
-      Acts::SpacePointGridCreator::createGrid<value_type>(gridConfig, gridOpts);
 
+  Acts::SpacePointGrid<value_type> grid =
+      Acts::SpacePointGridCreator::createGrid<value_type>(gridConfig, gridOpts);
+  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
+                                        spVec.end(), globalTool,
+                                        rRangeSPExtent);
+
+  std::array<std::vector<std::size_t>, 2ul> navigation;
   auto spGroup = Acts::BinnedSPGroup<value_type>(
-      spContainer.begin(), spContainer.end(), bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, config, options);
+      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get(),
+      std::move(navigation));
 
   auto end_prep = std::chrono::system_clock::now();
 

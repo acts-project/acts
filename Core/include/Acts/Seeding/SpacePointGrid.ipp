@@ -1,18 +1,14 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/detail/Axis.hpp"
-
-#include <memory>
-
 template <typename SpacePoint>
-std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
-Acts::SpacePointGridCreator::createGrid(
+Acts::SpacePointGrid<SpacePoint> Acts::SpacePointGridCreator::createGrid(
     const Acts::SpacePointGridConfig& config,
     const Acts::SpacePointGridOptions& options) {
   if (!config.isInInternalUnits) {
@@ -118,6 +114,7 @@ Acts::SpacePointGridCreator::createGrid(
     float zBins =
         std::max(1.f, std::floor((config.zMax - config.zMin) / zBinSize));
 
+    zValues.reserve(static_cast<int>(zBins));
     for (int bin = 0; bin <= static_cast<int>(zBins); bin++) {
       AxisScalar edge =
           config.zMin + bin * ((config.zMax - config.zMin) / zBins);
@@ -126,6 +123,7 @@ Acts::SpacePointGridCreator::createGrid(
 
   } else {
     // Use the zBinEdges defined in the config
+    zValues.reserve(config.zBinEdges.size());
     for (float bin : config.zBinEdges) {
       zValues.push_back(bin);
     }
@@ -133,6 +131,105 @@ Acts::SpacePointGridCreator::createGrid(
 
   detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
       zAxis(std::move(zValues));
-  return std::make_unique<Acts::SpacePointGrid<SpacePoint>>(
+  return Acts::SpacePointGrid<SpacePoint>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+}
+
+template <typename external_spacepoint_t,
+          typename external_spacepoint_iterator_t>
+void Acts::SpacePointGridCreator::fillGrid(
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    const Acts::SeedFinderOptions& options,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    external_spacepoint_iterator_t spBegin,
+    external_spacepoint_iterator_t spEnd,
+    Acts::Extent& rRangeSPExtent) {
+  using iterated_value_t =
+      typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
+  using iterated_t = typename std::remove_const<
+      typename std::remove_pointer<iterated_value_t>::type>::type;
+  static_assert(!std::is_pointer<iterated_value_t>::value,
+                "Iterator must not contain pointers to space points");
+  static_assert(std::is_same<iterated_t, external_spacepoint_t>::value,
+                "Iterator does not contain type this class was templated with");
+
+  if (!config.isInInternalUnits) {
+    throw std::runtime_error(
+        "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
+  }
+  if (config.seedFilter == nullptr) {
+    throw std::runtime_error("SeedFinderConfig has a null SeedFilter object");
+  }
+  if (!options.isInInternalUnits) {
+    throw std::runtime_error(
+        "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
+  }
+
+  // get region of interest (or full detector if configured accordingly)
+  float phiMin = config.phiMin;
+  float phiMax = config.phiMax;
+  float zMin = config.zMin;
+  float zMax = config.zMax;
+
+  // sort by radius
+  // add magnitude of beamPos to rMax to avoid excluding measurements
+  // create number of bins equal to number of millimeters rMax
+  // (worst case minR: configured minR + 1mm)
+  // binSizeR allows to increase or reduce numRBins if needed
+  std::size_t numRBins = static_cast<std::size_t>(
+      (config.rMax + options.beamPos.norm()) / config.binSizeR);
+
+  // keep track of changed bins while sorting
+  boost::container::flat_set<std::size_t> rBinsIndex;
+
+  std::size_t counter = 0ul;
+  for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
+       it++, ++counter) {
+
+    const external_spacepoint_t& sp = *it;
+    float spX = sp.x();
+    float spY = sp.y();
+    float spZ = sp.z();
+
+    // store x,y,z values in extent
+    rRangeSPExtent.extend({spX, spY, spZ});
+
+    // remove SPs outside z and phi region
+    if (spZ > zMax || spZ < zMin) {
+      continue;
+    }
+    float spPhi = std::atan2(spY, spX);
+    if (spPhi > phiMax || spPhi < phiMin) {
+      continue;
+    }
+
+    // calculate r-Bin index and protect against overflow (underflow not
+    // possible)
+    std::size_t rIndex =
+        static_cast<std::size_t>(sp.radius() / config.binSizeR);
+    // if index out of bounds, the SP is outside the region of interest
+    if (rIndex >= numRBins) {
+      continue;
+    }
+
+    // fill rbins into grid
+    Acts::Vector2 spLocation(sp.phi(), sp.z());
+    std::vector<const external_spacepoint_t*>&
+        rbin = grid.atPosition(spLocation);
+    rbin.push_back(&sp);
+
+    // keep track of the bins we modify so that we can later sort the SPs in
+    // those bins only
+    if (rbin.size() > 1) {
+      rBinsIndex.insert(grid.globalBinFromPosition(spLocation));
+    }
+  }
+
+  /// sort SPs in R for each filled bin
+  for (auto& binIndex : rBinsIndex) {
+    auto& rbin = grid.atPosition(binIndex);
+    std::sort(rbin.begin(), rbin.end(), [](const auto& a, const auto& b) {
+      return a->radius() < b->radius();
+    });
+  }
 }

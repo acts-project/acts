@@ -22,7 +22,7 @@
 // Acts include(s).
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -70,9 +70,9 @@ int main(int argc, char* argv[]) {
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   // Create binned groups of these spacepoints.
-  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       numPhiNeighbors, zBinNeighborsBottom);
-  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       numPhiNeighbors, zBinNeighborsTop);
 
   // Set up the seedFinder configuration.
@@ -126,9 +126,13 @@ int main(int argc, char* argv[]) {
   // split the spacepoints into groups according to that grid.
   auto grid =
       Acts::SpacePointGridCreator::createGrid<value_type>(gridConfig, gridOpts);
+  Acts::SpacePointGridCreator::fillGrid(sfConfig, sfOptions, grid,
+                                        spView.begin(), spView.end(), ct,
+                                        rRangeSPExtent);
+  
   auto spGroup = Acts::BinnedSPGroup<value_type>(
-      spContainer.begin(), spContainer.end(), bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, sfConfig, sfOptions);
+      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get());
+
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
 
@@ -187,8 +191,8 @@ int main(int argc, char* argv[]) {
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
       std::array<std::size_t, 2ul> localPosition =
           spGroup.grid().localBinsFromGlobalBin(i);
-      auto spGroup_itr =
-          Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
+      auto spGroup_itr = Acts::BinnedSPGroupIterator<TestSpacePoint>(
+          spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
       }
@@ -224,8 +228,8 @@ int main(int argc, char* argv[]) {
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
     std::array<std::size_t, 2ul> localPosition =
         spGroup.grid().localBinsFromGlobalBin(i);
-    auto spGroup_itr =
-        Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
+    auto spGroup_itr = Acts::BinnedSPGroupIterator<TestSpacePoint>(
+        spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;
     }

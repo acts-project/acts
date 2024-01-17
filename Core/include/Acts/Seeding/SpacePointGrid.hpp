@@ -9,10 +9,14 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
 #include <memory>
+
+#include <boost/container/flat_set.hpp>
 
 namespace Acts {
 
@@ -96,9 +100,19 @@ using SpacePointGrid = Grid<
 class SpacePointGridCreator {
  public:
   template <typename external_spacepoint_t>
-  static std::unique_ptr<SpacePointGrid<external_spacepoint_t>> createGrid(
+  static Acts::SpacePointGrid<external_spacepoint_t> createGrid(
       const Acts::SpacePointGridConfig& _config,
       const Acts::SpacePointGridOptions& _options);
+
+  template <typename external_spacepoint_t,
+            typename external_spacepoint_iterator_t>
+  static void fillGrid(
+      const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+      const Acts::SeedFinderOptions& options,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      external_spacepoint_iterator_t spBegin,
+      external_spacepoint_iterator_t spEnd,
+      Acts::Extent& rRangeSPExtent);
 };
 }  // namespace Acts
 #include "Acts/Seeding/SpacePointGrid.ipp"
