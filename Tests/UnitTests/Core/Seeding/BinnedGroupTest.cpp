@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(binned_group_constructor) {
 
   Acts::GridBinFinder<1ul> binFinder_1d(1);
   Acts::GridBinFinder<2ul> binFinder_2d(1, 1);
-  Acts::GridBinFinder<3ul> binFinder_3d(1, 2 ,1);
+  Acts::GridBinFinder<3ul> binFinder_3d(1, 2, 1);
 
   std::array<std::vector<std::size_t>, 1ul> navigation_1d;
   navigation_1d[0ul].resize(10);
@@ -49,12 +49,10 @@ BOOST_AUTO_TEST_CASE(binned_group_constructor) {
   // Costructors
   // We provide a proper navigation
   Acts::BinnedGroup<grid_1d_t> group_1d(std::move(grid_1d), binFinder_1d,
-                                        binFinder_1d,
-                                        std::move(navigation_1d));
+                                        binFinder_1d, std::move(navigation_1d));
   // We provide a partial navigation, the constructor will complete it
   Acts::BinnedGroup<grid_2d_t> group_2d(std::move(grid_2d), binFinder_2d,
-                                        binFinder_2d,
-                                        std::move(navigation_2d));
+                                        binFinder_2d, std::move(navigation_2d));
   // We do not provide navigation, the constructor will define it
   Acts::BinnedGroup<grid_3d_t> group_3d(std::move(grid_3d), binFinder_3d,
                                         binFinder_3d);
@@ -75,8 +73,7 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_emptyGrid) {
   Acts::detail::EquidistantAxis xAxis(0, 100, 10);
   grid_t grid(std::make_tuple(std::move(xAxis)));
   binfinder_t binfinder(0);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder,
-                                  binfinder);
+  Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
 
   Acts::BinnedGroupIterator<grid_t> itrStart = group.begin();
   Acts::BinnedGroupIterator<grid_t> itrStop = group.end();
@@ -99,8 +96,7 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_emptyGrid) {
   Acts::detail::EquidistantAxis yAxis(0, 100, 10);
   grid_t grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
   binfinder_t binfinder(0, 0);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder,
-                                  binfinder);
+  Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
 
   Acts::BinnedGroupIterator<grid_t> itrStart = group.begin();
   Acts::BinnedGroupIterator<grid_t> itrStop = group.end();
@@ -128,8 +124,7 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_perFilledGrid) {
 
   binfinder_t botBinfinder(0);
   binfinder_t topBinfinder(1);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), botBinfinder,
-                                  topBinfinder);
+  Acts::BinnedGroup<grid_t> group(std::move(grid), botBinfinder, topBinfinder);
 
   std::size_t nIterations = 0ul;
   for (const auto [bottom, middle, top] : group) {
@@ -156,8 +151,7 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_perFilledGrid) {
 
   binfinder_t botBinfinder(1, 2);
   binfinder_t topBinfinder(1, 1);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), botBinfinder,
-                                  topBinfinder);
+  Acts::BinnedGroup<grid_t> group(std::move(grid), botBinfinder, topBinfinder);
 
   std::size_t nIterations = 0ul;
   for (const auto [bottom, middle, top] : group) {
@@ -183,8 +177,7 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_2d) {
 
   grid_t grid(std::make_tuple(std::move(phiAxis), std::move(zAxis)));
   binfinder_t binfinder(1, 1);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder,
-                                  binfinder);
+  Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
 
   /// Fill the grid already owned by the group filling only one bin at a
   /// specific local position
@@ -224,8 +217,7 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_3d) {
   grid_t grid(
       std::make_tuple(std::move(phiAxis), std::move(zAxis), std::move(rAxis)));
   binfinder_t binfinder(1, 1, 0);
-  Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder,
-                                  binfinder);
+  Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
 
   /// Fill the grid already owned by the group filling only one bin at a
   /// specific local position
