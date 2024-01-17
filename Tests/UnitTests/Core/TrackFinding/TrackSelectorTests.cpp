@@ -631,13 +631,15 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
 
-  auto track = tc.makeTrack();
+  auto makeTrack = [&]() {
+    auto track = tc.makeTrack();
 
-  using namespace Acts::UnitLiterals;
-
-  track.parameters() << 0, 0, M_PI / 2, M_PI / 2, 1 / 1_GeV, 0;
-  auto perigee = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
-  track.setReferenceSurface(perigee);
+    using namespace Acts::UnitLiterals;
+    track.parameters() << 0, 0, M_PI / 2, M_PI / 2, 1 / 1_GeV, 0;
+    auto perigee = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+    track.setReferenceSurface(perigee);
+    return track;
+  };
 
   auto vol7_lay3_sen2 = makeSurface(
       GeometryIdentifier{}.setVolume(7).setLayer(3).setSensitive(2));
@@ -658,21 +660,85 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
   auto vol8_lay9_sen1 = makeSurface(
       GeometryIdentifier{}.setVolume(8).setLayer(9).setSensitive(1));
 
+  TrackSelector::Config cfgVol7;
+  cfgVol7.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(7)}, 3);
+  TrackSelector selectorVol7{cfgVol7};
+
+  auto trackVol7 = makeTrack();
+
+  BOOST_CHECK(!selectorVol7.isValidTrack(trackVol7));
+
   // 1 hit in vol7
-  addMeasurement(track, vol7_lay3_sen2);
-  addMaterial(track, vol7_lay4);
+  addMeasurement(trackVol7, vol7_lay3_sen2);
+  addMaterial(trackVol7, vol7_lay4);
 
-  TrackSelector::Config cfg;
-  cfg.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(7)}, 3);
-  TrackSelector selector{cfg};
-
-  BOOST_CHECK(!selector.isValidTrack(track));
-  addMeasurement(track, vol7_lay5_sen11);
-  BOOST_CHECK(!selector.isValidTrack(track));
+  BOOST_CHECK(!selectorVol7.isValidTrack(trackVol7));
+  addMeasurement(trackVol7, vol7_lay5_sen11);
+  BOOST_CHECK(!selectorVol7.isValidTrack(trackVol7));
 
   // Now we should have enough hits
-  addMeasurement(track, vol7_lay6_sen3);
-  BOOST_CHECK(selector.isValidTrack(track));
+  addMeasurement(trackVol7, vol7_lay6_sen3);
+  BOOST_CHECK(selectorVol7.isValidTrack(trackVol7));
+
+  TrackSelector::Config cfgVol8;
+  cfgVol8.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(8)}, 2);
+  TrackSelector selectorVol8{cfgVol8};
+
+  // Previous trackVol7 has no measurements in volume 8
+  BOOST_CHECK(!selectorVol8.isValidTrack(trackVol7));
+
+  auto trackVol8 = makeTrack();
+  BOOST_CHECK(!selectorVol8.isValidTrack(trackVol8));
+
+  addMeasurement(trackVol8, vol8_lay8_sen1);
+  BOOST_CHECK(!selectorVol8.isValidTrack(trackVol8));
+  addMeasurement(trackVol8, vol8_lay8_sen2);
+  BOOST_CHECK(selectorVol8.isValidTrack(trackVol8));
+  addMeasurement(trackVol8, vol8_lay9_sen1);
+  BOOST_CHECK(selectorVol8.isValidTrack(trackVol8));
+
+  TrackSelector::Config cfgVol7Lay5;
+  cfgVol7Lay5.measurementCounter.addCounter(
+      {GeometryIdentifier{}.setVolume(7).setLayer(5)}, 2);
+  TrackSelector selectorVol7Lay5{cfgVol7Lay5};
+
+  // Only one hit on volume 7 layer 5
+  BOOST_CHECK(!selectorVol7Lay5.isValidTrack(trackVol7));
+  addMeasurement(trackVol7, vol7_lay5_sen12);
+  BOOST_CHECK(selectorVol7Lay5.isValidTrack(trackVol7));
+
+  // Check requirement on volume 7 OR 8
+  TrackSelector::Config cfgVol7Or8;
+  cfgVol7Or8.measurementCounter.addCounter(
+      {GeometryIdentifier{}.setVolume(7), GeometryIdentifier{}.setVolume(8)},
+      4);
+  TrackSelector selectorVol7Or8{cfgVol7Or8};
+
+  // threshold is 4
+  // this track has enough hits in volume 7 only
+  BOOST_CHECK(selectorVol7Or8.isValidTrack(trackVol7));
+  // this track does not have enough hits in volume 8 only
+  BOOST_CHECK(!selectorVol7Or8.isValidTrack(trackVol8));
+
+  // add 1 hit in volume 7 to push it over the threshold
+  addMeasurement(trackVol8, vol7_lay3_sen8);
+  // now it passes
+  BOOST_CHECK(selectorVol7Or8.isValidTrack(trackVol8));
+
+  TrackSelector::Config cfgVol7And8;
+  cfgVol7And8.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(7)},
+                                            4);
+  cfgVol7And8.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(8)},
+                                            2);
+  TrackSelector selectorVol7And8{cfgVol7And8};
+
+  // this track has enough hits in vol 7 but not enough in vol 8
+  BOOST_CHECK(!selectorVol7And8.isValidTrack(trackVol7));
+
+  addMeasurement(trackVol7, vol8_lay8_sen1);
+  addMeasurement(trackVol7, vol8_lay8_sen2);
+
+  BOOST_CHECK(selectorVol7And8.isValidTrack(trackVol7));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

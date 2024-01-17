@@ -14,7 +14,6 @@
 
 #include <cmath>
 #include <functional>
-#include <iostream>
 #include <limits>
 #include <numeric>
 #include <ostream>
@@ -479,13 +478,11 @@ bool TrackSelector::MeasurementCounter::isValidTrack(
   counterValues.resize(counters.size(), 0);
 
   for (const auto& ts : track.trackStatesReversed()) {
-    std::cout << "No measurement" << std::endl;
     if (!ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       continue;
     }
 
     const auto geoId = ts.referenceSurface().geometryId();
-    std::cout << "Track Measurement on :" << geoId << std::endl;
 
     for (std::size_t i = 0; i < counters.size(); i++) {
       const auto& [counterMap, threshold] = counters[i];
@@ -494,15 +491,12 @@ bool TrackSelector::MeasurementCounter::isValidTrack(
         continue;
       }
 
-      std::cout << " -> accepted" << std::endl;
       counterValues[i]++;
     }
   }
 
   for (std::size_t i = 0; i < counters.size(); i++) {
     const auto& [counterMap, threshold] = counters[i];
-    std::cout << " -> #" << i << " => " << counterValues[i] << " / "
-              << threshold << std::endl;
     const unsigned int value = counterValues[i];
     if (value < threshold) {
       return false;
