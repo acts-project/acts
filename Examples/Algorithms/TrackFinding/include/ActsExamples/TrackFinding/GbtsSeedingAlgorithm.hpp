@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbts.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"

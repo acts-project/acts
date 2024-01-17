@@ -11,12 +11,11 @@
 // TODO: update to C++17 style
 
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 #include "Acts/Utilities/KDTree.hpp"
+#include "Acts/EventData/Seed.hpp"
 
 #include <array>
 #include <iostream>

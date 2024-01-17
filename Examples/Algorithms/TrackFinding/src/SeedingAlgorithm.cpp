@@ -185,7 +185,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   m_bottomBinFinder =
       std::make_shared<const Acts::GridBinFinder<2ul>>(
-						       m_m_cfg.numPhiNeighbors, cfg.zBinNeighborsBottom);
+						       m_cfg.numPhiNeighbors, cfg.zBinNeighborsBottom);
   m_topBinFinder =
       std::make_shared<const Acts::GridBinFinder<2ul>>(
 						       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);

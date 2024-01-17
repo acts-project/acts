@@ -9,7 +9,7 @@
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Seeding/Seed.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"

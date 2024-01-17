@@ -10,7 +10,7 @@
 
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/GridBinFinder.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
