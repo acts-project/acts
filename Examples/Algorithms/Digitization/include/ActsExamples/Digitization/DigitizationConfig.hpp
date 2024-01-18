@@ -94,13 +94,11 @@ struct GeometricConfig {
   ///
   /// @param csizes is the cluster size in the different dimensions
   /// @param cmins is the cluster minimum in the different dimensions
-  /// @param rng is the random number generator
   ///
   /// @return a vector of variances for the cluster
   std::vector<Acts::ActsScalar> variances(
       const std::array<std::size_t, 2u> &csizes,
-      const std::array<std::size_t, 2u> &cmins,
-      [[maybe_unused]] RandomEngine &rng) const;
+      const std::array<std::size_t, 2u> &cmins) const;
 
   /// Drift generation (currently not implemented)
   /// Takes as an argument the position, and a random engine

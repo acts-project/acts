@@ -342,8 +342,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     std::size_t size0 = static_cast<std::size_t>(b0max - b0min + 1);
     std::size_t size1 = static_cast<std::size_t>(b1max - b1min + 1);
 
-    dParameters.variances =
-        geoCfg.variances({size0, size1}, {b0min, b1min}, rng);
+    dParameters.variances = geoCfg.variances({size0, size1}, {b0min, b1min});
     dParameters.cluster.sizeLoc0 = size0;
     dParameters.cluster.sizeLoc1 = size1;
   }

@@ -62,8 +62,7 @@ ActsExamples::DigitizationConfig::getBoundIndices() const {
 
 std::vector<Acts::ActsScalar> ActsExamples::GeometricConfig::variances(
     const std::array<std::size_t, 2u>& csizes,
-    const std::array<std::size_t, 2u>& cmins,
-    [[maybe_unused]] RandomEngine& rng) const {
+    const std::array<std::size_t, 2u>& cmins) const {
   std::vector<Acts::ActsScalar> rVariances;
   for (const auto& bIndex : indices) {
     Acts::ActsScalar var = 0.;
