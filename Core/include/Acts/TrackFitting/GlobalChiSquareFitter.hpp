@@ -245,7 +245,7 @@ struct Gx2FitterResult {
 /// @param result is the mutable result/cache object
 /// @param logger a logger instance
 template <std::size_t measDim, typename traj_t>
-void collector(const typename traj_t::TrackStateProxy& trackStateProxy,
+void collector(const typename traj_t::ConstTrackStateProxy& trackStateProxy,
                Gx2FitterResult<traj_t>& result, const Logger& logger) {
   auto predicted = trackStateProxy.predicted();
   auto measurement = trackStateProxy.template calibrated<measDim>();
@@ -643,8 +643,7 @@ class Gx2Fitter {
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.nUpdate = nUpdate;
 
-      auto propagatorState =
-          m_propagator.template makeState(params, propagatorOptions);
+      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();

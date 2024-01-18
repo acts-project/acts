@@ -107,8 +107,7 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
       std::is_copy_constructible<StepperCurvilinearTrackParameters>::value,
       "return track parameter type must be copy-constructible");
 
-  auto state = makeState<parameters_t, propagator_options_t, path_aborter_t>(
-      start, options);
+  auto state = makeState(start, options);
 
   // Perform the actual propagation
   auto propagationResult = propagate(state);
