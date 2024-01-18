@@ -209,9 +209,9 @@ class PropagatorStub {};
 template <typename derived_t>
 class BasePropagatorHelper : public BasePropagator {
  public:
-  Result<BoundTrackParameters> propagateToSurface(const BoundTrackParameters& start,
-                                         const Surface& target,
-                                         const Options& options) const override;
+  Result<BoundTrackParameters> propagateToSurface(
+      const BoundTrackParameters& start, const Surface& target,
+      const Options& options) const override;
 };
 }  // namespace detail
 
