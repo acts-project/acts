@@ -31,7 +31,6 @@ def buildITkGeometry(
     jsonconfig: bool = False,
     logLevel=acts.logging.WARNING,
 ):
-
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
     logger = acts.logging.getLogger("buildITkGeometry")
 
