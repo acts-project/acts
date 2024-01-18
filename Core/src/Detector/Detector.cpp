@@ -53,6 +53,9 @@ Acts::Experimental::Detector::Detector(
 
   // Fill the surface map
   std::unordered_map<GeometryIdentifier, const Surface*> surfaceGeoIdMap;
+  // Map for the volume geometry id
+  std::unordered_map<GeometryIdentifier, const DetectorVolume*> volumeGeoIdMap;
+
   // Check for unique names and fill the volume name / index map
   for (auto [iv, v] : enumerate(m_volumes.internal)) {
     // Assign this detector
@@ -67,8 +70,40 @@ Acts::Experimental::Detector::Detector(
     }
     m_volumeNameIndex[vName] = iv;
 
+    // ---------------------------------------------------------------
+    // Check volume geometry id
+    auto vgeoID = v->geometryId();
+    // Check for undefined geometry id
+    if (vgeoID.value() == 0u) {
+      throw std::invalid_argument("Detector: volume '" + v->name() +
+                                  "' with undefined geometry id detected" +
+                                  ". Make sure a GeometryIdGenerator is used.");
+    }
+    if (volumeGeoIdMap.find(vgeoID) != volumeGeoIdMap.end()) {
+      std::stringstream ss;
+      ss << vgeoID;
+      throw std::invalid_argument("Detector: duplicate volume geometry id '" +
+                                  ss.str() + "' detected" +
+                                  ". Make sure a GeometryIdGenerator is used.");
+    }
+    volumeGeoIdMap.emplace(vgeoID, v.get());
+    // ---------------------------------------------------------------
+
     for (const auto* s : v->surfaces()) {
       auto sgeoID = s->geometryId();
+
+      // ---------------------------------------------------------------
+      // Check for undefined geometry id
+      if (sgeoID.value() == 0u) {
+        std::stringstream ss;
+        ss << s->name();
+        throw std::invalid_argument(
+            "Detector: surface '" + ss.str() + "' with undefined geometry id " +
+            "detected in volume '" + v->name() +
+            "'. Make sure a GeometryIdGenerator is used.");
+      }
+      // ---------------------------------------------------------------
+
       if (surfaceGeoIdMap.find(sgeoID) != surfaceGeoIdMap.end()) {
         std::stringstream ss;
         ss << sgeoID;
