@@ -288,7 +288,7 @@ struct GaussianSumFitter {
         params = sParameters;
       }
 
-      auto state = m_propagator.template makeState(*params, fwdPropOptions);
+      auto state = m_propagator.makeState(*params, fwdPropOptions);
 
       auto& r = state.template get<typename GsfActor::result_type>();
       r.fittedStates = &trackContainer.trackStateContainer();
