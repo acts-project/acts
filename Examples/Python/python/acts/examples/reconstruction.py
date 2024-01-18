@@ -127,7 +127,7 @@ TrackSelectorConfig = namedtuple(
         "nMeasurementsMin",
         "nMeasurementsGroupMin",
     ],
-    defaults=[(None, None)] * 7 + [None],
+    defaults=[(None, None)] * 7 + [None] * 2,
 )
 
 CkfConfig = namedtuple(
