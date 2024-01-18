@@ -20,7 +20,6 @@ def runDigitization(
     s: Optional[acts.examples.Sequencer] = None,
     doMerge: Optional[bool] = None,
 ) -> acts.examples.Sequencer:
-
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
