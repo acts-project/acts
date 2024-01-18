@@ -196,13 +196,14 @@ int main(int argc, char** argv) {
   Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
+
   Acts::CylindricalSpacePointGrid<SpacePoint> grid =
       Acts::CylindricalSpacePointGridCreator::createGrid<SpacePoint>(gridConf,
                                                                      gridOpts);
   Acts::CylindricalSpacePointGridCreator::fillGrid(
       config, options, grid, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
   auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(
-      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get());
+      std::move(grid), *bottomBinFinder, *topBinFinder);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;

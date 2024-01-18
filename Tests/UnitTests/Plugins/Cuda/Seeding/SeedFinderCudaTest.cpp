@@ -252,7 +252,7 @@ int main(int argc, char** argv) {
       config, options, grid, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
 
   auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(
-      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get());
+      std::move(grid), *bottomBinFinder, *topBinFinder);
 
   auto end_pre = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;

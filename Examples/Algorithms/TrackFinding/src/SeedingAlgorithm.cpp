@@ -258,8 +258,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
+
   auto spacePointsGrouping = Acts::CylindricalBinnedGroup<SimSpacePoint>(
-      std::move(grid), *m_bottomBinFinder.get(), *m_topBinFinder.get(),
+      std::move(grid), *m_bottomBinFinder, *m_topBinFinder,
       std::move(navigation));
 
   // safely clamp double to float
