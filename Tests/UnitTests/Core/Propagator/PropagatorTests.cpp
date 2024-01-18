@@ -24,9 +24,13 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -43,6 +47,7 @@
 #include <optional>
 #include <random>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 namespace Acts {
@@ -386,5 +391,83 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
+BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 2_T});
+  EigenStepper<> eigenStepper{field};
+  VoidNavigator navigator{};
+
+  auto startSurface =
+      Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitX());
+  auto targetSurface = Surface::makeShared<PlaneSurface>(
+      Vector3::UnitX() * 20_mm, Vector3::UnitX());
+
+  BoundVector startPars;
+  startPars << 0, 0, 0, M_PI / 2, 1 / 1_GeV, 0;
+
+  BoundTrackParameters startParameters{startSurface, startPars, std::nullopt,
+                                       ParticleHypothesis::pion()};
+
+  GeometryContext gctx;
+  MagneticFieldContext mctx;
+  PropagatorOptions<> options{gctx, mctx};
+
+  {
+    Propagator propagator{eigenStepper, navigator};
+    static_assert(std::is_base_of_v<BasePropagator, decltype(propagator)>,
+                  "Propagator does not inherit from BasePropagator");
+    const BasePropagator* base =
+        static_cast<const BasePropagator*>(&propagator);
+
+    // Ensure the propagation does the same thing
+    auto result =
+        propagator.propagate(startParameters, *targetSurface, options);
+    BOOST_REQUIRE(result.ok());
+    BOOST_CHECK_EQUAL(&result.value().endParameters.value().referenceSurface(),
+                      targetSurface.get());
+
+    auto resultBase = base->propagate(startParameters, *targetSurface, options);
+
+    BOOST_REQUIRE(resultBase.ok());
+    BOOST_CHECK_EQUAL(&resultBase.value().referenceSurface(),
+                      targetSurface.get());
+
+    BOOST_CHECK_EQUAL(result.value().endParameters.value().parameters(),
+                      resultBase.value().parameters());
+  }
+
+  StraightLineStepper slStepper{};
+  {
+    Propagator propagator{slStepper, navigator};
+    static_assert(std::is_base_of_v<BasePropagator, decltype(propagator)>,
+                  "Propagator does not inherit from BasePropagator");
+    const BasePropagator* base =
+        static_cast<const BasePropagator*>(&propagator);
+
+    // Ensure the propagation does the same thing
+    auto result =
+        propagator.propagate(startParameters, *targetSurface, options);
+    BOOST_REQUIRE(result.ok());
+    BOOST_CHECK_EQUAL(&result.value().endParameters.value().referenceSurface(),
+                      targetSurface.get());
+
+    auto resultBase = base->propagate(startParameters, *targetSurface, options);
+
+    BOOST_REQUIRE(resultBase.ok());
+    BOOST_CHECK_EQUAL(&resultBase.value().referenceSurface(),
+                      targetSurface.get());
+
+    BOOST_CHECK_EQUAL(result.value().endParameters.value().parameters(),
+                      resultBase.value().parameters());
+  }
+
+  EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>
+      denseEigenStepper{field};
+
+  {
+    Propagator propagator{denseEigenStepper, navigator};
+    static_assert(!std::is_base_of_v<BasePropagator, decltype(propagator)>,
+                  "Propagator unexpectedly inherits from BasePropagator");
+  }
+}
 }  // namespace Test
 }  // namespace Acts
