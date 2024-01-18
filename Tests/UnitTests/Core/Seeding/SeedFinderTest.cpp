@@ -201,7 +201,7 @@ int main(int argc, char** argv) {
   Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
                                         spVec.end(), ct, rRangeSPExtent);
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
-      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get());
+      std::move(grid), *bottomBinFinder, *topBinFinder);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;

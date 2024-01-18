@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
                                         rRangeSPExtent);
 
   auto spGroup = Acts::BinnedSPGroup<TestSpacePoint>(
-      std::move(grid), *bottomBinFinder.get(), *topBinFinder.get());
+      std::move(grid), *bottomBinFinder, *topBinFinder);
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
 
