@@ -42,7 +42,7 @@ Acts::NumericalTrackLinearizer::
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
-  auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
+  auto result = m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
   if (!result.ok()) {
     return result.error();
   }
@@ -124,7 +124,7 @@ Acts::NumericalTrackLinearizer::
         Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
     // Propagate to the new PCA and extract Perigee parameters
-    auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,
+    auto newResult = m_cfg.propagator->propagateToSurface(wiggledCurvilinearParams,
                                                  perigeeSurface, pOptions);
     if (!newResult.ok()) {
       return newResult.error();

@@ -92,7 +92,8 @@ Acts::ImpactPointEstimator::
 
   // Propagate to the surface; intersection corresponds to an estimate of the 3D
   // PCA. If deltaR and momDir were orthogonal the calculation would be exact.
-  auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(trkParams, *planeSurface, pOptions);
   if (result.ok()) {
     return *result;
   } else {
@@ -384,7 +385,8 @@ Acts::ImpactPointEstimator::
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Do the propagation to linPoint
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     ACTS_ERROR("Error during propagation in getImpactParameters.");
@@ -464,7 +466,8 @@ Acts::ImpactPointEstimator::getLifetimeSignOfTrack(const BoundTrackParameters& t
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     return result.error();
@@ -505,7 +508,8 @@ Acts::ImpactPointEstimator::
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     return result.error();

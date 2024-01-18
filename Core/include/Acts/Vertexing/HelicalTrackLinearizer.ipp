@@ -45,7 +45,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     // return result.error();
   // }
   // const auto& endParams = *result->endParameters;
-  const auto res = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
+  const auto res = m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
   if(!res.ok()) {return res.error();}
   const auto& endParams = *res;
 
