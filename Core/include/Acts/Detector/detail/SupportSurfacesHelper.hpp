@@ -102,7 +102,7 @@ struct RectangularSupport {
   /// Offset in position placement
   ActsScalar pOffset = 0.;
 
-  /// Clearance in first local direction - cylcic order
+  /// Clearance in first local direction - cyclic order
   std::array<ActsScalar, 2u> loc0Clearance = {1_mm, 1_mm};
 
   /// Clearance in phi if a sectoral support is chosen

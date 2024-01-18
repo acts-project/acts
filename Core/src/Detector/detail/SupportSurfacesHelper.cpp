@@ -114,7 +114,7 @@ operator()(const Extent& lExtent) const {
         "z are not constrained.");
   }
 
-  // Set the local coorinates - cyclic permutation
+  // Set the local coordinates - cyclic permutation
   std::array<BinningValue, 2> locals = {binX, binY};
   if (pPlacement == binX) {
     locals = {binY, binZ};

@@ -282,7 +282,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
                                                   supportExtent, dSupport,
                                                   support.splits);
       } else if (support.type == Surface::SurfaceType::Plane) {
-        // Set the local coorinates - cyclic permutation
+        // Set the local coordinates - cyclic permutation
         std::array<BinningValue, 2> locals = {binX, binY};
         if (support.pPlacement == binX) {
           locals = {binY, binZ};
