@@ -287,19 +287,19 @@ auto Acts::Propagator<S, N>::propagate(
 }
 
 template <typename derived_t>
-  Acts::Result<Acts::BoundTrackParameters> Acts::detail::BasePropagatorHelper<derived_t>::propagate(
-      const BoundTrackParameters& start, const Surface& target,
-      const Options& options) const {
-    auto res =
-        static_cast<const derived_t*>(this)
-            ->template propagate<BoundTrackParameters, PropagatorOptions<>,
-                                 SurfaceReached, PathLimitReached>(
-                start, target, options);
+Acts::Result<Acts::BoundTrackParameters>
+Acts::detail::BasePropagatorHelper<derived_t>::propagate(
+    const BoundTrackParameters& start, const Surface& target,
+    const Options& options) const {
+  auto res = static_cast<const derived_t*>(this)
+                 ->template propagate<BoundTrackParameters, PropagatorOptions<>,
+                                      SurfaceReached, PathLimitReached>(
+                     start, target, options);
 
-    if (res.ok()) {
-      // @TODO: Return optional?
-      return std::move((*res).endParameters.value());
-    } else {
-      return res.error();
-    }
+  if (res.ok()) {
+    // @TODO: Return optional?
+    return std::move((*res).endParameters.value());
+  } else {
+    return res.error();
   }
+}

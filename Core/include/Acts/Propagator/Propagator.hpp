@@ -199,6 +199,8 @@ class BasePropagator {
   virtual Result<BoundTrackParameters> propagate(
       const BoundTrackParameters& start, const Surface& target,
       const Options& options) const = 0;
+
+  virtual ~BasePropagator() = default;
 };
 
 namespace detail {
