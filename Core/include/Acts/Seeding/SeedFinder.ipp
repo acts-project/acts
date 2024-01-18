@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -39,7 +40,7 @@ template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
-    const Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+    const grid_t& grid,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
     const sp_range_t& topSPsIdx,
@@ -197,13 +198,11 @@ template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
 inline void
 SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     Acts::SpacePointData& spacePointData,
-    const Acts::SeedFinderOptions& options,
-    const Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+    const Acts::SeedFinderOptions& options, const grid_t& grid,
     boost::container::small_vector<
-        Acts::Neighbour<Acts::CylindricalSpacePointGrid<external_spacepoint_t>>,
-        Acts::detail::ipow(
-            3, Acts::CylindricalSpacePointGrid<external_spacepoint_t>::DIM)>&
-        otherSPsNeighbours,
+        Acts::Neighbour<
+            typename SeedFinder<external_spacepoint_t, platform_t>::grid_t>,
+        Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
     const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
@@ -823,8 +822,7 @@ template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options,
-    const Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
+    const Acts::SeedFinderOptions& options, const grid_t& grid,
     const sp_range_t& bottomSPs, const std::size_t middleSPs,
     const sp_range_t& topSPs) const {
   SeedingState state;

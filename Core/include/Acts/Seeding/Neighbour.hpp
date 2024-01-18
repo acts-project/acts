@@ -32,12 +32,6 @@ struct Neighbour {
   /// @brief default constructor
   Neighbour() = delete;
 
-  /// @brief Constructor with grid as rvalue
-  /// @param grid The grid containing the space points
-  /// @param idx The global index of the bin in the grid
-  /// @param lowerBound The lower bound of the allowed space points
-  Neighbour(grid_t&& grid, std::size_t idx, const float lowerBound) = delete;
-
   /// @brief Constructor
   /// @param grid The grid containing the space points
   /// @param idx The global index of the bin in the grid
