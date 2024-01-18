@@ -30,73 +30,72 @@ class IGeometryIdGenerator;
 /// that will be executed in a chain
 ///
 /// @note allowed BinningValue(s) for the cuboid container builder are
-/// {binX}, {binY}, {binZ}. 
+/// {binX}, {binY}, {binZ}.
 ///
 /// @note Connecting containers isn't functional yet due to the underlying
 /// issues in the CuboidDetectorHelper
 ///
 class CuboidalContainerBuilder : public IDetectorComponentBuilder {
-    public:
-        /// Nested configuration object
-        struct Config {
-            /// The configured volume builders
-            std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
-            /// Binning prescription of attachment
-            BinningValue binning;
-            /// The root volume finder
-            std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
-                nullptr;
-            /// The geometry id generator
-            std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
-            /// An eventual reverse geometry id generation
-            bool geoIdReverseGen = false;
-            /// Auxiliary information, mainly for screen output
-            std::string auxiliary = "";
-        };
+ public:
+  /// Nested configuration object
+  struct Config {
+    /// The configured volume builders
+    std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
+    /// Binning prescription of attachment
+    BinningValue binning;
+    /// The root volume finder
+    std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
+        nullptr;
+    /// The geometry id generator
+    std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
+    /// An eventual reverse geometry id generation
+    bool geoIdReverseGen = false;
+    /// Auxiliary information, mainly for screen output
+    std::string auxiliary = "";
+  };
 
-        /// Constructor with configuration struct
-        ///
-        /// @param cfg is the configuration struct
-        /// @param logger logging instance for screen output
-        CuboidalContainerBuilder(
-            const Config& cfg,
-            std::unique_ptr<const Logger> logger =
-                getDefaultLogger("CuboidalContainerBuilder", Logging::INFO));
-    
-        /// Constructor from blueprint and logging level
-        ///
-        /// It will create recursively the builders of sub volumes
-        ///
-        /// @param bpNode is the entry blue print node
-        /// @param logLevel is the logging output level for the builder tools
-        ///
-        /// @note no checking is being done on consistency of the blueprint,
-        /// it is assumed it has passed first through gap filling via the
-        /// blueprint helper.
-        ///
-        /// @note that the naming of the builders is taken from the bluprint nodes
-        ///
-        /// @return a cylindrical container builder representing this blueprint
-        CuboidalContainerBuilder(
-            const Acts::Experimental::Blueprint::Node& bpNode,
-            Acts::Logging::Level logLevel = Acts::Logging::INFO);
-    
-        /// The final implementation of the cylindrical container builder
-        ///
-        /// @param gctx The geometry context for this call
-        ///
-        /// @return an outgoing detector component
-        DetectorComponent construct(const GeometryContext& gctx) const final;
+  /// Constructor with configuration struct
+  ///
+  /// @param cfg is the configuration struct
+  /// @param logger logging instance for screen output
+  CuboidalContainerBuilder(const Config& cfg,
+                           std::unique_ptr<const Logger> logger =
+                               getDefaultLogger("CuboidalContainerBuilder",
+                                                Logging::INFO));
 
-    private:
-        /// configuration object
-        Config m_cfg;
-        
-        /// Private access method to the logger
-        const Logger& logger() const { return *m_logger; }
-        
-        /// logging instance
-        std::unique_ptr<const Logger> m_logger;
+  /// Constructor from blueprint and logging level
+  ///
+  /// It will create recursively the builders of sub volumes
+  ///
+  /// @param bpNode is the entry blue print node
+  /// @param logLevel is the logging output level for the builder tools
+  ///
+  /// @note no checking is being done on consistency of the blueprint,
+  /// it is assumed it has passed first through gap filling via the
+  /// blueprint helper.
+  ///
+  /// @note that the naming of the builders is taken from the bluprint nodes
+  ///
+  /// @return a cylindrical container builder representing this blueprint
+  CuboidalContainerBuilder(const Acts::Experimental::Blueprint::Node& bpNode,
+                           Acts::Logging::Level logLevel = Acts::Logging::INFO);
+
+  /// The final implementation of the cylindrical container builder
+  ///
+  /// @param gctx The geometry context for this call
+  ///
+  /// @return an outgoing detector component
+  DetectorComponent construct(const GeometryContext& gctx) const final;
+
+ private:
+  /// configuration object
+  Config m_cfg;
+
+  /// Private access method to the logger
+  const Logger& logger() const { return *m_logger; }
+
+  /// logging instance
+  std::unique_ptr<const Logger> m_logger;
 };
 
 }  // namespace Experimental
