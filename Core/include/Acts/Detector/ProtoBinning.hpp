@@ -39,6 +39,8 @@ struct ProtoBinning {
   std::vector<ActsScalar> edges = {};
   /// An expansion for the filling (in bins)
   std::size_t expansion = 0u;
+  /// Indication if this is an auto-range binning
+  bool autorange = false;
 
   /// Convenience constructors - for variable binning
   ///
@@ -52,7 +54,8 @@ struct ProtoBinning {
         axisType(Acts::detail::AxisType::Variable),
         boundaryType(bType),
         edges(e),
-        expansion(exp) {
+        expansion(exp),
+        autorange(false) {
     if (edges.size() < 2u) {
       throw std::invalid_argument(
           "ProtoBinning: Invalid binning, at least two edges are needed.");
@@ -70,7 +73,10 @@ struct ProtoBinning {
   ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
                ActsScalar minE, ActsScalar maxE, std::size_t nbins,
                std::size_t exp = 0u)
-      : binValue(bValue), boundaryType(bType), expansion(exp) {
+      : binValue(bValue),
+        boundaryType(bType),
+        expansion(exp),
+        autorange(false) {
     if (minE >= maxE) {
       std::string msg = "ProtoBinning: Invalid binning for value '";
       msg += binningValueNames()[bValue];
@@ -106,7 +112,8 @@ struct ProtoBinning {
       : binValue(bValue),
         boundaryType(bType),
         edges(nbins + 1, 0.),
-        expansion(exp) {}
+        expansion(exp),
+        autorange(true) {}
 
   // Return the number of bins
   std::size_t bins() const { return edges.size() - 1u; }
@@ -118,7 +125,11 @@ struct ProtoBinning {
        << binningValueNames()[binValue];
     ss << (axisType == Acts::detail::AxisType::Variable ? ", variable "
                                                         : ", equidistant ");
-    ss << "within [" << edges.front() << ", " << edges.back() << "] ";
+    if (!autorange) {
+      ss << "within [" << edges.front() << ", " << edges.back() << "] ";
+    } else {
+      ss << "within automatic range";
+    }
     return ss.str();
   }
 };
