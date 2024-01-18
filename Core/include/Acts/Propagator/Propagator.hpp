@@ -188,8 +188,14 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 /// appropriate navigator. No custom actors or aborters are supported.
 class BasePropagator {
  public:
+  /// Base propagator options
   using Options = PropagatorOptions<>;
 
+  /// Method to propagate start bound track parameters to a target surface.
+  /// @param start The start bound track parameters.
+  /// @param target The target surface.
+  /// @param options The propagation options.
+  /// @return The end bound track parameters.
   virtual Result<BoundTrackParameters> propagate(
       const BoundTrackParameters& start, const Surface& target,
       const Options& options) const = 0;
