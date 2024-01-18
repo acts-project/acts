@@ -15,18 +15,12 @@
 #include <functional>
 #include <typeindex>
 
-// @TODO REMOVE!
-#include <boost/core/demangle.hpp>
-
 namespace Acts {
 
 struct InputTrack {
   template <typename input_track_t>
   explicit InputTrack(const input_track_t* inputTrack)
       : m_type{typeid(inputTrack)}, m_ptr{inputTrack} {}
-
-  // template <typename input_track_t>
-  // InputTrack(const input_track_t* inputTrack) : InputTrack{*inputTrack} {}
 
   InputTrack() = delete;
   InputTrack(const InputTrack&) = default;
@@ -47,8 +41,6 @@ struct InputTrack {
   const T* as() const {
     using ptr_t = const T*;
     if (m_type != typeid(ptr_t)) {
-      std::cout << boost::core::demangle(m_type.name()) << " vs. "
-                << boost::core::demangle(typeid(ptr_t).name()) << std::endl;
       throw std::bad_any_cast();
     }
     return static_cast<ptr_t>(m_ptr);
