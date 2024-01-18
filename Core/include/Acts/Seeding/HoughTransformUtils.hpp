@@ -107,7 +107,7 @@ class HoughCell {
   /// @param identifier: Identifier of the hit (used to distinguish hits from another)
   /// @param layer: Layer of the hit (used when counting layers)
   /// @param weight: Optional weight to assign to the hit
-  void fill(const identifier_t& identifier, unsigned layer,
+  void fill(const identifier_t& identifier, unsigned int layer,
             YieldType weight = 1.);
   /// @brief access the number of layers with hits compatible with this cell
   YieldType nLayers() const { return m_nLayers; }
