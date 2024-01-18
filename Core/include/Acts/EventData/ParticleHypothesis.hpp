@@ -44,6 +44,9 @@ class SinglyChargedParticleHypothesis
   static SinglyChargedParticleHypothesis electron() {
     return SinglyChargedParticleHypothesis(PdgParticle::eElectron);
   }
+  static SinglyChargedParticleHypothesis proton() {
+    return SinglyChargedParticleHypothesis(PdgParticle::eProton);
+  }
 
   static SinglyChargedParticleHypothesis chargedGeantino() {
     return SinglyChargedParticleHypothesis(PdgParticle::eInvalid, 0);
@@ -103,6 +106,9 @@ class NonNeutralChargedParticleHypothesis
   static NonNeutralChargedParticleHypothesis electron() {
     return SinglyChargedParticleHypothesis::electron();
   }
+  static NonNeutralChargedParticleHypothesis proton() {
+    return SinglyChargedParticleHypothesis::proton();
+  }
 
   static NonNeutralChargedParticleHypothesis pionLike(float absQ) {
     return NonNeutralChargedParticleHypothesis(pion().absolutePdg(),
@@ -140,6 +146,9 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
   }
   static ParticleHypothesis electron() {
     return SinglyChargedParticleHypothesis::electron();
+  }
+  static ParticleHypothesis proton() {
+    return SinglyChargedParticleHypothesis::proton();
   }
 
   static ParticleHypothesis photon() {
