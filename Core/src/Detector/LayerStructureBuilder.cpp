@@ -289,7 +289,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
         } else if (support.pPlacement == binY) {
           locals = {binZ, binX};
         }
-        // Add rectanular support
+        // Add rectangular support
         detail::SupportSurfacesHelper::RectangularSupport rSupport{
             support.pPlacement, support.offset,
             support.volumeClearance[locals[0u]],
