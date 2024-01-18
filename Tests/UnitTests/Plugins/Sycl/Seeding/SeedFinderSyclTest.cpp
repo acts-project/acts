@@ -204,8 +204,7 @@ auto main(int argc, char** argv) -> int {
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
   auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(
-      std::move(grid), *bottomBinFinder, *topBinFinder,
-      std::move(navigation));
+      std::move(grid), *bottomBinFinder, *topBinFinder, std::move(navigation));
 
   auto end_prep = std::chrono::system_clock::now();
 
