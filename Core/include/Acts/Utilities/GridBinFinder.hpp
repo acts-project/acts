@@ -34,7 +34,7 @@ class GridBinFinder {
   ///
   /// @param [in] vals The input parameters that define how many neighbours we need to find
   ///
-  /// @pre The provided paramers must be of time 'int' or 'std::vector<std::pair<int, int>>'
+  /// @pre The provided paramers must be of type 'int', 'std::pair<int, int>' or 'std::vector<std::pair<int, int>>'
   /// no other type is allowed. The order of these parameters must correspond to
   /// the same ordering of the axes in the grid
   template <typename... args>
@@ -96,7 +96,8 @@ class GridBinFinder {
   bool isGridCompatible(const Acts::Grid<stored_t, Axes...>& grid) const;
 
  private:
-  using stored_values_t = std::variant<int, std::vector<std::pair<int, int>>>;
+  using stored_values_t =
+      std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
   /// @brief the instructions for retrieving the nieghbouring bins for each given axis in the grid
   /// These values are provided by the user and can be either ints or a vector
   /// of pair of ints. In the first case, the neighbours will be +/- bins from
