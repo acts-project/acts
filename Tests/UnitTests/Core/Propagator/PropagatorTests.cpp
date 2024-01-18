@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
     BOOST_CHECK_EQUAL(&result.value().endParameters.value().referenceSurface(),
                       targetSurface.get());
 
-    auto resultBase = base->propagate(startParameters, *targetSurface, options);
+    auto resultBase = base->propagateToSurface(startParameters, *targetSurface, options);
 
     BOOST_REQUIRE(resultBase.ok());
     BOOST_CHECK_EQUAL(&resultBase.value().referenceSurface(),
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                       resultBase.value().parameters());
 
     // Propagation call with curvilinear also works
-    auto resultCurv = base->propagate(startCurv, *targetSurface, options);
+    auto resultCurv = base->propagateToSurface(startCurv, *targetSurface, options);
     BOOST_CHECK(resultCurv.ok());
   }
 
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
     BOOST_CHECK_EQUAL(&result.value().endParameters.value().referenceSurface(),
                       targetSurface.get());
 
-    auto resultBase = base->propagate(startParameters, *targetSurface, options);
+    auto resultBase = base->propagateToSurface(startParameters, *targetSurface, options);
 
     BOOST_REQUIRE(resultBase.ok());
     BOOST_CHECK_EQUAL(&resultBase.value().referenceSurface(),
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                       resultBase.value().parameters());
 
     // Propagation call with curvilinear also works
-    auto resultCurv = base->propagate(startCurv, *targetSurface, options);
+    auto resultCurv = base->propagateToSurface(startCurv, *targetSurface, options);
     BOOST_CHECK(resultCurv.ok());
   }
 

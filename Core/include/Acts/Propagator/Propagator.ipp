@@ -288,7 +288,7 @@ auto Acts::Propagator<S, N>::propagate(
 
 template <typename derived_t>
 Acts::Result<Acts::BoundTrackParameters>
-Acts::detail::BasePropagatorHelper<derived_t>::propagate(
+Acts::detail::BasePropagatorHelper<derived_t>::propagateToSurface(
     const BoundTrackParameters& start, const Surface& target,
     const Options& options) const {
   auto res = static_cast<const derived_t*>(this)

@@ -196,7 +196,7 @@ class BasePropagator {
   /// @param target The target surface.
   /// @param options The propagation options.
   /// @return The end bound track parameters.
-  virtual Result<BoundTrackParameters> propagate(
+  virtual Result<BoundTrackParameters> propagateToSurface(
       const BoundTrackParameters& start, const Surface& target,
       const Options& options) const = 0;
 
@@ -209,7 +209,7 @@ class PropagatorStub {};
 template <typename derived_t>
 class BasePropagatorHelper : public BasePropagator {
  public:
-  Result<BoundTrackParameters> propagate(const BoundTrackParameters& start,
+  Result<BoundTrackParameters> propagateToSurface(const BoundTrackParameters& start,
                                          const Surface& target,
                                          const Options& options) const override;
 };
