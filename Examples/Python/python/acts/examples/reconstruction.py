@@ -114,10 +114,19 @@ TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
 )
 
 
-
 TrackSelectorConfig = namedtuple(
     "TrackSelectorConfig",
-    ["loc0", "loc1", "time", "eta", "absEta", "pt", "phi", "nMeasurementsMin", "nMeasurementsGroupMin"],
+    [
+        "loc0",
+        "loc1",
+        "time",
+        "eta",
+        "absEta",
+        "pt",
+        "phi",
+        "nMeasurementsMin",
+        "nMeasurementsGroupMin",
+    ],
     defaults=[(None, None)] * 7 + [None],
 )
 
