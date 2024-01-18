@@ -15,7 +15,6 @@
 #include <array>
 #include <utility>
 #include <vector>
-#include <utility>
 
 namespace Acts::Test {
 
@@ -91,7 +90,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_constructor) {
   Acts::GridBinFinder<1ul> binFinder_1d_2(list_t({}));
   Acts::GridBinFinder<1ul> binFinder_1d_3(list_t({{0, 2}, {-1, 1}}));
   Acts::GridBinFinder<1ul> binFinder_1d_4(std::make_pair(1, 1));
-  
+
   Acts::GridBinFinder<2ul> binFinder_2d_1(1, 5);
   Acts::GridBinFinder<2ul> binFinder_2d_2(list_t({}),
                                           list_t({{0, 2}, {-1, 1}}));
@@ -221,7 +220,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pair) {
 
   std::array<std::size_t, 1ul> locPosition({3ul});
 
-  Acts::GridBinFinder<1ul> binFinder_1(std::make_pair(1,1));
+  Acts::GridBinFinder<1ul> binFinder_1(std::make_pair(1, 1));
   auto neighbours_1 = binFinder_1.findBins(locPosition, grid);
   BOOST_CHECK_EQUAL(neighbours_1.size(), 3ul);
 
@@ -256,12 +255,12 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pair_asymmetric) {
 
   std::array<std::size_t, 1ul> locPosition({3ul});
 
-  Acts::GridBinFinder<1ul> binFinder_1(std::make_pair(1,2));
+  Acts::GridBinFinder<1ul> binFinder_1(std::make_pair(1, 2));
   auto neighbours_1 = binFinder_1.findBins(locPosition, grid);
   BOOST_CHECK_EQUAL(neighbours_1.size(), 4ul);
 
   std::array<std::size_t, 4ul> expected({2ul, 3ul, 4ul, 5ul});
-  for (std::size_t i(0ul); i<4ul; ++i) {
+  for (std::size_t i(0ul); i < 4ul; ++i) {
     BOOST_CHECK_EQUAL(neighbours_1[i], expected[i]);
   }
 }
@@ -277,7 +276,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pair) {
 
   std::array<std::size_t, 2ul> locPosition({3ul, 6ul});
 
-  Acts::GridBinFinder<2ul> binFinder_1(std::make_pair(1, 1), std::make_pair(3, 3));
+  Acts::GridBinFinder<2ul> binFinder_1(std::make_pair(1, 1),
+                                       std::make_pair(3, 3));
   std::array<std::size_t, 2ul> dims_1({1, 3});
   auto neighbours_1 = binFinder_1.findBins(locPosition, grid);
   BOOST_CHECK_EQUAL(neighbours_1.size(), 3ul * 7ul);
@@ -293,7 +293,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pair) {
     }
   }
 
-  Acts::GridBinFinder<2ul> binFinder_2(std::make_pair(2, 2), std::make_pair(1, 1));
+  Acts::GridBinFinder<2ul> binFinder_2(std::make_pair(2, 2),
+                                       std::make_pair(1, 1));
   std::array<std::size_t, 2ul> dims_2({2, 1});
   auto neighbours_2 = binFinder_2.findBins(locPosition, grid);
   BOOST_CHECK_EQUAL(neighbours_2.size(), 5ul * 3ul);
