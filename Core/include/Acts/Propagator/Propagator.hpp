@@ -180,8 +180,12 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
 };
 
-class PropagatorStub {};
-
+/// Common simplified base interface for propagators.
+///
+/// This class only supports propagation from start bound parameters to a target
+/// surface and returns only the end bound parameters.
+/// Navigation is performed if the underlying propagator is configured with an
+/// appropriate navigator. No custom actors or aborters are supported.
 class BasePropagator {
  public:
   using Options = PropagatorOptions<>;
@@ -190,6 +194,9 @@ class BasePropagator {
       const BoundTrackParameters& start, const Surface& target,
       const Options& options) const = 0;
 };
+
+namespace detail {
+class PropagatorStub {};
 
 template <typename derived_t>
 class BasePropagatorHelper : public BasePropagator {
@@ -211,6 +218,7 @@ class BasePropagatorHelper : public BasePropagator {
     }
   }
 };
+}  // namespace detail
 
 /// @brief Propagator for particles (optionally in a magnetic field)
 ///
@@ -241,8 +249,8 @@ template <typename stepper_t, typename navigator_t = VoidNavigator>
 class Propagator final
     : public std::conditional_t<
           supportsBoundParameters_v<stepper_t, navigator_t>,
-          BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
-          PropagatorStub> {
+          detail::BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
+          detail::PropagatorStub> {
   /// Re-define bound track parameters dependent on the stepper
   using StepperBoundTrackParameters =
       detail::stepper_bound_parameters_type_t<stepper_t>;
