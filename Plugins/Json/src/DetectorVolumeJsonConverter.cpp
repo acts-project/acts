@@ -170,9 +170,11 @@ Acts::DetectorVolumeJsonConverter::fromJson(const GeometryContext& gctx,
   auto portalGenerator = Experimental::defaultPortalGenerator();
 
   if (jSurfaces.empty() && jVolumes.empty()) {
-    return Experimental::DetectorVolumeFactory::construct(
+    auto volume = Experimental::DetectorVolumeFactory::construct(
         portalGenerator, gctx, name, transform, std::move(bounds),
         Experimental::tryAllPortals());
+    volume->assignGeometryId(geoId);
+    return volume;
   }
   // Convert the surfaces
   std::vector<std::shared_ptr<Surface>> surfaces;

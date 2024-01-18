@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/GeometryIdGenerator.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
@@ -70,22 +70,20 @@ std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 = {
 
 Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
 Acts::Experimental::GeometryIdGenerator generator(
-    generatorConfig, 
-    Acts::getDefaultLogger("SequentialIdGenerator", 
-        Acts::Logging::VERBOSE));
-
+    generatorConfig,
+    Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 
 // Test finding detectors by trial and error
 BOOST_AUTO_TEST_CASE(RootVolumeFinder) {
-    auto cache = generator.generateCache();
-    for (auto& vol : volumes012) {
-        generator.assignGeometryId(cache, *vol);
-    }
-    
-    auto det012 = Acts::Experimental::Detector::makeShared(
-        "Det012", volumes012, Acts::Experimental::tryRootVolumes());
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes012) {
+    generator.assignGeometryId(cache, *vol);
+  }
+
+  auto det012 = Acts::Experimental::Detector::makeShared(
+      "Det012", volumes012, Acts::Experimental::tryRootVolumes());
 
   nState.currentDetector = det012.get();
   Acts::Experimental::RootVolumeFinder rvf;
@@ -108,13 +106,13 @@ BOOST_AUTO_TEST_CASE(RootVolumeFinder) {
 
 // Test finding detectors beu trial and error
 BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
-    auto cache = generator.generateCache();
-    for (auto& vol : volumes012) {
-        generator.assignGeometryId(cache, *vol);
-    }
-    
-    auto det012 = Acts::Experimental::Detector::makeShared(
-        "Det012", volumes012, Acts::Experimental::tryRootVolumes());
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes012) {
+    generator.assignGeometryId(cache, *vol);
+  }
+
+  auto det012 = Acts::Experimental::Detector::makeShared(
+      "Det012", volumes012, Acts::Experimental::tryRootVolumes());
 
   nState.currentDetector = det012.get();
 
