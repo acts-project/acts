@@ -166,7 +166,8 @@ class TrackSelector {
 
     /// Auto-converting constructor from a single cut configuration.
     /// Results in a single absolute eta bin from 0 to infinity.
-    EtaBinnedConfig(Config cutSet) : cutSets{cutSet}, absEtaEdges{{0, inf}} {}
+    EtaBinnedConfig(Config cutSet)
+        : cutSets{std::move(cutSet)}, absEtaEdges{{0, inf}} {}
 
     /// Add a new eta bin with the given upper bound.
     /// @param etaMax Upper bound of the new eta bin
