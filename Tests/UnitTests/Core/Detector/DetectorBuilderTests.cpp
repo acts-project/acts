@@ -60,6 +60,10 @@ class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
       portalContainer[ip] = p;
     }
 
+  Acts::GeometryIdentifier geoID;
+  geoID.setVolume(1);
+  dVolume->assignGeometryId(geoID);
+
     return Acts::Experimental::DetectorComponent{
         {dVolume},
         portalContainer,

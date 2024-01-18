@@ -49,6 +49,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
     const Options& options) {
   nlohmann::json jVolume;
   jVolume["name"] = volume.name();
+  jVolume["geometryId"] = volume.geometryId().volume();
   jVolume["transform"] = Transform3JsonConverter::toJson(
       volume.transform(gctx), options.transformOptions);
   jVolume["bounds"] = VolumeBoundsJsonConverter::toJson(volume.volumeBounds());
@@ -156,6 +157,8 @@ std::shared_ptr<Acts::Experimental::DetectorVolume>
 Acts::DetectorVolumeJsonConverter::fromJson(const GeometryContext& gctx,
                                             const nlohmann::json& jVolume) {
   std::string name = jVolume["name"];
+  GeometryIdentifier geoId;
+  geoId.setVolume(jVolume["geometryId"]);
   Transform3 transform =
       Transform3JsonConverter::fromJson(jVolume["transform"]);
   auto bounds = VolumeBoundsJsonConverter::fromJson(jVolume["bounds"]);
@@ -184,8 +187,10 @@ Acts::DetectorVolumeJsonConverter::fromJson(const GeometryContext& gctx,
 
   auto jSurfaceNavigation = jVolume["surface_navigation"];
 
-  return Experimental::DetectorVolumeFactory::construct(
+  auto volume = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, gctx, name, transform, std::move(bounds), surfaces,
       volumes, Experimental::tryRootVolumes(),
       IndexedSurfacesJsonConverter::fromJson(jSurfaceNavigation));
+  volume->assignGeometryId(geoId);
+  return volume;
 }

@@ -12,6 +12,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
@@ -71,6 +72,16 @@ BOOST_AUTO_TEST_CASE(IndexedRootVolumeFinderBuilderCylindrical) {
 
   // Let's construct a detector
   auto rootVolumeFinder = builder.construct(tContext, rootVolumes);
+
+    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+    Acts::Experimental::GeometryIdGenerator generator(
+        generatorConfig, 
+        Acts::getDefaultLogger("SequentialIdGenerator", 
+            Acts::Logging::VERBOSE));
+    auto cache = generator.generateCache();
+    for (auto& vol : rootVolumes) {
+        generator.assignGeometryId(cache, *vol);
+    }
 
   auto detectorIndexed = Detector::makeShared("IndexedDetector", rootVolumes,
                                               std::move(rootVolumeFinder));
