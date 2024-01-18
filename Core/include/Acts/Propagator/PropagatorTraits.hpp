@@ -11,9 +11,9 @@
 #include <type_traits>
 namespace Acts {
 template <typename stepper_t, typename navigator_t>
-struct supportsBoundParameters : public std::false_type {};
+struct SupportsBoundParameters : public std::false_type {};
 
 template <typename stepper_t, typename navigator_t>
-constexpr bool supportsBoundParameters_v =
-    supportsBoundParameters<stepper_t, navigator_t>::value;
+constexpr bool SupportsBoundParameters_v =
+    SupportsBoundParameters<stepper_t, navigator_t>::value;
 }  // namespace Acts

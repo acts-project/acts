@@ -427,7 +427,7 @@ class StraightLineStepper {
 };
 
 template <typename navigator_t>
-struct supportsBoundParameters<StraightLineStepper, navigator_t>
+struct SupportsBoundParameters<StraightLineStepper, navigator_t>
     : public std::true_type {};
 
 }  // namespace Acts

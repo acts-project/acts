@@ -424,7 +424,7 @@ class EigenStepper {
 };
 
 template <typename navigator_t>
-struct supportsBoundParameters<EigenStepper<>, navigator_t>
+struct SupportsBoundParameters<EigenStepper<>, navigator_t>
     : public std::true_type {};
 
 }  // namespace Acts

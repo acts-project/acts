@@ -254,7 +254,7 @@ class BasePropagatorHelper : public BasePropagator {
 template <typename stepper_t, typename navigator_t = VoidNavigator>
 class Propagator final
     : public std::conditional_t<
-          supportsBoundParameters_v<stepper_t, navigator_t>,
+          SupportsBoundParameters_v<stepper_t, navigator_t>,
           detail::BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
           detail::PropagatorStub> {
   /// Re-define bound track parameters dependent on the stepper
