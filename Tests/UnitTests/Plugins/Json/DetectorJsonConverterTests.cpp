@@ -84,15 +84,14 @@ BOOST_AUTO_TEST_CASE(SingleEmptyVolumeDetector) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
       volume};
 
-    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
-    Acts::Experimental::GeometryIdGenerator generator(
-        generatorConfig, 
-        Acts::getDefaultLogger("SequentialIdGenerator", 
-            Acts::Logging::VERBOSE));
-    auto cache = generator.generateCache();
-    for (auto& vol : volumes) {
-        generator.assignGeometryId(cache, *vol);
-    }
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig,
+      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes) {
+    generator.assignGeometryId(cache, *vol);
+  }
 
   auto detector = Acts::Experimental::Detector::makeShared(
       "Detector", volumes, Acts::Experimental::tryRootVolumes());
@@ -124,15 +123,14 @@ BOOST_AUTO_TEST_CASE(SingleVolumeOneSurfaceDetector) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
       volume};
 
-    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
-    Acts::Experimental::GeometryIdGenerator generator(
-        generatorConfig, 
-        Acts::getDefaultLogger("SequentialIdGenerator", 
-            Acts::Logging::VERBOSE));
-    auto cache = generator.generateCache();
-    for (auto& vol : volumes) {
-        generator.assignGeometryId(cache, *vol);
-    }
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig,
+      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes) {
+    generator.assignGeometryId(cache, *vol);
+  }
 
   auto detector = Acts::Experimental::Detector::makeShared(
       "Detector", volumes, Acts::Experimental::tryRootVolumes());

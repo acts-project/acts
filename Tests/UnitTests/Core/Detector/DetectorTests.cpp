@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/GeometryIdGenerator.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -89,15 +89,14 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 =
       {cyl0, cyl1, cyl2};
 
-    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
-    Acts::Experimental::GeometryIdGenerator generator(
-        generatorConfig, 
-        Acts::getDefaultLogger("SequentialIdGenerator", 
-            Acts::Logging::VERBOSE));
-    auto cache = generator.generateCache();
-    for (auto& vol : volumes012) {
-        generator.assignGeometryId(cache, *vol);
-    }
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig,
+      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes012) {
+    generator.assignGeometryId(cache, *vol);
+  }
 
   auto det012 = Acts::Experimental::Detector::makeShared(
       "Det012", volumes012, Acts::Experimental::tryRootVolumes());
@@ -145,7 +144,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
                                                std::move(unconnected)),
       std::invalid_argument);
 
-    generator.assignGeometryId(cache, *cyl0nameDup);
+  generator.assignGeometryId(cache, *cyl0nameDup);
 
   // Misconfigured - duplicate name
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes002 =
@@ -180,14 +179,13 @@ BOOST_AUTO_TEST_CASE(DetectorConstructionWithHierarchyMap) {
       Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
-    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
-    Acts::Experimental::GeometryIdGenerator generator(
-        generatorConfig, 
-        Acts::getDefaultLogger("SequentialIdGenerator", 
-            Acts::Logging::VERBOSE));
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig,
+      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
 
-    auto cache = generator.generateCache();
-    generator.assignGeometryId(cache, *cylVolume);
+  auto cache = generator.generateCache();
+  generator.assignGeometryId(cache, *cylVolume);
 
   auto det = Acts::Experimental::Detector::makeShared(
       "DetWithSurfaces", {cylVolume}, Acts::Experimental::tryRootVolumes());
