@@ -407,6 +407,10 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   BoundTrackParameters startParameters{startSurface, startPars, std::nullopt,
                                        ParticleHypothesis::pion()};
 
+  CurvilinearTrackParameters startCurv{Vector4::Zero(), Vector3::UnitX(),
+                                       1. / 1_GeV, std::nullopt,
+                                       ParticleHypothesis::pion()};
+
   GeometryContext gctx;
   MagneticFieldContext mctx;
   PropagatorOptions<> options{gctx, mctx};
@@ -433,6 +437,10 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
 
     BOOST_CHECK_EQUAL(result.value().endParameters.value().parameters(),
                       resultBase.value().parameters());
+
+    // Propagation call with curvilinear also works
+    auto resultCurv = base->propagate(startCurv, *targetSurface, options);
+    BOOST_CHECK(resultCurv.ok());
   }
 
   StraightLineStepper slStepper{};
@@ -458,6 +466,10 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
 
     BOOST_CHECK_EQUAL(result.value().endParameters.value().parameters(),
                       resultBase.value().parameters());
+
+    // Propagation call with curvilinear also works
+    auto resultCurv = base->propagate(startCurv, *targetSurface, options);
+    BOOST_CHECK(resultCurv.ok());
   }
 
   EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>

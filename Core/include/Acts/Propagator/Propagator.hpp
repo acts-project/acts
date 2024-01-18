@@ -207,22 +207,9 @@ class PropagatorStub {};
 template <typename derived_t>
 class BasePropagatorHelper : public BasePropagator {
  public:
-  Result<BoundTrackParameters> propagate(
-      const BoundTrackParameters& start, const Surface& target,
-      const Options& options) const override {
-    auto res =
-        static_cast<const derived_t*>(this)
-            ->template propagate<BoundTrackParameters, PropagatorOptions<>,
-                                 SurfaceReached, PathLimitReached>(
-                start, target, options);
-
-    if (res.ok()) {
-      // @TODO: Return optional?
-      return std::move((*res).endParameters.value());
-    } else {
-      return res.error();
-    }
-  }
+  Result<BoundTrackParameters> propagate(const BoundTrackParameters& start,
+                                         const Surface& target,
+                                         const Options& options) const override;
 };
 }  // namespace detail
 
