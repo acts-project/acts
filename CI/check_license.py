@@ -191,7 +191,6 @@ def main():
     nsrcs = len(srcs)
     step = int(nsrcs / 20)
     for i, src in enumerate(srcs):
-
         if any([fnmatch(src, e) for e in args.exclude]):
             continue
 
@@ -267,7 +266,6 @@ def main():
                         valid = False
 
                     if args.check_years:
-
                         if git_add_year != git_mod_year:
                             # need year range in licence
                             if not (year1 and year2):
@@ -308,7 +306,6 @@ def main():
                                     int(year1) != git_add_year
                                     or int(year2) != git_mod_year
                                 ):
-
                                     year_print("File: {}".format(src))
                                     year_print(
                                         "Year range {}-{} does not match range from git {}-{}".format(

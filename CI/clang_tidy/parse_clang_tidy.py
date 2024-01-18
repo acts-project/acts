@@ -15,7 +15,6 @@ from item import Item, ItemCollection
 
 
 def parse_clang_tidy_item(itemstr):
-
     try:
         m = re.match(
             r"(?P<file>[/.\-+\w]+):(?P<line>\d+):(?P<col>\d+): (?P<sev>.*?):(?P<msg>[\s\S]*)\[(?P<code>.*)\]\n(?P<info>[\s\S]*)",
@@ -46,7 +45,6 @@ def parse_clang_tidy_item(itemstr):
 
 
 def parse_clang_tidy_output(output):
-
     # cleanup
     itemstr = output
     itemstr = re.sub(r"Enabled checks:\n[\S\s]+?\n\n", "", itemstr)

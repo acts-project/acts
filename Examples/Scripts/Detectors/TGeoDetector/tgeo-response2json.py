@@ -179,7 +179,6 @@ def process(f):
         vol[oo][side] = vv
 
     if "-n" not in opt:
-
         if "-d" in opt:
             empty = generate_empty_config("ActsExampleGeometryTGeo")
         elif "-c" in opt:
