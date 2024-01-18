@@ -6,10 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// @file HoughTransformSeeder.hpp
-// @author Max Goblirsch, based on work by Riley Xu and Jahred Adelman
-// @brief Implements a set of tools to
-/// implement a hough transform.
+/// This file implements the tools for a hough transform.
 
 #pragma once
 #include "Acts/Utilities/Delegate.hpp"
