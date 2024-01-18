@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,8 +9,7 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <chrono>
@@ -160,10 +160,10 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   auto config = setupSeedFinderConfiguration<SpacePoint>();
   config = config.toInternalUnits().calculateDerivedQuantities();
   auto options = setupSeedFinderOptions();
@@ -194,12 +194,15 @@ auto main(int argc, char** argv) -> int {
   auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
   gridConfig = gridConfig.toInternalUnits();
   gridOpts = gridOpts.toInternalUnits();
-  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
+  Acts::SpacePointGrid<SpacePoint> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
+  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
+                                        spVec.end(), globalTool,
+                                        rRangeSPExtent);
 
+  std::array<std::vector<std::size_t>, 2ul> navigation;
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
-      spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, config, options);
+      std::move(grid), *bottomBinFinder, *topBinFinder, std::move(navigation));
 
   auto end_prep = std::chrono::system_clock::now();
 
