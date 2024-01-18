@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -124,7 +125,6 @@ class ObjectIntersection {
   ///
   /// @param intersection is the intersection
   /// @param object is the object to be instersected
-  /// @param representation is the object representation
   /// @param index is the intersection index
   constexpr ObjectIntersection(const Intersection3D& intersection,
                                const object_t* object, std::uint8_t index = 0)
@@ -191,7 +191,6 @@ class ObjectMultiIntersection {
   ///
   /// @param intersections are the intersections
   /// @param object is the object to be instersected
-  /// @param representation is the object representation
   constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
                                     const object_t* object)
       : m_intersections(intersections), m_object(object) {}
@@ -232,26 +231,25 @@ namespace detail {
 /// path-limit and overstep-limit
 ///
 /// @tparam intersection_t Type of the intersection object
-/// @tparam logger_t The logger type, which defaults to std::false_type to
-/// prevent the generation of logging code
 ///
 /// @param intersection The intersection to check
-/// @param pLimit The path-limit
-/// @param oLimit The overstep-limit
-/// @param tolerance The tolerance that is applied to the path-limit criterion
+/// @param nearLimit The minimum distance for an intersection to be considered
+/// @param farLimit The maximum distance for an intersection to be considered
 /// @param logger A optionally supplied logger which prints out a lot of infos
-/// at VERBOSE level
-template <typename intersection_t, typename logger_t = std::false_type>
-bool checkIntersection(const intersection_t& intersection, double pLimit,
-                       double oLimit, double tolerance,
+///               at VERBOSE level
+template <typename intersection_t>
+bool checkIntersection(const intersection_t& intersection, double nearLimit,
+                       double farLimit,
                        const Logger& logger = getDummyLogger()) {
-  const double cLimit = intersection.pathLength();
+  const double distance = intersection.pathLength();
+  // TODO why?
+  const double tolerance = s_onSurfaceTolerance;
 
-  ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                              << ", " << cLimit);
+  ACTS_VERBOSE(" -> near limit, far limit, distance: "
+               << nearLimit << ", " << farLimit << ", " << distance);
 
-  const bool coCriterion = cLimit > oLimit;
-  const bool cpCriterion = std::abs(cLimit) < std::abs(pLimit) + tolerance;
+  const bool coCriterion = distance > nearLimit;
+  const bool cpCriterion = std::abs(distance) < std::abs(farLimit) + tolerance;
 
   const bool accept = coCriterion && cpCriterion;
 
@@ -261,12 +259,12 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
     ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
     if (!coCriterion) {
       ACTS_VERBOSE("- intersection path length "
-                   << cLimit << " <= overstep limit " << oLimit);
+                   << distance << " <= near limit " << nearLimit);
     }
     if (!cpCriterion) {
       ACTS_VERBOSE("- intersection path length "
-                   << std::abs(cLimit) << " is over the path limit "
-                   << (std::abs(pLimit) + tolerance)
+                   << std::abs(distance) << " is over the far limit "
+                   << (std::abs(farLimit) + tolerance)
                    << " (including tolerance of " << tolerance << ")");
     }
   }
