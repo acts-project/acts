@@ -473,8 +473,6 @@ bool TrackSelector::MeasurementCounter::isValidTrack(
     return true;
   }
 
-  // Make a copy so we can update it
-  // @TODO: Internally, the hierarchy map uses vectors, so copying is not very efficient
   boost::container::small_vector<unsigned int, 4> counterValues;
   counterValues.resize(counters.size(), 0);
 
