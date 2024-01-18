@@ -12,6 +12,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -176,8 +177,8 @@ struct FitterTester {
     // this is the default option. set anyway for consistency
     options.referenceSurface = nullptr;
 
-    Acts::ConstTrackAccessor<bool> reversed{"reversed"};
-    Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
     auto doTest = [&](bool diag) {
       Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
@@ -249,8 +250,8 @@ struct FitterTester {
     BOOST_CHECK(tracks.hasColumn("reversed"));
     BOOST_CHECK(tracks.hasColumn("smoothed"));
 
-    Acts::ConstTrackAccessor<bool> reversed{"reversed"};
-    Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
     // check the output status flags
     if (doDiag) {
@@ -305,8 +306,8 @@ struct FitterTester {
     BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
     BOOST_CHECK_EQUAL(track.nHoles(), 0u);
 
-    Acts::ConstTrackAccessor<bool> reversed{"reversed"};
-    Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
     // check the output status flags
     if (doDiag) {
       BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
@@ -358,8 +359,8 @@ struct FitterTester {
     BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
     BOOST_CHECK_EQUAL(track.nHoles(), 0u);
 
-    Acts::ConstTrackAccessor<bool> reversed{"reversed"};
-    Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
     // check the output status flags
     if (doDiag) {
@@ -388,8 +389,8 @@ struct FitterTester {
     tracks.addColumn<bool>("reversed");
     tracks.addColumn<bool>("smoothed");
 
-    Acts::ConstTrackAccessor<bool> reversed{"reversed"};
-    Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
     // fit w/ all hits in order
     {
@@ -448,8 +449,8 @@ struct FitterTester {
     tracks.addColumn<bool>("reversed");
     tracks.addColumn<bool>("smoothed");
 
-    Acts::ConstTrackAccessor<bool> reversed{"reversed"};
-    Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
     // always keep the first and last measurement. leaving those in seems to not
     // count the respective surfaces as holes.
@@ -498,8 +499,8 @@ struct FitterTester {
     tracks.addColumn<bool>("reversed");
     tracks.addColumn<bool>("smoothed");
 
-    Acts::ConstTrackAccessor<bool> reversed{"reversed"};
-    Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
     for (std::size_t i = 0; i < sourceLinks.size(); ++i) {
       // replace the i-th measurement with an outlier
@@ -547,8 +548,8 @@ struct FitterTester {
     tracks.addColumn<bool>("reversed");
     tracks.addColumn<bool>("smoothed");
 
-    Acts::ConstTrackAccessor<bool> reversed{"reversed"};
-    Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
+    Acts::ConstProxyAccessor<bool> reversed{"reversed"};
+    Acts::ConstProxyAccessor<bool> smoothed{"smoothed"};
 
     auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
 

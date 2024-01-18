@@ -69,26 +69,28 @@ std::shared_ptr<Portal> Portal::fuse(std::shared_ptr<Portal>& aPortal,
 
   if (noneConnected(*aPortal) || noneConnected(*bPortal)) {
     throw std::invalid_argument(
-        "Portal: trying to fuse two portals where at least on has no links.");
+        "Portal: trying to fuse two portals where at least one has no links.");
   }
-
-  // We checked they're not both empty, so one of them must be connected
-  Direction aDir = (aPortal->m_volumeUpdaters[0].connected())
-                       ? Direction::fromIndex(0)
-                       : Direction::fromIndex(1);
-  Direction bDir = aDir.invert();
-
-  // And now check other direction
-  if (!bPortal->m_volumeUpdaters[bDir.index()].connected()) {
-    throw std::runtime_error(
-        "Portal: trying to fuse portal (discard) with no links.");
-  }
-
-  const auto& aSurface = aPortal->surface();
-  const auto& bSurface = bPortal->surface();
 
   // @TODO: There's no safety against fusing portals with different surfaces
+  // We model the fused portal after the aPortal
   std::shared_ptr<Portal> fused = std::make_shared<Portal>(aPortal->m_surface);
+
+  // Get the connection directions
+  Direction getA = (aPortal->m_volumeUpdaters[0].connected())
+                       ? Direction::fromIndex(0)
+                       : Direction::fromIndex(1);
+  Direction getB = (bPortal->m_volumeUpdaters[0].connected())
+                       ? Direction::fromIndex(0)
+                       : Direction::fromIndex(1);
+
+  // Modelling the fused portal after the aPortal, leaves B as inverted
+  Direction setA = getA;
+  Direction setB = setA.invert();
+
+  // Check if material is associated
+  const auto& aSurface = aPortal->surface();
+  const auto& bSurface = bPortal->surface();
 
   if (aSurface.surfaceMaterial() != nullptr &&
       bSurface.surfaceMaterial() != nullptr) {
@@ -96,20 +98,24 @@ std::shared_ptr<Portal> Portal::fuse(std::shared_ptr<Portal>& aPortal,
         "Portal: both surfaces have surface material, fusing will lead to "
         "information loss.");
   } else if (aSurface.surfaceMaterial() != nullptr) {
+    // We keep the aPortal modelling
     fused->m_surface = aPortal->m_surface;
   } else if (bSurface.surfaceMaterial() != nullptr) {
     fused->m_surface = bPortal->m_surface;
+    // Remodel after the bPortal
+    setB = getB;
+    setA = setB.invert();
   }
 
-  fused->m_volumeUpdaters[aDir.index()] =
-      std::move(aPortal->m_volumeUpdaters[aDir.index()]);
-  fused->m_attachedVolumes[aDir.index()] =
-      std::move(aPortal->m_attachedVolumes[aDir.index()]);
+  fused->m_volumeUpdaters[setA.index()] =
+      std::move(aPortal->m_volumeUpdaters[getA.index()]);
+  fused->m_attachedVolumes[setA.index()] =
+      std::move(aPortal->m_attachedVolumes[getA.index()]);
 
-  fused->m_volumeUpdaters[bDir.index()] =
-      std::move(bPortal->m_volumeUpdaters[bDir.index()]);
-  fused->m_attachedVolumes[bDir.index()] =
-      std::move(bPortal->m_attachedVolumes[bDir.index()]);
+  fused->m_volumeUpdaters[setB.index()] =
+      std::move(bPortal->m_volumeUpdaters[getB.index()]);
+  fused->m_attachedVolumes[setB.index()] =
+      std::move(bPortal->m_attachedVolumes[getB.index()]);
 
   return fused;
 }

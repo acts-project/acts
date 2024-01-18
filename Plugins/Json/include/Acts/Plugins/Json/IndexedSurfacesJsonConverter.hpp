@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -20,6 +19,7 @@
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeList.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
@@ -29,7 +29,7 @@
 
 namespace Acts {
 
-using namespace Experimental::detail::GridAxisGenerators;
+using namespace GridAxisGenerators;
 
 namespace IndexedSurfacesJsonConverter {
 
@@ -97,7 +97,7 @@ static inline nlohmann::json toJson(
   // Convert if dynamic cast happens to work
   nlohmann::json jIndexedSurfaces;
   unrollConvert(jIndexedSurfaces, delegate, detray,
-                Experimental::detail::GridAxisGenerators::PossibleAxes{});
+                GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
   if (!jIndexedSurfaces.is_null()) {
     jIndexedSurfaces["type"] = "IndexedSurfaces";
