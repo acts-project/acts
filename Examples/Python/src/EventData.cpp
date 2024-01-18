@@ -41,6 +41,10 @@ void addEventData(Context& ctx) {
           [](py::object /* self */) {
             return Acts::ParticleHypothesis::electron();
           })
+      .def_property_readonly_static("proton",
+                                    [](py::object /* self */) {
+                                      return Acts::ParticleHypothesis::proton();
+                                    })
       .def_property_readonly_static(
           "geantino",
           [](py::object /* self */) {
