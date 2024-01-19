@@ -104,6 +104,17 @@ void Acts::Extent::setEnvelope(const ExtentEnvelope& envelope) {
   m_envelope = envelope;
 }
 
+bool Acts::Extent::contains(const Vector3& vtx) const {
+  Extent checkExtent;
+  for (int ibv = 0; ibv < (int)binValues; ++ibv) {
+    if (constrains((BinningValue)ibv)) {
+      ActsScalar vtxVal = VectorHelpers::cast(vtx, (BinningValue)ibv);
+      checkExtent.set((BinningValue)ibv, vtxVal, vtxVal);
+    }
+  }
+  return contains(checkExtent);
+}
+
 bool Acts::Extent::contains(const Extent& rhs, BinningValue bValue) const {
   // Helper to check including a constraint bit set check
   auto checkContainment = [&](BinningValue bvc) -> bool {
