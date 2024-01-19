@@ -144,16 +144,6 @@ Acts::Experimental::CuboidalContainerBuilder::construct(
   }
   ACTS_VERBOSE("Number of root volumes: " << rootVolumes.size());
 
-  // Check if a root volume finder is provided
-  if (m_cfg.rootVolumeFinderBuilder) {
-    // Return the container
-    return Acts::Experimental::DetectorComponent{
-        volumes, rContainer,
-        RootDetectorVolumes{
-            rootVolumes,
-            m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
-  }
-
   // Geometry Id generation
   if (m_cfg.geoIdGenerator != nullptr) {
     ACTS_DEBUG("Assigning geometry ids to the detector");
@@ -169,6 +159,16 @@ Acts::Experimental::CuboidalContainerBuilder::construct(
         ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       });
     }
+  }
+
+  // Check if a root volume finder is provided
+  if (m_cfg.rootVolumeFinderBuilder) {
+    // Return the container
+    return Acts::Experimental::DetectorComponent{
+        volumes, rContainer,
+        RootDetectorVolumes{
+            rootVolumes,
+            m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
   }
 
   // Return the container
