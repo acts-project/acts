@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Cuda/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -214,9 +214,9 @@ int main(int argc, char** argv) {
   config.nAvgTrplPerSpBLimit = nAvgTrplPerSpBLimit;
 
   // binfinder
-  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
-  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
   };
 
   // setup spacepoint grid config
-  Acts::SpacePointGridConfig gridConf;
+  Acts::CylindricalSpacePointGridConfig gridConf;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
@@ -242,14 +242,17 @@ int main(int argc, char** argv) {
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
   // setup spacepoint grid options
-  Acts::SpacePointGridOptions gridOpts;
+  Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
-  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
-      spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, config, options);
+  Acts::CylindricalSpacePointGrid<SpacePoint> grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<SpacePoint>(gridConf,
+                                                                     gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(
+      config, options, grid, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
+
+  auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(
+      std::move(grid), *bottomBinFinder, *topBinFinder);
 
   auto end_pre = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
@@ -272,8 +275,8 @@ int main(int argc, char** argv) {
       spGroup.grid().localBinsFromGlobalBin(skip);
 
   int group_count;
-  auto groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, localPosition,
-                                                         navigation);
+  auto groupIt = Acts::CylindricalBinnedGroupIterator<SpacePoint>(
+      spGroup, localPosition, navigation);
 
   //----------- CPU ----------//
   group_count = 0;
@@ -309,8 +312,8 @@ int main(int argc, char** argv) {
 
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
-  groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, localPosition,
-                                                    navigation);
+  groupIt = Acts::CylindricalBinnedGroupIterator<SpacePoint>(
+      spGroup, localPosition, navigation);
 
   Acts::SpacePointData spacePointData;
   spacePointData.resize(spVec.size());

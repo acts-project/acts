@@ -10,10 +10,12 @@ template <std::size_t DIM>
 template <typename... args>
 Acts::GridBinFinder<DIM>::GridBinFinder(args&&... vals) {
   static_assert(sizeof...(args) == DIM);
-  static_assert(std::conjunction<std::disjunction<
-                    std::is_same<int, typename std::decay<args>::type>,
-                    std::is_same<std::vector<std::pair<int, int>>,
-                                 typename std::decay<args>::type>>...>::value);
+  static_assert(
+      std::conjunction<std::disjunction<
+          std::is_same<int, typename std::decay<args>::type>,
+          std::is_same<std::pair<int, int>, typename std::decay<args>::type>,
+          std::is_same<std::vector<std::pair<int, int>>,
+                       typename std::decay<args>::type>>...>::value);
   storeValue(std::forward<args>(vals)...);
 }
 
@@ -28,6 +30,9 @@ void Acts::GridBinFinder<DIM>::storeValue(first_value_t&& fv,
   if constexpr (std::is_same<int, decayed_value_t>::value) {
     /// if int -> value is positive
     assert(fv >= 0);
+    m_values[DIM - N - 1ul] = fv;
+  } else if constexpr (std::is_same<std::pair<int, int>,
+                                    decayed_value_t>::value) {
     m_values[DIM - N - 1ul] = fv;
   } else {
     /// If vector of pairs -> also allow for empty vectors
@@ -53,12 +58,13 @@ std::array<std::pair<int, int>, DIM> Acts::GridBinFinder<DIM>::getSizePerAxis(
           if constexpr (std::is_same<int, value_t>::value) {
             assert(val >= 0);
             return std::make_pair(-val, val);
+          } else if constexpr (std::is_same<std::pair<int, int>,
+                                            value_t>::value) {
+            return std::make_pair(-val.first, val.second);
           } else {
             assert(locPosition.size() > i);
             assert(locPosition[i] > 0ul);
             assert(val.size() >= locPosition[i]);
-            assert(val[locPosition[i] - 1ul].first <=
-                   val[locPosition[i] - 1ul].second);
             return val[locPosition[i] - 1ul];
           }
         },
@@ -90,7 +96,8 @@ bool Acts::GridBinFinder<DIM>::isGridCompatible(
     bool isCompabile = std::visit(
         [nBins](const auto& val) -> bool {
           using value_t = typename std::decay<decltype(val)>::type;
-          if constexpr (std::is_same<int, value_t>::value) {
+          if constexpr (std::is_same<int, value_t>::value ||
+                        std::is_same<std::pair<int, int>, value_t>::value) {
             return true;
           } else {
             return val.size() == nBins;

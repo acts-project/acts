@@ -9,7 +9,7 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -123,8 +123,9 @@ template <typename external_spacepoint_t>
 auto setupSpacePointGridConfig(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::SeedFinderOptions& options)
-    -> std::pair<Acts::SpacePointGridConfig, Acts::SpacePointGridOptions> {
-  Acts::SpacePointGridConfig gridConf{};
+    -> std::pair<Acts::CylindricalSpacePointGridConfig,
+                 Acts::CylindricalSpacePointGridOptions> {
+  Acts::CylindricalSpacePointGridConfig gridConf{};
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
@@ -132,7 +133,7 @@ auto setupSpacePointGridConfig(
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
 
-  Acts::SpacePointGridOptions gridOpts{};
+  Acts::CylindricalSpacePointGridOptions gridOpts{};
   gridOpts.bFieldInZ = options.bFieldInZ;
   return std::make_pair(gridConf, gridOpts);
 }
@@ -160,9 +161,9 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
-  auto topBinFinder = std::make_shared<Acts::GridBinFinder<2ul>>(
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   auto config = setupSeedFinderConfiguration<SpacePoint>();
   config = config.toInternalUnits().calculateDerivedQuantities();
@@ -194,12 +195,16 @@ auto main(int argc, char** argv) -> int {
   auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
   gridConfig = gridConfig.toInternalUnits();
   gridOpts = gridOpts.toInternalUnits();
-  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
+  Acts::CylindricalSpacePointGrid<SpacePoint> grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<SpacePoint>(gridConfig,
+                                                                     gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid,
+                                                   spVec.begin(), spVec.end(),
+                                                   globalTool, rRangeSPExtent);
 
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
-      spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, config, options);
+  std::array<std::vector<std::size_t>, 2ul> navigation;
+  auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(
+      std::move(grid), *bottomBinFinder, *topBinFinder, std::move(navigation));
 
   auto end_prep = std::chrono::system_clock::now();
 

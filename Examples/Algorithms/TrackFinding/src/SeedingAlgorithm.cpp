@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -205,9 +205,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
-  m_bottomBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+  m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
-  m_topBinFinder = std::make_shared<const Acts::GridBinFinder<2ul>>(
+  m_topBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
 
   m_cfg.seedFinderConfig.seedFilter =
@@ -248,13 +248,20 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-  auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
-      m_cfg.gridConfig, m_cfg.gridOptions);
-
-  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
+  Acts::CylindricalSpacePointGrid<SimSpacePoint> grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<SimSpacePoint>(
+          m_cfg.gridConfig, m_cfg.gridOptions);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(
+      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
-      m_bottomBinFinder, m_topBinFinder, std::move(grid), rRangeSPExtent,
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
+      rRangeSPExtent);
+
+  std::array<std::vector<std::size_t>, 2ul> navigation;
+  navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
+
+  auto spacePointsGrouping = Acts::CylindricalBinnedGroup<SimSpacePoint>(
+      std::move(grid), *m_bottomBinFinder, *m_topBinFinder,
+      std::move(navigation));
 
   // safely clamp double to float
   float up = Acts::clampValue<float>(

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
@@ -34,7 +34,7 @@ class GridBinFinder {
   ///
   /// @param [in] vals The input parameters that define how many neighbours we need to find
   ///
-  /// @pre The provided paramers must be of time 'int' or 'std::vector<std::pair<int, int>>'
+  /// @pre The provided paramers must be of type 'int', 'std::pair<int, int>' or 'std::vector<std::pair<int, int>>'
   /// no other type is allowed. The order of these parameters must correspond to
   /// the same ordering of the axes in the grid
   template <typename... args>
@@ -46,11 +46,11 @@ class GridBinFinder {
   /// space points in the bin with the provided indices to create seeds.
   ///
   /// @tparam stored_t The type of elements stored in the Grid
-  /// @tpatam Axes ... The type of the axes of the grid
+  /// @tparam Axes ... The type of the axes of the grid
   ///
   /// @param [in] locPosition The N-dimentional local position in the grid
   /// @param [in] grid The grid
-  /// @output The list of neighbouring bins
+  /// @return The list of neighbouring bins
   ///
   /// @pre The provided local position must be a valid local bins configuration in the grid
   template <typename stored_t, class... Axes>
@@ -88,7 +88,7 @@ class GridBinFinder {
   /// This function is called only in debug mode
   ///
   /// @tparam stored_t The type of elements stored in the Grid
-  /// @tpatam Axes ... The type of the axes of the grid
+  /// @tparam Axes ... The type of the axes of the grid
   ///
   /// @param [in] grid The Grid
   /// @return If the GridBinFinder is compatible with the grid
@@ -96,12 +96,13 @@ class GridBinFinder {
   bool isGridCompatible(const Acts::Grid<stored_t, Axes...>& grid) const;
 
  private:
-  using stored_values_t = std::variant<int, std::vector<std::pair<int, int>>>;
+  using stored_values_t =
+      std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
   /// @brief the instructions for retrieving the nieghbouring bins for each given axis in the grid
-  /// These values are provided by the user and can be either ints or a vector
-  /// of pair of ints. In the first case, the neighbours will be +/- bins from
-  /// the given local bin In the second case, the user defines how many bins in
-  /// both directions should be provided
+  /// These values are provided by the user and can be ints, a pair of ints or a
+  /// vector of pair of ints. In the first case, the neighbours will be +/- bins
+  /// from the given local bin In the second case, the user defines how many
+  /// bins in both directions should be provided
   ///
   /// @pre The list of entries of the vector of pairs MUST be equal to the number of bins in that specific
   /// axis. Empty vectors are also allowed  but in this case the value will be
