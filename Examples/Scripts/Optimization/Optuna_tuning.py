@@ -142,15 +142,16 @@ class Objective:
                     timing["identifier"].str.match("Algorithm:TrackFindingAlgorithm")
                 ]["time_perevent_s"]
             )
-        else:
-            time_ckf = 0
 
         time_seeding = float(
             timing[timing["identifier"].str.match("Algorithm:SeedingAlgorithm")][
                 "time_perevent_s"
             ]
         )
-        self.res["runtime"].append(time_ckf + time_seeding)
+        if ckf_perf:
+            self.res["runtime"].append(time_ckf + time_seeding)
+        else:
+            self.res["runtime"].append(time_seeding)
 
         efficiency = self.res["eff"][-1]
         penalty = (
