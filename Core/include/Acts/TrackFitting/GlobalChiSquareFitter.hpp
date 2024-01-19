@@ -241,11 +241,11 @@ struct Gx2FitterResult {
 /// @tparam measDim Number of dimensions of the measurement
 /// @tparam traj_t The trajectory type
 ///
-/// @param trackStateProxy is the current track state
+/// @param trackStateProxy is the track state proxy
 /// @param result is the mutable result/cache object
 /// @param logger a logger instance
 template <std::size_t measDim, typename traj_t>
-void collector(typename traj_t::TrackStateProxy& trackStateProxy,
+void collector(const typename traj_t::ConstTrackStateProxy& trackStateProxy,
                Gx2FitterResult<traj_t>& result, const Logger& logger) {
   auto predicted = trackStateProxy.predicted();
   auto measurement = trackStateProxy.template calibrated<measDim>();
@@ -643,19 +643,20 @@ class Gx2Fitter {
       gx2fActor.actorLogger = m_actorLogger.get();
       gx2fActor.nUpdate = nUpdate;
 
-      typename propagator_t::template action_list_t_result_t<
-          CurvilinearTrackParameters, Actors>
-          inputResult;
+      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
-      auto& r = inputResult.template get<Gx2FitterResult<traj_t>>();
+      auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
+      r.fittedStates = &trackContainer.trackStateContainer();
 
       // Clear the track container. It could be more performant to update the
       // existing states, but this needs some more thinking.
       trackContainer.clear();
-      r.fittedStates = &trackContainer.trackStateContainer();
-      // propagate with params and return jacobians and residuals
-      auto result = m_propagator.template propagate(
-          params, propagatorOptions, true, std::move(inputResult));
+
+      auto propagationResult = m_propagator.template propagate(propagatorState);
+
+      auto result = m_propagator.template makeResult(std::move(propagatorState),
+                                                     propagationResult,
+                                                     propagatorOptions, false);
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
