@@ -10,7 +10,6 @@ def getOpenDataDetector(
     mdecorator=None,
     logLevel=acts.logging.INFO,
 ):
-
     import acts.examples.dd4hep
 
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)

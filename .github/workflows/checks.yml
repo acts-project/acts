@@ -8,7 +8,7 @@ on:
       - 'release/**'
       - 'develop/**'
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install black
-        run: pip install black==22.3.0
+        run: pip install black==23.12.1
       - name: Run black format check
         run: black --check . --extend-exclude ".*thirdparty.*"
 

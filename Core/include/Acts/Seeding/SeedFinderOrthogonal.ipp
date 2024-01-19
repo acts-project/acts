@@ -742,9 +742,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   spacePointData.resize(spacePoints.size());
 
   for (const external_spacepoint_t *p : spacePoints) {
-    auto [position, variance] = extract_coordinates(p);
+    auto [position, variance, time] = extract_coordinates(p);
     internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
-        counter++, *p, position, options.beamPos, variance));
+        counter++, *p, position, options.beamPos, variance, time));
     // store x,y,z values in extent
     rRangeSPExtent.extend(position);
   }

@@ -10,7 +10,6 @@ import matplotlib.pyplot
 
 
 def main(files: List[Path], output: str, title: str = ""):
-
     mus = []
 
     for file in files:
