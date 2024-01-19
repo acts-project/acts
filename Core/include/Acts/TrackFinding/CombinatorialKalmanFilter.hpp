@@ -86,8 +86,8 @@ struct CombinatorialKalmanFilterExtensions {
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
           candidate_container_t& trackStates, bool&, const Logger&)>;
-  using BranchStopper =
-      Delegate<bool(const CombinatorialKalmanFilterTipState&)>;
+  using BranchStopper = Delegate<bool(const CombinatorialKalmanFilterTipState&,
+                                      typename traj_t::TrackStateProxy&)>;
 
   /// The Calibrator is a dedicated calibration algorithm that allows
   /// to calibrate measurements using track information, this could be
@@ -110,7 +110,7 @@ struct CombinatorialKalmanFilterExtensions {
     calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
     updater.template connect<&detail::voidFitterUpdater<traj_t>>();
     smoother.template connect<&detail::voidFitterSmoother<traj_t>>();
-    branchStopper.connect<voidBranchStopper>();
+    branchStopper.template connect<voidBranchStopper>();
     measurementSelector.template connect<voidMeasurementSelector>();
   }
 
@@ -132,10 +132,13 @@ struct CombinatorialKalmanFilterExtensions {
 
   /// Default branch stopper which will never stop
   /// @param tipState The tip state to decide whether to stop (unused)
+  /// @param trackState The track state to decide whether to stop (unused)
   /// @return false
   static bool voidBranchStopper(
-      const CombinatorialKalmanFilterTipState& tipState) {
+      const CombinatorialKalmanFilterTipState& tipState,
+      typename traj_t::TrackStateProxy& trackState) {
     (void)tipState;
+    (void)trackState;
     return false;
   }
 };
@@ -342,7 +345,6 @@ class CombinatorialKalmanFilter {
     using BoundState = std::tuple<parameters_t, BoundMatrix, double>;
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
-    // The source link container type
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<traj_t>;
 
@@ -649,10 +651,9 @@ class CombinatorialKalmanFilter {
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering; it's only needed
       // after smoothing
-      navigator.resetState(
-          state.navigation, state.geoContext, stepper.position(state.stepping),
-          state.options.direction * stepper.direction(state.stepping),
-          &currentState.referenceSurface(), nullptr);
+      state.navigation =
+          navigator.makeState(&currentState.referenceSurface(), nullptr);
+      navigator.initialize(state, stepper);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
@@ -833,8 +834,11 @@ class CombinatorialKalmanFilter {
           currentTip = addNonSourcelinkState(stateMask, boundState, result,
                                              isSensitive, prevTip);
 
+          auto nonSourcelinkState =
+              result.fittedStates->getTrackState(currentTip);
+
           // Check the branch
-          if (!m_extensions.branchStopper(tipState)) {
+          if (!m_extensions.branchStopper(tipState, nonSourcelinkState)) {
             // Remember the active tip and its state
             result.activeTips.emplace_back(currentTip, tipState);
           } else {
@@ -1052,7 +1056,7 @@ class CombinatorialKalmanFilter {
         }
 
         // Check if need to stop this branch
-        if (!m_extensions.branchStopper(tipState)) {
+        if (!m_extensions.branchStopper(tipState, trackState)) {
           // Put tipstate back into active tips to continue with it
           result.activeTips.emplace_back(currentTip, tipState);
           // Record the number of branches on surface
@@ -1066,8 +1070,7 @@ class CombinatorialKalmanFilter {
     ///
     /// @param stateMask The bitmask that instructs which components to allocate
     /// @param boundState The bound state on current surface
-    /// @param result is the mutable result state object
-    /// and which to leave invalid
+    /// @param result is the mutable result state object and which to leave invalid
     /// @param isSensitive The surface is sensitive or passive
     /// @param prevTip The index of the previous state
     ///
@@ -1209,9 +1212,9 @@ class CombinatorialKalmanFilter {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);
         bool isOutlier = st.typeFlags().test(TrackStateFlag::OutlierFlag);
-        // We are excluding non measurement states and outlier here. Those can
-        // decrease resolution because only the smoothing corrected the very
-        // first prediction as filtering is not possible.
+        // We are excluding non measurement states and outlier here. Those
+        // can decrease resolution because only the smoothing corrected the
+        // very first prediction as filtering is not possible.
         if (isMeasurement && !isOutlier) {
           firstStateIndex = st.index();
         }
@@ -1325,10 +1328,8 @@ class CombinatorialKalmanFilter {
       // Reset the navigation state to enable propagation towards the target
       // surface
       // Set targetSurface to nullptr as it is handled manually in the actor
-      navigator.resetState(
-          state.navigation, state.geoContext, stepper.position(state.stepping),
-          state.options.direction * stepper.direction(state.stepping), &surface,
-          nullptr);
+      state.navigation = navigator.makeState(&surface, nullptr);
+      navigator.initialize(state, stepper);
 
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
                                   logger());
@@ -1357,7 +1358,7 @@ class CombinatorialKalmanFilter {
   template <typename source_link_accessor_t, typename parameters_t>
   class Aborter {
    public:
-    /// Broadcast the result_type
+    /// Broadcast the action type
     using action_type = Actor<source_link_accessor_t, parameters_t>;
 
     template <typename propagator_state_t, typename stepper_t,
@@ -1458,23 +1459,17 @@ class CombinatorialKalmanFilter {
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
     combKalmanActor.m_extensions = tfOptions.extensions;
 
-    // Run the CombinatorialKalmanFilter.
-    auto stateBuffer = std::make_shared<traj_t>();
+    auto propState =
+        m_propagator.template makeState(initialParameters, propOptions);
 
-    typename propagator_t::template action_list_t_result_t<
-        CurvilinearTrackParameters, Actors>
-        inputResult;
-
-    auto& r =
-        inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>();
-
+    auto& r = propState.template get<CombinatorialKalmanFilterResult<traj_t>>();
     r.fittedStates = &trackContainer.trackStateContainer();
-    r.stateBuffer = stateBuffer;
-    r.stateBuffer->clear();
+    r.stateBuffer = std::make_shared<traj_t>();
 
-    auto result = m_propagator.template propagate<
-        start_parameters_t, decltype(propOptions), PathLimitReached>(
-        initialParameters, propOptions, false, std::move(inputResult));
+    auto propagationResult = m_propagator.propagate(propState);
+
+    auto result = m_propagator.makeResult(
+        std::move(propState), propagationResult, propOptions, false);
 
     if (!result.ok()) {
       ACTS_ERROR("Propagation failed: " << result.error() << " "
