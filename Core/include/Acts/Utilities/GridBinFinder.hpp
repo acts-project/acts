@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
@@ -46,11 +46,11 @@ class GridBinFinder {
   /// space points in the bin with the provided indices to create seeds.
   ///
   /// @tparam stored_t The type of elements stored in the Grid
-  /// @tpatam Axes ... The type of the axes of the grid
+  /// @tparam Axes ... The type of the axes of the grid
   ///
   /// @param [in] locPosition The N-dimentional local position in the grid
   /// @param [in] grid The grid
-  /// @output The list of neighbouring bins
+  /// @return The list of neighbouring bins
   ///
   /// @pre The provided local position must be a valid local bins configuration in the grid
   template <typename stored_t, class... Axes>
@@ -88,7 +88,7 @@ class GridBinFinder {
   /// This function is called only in debug mode
   ///
   /// @tparam stored_t The type of elements stored in the Grid
-  /// @tpatam Axes ... The type of the axes of the grid
+  /// @tparam Axes ... The type of the axes of the grid
   ///
   /// @param [in] grid The Grid
   /// @return If the GridBinFinder is compatible with the grid
