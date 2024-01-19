@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
         roots.volumes.at(1)->transform(tContext).translation()[bVal], 20);
 
     for (auto& portal : portals) {
-      if (portal.second->attachedDetectorVolumes().at(0).size() == 0) {
+      if (portal.second->attachedDetectorVolumes().at(0).empty()) {
         BOOST_CHECK_EQUAL(portal.second->attachedDetectorVolumes().at(1).size(),
                           2u);
       } else {

@@ -50,7 +50,7 @@ class CuboidalContainerBuilder : public IDetectorComponentBuilder {
     /// The configured volume builders
     std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
     /// Binning prescription of attachment
-    BinningValue binning;
+    BinningValue binning{};
     /// The root volume finder
     std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
         nullptr;
