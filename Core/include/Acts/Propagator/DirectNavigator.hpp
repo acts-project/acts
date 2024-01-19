@@ -50,6 +50,7 @@ class DirectNavigator {
     struct this_result {
       bool initialized = false;
     };
+
     using result_type = this_result;
 
     /// Defaulting the constructor
