@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(closed_axis) {
 }
 
 BOOST_AUTO_TEST_CASE(neighborhood) {
-  using bins_t = std::vector<size_t>;
+  using bins_t = std::vector<std::size_t>;
   Axis<AxisType::Equidistant, AxisBoundaryType::Open> a1(0.0, 1.0, 10u);
 
   BOOST_CHECK(a1.neighborHoodIndices(0, 1).collect() == bins_t({0, 1}));

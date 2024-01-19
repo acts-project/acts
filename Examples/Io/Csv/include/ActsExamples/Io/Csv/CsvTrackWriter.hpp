@@ -56,8 +56,8 @@ class CsvTrackWriter : public WriterT<ConstTrackContainer> {
     std::string fileName = "CKFtracks.csv";  ///< name of the output files
     std::string
         inputMeasurementParticlesMap;  ///< Input hit-particles map collection
-    size_t outputPrecision = 6;        ///< floating point precision
-    size_t nMeasurementsMin = 7;       ///< Min number of measurements
+    std::size_t outputPrecision = 6;   ///< floating point precision
+    std::size_t nMeasurementsMin = 7;  ///< Min number of measurements
     bool onlyTruthMatched = false;     ///< Only write truth matched tracks
     double truthMatchProbMin = 0.5;  ///< Probability threshold for fake tracks
     double ptMin = 1_GeV;            ///< Min pt of tracks
@@ -88,9 +88,10 @@ class CsvTrackWriter : public WriterT<ConstTrackContainer> {
   /// @brief Struct for brief trajectory summary info
   ///
   struct TrackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
-    size_t trackId = 0;
+    std::size_t trackId = 0;
+    unsigned int seedID = 0;
     ActsFatras::Barcode particleId;
-    size_t nMajorityHits = 0;
+    std::size_t nMajorityHits = 0;
     std::string trackType;
     double truthMatchProb = 0;
     std::optional<TrackParameters> fittedParameters;

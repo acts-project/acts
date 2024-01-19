@@ -60,10 +60,10 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
 
   // print hits selected by index
   if (0 < m_cfg.selectIndexLength) {
-    size_t ihit = m_cfg.selectIndexStart;
+    std::size_t ihit = m_cfg.selectIndexStart;
     // Saturated addition that does not overflow and exceed SIZE_MAX.
     // From http://locklessinc.com/articles/sat_arithmetic/
-    size_t nend = ihit + m_cfg.selectIndexLength;
+    std::size_t nend = ihit + m_cfg.selectIndexLength;
     nend |= -static_cast<int>(nend < ihit);
     // restrict to available hits
     nend = std::min(clusters.size(), nend);
@@ -71,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
     if (nend <= ihit) {
       ACTS_WARNING("event "
                    << ctx.eventNumber << " collection '" << m_cfg.inputClusters
-                   << " hit index selection is outside the available range");
+                   << "' hit index selection is outside the available range");
     } else {
       ACTS_INFO("event " << ctx.eventNumber << " collection '"
                          << m_cfg.inputClusters << "' contains "

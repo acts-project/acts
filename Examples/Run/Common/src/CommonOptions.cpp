@@ -35,7 +35,7 @@ ActsExamples::Options::makeDefaultOptions(const std::string& caption) {
 
   opt.add_options()("help,h", "Produce help message");
   opt.add_options()(
-      "loglevel,l", value<size_t>()->default_value(2),
+      "loglevel,l", value<std::size_t>()->default_value(2),
       "The output log level. Please set the wished number (0 = VERBOSE, 1 = "
       "DEBUG, 2 = INFO, 3 = WARNING, 4 = ERROR, 5 = FATAL).");
   opt.add_options()(
@@ -48,10 +48,10 @@ ActsExamples::Options::makeDefaultOptions(const std::string& caption) {
 void ActsExamples::Options::addSequencerOptions(
     boost::program_options::options_description& opt) {
   // sequencer options
-  opt.add_options()("events,n", value<size_t>(),
+  opt.add_options()("events,n", value<std::size_t>(),
                     "The number of events to process. If not given, all "
                     "available events will be processed.")(
-      "skip", value<size_t>()->default_value(0),
+      "skip", value<std::size_t>()->default_value(0),
       "The number of events to skip")("jobs,j", value<int>()->default_value(-1),
                                       "Number of parallel jobs, negative for "
                                       "automatic.");
@@ -65,11 +65,12 @@ void ActsExamples::Options::addRandomNumbersOptions(
 
 void ActsExamples::Options::addGeometryOptions(
     boost::program_options::options_description& opt) {
-  opt.add_options()("geo-surface-loglevel", value<size_t>()->default_value(3),
+  opt.add_options()("geo-surface-loglevel",
+                    value<std::size_t>()->default_value(3),
                     "The outoput log level for the surface building.")(
-      "geo-layer-loglevel", value<size_t>()->default_value(3),
+      "geo-layer-loglevel", value<std::size_t>()->default_value(3),
       "The output log level for the layer building.")(
-      "geo-volume-loglevel", value<size_t>()->default_value(3),
+      "geo-volume-loglevel", value<std::size_t>()->default_value(3),
       "The output log level "
       "for the volume "
       "building.");
@@ -200,15 +201,15 @@ boost::program_options::variables_map ActsExamples::Options::parse(
 
 Acts::Logging::Level ActsExamples::Options::readLogLevel(
     const boost::program_options::variables_map& vm) {
-  return Acts::Logging::Level(vm["loglevel"].as<size_t>());
+  return Acts::Logging::Level(vm["loglevel"].as<std::size_t>());
 }
 
 ActsExamples::Sequencer::Config ActsExamples::Options::readSequencerConfig(
     const boost::program_options::variables_map& vm) {
   Sequencer::Config cfg;
-  cfg.skip = vm["skip"].as<size_t>();
+  cfg.skip = vm["skip"].as<std::size_t>();
   if (not vm["events"].empty()) {
-    cfg.events = vm["events"].as<size_t>();
+    cfg.events = vm["events"].as<std::size_t>();
   }
   cfg.logLevel = readLogLevel(vm);
   cfg.numThreads = vm["jobs"].as<int>();

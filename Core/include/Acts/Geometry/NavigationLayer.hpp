@@ -26,7 +26,6 @@ namespace Acts {
 /// Class to be used for gaps in Volumes as a navigational link.
 /// Navigation Layers have a surface representation, but should usually never be
 /// propagated to.
-
 class NavigationLayer : public Layer {
  public:
   ///  Factory Constructor - the surface representation is given by pointer

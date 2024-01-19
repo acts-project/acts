@@ -30,10 +30,10 @@ namespace {
 /// @param lBin the local bin to printed
 ///
 /// @return a string for screen output
-template <typename local_bin_t, size_t DIM>
+template <typename local_bin_t, std::size_t DIM>
 std::string localToString(const local_bin_t& lBin) {
   std::string lbString = "[";
-  for (size_t ib = 0; ib < DIM; ++ib) {
+  for (std::size_t ib = 0; ib < DIM; ++ib) {
     if (ib > 0u) {
       lbString += std::string(", ");
     }
@@ -47,8 +47,8 @@ std::string localToString(const local_bin_t& lBin) {
 BOOST_AUTO_TEST_SUITE(ActSvg)
 
 BOOST_AUTO_TEST_CASE(BoundGridXY) {
-  using GlobalBin = size_t;
-  using LocalBin = std::array<size_t, 2u>;
+  using GlobalBin = std::size_t;
+  using LocalBin = std::array<std::size_t, 2u>;
 
   // x-y axis and grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisX(-200., 200, 4);
@@ -124,8 +124,8 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
 }
 
 BOOST_AUTO_TEST_CASE(OpenGridXY) {
-  using GlobalBin = size_t;
-  using LocalBin = std::array<size_t, 2u>;
+  using GlobalBin = std::size_t;
+  using LocalBin = std::array<std::size_t, 2u>;
 
   // x-y axis and grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Open> axisX(-200., 200, 4);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   auto edgesY = axisY.getBinEdges();
 
   std::vector<actsvg::svg::object> targets = {};
-  size_t ig = 0;
+  std::size_t ig = 0;
   for (auto [ix, x] : Acts::enumerate(edgesX)) {
     if (ix > 0u) {
       ActsScalar xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
@@ -201,8 +201,8 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
 }
 
 BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
-  using GlobalBin = size_t;
-  using LocalBin = std::array<size_t, 2u>;
+  using GlobalBin = std::size_t;
+  using LocalBin = std::array<std::size_t, 2u>;
 
   // z-phi Axes & Grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisZ(-200., 200., 3);
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   auto edgesPhi = axisPhi.getBinEdges();
 
   std::vector<actsvg::svg::object> targets = {};
-  size_t ig = 0;
+  std::size_t ig = 0;
   for (auto [iz, z] : Acts::enumerate(edgesZ)) {
     if (iz > 0u) {
       ActsScalar zp = 0.2 * edgesZ[iz] + 0.8 * edgesZ[iz - 1u];
@@ -280,8 +280,8 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 }
 
 BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
-  using GlobalBin = size_t;
-  using LocalBin = std::array<size_t, 2u>;
+  using GlobalBin = std::size_t;
+  using LocalBin = std::array<std::size_t, 2u>;
 
   // r-phi Axes & Grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisR(100., 400., 3);
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   auto edgesPhi = axisPhi.getBinEdges();
 
   std::vector<actsvg::svg::object> targets = {};
-  size_t ig = 0;
+  std::size_t ig = 0;
   for (auto [ir, r] : Acts::enumerate(edgesR)) {
     if (ir > 0u) {
       ActsScalar rp = 0.5 * (edgesR[ir] + edgesR[ir - 1u]);

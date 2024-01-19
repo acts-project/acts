@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -19,9 +18,6 @@
 
 #include <memory>
 #include <vector>
-
-// A test context
-Acts::GeometryContext tContext;
 
 namespace Acts {
 namespace Experimental {
@@ -53,8 +49,8 @@ BOOST_AUTO_TEST_CASE(NavigationState) {
       Acts::Surface::makeShared<Acts::PlaneSurface>(dTransform, rectangle);
 
   // Create a few fake portals out of it
-  auto portalA = Acts::Experimental::Portal::makeShared(pSurfaceA);
-  auto portalB = Acts::Experimental::Portal::makeShared(pSurfaceB);
+  auto portalA = std::make_shared<Acts::Experimental::Portal>(pSurfaceA);
+  auto portalB = std::make_shared<Acts::Experimental::Portal>(pSurfaceB);
 
   std::vector<const Acts::Surface*> surfaces = {surfaceA.get(), surfaceB.get(),
                                                 surfaceC.get()};

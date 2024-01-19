@@ -80,7 +80,7 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
     std::string writerName = "PointWriter";  ///< the name of the writer
     std::string inputCollection;             ///< which collection to write
     std::string outputDir;                   ///< where to place output files
-    size_t outputPrecision = 6;              ///< floating point precision
+    std::size_t outputPrecision = 6;         ///< floating point precision
 
     Acts::ActsScalar spSize = 10.;  //!< size of the space point to be drawn
     Acts::Svg::Style spStyle =

@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance) {
   BoundaryCheck bcheck(true);
 
-  for (size_t i = 0; i < rectTestPoints.size(); i++) {
+  for (std::size_t i = 0; i < rectTestPoints.size(); i++) {
     const Vector2& testPoint = rectTestPoints.at(i);
     double refDistance = rectDistances.at(i);
     Vector2 ll(rectDimensions.xmin, rectDimensions.ymin);
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance) {
     CHECK_CLOSE_REL(refDistance, distance, 1e-6);
   }
 
-  for (size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
+  for (std::size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
     const Vector2& testPoint = rectShiftedTestPoints.at(i);
     double refDistance = rectShiftedDistances.at(i);
     Vector2 ll(rectShiftedDimensions.xmin, rectShiftedDimensions.ymin);
@@ -88,14 +88,14 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckPolyDistance) {
 
   BoundaryCheck bcheck(true);
 
-  for (size_t i = 0; i < rectTestPoints.size(); i++) {
+  for (std::size_t i = 0; i < rectTestPoints.size(); i++) {
     const Vector2& testPoint = rectTestPoints.at(i);
     double refDistance = rectDistances.at(i);
     double distance = bcheck.distance(testPoint, rectVertices);
     CHECK_CLOSE_REL(refDistance, distance, 1e-6);
   }
 
-  for (size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
+  for (std::size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
     const Vector2& testPoint = rectShiftedTestPoints.at(i);
     double refDistance = rectShiftedDistances.at(i);
     double distance = bcheck.distance(testPoint, rectShiftedVertices);

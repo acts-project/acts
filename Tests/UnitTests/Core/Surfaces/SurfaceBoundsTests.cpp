@@ -25,7 +25,7 @@ namespace Acts {
 class SurfaceBoundsStub : public SurfaceBounds {
  public:
   /// Implement ctor and pure virtual methods of SurfaceBounds
-  explicit SurfaceBoundsStub(size_t nValues = 0) : m_values(nValues, 0) {
+  explicit SurfaceBoundsStub(std::size_t nValues = 0) : m_values(nValues, 0) {
     std::iota(m_values.begin(), m_values.end(), 0);
   }
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant SurfaceBounds object
 BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
   SurfaceBoundsStub u;
-  SurfaceBoundsStub s(1);  // would act as size_t cast to SurfaceBounds
+  SurfaceBoundsStub s(1);  // would act as std::size_t cast to SurfaceBounds
   SurfaceBoundsStub t(s);
   SurfaceBoundsStub v(u);
 }

@@ -33,7 +33,7 @@ using Frustum3 = Frustum<float, 3, 4>;
 using Ray3 = Ray<float, 3>;
 
 int main(int /*argc*/, char** /*argv[]*/) {
-  size_t n = 1000;
+  std::size_t n = 1000;
 
   std::mt19937 rng(42);
   std::uniform_real_distribution<float> dir(0, 1);
@@ -92,7 +92,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     double tmin = -INFINITY, tmax = INFINITY;
 
-    for (size_t i = 0; i < 3; i++) {
+    for (std::size_t i = 0; i < 3; i++) {
       if (d[i] == 0.0) {
         continue;
       }
@@ -157,7 +157,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     const vertex_array_type& id = ray.idir();
     double tmin = -INFINITY, tmax = INFINITY;
 
-    for (size_t i = 0; i < 3; i++) {
+    for (std::size_t i = 0; i < 3; i++) {
       double t1 = (box.min()[i] - origin[i]) * id[i];
       double t2 = (box.max()[i] - origin[i]) * id[i];
       tmin = std::max(tmin, std::min(t1, t2));
@@ -227,8 +227,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
   frustumVariants["Manual constexpr loop unroll, early ret."] =
       [](const Box& box, const Frustum3& fr) {
-        constexpr size_t sides = 4;  // yes this is pointless, I just want to
-                                     // kind of match the other impl
+        constexpr std::size_t sides = 4;  // yes this is pointless, I just want
+                                          // to kind of match the other impl
 
         const auto& normals = fr.normals();
         const vertex_array_type fr_vmin = box.min() - fr.origin();
@@ -271,7 +271,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
         }
 
         if constexpr (sides > 4) {
-          for (size_t i = 5; i <= fr.sides; i++) {
+          for (std::size_t i = 5; i <= fr.sides; i++) {
             const VertexType& normal = normals[i];
 
             p_vtx = calc(normal);
@@ -292,7 +292,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     VertexType p_vtx;
     bool result = true;
-    for (size_t i = 0; i < fr.sides + 1; i++) {
+    for (std::size_t i = 0; i < fr.sides + 1; i++) {
       const VertexType& normal = normals[i];
 
       p_vtx = (normal.array() < 0).template cast<value_type>() * fr_vmin +
@@ -305,8 +305,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
   frustumVariants["Manual constexpr unroll, early ret."] =
       [](const Box& box, const Frustum3& fr) {
-        constexpr size_t sides = 4;  // yes this is pointless, I just want to
-                                     // kind of match the other impl
+        constexpr std::size_t sides = 4;  // yes this is pointless, I just want
+                                          // to kind of match the other impl
 
         const auto& normals = fr.normals();
         const vertex_array_type fr_vmin = box.min() - fr.origin();
@@ -340,7 +340,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
         }
 
         if constexpr (sides > 4) {
-          for (size_t i = 5; i <= fr.sides; i++) {
+          for (std::size_t i = 5; i <= fr.sides; i++) {
             const VertexType& normal = normals[i];
 
             p_vtx = calc(normal);
@@ -389,7 +389,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   }
   std::cout << "Seems ok" << std::endl;
 
-  size_t iters_per_run = 1000;
+  std::size_t iters_per_run = 1000;
 
   std::vector<std::pair<std::string, Frustum3>> testFrusts = {
       {"away", Frustum3{{0, 0, -10}, {0, 0, -1}, M_PI / 4.}},

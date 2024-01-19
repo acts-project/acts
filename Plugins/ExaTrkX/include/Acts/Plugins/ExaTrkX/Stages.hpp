@@ -29,7 +29,7 @@ class GraphConstructionBase {
   ///
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
-      std::vector<float> &inputValues, size_t numNodes,
+      std::vector<float> &inputValues, std::size_t numNodes,
       int deviceHint = -1) = 0;
 
   virtual ~GraphConstructionBase() = default;

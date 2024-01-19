@@ -51,7 +51,7 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
   // Setup ROOT File
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath + "'");
   }
 
   m_outputFile->cd();
@@ -62,7 +62,7 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
       dTrees;
   if (!m_cfg.boundIndices.empty()) {
     ACTS_DEBUG("Bound indices are declared, preparing trees.");
-    for (size_t ikv = 0; ikv < m_cfg.boundIndices.size(); ++ikv) {
+    for (std::size_t ikv = 0; ikv < m_cfg.boundIndices.size(); ++ikv) {
       auto geoID = m_cfg.boundIndices.idAt(ikv);
       auto bIndices = m_cfg.boundIndices.valueAt(ikv);
       auto dTree = std::make_unique<DigitizationTree>(geoID);

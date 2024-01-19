@@ -42,7 +42,7 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   if (m_outputFile == nullptr) {
     m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
     if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
+      throw std::ios_base::failure("Could not open '" + m_cfg.filePath + "'");
     }
   }
   m_outputFile->cd();

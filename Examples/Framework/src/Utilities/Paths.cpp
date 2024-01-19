@@ -46,7 +46,7 @@ std::string ActsExamples::joinPaths(const std::string& dir,
 
 std::string ActsExamples::perEventFilepath(const std::string& dir,
                                            const std::string& name,
-                                           size_t event) {
+                                           std::size_t event) {
   char prefix[64];
 
   snprintf(prefix, sizeof(prefix), "event%09zu-", event);
@@ -58,7 +58,7 @@ std::string ActsExamples::perEventFilepath(const std::string& dir,
   }
 }
 
-std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
+std::pair<std::size_t, std::size_t> ActsExamples::determineEventFilesRange(
     const std::string& dir, const std::string& name) {
   using std::filesystem::current_path;
   using std::filesystem::directory_iterator;
@@ -77,8 +77,8 @@ std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
   }
 
   // invalid default range that allows simple restriction later on
-  size_t eventMin = SIZE_MAX;
-  size_t eventMax = 0;
+  std::size_t eventMin = SIZE_MAX;
+  std::size_t eventMax = 0;
 
   // filter matching event files from the directory listing
   std::string filename;
@@ -95,7 +95,7 @@ std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
       ACTS_VERBOSE("Matching file " << filename);
 
       // first sub_match is the whole string, second should be the event number
-      size_t event = 0;
+      std::size_t event = 0;
       auto ret = std::from_chars(match[1].first, match[1].second, event);
       if (ret.ptr == match[1].first) {
         throw std::runtime_error(

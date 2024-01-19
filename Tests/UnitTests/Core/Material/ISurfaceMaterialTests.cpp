@@ -34,8 +34,8 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
     return m_fullMaterial;
   }
 
-  const MaterialSlab& materialSlab(size_t /*bin0*/,
-                                   size_t /*bin1*/) const override {
+  const MaterialSlab& materialSlab(std::size_t /*bin0*/,
+                                   std::size_t /*bin1*/) const override {
     return m_fullMaterial;
   }
 

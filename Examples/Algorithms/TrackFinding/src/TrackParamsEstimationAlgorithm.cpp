@@ -58,7 +58,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 
   // Set up the track parameters covariance (the same for all tracks)
-  for (size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
     m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
                          m_cfg.initialSigmas[i];
   }
@@ -95,7 +95,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   IndexSourceLink::SurfaceAccessor surfaceAccessor{*m_cfg.trackingGeometry};
 
   // Loop over all found seeds to estimate track parameters
-  for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
+  for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
@@ -129,16 +129,23 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
                                                               << " failed.");
       continue;
-    } else {
-      const auto& params = optParams.value();
-      trackParameters.emplace_back(surface->getSharedPtr(), params,
-                                   m_covariance, m_cfg.particleHypothesis);
-      if (outputSeeds) {
-        outputSeeds->push_back(seed);
-      }
-      if (outputTracks && inputTracks != nullptr) {
-        outputTracks->push_back(inputTracks->at(iseed));
-      }
+    }
+
+    const auto& params = optParams.value();
+
+    Acts::BoundSquareMatrix cov = m_covariance;
+    if (!bottomSP->t().has_value()) {
+      // Inflate the time uncertainty if no time measurement is available
+      cov(Acts::eBoundTime, Acts::eBoundTime) *= m_cfg.noTimeVarInflation;
+    }
+
+    trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
+                                 m_cfg.particleHypothesis);
+    if (outputSeeds) {
+      outputSeeds->push_back(seed);
+    }
+    if (outputTracks && inputTracks != nullptr) {
+      outputTracks->push_back(inputTracks->at(iseed));
     }
   }
 

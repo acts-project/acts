@@ -87,7 +87,7 @@ class MultivariateNormalDistribution {
 // Sample data from a multi-component multivariate distribution
 template <int D>
 auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
-                            size_t n_samples, std::mt19937 &gen) {
+                            std::size_t n_samples, std::mt19937 &gen) {
   using MultiNormal = MultivariateNormalDistribution<double, D>;
 
   std::vector<MultiNormal> dists;

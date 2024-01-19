@@ -126,7 +126,7 @@ const Acts::LayerVector LayerBuilderT<detector_element_t>::centralLayers(
   Acts::LayerVector cLayers;
   cLayers.reserve(m_cfg.centralProtoLayers.size());
   // the layer counter
-  size_t icl = 0;
+  std::size_t icl = 0;
   for (auto& cpl : m_cfg.centralProtoLayers) {
     // create the layer actually
     Acts::MutableLayerPtr cLayer = m_cfg.layerCreator->cylinderLayer(
@@ -198,7 +198,7 @@ LayerBuilderT<detector_element_t>::constructEndcapLayers(
   eLayers.reserve(protoLayers.size());
 
   // the layer counter
-  size_t ipnl = 0;
+  std::size_t ipnl = 0;
   // loop over the proto layers and create the actual layers
   for (auto& ple : protoLayers) {
     /// the layer is created

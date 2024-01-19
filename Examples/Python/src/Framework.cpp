@@ -119,7 +119,7 @@ void addFramework(Context& ctx) {
   py::class_<Acts::GeometryContext>(m, "GeometryContext").def(py::init<>());
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
-      .def(py::init<size_t, size_t, WhiteBoard&>())
+      .def(py::init<std::size_t, std::size_t, WhiteBoard&>())
       .def_readonly("algorithmNumber", &AlgorithmContext::algorithmNumber)
       .def_readonly("eventNumber", &AlgorithmContext::eventNumber)
       .def_property_readonly("eventStore",
@@ -198,7 +198,7 @@ void addFramework(Context& ctx) {
       py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
           .def(py::init<>())
           .def(py::init<std::string, std::pair<unsigned int, unsigned int>,
-                        Acts::FpeType, size_t>())
+                        Acts::FpeType, std::size_t>())
           .def("__repr__", [](const Sequencer::FpeMask& self) {
             std::stringstream ss;
             ss << self;

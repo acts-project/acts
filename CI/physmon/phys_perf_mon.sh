@@ -217,38 +217,21 @@ function simulation() {
     config="CI/physmon/simulation_config.yml"
 
     Examples/Scripts/generic_plotter.py \
-        $outdir/particles_initial_${suffix}.root \
+        $outdir/particles_${suffix}.root \
         particles \
-        $outdir/particles_initial_${suffix}_hist.root \
+        $outdir/particles_${suffix}_hist.root \
         --silent \
-        --config CI/physmon/particles_initial_config.yml
+        --config $config
     ec=$(($ec | $?))
 
     # remove ntuple file because it's large
-    rm $outdir/particles_initial_${suffix}.root
+    rm $outdir/particles_${suffix}.root
 
     run_histcmp \
-        $outdir/particles_initial_${suffix}_hist.root \
-        $refdir/particles_initial_${suffix}_hist.root \
-        "Particles inital ${suffix}" \
-        particles_initial_${suffix}
-
-    Examples/Scripts/generic_plotter.py \
-        $outdir/particles_final_${suffix}.root \
-        particles \
-        $outdir/particles_final_${suffix}_hist.root \
-        --silent \
-        --config CI/physmon/particles_final_config.yml
-    ec=$(($ec | $?))
-
-    # remove ntuple file because it's large
-    rm $outdir/particles_final_${suffix}.root
-
-    run_histcmp \
-        $outdir/particles_final_${suffix}_hist.root \
-        $refdir/particles_final_${suffix}_hist.root \
-        "Particles final ${suffix}" \
-        particles_final_${suffix}
+        $outdir/particles_${suffix}_hist.root \
+        $refdir/particles_${suffix}_hist.root \
+        "Particles ${suffix}" \
+        particles_${suffix}
 }
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
@@ -294,7 +277,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         vertexing \
         $outdir/performance_amvf_ttbar_hist.root \
         --silent \
-        --config CI/physmon/vertexing_config.yml
+        --config CI/physmon/vertexing_ttbar_config.yml
     ec=$(($ec | $?))
 
     Examples/Scripts/generic_plotter.py \
@@ -327,7 +310,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         vertexing \
         $outdir/performance_amvf_gridseeder_ttbar_hist.root \
         --silent \
-        --config CI/physmon/vertexing_config.yml
+        --config CI/physmon/vertexing_ttbar_config.yml
     ec=$(($ec | $?))
 
     # remove ntuple file because it's large

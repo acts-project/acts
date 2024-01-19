@@ -46,7 +46,7 @@ ActsExamples::CsvTrackParameterReader::CsvTrackParameterReader::name() const {
   return "CsvTrackParameterReader";
 }
 
-std::pair<size_t, size_t>
+std::pair<std::size_t, std::size_t>
 ActsExamples::CsvTrackParameterReader::availableEvents() const {
   return m_eventsRange;
 }

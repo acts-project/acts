@@ -42,21 +42,22 @@ using RandomEngine = std::mt19937;
 
 void accessStepWise(const Acts::MagneticFieldProvider& bField,
                     const Acts::MagneticFieldContext& bFieldContext,
-                    size_t events, size_t theta_steps, double theta_0,
-                    double theta_step, size_t phi_steps, double phi_0,
-                    double phi_step, size_t access_steps, double access_step) {
+                    std::size_t events, std::size_t theta_steps, double theta_0,
+                    double theta_step, std::size_t phi_steps, double phi_0,
+                    double phi_step, std::size_t access_steps,
+                    double access_step) {
   std::cout << "[>>>] Start: step-wise access pattern ... " << std::endl;
   // initialize the field cache
   auto bCache = bField.makeCache(bFieldContext);
   // boost display
-  size_t totalSteps = events * theta_steps * phi_steps * access_steps;
+  std::size_t totalSteps = events * theta_steps * phi_steps * access_steps;
   progress_display show_progress(totalSteps);
   // the event loop
   // loop over the events - @todo move to parallel for
-  for (size_t ievt = 0; ievt < events; ++ievt) {
-    for (size_t itheta = 0; itheta < theta_steps; ++itheta) {
+  for (std::size_t ievt = 0; ievt < events; ++ievt) {
+    for (std::size_t itheta = 0; itheta < theta_steps; ++itheta) {
       double theta = theta_0 + itheta * theta_step;
-      for (size_t iphi = 0; iphi < phi_steps; ++iphi) {
+      for (std::size_t iphi = 0; iphi < phi_steps; ++iphi) {
         double phi = phi_0 + iphi * phi_step;
         // make a direction
         Acts::Vector3 dir(cos(phi) * sin(theta), sin(phi) * sin(theta),
@@ -64,7 +65,7 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
         // check for the current step
         double currentStep = 0.;
         // now step through the magnetic field
-        for (size_t istep = 0; istep < access_steps; ++istep) {
+        for (std::size_t istep = 0; istep < access_steps; ++istep) {
           Acts::Vector3 position = currentStep * dir;
           // access the field with the cell
           auto field_from_cache = bField.getField(position, bCache);
@@ -82,7 +83,7 @@ void accessStepWise(const Acts::MagneticFieldProvider& bField,
 
 void accessRandom(const Acts::MagneticFieldProvider& bField,
                   const Acts::MagneticFieldContext& bFieldContext,
-                  size_t totalSteps, double radius) {
+                  std::size_t totalSteps, double radius) {
   std::cout << "[>>>] Start: random access pattern ... " << std::endl;
   RandomEngine rng;
   UniformDist xDist(-radius, radius);
@@ -95,7 +96,7 @@ void accessRandom(const Acts::MagneticFieldProvider& bField,
 
   // the event loop
   // loop over the events - @todo move to parallel for
-  for (size_t istep = 0; istep < totalSteps; ++istep) {
+  for (std::size_t istep = 0; istep < totalSteps; ++istep) {
     Acts::Vector3 position(xDist(rng), yDist(rng), zDist(rng));
     // access the field with the cell
     auto field_from_cache = bField.getField(position, bCache);
@@ -123,11 +124,11 @@ int main(int argc, char* argv[]) {
       "bf-theta-range",
       po::value<ActsExamples::Options::Reals<2>>()->default_value({{0., M_PI}}),
       "range in which the eta parameter is generated.")(
-      "bf-phisteps", po::value<size_t>()->default_value(1000),
+      "bf-phisteps", po::value<std::size_t>()->default_value(1000),
       "number of steps for the phi parameter.")(
-      "bf-thetasteps", po::value<size_t>()->default_value(100),
+      "bf-thetasteps", po::value<std::size_t>()->default_value(100),
       "number of steps for the eta parameter.")(
-      "bf-accesssteps", po::value<size_t>()->default_value(100),
+      "bf-accesssteps", po::value<std::size_t>()->default_value(100),
       "number of steps for magnetic field access.")(
       "bf-tracklength", po::value<double>()->default_value(100.),
       "track length in [mm] magnetic field access.");
@@ -150,10 +151,10 @@ int main(int argc, char* argv[]) {
   auto phir = vm["bf-phi-range"].as<ActsExamples::Options::Reals<2>>();
   auto thetar = vm["bf-theta-range"].as<ActsExamples::Options::Reals<2>>();
   // Get the granularity
-  size_t phi_steps = vm["bf-phisteps"].as<size_t>();
-  size_t theta_steps = vm["bf-thetasteps"].as<size_t>();
+  std::size_t phi_steps = vm["bf-phisteps"].as<std::size_t>();
+  std::size_t theta_steps = vm["bf-thetasteps"].as<std::size_t>();
   // The defaults
-  size_t access_steps = vm["bf-accesssteps"].as<size_t>();
+  std::size_t access_steps = vm["bf-accesssteps"].as<std::size_t>();
   double track_length =
       vm["bf-tracklength"].as<double>() * Acts::UnitConstants::mm;
   // sort the ranges - and prepare the access grid

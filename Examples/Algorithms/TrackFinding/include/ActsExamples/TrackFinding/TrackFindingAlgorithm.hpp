@@ -138,8 +138,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 
-  mutable std::atomic<size_t> m_nTotalSeeds{0};
-  mutable std::atomic<size_t> m_nFailedSeeds{0};
+  mutable std::atomic<std::size_t> m_nTotalSeeds{0};
+  mutable std::atomic<std::size_t> m_nFailedSeeds{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {
@@ -158,10 +158,10 @@ void TrackFindingAlgorithm::computeSharedHits(
   // Compute nSharedhits and Update ckf results
   // hit index -> list of multi traj indexes [traj, meas]
 
-  std::vector<size_t> firstTrackOnTheHit(sourceLinks.size(),
-                                         std::numeric_limits<size_t>::max());
-  std::vector<size_t> firstStateOnTheHit(sourceLinks.size(),
-                                         std::numeric_limits<size_t>::max());
+  std::vector<std::size_t> firstTrackOnTheHit(
+      sourceLinks.size(), std::numeric_limits<std::size_t>::max());
+  std::vector<std::size_t> firstStateOnTheHit(
+      sourceLinks.size(), std::numeric_limits<std::size_t>::max());
 
   for (auto track : tracks) {
     for (auto state : track.trackStatesReversed()) {
@@ -169,13 +169,13 @@ void TrackFindingAlgorithm::computeSharedHits(
         continue;
       }
 
-      size_t hitIndex = state.getUncalibratedSourceLink()
-                            .template get<IndexSourceLink>()
-                            .index();
+      std::size_t hitIndex = state.getUncalibratedSourceLink()
+                                 .template get<IndexSourceLink>()
+                                 .index();
 
       // Check if hit not already used
       if (firstTrackOnTheHit.at(hitIndex) ==
-          std::numeric_limits<size_t>::max()) {
+          std::numeric_limits<std::size_t>::max()) {
         firstTrackOnTheHit.at(hitIndex) = track.index();
         firstStateOnTheHit.at(hitIndex) = state.index();
         continue;

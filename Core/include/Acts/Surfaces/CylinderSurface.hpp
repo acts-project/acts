@@ -18,7 +18,9 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -284,5 +286,7 @@ class CylinderSurface : public RegularSurface {
       const Transform3& transform, const Vector3& position,
       const Vector3& direction) const;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, CylinderSurface);
 
 }  // namespace Acts

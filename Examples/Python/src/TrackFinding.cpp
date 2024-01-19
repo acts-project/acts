@@ -12,16 +12,16 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Seeding/SeedFinderFTFConfig.hpp"
+#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -127,7 +127,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinsCustomLooping);
-    ACTS_PYTHON_MEMBER(skipZMiddleBinSearch);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
@@ -197,14 +196,14 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SeedFinderFTFConfig<SimSpacePoint>;
-    auto c = py::class_<Config>(m, "SeedFinderFTFConfig").def(py::init<>());
+    using Config = Acts::SeedFinderGbtsConfig<SimSpacePoint>;
+    auto c = py::class_<Config>(m, "SeedFinderGbtsConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
     ACTS_PYTHON_MEMBER(sigmaScattering);
     ACTS_PYTHON_MEMBER(highland);
     ACTS_PYTHON_MEMBER(maxScatteringAngle2);
-    ACTS_PYTHON_MEMBER(fastrack_input_file);
+    ACTS_PYTHON_MEMBER(connector_input_file);
     ACTS_PYTHON_MEMBER(m_phiSliceWidth);
     ACTS_PYTHON_MEMBER(m_nMaxPhiSlice);
     ACTS_PYTHON_MEMBER(m_useClusterWidth);
@@ -273,10 +272,10 @@ void addTrackFinding(Context& ctx) {
                                 seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SeedingFTFAlgorithm, mex, "SeedingFTFAlgorithm",
+      ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
       inputSpacePoints, outputSeeds, seedFilterConfig, seedFinderConfig,
       seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks,
-      trackingGeometry, ACTS_FTF_Map, fill_module_csv);
+      trackingGeometry, ActsGbtsMap, fill_module_csv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
@@ -344,11 +343,11 @@ void addTrackFinding(Context& ctx) {
                                 outputTrackParameters);
 
   {
-    auto constructor = [](const std::vector<
-                           std::pair<GeometryIdentifier,
-                                     std::tuple<std::vector<double>,
-                                                std::vector<double>,
-                                                std::vector<size_t>>>>& input) {
+    auto constructor = [](const std::vector<std::pair<
+                              GeometryIdentifier,
+                              std::tuple<std::vector<double>,
+                                         std::vector<double>,
+                                         std::vector<std::size_t>>>>& input) {
       std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
           converted;
       converted.reserve(input.size());
@@ -362,7 +361,7 @@ void addTrackFinding(Context& ctx) {
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
         .def(py::init<std::vector<double>, std::vector<double>,
-                      std::vector<size_t>>())
+                      std::vector<std::size_t>>())
         .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
         .def_readwrite("chi2CutOff", &MeasurementSelectorCuts::chi2CutOff)
         .def_readwrite("numMeasurementsCutOff",

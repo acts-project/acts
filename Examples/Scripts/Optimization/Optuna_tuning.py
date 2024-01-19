@@ -43,7 +43,6 @@ srcDir = Path(__file__).resolve().parent
 
 
 def run_ckf(params, names, outDir):
-
     if len(params) != len(names):
         raise Exception("Length of Params must equal names")
 
@@ -164,7 +163,6 @@ class Objective:
 
 
 def main():
-
     k_dup = 5
     k_time = 5
 

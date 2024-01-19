@@ -427,7 +427,7 @@ struct GenericDenseEnvironmentExtension {
     if (state.stepping.covTransport) {
       // Calculate the change of the energy loss per path length and
       // inverse momentum
-      if (state.options.includeGgradient) {
+      if (state.options.includeGradient) {
         if (state.options.meanEnergyLoss) {
           dgdqopValue = deriveEnergyLossMeanQOverP(
               slab, absPdg, mass, static_cast<float>(qop[0]), absQ);

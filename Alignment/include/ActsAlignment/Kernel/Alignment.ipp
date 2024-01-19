@@ -17,7 +17,8 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const Acts::GeometryContext& gctx,
     const std::vector<source_link_t>& sourcelinks,
     const start_parameters_t& sParameters, const fit_options_t& fitOptions,
-    const std::unordered_map<const Acts::Surface*, size_t>& idxedAlignSurfaces,
+    const std::unordered_map<const Acts::Surface*, std::size_t>&
+        idxedAlignSurfaces,
     const ActsAlignment::AlignmentMask& alignMask) const {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -122,7 +123,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   // Get the inverse of chi2 second derivative matrix (we need this to
   // calculate the covariance of the alignment parameters)
   // @Todo: use more stable method for solving the inverse
-  size_t alignDof = alignResult.alignmentDof;
+  std::size_t alignDof = alignResult.alignmentDof;
   Acts::ActsDynamicMatrix sumChi2SecondDerivativeInverse =
       Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
   sumChi2SecondDerivativeInverse = sumChi2SecondDerivative.inverse();

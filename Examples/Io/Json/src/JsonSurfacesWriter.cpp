@@ -137,7 +137,7 @@ ProcessCode JsonSurfacesWriter::write(const AlgorithmContext& ctx) {
     using NamedConverter = Acts::GeometryHierarchyMapJsonConverter<std::string>;
 
     std::vector<std::pair<Acts::GeometryIdentifier, std::string>> namedEntries;
-    for (size_t is = 0; is < sContainer.size(); ++is) {
+    for (std::size_t is = 0; is < sContainer.size(); ++is) {
       Acts::GeometryIdentifier geometryId = sContainer.idAt(is);
       std::stringstream geoTypeName;
       geoTypeName << geometryId;

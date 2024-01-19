@@ -38,12 +38,7 @@ namespace Acts {
 class AssertionFailureException;
 }  // namespace Acts
 
-namespace tt = boost::test_tools;
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
 namespace Acts {
-
 namespace Test {
 
 // Create a test context

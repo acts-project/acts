@@ -46,10 +46,10 @@ ProcessCode PropagationAlgorithm::execute(
   propagationSteps.reserve(m_cfg.ntests);
 
   // Output (optional): the recorded material
-  std::unordered_map<size_t, Acts::RecordedMaterialTrack> recordedMaterial;
+  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack> recordedMaterial;
 
   // loop over number of particles
-  for (size_t it = 0; it < m_cfg.ntests; ++it) {
+  for (std::size_t it = 0; it < m_cfg.ntests; ++it) {
     /// get the d0 and z0
     double d0 = m_cfg.d0Sigma * gauss(rng);
     double z0 = m_cfg.z0Sigma * gauss(rng);
@@ -107,12 +107,12 @@ std::optional<Acts::BoundSquareMatrix> PropagationAlgorithm::generateCovariance(
     Acts::BoundSquareMatrix newCov(m_cfg.correlations);
     // Then we draw errors according to the error values
     Acts::BoundVector covs_smeared = m_cfg.covariances;
-    for (size_t k = 0; k < size_t(covs_smeared.size()); ++k) {
+    for (std::size_t k = 0; k < std::size_t(covs_smeared.size()); ++k) {
       covs_smeared[k] *= gauss(rnd);
     }
     // and apply a double loop
-    for (size_t i = 0; i < size_t(newCov.rows()); ++i) {
-      for (size_t j = 0; j < size_t(newCov.cols()); ++j) {
+    for (std::size_t i = 0; i < std::size_t(newCov.rows()); ++i) {
+      for (std::size_t j = 0; j < std::size_t(newCov.cols()); ++j) {
         (newCov)(i, j) *= covs_smeared[i];
         (newCov)(i, j) *= covs_smeared[j];
       }

@@ -75,7 +75,7 @@ void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
       "The length of the solenoid magnetic field in `mm`.");
   opt("bf-solenoid-radius", value<double>()->default_value(1200),
       "The radius of the solenoid magnetic field in `mm`.");
-  opt("bf-solenoid-ncoils", value<size_t>()->default_value(1194),
+  opt("bf-solenoid-ncoils", value<std::size_t>()->default_value(1194),
       "Number of coils for the solenoid magnetic field.");
   opt("bf-solenoid-map-rlim",
       value<Interval>()->value_name("MIN:MAX")->default_value({0, 1200}),
@@ -148,8 +148,8 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
     }
 
     if (type == "xyz") {
-      auto mapBins = [](std::array<size_t, 3> bins,
-                        std::array<size_t, 3> sizes) {
+      auto mapBins = [](std::array<std::size_t, 3> bins,
+                        std::array<std::size_t, 3> sizes) {
         return (bins[0] * (sizes[1] * sizes[2]) + bins[1] * sizes[2] + bins[2]);
       };
 
@@ -168,8 +168,8 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
       }
 
     } else if (type == "rz") {
-      auto mapBins = [](std::array<size_t, 2> bins,
-                        std::array<size_t, 2> sizes) {
+      auto mapBins = [](std::array<std::size_t, 2> bins,
+                        std::array<std::size_t, 2> sizes) {
         return (bins[1] * sizes[0] + bins[0]);
       };
 
@@ -201,7 +201,7 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
         vars["bf-solenoid-length"].as<double>() * Acts::UnitConstants::mm;
     solenoidConfig.radius =
         vars["bf-solenoid-radius"].as<double>() * Acts::UnitConstants::mm;
-    solenoidConfig.nCoils = vars["bf-solenoid-ncoils"].as<size_t>();
+    solenoidConfig.nCoils = vars["bf-solenoid-ncoils"].as<std::size_t>();
     solenoidConfig.bMagCenter =
         vars["bf-solenoid-mag-tesla"].as<double>() * Acts::UnitConstants::T;
     ACTS_INFO("Use solenoid magnetic field with magnitude "

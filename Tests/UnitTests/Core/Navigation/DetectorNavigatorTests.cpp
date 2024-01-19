@@ -21,7 +21,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -56,6 +56,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigator) {
       Acts::Experimental::tryAllSubVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
+  Acts::GeometryIdentifier innerGeoID;
+  innerGeoID.setVolume(1);
+  innerVolume->assignGeometryId(innerGeoID);
+
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), tgContext,
       "Detector Volume", Acts::Transform3::Identity(),
@@ -65,6 +69,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigator) {
           {innerVolume}),
       Acts::Experimental::tryAllSubVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
+
+  Acts::GeometryIdentifier geoID;
+  geoID.setVolume(2);
+  detectorVolume->assignGeometryId(geoID);
 
   auto detector = Acts::Experimental::Detector::makeShared(
       "Detector", {detectorVolume}, Acts::Experimental::tryRootVolumes());

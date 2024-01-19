@@ -79,7 +79,8 @@ void addGeometry(Context& ctx) {
         .def("boundary", &Acts::GeometryIdentifier::boundary)
         .def("approach", &Acts::GeometryIdentifier::approach)
         .def("sensitive", &Acts::GeometryIdentifier::sensitive)
-        .def("extra", &Acts::GeometryIdentifier::extra);
+        .def("extra", &Acts::GeometryIdentifier::extra)
+        .def("value", &Acts::GeometryIdentifier::value);
   }
 
   {
@@ -220,9 +221,10 @@ void addExperimentalGeometry(Context& ctx) {
     // Be able to construct a proto binning
     py::class_<ProtoBinning>(m, "ProtoBinning")
         .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
-                      const std::vector<Acts::ActsScalar>&, size_t>())
+                      const std::vector<Acts::ActsScalar>&, std::size_t>())
         .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
-                      Acts::ActsScalar, Acts::ActsScalar, size_t, size_t>());
+                      Acts::ActsScalar, Acts::ActsScalar, std::size_t,
+                      std::size_t>());
   }
 
   {

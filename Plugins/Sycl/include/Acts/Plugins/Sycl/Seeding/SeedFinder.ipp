@@ -65,7 +65,7 @@ std::vector<Acts::Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     Acts::SpacePointData& spacePointData,
     Acts::SpacePointGrid<external_spacepoint_t>& grid,
-    const sp_range_t& bottomSPs, const size_t middleSPs,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
     const sp_range_t& topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
@@ -83,7 +83,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPvec;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
 
-  for (size_t SPidx : bottomSPs) {
+  for (std::size_t SPidx : bottomSPs) {
     auto& sp_collection = grid.at(SPidx);
     for (auto& SP : sp_collection) {
       bottomSPvec.push_back(SP.get());
@@ -133,9 +133,9 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
       const InternalSpacePoint<external_spacepoint_t>>::value_type>
       candidates;
 
-  for (size_t mi = 0; mi < seeds.size(); ++mi) {
+  for (std::size_t mi = 0; mi < seeds.size(); ++mi) {
     candidates.clear();
-    for (size_t j = 0; j < seeds[mi].size(); ++j) {
+    for (std::size_t j = 0; j < seeds[mi].size(); ++j) {
       auto& bottomSP = *(bottomSPvec[seeds[mi][j].bottom]);
       auto& middleSP = *(middleSPvec[mi]);
       auto& topSP = *(topSPvec[seeds[mi][j].top]);
@@ -147,7 +147,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
         candidates.begin(), candidates.end(),
         CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>::
             descendingByQuality);
-    size_t numQualitySeeds = 0;  // not used but needs to be fixed
+    std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_config.seedFilter->filterSeeds_1SpFixed(spacePointData, candidates,
                                               numQualitySeeds,
                                               std::back_inserter(outputVec));

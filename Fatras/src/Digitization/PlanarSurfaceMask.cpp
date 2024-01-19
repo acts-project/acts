@@ -164,7 +164,7 @@ ActsFatras::PlanarSurfaceMask::polygonMask(
   Acts::Vector2 sDir = sVector.normalized();
   double sLength = sVector.norm();
 
-  for (size_t iv = 0; iv < vertices.size(); ++iv) {
+  for (std::size_t iv = 0; iv < vertices.size(); ++iv) {
     const Acts::Vector2& s0 = vertices[iv];
     const Acts::Vector2& s1 =
         (iv + 1) < vertices.size() ? vertices[iv + 1] : vertices[0];

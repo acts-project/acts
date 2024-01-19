@@ -134,9 +134,9 @@ class MaterialMapping : public IAlgorithm {
       m_mappingStateVol;  //!< Material mapping state
                           //
 
-  ReadDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  ReadDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_inputMaterialTracks{this, "InputMaterialTracks"};
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "OutputMaterialTracks"};
 };
 

@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/KdtSurfacesProvider.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
   CylindricalTrackingGeometry::DetectorStore dStore;
   auto pSurfaces = pixelSurfaces(dStore);
   // Count the number of surfacees
-  size_t refNumber = 6u * 22u + 14u * (16u + 32u + 52u + 78u);
+  std::size_t refNumber = 6u * 22u + 14u * (16u + 32u + 52u + 78u);
   BOOST_CHECK_EQUAL(pSurfaces.size(), refNumber);
 
   using KDTS = Acts::Experimental::KdtSurfaces<>;

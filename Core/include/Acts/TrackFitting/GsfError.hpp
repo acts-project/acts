@@ -14,7 +14,6 @@
 namespace Acts {
 
 enum class GsfError {
-  StartParametersNotOnStartSurface = 1,
   StartParametersHaveNoCovariance,
   NoMeasurementStatesCreatedForward,
   NoMeasurementStatesCreatedBackward,

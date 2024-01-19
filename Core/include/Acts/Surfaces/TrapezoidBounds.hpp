@@ -30,7 +30,6 @@ namespace Acts {
 /// @image html TrapezoidBounds.gif
 ///
 /// @todo can be speed optimized by calculating kappa/delta and caching it
-
 class TrapezoidBounds : public PlanarBounds {
  public:
   enum BoundValues {
