@@ -109,48 +109,7 @@ class Objective:
             "deltaRMax",
         ]
 
-        if ckf_perf:
-            outDirName = "Output_CKF"
-            outputfile = srcDir / outDirName / "performance_ckf.root"
-            effContName = "particles"
-            contName = "tracks"
-        else:
-            outDirName = "Output_Seeding"
-            outputfile = srcDir / outDirName / "performance_seeding.root"
-            effContName = "seeds"
-            contName = "seeds"
-
-        outputDir = Path(srcDir / outDirName)
-        outputDir.mkdir(exist_ok=True)
-        run_ckf(params, keys, outputDir)
-        rootFile = uproot.open(outputfile)
-        self.res["eff"].append(rootFile["eff_" + effContName].member("fElements")[0])
-        self.res["fakerate"].append(
-            rootFile["fakerate_" + contName].member("fElements")[0]
-        )
-        self.res["duplicaterate"].append(
-            rootFile["duplicaterate_" + contName].member("fElements")[0]
-        )
-
-        timingfile = srcDir / outDirName / "timing.tsv"
-        timing = pd.read_csv(timingfile, sep="\t")
-
-        if ckf_perf:
-            time_ckf = float(
-                timing[
-                    timing["identifier"].str.match("Algorithm:TrackFindingAlgorithm")
-                ]["time_perevent_s"]
-            )
-
-        time_seeding = float(
-            timing[timing["identifier"].str.match("Algorithm:SeedingAlgorithm")][
-                "time_perevent_s"
-            ]
-        )
-        if ckf_perf:
-            self.res["runtime"].append(time_ckf + time_seeding)
-        else:
-            self.res["runtime"].append(time_seeding)
+        get_tracking_perf(self, ckf_perf, params, keys)
 
         efficiency = self.res["eff"][-1]
         penalty = (
@@ -160,6 +119,49 @@ class Objective:
         )
 
         return efficiency - penalty
+
+
+def get_tracking_perf(self, ckf_perf, params, keys):
+    if ckf_perf:
+        outDirName = "Output_CKF"
+        outputfile = srcDir / outDirName / "performance_ckf.root"
+        effContName = "particles"
+        contName = "tracks"
+    else:
+        outDirName = "Output_Seeding"
+        outputfile = srcDir / outDirName / "performance_seeding.root"
+        effContName = "seeds"
+        contName = "seeds"
+
+    outputDir = Path(srcDir / outDirName)
+    outputDir.mkdir(exist_ok=True)
+    run_ckf(params, keys, outputDir)
+    rootFile = uproot.open(outputfile)
+    self.res["eff"].append(rootFile["eff_" + effContName].member("fElements")[0])
+    self.res["fakerate"].append(rootFile["fakerate_" + contName].member("fElements")[0])
+    self.res["duplicaterate"].append(
+        rootFile["duplicaterate_" + contName].member("fElements")[0]
+    )
+
+    timingfile = srcDir / outDirName / "timing.tsv"
+    timing = pd.read_csv(timingfile, sep="\t")
+
+    if ckf_perf:
+        time_ckf = float(
+            timing[timing["identifier"].str.match("Algorithm:TrackFindingAlgorithm")][
+                "time_perevent_s"
+            ]
+        )
+
+    time_seeding = float(
+        timing[timing["identifier"].str.match("Algorithm:SeedingAlgorithm")][
+            "time_perevent_s"
+        ]
+    )
+    if ckf_perf:
+        self.res["runtime"].append(time_ckf + time_seeding)
+    else:
+        self.res["runtime"].append(time_seeding)
 
 
 def main():
