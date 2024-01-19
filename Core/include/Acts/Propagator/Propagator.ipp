@@ -321,3 +321,21 @@ void Acts::Propagator<S, N>::moveStateToResult(propagator_state_t& state,
   result.steps = state.steps;
   result.pathLength = state.pathLength;
 }
+
+template <typename derived_t>
+Acts::Result<Acts::BoundTrackParameters>
+Acts::detail::BasePropagatorHelper<derived_t>::propagateToSurface(
+    const BoundTrackParameters& start, const Surface& target,
+    const Options& options) const {
+  auto res = static_cast<const derived_t*>(this)
+                 ->template propagate<BoundTrackParameters, PropagatorOptions<>,
+                                      SurfaceReached, PathLimitReached>(
+                     start, target, options);
+
+  if (res.ok()) {
+    // @TODO: Return optional?
+    return std::move((*res).endParameters.value());
+  } else {
+    return res.error();
+  }
+}
