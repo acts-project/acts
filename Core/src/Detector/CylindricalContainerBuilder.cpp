@@ -251,17 +251,6 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     }
   }
 
-  // Check if a root volume finder is provided
-  if (m_cfg.rootVolumeFinderBuilder) {
-    // Return the container
-    return Acts::Experimental::DetectorComponent{
-        {},
-        portalContainer,
-        RootDetectorVolumes{
-            rootVolumes,
-            m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
-  }
-
   // Assign the proto material
   // Material assignment from configuration
   for (auto [ip, bDescription] : m_cfg.portalMaterialBinning) {
@@ -271,6 +260,17 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
       ACTS_VERBOSE("-> Assigning proto material to portal " << ip << " with "
                                                             << bd.toString());
     }
+  }
+
+  // Check if a root volume finder is provided
+  if (m_cfg.rootVolumeFinderBuilder) {
+    // Return the container
+    return Acts::Experimental::DetectorComponent{
+        {},
+        portalContainer,
+        RootDetectorVolumes{
+            rootVolumes,
+            m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
   }
 
   // Return the container
