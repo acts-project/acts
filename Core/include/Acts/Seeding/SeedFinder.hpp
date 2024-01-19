@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
 #include <limits>
@@ -41,6 +42,7 @@ class SeedFinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
+  using grid_t = Acts::CylindricalSpacePointGrid<external_spacepoint_t>;
 
  public:
   struct SeedingState {
@@ -63,9 +65,11 @@ class SeedFinder {
         candidates_collector;
 
     // managing doublet candidates
-    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+    boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                   Acts::detail::ipow(3, grid_t::DIM)>
         bottomNeighbours;
-    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+    boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                   Acts::detail::ipow(3, grid_t::DIM)>
         topNeighbours;
 
     // Adding space point info
@@ -99,7 +103,7 @@ class SeedFinder {
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
       const Acts::SeedFinderOptions& options, SeedingState& state,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const grid_t& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs,
@@ -126,8 +130,7 @@ class SeedFinder {
   /// @returns a vector of seeds.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      const Acts::SeedFinderOptions& options,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const Acts::SeedFinderOptions& options, const grid_t& grid,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs) const;
 
@@ -150,9 +153,9 @@ class SeedFinder {
   template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
       Acts::SpacePointData& spacePointData,
-      const Acts::SeedFinderOptions& options,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
+      const Acts::SeedFinderOptions& options, const grid_t& grid,
+      boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                     Acts::detail::ipow(3, grid_t::DIM)>&
           otherSPsNeighbours,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,

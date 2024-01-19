@@ -28,7 +28,6 @@ def runITk(
     outputCsv=False,
     outputJson=False,
 ):
-
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
         ialg = 0
