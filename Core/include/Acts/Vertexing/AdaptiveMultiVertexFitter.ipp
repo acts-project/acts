@@ -13,25 +13,6 @@
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
-    State& state, const std::vector<Vertex<input_track_t>*>& verticesToFit,
-    const linearizer_t& linearizer,
-    const VertexingOptions<input_track_t>& vertexingOptions) const {
-  // Set all vertices to fit in the current state
-  state.vertexCollection = verticesToFit;
-
-  // Perform fit on all vertices simultaneously
-  auto fitRes = fitImpl(state, linearizer, vertexingOptions);
-
-  if (!fitRes.ok()) {
-    return fitRes.error();
-  }
-
-  return {};
-}
-
-template <typename input_track_t, typename linearizer_t>
-Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     State& state, const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Reset annealing tool
@@ -68,6 +49,17 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       if (xyDiff.norm() > m_cfg.maxDistToLinPoint) {
         // Set flag for relinearization
         vtxInfo.relinearize = true;
+        // Recalculate the track impact parameters at the current vertex
+        // position
+        auto prepareVertexResult =
+            prepareVertexForFit(state, vtx, vertexingOptions);
+        if (!prepareVertexResult.ok()) {
+          // Print vertices and associated tracks if logger is in debug mode
+          if (logger().doPrint(Logging::DEBUG)) {
+            logDebugData(state, vertexingOptions.geoContext);
+          }
+          return prepareVertexResult.error();
+        }
       }
 
       // Check if we use the constraint during the vertex fit
@@ -84,11 +76,27 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at the current vertex
-      setAllVertexCompatibilities(state, vtx, vertexingOptions);
+      auto setCompatibilitiesResult =
+          setAllVertexCompatibilities(state, vtx, vertexingOptions);
+      if (!setCompatibilitiesResult.ok()) {
+        // Print vertices and associated tracks if logger is in debug mode
+        if (logger().doPrint(Logging::DEBUG)) {
+          logDebugData(state, vertexingOptions.geoContext);
+        }
+        return setCompatibilitiesResult.error();
+      }
     }  // End loop over vertex collection
 
     // Recalculate all track weights and update vertices
-    setWeightsAndUpdate(state, linearizer, vertexingOptions);
+    auto setWeightsResult =
+        setWeightsAndUpdate(state, linearizer, vertexingOptions);
+    if (!setWeightsResult.ok()) {
+      // Print vertices and associated tracks if logger is in debug mode
+      if (logger().doPrint(Logging::DEBUG)) {
+        logDebugData(state, vertexingOptions.geoContext);
+      }
+      return setWeightsResult.error();
+    }
 
     // Cool the system down, i.e., reduce the temperature parameter. At lower
     // temperatures, outlying tracks are downweighted more.
@@ -116,10 +124,13 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
     const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
+    ACTS_ERROR(
+        "newVertex does not have any associated tracks (i.e., its trackLinks "
+        "are empty).")
     return VertexingError::EmptyInput;
   }
 
-  std::vector<Vertex<input_track_t>*> verticesToFit;
+  std::vector<Vertex<input_track_t>*> verticesToFit = {&newVertex};
 
   // List of vertices added in last iteration
   std::vector<Vertex<input_track_t>*> lastIterAddedVertices = {&newVertex};
@@ -163,8 +174,18 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
 
   state.vertexCollection = verticesToFit;
 
+  // Save the 3D impact parameters of all tracks associated with newVertex.
+  auto res = prepareVertexForFit(state, &newVertex, vertexingOptions);
+  if (!res.ok()) {
+    // Print vertices and associated tracks if logger is in debug mode
+    if (logger().doPrint(Logging::DEBUG)) {
+      logDebugData(state, vertexingOptions.geoContext);
+    }
+    return res.error();
+  }
+
   // Perform fit on all added vertices
-  auto fitRes = fitImpl(state, linearizer, vertexingOptions);
+  auto fitRes = fit(state, linearizer, vertexingOptions);
   if (!fitRes.ok()) {
     return fitRes.error();
   }
@@ -180,47 +201,25 @@ bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    updateImpactParams3D(
+Acts::Result<void> Acts::
+    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
-  // Vertex position, i.e., point wrt which the impact parameters are estimated
-  const Vector3& vtxPosition = vtxInfo.oldPosition.template head<3>();
+  // Vertex seed position
+  const Vector3& seedPos = vtxInfo.seedPosition.template head<3>();
 
   // Loop over all tracks at the vertex
   for (const auto& trk : vtxInfo.trackLinks) {
-    // Track parameters
-    auto trkParams = m_extractParameters(*trk);
-
-    // Origin of the track reference surface
-    Vector3 surfaceOrigin = trkParams.referenceSurface()
-                                .transform(vertexingOptions.geoContext)
-                                .translation();
-    // Skip the impact point estimation if the impact parameters of trk wrt the
-    // current vertex position were already calculated.
-    if (surfaceOrigin == vtxPosition &&
-        vtxInfo.impactParams3D.find(trk) != vtxInfo.impactParams3D.end()) {
-      continue;
-    }
-
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-        trkParams, vtxPosition, state.ipState);
+        m_extractParameters(*trk), seedPos, state.ipState);
     if (!res.ok()) {
       return res.error();
     }
-
-    // Try to create a new map entry. If "trk" already exists as key, the
-    // corresponding value will not be overwritten and the boolean "inserted"
-    // will be set to false ...
-    auto [it, inserted] = vtxInfo.impactParams3D.emplace(trk, *res);
-    // ... and we have to overwrite manually.
-    if (!inserted) {
-      it->second = *res;
-    }
+    // Save 3D impact parameters of the track
+    vtxInfo.impactParams3D.emplace(trk, res.value());
   }
   return {};
 }
@@ -231,14 +230,26 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
-  // Update the 3D impact parameters of all tracks
-  updateImpactParams3D(state, vtx, vertexingOptions);
-
   VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
-  // Loop over the tracks that are associated with vtx and estimate their
+
+  // Loop over all tracks that are associated with vtx and estimate their
   // compatibility
   for (const auto& trk : vtxInfo.trackLinks) {
     auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
+    // Recover from cases where linearization point != 0 but
+    // more tracks were added later on
+    if (vtxInfo.impactParams3D.find(trk) == vtxInfo.impactParams3D.end()) {
+      auto res = m_cfg.ipEst.estimate3DImpactParameters(
+          vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+          m_extractParameters(*trk), VectorHelpers::position(vtxInfo.linPoint),
+          state.ipState);
+      if (!res.ok()) {
+        return res.error();
+      }
+      // Set impactParams3D for current trackAtVertex
+      vtxInfo.impactParams3D.emplace(trk, res.value());
+    }
+    // Set compatibility with current vertex
     Acts::Result<double> compatibilityResult(0.);
     if (m_cfg.useTime) {
       compatibilityResult = m_cfg.ipEst.template getVertexCompatibility<4>(
@@ -296,9 +307,16 @@ Acts::Result<void> Acts::
           trkAtVtx.linearizedState = *result;
           trkAtVtx.isLinearized = true;
         }
-        // Update the vertex with the new track
-        KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(*vtx,
-                                                                  trkAtVtx);
+        // Update the vertex with the new track. The second template argument
+        // corresponds to the number of fitted vertex dimensions (i.e., 3 if we
+        // only fit spatial coordinates and 4 if we also fit time).
+        if (m_cfg.useTime) {
+          KalmanVertexUpdater::updateVertexWithTrack<input_track_t, 4>(
+              *vtx, trkAtVtx);
+        } else {
+          KalmanVertexUpdater::updateVertexWithTrack<input_track_t, 3>(
+              *vtx, trkAtVtx);
+        }
       } else {
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }
@@ -358,8 +376,41 @@ void Acts::AdaptiveMultiVertexFitter<
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
-        KalmanVertexTrackUpdater::update<input_track_t>(trkAtVtx, *vtx);
+        // Update the new track under the assumption that it originates at the
+        // vertex. The second template argument corresponds to the number of
+        // fitted vertex dimensions (i.e., 3 if we only fit spatial coordinates
+        // and 4 if we also fit time).
+        KalmanVertexTrackUpdater::update(trkAtVtx, vtx->fullPosition(),
+                                         vtx->fullCovariance(),
+                                         m_cfg.useTime ? 4 : 3);
       }
+    }
+  }
+}
+
+template <typename input_track_t, typename linearizer_t>
+void Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::logDebugData(
+    const State& state, const Acts::GeometryContext& geoContext) const {
+  ACTS_DEBUG("Encountered an error when fitting the following "
+             << state.vertexCollection.size() << " vertices:");
+  for (std::size_t vtxInd = 0; vtxInd < state.vertexCollection.size();
+       ++vtxInd) {
+    auto vtx = state.vertexCollection[vtxInd];
+    ACTS_DEBUG("Position of " << vtxInd << ". vertex seed:\n"
+                              << state.vtxInfoMap.at(vtx).seedPosition);
+    ACTS_DEBUG("Position of said vertex after the last fitting step:\n"
+               << state.vtxInfoMap.at(vtx).oldPosition);
+    ACTS_DEBUG("Associated tracks:");
+    const auto& trks = state.vtxInfoMap.at(vtx).trackLinks;
+    for (std::size_t trkInd = 0; trkInd < trks.size(); ++trkInd) {
+      const auto& trkAtVtx =
+          state.tracksAtVerticesMap.at(std::make_pair(trks[trkInd], vtx));
+      const auto& trkParams = m_extractParameters(*(trkAtVtx.originalParams));
+      ACTS_DEBUG(trkInd << ". track parameters:\n" << trkParams.parameters());
+      ACTS_DEBUG(trkInd << ". track covariance matrix:\n"
+                        << trkParams.covariance().value());
+      ACTS_DEBUG("Origin of corresponding reference surface:\n"
+                 << trkParams.referenceSurface().center(geoContext));
     }
   }
 }

@@ -190,7 +190,7 @@ void addGenerators(Context& ctx) {
              std::shared_ptr<ActsExamples::FixedMultiplicityGenerator>>(
       mex, "FixedMultiplicityGenerator")
       .def(py::init<>())
-      .def(py::init([](size_t n) {
+      .def(py::init([](std::size_t n) {
              ActsExamples::FixedMultiplicityGenerator g;
              g.n = n;
              return g;

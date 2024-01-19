@@ -72,18 +72,18 @@ namespace Details {
 ///         for each middle spacepoint
 ///
 std::vector<std::vector<Triplet> > findTriplets(
-    const Info::Device& device, size_t maxBlockSize,
+    const Info::Device& device, std::size_t maxBlockSize,
     const DubletCounts& dubletCounts, const SeedFilterConfig& seedConfig,
-    const TripletFilterConfig& filterConfig, size_t nBottomSPs,
-    const device_array<SpacePoint>& bottomSPs, size_t nMiddleSPs,
-    const device_array<SpacePoint>& middleSPs, size_t nTopSPs,
+    const TripletFilterConfig& filterConfig, std::size_t nBottomSPs,
+    const device_array<SpacePoint>& bottomSPs, std::size_t nMiddleSPs,
+    const device_array<SpacePoint>& middleSPs, std::size_t nTopSPs,
     const device_array<SpacePoint>& topSPs,
     const device_array<unsigned int>& middleBottomCounts,
-    const device_array<size_t>& middleBottomDublets,
+    const device_array<std::size_t>& middleBottomDublets,
     const device_array<unsigned int>& middleTopCounts,
-    const device_array<size_t>& middleTopDublets, float maxScatteringAngle2,
-    float sigmaScattering, float minHelixDiameter2, float pT2perRadius,
-    float impactMax);
+    const device_array<std::size_t>& middleTopDublets,
+    float maxScatteringAngle2, float sigmaScattering, float minHelixDiameter2,
+    float pT2perRadius, float impactMax);
 
 }  // namespace Details
 }  // namespace Cuda

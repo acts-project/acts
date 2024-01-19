@@ -28,13 +28,13 @@ using namespace Acts;
 ///
 struct TrackAlignmentState {
   // The dimension of measurements
-  size_t measurementDim = 0;
+  std::size_t measurementDim = 0;
 
   // The dimension of track parameters
-  size_t trackParametersDim = 0;
+  std::size_t trackParametersDim = 0;
 
   // The contributed alignment degree of freedom
-  size_t alignmentDof = 0;
+  std::size_t alignmentDof = 0;
 
   // The measurements covariance
   ActsDynamicMatrix measurementCovariance;
@@ -65,7 +65,8 @@ struct TrackAlignmentState {
 
   // The alignable surfaces on the track and their indices in both the global
   // alignable surfaces pool and those relevant with this track
-  std::unordered_map<const Surface*, std::pair<size_t, size_t>> alignedSurfaces;
+  std::unordered_map<const Surface*, std::pair<std::size_t, std::size_t>>
+      alignedSurfaces;
 };
 
 /// Reset some columns of the alignment to bound derivative to zero if the
@@ -104,10 +105,11 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 template <typename traj_t, typename parameters_t = BoundTrackParameters>
 TrackAlignmentState trackAlignmentState(
     const GeometryContext& gctx, const traj_t& multiTraj,
-    const size_t& entryIndex,
-    const std::pair<ActsDynamicMatrix, std::unordered_map<size_t, size_t>>&
+    const std::size_t& entryIndex,
+    const std::pair<ActsDynamicMatrix,
+                    std::unordered_map<std::size_t, std::size_t>>&
         globalTrackParamsCov,
-    const std::unordered_map<const Surface*, size_t>& idxedAlignSurfaces,
+    const std::unordered_map<const Surface*, std::size_t>& idxedAlignSurfaces,
     const AlignmentMask& alignMask) {
   using CovMatrix = typename parameters_t::CovarianceMatrix;
 
@@ -115,13 +117,12 @@ TrackAlignmentState trackAlignmentState(
   TrackAlignmentState alignState;
 
   // Remember the index within the trajectory and whether it's alignable
-  std::vector<std::pair<size_t, bool>> measurementStates;
+  std::vector<std::pair<std::size_t, bool>> measurementStates;
   measurementStates.reserve(15);
   // Number of smoothed states on the track
-  // size_t nSmoothedStates = 0; // commented because clang-tidy complains about
-  // unused
-  // Number of alignable surfaces on the track
-  size_t nAlignSurfaces = 0;
+  // std::size_t nSmoothedStates = 0; // commented because clang-tidy complains
+  // about unused Number of alignable surfaces on the track
+  std::size_t nAlignSurfaces = 0;
 
   // Visit the track states on the track
   multiTraj.visitBackwards(entryIndex, [&](const auto& ts) {
@@ -192,12 +193,12 @@ TrackAlignmentState trackAlignmentState(
 
   // Loop over the measurement states to fill those alignment matrices
   // This is done in reverse order
-  size_t iMeasurement = alignState.measurementDim;
-  size_t iParams = alignState.trackParametersDim;
-  size_t iSurface = nAlignSurfaces;
+  std::size_t iMeasurement = alignState.measurementDim;
+  std::size_t iParams = alignState.trackParametersDim;
+  std::size_t iSurface = nAlignSurfaces;
   for (const auto& [rowStateIndex, isAlignable] : measurementStates) {
     const auto& state = multiTraj.getTrackState(rowStateIndex);
-    const size_t measdim = state.calibratedSize();
+    const std::size_t measdim = state.calibratedSize();
     // Update index of current measurement and parameter
     iMeasurement -= measdim;
     iParams -= eBoundSize;
@@ -251,14 +252,14 @@ TrackAlignmentState trackAlignmentState(
     // @Todo: add helper function to select rows/columns of a matrix
     for (unsigned int iColState = 0; iColState < measurementStates.size();
          iColState++) {
-      size_t colStateIndex = measurementStates.at(iColState).first;
+      std::size_t colStateIndex = measurementStates.at(iColState).first;
       // Retrieve the block from the source covariance matrix
       CovMatrix correlation =
           sourceTrackParamsCov.block<eBoundSize, eBoundSize>(
               stateRowIndices.at(rowStateIndex),
               stateRowIndices.at(colStateIndex));
       // Fill the block of the target covariance matrix
-      size_t iCol =
+      std::size_t iCol =
           alignState.trackParametersDim - (iColState + 1) * eBoundSize;
       alignState.trackParametersCovariance.block<eBoundSize, eBoundSize>(
           iParams, iCol) = correlation;

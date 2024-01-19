@@ -40,9 +40,9 @@ ActsExamples::Measurement ActsExamples::createMeasurement(
       return Acts::Measurement<Acts::BoundIndices, 4>(std::move(sl), indices,
                                                       par, cov);
     };
+    default:
+      std::string errorMsg = "Invalid/mismatching measurement dimension: " +
+                             std::to_string(dParams.indices.size());
+      throw std::runtime_error(errorMsg.c_str());
   }
-  std::string errorMsg = "Invalid/mismatching measurement dimension: " +
-                         std::to_string(dParams.indices.size());
-
-  throw std::runtime_error(errorMsg.c_str());
 }

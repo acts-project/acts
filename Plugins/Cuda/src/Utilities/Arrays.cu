@@ -44,7 +44,7 @@ void HostArrayDeleter::operator()(void* ptr) {
 }  // namespace Details
 
 template <typename T>
-device_array<T> make_device_array(size_t size) {
+device_array<T> make_device_array(std::size_t size) {
   // Allocate the memory.
   T* ptr = nullptr;
   if (size != 0) {
@@ -55,7 +55,7 @@ device_array<T> make_device_array(size_t size) {
 }
 
 template <typename T>
-host_array<T> make_host_array(size_t size) {
+host_array<T> make_host_array(std::size_t size) {
   // Allocate the memory.
   T* ptr = nullptr;
   if (size != 0) {
@@ -67,7 +67,7 @@ host_array<T> make_host_array(size_t size) {
 
 template <typename T>
 void copyToDevice(device_array<T>& dev, const host_array<T>& host,
-                  size_t arraySize) {
+                  std::size_t arraySize) {
   ACTS_CUDA_ERROR_CHECK(cudaMemcpy(dev.get(), host.get(), arraySize * sizeof(T),
                                    cudaMemcpyHostToDevice));
   return;
@@ -75,7 +75,7 @@ void copyToDevice(device_array<T>& dev, const host_array<T>& host,
 
 template <typename T>
 void copyToDevice(device_array<T>& dev, const host_array<T>& host,
-                  size_t arraySize, const StreamWrapper& stream) {
+                  std::size_t arraySize, const StreamWrapper& stream) {
   ACTS_CUDA_ERROR_CHECK(
       cudaMemcpyAsync(dev.get(), host.get(), arraySize * sizeof(T),
                       cudaMemcpyHostToDevice, getStreamFrom(stream)));
@@ -84,7 +84,7 @@ void copyToDevice(device_array<T>& dev, const host_array<T>& host,
 
 template <typename T>
 void copyToHost(host_array<T>& host, const device_array<T>& dev,
-                size_t arraySize) {
+                std::size_t arraySize) {
   ACTS_CUDA_ERROR_CHECK(cudaMemcpy(host.get(), dev.get(), arraySize * sizeof(T),
                                    cudaMemcpyDeviceToHost));
   return;
@@ -92,7 +92,7 @@ void copyToHost(host_array<T>& host, const device_array<T>& dev,
 
 template <typename T>
 void copyToHost(host_array<T>& host, const device_array<T>& dev,
-                size_t arraySize, const StreamWrapper& stream) {
+                std::size_t arraySize, const StreamWrapper& stream) {
   ACTS_CUDA_ERROR_CHECK(
       cudaMemcpyAsync(host.get(), dev.get(), arraySize * sizeof(T),
                       cudaMemcpyDeviceToHost, getStreamFrom(stream)));
@@ -112,26 +112,26 @@ void copyToHost(host_array<T>& host, const device_array<T>& dev,
   template class std::unique_ptr<TYPE,                                         \
                                  Acts::Cuda::Details::DeviceArrayDeleter>;     \
   template std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>      \
-      Acts::Cuda::make_device_array<TYPE>(size_t);                             \
+      Acts::Cuda::make_device_array<TYPE>(std::size_t);                        \
   template class std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>; \
   template std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>        \
-      Acts::Cuda::make_host_array<TYPE>(size_t);                               \
+      Acts::Cuda::make_host_array<TYPE>(std::size_t);                          \
   template void Acts::Cuda::copyToDevice<TYPE>(                                \
       std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>&,         \
       const std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>&,     \
-      size_t);                                                                 \
+      std::size_t);                                                            \
   template void Acts::Cuda::copyToDevice<TYPE>(                                \
       std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>&,         \
       const std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>&,     \
-      size_t, const Acts::Cuda::StreamWrapper&);                               \
+      std::size_t, const Acts::Cuda::StreamWrapper&);                          \
   template void Acts::Cuda::copyToHost<TYPE>(                                  \
       std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>&,           \
       const std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>&,   \
-      size_t);                                                                 \
+      std::size_t);                                                            \
   template void Acts::Cuda::copyToHost<TYPE>(                                  \
       std::unique_ptr<TYPE, Acts::Cuda::Details::HostArrayDeleter>&,           \
       const std::unique_ptr<TYPE, Acts::Cuda::Details::DeviceArrayDeleter>&,   \
-      size_t, const Acts::Cuda::StreamWrapper&)
+      std::size_t, const Acts::Cuda::StreamWrapper&)
 
 // Instantiate the templated functions for all primitive types.
 INST_ARRAY_FOR_TYPE(char);

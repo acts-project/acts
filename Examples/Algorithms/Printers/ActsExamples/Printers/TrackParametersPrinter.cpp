@@ -36,7 +36,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParametersPrinter::execute(
   ACTS_INFO("event " << ctx.eventNumber << " collection '"
                      << m_cfg.inputTrackParameters << "' contains "
                      << trackParameters.size() << " track parameters");
-  size_t i = 0;
+  std::size_t i = 0;
   for (const auto& params : trackParameters) {
     ACTS_INFO("  track " << i++ << "\n" << params);
   }

@@ -5,7 +5,7 @@ gperftools is a software profiling package. It contains a CPU profiler, thread-c
 
 ## Install gperftools
 
-It is strongly recommended to install [libunwind](http://download.savannah.gnu.org/releases/libunwind/libunwind-0.99-beta.tar.gz) before trying to configure or install gperftools.
+It is strongly recommended to install [libunwind](https://github.com/libunwind/libunwind) before trying to configure or install gperftools.
 
 ### Ubuntu
 

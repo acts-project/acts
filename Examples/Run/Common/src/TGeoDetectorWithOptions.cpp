@@ -96,12 +96,12 @@ auto TGeoDetectorWithOptions::finalize(
 
   config.fileName = vm["geo-tgeo-filename"].as<std::string>();
 
-  config.surfaceLogLevel =
-      Acts::Logging::Level(vm["geo-surface-loglevel"].template as<size_t>());
+  config.surfaceLogLevel = Acts::Logging::Level(
+      vm["geo-surface-loglevel"].template as<std::size_t>());
   config.layerLogLevel =
-      Acts::Logging::Level(vm["geo-layer-loglevel"].template as<size_t>());
-  config.volumeLogLevel =
-      Acts::Logging::Level(vm["geo-volume-loglevel"].template as<size_t>());
+      Acts::Logging::Level(vm["geo-layer-loglevel"].template as<std::size_t>());
+  config.volumeLogLevel = Acts::Logging::Level(
+      vm["geo-volume-loglevel"].template as<std::size_t>());
 
   // No valid geometry configuration. Stop
   if (vm["geo-tgeo-jsonconfig"].as<std::string>().empty()) {

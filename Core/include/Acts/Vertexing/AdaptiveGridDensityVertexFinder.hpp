@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
@@ -30,25 +29,17 @@ namespace Acts {
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
 ///
-/// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
-/// a single track is modelled as a (trkGridSize x trkGridSize) grid
-/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-template <int trkGridSize = 15, typename vfitter_t = DummyVertexFitter<>>
+/// @tparam vfitter_t Vertex fitter type
+template <typename vfitter_t = DummyVertexFitter<>>
 class AdaptiveGridDensityVertexFinder {
-  // Assert odd trkGridSize
-  static_assert(trkGridSize % 2);
-
   using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
+  using GridDensity = AdaptiveGridTrackDensity;
 
  public:
   using DensityMap = typename GridDensity::DensityMap;
 
   /// @brief The Config struct
   struct Config {
-    ///@param binSize Bin size of grid in mm
-    Config(float binSize = 0.1)
-        : gridDensity(typename GridDensity::Config(binSize)) {}
     ///@param gDensity The grid density
     Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
 
@@ -82,9 +73,6 @@ class AdaptiveGridDensityVertexFinder {
 
     // Map from input track to corresponding track density map
     std::unordered_map<const InputTrack_t*, DensityMap> trackDensities;
-
-    // Map to store bool if track has passed track selection or not
-    std::unordered_map<const InputTrack_t*, bool> trackSelectionMap;
 
     // Store tracks that have been removed from track collection. These
     // tracks will be removed from the main grid

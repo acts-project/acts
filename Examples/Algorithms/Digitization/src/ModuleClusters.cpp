@@ -133,10 +133,10 @@ void ModuleClusters::merge() {
 }
 
 // ATTN: returns vector of index into `indices'
-std::vector<size_t> ModuleClusters::nonGeoEntries(
+std::vector<std::size_t> ModuleClusters::nonGeoEntries(
     std::vector<Acts::BoundIndices>& indices) {
-  std::vector<size_t> retv;
-  for (size_t i = 0; i < indices.size(); i++) {
+  std::vector<std::size_t> retv;
+  for (std::size_t i = 0; i < indices.size(); i++) {
     auto idx = indices.at(i);
     if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
         m_geoIndices.end()) {
@@ -152,7 +152,7 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
   std::vector<std::vector<ModuleValue>> retv;
 
   std::vector<bool> used(values.size(), false);
-  for (size_t i = 0; i < values.size(); i++) {
+  for (std::size_t i = 0; i < values.size(); i++) {
     if (used.at(i)) {
       continue;
     }
@@ -167,7 +167,7 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
     // Values previously visited by index `i' have already been added
     // to a cluster or used to seed a new cluster, so start at the
     // next unseen one
-    for (size_t j = i + 1; j < values.size(); j++) {
+    for (std::size_t j = i + 1; j < values.size(); j++) {
       // Still may have already been used, so check it
       if (used.at(j)) {
         continue;
@@ -240,9 +240,9 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   }
 
   // Now, go over the non-geometric indices
-  for (size_t i = 0; i < values.size(); i++) {
+  for (std::size_t i = 0; i < values.size(); i++) {
     ModuleValue& other = values.at(i);
-    for (size_t j = 0; j < other.paramIndices.size(); j++) {
+    for (std::size_t j = 0; j < other.paramIndices.size(); j++) {
       auto idx = other.paramIndices.at(j);
       if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
           m_geoIndices.end()) {
@@ -270,12 +270,12 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   Acts::Vector2 pos(0., 0.);
   Acts::Vector2 var(0., 0.);
 
-  size_t b0min = SIZE_MAX;
-  size_t b0max = 0;
-  size_t b1min = SIZE_MAX;
-  size_t b1max = 0;
+  std::size_t b0min = SIZE_MAX;
+  std::size_t b0max = 0;
+  std::size_t b1min = SIZE_MAX;
+  std::size_t b1max = 0;
 
-  for (size_t i = 0; i < values.size(); i++) {
+  for (std::size_t i = 0; i < values.size(); i++) {
     ModuleValue& other = values.at(i);
     if (!std::holds_alternative<Cluster::Cell>(other.value)) {
       continue;
@@ -284,8 +284,8 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
     Cluster::Cell ch = std::get<Cluster::Cell>(other.value);
     auto bin = ch.bin;
 
-    size_t b0 = bin[0];
-    size_t b1 = bin[1];
+    std::size_t b0 = bin[0];
+    std::size_t b1 = bin[1];
 
     b0min = std::min(b0min, b0);
     b0max = std::max(b0max, b0);

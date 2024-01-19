@@ -584,8 +584,8 @@ int trackSummaryAnalysis(
 
     // Make sure you have the entry
     tracks.tree->GetEntry(ie);
-    size_t nTracks = tracks.hasFittedParams->size();
-    for (size_t it = 0; it < nTracks; ++it) {
+    std::size_t nTracks = tracks.hasFittedParams->size();
+    for (std::size_t it = 0; it < nTracks; ++it) {
       if (tracks.hasFittedParams->at(it)) {
         // Residual handlesL
         // Full range handles

@@ -18,7 +18,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -131,7 +131,8 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
   auto cylinderSurface =
       Acts::Surface::makeShared<Acts::CylinderSurface>(nominal, 10., 100.);
 
-  auto cylinderPortal = Acts::Experimental::Portal::makeShared(cylinderSurface);
+  auto cylinderPortal =
+      std::make_shared<Acts::Experimental::Portal>(cylinderSurface);
 
   fullCylinderVolume->updatePortal(cylinderPortal, 2u);
 
@@ -179,8 +180,9 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
 
   outerBox->updateNavigationState(tContext, nState);
 
-  // We should have 12 candidates, 6 inner, 6 outer portals
-  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 12u);
+  // We should have 12 candidates, 6 inner, 6 outer portals but only 3 are
+  // reachable
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 3u);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {

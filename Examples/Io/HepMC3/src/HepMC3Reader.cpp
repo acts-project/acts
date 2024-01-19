@@ -44,8 +44,8 @@ std::string ActsExamples::HepMC3AsciiReader::HepMC3AsciiReader::name() const {
   return "HepMC3AsciiReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::HepMC3AsciiReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::HepMC3AsciiReader::availableEvents() const {
   return m_eventsRange;
 }
 

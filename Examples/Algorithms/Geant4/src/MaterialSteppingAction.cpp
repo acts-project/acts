@@ -42,7 +42,7 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   std::string materialName = material->GetName();
   for (const auto& emat : m_cfg.excludeMaterials) {
     if (emat == materialName) {
-      ACTS_VERBOSE("Exclude step in material '" << materialName << ".");
+      ACTS_VERBOSE("Exclude step in material '" << materialName << "'.");
       return;
     }
   }
@@ -64,14 +64,14 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   // the Geant4 docs). Need to compute average manually.
   const G4ElementVector* elements = material->GetElementVector();
   const G4double* fraction = material->GetFractionVector();
-  size_t nElements = material->GetNumberOfElements();
+  std::size_t nElements = material->GetNumberOfElements();
   double Ar = 0.;
   double Z = 0.;
   if (nElements == 1) {
     Ar = material->GetA() / (CLHEP::gram / CLHEP::mole);
     Z = material->GetZ();
   } else {
-    for (size_t i = 0; i < nElements; i++) {
+    for (std::size_t i = 0; i < nElements; i++) {
       Ar += elements->at(i)->GetA() * fraction[i] / (CLHEP::gram / CLHEP::mole);
       Z += elements->at(i)->GetZ() * fraction[i];
     }
@@ -95,7 +95,7 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   mInteraction.pathCorrection = (step->GetStepLength() / CLHEP::mm);
 
   G4Track* g4Track = step->GetTrack();
-  size_t trackID = g4Track->GetTrackID();
+  std::size_t trackID = g4Track->GetTrackID();
   auto& materialTracks = eventStore().materialTracks;
   if (materialTracks.find(trackID - 1) == materialTracks.end()) {
     Acts::RecordedMaterialTrack rmTrack;

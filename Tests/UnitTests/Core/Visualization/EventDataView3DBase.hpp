@@ -15,6 +15,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -30,7 +31,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -67,7 +67,7 @@ std::default_random_engine generator(42);
 void createDetector(GeometryContext& tgContext,
                     std::vector<const Surface*>& surfaces,
                     std::shared_ptr<const TrackingGeometry>& detector,
-                    const size_t nSurfaces = 7) {
+                    const std::size_t nSurfaces = 7) {
   using namespace UnitLiterals;
 
   if (nSurfaces < 1) {
@@ -224,7 +224,7 @@ static inline std::string testMeasurement(IVisualization3D& helper) {
   GeometryContext tgContext = GeometryContext();
 
   // Create a detector
-  const size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 7;
   std::vector<const Surface*> surfaces;
   std::shared_ptr<const TrackingGeometry> detector;
   createDetector(tgContext, surfaces, detector, nSurfaces);
@@ -232,7 +232,7 @@ static inline std::string testMeasurement(IVisualization3D& helper) {
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<Test::TestSourceLink> sourcelinks;
+  std::vector<detail::Test::TestSourceLink> sourcelinks;
   sourcelinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
@@ -242,7 +242,7 @@ static inline std::string testMeasurement(IVisualization3D& helper) {
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(Test::TestSourceLink{
+    sourcelinks.emplace_back(detail::Test::TestSourceLink{
         eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
@@ -285,7 +285,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   CalibrationContext calContext = CalibrationContext();
 
   // Create a detector
-  const size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 7;
   std::vector<const Surface*> surfaces;
   std::shared_ptr<const TrackingGeometry> detector;
   createDetector(tgContext, surfaces, detector, nSurfaces);
@@ -303,7 +303,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(Test::TestSourceLink{
+    sourcelinks.emplace_back(detail::Test::TestSourceLink{
         eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
@@ -344,8 +344,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   Acts::GainMatrixSmoother kfSmoother;
 
   KalmanFitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.calibrator.connect<
+      &detail::Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
   extensions.updater
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);
@@ -353,9 +353,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
           &kfSmoother);
 
-  Test::TestSourceLink::SurfaceAccessor surfaceAccessor{*detector};
+  detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor{*detector};
   extensions.surfaceAccessor
-      .connect<&Test::TestSourceLink::SurfaceAccessor::operator()>(
+      .connect<&detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
           &surfaceAccessor);
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,

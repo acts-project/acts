@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,8 +9,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
@@ -50,16 +50,17 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
       std::stringstream ss(line);
       std::string linetype;
       ss >> linetype;
-      float x = 0, y = 0, z = 0, r = 0, varianceR = 0, varianceZ = 0;
       if (linetype == "lxyz") {
+        float x = 0, y = 0, z = 0, varianceR = 0, varianceZ = 0;
+        std::optional<float> t, varianceT;
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-        r = std::hypot(x, y);
-        float f22 = varianceR;
-        float wid = varianceZ;
-        float cov = wid * wid * .08333;
-        if (cov < f22) {
-          cov = f22;
+        const float r = std::hypot(x, y);
+
+        float cov = varianceZ * varianceZ * .08333;
+        if (cov < varianceR) {
+          cov = varianceR;
         }
+
         if (std::abs(z) > 450.) {
           varianceZ = 9. * cov;
           varianceR = .06;
@@ -67,8 +68,9 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
           varianceR = 9. * cov;
           varianceZ = .06;
         }
-        SpacePoint* sp =
-            new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
+
+        SpacePoint* sp = new SpacePoint{
+            x, y, z, r, layer, varianceR, varianceZ, t, varianceT};
         //     if(r < 200.){
         //       sp->setClusterList(1,0);
         //     }
@@ -164,10 +166,10 @@ int main(int argc, char** argv) {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsBottom));
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
+      Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
@@ -176,11 +178,10 @@ int main(int argc, char** argv) {
   a = Acts::SeedFinder<SpacePoint>(config);
 
   // covariance tool, sets covariances per spacepoint as required
-  auto ct = [=](const SpacePoint& sp, float, float,
-                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto ct = [=](const SpacePoint& sp, float, float, float) {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
-    return std::make_pair(position, covariance);
+    return std::make_tuple(position, covariance, sp.t());
   };
 
   // setup spacepoint grid config
@@ -195,11 +196,12 @@ int main(int argc, char** argv) {
   Acts::SpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
-  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
+  Acts::SpacePointGrid<SpacePoint> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
+  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
+                                        spVec.end(), ct, rRangeSPExtent);
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
-      spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, config, options);
+      std::move(grid), *bottomBinFinder, *topBinFinder);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;
@@ -220,7 +222,7 @@ int main(int argc, char** argv) {
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
   if (!quiet) {
     for (auto& regionVec : seedVector) {
-      for (size_t i = 0; i < regionVec.size(); i++) {
+      for (std::size_t i = 0; i < regionVec.size(); i++) {
         const Acts::Seed<SpacePoint>* seed = &regionVec[i];
         const SpacePoint* sp = seed->sp()[0];
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()

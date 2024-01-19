@@ -11,12 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -66,13 +67,24 @@ auto cyl2 = Acts::Experimental::DetectorVolumeFactory::construct(
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 = {
     cyl0, cyl1, cyl2};
-auto det012 = Acts::Experimental::Detector::makeShared(
-    "Det012", volumes012, Acts::Experimental::tryRootVolumes());
+
+Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+Acts::Experimental::GeometryIdGenerator generator(
+    generatorConfig,
+    Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 
 // Test finding detectors by trial and error
 BOOST_AUTO_TEST_CASE(RootVolumeFinder) {
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes012) {
+    generator.assignGeometryId(cache, *vol);
+  }
+
+  auto det012 = Acts::Experimental::Detector::makeShared(
+      "Det012", volumes012, Acts::Experimental::tryRootVolumes());
+
   nState.currentDetector = det012.get();
   Acts::Experimental::RootVolumeFinder rvf;
   // Cylinder 0
@@ -94,9 +106,17 @@ BOOST_AUTO_TEST_CASE(RootVolumeFinder) {
 
 // Test finding detectors beu trial and error
 BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes012) {
+    generator.assignGeometryId(cache, *vol);
+  }
+
+  auto det012 = Acts::Experimental::Detector::makeShared(
+      "Det012", volumes012, Acts::Experimental::tryRootVolumes());
+
   nState.currentDetector = det012.get();
 
-  using SingleIndex = size_t;
+  using SingleIndex = std::size_t;
 
   using Axis = Acts::detail::Axis<Acts::detail::AxisType::Variable,
                                   Acts::detail::AxisBoundaryType::Bound>;
@@ -110,8 +130,8 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
   g.atPosition(std::array<Acts::ActsScalar, 1u>{50.}) = 1u;
   g.atPosition(std::array<Acts::ActsScalar, 1u>{150.}) = 2u;
 
-  Acts::Experimental::IndexedDetectorVolumeImpl<decltype(g)> idv(std::move(g),
-                                                                 {Acts::binR});
+  Acts::Experimental::IndexedDetectorVolumesImpl<decltype(g)> idv(std::move(g),
+                                                                  {Acts::binR});
 
   // Cylinder 0
   nState.position = Acts::Vector3(5., 0., 0.);

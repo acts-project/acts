@@ -13,8 +13,6 @@
 #include <cmath>
 #include <optional>
 
-namespace utf = boost::unit_test;
-
 namespace {
 
 __attribute__((noinline)) void divbyzero() {

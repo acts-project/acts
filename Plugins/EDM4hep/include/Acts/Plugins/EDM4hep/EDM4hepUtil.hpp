@@ -18,7 +18,6 @@
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -207,8 +206,8 @@ void readTrack(const edm4hep::Track& from,
                           << " track states (including IP state)");
   // We write the trackstates out outside in, need to reverse iterate to get the
   // same order
-  for (size_t i = from.trackStates_size() - 1; i <= from.trackStates_size();
-       i--) {
+  for (std::size_t i = from.trackStates_size() - 1;
+       i <= from.trackStates_size(); i--) {
     auto trackState = from.getTrackStates(i);
     if (trackState.location == edm4hep::TrackState::AtIP) {
       ipState = trackState;

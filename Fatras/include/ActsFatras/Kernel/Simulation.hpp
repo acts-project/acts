@@ -310,7 +310,7 @@ struct Simulation {
   ///
   template <typename particles_t>
   static void renumberTailParticleIds(particles_t &particles,
-                                      size_t lastValid) {
+                                      std::size_t lastValid) {
     // iterate over adjacent pairs; potentially modify the second element.
     // assume e.g. a primary particle 2 with generation=subparticle=0 that
     // generates two secondaries during simulation. we have the following

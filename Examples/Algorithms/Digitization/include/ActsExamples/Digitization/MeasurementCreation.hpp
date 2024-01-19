@@ -51,7 +51,7 @@ Measurement createMeasurement(const DigitizedParameters& dParams,
 /// @param dParams the struct of arrays of parameters to be created
 ///
 /// @return a tuple of constituents for a measurement
-template <size_t kMeasDIM>
+template <std::size_t kMeasDIM>
 std::tuple<std::array<Acts::BoundIndices, kMeasDIM>, Acts::ActsVector<kMeasDIM>,
            Acts::ActsSquareMatrix<kMeasDIM>>
 measurementConstituents(const DigitizedParameters& dParams) {

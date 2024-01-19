@@ -33,7 +33,8 @@ class EffPlotTool {
     std::map<std::string, PlotHelpers::Binning> varBinning = {
         {"Eta", PlotHelpers::Binning("#eta", 40, -4, 4)},
         {"Phi", PlotHelpers::Binning("#phi", 100, -3.15, 3.15)},
-        {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)}};
+        {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)},
+        {"DeltaR", PlotHelpers::Binning("#Delta R", 100, 0, 0.3)}};
   };
 
   /// @brief Nested Cache struct
@@ -41,6 +42,9 @@ class EffPlotTool {
     TEfficiency* trackEff_vs_pT{nullptr};   ///< Tracking efficiency vs pT
     TEfficiency* trackEff_vs_eta{nullptr};  ///< Tracking efficiency vs eta
     TEfficiency* trackEff_vs_phi{nullptr};  ///< Tracking efficiency vs phi
+    TEfficiency* trackEff_vs_DeltaR{
+        nullptr};  ///< Tracking efficiency vs distance to the closest truth
+                   ///< particle
   };
 
   /// Constructor
@@ -58,9 +62,11 @@ class EffPlotTool {
   ///
   /// @param effPlotCache cache object for efficiency plots
   /// @param truthParticle the truth Particle
+  /// @param deltaR the distance to the closest truth particle
   /// @param status the reconstruction status
   void fill(EffPlotCache& effPlotCache,
-            const ActsFatras::Particle& truthParticle, bool status) const;
+            const ActsFatras::Particle& truthParticle, double deltaR,
+            bool status) const;
 
   /// @brief write the efficiency plots to file
   ///

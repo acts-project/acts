@@ -46,7 +46,7 @@ using device_array = std::unique_ptr<T, Details::DeviceArrayDeleter>;
 
 /// Function creating a primitive array in CUDA device memory
 template <typename T>
-device_array<T> make_device_array(size_t size);
+device_array<T> make_device_array(std::size_t size);
 
 /// Convenience type for using primitive variable arrays on the host
 template <typename T>
@@ -54,27 +54,27 @@ using host_array = std::unique_ptr<T, Details::HostArrayDeleter>;
 
 /// Function creating a primitive array in the host's memory
 template <typename T>
-host_array<T> make_host_array(size_t size);
+host_array<T> make_host_array(std::size_t size);
 
 /// Copy one array from the host to the device
 template <typename T>
 void copyToDevice(device_array<T>& dev, const host_array<T>& host,
-                  size_t arraySize);
+                  std::size_t arraySize);
 
 /// Copy one array from the host to the device asynchronously
 template <typename T>
 void copyToDevice(device_array<T>& dev, const host_array<T>& host,
-                  size_t arraySize, const StreamWrapper& stream);
+                  std::size_t arraySize, const StreamWrapper& stream);
 
 /// Copy one array from the device to the host
 template <typename T>
 void copyToHost(host_array<T>& host, const device_array<T>& dev,
-                size_t arraySize);
+                std::size_t arraySize);
 
 /// Copy one array from the device to the host asynchronously
 template <typename T>
 void copyToHost(host_array<T>& host, const device_array<T>& dev,
-                size_t arraySize, const StreamWrapper& stream);
+                std::size_t arraySize, const StreamWrapper& stream);
 
 }  // namespace Cuda
 }  // namespace Acts
