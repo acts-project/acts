@@ -51,9 +51,9 @@ auto Acts::EigenStepper<E, A>::boundState(
     const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
   return detail::boundState(
-      state.geoContext, state.cov, state.jacobian, state.jacTransport,
+      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
-      state.covTransport && transportCov, state.pathAccumulated, surface,
+      state.covTransport && transportCov, state.pathAccumulated,
       freeToBoundCorrection);
 }
 
@@ -101,10 +101,10 @@ template <typename E, typename A>
 void Acts::EigenStepper<E, A>::transportCovarianceToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
-  detail::transportCovarianceToBound(
-      state.geoContext.get(), state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars, surface,
-      freeToBoundCorrection);
+  detail::transportCovarianceToBound(state.geoContext.get(), surface, state.cov,
+                                     state.jacobian, state.jacTransport,
+                                     state.derivative, state.jacToGlobal,
+                                     state.pars, freeToBoundCorrection);
 }
 
 template <typename E, typename A>

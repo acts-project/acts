@@ -90,7 +90,6 @@ def runMaterialRecording(
 
 
 def main():
-
     p = argparse.ArgumentParser()
     p.add_argument(
         "-n", "--events", type=int, default=1000, help="Number of events to generate"

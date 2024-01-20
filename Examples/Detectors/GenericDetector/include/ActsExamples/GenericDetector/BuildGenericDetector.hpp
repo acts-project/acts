@@ -204,7 +204,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   bpvConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
                               1. * Acts::UnitConstants::mm};
   bpvConfig.buildToRadiusZero = true;
-  bpvConfig.volumeSignature = 0;
   auto beamPipeVolumeBuilder =
       std::make_shared<const Acts::CylinderVolumeBuilder>(
           bpvConfig,
@@ -392,7 +391,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pvbConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
                               5. * Acts::UnitConstants::mm};
   pvbConfig.layerBuilder = pixelLayerBuilder;
-  pvbConfig.volumeSignature = 0;
   auto pixelVolumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
       pvbConfig, Acts::getDefaultLogger("PixelVolumeBuilder", volumeLLevel));
   // add to the list of builders
@@ -426,7 +424,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     pstvolConfig.volumeName = "PST";
     pstvolConfig.buildToRadiusZero = false;
     pstvolConfig.layerBuilder = pstBuilder;
-    pstvolConfig.volumeSignature = 0;
     auto pstVolumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
         pstvolConfig, Acts::getDefaultLogger("PSTVolumeBuilder", volumeLLevel));
     // add to the detector builds
@@ -622,7 +619,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     ssvbConfig.volumeName = "SStrip";
     ssvbConfig.buildToRadiusZero = false;
     ssvbConfig.layerBuilder = sstripLayerBuilder;
-    ssvbConfig.volumeSignature = 0;
     auto sstripVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
             ssvbConfig,
@@ -808,7 +804,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     lsvbConfig.volumeName = "LStrip";
     lsvbConfig.buildToRadiusZero = false;
     lsvbConfig.layerBuilder = lstripLayerBuilder;
-    lsvbConfig.volumeSignature = 0;
     auto lstripVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
             lsvbConfig,

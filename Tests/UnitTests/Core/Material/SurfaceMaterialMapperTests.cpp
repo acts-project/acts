@@ -87,7 +87,6 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
   cvbConfig.layerBuilder = layerBuilder;
   cvbConfig.layerEnvelopeR = {1_mm, 1_mm};
   cvbConfig.buildToRadiusZero = true;
-  cvbConfig.volumeSignature = 0;
   auto centralVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
       cvbConfig, getDefaultLogger("CentralVolumeBuilder", volumeLLevel));
 

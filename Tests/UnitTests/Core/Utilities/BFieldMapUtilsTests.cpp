@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"

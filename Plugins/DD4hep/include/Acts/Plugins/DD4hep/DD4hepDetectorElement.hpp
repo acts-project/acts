@@ -38,6 +38,9 @@ class ISurfaceMaterial;
 ///
 class DD4hepDetectorElement : public TGeoDetectorElement {
  public:
+  // Define the context type
+  using DD4hepVolumeID = dd4hep::DDSegmentation::VolumeID;
+
   /// Broadcast the context type
   using ContextType = GeometryContext;
 
@@ -80,6 +83,9 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
       std::shared_ptr<const ISurfaceMaterial> material = nullptr);
 
   ~DD4hepDetectorElement() override = default;
+
+  // Give access to the DD4hep detector element
+  const dd4hep::DetElement& sourceElement() const { return m_detElement; }
 
  private:
   /// DD4hep detector element

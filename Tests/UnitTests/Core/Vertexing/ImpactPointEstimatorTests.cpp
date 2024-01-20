@@ -26,7 +26,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -98,7 +98,7 @@ Estimator makeEstimator(double bZ) {
   Stepper stepper(field);
   Estimator::Config cfg(field,
                         std::make_shared<Propagator>(
-                            std::move(stepper), detail::VoidNavigator(),
+                            std::move(stepper), VoidNavigator(),
                             getDefaultLogger("Prop", Logging::Level::WARNING)));
   return Estimator(cfg);
 }
