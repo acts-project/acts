@@ -8,23 +8,21 @@
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(const Vector3& position) {
-  m_position[ePos0] = position[ePos0];
-  m_position[ePos1] = position[ePos1];
-  m_position[ePos2] = position[ePos2];
+  m_position.head<3>() = position;
+  m_seedPosition.head<3>() = position;
 }
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(const Vector4& position)
-    : m_position(position) {}
+    : m_position(position), m_seedPosition(position) {}
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
     const Vector3& position, const SquareMatrix3& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_tracksAtVertex(tracks) {
-  m_position[ePos0] = position[ePos0];
-  m_position[ePos1] = position[ePos1];
-  m_position[ePos2] = position[ePos2];
+  m_position.head<3>() = position;
+  m_seedPosition.head<3>() = position;
   m_covariance.block<3, 3>(ePos0, ePos0) = covariance;
 }
 
@@ -33,6 +31,7 @@ Acts::Vertex<input_track_t>::Vertex(
     const Vector4& position, const SquareMatrix4& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_position(position),
+      m_seedPosition(position),
       m_covariance(covariance),
       m_tracksAtVertex(tracks) {}
 
@@ -54,6 +53,11 @@ const Acts::Vector4& Acts::Vertex<input_track_t>::fullPosition() const {
 template <typename input_track_t>
 Acts::Vector4& Acts::Vertex<input_track_t>::fullPosition() {
   return m_position;
+}
+
+template <typename input_track_t>
+const Acts::Vector4& Acts::Vertex<input_track_t>::fullSeedPosition() const {
+  return m_seedPosition;
 }
 
 template <typename input_track_t>
