@@ -380,11 +380,9 @@ void Acts::AdaptiveMultiVertexFitter<
         // vertex. The second template argument corresponds to the number of
         // fitted vertex dimensions (i.e., 3 if we only fit spatial coordinates
         // and 4 if we also fit time).
-        if (m_cfg.useTime) {
-          KalmanVertexTrackUpdater::update<input_track_t, 4>(trkAtVtx, *vtx);
-        } else {
-          KalmanVertexTrackUpdater::update<input_track_t, 3>(trkAtVtx, *vtx);
-        }
+        KalmanVertexTrackUpdater::update(trkAtVtx, vtx->fullPosition(),
+                                         vtx->fullCovariance(),
+                                         m_cfg.useTime ? 4 : 3);
       }
     }
   }

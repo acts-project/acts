@@ -37,6 +37,7 @@ Possible extensions are:
 In addition, a dedicated extension exists to allow configuration of the material
 mapping process, that is in further described below.
 
- * {class}`Acts::ProtoSurfaceMaterial`, only binning description (without material) to be
-   used in the material mapping process
+ * {class}`Acts::ProtoSurfaceMaterialT`, only binning description (without material) to be
+   used in the material mapping process, which can be specified with a templated binning
+   description.
 
