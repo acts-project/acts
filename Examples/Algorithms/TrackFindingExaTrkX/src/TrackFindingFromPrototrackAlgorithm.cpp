@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
@@ -125,7 +126,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   TrackContainer tracks(trackContainer, trackStateContainer);
 
   tracks.addColumn<unsigned int>("trackGroup");
-  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+  Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   std::size_t nSeed = 0;
   std::size_t nFailed = 0;

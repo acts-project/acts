@@ -339,6 +339,7 @@ class ConstPodioTrackStateContainer final
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 static_assert(IsReadOnlyMultiTrajectory<ConstPodioTrackStateContainer>::value,
@@ -655,14 +656,12 @@ class MutablePodioTrackStateContainer final
   std::unordered_map<HashedString,
                      std::unique_ptr<podio_detail::DynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 static_assert(
     !IsReadOnlyMultiTrajectory<MutablePodioTrackStateContainer>::value,
     "MutablePodioTrackStateContainer should not be read-only");
-
-static_assert(!MutablePodioTrackStateContainer::ReadOnly,
-              "MutablePodioTrackStateContainer should not be read-only");
 
 ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend,
                           MutablePodioTrackStateContainer);

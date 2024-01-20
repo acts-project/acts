@@ -129,16 +129,23 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
                                                               << " failed.");
       continue;
-    } else {
-      const auto& params = optParams.value();
-      trackParameters.emplace_back(surface->getSharedPtr(), params,
-                                   m_covariance, m_cfg.particleHypothesis);
-      if (outputSeeds) {
-        outputSeeds->push_back(seed);
-      }
-      if (outputTracks && inputTracks != nullptr) {
-        outputTracks->push_back(inputTracks->at(iseed));
-      }
+    }
+
+    const auto& params = optParams.value();
+
+    Acts::BoundSquareMatrix cov = m_covariance;
+    if (!bottomSP->t().has_value()) {
+      // Inflate the time uncertainty if no time measurement is available
+      cov(Acts::eBoundTime, Acts::eBoundTime) *= m_cfg.noTimeVarInflation;
+    }
+
+    trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
+                                 m_cfg.particleHypothesis);
+    if (outputSeeds) {
+      outputSeeds->push_back(seed);
+    }
+    if (outputTracks && inputTracks != nullptr) {
+      outputTracks->push_back(inputTracks->at(iseed));
     }
   }
 

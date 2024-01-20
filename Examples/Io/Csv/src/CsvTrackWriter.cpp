@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
@@ -109,7 +110,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
       nMajorityHits = particleHitCount.front().hitCount;
     }
 
-    static const Acts::ConstTrackAccessor<unsigned int> seedNumber(
+    static const Acts::ConstProxyAccessor<unsigned int> seedNumber(
         "trackGroup");
 
     // track info
