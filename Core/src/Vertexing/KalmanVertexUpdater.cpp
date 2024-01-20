@@ -118,12 +118,6 @@ double trackParametersChi2(
   Vector3 newTrkMom = cache.wMat * momJac.transpose() * trkParamWeight *
                       (trkParams - constTerm - posJacVtxPos);
 
-  // Correct phi and theta for possible periodicity changes
-  const auto correctedPhiTheta =
-      Acts::detail::normalizePhiTheta(newTrkMom(0), newTrkMom(1));
-  newTrkMom(0) = correctedPhiTheta.first;   // phi
-  newTrkMom(1) = correctedPhiTheta.second;  // theta
-
   // \tilde{p_k}
   ParameterVector linearizedTrackParameters =
       constTerm + posJacVtxPos + momJac * newTrkMom;
