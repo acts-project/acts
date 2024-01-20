@@ -572,8 +572,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
             const Acts::ActsVector<4> diffSeedPos =
                 vtx.fullSeedPosition() - truePos;
-            m_resZ.push_back(diffSeedPos[Acts::FreeIndices::eFreePos2]);
-            m_resT.push_back(diffSeedPos[Acts::FreeIndices::eFreeTime]);
+            m_resSeedZ.push_back(diffSeedPos[Acts::FreeIndices::eFreePos2]);
+            m_resSeedT.push_back(diffSeedPos[Acts::FreeIndices::eFreeTime]);
 
             Acts::ActsScalar varX = vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos0, Acts::FreeIndices::eFreePos0);
