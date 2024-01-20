@@ -64,14 +64,11 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
     // Set up track density used during vertex seeding
     Acts::AdaptiveGridTrackDensity::Config trkDensityCfg;
-    // Number of bins in z-direction
-    trkDensityCfg.spatialTrkGridSize = 9;
     // Bin extent in z-direction
-    trkDensityCfg.spatialBinExtent = 0.015;
-    // Number of bins in t-direction
-    trkDensityCfg.temporalTrkGridSize = 5;
+    trkDensityCfg.spatialBinExtent = 15. * Acts::UnitConstants::um;
     // Bin extent in t-direction
-    trkDensityCfg.temporalBinExtent = 19.;
+    trkDensityCfg.temporalBinExtent = 19. * Acts::UnitConstants::mm;
+    trkDensityCfg.useTime = m_cfg.useTime;
     Acts::AdaptiveGridTrackDensity trkDensity(trkDensityCfg);
 
     // Set up vertex seeder and finder
@@ -128,7 +125,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   // Set the initial variance of the 4D vertex position. Since time is on a
   // numerical scale, we have to provide a greater value in the corresponding
   // dimension.
-  finderConfig.initialVariances << 1e+2, 1e+2, 1e+2, 1e+7;
+  finderConfig.initialVariances << 1e+2, 1e+2, 1e+2, 1e+8;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;

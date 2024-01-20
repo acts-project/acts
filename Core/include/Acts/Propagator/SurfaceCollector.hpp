@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <sstream>
@@ -94,6 +95,10 @@ struct SurfaceCollector {
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
+    if (state.stage == PropagatorStage::postPropagation) {
+      return;
+    }
+
     auto currentSurface = navigator.currentSurface(state.navigation);
 
     // The current surface has been assigned by the navigator

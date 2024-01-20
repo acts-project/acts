@@ -19,7 +19,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"

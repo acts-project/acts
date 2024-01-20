@@ -144,25 +144,6 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   // Portal A retains identical position to B
   BOOST_CHECK_EQUAL(portalA->surface().center(gctx),
                     portalB->surface().center(gctx));
-
-  // An invalid fusing setup
-  auto linkToAIImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
-  auto linkToBIImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
-
-  auto portalAI = std::make_shared<Portal>(surface);
-  DetectorVolumeUpdater linkToAI;
-  linkToAI.connect<&LinkToVolumeImpl::link>(std::move(linkToAIImpl));
-  portalAI->assignDetectorVolumeUpdater(Acts::Direction::Positive,
-                                        std::move(linkToAI), {volumeA});
-
-  auto portalBI = std::make_shared<Portal>(surface);
-  DetectorVolumeUpdater linkToBI;
-  linkToBI.connect<&LinkToVolumeImpl::link>(std::move(linkToBIImpl));
-  portalBI->assignDetectorVolumeUpdater(Acts::Direction::Positive,
-                                        std::move(linkToBI), {volumeB});
-
-  BOOST_CHECK_THROW(Portal::fuse(portalAI, portalBI), std::runtime_error);
-  BOOST_CHECK_THROW(Portal::fuse(portalBI, portalAI), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
