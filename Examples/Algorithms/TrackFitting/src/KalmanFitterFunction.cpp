@@ -19,6 +19,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/SurfaceContainer.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -87,7 +88,9 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
                            const Acts::TrackingGeometry& trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
-        slSurfaceAccessor{trkGeo} {}
+        slSurfaceAccessor{
+        Acts::SurfaceContainer(std::make_shared<const Acts::TrackingGeometry>(trkGeo)).surfacePtrs()
+  } {}
 
   template <typename calibrator_t>
   auto makeKfOptions(const GeneralFitterOptions& options,

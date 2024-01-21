@@ -21,6 +21,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/SurfaceContainer.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -78,7 +79,9 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
                                     const Acts::TrackingGeometry& trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
-        m_slSurfaceAccessor{trkGeo} {}
+        m_slSurfaceAccessor{
+                Acts::SurfaceContainer(std::make_shared<const Acts::TrackingGeometry>(trkGeo)).surfacePtrs()
+  } {}
 
   template <typename calibrator_t>
   auto makeGx2fOptions(const GeneralFitterOptions& options,

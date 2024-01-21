@@ -19,6 +19,7 @@
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/SurfaceContainer.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
@@ -33,6 +34,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
+
 
 #include <algorithm>
 #include <array>
@@ -92,7 +94,9 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
                         const Acts::TrackingGeometry& trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
-        m_slSurfaceAccessor{trkGeo} {}
+        m_slSurfaceAccessor{
+        Acts::SurfaceContainer(std::make_shared<const Acts::TrackingGeometry>(trkGeo)).surfacePtrs()
+        } {}
 
   template <typename calibrator_t>
   auto makeGsfOptions(const GeneralFitterOptions& options,
