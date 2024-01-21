@@ -121,7 +121,10 @@ class VertexPerformanceWriter final
   std::vector<double> m_recoZ;
   std::vector<double> m_recoT;
 
-  // Seed z and t coordinate
+  // 4D position of the vertex seed. x and y coordinate are 0 in current
+  // implementations, we save them here as a check.
+  std::vector<double> m_seedX;
+  std::vector<double> m_seedY;
   std::vector<double> m_seedZ;
   std::vector<double> m_seedT;
 

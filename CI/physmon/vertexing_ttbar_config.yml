@@ -49,7 +49,7 @@ histograms:
     min: 0.0
     max: 100.0
 
-  "truthX|truthY|recoX|recoY":
+  "truthX|truthY|recoX|recoY|seedX|seedY":
     nbins: 100
     min: -0.1
     max: 0.1

@@ -559,6 +559,10 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
             m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
 
+            m_seedX.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos0]);
+            m_seedY.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos1]);
             m_seedZ.push_back(
                 vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos2]);
             m_seedT.push_back(
