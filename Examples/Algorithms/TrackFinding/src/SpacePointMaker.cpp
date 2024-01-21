@@ -41,7 +41,7 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   if (m_cfg.outputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point output collection");
   }
-  if (m_cfg.surfacePtrs.empty()) {
+  if (m_cfg.surfacePtrs.empty() && !m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing surface pointers");
   }
   if (m_cfg.geometrySelection.empty()) {

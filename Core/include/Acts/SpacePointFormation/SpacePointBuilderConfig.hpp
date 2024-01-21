@@ -17,6 +17,7 @@ namespace Acts {
 struct SpacePointBuilderConfig {
   /// Tracking geometry
   SurfacePtrsContainer surfacePtrs;
+  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   /// Perform the perpendicular projection for space point finding
   bool usePerpProj = false;
 

@@ -55,6 +55,7 @@ class SpacePointMaker final : public IAlgorithm {
     std::string outputSpacePoints;
       /// Vector containing the geometry's surfaces.
     std::vector<const Acts::Surface*> surfacePtrs;
+    std::shared_ptr<const Acts::TrackingGeometry > trackingGeometry;
     /// For which part of the detector geometry should space points be created.
     ///
     /// Only volumes and layers can be set. Zero values can be used as wildcards

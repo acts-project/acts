@@ -43,7 +43,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters output collection");
   }
-  if (m_cfg.surfacePtrs.empty()) {
+  if (m_cfg.surfacePtrs.empty() && !m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing surface pointers");
   }
   if (!m_cfg.magneticField) {

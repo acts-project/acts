@@ -65,6 +65,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     std::string outputProtoTracks;
     /// Vector containing the geometry's surfaces.
     std::vector<const Acts::Surface*> surfacePtrs;
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
     /// The minimum magnetic field to trigger the track parameters estimation

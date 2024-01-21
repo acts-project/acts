@@ -1,25 +1,19 @@
+// This file is part of the Acts project.
 //
-// Created by Alon Levi on 21/01/2024.
+// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
 //
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-namespace Acts {
-// Make Mock Detector
-class MockDetector {
-    public:
-        MockTrack(const Vector3 &mom, const Vector3 &pos) : m_mom(mom), m_pos(pos) {
-            // nop
-        }
+#include <boost/test/data/test_case.hpp>
+#include <boost/test/tools/output_test_stream.hpp>
+#include <boost/test/unit_test.hpp>
 
-        Vector3 momentum() const { return m_mom; }
+// make detector
 
-        Vector3 position() const { return m_pos; }
+// make tracking geometry
 
-    private:
-        Vector3 m_mom;
-        Vector3 m_pos;
-    };
+// make points
 
-
-// Make Mock Tracking Geometry
-
-} // namespace acts
+// make spacepoints
