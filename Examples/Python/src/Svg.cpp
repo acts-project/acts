@@ -26,6 +26,7 @@
 #include "ActsExamples/Io/Svg/SvgPointWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
 
+#include <vector>
 #include <memory>
 #include <tuple>
 
