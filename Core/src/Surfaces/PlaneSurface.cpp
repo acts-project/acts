@@ -190,7 +190,8 @@ Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != Intersection3D::Status::unreachable && bcheck) {
+  if (intersection.status() != Intersection3D::Status::unreachable &&
+      bcheck.isEnabled()) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local

@@ -18,9 +18,9 @@ StraightLineStepper::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   return detail::boundState(
-      state.geoContext, state.cov, state.jacobian, state.jacTransport,
+      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
-      state.covTransport && transportCov, state.pathAccumulated, surface,
+      state.covTransport && transportCov, state.pathAccumulated,
       freeToBoundCorrection);
 }
 
@@ -60,9 +60,8 @@ void StraightLineStepper::transportCovarianceToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
-      state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars, surface,
-      freeToBoundCorrection);
+      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
+      state.derivative, state.jacToGlobal, state.pars, freeToBoundCorrection);
 }
 
 void StraightLineStepper::resetState(State& state,

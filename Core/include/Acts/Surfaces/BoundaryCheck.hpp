@@ -53,8 +53,7 @@ class BoundaryCheck {
   /// @param sigmaMax  Significance for the compatibility test
   BoundaryCheck(const SquareMatrix2& localCovariance, double sigmaMax = 1);
 
-  operator bool() const { return (m_type != Type::eNone); }
-  bool operator!() const { return !bool(*this); }
+  bool isEnabled() const { return m_type != Type::eNone; }
 
   /// Check if the point is inside a polygon.
   ///

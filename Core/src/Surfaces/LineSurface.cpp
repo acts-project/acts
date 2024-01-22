@@ -181,7 +181,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
   Vector3 result = ma + u * ea;
   // Evaluate the boundary check if requested
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
-  if (bcheck && m_bounds) {
+  if (bcheck.isEnabled() && m_bounds) {
     // At closest approach: check inside R or and inside Z
     Vector3 vecLocal = result - mb;
     double cZ = vecLocal.dot(eb);

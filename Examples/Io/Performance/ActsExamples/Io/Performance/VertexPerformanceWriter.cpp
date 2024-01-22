@@ -94,6 +94,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     throw std::bad_alloc();
   } else {
     // I/O parameters.
+    m_outputTree->Branch("event_nr", &m_eventNr);
+
     // Branches related to the 4D vertex position
     m_outputTree->Branch("truthX", &m_truthX);
     m_outputTree->Branch("truthY", &m_truthY);
@@ -261,6 +263,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
   TrackParametersContainer trackParameters;
   std::vector<SimParticle> associatedTruthParticles;
+
+  // Get the event number
+  m_eventNr = ctx.eventNumber;
 
   // The i-th entry in associatedTruthParticles corresponds to the i-th entry in
   // trackParameters. If we know the truth particles associated to the track

@@ -21,6 +21,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -424,5 +425,9 @@ class StraightLineStepper {
  private:
   double m_overstepLimit = s_onSurfaceTolerance;
 };
+
+template <typename navigator_t>
+struct SupportsBoundParameters<StraightLineStepper, navigator_t>
+    : public std::true_type {};
 
 }  // namespace Acts
