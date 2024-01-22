@@ -26,9 +26,10 @@
 #include "ActsExamples/Io/Svg/SvgPointWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
 
-#include <vector>
 #include <memory>
+#include <string>
 #include <tuple>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -41,7 +42,7 @@ using namespace ActsExamples;
 
 namespace {
 
-using ViewAndRange = std::tuple<std::string, Acts::Extent>;
+using ViewAndRange = std::tuple<const std::string, const Acts::Extent>;
 
 // Helper function to be picked in different access patterns
 actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
