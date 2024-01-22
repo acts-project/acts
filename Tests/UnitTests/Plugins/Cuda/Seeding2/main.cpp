@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
   sfConfig = sfConfig.toInternalUnits().calculateDerivedQuantities();
 
   // Set up the spacepoint grid configuration.
-  Acts::SpacePointGridConfig gridConfig;
+  Acts::CylindricalSpacePointGridConfig gridConfig;
   gridConfig.minPt = sfConfig.minPt;
   gridConfig.rMax = sfConfig.rMax;
   gridConfig.zMax = sfConfig.zMax;
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
   gridConfig.cotThetaMax = sfConfig.cotThetaMax;
   gridConfig = gridConfig.toInternalUnits();
   // Set up the spacepoint grid options
-  Acts::SpacePointGridOptions gridOpts;
+  Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = sfOptions.bFieldInZ;
 
   // Covariance tool, sets covariances per spacepoint as required.
@@ -123,13 +123,14 @@ int main(int argc, char* argv[]) {
 
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
-  auto grid = Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(
-      gridConfig, gridOpts);
-  Acts::SpacePointGridCreator::fillGrid(sfConfig, sfOptions, grid,
-                                        spView.begin(), spView.end(), ct,
-                                        rRangeSPExtent);
+  auto grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<TestSpacePoint>(
+          gridConfig, gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(sfConfig, sfOptions, grid,
+                                                   spView.begin(), spView.end(),
+                                                   ct, rRangeSPExtent);
 
-  auto spGroup = Acts::BinnedSPGroup<TestSpacePoint>(
+  auto spGroup = Acts::CylindricalBinnedGroup<TestSpacePoint>(
       std::move(grid), *bottomBinFinder, *topBinFinder);
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
@@ -189,7 +190,7 @@ int main(int argc, char* argv[]) {
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
       std::array<std::size_t, 2ul> localPosition =
           spGroup.grid().localBinsFromGlobalBin(i);
-      auto spGroup_itr = Acts::BinnedSPGroupIterator<TestSpacePoint>(
+      auto spGroup_itr = Acts::CylindricalBinnedGroupIterator<TestSpacePoint>(
           spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
@@ -228,7 +229,7 @@ int main(int argc, char* argv[]) {
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
     std::array<std::size_t, 2ul> localPosition =
         spGroup.grid().localBinsFromGlobalBin(i);
-    auto spGroup_itr = Acts::BinnedSPGroupIterator<TestSpacePoint>(
+    auto spGroup_itr = Acts::CylindricalBinnedGroupIterator<TestSpacePoint>(
         spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;
