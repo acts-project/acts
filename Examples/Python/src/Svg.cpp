@@ -83,7 +83,7 @@ actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
     }
   }
   return svgDet;
-};
+}
 
 // Helper function to be picked in different access patterns
 void viewDetector(
@@ -125,7 +125,7 @@ void viewDetector(
     auto [view, range] = var;
     Svg::toFile({svgDetViews[iv]}, saveAs + "_" + view + ".svg");
   }
-};
+}
 
 }  // namespace
 
