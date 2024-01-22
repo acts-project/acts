@@ -11,6 +11,7 @@ target_sources(
     detail/SupportSurfacesHelper.cpp
     detail/IndexedGridFiller.cpp
     CylindricalContainerBuilder.cpp
+    CuboidalContainerBuilder.cpp
     Detector.cpp
     DetectorBuilder.cpp
     DetectorVolume.cpp
