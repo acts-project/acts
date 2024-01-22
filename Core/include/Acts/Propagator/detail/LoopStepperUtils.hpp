@@ -126,11 +126,11 @@ struct LoopComponentProxy
   Result<typename SingleStepper::BoundState> boundState(
       const Surface& surface, bool transportCov,
       const FreeToBoundCorrection& freeToBoundCorrection) {
-    return detail::boundState(
-        all_state.geoContext, cov(), jacobian(), jacTransport(), derivative(),
-        jacToGlobal(), pars(), all_state.particleHypothesis,
-        all_state.covTransport && transportCov, cmp.state.pathAccumulated,
-        surface, freeToBoundCorrection);
+    return detail::boundState(all_state.geoContext, surface, cov(), jacobian(),
+                              jacTransport(), derivative(), jacToGlobal(),
+                              pars(), all_state.particleHypothesis,
+                              all_state.covTransport && transportCov,
+                              cmp.state.pathAccumulated, freeToBoundCorrection);
   }
 
   void update(const FreeVector& freeParams, const BoundVector& boundParams,

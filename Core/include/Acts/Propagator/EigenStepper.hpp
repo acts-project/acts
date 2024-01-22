@@ -20,6 +20,7 @@
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
+#include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
@@ -29,6 +30,7 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <type_traits>
 
 namespace Acts {
 
@@ -407,6 +409,11 @@ class EigenStepper {
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 };
+
+template <typename navigator_t>
+struct SupportsBoundParameters<EigenStepper<>, navigator_t>
+    : public std::true_type {};
+
 }  // namespace Acts
 
 #include "Acts/Propagator/EigenStepper.ipp"

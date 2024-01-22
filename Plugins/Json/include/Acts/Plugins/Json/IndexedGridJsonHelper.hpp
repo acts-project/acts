@@ -8,16 +8,16 @@
 
 #pragma once
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <tuple>
 
 namespace Acts {
-using namespace Experimental::detail::GridAxisGenerators;
+using namespace GridAxisGenerators;
 
 namespace IndexedGridJsonHelper {
 

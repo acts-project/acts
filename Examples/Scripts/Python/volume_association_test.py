@@ -10,7 +10,6 @@ from acts import GeometryContext, logging
 
 
 def volumeAssociationTest(sequencer, ntests, tdetector):
-
     rnd = acts.examples.RandomNumbers(seed=42)
 
     alg = acts.examples.VolumeAssociationTest(

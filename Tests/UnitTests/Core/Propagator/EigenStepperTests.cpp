@@ -362,9 +362,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     copy.stepSize = state.stepSize;
     copy.previousStepSize = state.previousStepSize;
 
-    copy.fieldCache =
-        MagneticFieldProvider::Cache::make<typename field_t::Cache>(
-            state.fieldCache.template get<typename field_t::Cache>());
+    copy.fieldCache = MagneticFieldProvider::Cache(
+        std::in_place_type<typename field_t::Cache>,
+        state.fieldCache.template as<typename field_t::Cache>());
 
     copy.geoContext = state.geoContext;
     copy.extension = state.extension;
