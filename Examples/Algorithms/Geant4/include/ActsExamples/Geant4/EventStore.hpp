@@ -35,7 +35,7 @@ struct EventStore {
   /// Use a std::set here because it allows for fast insertion and ensures
   /// uniqueness. Thus particle collisions are detected early.
   using ParticleContainer =
-      std::set<ActsFatras::Particle, ActsExamples::detail::CompareParticleId>;
+      std::set<SimParticle, ActsExamples::detail::CompareParticleId>;
 
   /// Initial and final particle collections
   ParticleContainer particlesInitial;

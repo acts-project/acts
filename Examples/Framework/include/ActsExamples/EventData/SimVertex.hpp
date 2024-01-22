@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
@@ -26,9 +27,9 @@ struct SimVertex {
   /// The vertex process type.
   ActsFatras::ProcessType process = ActsFatras::ProcessType::eUndefined;
   /// The incoming particles into the vertex
-  std::vector<ActsFatras::Particle> incoming = {};
+  std::vector<SimParticle> incoming = {};
   /// The outgoing particles from the vertex
-  std::vector<ActsFatras::Particle> outgoing = {};
+  std::vector<SimParticle> outgoing = {};
 
   /// Construct the vertex from a position and optional process type.
   ///

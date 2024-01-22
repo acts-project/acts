@@ -128,7 +128,7 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
     const auto pdg = static_cast<Acts::PdgParticle>(genParticle.id());
     const auto charge = genParticle.charge() * 1_e;
     const auto mass = genParticle.m0() * 1_GeV;
-    ActsFatras::Particle particle(particleId, pdg, charge, mass);
+    SimParticle particle(particleId, pdg, charge, mass);
     particle.setPosition4(pos4);
     // normalization/ units are not import for the direction
     particle.setDirection(genParticle.px(), genParticle.py(), genParticle.pz());

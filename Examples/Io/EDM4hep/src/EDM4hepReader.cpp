@@ -86,6 +86,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
   ACTS_DEBUG("Found " << primaryVertices.size() << " primary vertices");
 
+  // key: child, value: parent
+  ParentRelationship parentRelationship;
+
   std::size_t nPrimaryVertices = 0;
   // Walk the particle tree
   for (const auto& [vtxPos, particles] : primaryVertices) {
@@ -98,7 +101,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     auto startSize = unordered.size();
     for (const auto& inParticle : particles) {
       nParticles += 1;
-      SimParticle particle = EDM4hepUtil::readParticle(inParticle);
+      SimParticle particle{EDM4hepUtil::readParticle(inParticle)};
       particle.setParticleId(SimBarcode{}
                                  .setParticle(nParticles)
                                  .setVertexPrimary(nPrimaryVertices));
@@ -113,7 +116,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
                                     << inParticle.getEndpoint().z);
       const auto pid = particle.particleId();
       unordered.push_back(std::move(particle));
-      processChildren(inParticle, pid, unordered, nSecondaryVertices, maxGen);
+      processChildren(inParticle, pid, unordered, parentRelationship,
+                      nSecondaryVertices, maxGen);
     }
     ACTS_VERBOSE("Primary vertex complete, produced "
                  << (unordered.size() - startSize) << " particles and "
@@ -135,7 +139,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 void EDM4hepReader::processChildren(
     const edm4hep::MCParticle& inParticle, SimBarcode parentId,
     SimParticleContainer::sequence_type& particles,
-    std::size_t& nSecondaryVertices, std::size_t& maxGen) const {
+    ParentRelationship& parentRelationship, std::size_t& nSecondaryVertices,
+    std::size_t& maxGen) const {
   constexpr auto indent = [&](std::size_t n) {
     std::string result;
     for (std::size_t i = 0; i < n; ++i) {
@@ -162,6 +167,8 @@ void EDM4hepReader::processChildren(
     ACTS_VERBOSE(indent(gen) << "    -> parent decays");
     secondaryVertex = ++nSecondaryVertices;
   }
+
+  std::size_t parentIndex = particles.size() - 1;
 
   std::size_t nParticles = 0;
   for (const auto& daughter : inParticle.getDaughters()) {
@@ -200,7 +207,9 @@ void EDM4hepReader::processChildren(
                  << daughter.getEndpoint().z);
 
     particles.push_back(std::move(particle));
-    processChildren(daughter, pid, particles, nSecondaryVertices, maxGen);
+    parentRelationship[particles.size() - 1] = parentIndex;
+    processChildren(daughter, pid, particles, parentRelationship,
+                    nSecondaryVertices, maxGen);
   }
 }
 

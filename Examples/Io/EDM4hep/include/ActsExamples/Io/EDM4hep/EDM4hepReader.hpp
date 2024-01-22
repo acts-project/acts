@@ -39,6 +39,8 @@ class EDM4hepReader final : public IReader {
     std::string outputParticles;
   };
 
+  using ParentRelationship = std::unordered_map<std::size_t, std::size_t>;
+
   /// Construct the particle reader.
   ///
   /// @param config is the configuration object
@@ -58,6 +60,7 @@ class EDM4hepReader final : public IReader {
 
   void processChildren(const edm4hep::MCParticle& particle, SimBarcode parentId,
                        SimParticleContainer::sequence_type& particles,
+                       ParentRelationship& parentRelationship,
                        std::size_t& nSecondaryVertices,
                        std::size_t& maxGen) const;
 
