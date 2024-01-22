@@ -422,8 +422,7 @@ template <typename vfitter_t, typename sfinder_t>
 Acts::Result<bool>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     std::vector<Vertex<InputTrack_t>>& vertexCollection,
-    Vertex<InputTrack_t>& currentVertex,
-    std::vector<InputTrack>& tracksToFit,
+    Vertex<InputTrack_t>& currentVertex, std::vector<InputTrack>& tracksToFit,
     std::vector<InputTrack>& seedTracks,
     const std::vector<InputTrack>& /* origTracks */,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
