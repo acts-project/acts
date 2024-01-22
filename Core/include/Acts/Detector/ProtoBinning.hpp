@@ -54,8 +54,7 @@ struct ProtoBinning {
         axisType(Acts::detail::AxisType::Variable),
         boundaryType(bType),
         edges(e),
-        expansion(exp),
-        autorange(false) {
+        expansion(exp) {
     if (edges.size() < 2u) {
       throw std::invalid_argument(
           "ProtoBinning: Invalid binning, at least two edges are needed.");
@@ -73,10 +72,7 @@ struct ProtoBinning {
   ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
                ActsScalar minE, ActsScalar maxE, std::size_t nbins,
                std::size_t exp = 0u)
-      : binValue(bValue),
-        boundaryType(bType),
-        expansion(exp),
-        autorange(false) {
+      : binValue(bValue), boundaryType(bType), expansion(exp) {
     if (minE >= maxE) {
       std::string msg = "ProtoBinning: Invalid binning for value '";
       msg += binningValueNames()[bValue];
