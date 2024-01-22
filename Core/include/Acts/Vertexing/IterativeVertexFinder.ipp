@@ -346,8 +346,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
 template <typename vfitter_t, typename sfinder_t>
 Acts::Result<void>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
-    const std::vector<InputTrack>& seedTracks,
-    const Vertex& seedVertex,
+    const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
     std::vector<InputTrack>& tracksToFitOut,
     std::vector<InputTrack>& tracksToFitSplitVertexOut,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
@@ -421,10 +420,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
 template <typename vfitter_t, typename sfinder_t>
 Acts::Result<bool>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
-    std::vector<Vertex>& vertexCollection,
-    Vertex& currentVertex,
-    std::vector<InputTrack>& tracksToFit,
-    std::vector<InputTrack>& seedTracks,
+    std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
+    std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
     const std::vector<InputTrack>& /* origTracks */,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
     State& state) const {

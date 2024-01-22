@@ -65,8 +65,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
       // Check if we use the constraint during the vertex fit
       if (state.vtxInfoMap[vtx].constraint.fullCovariance() !=
           SquareMatrix4::Zero()) {
-        const Acts::Vertex& constraint =
-            state.vtxInfoMap[vtx].constraint;
+        const Acts::Vertex& constraint = state.vtxInfoMap[vtx].constraint;
         vtx->setFullPosition(constraint.fullPosition());
         vtx->setFitQuality(constraint.fitQuality());
         vtx->setFullCovariance(constraint.fullCovariance());
@@ -120,8 +119,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
-    State& state, Vertex& newVertex,
-    const linearizer_t& linearizer,
+    State& state, Vertex& newVertex, const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
     ACTS_ERROR(
@@ -195,8 +193,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
 
 template <typename input_track_t, typename linearizer_t>
 bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    isAlreadyInList(Vertex* vtx,
-                    const std::vector<Vertex*>& vertices) const {
+    isAlreadyInList(Vertex* vtx, const std::vector<Vertex*>& vertices) const {
   return std::find(vertices.begin(), vertices.end(), vtx) != vertices.end();
 }
 

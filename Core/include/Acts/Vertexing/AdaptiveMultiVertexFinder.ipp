@@ -140,12 +140,10 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
-    const std::vector<InputTrack>& trackVector,
-    Vertex& currentConstraint,
+    const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
     SeedFinderState_t& seedFinderState,
-    const std::vector<InputTrack>& removedSeedTracks) const
-    -> Result<Vertex> {
+    const std::vector<InputTrack>& removedSeedTracks) const -> Result<Vertex> {
   VertexingOptions<InputTrack_t> seedOptions = vertexingOptions;
   seedOptions.constraint = currentConstraint;
 
@@ -234,8 +232,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     addCompatibleTracksToVertex(
-        const std::vector<InputTrack>& tracks,
-        Vertex& vtx, FitterState_t& fitterState,
+        const std::vector<InputTrack>& tracks, Vertex& vtx,
+        FitterState_t& fitterState,
         const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<void> {
   for (const auto& trk : tracks) {
@@ -267,10 +265,8 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     canRecoverFromNoCompatibleTracks(
         const std::vector<InputTrack>& allTracks,
-        const std::vector<InputTrack>& seedTracks,
-        Vertex& vtx,
-        const Vertex& currentConstraint,
-        FitterState_t& fitterState,
+        const std::vector<InputTrack>& seedTracks, Vertex& vtx,
+        const Vertex& currentConstraint, FitterState_t& fitterState,
         const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<bool> {
   // Recover from cases where no compatible tracks to vertex
@@ -325,10 +321,8 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     canPrepareVertexForFit(
         const std::vector<InputTrack>& allTracks,
-        const std::vector<InputTrack>& seedTracks,
-        Vertex& vtx,
-        const Vertex& currentConstraint,
-        FitterState_t& fitterState,
+        const std::vector<InputTrack>& seedTracks, Vertex& vtx,
+        const Vertex& currentConstraint, FitterState_t& fitterState,
         const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<bool> {
   // Add vertex info to fitter state
@@ -355,10 +349,10 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
-    checkVertexAndCompatibleTracks(
-        Vertex& vtx,
-        const std::vector<InputTrack>& seedTracks,
-        FitterState_t& fitterState, bool useVertexConstraintInFit) const
+    checkVertexAndCompatibleTracks(Vertex& vtx,
+                                   const std::vector<InputTrack>& seedTracks,
+                                   FitterState_t& fitterState,
+                                   bool useVertexConstraintInFit) const
     -> std::pair<int, bool> {
   bool isGoodVertex = false;
   int nCompatibleTracks = 0;
@@ -422,11 +416,10 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
-    removeTrackIfIncompatible(
-        Vertex& vtx, std::vector<InputTrack>& seedTracks,
-        FitterState_t& fitterState,
-        std::vector<InputTrack>& removedSeedTracks,
-        const GeometryContext& geoCtx) const -> bool {
+    removeTrackIfIncompatible(Vertex& vtx, std::vector<InputTrack>& seedTracks,
+                              FitterState_t& fitterState,
+                              std::vector<InputTrack>& removedSeedTracks,
+                              const GeometryContext& geoCtx) const -> bool {
   // Try to find the track with highest compatibility
   double maxCompatibility = 0;
 
@@ -480,8 +473,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
-    Vertex& vtx,
-    const std::vector<Vertex*>& allVertices,
+    Vertex& vtx, const std::vector<Vertex*>& allVertices,
     FitterState_t& fitterState) const -> bool {
   double contamination = 0.;
   double contaminationNum = 0;
@@ -509,8 +501,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
-    const Vertex& vtx,
-    const std::vector<Vertex*>& allVertices) const -> bool {
+    const Vertex& vtx, const std::vector<Vertex*>& allVertices) const -> bool {
   const Vector4& candidatePos = vtx.fullPosition();
   const SquareMatrix4& candidateCov = vtx.fullCovariance();
 
@@ -564,10 +555,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
 
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
-    Vertex& vtx,
-    std::vector<std::unique_ptr<Vertex>>& allVertices,
-    std::vector<Vertex*>& allVerticesPtr,
-    FitterState_t& fitterState,
+    Vertex& vtx, std::vector<std::unique_ptr<Vertex>>& allVertices,
+    std::vector<Vertex*>& allVerticesPtr, FitterState_t& fitterState,
     const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<void> {
   allVertices.pop_back();
@@ -609,8 +598,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getVertexOutputList(
     const std::vector<Vertex*>& allVerticesPtr,
-    FitterState_t& fitterState) const
-    -> Acts::Result<std::vector<Vertex>> {
+    FitterState_t& fitterState) const -> Acts::Result<std::vector<Vertex>> {
   std::vector<Vertex> outputVec;
   for (auto vtx : allVerticesPtr) {
     auto& outVtx = *vtx;
