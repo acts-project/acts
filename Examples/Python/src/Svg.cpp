@@ -43,9 +43,9 @@ namespace {
 using ViewAndRange = std::tuple<std::string, Acts::Extent>;
 
 // Helper function to be picked in different access patterns
-static inline actsvg::svg::object viewDetectorVolume(
-    const Svg::ProtoVolume& pVolume, const std::string& identification,
-    const ViewAndRange& viewAndRange) {
+actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
+                                       const std::string& identification,
+                                       const ViewAndRange& viewAndRange) {
   actsvg::svg::object svgDet;
   svgDet._id = identification;
   svgDet._tag = "g";
@@ -54,7 +54,7 @@ static inline actsvg::svg::object viewDetectorVolume(
 
   // The surfaces to be drawn
   std::vector<Svg::ProtoVolume::surface_type> surfaces;
-  // If there is view reange restriction, filter the surfaces
+  // If there is view range restriction, filter the surfaces
   if (viewRange.constrains()) {
     for (const auto& vs : pVolume._v_surfaces) {
       bool inRange = false;
@@ -86,7 +86,7 @@ static inline actsvg::svg::object viewDetectorVolume(
 };
 
 // Helper function to be picked in different access patterns
-static inline void viewDetector(
+void viewDetector(
     const Acts::GeometryContext& gctx,
     const Acts::Experimental::Detector& detector,
     const std::string& identification,
@@ -112,7 +112,7 @@ static inline void viewDetector(
         Svg::DetectorVolumeConverter::convert(gctx, *v, vopts);
 
     for (auto [iv, var] : Acts::enumerate(viewAndRanges)) {
-            auto [view, range] = var;
+      auto [view, range] = var;
       // Get the view and the range
       auto svgVolView = viewDetectorVolume(
           pVolume, identification + "_vol" + std::to_string(vidx) + "_" + view,
@@ -136,7 +136,7 @@ void addSvg(Context& ctx) {
   auto svg = m.def_submodule("svg");
 
   // Some basics
-  { py::class_<actsvg::svg::object>(svg, "object"); }
+  py::class_<actsvg::svg::object>(svg, "object");
 
   // Core components, added as an acts.svg submodule
   {
