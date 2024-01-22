@@ -42,7 +42,7 @@ using namespace ActsExamples;
 
 namespace {
 
-using ViewAndRange = std::tuple<const std::string, const Acts::Extent>;
+using ViewAndRange = std::tuple<std::string, Acts::Extent>;
 
 // Helper function to be picked in different access patterns
 actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
@@ -94,7 +94,7 @@ void viewDetector(
     const std::string& identification,
     const std::vector<std::tuple<int, Svg::DetectorVolumeConverter::Options>>&
         volumeIdxOpts,
-    const std::vector<const ViewAndRange>& viewAndRanges,
+    const std::vector<ViewAndRange>& viewAndRanges,
     const std::string& saveAs) {
   // The svg object to be returned
 
