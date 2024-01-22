@@ -34,15 +34,13 @@ void fillGaps(Blueprint::Node& node, bool adjustToParent = true);
 ///
 /// @param node the node for with the gaps should be filled
 /// @param adjustToParent nodes, if nodes should be adjusted to parent
-void fillGapsCylindrical(Blueprint::Node& node, 
-    bool adjustToParent = true);
+void fillGapsCylindrical(Blueprint::Node& node, bool adjustToParent = true);
 
 /// @brief Fill the gaps in the Cuboidal container node
 ///
 /// @param node the node for with the gaps should be filled
 /// @param adjustToParent nodes, if nodes should be adjusted to parent
-void fillGapsCuboidal(Blueprint::Node& node, 
-    bool adjustToParent = true);
+void fillGapsCuboidal(Blueprint::Node& node, bool adjustToParent = true);
 
 }  // namespace BlueprintHelper
 }  // namespace detail

@@ -206,16 +206,15 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
       // Assign the portal direction
       // in a consistent way
       Acts::Direction dir;
-      if (index%2 == 0) {
+      if (index % 2 == 0) {
         dir = Direction::Forward;
       } else {
         dir = Direction::Backward;
       }
 
       // Make the stitch boundaries
-      pReplacements.push_back(
-          PortalReplacement(portal, index, dir,
-                            stitchBoundaries, (mergedInX ? binX : binY)));
+      pReplacements.push_back(PortalReplacement(
+          portal, index, dir, stitchBoundaries, (mergedInX ? binX : binY)));
     }
   }
 
