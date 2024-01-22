@@ -205,8 +205,8 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
 
       // Assign the portal direction
       // in a consistent way
-      Acts::Direction dir = 
-          (index%2 == 0) ? Direction::Forward : Direction::Backward;
+      Acts::Direction dir =
+          (index % 2 == 0) ? Direction::Forward : Direction::Backward;
 
       // Make the stitch boundaries
       pReplacements.push_back(PortalReplacement(
