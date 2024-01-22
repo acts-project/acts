@@ -52,6 +52,9 @@ public:
     SurfaceContainer(TrackingGeometryPtr tGeometryPtr)
             : m_surfacePtrs(getPtrs(tGeometryPtr)) {}
 
+    SurfaceContainer(SurfacePtrsContainer& surfaceVec)
+            : m_surfacePtrs(surfaceVec) {}
+
     // Get surface pointer vector
     SurfacePtrsContainer surfacePtrs() const { return m_surfacePtrs; }
 };
