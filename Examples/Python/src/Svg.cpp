@@ -94,8 +94,7 @@ void viewDetector(
     const std::string& identification,
     const std::vector<std::tuple<int, Svg::DetectorVolumeConverter::Options>>&
         volumeIdxOpts,
-    const std::vector<ViewAndRange>& viewAndRanges,
-    const std::string& saveAs) {
+    const std::vector<ViewAndRange>& viewAndRanges, const std::string& saveAs) {
   // The svg object to be returned
 
   std::vector<actsvg::svg::object> svgDetViews;
