@@ -16,11 +16,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
@@ -178,6 +180,41 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
 };
 
+/// Common simplified base interface for propagators.
+///
+/// This class only supports propagation from start bound parameters to a target
+/// surface and returns only the end bound parameters.
+/// Navigation is performed if the underlying propagator is configured with an
+/// appropriate navigator. No custom actors or aborters are supported.
+class BasePropagator {
+ public:
+  /// Base propagator options
+  using Options = PropagatorOptions<>;
+
+  /// Method to propagate start bound track parameters to a target surface.
+  /// @param start The start bound track parameters.
+  /// @param target The target surface.
+  /// @param options The propagation options.
+  /// @return The end bound track parameters.
+  virtual Result<BoundTrackParameters> propagateToSurface(
+      const BoundTrackParameters& start, const Surface& target,
+      const Options& options) const = 0;
+
+  virtual ~BasePropagator() = default;
+};
+
+namespace detail {
+class PropagatorStub {};
+
+template <typename derived_t>
+class BasePropagatorHelper : public BasePropagator {
+ public:
+  Result<BoundTrackParameters> propagateToSurface(
+      const BoundTrackParameters& start, const Surface& target,
+      const Options& options) const override;
+};
+}  // namespace detail
+
 /// @brief Propagator for particles (optionally in a magnetic field)
 ///
 /// The Propagator works with a state objects given at function call
@@ -204,7 +241,11 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 ///   surface type) -> type of internal state object
 ///
 template <typename stepper_t, typename navigator_t = VoidNavigator>
-class Propagator final {
+class Propagator final
+    : public std::conditional_t<
+          SupportsBoundParameters_v<stepper_t, navigator_t>,
+          detail::BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
+          detail::PropagatorStub> {
   /// Re-define bound track parameters dependent on the stepper
   using StepperBoundTrackParameters =
       detail::stepper_bound_parameters_type_t<stepper_t>;
