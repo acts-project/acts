@@ -183,7 +183,7 @@ class AdaptiveMultiVertexFitter {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFitter", Logging::INFO))
       : m_cfg(std::move(cfg)),
-        m_extractParameters(func),
+        m_extractParameters(std::move(func)),
         m_logger(std::move(logger)) {}
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.

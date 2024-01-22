@@ -100,7 +100,9 @@ class FullBilloirVertexFitter {
       std::function<BoundTrackParameters(const InputTrack&)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("FullBilloirVertexFitter", Logging::INFO))
-      : m_cfg(cfg), extractParameters(func), m_logger(std::move(logger)) {}
+      : m_cfg(cfg),
+        extractParameters(std::move(func)),
+        m_logger(std::move(logger)) {}
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///

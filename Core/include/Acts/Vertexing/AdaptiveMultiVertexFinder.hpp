@@ -197,7 +197,7 @@ class AdaptiveMultiVertexFinder {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
-        m_extractParameters(func),
+        m_extractParameters(std::move(func)),
         m_logger(std::move(logger)) {}
 
   AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;

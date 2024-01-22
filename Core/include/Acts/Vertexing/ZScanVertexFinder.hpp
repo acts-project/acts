@@ -101,7 +101,9 @@ class ZScanVertexFinder {
                     std::function<BoundTrackParameters(const InputTrack&)> func,
                     std::unique_ptr<const Logger> logger =
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
-      : m_cfg(cfg), m_extractParameters(func), m_logger(std::move(logger)) {}
+      : m_cfg(cfg),
+        m_extractParameters(std::move(func)),
+        m_logger(std::move(logger)) {}
 
   /// @brief Function that determines single vertex,
   /// based on z0 values of input tracks,

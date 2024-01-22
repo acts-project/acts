@@ -558,7 +558,7 @@ template <typename vfitter_t, typename sfinder_t>
 int Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::countSignificantTracks(
     const Vertex<InputTrack_t>& vtx) const {
   return std::count_if(vtx.tracks().begin(), vtx.tracks().end(),
-                       [this](TrackAtVertex trk) {
+                       [this](const TrackAtVertex& trk) {
                          return trk.trackWeight > m_cfg.cutOffTrackWeight;
                        });
 }

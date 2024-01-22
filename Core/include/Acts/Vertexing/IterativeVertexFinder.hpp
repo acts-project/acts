@@ -163,7 +163,7 @@ class IterativeVertexFinder {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("IterativeVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
-        m_extractParameters(func),
+        m_extractParameters(std::move(func)),
         m_logger(std::move(logger)) {}
 
   /// @brief Finds vertices corresponding to input trackVector

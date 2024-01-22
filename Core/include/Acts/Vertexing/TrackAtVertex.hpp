@@ -77,7 +77,7 @@ struct TrackAtVertex {
   TrackAtVertex(double chi2perTrack, const BoundTrackParameters& paramsAtVertex,
                 InputTrack originalTrack)
       : fittedParams(paramsAtVertex),
-        originalParams(std::move(originalTrack)),
+        originalParams(originalTrack),
         chi2Track(chi2perTrack) {}
 
   /// @brief Constructor with default chi2
@@ -86,8 +86,7 @@ struct TrackAtVertex {
   /// @param originalTrack Original perigee parameter
   TrackAtVertex(const BoundTrackParameters& paramsAtVertex,
                 InputTrack originalTrack)
-      : fittedParams(paramsAtVertex),
-        originalParams(std::move(originalTrack)) {}
+      : fittedParams(paramsAtVertex), originalParams(originalTrack) {}
 
   /// Fitted perigee
   BoundTrackParameters fittedParams;
