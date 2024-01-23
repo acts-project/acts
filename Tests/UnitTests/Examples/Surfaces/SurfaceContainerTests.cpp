@@ -11,9 +11,14 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/container/static_vector.hpp>
 
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
@@ -50,8 +55,8 @@ namespace Test {
 
     BOOST_AUTO_TEST_CASE(SurfaceContainerTest){
             // Make basic Objects
-            int numSurfaces = 6;
-            auto rBounds = std::make_shared<const RectangleBounds>(3._mm, 4._mm);
+            unsigned numSurfaces = 6;
+            auto rBounds = std::make_shared<const RectangleBounds>(3,4);
             std::vector<std::shared_ptr<Acts::PlaneSurface>> surfaces;
             std::vector<Transform3> transformations;
             std::array<LayerPtr, 6> layers{};
@@ -61,7 +66,7 @@ namespace Test {
             Vector2 Zero2{ 0., 0. };
             Vector3 Zero3{ 0., 0., 0. };
 
-            for (int i=0; i<numSurfaces; i++) {
+            for (unsigned i=0; i<numSurfaces; i++) {
                 // Make Surfaces
                 long double x = (long double) i;
                 Translation3 translation{(x + 1.) * 10._mm, 0.25_m, 0.25_m};
@@ -85,8 +90,7 @@ namespace Test {
 
                 std::unique_ptr<SurfaceArray> surArray(new SurfaceArray(surfaces[i]));
 
-                layers[i] =
-                        PlaneLayer::create(trafo, rBounds, std::move(surArray), 0._mm);
+                layers[i] = PlaneLayer::create(trafo, rBounds, std::move(surArray), 0._mm);
 
                 auto mutableSurface = const_cast<PlaneSurface *>(surfaces[i].get());
                 mutableSurface->associateLayer(*layers[i]);
@@ -110,11 +114,11 @@ namespace Test {
             std::unique_ptr<const LayerArray> layArr(
             layArrCreator.layerArray(gctx, layVec, 0., 2._m,
             BinningType::arbitrary, BinningValue::binX));
-            auto boundsVol =
+            auto boundsVolTG =
             std::make_shared<const CuboidVolumeBounds>(1.5_m, 0.5_m, 0.5_m);
 
             auto trackVolume =
-            TrackingVolume::create(trafoVol, boundsVol, nullptr,
+            TrackingVolume::create(trafoVol, boundsVolTG, nullptr,
             std::move(layArr), nullptr, {}, "Volume");
 
             Transform3 trafoWorld(Transform3::Identity());
@@ -137,16 +141,54 @@ namespace Test {
 
             MutableTrackingVolumePtr mtvpWorld(
             TrackingVolume::create(trafoWorld, worldVol, trVolArr, "World"));
-
             // Build tracking geometry
             std::shared_ptr<TrackingGeometry> tGeometry(
             new Acts::TrackingGeometry(mtvpWorld));
             // make surfacePtrs from TG
             auto surfacePtrsTG = SurfaceContainer(tGeometry).surfacePtrs();
             BOOST_CHECK_NE(tGeometry, nullptr);
-
             BOOST_TEST_MESSAGE("PASSED tracking geometry tests" );
+            auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
+            Acts::Transform3 nominal = Acts::Transform3::Identity();
+            BOOST_CHECK_NE(tGeometry, nullptr);
 
+            std::vector<std::shared_ptr<Acts::PlaneSurface>> surfacePtrs_shared(6);
+            GeometryIdentifier surfaceId;
+            for (unsigned i=0 ; i<numSurfaces ; i++) {
+//                auto detElement = std::make_unique<Acts::Test::DetectorElementStub>(
+//                        transformations[i],
+//                        rBounds, 0.01);
+//                auto surface = detElement->surface().getSharedPtr();
+                std::shared_ptr<Acts::PlaneSurface> detPlaneSurface = Surface::makeShared<PlaneSurface>(transformations[i], rBounds);
+                surfaceId.setVolume(2u).setLayer(2u*(i+1u)).setSensitive(1u);
+                detPlaneSurface->assignGeometryId(surfaceId);
+                surfacePtrs_shared.at(i) = std::move(detPlaneSurface);
+            }
+
+            auto boundsVolDet =
+            std::make_shared<Acts::CuboidVolumeBounds>(1.5_m, 0.5_m, 0.5_m);
+            const std::vector<std::shared_ptr<PlaneSurface>> surfacePtrs_shared_const(surfacePtrs_shared);
+
+            auto vol = Acts::Experimental::DetectorVolumeFactory::construct(
+            portalGenerator, gctx, "VolumeWithSurfaces", nominal,
+            std::move(boundsVolDet), surfacePtrs_shared_const, {},
+            Acts::Experimental::tryNoVolumes(),
+            Acts::Experimental::tryAllPortalsAndSurfaces());
+
+            Acts::GeometryIdentifier volId;
+            volId.setVolume(2u);
+            vol->assignGeometryId(volId);
+
+            auto detector = Acts::Experimental::Detector::makeShared(
+            "detector", {vol}, Acts::Experimental::tryRootVolumes());
+
+            SurfaceContainer detSC(detector);
+            auto surfacePtrsD = detSC.surfacePtrs();
+            for (unsigned i=0 ; i<numSurfaces ; i++) {
+                auto detTransform = surfacePtrsD.at(i)->localToGlobal(gctx,Zero2,Zero3);
+                auto TGTransform =  surfacePtrsTG.at(i)->localToGlobal(gctx,Zero2,Zero3);
+                BOOST_CHECK_EQUAL(detTransform(0),TGTransform(0));
+            }
     }
     };// namespace Test
 } // namcespace Acts
