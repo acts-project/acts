@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,11 +20,11 @@
 
 // Acts include(s).
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 
 // System include(s).
 #include <cassert>
@@ -61,10 +61,10 @@ int main(int argc, char* argv[]) {
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   // Create binned groups of these spacepoints.
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
-      zBinNeighborsBottom, numPhiNeighbors);
-  auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
-      zBinNeighborsTop, numPhiNeighbors);
+  auto bottomBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
+      numPhiNeighbors, zBinNeighborsBottom);
+  auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
+      numPhiNeighbors, zBinNeighborsTop);
 
   // Set up the seedFinder configuration.
   Acts::SeedFinderConfig<TestSpacePoint> sfConfig;
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
   sfConfig = sfConfig.toInternalUnits().calculateDerivedQuantities();
 
   // Set up the spacepoint grid configuration.
-  Acts::SpacePointGridConfig gridConfig;
+  Acts::CylindricalSpacePointGridConfig gridConfig;
   gridConfig.minPt = sfConfig.minPt;
   gridConfig.rMax = sfConfig.rMax;
   gridConfig.zMax = sfConfig.zMax;
@@ -105,15 +105,15 @@ int main(int argc, char* argv[]) {
   gridConfig.cotThetaMax = sfConfig.cotThetaMax;
   gridConfig = gridConfig.toInternalUnits();
   // Set up the spacepoint grid options
-  Acts::SpacePointGridOptions gridOpts;
+  Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = sfOptions.bFieldInZ;
 
   // Covariance tool, sets covariances per spacepoint as required.
-  auto ct = [=](const TestSpacePoint& sp, float, float,
-                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+  auto ct = [=](const TestSpacePoint& sp, float, float, float)
+      -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.m_varianceR, sp.m_varianceZ);
-    return std::make_pair(position, covariance);
+    return std::make_tuple(position, covariance, std::nullopt);
   };
 
   // extent used to store r range for middle spacepoint
@@ -123,11 +123,15 @@ int main(int argc, char* argv[]) {
 
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
-  auto grid = Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(
-      gridConfig, gridOpts);
-  auto spGroup = Acts::BinnedSPGroup<TestSpacePoint>(
-      spView.begin(), spView.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, sfConfig, sfOptions);
+  auto grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<TestSpacePoint>(
+          gridConfig, gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(sfConfig, sfOptions, grid,
+                                                   spView.begin(), spView.end(),
+                                                   ct, rRangeSPExtent);
+
+  auto spGroup = Acts::CylindricalBinnedGroup<TestSpacePoint>(
+      std::move(grid), *bottomBinFinder, *topBinFinder);
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
 
@@ -186,8 +190,8 @@ int main(int argc, char* argv[]) {
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
       std::array<std::size_t, 2ul> localPosition =
           spGroup.grid().localBinsFromGlobalBin(i);
-      auto spGroup_itr =
-          Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
+      auto spGroup_itr = Acts::CylindricalBinnedGroupIterator<TestSpacePoint>(
+          spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
       }
@@ -225,8 +229,8 @@ int main(int argc, char* argv[]) {
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
     std::array<std::size_t, 2ul> localPosition =
         spGroup.grid().localBinsFromGlobalBin(i);
-    auto spGroup_itr =
-        Acts::BinnedSPGroupIterator(spGroup, localPosition, navigation);
+    auto spGroup_itr = Acts::CylindricalBinnedGroupIterator<TestSpacePoint>(
+        spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;
     }

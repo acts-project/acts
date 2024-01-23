@@ -175,16 +175,8 @@ if(ACTS_BUILD_PLUGIN_ONNX)
   target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibrator.cpp)
   list(APPEND py_files examples/onnx/__init__.py)
 
-  if(ACTS_BUILD_PLUGIN_MLPACK)
-    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpack.cpp)
-    list(APPEND py_files examples/onnx/mlpack.py)
-  else()
-    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
-  endif()
-
 else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
-  target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
   target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 

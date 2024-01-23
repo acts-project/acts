@@ -32,7 +32,6 @@ import sys
 
 
 def add_switch(i, argv, current):
-
     fields = argv[i].split("=")
 
     if len(fields) == 1:
