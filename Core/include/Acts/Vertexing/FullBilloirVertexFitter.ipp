@@ -261,9 +261,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       transMat(5, 3) = 1.;
 
       // cov(V,P)
-      // TODO: This is incorrect (see Ref. (3)), but it will not be needed
-      // anyway once we replace fittedParams with fittedMomentum
-      ActsMatrix<4, 3> covVP = billoirTrack.B;
+      ActsMatrix<4, 3> covVP = -covV * billoirTrack.BCinv;
 
       // cov(P,P), 3x3 matrix, see Ref. (3)
       ActsSquareMatrix<3> covP =
