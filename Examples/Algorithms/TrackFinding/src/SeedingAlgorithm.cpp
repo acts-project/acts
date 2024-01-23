@@ -248,17 +248,18 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-  Acts::SpacePointGrid<SimSpacePoint> grid =
-      Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig,
-                                                             m_cfg.gridOptions);
-  Acts::SpacePointGridCreator::fillGrid(
+  Acts::CylindricalSpacePointGrid<SimSpacePoint> grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<SimSpacePoint>(
+          m_cfg.gridConfig, m_cfg.gridOptions);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       rRangeSPExtent);
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
-  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
+
+  auto spacePointsGrouping = Acts::CylindricalBinnedGroup<SimSpacePoint>(
       std::move(grid), *m_bottomBinFinder, *m_topBinFinder,
       std::move(navigation));
 
