@@ -153,6 +153,27 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   BOOST_CHECK(!tString.empty());
 }
 
+// Test that the constains() check advances when the extend() method
+// is used weith a new binning type
+BOOST_AUTO_TEST_CASE(ProtoSupportCaseTests) {
+  std::vector<Vector3> vertices = {
+      Vector3(15_mm, -3_mm, -10_mm), Vector3(18_mm, 0_mm, -10_mm),
+      Vector3(15_mm, 3_mm, -10_mm),  Vector3(15_mm, -3_mm, 10_mm),
+      Vector3(18_mm, 0_mm, 10_mm),   Vector3(15_mm, 3_mm, 10_mm)};
+
+  Extent volumeExtent;
+  volumeExtent.set(binZ, -300_mm, 300_mm);
+
+  BOOST_CHECK(volumeExtent.constrains(binZ));
+  BOOST_CHECK(!volumeExtent.constrains(binR));
+
+  for (const auto& v : vertices) {
+    volumeExtent.extend(v, {binR});
+  }
+
+  BOOST_CHECK(volumeExtent.constrains(binR));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
