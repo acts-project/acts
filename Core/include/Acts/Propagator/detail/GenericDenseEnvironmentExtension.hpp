@@ -543,15 +543,20 @@ struct GenericDenseEnvironmentExtension {
           jacobian * angleCov * jacobian.transpose();
       */
 
+      double s = accumulatedMaterial.thickness();
+
       // for derivation see
       // https://github.com/andiwand/cern-scripts/blob/5f0ebf1bef35db65322f28c2e840c1db1aaaf9a7/notebooks/2023-12-07_qp-dense-nav.ipynb
       //
       FreeMatrix additionalMscCovariance = FreeMatrix::Zero();
       additionalMscCovariance.block<3, 3>(eFreeDir0, eFreeDir0) =
+          (s * s / 3 - s * s / 4) *
+          (ActsSquareMatrix<3>::Identity() - direction * direction.transpose());
+      additionalMscCovariance.block<3, 3>(eFreeDir0, eFreeDir0) =
           theta0 * theta0 *
           (ActsSquareMatrix<3>::Identity() - direction * direction.transpose());
 
-      double transportDistance = accumulatedMaterial.thickness() / 2;
+      double transportDistance = s / 2;
       FreeMatrix transportJacobian = FreeMatrix::Identity();
       transportJacobian.block<3, 3>(eFreePos0, eFreeDir0) =
           transportDistance * ActsSquareMatrix<3>::Identity();

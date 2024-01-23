@@ -21,6 +21,7 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -43,8 +44,13 @@ const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
 inline Material makeLiquidArgon() {
-  return Material::fromMassDensity(140.034_mm, 857.064_mm, 39.948, 18,
-                                   1.396 * 1_g / 1_cm3);
+  return Material::fromMassDensity(140.0343868497_mm, 857.0639538668_mm,
+                                   39.9476933511, 18, 1.396 * 1_g / 1_cm3);
+}
+
+inline Material makeIron() {
+  return Material::fromMassDensity(17.57493465097_mm, 169.9030027586_mm,
+                                   55.845110798, 26, 7.874 * 1_g / 1_cm3);
 }
 
 inline std::tuple<std::shared_ptr<const Acts::TrackingGeometry>,
@@ -146,6 +152,7 @@ BOOST_DATA_TEST_CASE(dense_propagator_test,
   DenseStepperPropagatorOptions<> options(geoCtx, magCtx);
   options.maxStepSize = 1_m;
   options.maxSteps = 10000;
+  options.meanEnergyLoss = true;
 
   const Acts::Surface& target = *surfaces.back();
 
@@ -183,6 +190,76 @@ BOOST_DATA_TEST_CASE(dense_propagator_test,
       particleHypothesis.mass(), qOverP, particleHypothesis.absoluteCharge());
 
   std::cout << "theta0 = " << theta0 << std::endl;
+
+  double eloss = computeEnergyLossMean(
+      MaterialSlab(makeLiquidArgon(), 1_m), particleHypothesis.absolutePdg(),
+      particleHypothesis.mass(), qOverP, particleHypothesis.absoluteCharge());
+
+  std::cout << "eloss = " << eloss << std::endl;
+
+  std::cout << std::endl;
+}
+
+BOOST_AUTO_TEST_CASE(chart_eloss_lar) {
+  const double q = 1;
+  const double p_min = 50_MeV;
+  const double p_max = 1_TeV;
+  const int n = 1000;
+  const auto material = makeLiquidArgon();
+
+  std::ofstream file("eloss_lar.csv");
+
+  file << "p,total,bethe" << std::endl;
+
+  for (int i = 0; i < n; ++i) {
+    const double p = std::pow(
+        10, std::log10(p_min) +
+                (std::log10(p_max) - std::log10(p_min)) * (1.0 * i / n));
+
+    auto particleHypothesis = ParticleHypothesis::muon();
+    double qOverP = particleHypothesis.qOverP(p, q);
+
+    double bethe = computeEnergyLossBethe(MaterialSlab(material, 1),
+                                          particleHypothesis.mass(), qOverP,
+                                          particleHypothesis.absoluteCharge());
+
+    double total = computeEnergyLossMean(
+        MaterialSlab(material, 1), particleHypothesis.absolutePdg(),
+        particleHypothesis.mass(), qOverP, particleHypothesis.absoluteCharge());
+
+    file << p << "," << total << "," << bethe << std::endl;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(chart_eloss_iron) {
+  const double q = 1;
+  const double p_min = 50_MeV;
+  const double p_max = 1_TeV;
+  const int n = 1000;
+  const auto material = makeIron();
+
+  std::ofstream file("eloss_iron.csv");
+
+  file << "p,total,bethe" << std::endl;
+
+  for (int i = 0; i < n; ++i) {
+    const double p = std::pow(
+        10, std::log10(p_min) +
+                (std::log10(p_max) - std::log10(p_min)) * (1.0 * i / n));
+
+    auto particleHypothesis = ParticleHypothesis::muon();
+    double qOverP = particleHypothesis.qOverP(p, q);
+
+    double bethe = computeEnergyLossBethe(MaterialSlab(material, 1),
+                                          particleHypothesis.mass(), qOverP,
+                                          particleHypothesis.absoluteCharge());
+
+    double total = computeEnergyLossMean(
+        MaterialSlab(material, 1), particleHypothesis.absolutePdg(),
+        particleHypothesis.mass(), qOverP, particleHypothesis.absoluteCharge());
+
+    file << p << "," << total << "," << bethe << std::endl;
+  }
 }
 
 }  // namespace Test
