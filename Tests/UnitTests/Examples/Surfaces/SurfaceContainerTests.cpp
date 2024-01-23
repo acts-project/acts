@@ -152,26 +152,26 @@ namespace Test {
             Acts::Transform3 nominal = Acts::Transform3::Identity();
             BOOST_CHECK_NE(tGeometry, nullptr);
 
-            std::vector<std::shared_ptr<Acts::PlaneSurface>> surfacePtrs_shared(6);
+            std::vector<std::shared_ptr<Acts::Surface>> surfacePtrs_shared;
             GeometryIdentifier surfaceId;
             for (unsigned i=0 ; i<numSurfaces ; i++) {
 //                auto detElement = std::make_unique<Acts::Test::DetectorElementStub>(
 //                        transformations[i],
 //                        rBounds, 0.01);
 //                auto surface = detElement->surface().getSharedPtr();
-                std::shared_ptr<Acts::PlaneSurface> detPlaneSurface = Surface::makeShared<PlaneSurface>(transformations[i], rBounds);
+                auto detPlaneSurface = Surface::makeShared<PlaneSurface>(transformations[i],rBounds);
                 surfaceId.setVolume(2u).setLayer(2u*(i+1u)).setSensitive(1u);
                 detPlaneSurface->assignGeometryId(surfaceId);
-                surfacePtrs_shared.at(i) = std::move(detPlaneSurface);
+                surfacePtrs_shared.push_back(detPlaneSurface);
             }
 
             auto boundsVolDet =
             std::make_shared<Acts::CuboidVolumeBounds>(1.5_m, 0.5_m, 0.5_m);
-            const std::vector<std::shared_ptr<PlaneSurface>> surfacePtrs_shared_const(surfacePtrs_shared);
+            //const std::vector<std::shared_ptr<RegularSurface>> surfacePtrs_shared_const(surfacePtrs_shared);
 
             auto vol = Acts::Experimental::DetectorVolumeFactory::construct(
             portalGenerator, gctx, "VolumeWithSurfaces", nominal,
-            std::move(boundsVolDet), surfacePtrs_shared_const, {},
+            std::move(boundsVolDet), surfacePtrs_shared, {},
             Acts::Experimental::tryNoVolumes(),
             Acts::Experimental::tryAllPortalsAndSurfaces());
 
@@ -187,7 +187,7 @@ namespace Test {
             for (unsigned i=0 ; i<numSurfaces ; i++) {
                 auto detTransform = surfacePtrsD.at(i)->localToGlobal(gctx,Zero2,Zero3);
                 auto TGTransform =  surfacePtrsTG.at(i)->localToGlobal(gctx,Zero2,Zero3);
-                BOOST_CHECK_EQUAL(detTransform(0),TGTransform(0));
+                BOOST_CHECK_EQUAL(detTransform.isApprox(TGTransform),true);
             }
     }
     };// namespace Test
