@@ -202,10 +202,15 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
       auto portalSurface =
           Surface::makeShared<PlaneSurface>(portalTransform, portalBounds);
       auto portal = std::make_shared<Portal>(portalSurface);
+
+      // Assign the portal direction
+      // in a consistent way
+      Acts::Direction dir =
+          (index % 2 == 0) ? Direction::Forward : Direction::Backward;
+
       // Make the stitch boundaries
-      pReplacements.push_back(
-          PortalReplacement(portal, index, Direction::Backward,
-                            stitchBoundaries, (mergedInX ? binX : binY)));
+      pReplacements.push_back(PortalReplacement(
+          portal, index, dir, stitchBoundaries, (mergedInX ? binX : binY)));
     }
   }
 
