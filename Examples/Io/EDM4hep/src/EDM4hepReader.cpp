@@ -128,9 +128,51 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
   ACTS_DEBUG("Found " << unordered.size() << " particles");
 
+  // We need to keep the original indices, so that we can set the parent/child
+  // relationship later
+  std::vector<std::size_t> indices(unordered.size());
+  std::iota(indices.begin(), indices.end(), 0);
+
+  // Sort indices
+  std::sort(
+      indices.begin(), indices.end(), [&](std::size_t lhs, std::size_t rhs) {
+        return detail::CompareParticleId{}(unordered[lhs], unordered[rhs]);
+      });
+
+  SimParticleContainer::sequence_type ordered;
+  ordered.reserve(unordered.size());
+
+  std::vector<std::size_t> unorderedToOrdered(indices.size());
+  std::size_t unorderedIdx = 0;
+  for (std::size_t idx : indices) {
+    ordered.push_back(unordered[idx]);
+    unorderedToOrdered[idx] = unorderedIdx;
+    unorderedIdx++;
+  }
+
+  // ParentRelationship orderedParentRelationship;
+
   // Write ordered particles container to the EventStore
   SimParticleContainer particles;
-  particles.insert(unordered.begin(), unordered.end());
+  // This should be O(N) since the input is already ordered
+  particles.insert(ordered.begin(), ordered.end());
+
+  // Now that addresses should be stable, set parent/child relationships from
+  // the indices we have above
+  // Indices are in the unordered container, so need to convert to ordered
+  for (const auto [unorderedChildIdx, unorderedParentIdx] :
+       parentRelationship) {
+    std::size_t orderedChildIdx = unorderedToOrdered[unorderedChildIdx];
+    std::size_t orderedParentIdx = unorderedToOrdered[unorderedParentIdx];
+
+    // get the pointers from the final ordered container
+    auto& parent = *particles.find(ordered[orderedParentIdx].particleId());
+    auto& child = *particles.find(ordered[orderedChildIdx].particleId());
+
+    parent.addChild(child);
+    child.setParent(&parent);
+  }
+
   m_outputParticles(ctx, std::move(particles));
 
   return ProcessCode::SUCCESS;
