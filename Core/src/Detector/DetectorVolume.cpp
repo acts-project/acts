@@ -269,21 +269,36 @@ Acts::Extent Acts::Experimental::DetectorVolume::extent(
 
 bool Acts::Experimental::DetectorVolume::checkContainment(
     const GeometryContext& gctx, std::size_t nseg) const {
+
+  // Magnitude comparisons do not make sense here
+  // as these are 0-length ranges, meaning a volume 
+  // can never contain a surface or a subvolume
+  std::vector<Acts::BinningValue> binningValues = {
+    Acts::binX, Acts::binY, Acts::binZ};
+  // Add angular binning values if not cuboid
+  if (volumeBounds().type() != VolumeBounds::eCuboid) {
+    binningValues.insert(binningValues.end(), {
+      Acts::binR, Acts::binPhi, Acts::binRPhi, 
+      Acts::binEta, Acts::binH});
+  }
+
   // Create the volume extent
   auto volumeExtent = extent(gctx, nseg);
   // Check surfaces
-  for (const auto* s : surfaces()) {
-    auto sExtent = s->polyhedronRepresentation(gctx, nseg).extent();
-    if (!volumeExtent.contains(sExtent)) {
-      return false;
+  for (auto b : binningValues) {
+    for (const auto* s : surfaces()) {
+      auto sExtent = s->polyhedronRepresentation(gctx, nseg).extent();
+      if (!volumeExtent.contains(sExtent, b)) {
+        return false;
+      }
     }
-  }
   // Check volumes
-  for (const auto* v : volumes()) {
-    auto vExtent = v->extent(gctx, nseg);
-    if (!volumeExtent.contains(vExtent)) {
-      return false;
-    }
+    for (const auto* v : volumes()) {
+      auto vExtent = v->extent(gctx, nseg);
+        if (!volumeExtent.contains(vExtent, b)) {
+          return false;
+        }
+      }
   }
   // All contained
   return true;
