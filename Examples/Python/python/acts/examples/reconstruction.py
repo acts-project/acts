@@ -41,7 +41,6 @@ SeedFinderConfigArg = namedtuple(
         "maxPtScattering",
         "zBinEdges",
         "zBinsCustomLooping",
-        "skipZMiddleBinSearch",
         "rRangeMiddleSP",
         "useVariableMiddleSPRange",
         "binSizeR",
@@ -57,7 +56,7 @@ SeedFinderConfigArg = namedtuple(
         "z",  # (min,max)
         "zOutermostLayers",  # (min,max)
     ],
-    defaults=[None] * 19 + [(None, None)] * 8,
+    defaults=[None] * 18 + [(None, None)] * 8,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -114,10 +113,21 @@ TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
     defaults=[(None, None)],
 )
 
+
 TrackSelectorConfig = namedtuple(
     "TrackSelectorConfig",
-    ["loc0", "loc1", "time", "eta", "absEta", "pt", "phi", "nMeasurementsMin"],
-    defaults=[(None, None)] * 7 + [None],
+    [
+        "loc0",
+        "loc1",
+        "time",
+        "eta",
+        "absEta",
+        "pt",
+        "phi",
+        "nMeasurementsMin",
+        "nMeasurementsGroupMin",
+    ],
+    defaults=[(None, None)] * 7 + [None] * 2,
 )
 
 CkfConfig = namedtuple(
@@ -221,7 +231,7 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, skipZMiddleBinSearch, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
@@ -600,7 +610,6 @@ def addStandardSeeding(
             maxPtScattering=seedFinderConfigArg.maxPtScattering,
             zBinEdges=seedFinderConfigArg.zBinEdges,
             zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
-            skipZMiddleBinSearch=seedFinderConfigArg.skipZMiddleBinSearch,
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
             binSizeR=seedFinderConfigArg.binSizeR,
@@ -953,7 +962,7 @@ def addSeedFilterML(
     outputDirCsv: Optional[Union[Path, str]] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)()
-    from acts.examples.onnx.mlpack import SeedFilterMLAlgorithm
+    from acts.examples.onnx import SeedFilterMLAlgorithm
 
     inputParticles = "particles"
     selectedParticles = "truth_seeds_selected"
@@ -1179,6 +1188,7 @@ def addCKFTracks(
                 ptMin=trackSelectorConfig.pt[0],
                 ptMax=trackSelectorConfig.pt[1],
                 minMeasurements=trackSelectorConfig.nMeasurementsMin,
+                measurementCounter=trackSelectorConfig.nMeasurementsGroupMin,
             )
         )
         if trackSelectorConfig is not None

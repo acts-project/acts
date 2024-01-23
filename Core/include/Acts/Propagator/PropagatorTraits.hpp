@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-namespace Acts {
-namespace Python {
-struct Context;
-}  // namespace Python
-}  // namespace Acts
+#pragma once
 
-namespace Acts::Python {
-void addOnnxMlpack(Context& /*unused*/) {
-  // dummy function
-}
-}  // namespace Acts::Python
+#include <type_traits>
+namespace Acts {
+template <typename stepper_t, typename navigator_t>
+struct SupportsBoundParameters : public std::false_type {};
+
+template <typename stepper_t, typename navigator_t>
+constexpr bool SupportsBoundParameters_v =
+    SupportsBoundParameters<stepper_t, navigator_t>::value;
+}  // namespace Acts
