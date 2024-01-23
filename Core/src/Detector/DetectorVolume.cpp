@@ -53,9 +53,6 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
     throw std::invalid_argument(
         "DetectorVolume: navigation state updator delegate is not connected.");
   }
-
-  [[maybe_unused]] const auto& gctx_ref = gctx;
-  assert(checkContainment(gctx) && "Objects are not contained by volume.");
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
@@ -204,6 +201,14 @@ void Acts::Experimental::DetectorVolume::construct(
       portalGenerator(transform(gctx), *(m_bounds.get()), getSharedPtr());
   m_portals = ObjectStore<std::shared_ptr<Portal>>(portalSurfaces);
   createBoundingBox(gctx);
+
+  // Volume extent is constructed from the portals
+  // So the surface/subvolume containment 
+  // check has to happen here
+  if(!checkContainment(gctx)) {
+    throw std::invalid_argument(
+        "DetectorVolume: surfaces or subvolumes are not contained by volume");
+  }
 }
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
