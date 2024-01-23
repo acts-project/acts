@@ -60,7 +60,9 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   SimHitContainer::sequence_type unordered;
   SimHitData data;
 
+  ACTS_DEBUG("start to read hits ");
   while (reader.read(data)) {
+    ACTS_DEBUG("found a sim hit");
     const auto geometryId = Acts::GeometryIdentifier(data.geometry_id);
     // TODO validate geo id consistency
     const auto particleId = ActsFatras::Barcode(data.particle_id);
