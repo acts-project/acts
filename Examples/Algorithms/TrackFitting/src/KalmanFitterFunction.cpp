@@ -89,8 +89,9 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
       : fitter(std::move(f)),
         directFitter(std::move(df)),
         slSurfaceAccessor{
-        Acts::SurfaceContainer(std::make_shared<const Acts::TrackingGeometry>(trkGeo)).surfacePtrs()
-  } {}
+            Acts::SurfaceContainer(
+                std::make_shared<const Acts::TrackingGeometry>(trkGeo))
+                .surfacePtrs()} {}
 
   template <typename calibrator_t>
   auto makeKfOptions(const GeneralFitterOptions& options,

@@ -266,7 +266,7 @@ int runRecCKFTracks(
   trackFindingCfg.outputTracks = "tracks";
   trackFindingCfg.computeSharedHits = true;
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
-          trackingGeometry, magneticField,
+      trackingGeometry, magneticField,
       *Acts::getDefaultLogger("TrackFinder", logLevel));
   sequencer.addAlgorithm(
       std::make_shared<TrackFindingAlgorithm>(trackFindingCfg, logLevel));

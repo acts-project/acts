@@ -77,7 +77,8 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
       return false;
     }
     // within the same volume hierarchy only consider layers
-    return ((ref.sensitive() == cmp.sensitive())&&(ref.layer() == cmp.layer()));
+    return ((ref.sensitive() == cmp.sensitive()) &&
+            (ref.layer() == cmp.layer()));
   };
   auto geoSelBeg = m_cfg.geometrySelection.begin();
   auto geoSelEnd = m_cfg.geometrySelection.end();
@@ -94,7 +95,7 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
     ACTS_INFO("  " << geoId);
   }
   auto spBuilderConfig = Acts::SpacePointBuilderConfig();
-    spBuilderConfig.surfacePtrs = m_cfg.surfacePtrs;
+  spBuilderConfig.surfacePtrs = m_cfg.surfacePtrs;
 
   m_slSurfaceAccessor.emplace(
       IndexSourceLink::SurfaceAccessor{m_cfg.surfacePtrs});
@@ -123,7 +124,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   Acts::SpacePointBuilderOptions spOpt;
   spOpt.paramCovAccessor = [&measurements](Acts::SourceLink slink) {
     const auto islink = slink.get<IndexSourceLink>();
-    const auto& meas = measurements[islink.index()%measurements.size()];
+    const auto& meas = measurements[islink.index() % measurements.size()];
 
     return std::visit(
         [](const auto& measurement) {
@@ -139,8 +140,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   SimSpacePointContainer spacePoints;
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
-      if (geoId.sensitive() == 0)
-          continue;
+    if (geoId.sensitive() == 0)
+      continue;
     auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually

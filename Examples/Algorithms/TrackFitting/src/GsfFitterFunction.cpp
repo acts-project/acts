@@ -35,7 +35,6 @@
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -95,8 +94,9 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       : fitter(std::move(f)),
         directFitter(std::move(df)),
         m_slSurfaceAccessor{
-        Acts::SurfaceContainer(std::make_shared<const Acts::TrackingGeometry>(trkGeo)).surfacePtrs()
-        } {}
+            Acts::SurfaceContainer(
+                std::make_shared<const Acts::TrackingGeometry>(trkGeo))
+                .surfacePtrs()} {}
 
   template <typename calibrator_t>
   auto makeGsfOptions(const GeneralFitterOptions& options,

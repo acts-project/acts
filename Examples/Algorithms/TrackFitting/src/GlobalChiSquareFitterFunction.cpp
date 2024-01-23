@@ -80,8 +80,9 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
       : fitter(std::move(f)),
         directFitter(std::move(df)),
         m_slSurfaceAccessor{
-                Acts::SurfaceContainer(std::make_shared<const Acts::TrackingGeometry>(trkGeo)).surfacePtrs()
-  } {}
+            Acts::SurfaceContainer(
+                std::make_shared<const Acts::TrackingGeometry>(trkGeo))
+                .surfacePtrs()} {}
 
   template <typename calibrator_t>
   auto makeGx2fOptions(const GeneralFitterOptions& options,
