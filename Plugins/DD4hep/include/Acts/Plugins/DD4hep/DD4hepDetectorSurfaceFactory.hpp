@@ -70,7 +70,7 @@ class DD4hepDetectorSurfaceFactory {
     /// Optionally provide an Extent object to measure the passive
     std::optional<Extent> pExtent = std::nullopt;
     /// Optionally provide an Extent constraints to measure the layers
-    std::vector<BinningValue> extentContraints = {};
+    std::vector<BinningValue> extentConstraints = {};
     /// The approximination for extent measuring
     std::size_t nExtentSegments = 1u;
   };

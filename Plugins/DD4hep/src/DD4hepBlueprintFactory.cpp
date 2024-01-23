@@ -245,7 +245,7 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
         }
         internalsExtent.setEnvelope(clearance);
         lOptions.extent = internalsExtent;
-        lOptions.extentContraints = internalBinningValues;
+        lOptions.extentConstraints = internalBinningValues;
       }
       // Create the builder from the dd4hep element
       auto [ib, extOpt] = m_cfg.layerStructure->builder(
