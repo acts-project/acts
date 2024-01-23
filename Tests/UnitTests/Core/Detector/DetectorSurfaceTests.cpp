@@ -23,6 +23,7 @@
 #include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Surfaces/SurfaceContainer.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -44,9 +45,9 @@ std::shared_ptr<referenced_type> unpackToShared(referenced_type& rt) {
 
 Acts::GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Detector)
+BOOST_AUTO_TEST_SUITE(DetectorSurface)
 
-BOOST_AUTO_TEST_CASE(DetectorConstruction) {
+BOOST_AUTO_TEST_CASE(DetectorSurfaceConstruction) {
   Acts::ActsScalar r0 = 0.;
   Acts::ActsScalar r1 = 10.;
   Acts::ActsScalar r2 = 100.;
@@ -101,6 +102,11 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   auto det012 = Acts::Experimental::Detector::makeShared(
       "Det012", volumes012, Acts::Experimental::tryRootVolumes());
 
+  //////////////// real testing begins //////
+  /// create a surface from the detector
+  auto detSurface = Acts::SurfaceContainer(det012);
+  /// need to work on detSurface and check the surface parameters
+  
   // Check the basic return functions
   BOOST_CHECK_EQUAL(det012->name(), "Det012");
   BOOST_CHECK_EQUAL(det012->volumes().size(), 3u);
