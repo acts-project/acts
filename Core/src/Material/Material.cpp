@@ -67,8 +67,6 @@ Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
 Acts::Material Acts::Material::fromMolarDensity(float x0, float l0, float ar,
                                                 float z, float molarRho,
                                                 std::optional<float> I) {
-  using namespace Acts::UnitLiterals;
-
   Material mat;
   mat.m_x0 = x0;
   mat.m_l0 = l0;

@@ -67,7 +67,7 @@ class Material {
   /// @param l0 is the nuclear interaction length
   /// @param ar is the relative atomic mass
   /// @param z is the nuclear charge number
-  /// @param massRho is the mass
+  /// @param massRho is the mass density
   /// @param I is the mean excitation energy
   ///
   /// @warning Due to the choice of native mass units, using the mass density
