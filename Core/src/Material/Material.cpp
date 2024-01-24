@@ -20,7 +20,6 @@ enum MaterialClassificationNumberIndices {
   eRelativeAtomicMass = 2,
   eNuclearCharge = 3,
   eMolarDensity = 4,
-  eMeanExcitationEnergy = 5,
 };
 }  // namespace
 
@@ -105,7 +104,6 @@ Acts::Material::ParametersVector Acts::Material::parameters() const {
   parameters[eRelativeAtomicMass] = m_ar;
   parameters[eNuclearCharge] = m_z;
   parameters[eMolarDensity] = m_molarRho;
-  parameters[eMeanExcitationEnergy] = m_I;
   return parameters;
 }
 
