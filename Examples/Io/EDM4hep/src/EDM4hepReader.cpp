@@ -173,6 +173,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     child.setParent(&parent);
   }
 
+  std::ofstream dot("particles.dot");
+  graphvizSimParticleContainer(dot, particles);
+
   m_outputParticles(ctx, std::move(particles));
 
   return ProcessCode::SUCCESS;
@@ -262,13 +265,15 @@ void EDM4hepReader::setSubParticleIds(
   numByGeneration.reserve(10);
 
   for (auto it = begin; it != end; ++it) {
-    const auto& particle = *it;
+    auto& particle = *it;
     const auto pid = particle.particleId();
     if (pid.generation() >= numByGeneration.size()) {
       numByGeneration.resize(pid.generation() + 1, 0);
     }
-    numByGeneration[pid.generation()] = std::max(
-        numByGeneration[pid.generation()], std::size_t(pid.subParticle() + 1));
+    unsigned int nextSubParticle = numByGeneration[pid.generation()]++;
+
+    auto newPid = particle.particleId().setSubParticle(nextSubParticle);
+    particle.setParticleId(newPid);
   }
 }
 

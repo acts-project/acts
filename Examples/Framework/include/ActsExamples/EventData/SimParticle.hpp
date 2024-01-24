@@ -27,9 +27,11 @@ class SimParticle : public ::ActsFatras::Particle {
   void setParent(SimParticle* parent) { m_parent = parent; }
 
   auto childrenBegin() { return m_children.begin(); }
-  auto childrenBgin() const { return m_children.begin(); }
+  auto childrenBegin() const { return m_children.begin(); }
   auto childrenEnd() { return m_children.end(); }
   auto childrenEnd() const { return m_children.end(); }
+
+  auto children() const { return makeRange(childrenBegin(), childrenEnd()); }
 
   void addChild(SimParticle& child) { m_children.push_back(&child); }
 
@@ -91,5 +93,8 @@ inline GroupBy<SimParticleContainer::const_iterator,
 groupBySecondaryVertex(const SimParticleContainer& container) {
   return makeGroupBy(container, detail::SecondaryVertexIdGetter());
 }
+
+void graphvizSimParticleContainer(std::ostream& os,
+                                  const SimParticleContainer& container);
 
 }  // namespace ActsExamples
