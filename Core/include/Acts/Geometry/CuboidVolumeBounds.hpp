@@ -126,7 +126,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// for that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  std::vector<Acts::BinningValue> canonicalBinning() const {
+  std::vector<Acts::BinningValue> canonicalBinning() const override {
     return {Acts::binX, Acts::binY, Acts::binZ};
   };
 

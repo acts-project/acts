@@ -130,7 +130,7 @@ class ConeVolumeBounds : public VolumeBounds {
   /// @return vector of canonical binning values
   ///
   /// @note not yet implemented for this shape
-  std::vector<Acts::BinningValue> canonicalBinning() const {
+  std::vector<Acts::BinningValue> canonicalBinning() const override {
     return {Acts::binX, Acts::binY, Acts::binZ};
   };
 
