@@ -66,7 +66,7 @@ class DD4hepLayerStructure {
     // The extent structure - optionally
     std::optional<Extent> extent = std::nullopt;
     /// The extent constraints - optionally
-    std::vector<BinningValue> extentContraints = {};
+    std::vector<BinningValue> extentConstraints = {};
     /// Approximation for the polyhedron binning nSegments
     unsigned int nSegments = 1u;
     /// Patch the binning with the extent if possible
