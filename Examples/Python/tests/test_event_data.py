@@ -42,7 +42,9 @@ def test_particle_hypothesis():
     # printing should show something sensible
     assert str(muon) == "ParticleHypothesis{absPdg=mu, mass=0.105658, absCharge=1}"
     assert str(pion) == "ParticleHypothesis{absPdg=pi, mass=0.139571, absCharge=1}"
-    assert str(electron) == "ParticleHypothesis{absPdg=e, mass=0.000510999, absCharge=1}"
+    assert (
+        str(electron) == "ParticleHypothesis{absPdg=e, mass=0.000510999, absCharge=1}"
+    )
     assert str(proton) == "ParticleHypothesis{absPdg=p, mass=0.938272, absCharge=1}"
     assert str(geantino) == "ParticleHypothesis{absPdg=0, mass=0, absCharge=0}"
     assert str(chargedGeantino) == "ParticleHypothesis{absPdg=0, mass=0, absCharge=1}"
