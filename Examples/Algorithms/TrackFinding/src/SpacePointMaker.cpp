@@ -140,8 +140,9 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   SimSpacePointContainer spacePoints;
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
-    if (geoId.sensitive() == 0)
-      continue;
+    if (geoId.sensitive() == 0) {
+        continue;
+    }
     auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually

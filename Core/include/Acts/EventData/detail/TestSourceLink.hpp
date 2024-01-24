@@ -104,7 +104,7 @@ struct TestSourceLink final {
   }
 
   struct SurfaceAccessor {
-    //  const Acts::TrackingGeometry& trackingGeometry;
+
    private:
     std::vector<const Acts::Surface *> surfaceVec;
 
@@ -122,13 +122,6 @@ struct TestSourceLink final {
 
     const Acts::Surface *operator()(const Acts::SourceLink &sourceLink) const {
       const auto &testSourceLink = sourceLink.get<TestSourceLink>();
-      //      if ((surfaceVec.empty()) &&
-      //          (!(trackingGeometry.highestTrackingVolume()))) {
-      //        throw std::invalid_argument(
-      //            "Supply Surface Accessor with either tracking geometry of
-      //            surface " "pointers!");
-      //      } else if ((surfaceVec.empty() == false) &&
-      //                 (!(trackingGeometry.highestTrackingVolume()))) {
       auto g_ID = testSourceLink.m_geometryId;
       for (auto &surf : surfaceVec) {
         if (surf->geometryId() == g_ID) {

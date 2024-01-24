@@ -47,20 +47,35 @@ class IndexSourceLink final {
 
   Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
 
-  struct SurfaceAccessor {
-    Acts::SurfacePtrsContainer surfacePtrs;
+    struct SurfaceAccessor {
+    private:
+        std::vector<const Acts::Surface *> surfaceVec;
 
-    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-      const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
-      auto g_ID = indexSourceLink.geometryId();
-      for (auto& surf : surfacePtrs) {
-        if (surf->geometryId() == g_ID) {
-          return surf;
+        std::vector<const Acts::Surface *> getVec(
+                const Acts::TrackingGeometry &tGeometry) {
+            Acts::TrackingGeometryPtr tGeoPtr =
+                    std::make_shared<const Acts::TrackingGeometry>(tGeometry);
+            Acts::SurfaceContainer container(tGeoPtr);
+            return container.surfacePtrs();
         }
-      }
-      return nullptr;
+
+    public:
+        SurfaceAccessor(const Acts::TrackingGeometry &tGeometry)
+                : surfaceVec(getVec(tGeometry)) {}
+        SurfaceAccessor(std::vector<const Acts::Surface *> surfVec)
+                : surfaceVec(surfVec) {}
+
+        const Acts::Surface *operator()(const Acts::SourceLink &sourceLink) const {
+            const auto &testSourceLink = sourceLink.get<IndexSourceLink>();
+            auto g_ID = testSourceLink.m_geometryId;
+            for (auto &surf : surfaceVec) {
+                if (surf->geometryId() == g_ID) {
+                    return surf;
+                }
+            }
+            return nullptr;
+        }
     };
-  };
 
  private:
   Acts::GeometryIdentifier m_geometryId;
