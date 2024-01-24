@@ -162,6 +162,7 @@ Acts::Svg::ProtoPortal Acts::Svg::PortalConverter::convert(
     // Switch to the other side
     sign += 2;
   }
+
   // Return the proto Portal
   return pPortal;
 }
