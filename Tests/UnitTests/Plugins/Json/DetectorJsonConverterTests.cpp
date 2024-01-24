@@ -352,8 +352,6 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   in >> jDetectorIn;
   in.close();
 
-  std::cout << "Check the detector json file" << std::endl;
-
   auto detectorIn =
       Acts::DetectorJsonConverter::fromJson(tContext, jDetectorIn);
 
