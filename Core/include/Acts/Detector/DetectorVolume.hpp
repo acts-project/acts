@@ -417,11 +417,19 @@ class DetectorVolumeFactory {
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
       DetectorVolumeUpdater detectorVolumeUpdater,
-      SurfaceCandidatesUpdater surfaceCandidateUpdater) {
+      SurfaceCandidatesUpdater surfaceCandidateUpdater, int nseg = 1000) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, name, transform, std::move(bounds), surfaces, volumes,
         std::move(detectorVolumeUpdater), std::move(surfaceCandidateUpdater));
     dVolume->construct(gctx, portalGenerator);
+
+    // Volume extent is constructed from the portals
+    // So the surface/subvolume containment
+    // check has to happen here
+    if (!dVolume->checkContainment(gctx, nseg)) {
+      throw std::invalid_argument(
+          "DetectorVolume: surfaces or subvolumes are not contained by volume");
+    }
     return dVolume;
   }
 
