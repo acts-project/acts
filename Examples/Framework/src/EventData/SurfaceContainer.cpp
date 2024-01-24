@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/SurfaceContainer.hpp"
+#include "ActsExamples/EventData/SurfaceContainer.hpp"
 
 Acts::SurfacePtrsContainer Acts::SurfaceContainer::getPtrs(
     DetectorPtr detector) const {

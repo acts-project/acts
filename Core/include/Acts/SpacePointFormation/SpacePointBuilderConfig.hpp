@@ -11,12 +11,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Surfaces/SurfaceContainer.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 struct SpacePointBuilderConfig {
   /// Tracking geometry
-  SurfacePtrsContainer surfacePtrs;
+  std::vector<const Acts::Surface*> surfacePtrs;
   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   /// Perform the perpendicular projection for space point finding
   bool usePerpProj = false;
