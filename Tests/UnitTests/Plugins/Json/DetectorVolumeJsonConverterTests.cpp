@@ -290,7 +290,6 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
   in >> jVolumeIn;
   in.close();
 
-  std::cout << "Checking volumeIn" << std::endl;
   auto volumeIn =
       Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
