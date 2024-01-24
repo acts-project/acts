@@ -184,7 +184,7 @@ void viewDetector(
         Svg::DetectorVolumeConverter::convert(gctx, *v, vopts);
 
     for (auto [iv, var] : Acts::enumerate(viewAndRanges)) {
-      auto [view, slection, range] = var;
+      auto [view, selection, range] = var;
       // Get the view and the range
       auto svgVolView = viewDetectorVolume(
           pVolume, identification + "_vol" + std::to_string(vidx) + "_" + view,
