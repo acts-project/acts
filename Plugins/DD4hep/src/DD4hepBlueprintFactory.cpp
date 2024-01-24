@@ -117,14 +117,14 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
         std::string pmName = "acts_portal_proto_material_" + std::to_string(p);
         auto protoMaterial = getParamOr<bool>(pmName, dd4hepElement, false);
         if (protoMaterial) {
-          ACTS_INFO(ofs << " - proto material binning for portal " << p
-                        << " found");
+          ACTS_VERBOSE(ofs << " - proto material binning for portal " << p
+                           << " found");
           auto pmProtoBinnings = DD4hepBinningHelpers::convertBinning(
               dd4hepElement, pmName + "_binning");
           current->portalMaterialBinning[p] =
               BinningDescription{pmProtoBinnings};
-          ACTS_INFO(ofs << " - binning description is "
-                        << current->portalMaterialBinning[p].toString());
+          ACTS_VERBOSE(ofs << " - binning description is "
+                           << current->portalMaterialBinning[p].toString());
         }
       }
 
