@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,14 +20,13 @@ enum MaterialClassificationNumberIndices {
   eRelativeAtomicMass = 2,
   eNuclearCharge = 3,
   eMolarDensity = 4,
+  eMeanExcitationEnergy = 5,
 };
-
-// Avogadro constant
-constexpr double kAvogadro = 6.02214076e23 / Acts::UnitConstants::mol;
 }  // namespace
 
 Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
-                                               float z, float massRho) {
+                                               float z, float massRho,
+                                               std::optional<float> I) {
   using namespace Acts::UnitLiterals;
 
   Material mat;
@@ -47,18 +46,38 @@ Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
   //
   // perform computations in double precision to avoid loss of precision
   const double atomicMass = static_cast<double>(ar) * 1_u;
-  mat.m_molarRho = static_cast<double>(massRho) / (atomicMass * kAvogadro);
+  mat.m_molarRho =
+      static_cast<double>(massRho) / (atomicMass * UnitConstants::Avogadro);
+
+  if (I) {
+    mat.m_I = *I;
+  } else {
+    // use approximative computation as defined in ATL-SOFT-PUB-2008-003
+    mat.m_I = 16_eV * std::pow(z, 0.9f);
+  }
+
   return mat;
 }
 
 Acts::Material Acts::Material::fromMolarDensity(float x0, float l0, float ar,
-                                                float z, float molarRho) {
+                                                float z, float molarRho,
+                                                std::optional<float> I) {
+  using namespace Acts::UnitLiterals;
+
   Material mat;
   mat.m_x0 = x0;
   mat.m_l0 = l0;
   mat.m_ar = ar;
   mat.m_z = z;
   mat.m_molarRho = molarRho;
+
+  if (I) {
+    mat.m_I = *I;
+  } else {
+    // use approximative computation as defined in ATL-SOFT-PUB-2008-003
+    mat.m_I = 16_eV * std::pow(z, 0.9f);
+  }
+
   return mat;
 }
 
@@ -74,15 +93,9 @@ float Acts::Material::massDensity() const {
 
   // perform computations in double precision to avoid loss of precision
   const double atomicMass = static_cast<double>(m_ar) * 1_u;
-  const double numberDensity = static_cast<double>(m_molarRho) * kAvogadro;
+  const double numberDensity =
+      static_cast<double>(m_molarRho) * UnitConstants::Avogadro;
   return atomicMass * numberDensity;
-}
-
-float Acts::Material::meanExcitationEnergy() const {
-  using namespace Acts::UnitLiterals;
-
-  // use approximative computation as defined in ATL-SOFT-PUB-2008-003
-  return 16_eV * std::pow(m_z, 0.9f);
 }
 
 Acts::Material::ParametersVector Acts::Material::parameters() const {
@@ -92,6 +105,7 @@ Acts::Material::ParametersVector Acts::Material::parameters() const {
   parameters[eRelativeAtomicMass] = m_ar;
   parameters[eNuclearCharge] = m_z;
   parameters[eMolarDensity] = m_molarRho;
+  parameters[eMeanExcitationEnergy] = m_I;
   return parameters;
 }
 
@@ -104,6 +118,7 @@ std::ostream& Acts::operator<<(std::ostream& os, const Material& material) {
     os << "|ar=" << material.Ar();
     os << "|z=" << material.Z();
     os << "|molar_rho=" << material.molarDensity();
+    os << "|I=" << material.meanExcitationEnergy();
   }
   return os;
 }

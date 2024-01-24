@@ -74,6 +74,7 @@ void addUnits(Context& ctx) {
   UNIT(Gauss)
   UNIT(kGauss)
   UNIT(mol)
+  UNIT(Avogadro)
 
 #undef UNIT
 }

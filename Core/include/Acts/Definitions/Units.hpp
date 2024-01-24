@@ -195,6 +195,8 @@ constexpr double Gauss = 1e-4 * T;
 constexpr double kGauss = 1e-1 * T;
 /// Amount of substance, native unit mol
 constexpr double mol = 1.0;
+/// Avogadro constant
+constexpr double Avogadro = 6.02214076e23 / mol;
 }  // namespace UnitConstants
 
 namespace UnitLiterals {
@@ -245,6 +247,7 @@ ACTS_DEFINE_UNIT_LITERAL(T)
 ACTS_DEFINE_UNIT_LITERAL(Gauss)
 ACTS_DEFINE_UNIT_LITERAL(kGauss)
 ACTS_DEFINE_UNIT_LITERAL(mol)
+ACTS_DEFINE_UNIT_LITERAL(Avogadro)
 // not needed anymore. undef to prevent littering the namespace
 #undef ACTS_DEFINE_UNIT_LITERAL
 }  // namespace UnitLiterals

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,7 @@
 
 #include <iosfwd>
 #include <limits>
-#include <utility>
+#include <optional>
 
 namespace Acts {
 
@@ -26,6 +26,7 @@ namespace Acts {
 /// - relative atomic mass Ar (unitless number)
 /// - nuclear charge number Z (elementary charge e)
 /// - molar density (native amount-of-substance unit / (native length unit)³)
+/// - mean excitation energy I (native energy unit)
 ///
 /// The parameters can be effective or average parameters e.g. when a mixture
 /// of materials is described.
@@ -38,7 +39,7 @@ namespace Acts {
 ///   the future.
 class Material {
  public:
-  using ParametersVector = Eigen::Matrix<float, 5, 1>;
+  using ParametersVector = Eigen::Matrix<float, 6, 1>;
 
   // Both mass and molar density are stored as a float and can thus not be
   // distinguished by their types. Just changing the last element in the
@@ -55,21 +56,27 @@ class Material {
   /// @param ar is the relative atomic mass
   /// @param z is the nuclear charge number
   /// @param molarRho is the molar density
+  /// @param I is the mean excitation energy
   static Material fromMolarDensity(float x0, float l0, float ar, float z,
-                                   float molarRho);
+                                   float molarRho,
+                                   std::optional<float> I = std::nullopt);
+
   /// Construct from material parameters using the mass density.
   ///
   /// @param x0 is the radiation length
   /// @param l0 is the nuclear interaction length
   /// @param ar is the relative atomic mass
   /// @param z is the nuclear charge number
-  /// @param massRho is the mass density
+  /// @param massRho is the mass
+  /// @param I is the mean excitation energy
   ///
   /// @warning Due to the choice of native mass units, using the mass density
   ///   can lead to numerical problems. Typical mass densities lead to
   ///   computations with values differing by 20+ orders of magnitude.
   static Material fromMassDensity(float x0, float l0, float ar, float z,
-                                  float massRho);
+                                  float massRho,
+                                  std::optional<float> I = std::nullopt);
+
   /// Construct a vacuum representation.
   Material() = default;
   /// Construct from an encoded parameters vector.
@@ -99,7 +106,7 @@ class Material {
   /// Return the mass density.
   float massDensity() const;
   /// Return the mean electron excitation energy.
-  float meanExcitationEnergy() const;
+  constexpr float meanExcitationEnergy() const { return m_I; }
 
   /// Encode the properties into an opaque parameters vector.
   ParametersVector parameters() const;
@@ -110,6 +117,7 @@ class Material {
   float m_ar = 0.0f;
   float m_z = 0.0f;
   float m_molarRho = 0.0f;
+  float m_I = 0.0f;
 
   friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
     return (lhs.m_x0 == rhs.m_x0) && (lhs.m_l0 == rhs.m_l0) &&
