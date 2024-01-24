@@ -478,7 +478,7 @@ class Grid final {
   }
 
   /// @brief Convenience function to convert the type of the grid
-  /// to hold another ojbect type.
+  /// to hold another object type.
   ///
   /// @tparam U the new grid value type
   ///
@@ -490,7 +490,7 @@ class Grid final {
   }
 
   /// @brief Convenience function to convert the type of the grid
-  /// to hold another ojbect type.
+  /// to hold another object type.
   ///
   /// @tparam U the new grid value type
   /// @tparam CT the converter type
