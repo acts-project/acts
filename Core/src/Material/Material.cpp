@@ -21,6 +21,13 @@ enum MaterialClassificationNumberIndices {
   eNuclearCharge = 3,
   eMolarDensity = 4,
 };
+
+float approximateMeanExcitationEnergy(float z) {
+  using namespace Acts::UnitLiterals;
+
+  // use approximative computation as defined in ATL-SOFT-PUB-2008-003
+  return 16_eV * std::pow(z, 0.9f);
+}
 }  // namespace
 
 Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
@@ -51,8 +58,7 @@ Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
   if (I) {
     mat.m_I = *I;
   } else {
-    // use approximative computation as defined in ATL-SOFT-PUB-2008-003
-    mat.m_I = 16_eV * std::pow(z, 0.9f);
+    mat.m_I = approximateMeanExcitationEnergy(z);
   }
 
   return mat;
@@ -73,8 +79,7 @@ Acts::Material Acts::Material::fromMolarDensity(float x0, float l0, float ar,
   if (I) {
     mat.m_I = *I;
   } else {
-    // use approximative computation as defined in ATL-SOFT-PUB-2008-003
-    mat.m_I = 16_eV * std::pow(z, 0.9f);
+    mat.m_I = approximateMeanExcitationEnergy(z);
   }
 
   return mat;
@@ -85,7 +90,8 @@ Acts::Material::Material(const ParametersVector& parameters)
       m_l0(parameters[eInteractionLength]),
       m_ar(parameters[eRelativeAtomicMass]),
       m_z(parameters[eNuclearCharge]),
-      m_molarRho(parameters[eMolarDensity]) {}
+      m_molarRho(parameters[eMolarDensity]),
+      m_I(approximateMeanExcitationEnergy(m_z)) {}
 
 float Acts::Material::massDensity() const {
   using namespace Acts::UnitLiterals;
