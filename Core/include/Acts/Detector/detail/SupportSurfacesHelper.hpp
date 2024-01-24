@@ -83,7 +83,7 @@ struct DiscSupport {
   /// not to touch the volume boundaries
   std::array<ActsScalar, 2u> phiClearance = {0.0001_rad, 0.0001_rad};
 
-  // Type is obviously a cylinder
+  // Type is obviously a disc
   static constexpr Surface::SurfaceType type = Surface::SurfaceType::Disc;
 
   /// The support creator function
