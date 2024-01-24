@@ -60,15 +60,15 @@ if "__main__" == __name__:
     volumeOptions = acts.svg.DetectorVolumeOptions()
     volumeOptions.surfaceOptions = surfaceOptions
 
-    for ivol in range(detector.number_volumes()):
-        acts.svg.viewDetector(
-            geoContext,
-            detector,
-            "odd-xy",
-            [[ivol, volumeOptions]],
-            [["xy", viewRange]],
-            "vol_" + str(ivol),
-        )
+    #for ivol in range(detector.number_volumes()):
+    #    acts.svg.viewDetector(
+    #        geoContext,
+    #        detector,
+    #        "odd-xy",
+    #        [[ivol, volumeOptions]],
+    #        [["xy", ["sensitives"], viewRange]],
+    #        "vol_" + str(ivol),
+    #    )
 
     xyRange = acts.Extent([[acts.Binning.z, [-50, 50]]])
     zrRange = acts.Extent([[acts.Binning.phi, [-0.1, 0.1]]])
@@ -78,7 +78,7 @@ if "__main__" == __name__:
         detector,
         "odd",
         [[ivol, volumeOptions] for ivol in range(detector.number_volumes())],
-        [["xy", xyRange], ["zr", zrRange]],
+        [["xy", ["sensitives"], xyRange], ["zr", ["materials"], zrRange]],
         "detector",
     )
 
