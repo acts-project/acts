@@ -228,7 +228,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
   // Surface type check
   if (type != Surface::SurfaceType::Disc) {
     throw std::invalid_argument(
-        "SupportSurfacesHelper::cylindricalSupport(...) - "
+        "SupportSurfacesHelper::discSupport(...) - "
         "surface type is not a disc.");
   }
 
