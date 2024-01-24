@@ -53,6 +53,8 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
     throw std::invalid_argument(
         "DetectorVolume: navigation state updator delegate is not connected.");
   }
+
+  [[maybe_unused]] const auto& gctx_ref = gctx;
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
@@ -203,9 +205,9 @@ void Acts::Experimental::DetectorVolume::construct(
   createBoundingBox(gctx);
 
   // Volume extent is constructed from the portals
-  // So the surface/subvolume containment 
+  // So the surface/subvolume containment
   // check has to happen here
-  if(!checkContainment(gctx,1000)) {
+  if (!checkContainment(gctx, 1000)) {
     throw std::invalid_argument(
         "DetectorVolume: surfaces or subvolumes are not contained by volume");
   }
@@ -269,9 +271,8 @@ Acts::Extent Acts::Experimental::DetectorVolume::extent(
 
 bool Acts::Experimental::DetectorVolume::checkContainment(
     const GeometryContext& gctx, std::size_t nseg) const {
-  
   // We don't have a logging instance here
-  // so can't throw a warning for shapes that are 
+  // so can't throw a warning for shapes that are
   // using the bounding box
   auto binningValues = volumeBounds().canonicalBinning();
 
@@ -285,13 +286,13 @@ bool Acts::Experimental::DetectorVolume::checkContainment(
         return false;
       }
     }
-  // Check volumes
+    // Check volumes
     for (const auto* v : volumes()) {
       auto vExtent = v->extent(gctx, nseg);
-        if (!volumeExtent.contains(vExtent, b)) {
-          return false;
-        }
+      if (!volumeExtent.contains(vExtent, b)) {
+        return false;
       }
+    }
   }
   // All contained
   return true;

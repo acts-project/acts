@@ -99,9 +99,6 @@ class CylinderVolumeBounds : public VolumeBounds {
                        double bevelMinZ = 0.,
                        double bevelMaxZ = 0.) noexcept(false)
       : m_values({rmin, rmax, halfz, halfphi, avgphi, bevelMinZ, bevelMaxZ}) {
-    std::cout << "CylinderVolumeBounds: " << rmin << ", " << rmax << ", "
-              << halfz << ", " << halfphi << ", " << avgphi << ", " << bevelMinZ
-              << ", " << bevelMaxZ << std::endl;
     checkConsistency();
     buildSurfaceBounds();
   }

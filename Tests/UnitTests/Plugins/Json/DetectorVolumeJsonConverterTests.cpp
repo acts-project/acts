@@ -14,6 +14,7 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
+#include "Acts/Geometry/ConeVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
@@ -23,8 +24,6 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-
-#include"Acts/Geometry/ConeVolumeBounds.hpp"
 
 #include <fstream>
 #include <memory>
@@ -291,8 +290,7 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
   in >> jVolumeIn;
   in.close();
 
-
-    std::cout << "Checking volumeIn" << std::endl;
+  std::cout << "Checking volumeIn" << std::endl;
   auto volumeIn =
       Acts::DetectorVolumeJsonConverter::fromJson(tContext, jVolumeIn);
 
@@ -308,17 +306,6 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
   out.open("barrel-volume-with-surfaces-closure.json");
   out << jVolume.dump(4);
   out.close();
-    Acts::ConeVolumeBounds solidCone(0., 0., 0.45, 50, 50, 0., M_PI);
-    auto conicalVolume = Acts::Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "ConicalVolume", Acts::Transform3::Identity(),
-      std::move(Acts::Surface::makeShared<Acts::ConeVolumeBounds>(solidCone)), {}, {},
-      Acts::Experimental::tryRootVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
-
-
-    std::cout << "ConicalVolume: " << conicalVolume->getBoundingBox().max() << " " << conicalVolume->getBoundingBox().min() << std::endl;
-    std::cout << "ConicalVolume: " << conicalVolume->extent(Acts::GeometryContext(),1000) << std::endl;
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
