@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/SurfaceContainer.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <algorithm>
@@ -51,10 +52,11 @@ struct TestSourceLink final {
         indices{idx, eBoundSize},
         parameters(val, 0),
         covariance(Acts::ActsVector<2>(var, 0).asDiagonal()) {}
+
   /// Construct a source link for a 2d measurement.
   TestSourceLink(BoundIndices idx0, BoundIndices idx1,
-                 const Acts::ActsVector<2>& params,
-                 const Acts::ActsSquareMatrix<2>& cov,
+                 const Acts::ActsVector<2> &params,
+                 const Acts::ActsSquareMatrix<2> &cov,
                  GeometryIdentifier gid = GeometryIdentifier(),
                  std::size_t sid = 0u)
       : m_geometryId(gid),
@@ -62,19 +64,27 @@ struct TestSourceLink final {
         indices{idx0, idx1},
         parameters(params),
         covariance(cov) {}
+
   /// Default-construct an invalid source link to satisfy SourceLinkConcept.
   TestSourceLink() = default;
-  TestSourceLink(const TestSourceLink&) = default;
-  TestSourceLink(TestSourceLink&&) = default;
-  TestSourceLink& operator=(const TestSourceLink&) = default;
-  TestSourceLink& operator=(TestSourceLink&&) = default;
-  bool operator==(const TestSourceLink& rhs) const {
+
+  TestSourceLink(const TestSourceLink &) = default;
+
+  TestSourceLink(TestSourceLink &&) = default;
+
+  TestSourceLink &operator=(const TestSourceLink &) = default;
+
+  TestSourceLink &operator=(TestSourceLink &&) = default;
+
+  bool operator==(const TestSourceLink &rhs) const {
     return (m_geometryId == rhs.m_geometryId) && (sourceId == rhs.sourceId) &&
            (indices == rhs.indices) && (parameters == rhs.parameters) &&
            (covariance == rhs.covariance);
   }
-  bool operator!=(const TestSourceLink& rhs) const { return !(*this == rhs); }
-  std::ostream& print(std::ostream& os) const {
+
+  bool operator!=(const TestSourceLink &rhs) const { return !(*this == rhs); }
+
+  std::ostream &print(std::ostream &os) const {
     os << "TestsSourceLink(geometryId=" << m_geometryId
        << ",sourceId=" << sourceId;
     if (indices[0] != eBoundSize) {
@@ -86,32 +96,43 @@ struct TestSourceLink final {
     os << ")";
     return os;
   }
-  constexpr std::size_t index() const { return sourceId; }
+
+  constexpr std::size_t
+
+  index() const {
+    return sourceId;
+  }
 
   struct SurfaceAccessor {
-    const Acts::TrackingGeometry& trackingGeometry;
-    std::vector<const Acts::Surface*> surfaceVec = {};
+    //  const Acts::TrackingGeometry& trackingGeometry;
+   private:
+    std::vector<const Acts::Surface *> surfaceVec;
 
-    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-      const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-      if ((surfaceVec.empty()) &&
-          (!(trackingGeometry.highestTrackingVolume()))) {
-        throw std::invalid_argument(
-            "Supply Surface Accessor with either tracking geometry of surface "
-            "pointers!");
-      } else if ((surfaceVec.empty()==false)&&(!(trackingGeometry.highestTrackingVolume()))) {
-        auto g_ID = testSourceLink.m_geometryId;
-        for (auto& surf : surfaceVec) {
-          if (surf->geometryId() == g_ID) {
-            return surf;
-          } else if (trackingGeometry.highestTrackingVolume()) {
-            return trackingGeometry.findSurface(testSourceLink.m_geometryId);
-          } else {
-            throw std::invalid_argument(
-                "Supply Surface Accessor with either tracking geometry of "
-                "surface "
-                "pointers, not both!");
-          }
+    std::vector<const Acts::Surface *> getVec(
+        const Acts::TrackingGeometry &tGeometry) {
+      TrackingGeometryPtr tGeoPtr =
+          std::make_shared<const Acts::TrackingGeometry>(tGeometry);
+      Acts::SurfaceContainer container(tGeoPtr);
+      return container.surfacePtrs();
+    }
+
+   public:
+    SurfaceAccessor(const Acts::TrackingGeometry &tGeometry)
+        : surfaceVec(getVec(tGeometry)) {}
+
+    const Acts::Surface *operator()(const Acts::SourceLink &sourceLink) const {
+      const auto &testSourceLink = sourceLink.get<TestSourceLink>();
+      //      if ((surfaceVec.empty()) &&
+      //          (!(trackingGeometry.highestTrackingVolume()))) {
+      //        throw std::invalid_argument(
+      //            "Supply Surface Accessor with either tracking geometry of
+      //            surface " "pointers!");
+      //      } else if ((surfaceVec.empty() == false) &&
+      //                 (!(trackingGeometry.highestTrackingVolume()))) {
+      auto g_ID = testSourceLink.m_geometryId;
+      for (auto &surf : surfaceVec) {
+        if (surf->geometryId() == g_ID) {
+          return surf;
         }
       }
       return nullptr;
@@ -119,8 +140,8 @@ struct TestSourceLink final {
   };
 };
 
-inline std::ostream& operator<<(std::ostream& os,
-                                const TestSourceLink& sourceLink) {
+inline std::ostream &operator<<(std::ostream &os,
+                                const TestSourceLink &sourceLink) {
   return sourceLink.print(os);
 }
 
@@ -131,8 +152,8 @@ inline std::ostream& operator<<(std::ostream& os,
 /// @return The measurement used
 template <typename trajectory_t>
 Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
-    const GeometryContext& /*gctx*/, const CalibrationContext& /*cctx*/,
-    const SourceLink& sourceLink,
+    const GeometryContext & /*gctx*/, const CalibrationContext & /*cctx*/,
+    const SourceLink &sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
   TestSourceLink sl = sourceLink.template get<TestSourceLink>();
 
@@ -164,8 +185,8 @@ Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
 /// @param trackState TrackState to calibrated
 template <typename trajectory_t>
 void testSourceLinkCalibrator(
-    const GeometryContext& gctx, const CalibrationContext& cctx,
-    const SourceLink& sourceLink,
+    const GeometryContext &gctx, const CalibrationContext &cctx,
+    const SourceLink &sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
   testSourceLinkCalibratorReturn<trajectory_t>(gctx, cctx, sourceLink,
                                                trackState);

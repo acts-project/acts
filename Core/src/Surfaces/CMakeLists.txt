@@ -21,6 +21,7 @@ target_sources(
     StrawSurface.cpp
     Surface.cpp
     SurfaceArray.cpp
+    SurfaceContainer.cpp
     SurfaceError.cpp
     TrapezoidBounds.cpp
     detail/AlignmentHelper.cpp

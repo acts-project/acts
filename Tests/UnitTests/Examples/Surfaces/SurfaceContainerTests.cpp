@@ -24,14 +24,9 @@
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/SurfaceContainer.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/EventData/SurfaceContainer.hpp"
-#include "ActsExamples/Utilities/GroupBy.hpp"
 
 #include <functional>
 #include <iostream>
@@ -45,10 +40,6 @@ namespace Test {
 // make detector
 using namespace UnitLiterals;
 using namespace detail::Test;
-using namespace ActsExamples;
-using BuilderFunction = std::function<ActsExamples::SimSpacePoint(
-    Acts::Vector3, std::optional<double>, Acts::Vector2, std::optional<double>,
-    boost::container::static_vector<SourceLink, 2>)>;
 // make tracking geometry
 GeometryContext gctx = GeometryContext();
 //        BOOST_AUTO_TEST_SUITE(SurfaceContainer)
@@ -65,17 +56,18 @@ BOOST_AUTO_TEST_CASE(SurfaceContainerTest) {
       lacConfig, getDefaultLogger("LayerArrayCreator", Logging::INFO));
   Vector2 Zero2{0., 0.};
   Vector3 Zero3{0., 0., 0.};
+  std::vector<double> x_translations{10._mm, 20._mm, 30._mm,
+                                     40._mm, 50._mm, 60._mm};
 
   for (unsigned i = 0; i < numSurfaces; i++) {
     // Make Surfaces
-    long double x = (long double)i;
-    Translation3 translation{(x + 1.) * 10._mm, 0.25_m, 0.25_m};
+    Translation3 translation{x_translations[i], 0.25_m, 0.25_m};
     auto pTransform = Transform3(translation);
     transformations.push_back(pTransform);
     auto planeSurface = Surface::makeShared<PlaneSurface>(pTransform, rBounds);
     surfaces.push_back(planeSurface);
     BOOST_CHECK_EQUAL(surfaces.at(i)->localToGlobal(gctx, Zero2, Zero3)(0),
-                      (x + 1) * 10._mm);
+                      x_translations[i]);
     BOOST_CHECK_EQUAL(surfaces.at(i)->localToGlobal(gctx, Zero2, Zero3)(1),
                       0.25_m);
     BOOST_CHECK_EQUAL(surfaces.at(i)->localToGlobal(gctx, Zero2, Zero3)(2),
@@ -96,7 +88,7 @@ BOOST_AUTO_TEST_CASE(SurfaceContainerTest) {
         true);
     BOOST_CHECK_EQUAL(((layers[i]->surfaceRepresentation())
                            .localToGlobal(gctx, Zero2, Zero3))(0),
-                      (x + 1) * 10._mm);
+                      x_translations[i]);
   }
 
   Transform3 trafoVol(Transform3::Identity());

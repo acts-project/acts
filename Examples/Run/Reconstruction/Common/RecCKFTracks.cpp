@@ -11,7 +11,7 @@
 #ifdef ACTS_PLUGIN_ONNX
 #include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
 #endif
-#include "ActsExamples/EventData/SurfaceContainer.hpp"
+#include "Acts/Surfaces/SurfaceContainer.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
