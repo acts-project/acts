@@ -151,6 +151,12 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
 
   std::string tString = gExtConst.toString();
   BOOST_CHECK(!tString.empty());
+
+  // Check single vertex containment
+  Extent gExtVertexCheck;
+  gExtVertexCheck.set(binR, 0., 5.);
+  BOOST_CHECK(gExtVertexCheck.contains(Vector3(1., 0., 0.)));
+  BOOST_CHECK(!gExtVertexCheck.contains(Vector3(6., 0., 0.)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
