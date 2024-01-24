@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 
+#include <c10/cuda/CUDAGuard.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -25,7 +26,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
   if (m_deviceType == torch::kCUDA && cfg.deviceID >= 0 &&
-      static_cast<size_t>(cfg.deviceID) < torch::cuda::device_count()) {
+      static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
     ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
     m_device = torch::Device(torch::kCUDA, cfg.deviceID);
   } else {
@@ -56,6 +57,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
     std::any inputNodes, std::any inputEdges, torch::Device device) {
   ACTS_DEBUG("Start edge classification");
   c10::InferenceMode guard(true);
+  c10::cuda::CUDAGuard device_guard(device.index());
 
   auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);

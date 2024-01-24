@@ -32,7 +32,7 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
     float rVal = 1.6;
     int knnVal = 500;
     bool shuffleDirections = false;
-    int deviceID = 0;
+    int deviceID = 0;  // default is the first GPU if available
   };
 
   TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);
