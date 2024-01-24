@@ -42,44 +42,114 @@ using namespace ActsExamples;
 
 namespace {
 
-using ViewAndRange = std::tuple<std::string, Acts::Extent>;
+// A cache object
+using PortalCache = std::list<std::string>;
 
-// Helper function to be picked in different access patterns
+/// @brief helper tuple to define which views and which range to be used
+///
+/// @param view is the view type, e.g. 'xy', 'zr', ...
+/// @param selection is the selection of the volume, e.g. 'all', 'sensitives', 'portals', 'materials'
+using ViewAndRange =
+    std::tuple<std::string, std::vector<std::string>, Acts::Extent>;
+
+/// Helper function to be picked in different access patterns
+///
+/// @param pVolume is the proto volume to be drawn
+/// @param identification is the identification of the volume
+/// @param viewAndRange is the view, selection and range to be drawn
+/// @param portalCache is a portal cache to avoid multiple drawings of the same portal
+///
+/// Returns an svg object in the right view
 actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
                                        const std::string& identification,
-                                       const ViewAndRange& viewAndRange) {
+                                       const ViewAndRange& viewAndRange,
+                                       PortalCache& portalCache) {
   actsvg::svg::object svgDet;
   svgDet._id = identification;
   svgDet._tag = "g";
 
-  auto [view, viewRange] = viewAndRange;
+  auto [view, selection, viewRange] = viewAndRange;
 
-  // The surfaces to be drawn
-  std::vector<Svg::ProtoVolume::surface_type> surfaces;
-  // If there is view range restriction, filter the surfaces
-  if (viewRange.constrains()) {
-    for (const auto& vs : pVolume._v_surfaces) {
-      bool inRange = false;
-      for (const auto& v : vs._vertices) {
-        if (viewRange.contains(v)) {
-          inRange = true;
-          break;
-        }
-      }
-      if (inRange) {
-        surfaces.push_back(vs);
+  // Translate selection into booleans
+  bool all =
+      std::find(selection.begin(), selection.end(), "all") != selection.end();
+  bool sensitives = std::find(selection.begin(), selection.end(),
+                              "sensitives") != selection.end();
+  bool portals = std::find(selection.begin(), selection.end(), "portals") !=
+                 selection.end();
+  bool materials = std::find(selection.begin(), selection.end(), "materials") !=
+                   selection.end();
+
+  // Helper lambda for material selection
+  auto materialSel = [&](const Svg::ProtoSurface& s) -> bool {
+    return (materials &&
+            s._decorations.find("material") != s._decorations.end());
+  };
+
+  // Helper lambda for view range selection
+  auto viewRangeSel = [](const Svg::ProtoSurface& s,
+                         const Extent& vRange) -> bool {
+    bool accept = false;
+    for (const auto& v : s._vertices) {
+      if (vRange.contains(v)) {
+        accept = true;
+        break;
       }
     }
-  } else {
-    // take all instead
-    surfaces = pVolume._v_surfaces;
+    return accept;
+  };
+
+  // -------------------- surface section
+  // The surfaces to be drawn
+  std::vector<Svg::ProtoVolume::surface_type> sSurfaces;
+  sSurfaces.reserve(pVolume._v_surfaces.size());
+  for (const auto& s : pVolume._v_surfaces) {
+    if ((all || sensitives || materialSel(s)) && viewRangeSel(s, viewRange)) {
+      sSurfaces.push_back(s);
+    }
   }
+
   // Now draw all the surfaces
-  for (const auto& vs : surfaces) {
+  for (const auto& vs : sSurfaces) {
     if (view == "xy") {
       svgDet.add_object(Svg::View::xy(vs, identification));
     } else if (view == "zr") {
       svgDet.add_object(Svg::View::zr(vs, identification));
+    } else {
+      throw std::invalid_argument("Unknown view type");
+    }
+  }
+
+  // -------------------- portal section
+  std::vector<Svg::ProtoPortal> sPortals;
+  sPortals.reserve(pVolume._portals.size());
+  for (const auto& vp : pVolume._portals) {
+    if ((all || portals || materialSel(vp._surface)) &&
+        viewRangeSel(vp._surface, viewRange)) {
+      sPortals.push_back(vp);
+    }
+  }
+
+  // Now draw all the portals - if not already in the cache
+  for (const auto& vp : sPortals) {
+    auto pgID = vp._surface._decorations.find("geo_id");
+    std::string gpIDs = "";
+    if (pgID != vp._surface._decorations.end()) {
+      gpIDs = pgID->second._id;
+    }
+
+    if (std::find(portalCache.begin(), portalCache.end(), gpIDs) !=
+        portalCache.end()) {
+      continue;
+    }
+
+    // Register this portal to the cache
+    portalCache.insert(portalCache.begin(), gpIDs);
+
+    if (view == "xy") {
+      svgDet.add_object(Svg::View::xy(vp, identification));
+    } else if (view == "zr") {
+      svgDet.add_object(Svg::View::zr(vp, identification));
     } else {
       throw std::invalid_argument("Unknown view type");
     }
@@ -95,8 +165,9 @@ void viewDetector(
     const std::vector<std::tuple<int, Svg::DetectorVolumeConverter::Options>>&
         volumeIdxOpts,
     const std::vector<ViewAndRange>& viewAndRanges, const std::string& saveAs) {
-  // The svg object to be returned
+  PortalCache portalCache;
 
+  // The svg object to be returned
   std::vector<actsvg::svg::object> svgDetViews;
   svgDetViews.reserve(viewAndRanges.size());
   for (unsigned int i = 0; i < viewAndRanges.size(); ++i) {
@@ -113,17 +184,17 @@ void viewDetector(
         Svg::DetectorVolumeConverter::convert(gctx, *v, vopts);
 
     for (auto [iv, var] : Acts::enumerate(viewAndRanges)) {
-      auto [view, range] = var;
+      auto [view, slection, range] = var;
       // Get the view and the range
       auto svgVolView = viewDetectorVolume(
           pVolume, identification + "_vol" + std::to_string(vidx) + "_" + view,
-          var);
+          var, portalCache);
       svgDetViews[iv].add_object(svgVolView);
     }
   }
 
   for (auto [iv, var] : Acts::enumerate(viewAndRanges)) {
-    auto [view, range] = var;
+    auto [view, selection, range] = var;
     Svg::toFile({svgDetViews[iv]}, saveAs + "_" + view + ".svg");
   }
 }
