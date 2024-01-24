@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
       Acts::Experimental::DetectorVolumeFactory::construct(
           portalGenerator, Acts::GeometryContext(), "CubeWithSurfaceTooBig",
           Acts::Transform3::Identity(),
-          std::make_shared<Acts::CuboidVolumeBounds>(vBounds),
-          {surfaceTooBig}, {}, Acts::Experimental::tryAllSubVolumes(),
+          std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {surfaceTooBig},
+          {}, Acts::Experimental::tryAllSubVolumes(),
           Acts::Experimental::tryAllPortalsAndSurfaces()),
       std::invalid_argument);
 
@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
       Acts::Experimental::DetectorVolumeFactory::construct(
           portalGenerator, Acts::GeometryContext(),
           "SmallCubeWithBigCubeInside", Acts::Transform3::Identity(),
-          std::make_shared<Acts::CuboidVolumeBounds>(smallBounds),
-          {}, {bigVolume}, Acts::Experimental::tryAllSubVolumes(),
+          std::make_shared<Acts::CuboidVolumeBounds>(smallBounds), {},
+          {bigVolume}, Acts::Experimental::tryAllSubVolumes(),
           Acts::Experimental::tryAllPortalsAndSurfaces()),
       std::invalid_argument);
 
@@ -106,8 +106,8 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
       Acts::Experimental::DetectorVolumeFactory::construct(
           portalGenerator, Acts::GeometryContext(), "SmallCubeMisaligned",
           Acts::Transform3::Identity() * Acts::Translation3(9.5, 0., 0.),
-          std::make_shared<Acts::CuboidVolumeBounds>(smallBounds),
-          {}, {}, Acts::Experimental::tryAllSubVolumes(),
+          std::make_shared<Acts::CuboidVolumeBounds>(smallBounds), {}, {},
+          Acts::Experimental::tryAllSubVolumes(),
           Acts::Experimental::tryAllPortalsAndSurfaces());
 
   BOOST_CHECK_THROW(
