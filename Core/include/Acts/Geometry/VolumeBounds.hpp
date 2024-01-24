@@ -115,6 +115,12 @@ class VolumeBounds {
       const Transform3* trf = nullptr, const Vector3& envelope = {0, 0, 0},
       const Volume* entity = nullptr) const = 0;
 
+  /// Get the canonical binning values, i.e. the binning values
+  /// for that fully describe the shape's extent
+  ///
+  /// @return vector of canonical binning values
+  virtual std::vector<Acts::BinningValue> canonicalBinning() const = 0;
+
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param bValue is the binning schema used

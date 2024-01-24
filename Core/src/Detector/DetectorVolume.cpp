@@ -205,7 +205,7 @@ void Acts::Experimental::DetectorVolume::construct(
   // Volume extent is constructed from the portals
   // So the surface/subvolume containment 
   // check has to happen here
-  if(!checkContainment(gctx)) {
+  if(!checkContainment(gctx,1000)) {
     throw std::invalid_argument(
         "DetectorVolume: surfaces or subvolumes are not contained by volume");
   }
@@ -269,18 +269,11 @@ Acts::Extent Acts::Experimental::DetectorVolume::extent(
 
 bool Acts::Experimental::DetectorVolume::checkContainment(
     const GeometryContext& gctx, std::size_t nseg) const {
-
-  // Magnitude comparisons do not make sense here
-  // as these are 0-length ranges, meaning a volume 
-  // can never contain a surface or a subvolume
-  std::vector<Acts::BinningValue> binningValues = {
-    Acts::binX, Acts::binY, Acts::binZ};
-  // Add angular binning values if not cuboid
-  if (volumeBounds().type() != VolumeBounds::eCuboid) {
-    binningValues.insert(binningValues.end(), {
-      Acts::binR, Acts::binPhi, Acts::binRPhi, 
-      Acts::binEta, Acts::binH});
-  }
+  
+  // We don't have a logging instance here
+  // so can't throw a warning for shapes that are 
+  // using the bounding box
+  auto binningValues = volumeBounds().canonicalBinning();
 
   // Create the volume extent
   auto volumeExtent = extent(gctx, nseg);
