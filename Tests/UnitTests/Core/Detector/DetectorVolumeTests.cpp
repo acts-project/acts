@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
       Acts::Experimental::DetectorVolumeFactory::construct(
           portalGenerator, Acts::GeometryContext(),
           "CubeWithOutofBoundsSurface", Acts::Transform3::Identity(),
-          std::move(std::make_shared<Acts::CuboidVolumeBounds>(vBounds)),
+          std::make_shared<Acts::CuboidVolumeBounds>(vBounds),
           {surfaceOutOfBounds}, {}, Acts::Experimental::tryAllSubVolumes(),
           Acts::Experimental::tryAllPortalsAndSurfaces()),
       std::invalid_argument);
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
       Acts::Experimental::DetectorVolumeFactory::construct(
           portalGenerator, Acts::GeometryContext(), "CubeWithSurfaceTooBig",
           Acts::Transform3::Identity(),
-          std::move(std::make_shared<Acts::CuboidVolumeBounds>(vBounds)),
+          std::make_shared<Acts::CuboidVolumeBounds>(vBounds),
           {surfaceTooBig}, {}, Acts::Experimental::tryAllSubVolumes(),
           Acts::Experimental::tryAllPortalsAndSurfaces()),
       std::invalid_argument);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
   auto bigVolume = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, Acts::GeometryContext(), "BigCube",
       Acts::Transform3::Identity(),
-      std::move(std::make_shared<Acts::CuboidVolumeBounds>(vBounds)), {}, {},
+      std::make_shared<Acts::CuboidVolumeBounds>(vBounds)), {}, {,
       Acts::Experimental::tryAllSubVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
       Acts::Experimental::DetectorVolumeFactory::construct(
           portalGenerator, Acts::GeometryContext(), "CubeWithMisalignedVolume",
           Acts::Transform3::Identity(),
-          std::move(std::make_shared<Acts::CuboidVolumeBounds>(vBounds)), {},
+          std::make_shared<Acts::CuboidVolumeBounds>(vBounds)), {,
           {smallVolumeMisaligned}, Acts::Experimental::tryAllSubVolumes(),
           Acts::Experimental::tryAllPortalsAndSurfaces()),
       std::invalid_argument);

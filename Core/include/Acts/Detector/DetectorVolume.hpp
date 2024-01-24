@@ -423,9 +423,9 @@ class DetectorVolumeFactory {
         std::move(detectorVolumeUpdater), std::move(surfaceCandidateUpdater));
     dVolume->construct(gctx, portalGenerator);
 
-    // Volume extent is constructed from the portals
-    // So the surface/subvolume containment
-    // check has to happen here
+    /// Volume extent is constructed from the portals
+    /// So the surface/subvolume containment
+    /// check has to happen here
     if (!dVolume->checkContainment(gctx, nseg)) {
       throw std::invalid_argument(
           "DetectorVolume: surfaces or subvolumes are not contained by volume");
