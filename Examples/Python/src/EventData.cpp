@@ -6,8 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+
+#include <type_traits>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -22,14 +25,15 @@ void addEventData(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   py::class_<Acts::ParticleHypothesis>(m, "ParticleHypothesis")
-      .def(py::init<PdgParticle, float, float>(), py::arg("absPdg"),
-           py::arg("mass"), py::arg("charge"))
-      .def("__str__",
-           [](const Acts::ParticleHypothesis& particleHypothesis) {
-             std::stringstream os;
-             particleHypothesis.toStream(os);
-             return os.str();
-           })
+      .def(py::init<PdgParticle, float, float>(), py::arg("pdg"),
+           py::arg("mass"), py::arg("absCharge"))
+      .def(py::init([](std::underlying_type_t<Acts::PdgParticle> absPdg,
+                       float mass, float absCharge) {
+             return Acts::ParticleHypothesis(
+                 static_cast<Acts::PdgParticle>(absPdg), mass, absCharge);
+           }),
+           py::arg("absPdg"), py::arg("mass"), py::arg("absCharge"))
+      .def("__str__", &Acts::ParticleHypothesis::toString)
       .def("absolutePdg", &Acts::ParticleHypothesis::absolutePdg)
       .def("mass", &Acts::ParticleHypothesis::mass)
       .def("absoluteCharge", &Acts::ParticleHypothesis::absoluteCharge)

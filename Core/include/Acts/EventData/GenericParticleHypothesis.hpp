@@ -10,11 +10,11 @@
 
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/ChargeConcept.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 
+#include <cassert>
 #include <iosfwd>
+#include <sstream>
 #include <utility>
 
 namespace Acts {
@@ -117,6 +117,12 @@ class GenericParticleHypothesis {
     }
     os << ", mass=" << mass() << ", absCharge=" << absoluteCharge() << "}";
     return os;
+  }
+
+  std::string toString() const {
+    std::ostringstream os;
+    toStream(os);
+    return os.str();
   }
 
   friend std::ostream& operator<<(
