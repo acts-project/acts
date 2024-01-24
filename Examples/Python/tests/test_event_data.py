@@ -16,13 +16,13 @@ def test_particle_hypothesis():
     kaon = acts.ParticleHypothesis(321, 0.493677, 1)
 
     # check pdg
-    assert muon.pdg() == acts.PdgParticle.muon
-    assert pion.pdg() == acts.PdgParticle.pion
-    assert electron.pdg() == acts.PdgParticle.electron
-    assert proton.pdg() == acts.PdgParticle.proton
-    assert geantino.pdg() == acts.PdgParticle.geantino
-    assert chargedGeantino.pdg() == acts.PdgParticle.chargedGeantino
-    assert kaon.pdg() == 321
+    assert muon.absolutePdg() == acts.PdgParticle.muon
+    assert pion.absolutePdg() == acts.PdgParticle.pion
+    assert electron.absolutePdg() == acts.PdgParticle.electron
+    assert proton.absolutePdg() == acts.PdgParticle.proton
+    assert geantino.absolutePdg() == acts.PdgParticle.geantino
+    assert chargedGeantino.absolutePdg() == acts.PdgParticle.chargedGeantino
+    assert kaon.absolutePdg() == 321
 
     # check mass
     assert electron.mass() != 0
