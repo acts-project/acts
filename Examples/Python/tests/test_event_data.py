@@ -16,12 +16,12 @@ def test_particle_hypothesis():
     kaon = acts.ParticleHypothesis(321, 0.493677, 1)
 
     # check pdg
-    assert muon.absolutePdg() == acts.PdgParticle.muon
-    assert pion.absolutePdg() == acts.PdgParticle.pion
-    assert electron.absolutePdg() == acts.PdgParticle.electron
-    assert proton.absolutePdg() == acts.PdgParticle.proton
-    assert geantino.absolutePdg() == acts.PdgParticle.geantino
-    assert chargedGeantino.absolutePdg() == acts.PdgParticle.chargedGeantino
+    assert muon.absolutePdg() == acts.PdgParticle.eMuon
+    assert pion.absolutePdg() == acts.PdgParticle.ePionPlus
+    assert electron.absolutePdg() == acts.PdgParticle.eElectron
+    assert proton.absolutePdg() == acts.PdgParticle.eProton
+    assert geantino.absolutePdg() == acts.PdgParticle.eInvalid
+    assert chargedGeantino.absolutePdg() == acts.PdgParticle.eInvalid
     assert kaon.absolutePdg() == 321
 
     # check mass
@@ -43,9 +43,9 @@ def test_particle_hypothesis():
     assert kaon.absoluteCharge() == 1
 
     # printing should show something sensible
-    print(muon)
-    print(pion)
-    print(electron)
-    print(proton)
-    print(geantino)
-    print(chargedGeantino)
+    assert str(muon) == "ParticleHypothesis{absPdg=mu, mass=0.105658, absCharge=1}"
+    assert str(pion) == "ParticleHypothesis{absPdg=pi, mass=0.139571, absCharge=1}"
+    assert str(electron) == "ParticleHypothesis{absPdg=e, mass=0.000510999, absCharge=1}"
+    assert str(proton) == "ParticleHypothesis{absPdg=p, mass=0.938272, absCharge=1}"
+    assert str(geantino) == "ParticleHypothesis{absPdg=0, mass=0, absCharge=0}"
+    assert str(chargedGeantino) == "ParticleHypothesis{absPdg=0, mass=0, absCharge=1}"

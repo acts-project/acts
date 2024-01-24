@@ -14,7 +14,6 @@
 
 #include <cassert>
 #include <iosfwd>
-#include <sstream>
 #include <utility>
 
 namespace Acts {
@@ -117,12 +116,6 @@ class GenericParticleHypothesis {
     }
     os << ", mass=" << mass() << ", absCharge=" << absoluteCharge() << "}";
     return os;
-  }
-
-  std::string toString() const {
-    std::ostringstream os;
-    toStream(os);
-    return os.str();
   }
 
   friend std::ostream& operator<<(

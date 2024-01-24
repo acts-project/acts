@@ -33,10 +33,17 @@ void addEventData(Context& ctx) {
                  static_cast<Acts::PdgParticle>(absPdg), mass, absCharge);
            }),
            py::arg("absPdg"), py::arg("mass"), py::arg("absCharge"))
-      .def("__str__", &Acts::ParticleHypothesis::toString)
-      .def("absolutePdg", &Acts::ParticleHypothesis::absolutePdg)
-      .def("mass", &Acts::ParticleHypothesis::mass)
-      .def("absoluteCharge", &Acts::ParticleHypothesis::absoluteCharge)
+      .def("__str__",
+           [](const Acts::ParticleHypothesis& particleHypothesis) {
+             std::stringstream os;
+             particleHypothesis.toStream(os);
+             return os.str();
+           })
+      .def("absolutePdg",
+           [](const Acts::ParticleHypothesis& p) { return p.absolutePdg(); })
+      .def("mass", [](const Acts::ParticleHypothesis& p) { return p.mass(); })
+      .def("absoluteCharge",
+           [](const Acts::ParticleHypothesis& p) { return p.absoluteCharge(); })
       .def_property_readonly_static("muon",
                                     [](py::object /* self */) {
                                       return Acts::ParticleHypothesis::muon();
