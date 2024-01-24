@@ -96,7 +96,7 @@ struct DiscSupport {
 
 /// @brief Helper method to build planar support structure
 struct RectangularSupport {
-  /// Placement - the remaining loc0, loc1 are then cyclcic
+  /// Placement - the remaining loc0, loc1 are then cyclic
   BinningValue pPlacement = BinningValue::binZ;
 
   /// Offset in position placement
