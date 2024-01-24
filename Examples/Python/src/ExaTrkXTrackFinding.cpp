@@ -70,6 +70,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
+    ACTS_PYTHON_MEMBER(deviceID);
     ACTS_PYTHON_STRUCT_END();
   }
   {
@@ -93,6 +94,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_MEMBER(nChunks);
     ACTS_PYTHON_MEMBER(undirected);
+    ACTS_PYTHON_MEMBER(deviceID);
     ACTS_PYTHON_STRUCT_END();
   }
   {
@@ -208,7 +210,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("graphConstructor"), py::arg("edgeClassifiers"),
                  py::arg("trackBuilder"), py::arg("level"))
             .def("run", &ExaTrkXPipeline::run, py::arg("features"),
-                 py::arg("spacepoints"), py::arg("deviceHint") = -1,
+                 py::arg("spacepoints"), 
                  py::arg("hook") = Acts::ExaTrkXHook{},
                  py::arg("timing") = nullptr);
   }

@@ -13,6 +13,8 @@
 
 #include <memory>
 
+#include <torch/script.h>
+
 namespace Ort {
 class Env;
 class Session;
@@ -32,7 +34,7 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
   ~OnnxEdgeClassifier();
 
   std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges, int deviceHint = -1) override;
+      std::any nodes, std::any edges, torch::Device device) override;
 
   Config config() const { return m_cfg; }
 
