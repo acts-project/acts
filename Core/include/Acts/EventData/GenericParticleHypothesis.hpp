@@ -13,7 +13,7 @@
 #include "Acts/Utilities/Concepts.hpp"
 
 #include <cassert>
-#include <iosfwd>
+#include <ostream>
 #include <utility>
 
 namespace Acts {
