@@ -22,12 +22,17 @@ void addEventData(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   py::class_<Acts::ParticleHypothesis>(m, "ParticleHypothesis")
+      .def(py::init<PdgParticle, float, float>(), py::arg("absPdg"),
+           py::arg("mass"), py::arg("charge"))
       .def("__str__",
            [](const Acts::ParticleHypothesis& particleHypothesis) {
              std::stringstream os;
              particleHypothesis.toStream(os);
              return os.str();
            })
+      .def("absolutePdg", &Acts::ParticleHypothesis::absolutePdg)
+      .def("mass", &Acts::ParticleHypothesis::mass)
+      .def("absoluteCharge", &Acts::ParticleHypothesis::absoluteCharge)
       .def_property_readonly_static("muon",
                                     [](py::object /* self */) {
                                       return Acts::ParticleHypothesis::muon();
