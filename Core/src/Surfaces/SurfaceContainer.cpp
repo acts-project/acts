@@ -9,7 +9,7 @@
 #include "Acts/Surfaces/SurfaceContainer.hpp"
 
 Acts::SurfacePtrsContainer Acts::SurfaceContainer::getPtrs(
-    const DetectorPtr& detector) const {
+    DetectorPtr detector) const {
   Acts::SurfaceContainer::SurfaceVisitor visitor;
   for (auto& vol : detector->rootVolumePtrs()) {
     for (auto& surf : vol->surfacePtrs()) {
@@ -20,7 +20,7 @@ Acts::SurfacePtrsContainer Acts::SurfaceContainer::getPtrs(
 }
 
 Acts::SurfacePtrsContainer Acts::SurfaceContainer::getPtrs(
-   const TrackingGeometryPtr& tGeometryPtr) const {
+    TrackingGeometryPtr tGeometryPtr) const {
   Acts::SurfaceContainer::SurfaceVisitor visitor;
   tGeometryPtr->visitSurfaces(visitor);
   return visitor.surfacePtrs;
