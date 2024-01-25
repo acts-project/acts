@@ -104,7 +104,6 @@ struct TestSourceLink final {
   }
 
   struct SurfaceAccessor {
-
    private:
     std::vector<const Acts::Surface *> surfaceVec;
 
@@ -120,7 +119,7 @@ struct TestSourceLink final {
     SurfaceAccessor(const Acts::TrackingGeometry &tGeometry)
         : surfaceVec(getVec(tGeometry)) {}
     SurfaceAccessor(std::vector<const Acts::Surface *> surfVec)
-              : surfaceVec(surfVec) {}
+        : surfaceVec(surfVec) {}
 
     const Acts::Surface *operator()(const Acts::SourceLink &sourceLink) const {
       const auto &testSourceLink = sourceLink.get<TestSourceLink>();

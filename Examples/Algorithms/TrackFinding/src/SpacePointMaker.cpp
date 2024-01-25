@@ -141,7 +141,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
     if (geoId.sensitive() == 0) {
-        continue;
+      continue;
     }
     auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
     // groupByModule only works with geometry containers, not with an
