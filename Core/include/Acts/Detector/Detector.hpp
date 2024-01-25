@@ -14,7 +14,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <cstddef>
@@ -99,6 +101,18 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @return the map which can be queried with GeometryID for ranges
   const GeometryHierarchyMap<const Surface*>& sensitiveHierarchyMap() const;
+
+  /// @brief Visit all reachable surfacesof the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each sensitive surface
+  /// that is found
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    for (const auto& v : volumes())
+      v->template visitSurfaces<visitor_t>(std::forward<visitor_t>(visitor));
+  }
 
   /// Update the current volume of a given navigation state
   ///

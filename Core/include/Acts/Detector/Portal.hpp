@@ -12,11 +12,13 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <array>
 #include <map>
@@ -66,6 +68,17 @@ class Portal {
 
   /// Non-const access to the surface reference
   RegularSurface& surface();
+
+  /// @brief Visit all reachable surfacesof the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each sensitive surface
+  /// that is found
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    visitor(m_surface.get());
+  }
 
   /// Update the current volume
   ///
