@@ -33,9 +33,9 @@ class SurfaceContainer {
     }
   };
 
-  SurfacePtrsContainer getPtrs(DetectorPtr detector) const;
+  SurfacePtrsContainer getPtrs(const DetectorPtr& detector) const;
 
-  SurfacePtrsContainer getPtrs(TrackingGeometryPtr tGeometryPtr) const;
+  SurfacePtrsContainer getPtrs(const TrackingGeometryPtr& tGeometryPtr) const;
 
  public:
   /// Constructor from detector object
