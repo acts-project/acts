@@ -176,5 +176,5 @@ BOOST_AUTO_TEST_CASE(SurfaceContainerTest) {
     BOOST_CHECK_EQUAL(detTransform.isApprox(TGTransform), true);
   }
 }
-};  // namespace Test
+}  // namespace Test
 }  // namespace Acts
