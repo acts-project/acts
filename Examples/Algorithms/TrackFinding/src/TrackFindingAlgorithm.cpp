@@ -29,6 +29,8 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
+#include "Acts/Utilities/TracksHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
@@ -97,7 +99,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   Acts::CombinatorialKalmanFilterExtensions<IndexSourceLinkAccessor::Iterator,
@@ -123,16 +124,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   options.extensions = extensions;
   options.propagatorPlainOptions = pOptions;
 
-  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
-                          Acts::AbortList<Acts::EndOfWorldReached>>
-      pExtrapolationOptions(ctx.geoContext, ctx.magFieldContext);
-  pExtrapolationOptions.direction = Acts::Direction::Backward;
+  auto extrapolator =
+      Acts::buildStandardPropagator(m_cfg.magneticField, m_cfg.trackingGeometry,
+                                    logger().cloneWithSuffix("Propagator"));
 
-  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
-      Acts::EigenStepper<>(m_cfg.magneticField),
-      Acts::Navigator({m_cfg.trackingGeometry},
-                      logger().cloneWithSuffix("Navigator")),
-      logger().cloneWithSuffix("Propagator"));
+  auto extrapolationOptions =
+      Acts::buildMaterialPropagatorOptions(ctx.geoContext, ctx.magFieldContext);
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -172,52 +169,25 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
-      auto smoothingResult = kfSmoother(
-          ctx.geoContext, *trackStateContainerTemp, track.tipIndex(), logger());
-
+      auto smoothingResult =
+          Acts::smoothTrack(ctx.geoContext, tracksTemp, track, logger());
       if (!smoothingResult.ok()) {
-        ACTS_WARNING("Smoothing for seed "
-                     << iseed << " and track " << track.index()
-                     << " failed with error " << smoothingResult.error());
+        ACTS_ERROR("Smoothing for seed "
+                   << iseed << " and track " << track.index()
+                   << " failed with error " << smoothingResult.error());
         continue;
       }
 
-      std::size_t firstStateIndex = track.tipIndex();
-      for (auto st : track.trackStatesReversed()) {
-        bool isMeasurement =
-            st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag);
-        bool isOutlier = st.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
-        // We are excluding non measurement states and outlier here. Those can
-        // decrease resolution because only the smoothing corrected the very
-        // first prediction as filtering is not possible.
-        if (isMeasurement && !isOutlier) {
-          firstStateIndex = st.index();
-        }
-      }
-
-      auto firstState = trackStateContainerTemp->getTrackState(firstStateIndex);
-      auto parameters = Acts::BoundTrackParameters(
-          firstState.referenceSurface().getSharedPtr(), firstState.smoothed(),
-          firstState.smoothedCovariance(), track.particleHypothesis());
-
-      auto extrapolationResult = extrapolator.propagate<
-          Acts::BoundTrackParameters, decltype(pExtrapolationOptions),
-          Acts::ForcedSurfaceReached, Acts::PathLimitReached>(
-          parameters, *pSurface, pExtrapolationOptions);
-
+      auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
+          track, *pSurface, extrapolator, extrapolationOptions,
+          m_cfg.extrapolationStrategy, logger());
       if (!extrapolationResult.ok()) {
-        ACTS_WARNING("Extrapolation for seed "
-                     << iseed << " and track " << track.index()
-                     << " failed with error " << extrapolationResult.error());
+        ACTS_ERROR("Extrapolation for seed "
+                   << iseed << " and track " << track.index()
+                   << " failed with error " << extrapolationResult.error());
         continue;
       }
 
-      auto endParameters = extrapolationResult->endParameters.value();
-
-      track.parameters() = endParameters.parameters();
-      track.covariance() = endParameters.covariance().value();
-      track.setReferenceSurface(
-          endParameters.referenceSurface().getSharedPtr());
       seedNumber(track) = nSeed - 1;
 
       if (!m_trackSelector.has_value() ||

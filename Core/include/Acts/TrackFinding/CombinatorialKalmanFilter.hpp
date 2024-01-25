@@ -49,16 +49,6 @@
 
 namespace Acts {
 
-enum class CombinatorialKalmanFilterTargetSurfaceStrategy {
-  /// Use the first trackstate to reach target surface
-  first,
-  /// Use the last trackstate to reach target surface
-  last,
-  /// Use the first or last trackstate to reach target surface depending on the
-  /// distance
-  firstOrLast,
-};
-
 /// Track quality summary for one trajectory.
 ///
 /// This could be used to decide if a track is to be recorded when the

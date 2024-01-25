@@ -21,6 +21,7 @@
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/TracksHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -102,6 +103,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
     /// Maximum number of propagation steps
     unsigned int maxSteps = 100000;
+    /// Extrapolation strategy
+    Acts::TrackExtrapolationStrategy extrapolationStrategy =
+        Acts::TrackExtrapolationStrategy::firstOrLast;
   };
 
   /// Constructor of the track finding algorithm
