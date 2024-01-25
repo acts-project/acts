@@ -284,7 +284,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// Const access to the detector volume updator
   const DetectorVolumeUpdater& detectorVolumeUpdater() const;
 
-  /// @brief Visit all reachable surfacesof the detector
+  /// @brief Visit all reachable surfaces of the detector
   ///
   /// @tparam visitor_t Type of the callable visitor
   ///
