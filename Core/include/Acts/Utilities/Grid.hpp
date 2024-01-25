@@ -492,22 +492,28 @@ class Grid final {
   /// @brief Convenience function to convert the type of the grid
   /// to hold another object type.
   ///
-  /// @tparam U the new grid value type
-  /// @tparam CT the converter type
+  /// @tparam converter_t the converter type
+  ///
+  /// This is designed to be most flexible with a converter object
+  /// as a visitor. If needed, such a visitor could also use
+  /// caching or other techniques to speed up the conversion.
+  ///
+  /// @param cVisitor the converter object as visitor
   ///
   /// @return a new grid with the same axes and a different value type
-  template <typename U, typename CT>
-  Grid<U, Axes...> convertGrid() const {
-    Grid<U, Axes...> cGrid(m_axes);
+  template <typename converter_t>
+  Grid<typename converter_t::value_type, Axes...> convertGrid(
+      converter_t& cVisitor) const {
+    Grid<typename converter_t::value_type, Axes...> cGrid(m_axes);
     // Loop through the values and convert them
     for (std::size_t i = 0; i < size(); i++) {
-      cGrid.at(i) = CT::convert(at(i));
+      cGrid.at(i) = cVisitor(at(i));
     }
     return cGrid;
   }
 
   /// @brief get the axes as a tuple
-  const std::tuple<Axes...> axesTuple() const { return m_axes; }
+  const std::tuple<Axes...>& axesTuple() const { return m_axes; }
 
   /// @brief get the axes as an array of IAxis pointers
   std::array<const IAxis*, DIM> axes() const {

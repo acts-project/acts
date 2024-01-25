@@ -1347,7 +1347,10 @@ BOOST_AUTO_TEST_CASE(grid_type_conversion) {
 BOOST_AUTO_TEST_CASE(grid_full_conversion) {
   // The converter class
   struct DoubleToInt {
-    static int convert(double d) { return static_cast<int>(d); }
+    // Decalare a value tupe
+    using value_type = int;
+    // the conversion operator
+    int operator()(double d) { return static_cast<int>(d); }
   };
 
   using EAxis = EquidistantAxis;
@@ -1361,7 +1364,9 @@ BOOST_AUTO_TEST_CASE(grid_full_conversion) {
   g1.atPosition(Point({{0.3}})) = 1.1;
   g1.atPosition(Point({{0.6}})) = 2.4;
 
-  auto g1ConvertedInt = g1.convertGrid<int, DoubleToInt>();
+  DoubleToInt d2i;
+
+  auto g1ConvertedInt = g1.convertGrid(d2i);
   BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.3}})), 1);
   BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.6}})), 2);
 }
