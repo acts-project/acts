@@ -119,7 +119,13 @@ class VolumeBounds {
   /// for that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  virtual std::vector<Acts::BinningValue> canonicalBinning() const = 0;
+  ///
+  /// @note This is the default implementation that
+  /// returns the bounding box binning. Individual shapes
+  /// should override this method
+  virtual std::vector<Acts::BinningValue> canonicalBinning() const {
+    return {Acts::binX, Acts::binY, Acts::binZ};
+  };
 
   /// Binning offset - overloaded for some R-binning types
   ///

@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
           "CubeWithOutofBoundsSurface", Acts::Transform3::Identity(),
           std::make_shared<Acts::CuboidVolumeBounds>(vBounds),
           {surfaceOutOfBounds}, {}, Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces()),
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
       std::invalid_argument);
 
   // Create a surface that is too big
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
           Acts::Transform3::Identity(),
           std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {surfaceTooBig},
           {}, Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces()),
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
       std::invalid_argument);
 
   // Envelope a bigger volume into a smaller one
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
       Acts::Transform3::Identity(),
       std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {}, {},
       Acts::Experimental::tryAllSubVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+      Acts::Experimental::tryAllPortalsAndSurfaces(), 1000);
 
   auto smallBounds = Acts::CuboidVolumeBounds(1.0, 1.0, 1.0);
   BOOST_CHECK_THROW(
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
           "SmallCubeWithBigCubeInside", Acts::Transform3::Identity(),
           std::make_shared<Acts::CuboidVolumeBounds>(smallBounds), {},
           {bigVolume}, Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces()),
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
       std::invalid_argument);
 
   // Envelope a misaligned subvolume
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
           Acts::Transform3::Identity() * Acts::Translation3(9.5, 0., 0.),
           std::make_shared<Acts::CuboidVolumeBounds>(smallBounds), {}, {},
           Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces());
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000);
 
   BOOST_CHECK_THROW(
       Acts::Experimental::DetectorVolumeFactory::construct(
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
           Acts::Transform3::Identity(),
           std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {},
           {smallVolumeMisaligned}, Acts::Experimental::tryAllSubVolumes(),
-          Acts::Experimental::tryAllPortalsAndSurfaces()),
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
       std::invalid_argument);
 }
 

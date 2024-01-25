@@ -124,16 +124,6 @@ class ConeVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// Get the canonical binning values, i.e. the binning values
-  /// for that fully describe the shape's extent
-  ///
-  /// @return vector of canonical binning values
-  ///
-  /// @note not yet implemented for this shape
-  std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::binX, Acts::binY, Acts::binZ};
-  };
-
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
   double get(BoundValues bValue) const { return m_values[bValue]; }
