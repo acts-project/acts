@@ -111,8 +111,9 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// handled by the root volume
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
-    for (const auto& v : rootVolumes())
+    for (const auto& v : rootVolumes()) {
       v->template visitSurfaces<visitor_t>(std::forward<visitor_t>(visitor));
+    }
   }
 
   /// Update the current volume of a given navigation state
