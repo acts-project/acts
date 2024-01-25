@@ -29,8 +29,8 @@ class Range1D {
   /// This constructor coonstructs a degenerate range object with a maximum
   /// lower than the minimum. In other words, this range is empty.
   Range1D()
-      : m_min(std::numeric_limits<Type>::lowest()),
-        m_max(std::numeric_limits<Type>::max()) {}
+      : m_min(std::numeric_limits<Type>::max()),
+        m_max(std::numeric_limits<Type>::lowest()) {}
 
   /// @brief Construct a new range object from a lower and upper bound
   ///
