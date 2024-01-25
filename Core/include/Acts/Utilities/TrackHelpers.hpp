@@ -12,6 +12,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -274,8 +275,11 @@ Result<void> extrapolateTrackToReferenceSurface(
   auto &[trackState, distance] = *findResult;
 
   options.direction = Direction::fromScalarZeroAsPositive(distance);
-  auto propagateResult = propagator.propagate(
-      track.createParametersFromState(trackState), referenceSurface, options);
+  auto propagateResult =
+      propagator.template propagate<BoundTrackParameters, propagator_options_t,
+                                    ForcedSurfaceReached>(
+          track.createParametersFromState(trackState), referenceSurface,
+          options);
 
   if (!propagateResult.ok()) {
     ACTS_ERROR("failed to extrapolate track: " << propagateResult.error());
