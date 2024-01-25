@@ -1347,7 +1347,7 @@ BOOST_AUTO_TEST_CASE(grid_type_conversion) {
 BOOST_AUTO_TEST_CASE(grid_full_conversion) {
   // The converter class
   struct DoubleToInt {
-    // Decalare a value tupe
+    // Declare a value tupe
     using value_type = int;
     // the conversion operator
     int operator()(double d) { return static_cast<int>(d); }
