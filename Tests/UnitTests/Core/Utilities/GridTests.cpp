@@ -1323,6 +1323,54 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
   // clang-format on
 }
 
+BOOST_AUTO_TEST_CASE(grid_type_conversion) {
+  using EAxis = EquidistantAxis;
+  using VAxis = VariableAxis;
+
+  // Type conversion test
+  using Grid2Double = Grid<double, EAxis, VAxis>;
+  using Grid2Int = Grid<int, EAxis, VAxis>;
+
+  EAxis a(0.0, 1.0, 10u);
+  VAxis b({0., 1.2, 2.3, 3.4, 4.5, 5.6});
+  Grid2Double g2(std::make_tuple(a, b));
+  Grid2Double g2Copy(g2.axesTuple());
+
+  bool copyKeepsType = std::is_same<decltype(g2), decltype(g2Copy)>::value;
+  BOOST_CHECK(copyKeepsType);
+
+  auto g2ConvertedInt = g2Copy.convertType<int>();
+  bool newType = std::is_same<decltype(g2ConvertedInt), Grid2Int>::value;
+  BOOST_CHECK(newType);
+}
+
+BOOST_AUTO_TEST_CASE(grid_full_conversion) {
+  // The converter class
+  struct DoubleToInt {
+    // Declare a value tupe
+    using value_type = int;
+    // the conversion operator
+    int operator()(double d) { return static_cast<int>(d); }
+  };
+
+  using EAxis = EquidistantAxis;
+
+  // Grid conversion test
+  using Grid1Double = Grid<double, EAxis>;
+  EAxis a(0.0, 1.0, 2u);
+  Grid1Double g1(std::make_tuple(a));
+
+  using Point = std::array<double, 1>;
+  g1.atPosition(Point({{0.3}})) = 1.1;
+  g1.atPosition(Point({{0.6}})) = 2.4;
+
+  DoubleToInt d2i;
+
+  auto g1ConvertedInt = g1.convertGrid(d2i);
+  BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.3}})), 1);
+  BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.6}})), 2);
+}
+
 }  // namespace Test
 
 }  // namespace Acts
