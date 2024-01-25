@@ -52,7 +52,7 @@ class SurfaceContainer {
       : m_surfacePtrs(getPtrs(tGeometryPtr)) {}
 
   SurfaceContainer(const SurfacePtrsContainer& surfaceVec)
-      : m_surfacePtrs(std::move(surfaceVec)) {}
+      : m_surfacePtrs(surfaceVec) {}
 
   // Get surface pointer vector
   SurfacePtrsContainer surfacePtrs() const { return m_surfacePtrs; }
