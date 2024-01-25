@@ -73,8 +73,7 @@ class Portal {
   ///
   /// @tparam visitor_t Type of the callable visitor
   ///
-  /// @param visitor The callable. Will be called for each sensitive surface
-  /// that is found
+  /// @param visitor will be called with the represented surface
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     visitor(m_surface.get());

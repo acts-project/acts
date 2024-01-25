@@ -106,11 +106,12 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @tparam visitor_t Type of the callable visitor
   ///
-  /// @param visitor The callable. Will be called for each sensitive surface
-  /// that is found
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
-    for (const auto& v : volumes())
+    for (const auto& v : rootVolumes())
       v->template visitSurfaces<visitor_t>(std::forward<visitor_t>(visitor));
   }
 
