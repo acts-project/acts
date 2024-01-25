@@ -94,8 +94,6 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     unsigned int nMinimalSurfaces = 4u;
     /// Polyhedron approximations
     unsigned int nSegments = 1u;
-    /// Full closed phi binning
-    bool fullPhiBinning = true;
     /// Extra information, mainly for screen output
     std::string auxiliary = "";
   };
