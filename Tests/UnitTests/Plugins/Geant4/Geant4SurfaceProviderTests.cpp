@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Geant4/Geant4SurfaceProvider.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -114,7 +114,8 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
   auto spFullCfg = Acts::Experimental::Geant4SurfaceProvider<>::Config();
   spFullCfg.gdmlPath = gdmlPath.string();
   spFullCfg.surfacePreselector =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(names,true);
+      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(names,
+                                                                          true);
 
   auto spFull =
       std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(spFullCfg);
@@ -153,7 +154,8 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
   auto spLeftArmCfg = Acts::Experimental::Geant4SurfaceProvider<>::Config();
   spLeftArmCfg.gdmlPath = gdmlPath.string();
   spLeftArmCfg.surfacePreselector =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(leftArmNames,true);
+      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
+          leftArmNames, true);
 
   auto spLeftArm =
       std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(
@@ -231,7 +233,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
 
   auto kdt2DOpt = Acts::Experimental::Geant4SurfaceProvider<2>::kdtOptions();
   kdt2DOpt.range = Acts::RangeXD<2, Acts::ActsScalar>();
-  kdt2DOpt.range[0].set(8,12);
+  kdt2DOpt.range[0].set(8, 12);
   kdt2DOpt.range[1].set(armOffset - 5, armOffset + 100);
   kdt2DOpt.binningValues = {Acts::BinningValue::binZ};
 
@@ -259,9 +261,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   // and select only the second row
   auto sp2DPosCfg = Acts::Experimental::Geant4SurfaceProvider<1>::Config();
   sp2DPosCfg.gdmlPath = gdmlPath.string();
-  std::map<unsigned int,std::tuple<double,double>> ranges;
+  std::map<unsigned int, std::tuple<double, double>> ranges;
 
-  std::array<unsigned int,3> g4Axes;
+  std::array<unsigned int, 3> g4Axes;
   for (auto& bv : {Acts::binX, Acts::binY, Acts::binZ}) {
     g4Axes[bv] = Acts::binToGeant4Axis(bv);
   }
@@ -274,9 +276,8 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::PositionSelector>(
           ranges);
 
-  auto sp2DPos =
-      std::make_shared<Acts::Experimental::Geant4SurfaceProvider<1>>(
-          sp2DPosCfg, kdt1DOpt);
+  auto sp2DPos = std::make_shared<Acts::Experimental::Geant4SurfaceProvider<1>>(
+      sp2DPosCfg, kdt1DOpt);
 
   auto lb2DPosCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lb2DPosCfg.surfacesProvider = sp2DPos;

@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 
+#include <array>
 #include <string>
 #include <vector>
-#include <array>
 
 #include "G4VPhysicalVolume.hh"
 
@@ -21,14 +21,19 @@ namespace Acts {
 
 EAxis binToGeant4Axis(const Acts::BinningValue& bv) {
   switch (bv) {
-    case Acts::BinningValue::binX: return EAxis::kXAxis;
-    case Acts::BinningValue::binY: return EAxis::kYAxis;
-    case Acts::BinningValue::binZ: return EAxis::kZAxis;
-    case Acts::BinningValue::binR: return EAxis::kRho;
-    case Acts::BinningValue::binPhi: return EAxis::kPhi;
-    default: 
+    case Acts::BinningValue::binX:
+      return EAxis::kXAxis;
+    case Acts::BinningValue::binY:
+      return EAxis::kYAxis;
+    case Acts::BinningValue::binZ:
+      return EAxis::kZAxis;
+    case Acts::BinningValue::binR:
+      return EAxis::kRho;
+    case Acts::BinningValue::binPhi:
+      return EAxis::kPhi;
+    default:
       throw std::invalid_argument(
-        "No Geant4 axis conversion for this binning value");
+          "No Geant4 axis conversion for this binning value");
   }
 }
 
@@ -84,21 +89,21 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
 /// @param pos the provided list of ranges
 ///
 /// @note Can be used for preselection of volumes
-/// before a KDTree search. This way the memory 
+/// before a KDTree search. This way the memory
 /// consumption can be reduced, compromising the
 /// execution speed
 ///
-/// @note Careful with axis conventions as 
+/// @note Careful with axis conventions as
 /// Geant4 uses a different one than Acts
 /// TODO: Add axis conversion
 struct PositionSelector : public IGeant4PhysicalVolumeSelector {
-  std::map<unsigned int,std::tuple<double,double>> m_ranges;
+  std::map<unsigned int, std::tuple<double, double>> m_ranges;
 
   /// Constructor with arguments
   /// @param ns the provided list of names
   /// @param e whether to select them exact or not
   PositionSelector(
-    const std::map<unsigned int,std::tuple<double,double>>& ranges)
+      const std::map<unsigned int, std::tuple<double, double>>& ranges)
       : m_ranges(ranges) {}
 
   /// Secect function for the volume
@@ -108,7 +113,7 @@ struct PositionSelector : public IGeant4PhysicalVolumeSelector {
     bool matched = false;
     G4ThreeVector pos = g4PhysVol.GetTranslation();
     for (auto range : m_ranges) {
-      auto& [min,max] = range.second;
+      auto& [min, max] = range.second;
       EAxis axis = EAxis(range.first);
       matched = (pos[axis] >= min) && (pos[axis] <= max);
       if (!matched) {

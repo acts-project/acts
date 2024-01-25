@@ -22,7 +22,7 @@ namespace Experimental {
 /// @brief A surface provider that extracts surfaces from a gdml file
 ///
 /// This provider extracts volumes from a gdml file based on
-/// the preselection criteria (extracts all by default) and converts 
+/// the preselection criteria (extracts all by default) and converts
 /// them to surfaces.
 ///
 /// Optionally, it can be configured to return a range-based
@@ -54,7 +54,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
     /// A selector for passive surfaces
     std::shared_ptr<IGeant4PhysicalVolumeSelector> surfacePreselector =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::AllSelector>();
+        std::make_shared<Acts::Geant4PhysicalVolumeSelectors::AllSelector>();
   };
 
   /// Optional configuration for the KdtSurfaces
@@ -77,8 +77,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
       throw std::invalid_argument(
           "Geant4SurfaceProvider: no gdml file provided");
     }
-    if (config.surfacePreselector == nullptr &&
-        options.range.degenerate()) {
+    if (config.surfacePreselector == nullptr && options.range.degenerate()) {
       throw std::invalid_argument(
           "Geant4SurfaceProvider: preselection and range are not set");
     }
@@ -102,8 +101,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
   std::vector<std::shared_ptr<Acts::Surface>> surfaces(
       [[maybe_unused]] const Acts::GeometryContext& gctx) const override {
-
-    /// Surface factory options 
+    /// Surface factory options
     Acts::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
 
     /// Copy the configuration
