@@ -10,7 +10,7 @@ on:
     paths-ignore:
       - "docs/**"
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -49,7 +49,7 @@ jobs:
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions 
+        # versions
         run: >
           ccache -z &&
           cmake -B build -S .
@@ -59,7 +59,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
@@ -284,7 +284,7 @@ jobs:
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions 
+        # versions
         run: >
           ccache -z &&
           cmake -B build -S .
@@ -294,7 +294,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
@@ -340,114 +340,115 @@ jobs:
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
-  linux-nodeps:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v41
-    strategy:
-      matrix:
-        image:
-          # Note: We only want the centos8 base here, and so we do not
-          # setup the lcg environment below
-          - centos8-lcg100-gcc10
-    env:
-      # NOTE: we setup the ROOT from LCG even though this is a
-      # "nodeps" build. This is because we want to test that the boost
-      # dependency is handled correctly when building the examples
-      # (same for tbb below). ROOT is available from the "epel"
-      # official centos8 repo, but to save hundreds of MB's of package
-      # download we simply use lcg for this one package.
-      SETUP: source /opt/lcg/ROOT/v6.24.00-e7098/x86_64-centos8-gcc10-opt/bin/thisroot.sh
-      PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
-      INSTALL_DIR: ${{ github.workspace }}/install
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install dependencies
-          # Install tbb-devel also to build the examples
-        run: >
-          dnf -y install ninja-build tbb-devel ccache
-          && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
+  ## This job is disabled for now due to an issue installing RPM dependies from CERN resources
+  # linux-nodeps:
+    # runs-on: ubuntu-latest
+    # container: ghcr.io/acts-project/${{ matrix.image }}:v41
+    # strategy:
+      # matrix:
+        # image:
+          # # Note: We only want the centos8 base here, and so we do not
+          # # setup the lcg environment below
+          # - centos8-lcg100-gcc10
+    # env:
+      # # NOTE: we setup the ROOT from LCG even though this is a
+      # # "nodeps" build. This is because we want to test that the boost
+      # # dependency is handled correctly when building the examples
+      # # (same for tbb below). ROOT is available from the "epel"
+      # # official centos8 repo, but to save hundreds of MB's of package
+      # # download we simply use lcg for this one package.
+      # SETUP: source /opt/lcg/ROOT/v6.24.00-e7098/x86_64-centos8-gcc10-opt/bin/thisroot.sh
+      # PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
+      # INSTALL_DIR: ${{ github.workspace }}/install
+    # steps:
+      # - uses: actions/checkout@v3
+      # - name: Install dependencies
+          # # Install tbb-devel also to build the examples
+        # run: >
+          # dnf -y install ninja-build tbb-devel ccache
+          # && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
-      - name: Restore ccache
-        uses: actions/cache/restore@v3
-        id: ccache-restore
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_
+      # - name: Restore ccache
+        # uses: actions/cache/restore@v3
+        # id: ccache-restore
+        # with:
+          # path: ${{ github.workspace }}/ccache
+          # key: ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          # restore-keys: |
+            # ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_
 
-      - name: Configure
-        run: >
-          ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_BUILD_UNITTESTS=ON
-          -DACTS_BUILD_INTEGRATIONTESTS=ON
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_PLUGIN_JSON=ON
-      - name: Build
-        run: ${SETUP} && ( cmake --build build || cmake --build build )
-      # The above line is required as a sort of retry mechanism. Without it,
-      # the build fails for technical reasons.
-      - name: ccache stats
-        run: ccache -s
-      - name: Save ccache
-        uses: actions/cache/save@v3
-        if: always()
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-      - name: Unit tests
-        run: ${SETUP} && cmake --build build --target test
-      - name: Integration tests
-        run: ${SETUP} && cmake --build build --target integrationtests
-      - name: Install
-        run: ${SETUP} && cmake --build build --target install
-      # For some reasons, this version of ROOT complains that it
-      # cannot find the nlohmann::json config before we even installed
-      # it. So we have to do the examples in separate step.
-      - name: Configure Examples
-        run: >
-          ${SETUP} &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_BUILD_EXAMPLES_BINARIES=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_EXAMPLES=ON
-      - name: Build Examples
-        run: ${SETUP} && cmake --build build
-      - name: Install Examples
-        run: ${SETUP} && cmake --build build --target install
-      - name: Run Examples
-        # Run a single example to be sure that the boost dependencies
-        # got linked correctly
-        run: ${SETUP} && ${PRELOAD} && "${INSTALL_DIR}/bin/ActsExampleHelloWorld" -n 1
-      - name: Downstream configure
-        run: >
-          ${SETUP} &&
-          cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-      - name: Downstream build
-        run: cmake --build build-downstream-nodeps
-      - name: Downstream run
-        run: ./build-downstream-nodeps/bin/ShowActsVersion
-             && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
+      # - name: Configure
+        # run: >
+          # ccache -z &&
+          # cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          # -DACTS_BUILD_UNITTESTS=ON
+          # -DACTS_BUILD_INTEGRATIONTESTS=ON
+          # -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          # -DACTS_FORCE_ASSERTIONS=ON
+          # -DACTS_USE_SYSTEM_BOOST=OFF
+          # -DACTS_USE_SYSTEM_EIGEN3=OFF
+          # -DACTS_BUILD_PLUGIN_JSON=ON
+      # - name: Build
+        # run: ${SETUP} && ( cmake --build build || cmake --build build )
+      # # The above line is required as a sort of retry mechanism. Without it,
+      # # the build fails for technical reasons.
+      # - name: ccache stats
+        # run: ccache -s
+      # - name: Save ccache
+        # uses: actions/cache/save@v3
+        # if: always()
+        # with:
+          # path: ${{ github.workspace }}/ccache
+          # key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+      # - name: Unit tests
+        # run: ${SETUP} && cmake --build build --target test
+      # - name: Integration tests
+        # run: ${SETUP} && cmake --build build --target integrationtests
+      # - name: Install
+        # run: ${SETUP} && cmake --build build --target install
+      # # For some reasons, this version of ROOT complains that it
+      # # cannot find the nlohmann::json config before we even installed
+      # # it. So we have to do the examples in separate step.
+      # - name: Configure Examples
+        # run: >
+          # ${SETUP} &&
+          # cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          # -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          # -DACTS_BUILD_EXAMPLES_BINARIES=ON
+          # -DACTS_FORCE_ASSERTIONS=ON
+          # -DACTS_USE_SYSTEM_BOOST=OFF
+          # -DACTS_USE_SYSTEM_EIGEN3=OFF
+          # -DACTS_BUILD_EXAMPLES=ON
+      # - name: Build Examples
+        # run: ${SETUP} && cmake --build build
+      # - name: Install Examples
+        # run: ${SETUP} && cmake --build build --target install
+      # - name: Run Examples
+        # # Run a single example to be sure that the boost dependencies
+        # # got linked correctly
+        # run: ${SETUP} && ${PRELOAD} && "${INSTALL_DIR}/bin/ActsExampleHelloWorld" -n 1
+      # - name: Downstream configure
+        # run: >
+          # ${SETUP} &&
+          # cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
+          # -GNinja
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+      # - name: Downstream build
+        # run: cmake --build build-downstream-nodeps
+      # - name: Downstream run
+        # run: ./build-downstream-nodeps/bin/ShowActsVersion
+             # && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
   macos:
     runs-on: macos-11
