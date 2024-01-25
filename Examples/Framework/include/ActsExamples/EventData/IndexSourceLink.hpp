@@ -60,9 +60,9 @@ class IndexSourceLink final {
     }
 
    public:
-    SurfaceAccessor(const Acts::TrackingGeometry &tGeometry)
+    SurfaceAccessor(const Acts::TrackingGeometry& tGeometry)
         : surfaceVec(getVec(tGeometry)) {}
-    SurfaceAccessor(std::vector<const Acts::Surface *> surfVec)
+    SurfaceAccessor(const std::vector<const Acts::Surface *>& surfVec)
         : surfaceVec(surfVec) {}
 
     const Acts::Surface *operator()(const Acts::SourceLink &sourceLink) const {

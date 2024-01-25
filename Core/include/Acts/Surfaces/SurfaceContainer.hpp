@@ -41,7 +41,8 @@ class SurfaceContainer {
   /// Constructor from detector object
   ///
   /// @param detector Shared pointer to detector containing the surfaces
-  SurfaceContainer(DetectorPtr detector) : m_surfacePtrs(getPtrs(detector)) {}
+  SurfaceContainer(DetectorPtr& detector)
+      : m_surfacePtrs(getPtrs(detector)) {}
 
   /// Constructor from tracking geometry object
   ///
