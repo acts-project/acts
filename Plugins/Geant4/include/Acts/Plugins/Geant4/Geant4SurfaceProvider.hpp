@@ -35,6 +35,10 @@ namespace Experimental {
 /// the KdtSurfacesProvider can be skipped. In this case, the
 /// template parameters do not affect the behaviour of the provider.
 ///
+/// @note If the list of names is empty, all G4Volumes will be
+/// extracted from the gdml file. After that, the range-based
+/// selection could be used.
+///
 /// @tparam kDim The number of dimensions for the KDTree
 /// @tparam bSize The maximum number of surfaces per KDTree leaf
 /// @tparam reference_generator The reference generator for the KDTree
@@ -76,9 +80,9 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
       throw std::invalid_argument(
           "Geant4SurfaceProvider: no gdml file provided");
     }
-    if (config.surfaceNames.empty()) {
+    if (config.surfaceNames.empty() && options.range.degenerate()) {
       throw std::invalid_argument(
-          "Geant4SurfaceProvider: no surface names provided");
+          "Geant4SurfaceProvider: no surface names provided and no range set");
     }
 
     m_cfg = config;
@@ -102,8 +106,12 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
       [[maybe_unused]] const Acts::GeometryContext& gctx) const override {
     /// Surface selector to look in the G4 world
     auto surfaceSelector =
-        std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-            m_cfg.surfaceNames, m_cfg.exactMatch);
+        (m_cfg.surfaceNames.empty())
+            ? std::make_shared<
+                  Acts::Geant4PhysicalVolumeSelectors::AllSelector>()
+            : std::make_shared<
+                  Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
+                  m_cfg.surfaceNames, m_cfg.exactMatch);
 
     /// Surface factory options
     Acts::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
