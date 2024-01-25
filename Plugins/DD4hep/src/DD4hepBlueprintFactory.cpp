@@ -111,9 +111,9 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
         current->rootVolumeFinderBuilder = rootsFinderBuilder;
       }
 
-      // Check for proto material for the portals, max portal facettes is 8u
-      // for now (Bevelled cylinder)
-      for (unsigned int p = 0u; p < 8u; ++p) {
+      // Check for proto material for the portals, max portal number
+      // can be changed in configuration
+      for (unsigned int p = 0u; p < m_cfg.maxPortals; ++p) {
         std::string pmName = "acts_portal_proto_material_" + std::to_string(p);
         auto protoMaterial = getParamOr<bool>(pmName, dd4hepElement, false);
         if (protoMaterial) {
