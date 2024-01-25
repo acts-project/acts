@@ -69,7 +69,7 @@ class Portal {
   /// Non-const access to the surface reference
   RegularSurface& surface();
 
-  /// @brief Visit all reachable surfacesof the detector
+  /// @brief Visit all reachable surfaces of the detector
   ///
   /// @tparam visitor_t Type of the callable visitor
   ///
