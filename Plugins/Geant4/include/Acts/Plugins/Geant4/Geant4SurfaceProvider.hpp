@@ -30,6 +30,10 @@ namespace Experimental {
 /// The latter is achieved by using a KdtSurfacesProvider
 /// internally.
 ///
+/// @note if the KDTree selection is not needed, the 
+/// template parameters can left to their default values
+/// as they will not affect the result.
+///
 /// @tparam kDim The number of dimensions for the KDTree
 /// @tparam bSize The maximum number of surfaces per KDTree leaf
 /// @tparam reference_generator The reference generator for the KDTree
