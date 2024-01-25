@@ -47,7 +47,7 @@ class SurfaceContainer {
   ///
   /// @param tGeometryPtr Shared pointer to tracking geometry
   /// containing the surfaces
-  SurfaceContainer(TrackingGeometryPtr tGeometryPtr)
+  SurfaceContainer(TrackingGeometryPtr& tGeometryPtr)
       : m_surfacePtrs(getPtrs(tGeometryPtr)) {}
 
   SurfaceContainer(SurfacePtrsContainer& surfaceVec)

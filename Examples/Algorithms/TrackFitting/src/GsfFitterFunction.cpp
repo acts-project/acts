@@ -93,10 +93,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
                         const Acts::TrackingGeometry& trkGeo)
       : fitter(std::move(f)),
         directFitter(std::move(df)),
-        m_slSurfaceAccessor{
-            Acts::SurfaceContainer(
-                std::make_shared<const Acts::TrackingGeometry>(trkGeo))
-                .surfacePtrs()} {}
+        m_slSurfaceAccessor{trkGeo} {}
 
   template <typename calibrator_t>
   auto makeGsfOptions(const GeneralFitterOptions& options,
