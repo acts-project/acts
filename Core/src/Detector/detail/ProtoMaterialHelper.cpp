@@ -27,7 +27,7 @@ Acts::Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
   for (const auto& b : bDescription.binning) {
     ProtoBinning fBinning = b;
     // Check if the binning needs to be fixed
-    if (fBinning.edges.front() == fBinning.edges.back()) {
+    if (fBinning.autorange) {
       auto range = sExtent.range(b.binValue);
       fBinning = ProtoBinning(b.binValue, b.boundaryType, range.min(),
                               range.max(), b.bins(), b.expansion);
