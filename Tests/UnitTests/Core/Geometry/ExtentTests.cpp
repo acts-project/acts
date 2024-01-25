@@ -159,8 +159,8 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   BOOST_CHECK(!gExtVertexCheck.contains(Vector3(6., 0., 0.)));
 }
 
-// Test that the constains() check advances when the extend() method
-// is used weith a new binning type
+// Test that the constrains() check advances when the extend() method
+// is used with a new binning type
 BOOST_AUTO_TEST_CASE(ProtoSupportCaseTests) {
   std::vector<Vector3> vertices = {
       Vector3(15_mm, -3_mm, -10_mm), Vector3(18_mm, 0_mm, -10_mm),
