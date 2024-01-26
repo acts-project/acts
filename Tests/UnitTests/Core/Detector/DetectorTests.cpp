@@ -112,6 +112,24 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   BOOST_CHECK_EQUAL(
       det012, unpackToShared<const Acts::Experimental::Detector>(*det012));
 
+  // Check surface visiting
+  // Test the visitor pattern for surfaces
+  struct CountSurfaces {
+    unsigned int counter = 0;
+
+    void operator()(const Acts::Surface* s) {
+      if (s != nullptr) {
+        counter++;
+      }
+    }
+  };
+
+  CountSurfaces countSurfaces;
+  det012->visitSurfaces(countSurfaces);
+
+  // 3 innermost, 4 middle, 4 outermost
+  BOOST_CHECK_EQUAL(countSurfaces.counter, 11u);
+
   // Check the inside function with positions
   Acts::Experimental::NavigationState nState;
   nState.position = Acts::Vector3(5., 0., 0.);
