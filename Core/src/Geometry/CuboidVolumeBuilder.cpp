@@ -110,7 +110,7 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
 
   // Compute the min volume boundaries for computing the binning start
   // See
-  // https://acts.readthedocs.io/en/latest/core/geometry.html#geometry-building
+  // https://acts.readthedocs.io/en/latest/core/geometry/legacy/building.html
   // !! IMPORTANT !! The volume is assumed to be already rotated into the
   // telescope geometry
   Vector3 minVolumeBoundaries = cfg.position - 0.5 * cfg.length;
