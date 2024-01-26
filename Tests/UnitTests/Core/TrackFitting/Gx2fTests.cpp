@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(DidNotConverge) {
                               startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(!res.ok());
-  BOOST_TEST((res.error() ==
+  BOOST_CHECK((res.error() ==
               Acts::Experimental::GlobalChiSquareFitterError::DidNotConverge));
 
   ACTS_INFO("*** Test: DidNotConverge -- Finish");
