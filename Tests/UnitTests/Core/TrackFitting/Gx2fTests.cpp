@@ -723,16 +723,11 @@ BOOST_AUTO_TEST_CASE(DidNotConverge) {
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
   const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                               startParametersFit, gx2fOptions, tracks);
-  std::cout << "2898debug1" << std::endl;
+
   BOOST_REQUIRE(!res.ok());
-  std::cout << "res.ok(): " << !res.ok() << std::endl;
-  std::cout << "2898debug2" << std::endl;
   BOOST_CHECK_EQUAL(
       res.error(),
       Acts::Experimental::GlobalChiSquareFitterError::DidNotConverge);
-  std::cout << "2898debug3" << std::endl;
-  std::cout << "res.error(): " << res.error() << std::endl;
-  std::cout << "2898debug4" << std::endl;
 
   ACTS_INFO("*** Test: DidNotConverge -- Finish");
 }
