@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -100,15 +101,33 @@ class TrackingGeometry {
   ///         (could be a null pointer)
   const Surface* getBeamline() const;
 
-  /// @brief Visit all sensitive surfaces
+  /// @brief Visit all reachable surfaces
   ///
   /// @tparam visitor_t Type of the callable visitor
   ///
-  /// @param visitor The callable. Will be called for each sensitive surface
-  /// that is found
+  /// @param visitor The callable. Will be called for each reachable surface
+  /// that is found, a selection of the surfaces can be done in the visitor
+  ///
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     highestTrackingVolume()->template visitSurfaces<visitor_t>(
+        std::forward<visitor_t>(visitor));
+  }
+
+  /// @brief Visit all reachable tracking volumes
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each reachable volume
+  /// that is found, a selection of the volumes can be done in the visitor
+  ///
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
+  template <ACTS_CONCEPT(TrackingVolumeVisitor) visitor_t>
+  void visitVolumes(visitor_t&& visitor) const {
+    highestTrackingVolume()->template visitVolumes<visitor_t>(
         std::forward<visitor_t>(visitor));
   }
 
