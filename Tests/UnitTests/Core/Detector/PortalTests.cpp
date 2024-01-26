@@ -236,6 +236,23 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
   BOOST_CHECK_THROW(Portal::fuse(portalA, portalB), std::runtime_error);
   // Same in reverse
   BOOST_CHECK_THROW(Portal::fuse(portalB, portalA), std::runtime_error);
+
+  // Test the visitor pattern for the surface
+  struct ReachSurface {
+    bool reached = false;
+
+    void operator()(const Acts::Surface* s) {
+      if (s != nullptr) {
+        reached = true;
+      }
+    }
+  };
+
+  ReachSurface reachSurface;
+  portalB->visitSurfaces(reachSurface);
+
+  // The visitor should have reached the surface
+  BOOST_CHECK(reachSurface.reached);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
