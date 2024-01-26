@@ -663,6 +663,73 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
 
   ACTS_INFO("*** Test: relChi2changeCutOff -- Finish");
 }
+
+BOOST_AUTO_TEST_CASE(DidNotConverge) {
+  ACTS_INFO("*** Test: DidNotConverge -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  const std::size_t nSurfaces = 5;
+  Detector detector;
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  // simulation propagator
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
+
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter =
+      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 6, true, 0);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(!res.ok());
+  BOOST_TEST((res.error() ==
+              Acts::Experimental::GlobalChiSquareFitterError::DidNotConverge));
+
+  ACTS_INFO("*** Test: DidNotConverge -- Finish");
+}
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts
