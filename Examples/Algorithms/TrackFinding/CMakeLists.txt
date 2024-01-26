@@ -7,6 +7,7 @@ add_library(
   src/TrackFindingAlgorithmFunction.cpp
   src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp
+  src/MuonHoughSeeder.cpp
   src/GbtsSeedingAlgorithm.cpp
 )
 
@@ -22,6 +23,8 @@ target_link_libraries(
     ActsExamplesFramework
     ActsExamplesIoJson
     ActsExamplesMagneticField
+    
+  PRIVATE  ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
 
 install(
