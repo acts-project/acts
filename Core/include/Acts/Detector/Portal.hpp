@@ -75,8 +75,18 @@ class Portal {
   ///
   /// @param visitor will be called with the represented surface
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
-  void visitSurfaces(visitor_t&& visitor) const {
+  void visitSurface(visitor_t&& visitor) const {
     visitor(m_surface.get());
+  }
+
+  /// @brief Visit all reachable surfaces of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called with the represented surface
+  template <ACTS_CONCEPT(SurfacePtrVisitor) visitor_t>
+  void visitSurfacePtr(visitor_t&& visitor) {
+    visitor(m_surface);
   }
 
   /// Update the current volume

@@ -120,6 +120,23 @@ class Detector : public std::enable_shared_from_this<Detector> {
     }
   }
 
+  /// @brief Visit all reachable surfaces of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  template <ACTS_CONCEPT(SurfacePtrVisitor) visitor_t>
+  void visitSurfacePtrs(visitor_t&& visitor) {
+    for (auto& v : volumePtrs()) {
+      v->template visitSurfacePtrs<visitor_t>(std::forward<visitor_t>(visitor));
+    }
+  }
+
   /// @brief Visit all reachable detector volumes of the detector
   ///
   /// @tparam visitor_t Type of the callable visitor
@@ -134,6 +151,23 @@ class Detector : public std::enable_shared_from_this<Detector> {
   void visitVolumes(visitor_t&& visitor) const {
     for (const auto& v : rootVolumes()) {
       v->template visitVolumes<visitor_t>(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable detector volumes of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  template <ACTS_CONCEPT(DetectorVolumePtrVisitor) visitor_t>
+  void visitVolumePtrs(visitor_t&& visitor) {
+    for (const auto& v : volumePtrs()) {
+      v->template visitVolumePtrs<visitor_t>(std::forward<visitor_t>(visitor));
     }
   }
 

@@ -296,10 +296,29 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       visitor(s);
     }
     for (const auto& p : portals()) {
-      p->visitSurfaces(std::forward<visitor_t>(visitor));
+      p->visitSurface(std::forward<visitor_t>(visitor));
     }
     for (const auto& v : volumes()) {
       v->visitSurfaces(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable surfaces of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called for each found surface,
+  /// it will be handed down to contained volumes and portals
+  template <ACTS_CONCEPT(SurfacePtrVisitor) visitor_t>
+  void visitSurfacePtrs(visitor_t&& visitor) {
+    for (auto& s : surfacePtrs()) {
+      visitor(s);
+    }
+    for (auto& p : portalPtrs()) {
+      p->visitSurfacePtr(std::forward<visitor_t>(visitor));
+    }
+    for (auto& v : volumePtrs()) {
+      v->visitSurfacePtrs(std::forward<visitor_t>(visitor));
     }
   }
 
@@ -318,6 +337,24 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
     visitor(this);
     for (const auto& v : volumes()) {
       v->visitVolumes(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable detector volumes of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  template <ACTS_CONCEPT(DetectorVolumeVisitor) visitor_t>
+  void visitVolumePtrs(visitor_t&& visitor) {
+    visitor(this);
+    for (auto& v : volumePtrs()) {
+      v->visitVolumePtrs(std::forward<visitor_t>(visitor));
     }
   }
 

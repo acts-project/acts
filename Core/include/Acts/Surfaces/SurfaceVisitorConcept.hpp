@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <memory>
+
 #if defined(__cpp_concepts)
 #include <concepts>
 
@@ -18,6 +20,11 @@ class Surface;
 template <typename T>
 concept SurfaceVisitor = requires(T v) {
   {v(std::declval<const Surface*>())};
+};
+
+template <typename T>
+concept SurfacePtrVisitor = requires(T v) {
+  {v(std::declval<std::shared_ptr<Surface>>())};
 };
 
 }  // namespace Acts

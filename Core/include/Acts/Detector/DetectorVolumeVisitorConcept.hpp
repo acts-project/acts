@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <memory>
+
 #if defined(__cpp_concepts)
 #include <concepts>
 
@@ -19,6 +21,13 @@ template <typename T>
 concept DetectorVolumeVisitor = requires(T v) {
   {v(std::declval<const DetectorVolume*>())};
 };
+
+template <typename T>
+concept DetectorVolumePtrVisitor = requires(T v) {
+  {v(std::declval<std::shared_ptr<DetectorVolume>>())};
+};
+
+
 
 }  // namespace Acts
 
