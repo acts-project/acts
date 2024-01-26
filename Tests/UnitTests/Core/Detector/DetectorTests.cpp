@@ -127,6 +127,15 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   CountSurfaces countSurfaces;
   det012->visitSurfaces(countSurfaces);
 
+  // Check the volume visiting
+  std::size_t nVolumes = 0;
+  det012->visitVolumes([&nVolumes](const auto* v) {
+    if (v != nullptr) {
+      nVolumes++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nVolumes, 3u);
+
   // 3 innermost, 4 middle, 4 outermost
   BOOST_CHECK_EQUAL(countSurfaces.counter, 11u);
 

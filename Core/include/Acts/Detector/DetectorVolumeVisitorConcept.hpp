@@ -13,11 +13,11 @@
 
 namespace Acts {
 
-class TrackingVolume;
+class DetectorVolume;
 
 template <typename T>
-concept TrackingVolumeVisitor = requires(T v) {
-  {v(std::declval<const TrackingVolume*>())};
+concept DetectorVolumeVisitor = requires(T v) {
+  {v(std::declval<const DetectorVolume*>())};
 };
 
 }  // namespace Acts

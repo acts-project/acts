@@ -15,12 +15,12 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -300,6 +300,24 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
     }
     for (const auto& v : volumes()) {
       v->visitSurfaces(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable detector volumes of the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  template <ACTS_CONCEPT(DetectorVolumeVisitor) visitor_t>
+  void visitVolumes(visitor_t&& visitor) const {
+    visitor(this);
+    for (const auto& v : volumes()) {
+      v->visitVolumes(std::forward<visitor_t>(visitor));
     }
   }
 

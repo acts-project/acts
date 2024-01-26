@@ -11,9 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 

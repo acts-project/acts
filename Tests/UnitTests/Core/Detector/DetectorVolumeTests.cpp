@@ -201,6 +201,15 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
 
   // 6 portlas outer box, 6 portals inner box
   BOOST_CHECK_EQUAL(countSurfaces.counter, 12u);
+
+  // Check volume visiting
+  std::size_t nVolumes = 0;
+  outerBox->visitVolumes([&nVolumes](const auto* v) {
+    if (v != nullptr) {
+      nVolumes++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nVolumes, 2u);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {

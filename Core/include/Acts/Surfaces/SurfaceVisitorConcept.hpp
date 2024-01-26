@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "Acts/Surfaces/Surface.hpp"
-
 #if defined(__cpp_concepts)
 #include <concepts>
 
 namespace Acts {
+
+class Surface;
 
 template <typename T>
 concept SurfaceVisitor = requires(T v) {
