@@ -9,8 +9,8 @@
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -30,12 +30,6 @@
 #include <RtypesCore.h>
 #include <TFile.h>
 #include <TTree.h>
-
-namespace {
-using SimParticleContainer = ActsExamples::SimParticleContainer;
-using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-using ProtoTrackContainer = ActsExamples::ProtoTrackContainer;
-}  // namespace
 
 struct ActsExamples::TrackFinderPerformanceWriter::Impl {
   Config cfg;

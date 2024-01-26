@@ -150,21 +150,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     }
     // Loop over all the other truth particle and find the distance to the
     // closest one
-    double minDeltaR = -1;
-    for (const auto& closeParticle : particles) {
-      if (closeParticle.particleId() == particle.particleId()) {
-        continue;
-      }
-      double p_phi = phi(particle.direction());
-      double p_eta = eta(particle.direction());
-      double c_phi = phi(closeParticle.direction());
-      double c_eta = eta(closeParticle.direction());
-      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
-      if (minDeltaR == -1 || distance < minDeltaR) {
-        minDeltaR = distance;
-      }
-    }
-    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isMatched);
+    m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedSeedsForParticle - 1);
   }

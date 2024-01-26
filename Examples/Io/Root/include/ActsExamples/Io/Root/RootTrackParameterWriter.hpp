@@ -39,7 +39,6 @@ using TrackParameterWriter = WriterT<TrackParametersContainer>;
 /// speed. The event number is part of the written data.
 class RootTrackParameterWriter final : public TrackParameterWriter {
  public:
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
 
   struct Config {

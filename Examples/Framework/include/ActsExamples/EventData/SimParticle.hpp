@@ -47,6 +47,7 @@ struct SecondaryVertexIdGetter {
 };
 }  // namespace detail
 
+using SimBarcode = ::ActsFatras::Barcode;
 using SimParticle = ::ActsFatras::Particle;
 /// Store particles ordered by particle identifier.
 using SimParticleContainer =
