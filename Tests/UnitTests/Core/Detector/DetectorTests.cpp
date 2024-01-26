@@ -17,6 +17,10 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
@@ -114,18 +118,13 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   // Check surface visiting
   // Test the visitor pattern for surfaces
-  struct CountSurfaces {
-    unsigned int counter = 0;
-
-    void operator()(const Acts::Surface* s) {
-      if (s != nullptr) {
-        counter++;
-      }
+  std::size_t nSurfaces = 0;
+  det012->visitSurfaces([&nSurfaces](const auto* s) {
+    if (s != nullptr) {
+      nSurfaces++;
     }
-  };
-
-  CountSurfaces countSurfaces;
-  det012->visitSurfaces(countSurfaces);
+  });
+  BOOST_CHECK_EQUAL(nSurfaces, 11u);
 
   // Check the volume visiting
   std::size_t nVolumes = 0;
@@ -136,8 +135,55 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   });
   BOOST_CHECK_EQUAL(nVolumes, 3u);
 
-  // 3 innermost, 4 middle, 4 outermost
-  BOOST_CHECK_EQUAL(countSurfaces.counter, 11u);
+  // Check surface visiting - non-const access
+  // Test visitor pattern - non-const access
+  struct SetMaterial {
+    /// The material to set
+    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> surfaceMaterial =
+        std::make_shared<Acts::HomogeneousSurfaceMaterial>(Acts::MaterialSlab(
+            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.));
+
+    std::shared_ptr<Acts::HomogeneousVolumeMaterial> volumeMaterial =
+        std::make_shared<Acts::HomogeneousVolumeMaterial>(
+            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.));
+
+    /// The visitor call: set surface material
+    void operator()(std::shared_ptr<Acts::Surface> s) {
+      if (s != nullptr) {
+        s->assignSurfaceMaterial(surfaceMaterial);
+      }
+    }
+
+    /// The visitor call : set volume material
+    void operator()(std::shared_ptr<Acts::Experimental::DetectorVolume> v) {
+      if (v != nullptr) {
+        v->assignVolumeMaterial(volumeMaterial);
+      }
+    }
+  };
+
+  SetMaterial setMaterial;
+  det012->visitSurfacePtrs(setMaterial);
+  det012->visitVolumePtrs(setMaterial);
+
+  // Count surfaces with material
+  std::size_t nSurfacesWithMaterial = 0;
+  det012->visitSurfaces([&nSurfacesWithMaterial](const auto* s) {
+    if (s != nullptr && s->surfaceMaterial() != nullptr) {
+      nSurfacesWithMaterial++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nSurfacesWithMaterial, 11u);
+
+  // Count volumes with material
+  std::size_t nVolumesWithMaterial = 0;
+
+  det012->visitVolumes([&nVolumesWithMaterial](const auto* v) {
+    if (v != nullptr && v->volumeMaterial() != nullptr) {
+      nVolumesWithMaterial++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nVolumesWithMaterial, 3u);
 
   // Check the inside function with positions
   Acts::Experimental::NavigationState nState;

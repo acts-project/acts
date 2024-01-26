@@ -237,26 +237,25 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
 
   SetMaterial setMaterial;
   outerBox->visitSurfacePtrs(setMaterial);
-  //outerBox->visitVolumePtrs(setMaterial);
+  outerBox->visitVolumePtrs(setMaterial);
 
   // Count surfaces with material
-  //std::size_t nSurfacesWithMaterial = 0;
-  //outerBox->visitSurfaces([&nSurfacesWithMaterial](const auto* s) {
-  //  if (s != nullptr && s->surfaceMaterial() != nullptr) {
-  //    nSurfacesWithMaterial++;
-  //  }
-  //});
-  //BOOST_CHECK_EQUAL(nSurfacesWithMaterial, 12u);
+  std::size_t nSurfacesWithMaterial = 0;
+  outerBox->visitSurfaces([&nSurfacesWithMaterial](const auto* s) {
+    if (s != nullptr && s->surfaceMaterial() != nullptr) {
+      nSurfacesWithMaterial++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nSurfacesWithMaterial, 12u);
 
   // Count volumes with material
-  // std::size_t nVolumesWithMaterial = 0;
-  //outerBox->visitVolumes([&nVolumesWithMaterial](const auto* v) {
-  //  if (v != nullptr && v->volumeMaterial() != nullptr) {
-  //    nVolumesWithMaterial++;
-  //  }
-  //});
-  //BOOST_CHECK_EQUAL(nVolumesWithMaterial, 2u);
-
+  std::size_t nVolumesWithMaterial = 0;
+  outerBox->visitVolumes([&nVolumesWithMaterial](const auto* v) {
+    if (v != nullptr && v->volumeMaterial() != nullptr) {
+      nVolumesWithMaterial++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nVolumesWithMaterial, 2u);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {

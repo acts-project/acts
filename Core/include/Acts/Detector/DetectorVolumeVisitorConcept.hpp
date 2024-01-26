@@ -27,8 +27,6 @@ concept DetectorVolumePtrVisitor = requires(T v) {
   {v(std::declval<std::shared_ptr<DetectorVolume>>())};
 };
 
-
-
 }  // namespace Acts
 
 #endif

@@ -350,9 +350,9 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
-  template <ACTS_CONCEPT(DetectorVolumeVisitor) visitor_t>
+  template <ACTS_CONCEPT(DetectorVolumePtrVisitor) visitor_t>
   void visitVolumePtrs(visitor_t&& visitor) {
-    visitor(this);
+    visitor(getSharedPtr());
     for (auto& v : volumePtrs()) {
       v->visitVolumePtrs(std::forward<visitor_t>(visitor));
     }

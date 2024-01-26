@@ -113,6 +113,10 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
+  ///
+  /// @note due to the fact that portals can be shared between volumes, multiple
+  /// visits may occur, duplicated addressing needs to be taken care of by the
+  /// visitor
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     for (const auto& v : rootVolumes()) {
@@ -130,6 +134,10 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
+  ///
+  /// @note due to the fact that this doesn't run over root volumes, and
+  /// due to the fact that portals can be shared between volumes, multiple
+  /// visits may occur, duplicated addressing needs to be taken care of by the
   template <ACTS_CONCEPT(SurfacePtrVisitor) visitor_t>
   void visitSurfacePtrs(visitor_t&& visitor) {
     for (auto& v : volumePtrs()) {
@@ -164,6 +172,10 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
+  ///
+  /// @note that due to non running over root volumes, multiple visits
+  /// may occur, duplicated addressing needs to be taken care of by the
+  /// visitor
   template <ACTS_CONCEPT(DetectorVolumePtrVisitor) visitor_t>
   void visitVolumePtrs(visitor_t&& visitor) {
     for (const auto& v : volumePtrs()) {
