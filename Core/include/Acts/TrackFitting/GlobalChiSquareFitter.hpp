@@ -728,8 +728,8 @@ class Gx2Fitter {
     /// Finish Fitting /////////////////////////////////////////////////////////
 
     if (nUpdate == gx2fOptions.nUpdateMax && gx2fOptions.nUpdateMax > 5) {
-      ACTS_WARNING("Did not converge in " << gx2fOptions.nUpdateMax
-                                          << " updates.");
+      ACTS_INFO("Did not converge in " << gx2fOptions.nUpdateMax
+                                       << " updates.");
       return Experimental::GlobalChiSquareFitterError::DidNotConverge;
     }
 
