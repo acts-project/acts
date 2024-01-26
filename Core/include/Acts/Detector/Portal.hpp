@@ -84,9 +84,9 @@ class Portal {
   /// @tparam visitor_t Type of the callable visitor
   ///
   /// @param visitor will be called with the represented surface
-  template <ACTS_CONCEPT(SurfacePtrVisitor) visitor_t>
-  void visitSurfacePtr(visitor_t&& visitor) {
-    visitor(m_surface);
+  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  void visitMutableSurface(visitor_t&& visitor) {
+    visitor(m_surface.get());
   }
 
   /// Update the current volume

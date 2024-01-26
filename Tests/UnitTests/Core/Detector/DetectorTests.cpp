@@ -148,14 +148,14 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
             Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.));
 
     /// The visitor call: set surface material
-    void operator()(std::shared_ptr<Acts::Surface> s) {
+    void operator()(Acts::Surface* s) {
       if (s != nullptr) {
         s->assignSurfaceMaterial(surfaceMaterial);
       }
     }
 
     /// The visitor call : set volume material
-    void operator()(std::shared_ptr<Acts::Experimental::DetectorVolume> v) {
+    void operator()(Acts::Experimental::DetectorVolume* v) {
       if (v != nullptr) {
         v->assignVolumeMaterial(volumeMaterial);
       }
@@ -163,8 +163,8 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   };
 
   SetMaterial setMaterial;
-  det012->visitSurfacePtrs(setMaterial);
-  det012->visitVolumePtrs(setMaterial);
+  det012->visitMutableSurfaces(setMaterial);
+  det012->visitMutableVolumes(setMaterial);
 
   // Count surfaces with material
   std::size_t nSurfacesWithMaterial = 0;

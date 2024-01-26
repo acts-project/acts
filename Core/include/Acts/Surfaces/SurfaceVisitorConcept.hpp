@@ -23,8 +23,8 @@ concept SurfaceVisitor = requires(T v) {
 };
 
 template <typename T>
-concept SurfacePtrVisitor = requires(T v) {
-  {v(std::declval<std::shared_ptr<Surface>>())};
+concept MutableSurfaceVisitor = requires(T v) {
+  {v(std::declval<Surface*>())};
 };
 
 }  // namespace Acts

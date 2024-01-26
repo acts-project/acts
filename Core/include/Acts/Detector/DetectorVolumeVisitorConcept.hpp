@@ -23,8 +23,8 @@ concept DetectorVolumeVisitor = requires(T v) {
 };
 
 template <typename T>
-concept DetectorVolumePtrVisitor = requires(T v) {
-  {v(std::declval<std::shared_ptr<DetectorVolume>>())};
+concept MutableDetectorVolumeVisitor = requires(T v) {
+  {v(std::declval<DetectorVolume*>())};
 };
 
 }  // namespace Acts

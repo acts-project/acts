@@ -138,10 +138,11 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note due to the fact that this doesn't run over root volumes, and
   /// due to the fact that portals can be shared between volumes, multiple
   /// visits may occur, duplicated addressing needs to be taken care of by the
-  template <ACTS_CONCEPT(SurfacePtrVisitor) visitor_t>
-  void visitSurfacePtrs(visitor_t&& visitor) {
+  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  void visitMutableSurfaces(visitor_t&& visitor) {
     for (auto& v : volumePtrs()) {
-      v->template visitSurfacePtrs<visitor_t>(std::forward<visitor_t>(visitor));
+      v->template visitMutableSurfaces<visitor_t>(
+          std::forward<visitor_t>(visitor));
     }
   }
 
@@ -176,10 +177,11 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note that due to non running over root volumes, multiple visits
   /// may occur, duplicated addressing needs to be taken care of by the
   /// visitor
-  template <ACTS_CONCEPT(DetectorVolumePtrVisitor) visitor_t>
-  void visitVolumePtrs(visitor_t&& visitor) {
+  template <ACTS_CONCEPT(MutableDetectorVolumeVisistor) visitor_t>
+  void visitMutableVolumes(visitor_t&& visitor) {
     for (const auto& v : volumePtrs()) {
-      v->template visitVolumePtrs<visitor_t>(std::forward<visitor_t>(visitor));
+      v->template visitMutableVolumes<visitor_t>(
+          std::forward<visitor_t>(visitor));
     }
   }
 

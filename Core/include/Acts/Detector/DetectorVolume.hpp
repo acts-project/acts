@@ -309,16 +309,16 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @param visitor will be called for each found surface,
   /// it will be handed down to contained volumes and portals
-  template <ACTS_CONCEPT(SurfacePtrVisitor) visitor_t>
-  void visitSurfacePtrs(visitor_t&& visitor) {
+  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  void visitMutableSurfaces(visitor_t&& visitor) {
     for (auto& s : surfacePtrs()) {
-      visitor(s);
+      visitor(s.get());
     }
     for (auto& p : portalPtrs()) {
-      p->visitSurfacePtr(std::forward<visitor_t>(visitor));
+      p->visitMutableSurface(std::forward<visitor_t>(visitor));
     }
     for (auto& v : volumePtrs()) {
-      v->visitSurfacePtrs(std::forward<visitor_t>(visitor));
+      v->visitMutableSurfaces(std::forward<visitor_t>(visitor));
     }
   }
 
@@ -351,10 +351,10 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
   template <ACTS_CONCEPT(DetectorVolumePtrVisitor) visitor_t>
-  void visitVolumePtrs(visitor_t&& visitor) {
-    visitor(getSharedPtr());
+  void visitMutableVolumes(visitor_t&& visitor) {
+    visitor(this);
     for (auto& v : volumePtrs()) {
-      v->visitVolumePtrs(std::forward<visitor_t>(visitor));
+      v->visitMutableVolumes(std::forward<visitor_t>(visitor));
     }
   }
 

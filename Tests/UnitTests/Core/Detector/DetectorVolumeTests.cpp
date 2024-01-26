@@ -221,14 +221,14 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
             Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.));
 
     /// The visitor call: set surface material
-    void operator()(std::shared_ptr<Acts::Surface> s) {
+    void operator()(Acts::Surface* s) {
       if (s != nullptr) {
         s->assignSurfaceMaterial(surfaceMaterial);
       }
     }
 
     /// The visitor call : set volume material
-    void operator()(std::shared_ptr<DetectorVolume> v) {
+    void operator()(DetectorVolume* v) {
       if (v != nullptr) {
         v->assignVolumeMaterial(volumeMaterial);
       }
@@ -236,8 +236,8 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   };
 
   SetMaterial setMaterial;
-  outerBox->visitSurfacePtrs(setMaterial);
-  outerBox->visitVolumePtrs(setMaterial);
+  outerBox->visitMutableSurfaces(setMaterial);
+  outerBox->visitMutableVolumes(setMaterial);
 
   // Count surfaces with material
   std::size_t nSurfacesWithMaterial = 0;

@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
         std::make_shared<Acts::HomogeneousSurfaceMaterial>(Acts::MaterialSlab(
             Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.));
     /// The visitor call
-    void operator()(std::shared_ptr<Acts::Surface> s) {
+    void operator()(Acts::Surface* s) {
       if (s != nullptr) {
         s->assignSurfaceMaterial(material);
       }
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
 
   SetMaterial setMaterial;
   BOOST_CHECK(portalA->surface().surfaceMaterial() == nullptr);
-  portalA->visitSurfacePtr(setMaterial);
+  portalA->visitMutableSurface(setMaterial);
   BOOST_CHECK(portalA->surface().surfaceMaterial() ==
               setMaterial.material.get());
 }
