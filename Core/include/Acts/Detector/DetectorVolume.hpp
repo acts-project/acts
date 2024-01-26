@@ -10,16 +10,19 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -40,7 +43,6 @@ class VolumeBounds;
 namespace Experimental {
 
 class DetectorVolume;
-class Portal;
 class Detector;
 
 /// A detector volume description which can be:
@@ -281,6 +283,25 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
 
   /// Const access to the detector volume updator
   const DetectorVolumeUpdater& detectorVolumeUpdater() const;
+
+  /// @brief Visit all reachable surfaces of the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called for each found surface,
+  /// it will be handed down to contained volumes and portals
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    for (const auto& s : surfaces()) {
+      visitor(s);
+    }
+    for (const auto& p : portals()) {
+      p->visitSurfaces(std::forward<visitor_t>(visitor));
+    }
+    for (const auto& v : volumes()) {
+      v->visitSurfaces(std::forward<visitor_t>(visitor));
+    }
+  }
 
   /// This method allows to udate the navigation state updator
   /// module.

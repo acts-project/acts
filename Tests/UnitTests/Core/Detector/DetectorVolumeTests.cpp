@@ -254,6 +254,24 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   // We should have 12 candidates, 6 inner, 6 outer portals but only 3 are
   // reachable
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 3u);
+
+  // Check surface visiting
+  // Test the visitor pattern for surfaces
+  struct CountSurfaces {
+    unsigned int counter = 0;
+
+    void operator()(const Acts::Surface* s) {
+      if (s != nullptr) {
+        counter++;
+      }
+    }
+  };
+
+  CountSurfaces countSurfaces;
+  outerBox->visitSurfaces(countSurfaces);
+
+  // 6 portlas outer box, 6 portals inner box
+  BOOST_CHECK_EQUAL(countSurfaces.counter, 12u);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
@@ -301,6 +319,23 @@ BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
   BOOST_CHECK_EQUAL(esurfaces.size(), 2u);
   BOOST_CHECK_EQUAL(esurfaces[0u], surfaces[2u].get());
   BOOST_CHECK_EQUAL(esurfaces[1u], surfaces[4u].get());
+
+  // Test the visitor pattern for surfaces
+  struct CountSurfaces {
+    unsigned int counter = 0;
+
+    void operator()(const Acts::Surface* s) {
+      if (s != nullptr) {
+        counter++;
+      }
+    }
+  };
+
+  CountSurfaces countSurfaces;
+  cylinderVolume->visitSurfaces(countSurfaces);
+
+  // 6 internal surfaces, 4 portals -> 10 surfaces counted
+  BOOST_CHECK_EQUAL(countSurfaces.counter, 10u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
