@@ -22,16 +22,15 @@ namespace Experimental {
 /// @brief A surface provider that extracts surfaces from a gdml file
 ///
 /// This provider extracts volumes from a gdml file based on
-/// the preselection criteria (extracts all by default) and converts
-/// them to surfaces.
+/// the preselection criteria and converts them to surfaces.
+/// By default, all the volumes are converted.
 ///
 /// Optionally, it can be configured to return a range-based
-/// subset of all the surfaces selected by the name.
-/// The latter is achieved by using a KdtSurfacesProvider
-/// internally.
+/// subset of all the preselected surfaces, by using a
+/// KdtSurfaces instance internally.
 ///
 /// @note if the KDTree selection is not needed, the 
-/// template parameters can left to their default values
+/// template parameters can be left to their default values
 /// as they will not affect the result.
 ///
 /// @tparam kDim The number of dimensions for the KDTree
@@ -61,7 +60,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
         std::make_shared<Acts::Geant4PhysicalVolumeSelectors::AllSelector>();
   };
 
-  /// Optional configuration for the KdtSurfaces
+  /// Optional configuration for the KDTree
   struct kdtOptions {
     /// A set of ranges to separate the surfaces
     Acts::RangeXD<kDim, Acts::ActsScalar> range;
@@ -75,15 +74,16 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
   /// Constructor
   ///@param config The configuration struct
+  ///@param options The optional configuration for KDTree
   Geant4SurfaceProvider(const Config& config,
                         const kdtOptions& options = kdtOptions()) {
     if (config.gdmlPath.empty()) {
       throw std::invalid_argument(
           "Geant4SurfaceProvider: no gdml file provided");
     }
-    if (config.surfacePreselector == nullptr && options.range.degenerate()) {
+    if (config.surfacePreselector == nullptr) {
       throw std::invalid_argument(
-          "Geant4SurfaceProvider: preselection and range are not set");
+          "Geant4SurfaceProvider: no preselection criteria provided");
     }
 
     m_cfg = config;
