@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <memory>
-
 #if defined(__cpp_concepts)
 #include <concepts>
 

@@ -177,7 +177,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note that due to non running over root volumes, multiple visits
   /// may occur, duplicated addressing needs to be taken care of by the
   /// visitor
-  template <ACTS_CONCEPT(MutableDetectorVolumeVisistor) visitor_t>
+  template <ACTS_CONCEPT(MutableDetectorVolumeVisitor) visitor_t>
   void visitMutableVolumes(visitor_t&& visitor) {
     for (const auto& v : volumePtrs()) {
       v->template visitMutableVolumes<visitor_t>(
