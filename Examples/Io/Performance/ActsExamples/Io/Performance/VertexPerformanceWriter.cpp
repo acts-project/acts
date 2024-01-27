@@ -107,6 +107,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("recoZ", &m_recoZ);
     m_outputTree->Branch("recoT", &m_recoT);
 
+    m_outputTree->Branch("seedX", &m_seedX);
+    m_outputTree->Branch("seedY", &m_seedY);
     m_outputTree->Branch("seedZ", &m_seedZ);
     m_outputTree->Branch("seedT", &m_seedT);
 
@@ -749,10 +751,16 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_recoY.clear();
   m_recoZ.clear();
   m_recoT.clear();
+  m_seedX.clear();
+  m_seedY.clear();
+  m_seedZ.clear();
+  m_seedT.clear();
   m_resX.clear();
   m_resY.clear();
   m_resZ.clear();
   m_resT.clear();
+  m_resSeedZ.clear();
+  m_resSeedT.clear();
   m_pullX.clear();
   m_pullY.clear();
   m_pullZ.clear();
