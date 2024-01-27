@@ -98,7 +98,6 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
 ///
 /// @note Careful with axis conventions as
 /// Geant4 uses a different one than Acts
-/// TODO: Add axis conversion
 struct PositionSelector : public IGeant4PhysicalVolumeSelector {
   std::map<unsigned int, std::tuple<double, double>> m_ranges;
 
