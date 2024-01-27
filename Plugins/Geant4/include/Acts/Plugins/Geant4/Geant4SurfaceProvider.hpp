@@ -26,8 +26,8 @@ namespace Experimental {
 /// By default, all the volumes are converted.
 ///
 /// Optionally, it can be configured to return a range-based
-/// subset of all the preselected surfaces, by using a
-/// KdtSurfaces instance internally.
+/// subset of all the preselected surfaces. This is done
+/// by setting the range and binning values in the kdtOptions
 ///
 /// @note if the KDTree selection is not needed, the
 /// template parameters can be left to their default values
@@ -36,7 +36,7 @@ namespace Experimental {
 /// @tparam kDim The number of dimensions for the KDTree
 /// @tparam bSize The maximum number of surfaces per KDTree leaf
 /// @tparam reference_generator The reference generator for the KDTree
-template <std::size_t kDim = 0u, std::size_t bSize = 100u,
+template <std::size_t kDim = 2u, std::size_t bSize = 100u,
           typename reference_generator =
               detail::PolyhedronReferenceGenerator<1u, false>>
 class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
@@ -65,11 +65,21 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
     /// A set of ranges to separate the surfaces
     Acts::RangeXD<kDim, Acts::ActsScalar> range;
 
+    /// A set of binning values to perform the separation
     std::array<Acts::BinningValue, kDim> binningValues;
 
+    /// The maximum number of surfaces per leaf
     std::size_t leafSize = bSize;
 
+    /// The reference generator for the KDTree
     reference_generator rgen;
+
+    /// Intialize range to be degenerate by default
+    kdtOptions() {
+      for (std::size_t i = 0; i < kDim; ++i) {
+        range[i].set(1, -1);
+      }
+    }
   };
 
   /// Constructor
@@ -127,8 +137,8 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
     auto surfaces = g4SurfaceCache.passiveSurfaces;
 
-    /// If range is uninitialized
-    if (kDim == 0u) {
+    /// If range is degenerate, return all surfaces
+    if (m_kdtOptions.range.degenerate()) {
       return surfaces;
     }
 
