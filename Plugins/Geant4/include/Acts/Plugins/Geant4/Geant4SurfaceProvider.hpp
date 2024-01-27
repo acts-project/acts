@@ -29,7 +29,7 @@ namespace Experimental {
 /// subset of all the preselected surfaces, by using a
 /// KdtSurfaces instance internally.
 ///
-/// @note if the KDTree selection is not needed, the 
+/// @note if the KDTree selection is not needed, the
 /// template parameters can be left to their default values
 /// as they will not affect the result.
 ///
