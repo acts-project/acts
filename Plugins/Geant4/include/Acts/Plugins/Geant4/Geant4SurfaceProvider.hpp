@@ -74,7 +74,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
     /// The reference generator for the KDTree
     reference_generator rgen;
 
-    /// Intialize range to be degenerate by default
+    /// Initialize range to be degenerate by default
     kdtOptions() {
       for (std::size_t i = 0; i < kDim; ++i) {
         range[i].set(1, -1);

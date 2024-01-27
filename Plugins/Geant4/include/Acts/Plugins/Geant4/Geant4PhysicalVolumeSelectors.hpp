@@ -89,8 +89,6 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
 /// @brief Struct that selects G4VPhysicalVolume objects
 /// based on the allowed range of their position
 ///
-/// @param pos the provided list of ranges
-///
 /// @note Can be used for preselection of volumes
 /// before a KDTree search. This way the memory
 /// consumption can be reduced, compromising the
