@@ -102,8 +102,7 @@ struct PositionSelector : public IGeant4PhysicalVolumeSelector {
   std::map<unsigned int, std::tuple<double, double>> m_ranges;
 
   /// Constructor with arguments
-  /// @param ns the provided list of names
-  /// @param e whether to select them exact or not
+  /// @param ranges the provided map of axes of ranges
   PositionSelector(
       const std::map<unsigned int, std::tuple<double, double>>& ranges)
       : m_ranges(ranges) {}
