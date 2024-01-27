@@ -36,7 +36,7 @@ namespace Experimental {
 /// @tparam kDim The number of dimensions for the KDTree
 /// @tparam bSize The maximum number of surfaces per KDTree leaf
 /// @tparam reference_generator The reference generator for the KDTree
-template <std::size_t kDim = 2u, std::size_t bSize = 100u,
+template <std::size_t kDim = 0u, std::size_t bSize = 100u,
           typename reference_generator =
               detail::PolyhedronReferenceGenerator<1u, false>>
 class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
@@ -127,8 +127,8 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
     auto surfaces = g4SurfaceCache.passiveSurfaces;
 
-    /// If range is not set, return all surfaces
-    if (m_kdtOptions.range.degenerate()) {
+    /// If range is uninitialized
+    if (kDim == 0u) {
       return surfaces;
     }
 
