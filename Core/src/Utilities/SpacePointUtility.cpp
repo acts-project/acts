@@ -59,7 +59,6 @@ SpacePointUtility::globalCoords(
   const Surface* surface = surfaceAccessor(slink);
   Vector2 localPos(par[eBoundLoc0], par[eBoundLoc1]);
   SquareMatrix2 localCov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
-  // surface -> bounds();
   Vector3 globalPos = surface->localToGlobal(gctx, localPos, Vector3());
   RotationMatrix3 rotLocalToGlobal =
       surface->referenceFrame(gctx, globalPos, Vector3());

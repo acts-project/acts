@@ -95,10 +95,17 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
     ACTS_INFO("  " << geoId);
   }
   auto spBuilderConfig = Acts::SpacePointBuilderConfig();
-  spBuilderConfig.surfacePtrs = m_cfg.surfacePtrs;
 
-  m_slSurfaceAccessor.emplace(
-      IndexSourceLink::SurfaceAccessor{m_cfg.surfacePtrs});
+  if (!m_cfg.trackingGeometry) {
+    spBuilderConfig.surfacePtrs = m_cfg.surfacePtrs;
+    m_slSurfaceAccessor.emplace(
+        IndexSourceLink::SurfaceAccessor{m_cfg.surfacePtrs});
+  } else {
+    spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
+    m_slSurfaceAccessor.emplace(
+        IndexSourceLink::SurfaceAccessor{*m_cfg.trackingGeometry});
+  }
+
   spBuilderConfig.slSurfaceAccessor
       .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
           &m_slSurfaceAccessor.value());
@@ -124,7 +131,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   Acts::SpacePointBuilderOptions spOpt;
   spOpt.paramCovAccessor = [&measurements](Acts::SourceLink slink) {
     const auto islink = slink.get<IndexSourceLink>();
-    const auto& meas = measurements[islink.index() % measurements.size()];
+    const auto& meas = measurements[islink.index()];  // % measurements.size()
 
     return std::visit(
         [](const auto& measurement) {
