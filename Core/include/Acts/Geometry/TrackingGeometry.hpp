@@ -107,13 +107,28 @@ class TrackingGeometry {
   ///
   /// @param visitor The callable. Will be called for each reachable surface
   /// that is found, a selection of the surfaces can be done in the visitor
+  /// @param restrictToSensitives If true, only sensitive surfaces are visited
+  ///
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
+    highestTrackingVolume()->template visitSurfaces<visitor_t>(
+        std::forward<visitor_t>(visitor), restrictToSensitives);
+  }
+
+  /// @brief Visit all sensitive surfaces
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each sensitive surface
+  /// that is found, a selection of the surfaces can be done in the visitor
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
-    highestTrackingVolume()->template visitSurfaces<visitor_t>(
-        std::forward<visitor_t>(visitor));
+    visitSurfaces(std::forward<visitor_t>(visitor), true);
   }
 
   /// @brief Visit all reachable tracking volumes

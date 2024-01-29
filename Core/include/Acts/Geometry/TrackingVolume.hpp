@@ -266,14 +266,17 @@ class TrackingVolume : public Volume {
   ///
   /// @param visitor The callable. Will be called for each reachable surface
   /// that is found, a selection of the surfaces can be done in the visitor
+  /// @param restrictToSensitives If true, only sensitive surfaces are visited
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
-  void visitSurfaces(visitor_t&& visitor) const {
-    // Visit the boundary surfaces
-    for (const auto& bs : m_boundarySurfaces) {
-      visitor(&(bs->surfaceRepresentation()));
+  void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
+    if (!restrictToSensitives) {
+      // Visit the boundary surfaces
+      for (const auto& bs : m_boundarySurfaces) {
+        visitor(&(bs->surfaceRepresentation()));
+      }
     }
 
     // Internal structure
@@ -288,13 +291,15 @@ class TrackingVolume : public Volume {
               continue;
             }
           }
-          // Surfaces of the layer
-          visitor(&layer->surfaceRepresentation());
-          // Approach surfaces of the layer
-          if (layer->approachDescriptor() != nullptr) {
-            for (const auto& srf :
-                 layer->approachDescriptor()->containedSurfaces()) {
-              visitor(srf);
+          if (!restrictToSensitives) {
+            // Surfaces of the layer
+            visitor(&layer->surfaceRepresentation());
+            // Approach surfaces of the layer
+            if (layer->approachDescriptor() != nullptr) {
+              for (const auto& srf :
+                   layer->approachDescriptor()->containedSurfaces()) {
+                visitor(srf);
+              }
             }
           }
         }
@@ -302,9 +307,23 @@ class TrackingVolume : public Volume {
     } else {
       // contains sub volumes
       for (const auto& volume : m_confinedVolumes->arrayObjects()) {
-        volume->visitSurfaces(visitor);
+        volume->visitSurfaces(visitor, restrictToSensitives);
       }
     }
+  }
+
+  /// @brief Visit all sensitive surfaces
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each sensitive surface
+  /// that is found, a selection of the surfaces can be done in the visitor
+  ///
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    visitSurfaces(std::forward<visitor_t>(visitor), true);
   }
 
   /// @brief Visit all reachable tracking volumes
@@ -313,6 +332,7 @@ class TrackingVolume : public Volume {
   ///
   /// @param visitor The callable. Will be called for each reachable volume
   /// that is found, a selection of the volumes can be done in the visitor
+  /// @param restrictToSensitives If true, only sensitive surfaces are visited
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member

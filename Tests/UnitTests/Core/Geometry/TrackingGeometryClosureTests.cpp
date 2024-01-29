@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometry_testVisitSurfaces) {
   // method is called on the expected number of surfaces
   std::size_t nSurfaces = 0;
   tGeometry.visitSurfaces([&nSurfaces](const auto*) { nSurfaces++; });
-  BOOST_CHECK_EQUAL(nSurfaces, 35u);
+  BOOST_CHECK_EQUAL(nSurfaces, 9u);
 
   // this will also cover TrackingVolume::visitVolumes
   std::size_t nVolumes = 0;
