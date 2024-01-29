@@ -16,6 +16,7 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <algorithm>
+#include <iomanip>
 #include <stdexcept>
 
 #include <edm4hep/MCParticle.h>
@@ -43,6 +44,64 @@ std::string EDM4hepReader::name() const {
 
 std::pair<std::size_t, std::size_t> EDM4hepReader::availableEvents() const {
   return m_eventsRange;
+}
+
+namespace {
+std::string vid(unsigned int vtx) {
+  return "V" + std::to_string(vtx);
+}
+
+std::string pid(const SimParticle& particle) {
+  return "P" + std::to_string(particle.particleId().value());
+};
+
+std::string plabel(const SimParticle& particle) {
+  using namespace Acts::UnitLiterals;
+  std::stringstream ss;
+  ss << particle.pdg() << "\\n(" << particle.particleId() << ")\\n"
+     << "p=" << std::setprecision(3) << particle.absoluteMomentum() / 1_GeV
+     << " GeV";
+  return ss.str();
+};
+
+}  // namespace
+
+void EDM4hepReader::graphviz(
+    std::ostream& os, const SimParticleContainer::sequence_type& particles,
+    const ParentRelationship& parents) const {
+  os << "digraph Event {\n";
+
+  std::set<unsigned int> primaryVertices;
+
+  for (const auto& particle : particles) {
+    if (particle.particleId().generation() == 0) {
+      primaryVertices.insert(particle.particleId().vertexPrimary());
+
+      os << vid(particle.particleId().vertexPrimary()) << " -> "
+         << pid(particle) << ";\n";
+    }
+
+    os << pid(particle) << " [label=\"" << plabel(particle) << "\"];\n";
+  }
+
+  for (const auto [childIdx, parentIdx] : parents) {
+    const auto& child = particles[childIdx];
+    const auto& parent = particles[parentIdx];
+    os << pid(parent) << " -> " << pid(child);
+
+    if (parent.particleId().vertexSecondary() ==
+        child.particleId().vertexSecondary()) {
+      os << " [style=dashed]";
+    }
+
+    os << ";\n";
+  }
+
+  for (unsigned int vtx : primaryVertices) {
+    os << vid(vtx) << " [label=\"PV" << vtx << "\"];\n";
+  }
+
+  os << "}";
 }
 
 ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
@@ -128,49 +187,15 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
   ACTS_DEBUG("Found " << unordered.size() << " particles");
 
-  // We need to keep the original indices, so that we can set the parent/child
-  // relationship later
-  std::vector<std::size_t> indices(unordered.size());
-  std::iota(indices.begin(), indices.end(), 0);
-
-  // Sort indices
-  std::sort(
-      indices.begin(), indices.end(), [&](std::size_t lhs, std::size_t rhs) {
-        return detail::CompareParticleId{}(unordered[lhs], unordered[rhs]);
-      });
-
-  SimParticleContainer::sequence_type ordered;
-  ordered.reserve(unordered.size());
-
-  std::vector<std::size_t> unorderedToOrdered(indices.size());
-  std::size_t unorderedIdx = 0;
-  for (std::size_t idx : indices) {
-    ordered.push_back(unordered[idx]);
-    unorderedToOrdered[idx] = unorderedIdx;
-    unorderedIdx++;
-  }
-
-  // ParentRelationship orderedParentRelationship;
-
   // Write ordered particles container to the EventStore
   SimParticleContainer particles;
-  // This should be O(N) since the input is already ordered
-  particles.insert(ordered.begin(), ordered.end());
+  particles.insert(unordered.begin(), unordered.end());
 
-  // Now that addresses should be stable, set parent/child relationships from
-  // the indices we have above
-  // Indices are in the unordered container, so need to convert to ordered
-  for (const auto [unorderedChildIdx, unorderedParentIdx] :
-       parentRelationship) {
-    std::size_t orderedChildIdx = unorderedToOrdered[unorderedChildIdx];
-    std::size_t orderedParentIdx = unorderedToOrdered[unorderedParentIdx];
-
-    // get the pointers from the final ordered container
-    auto& parent = *particles.find(ordered[orderedParentIdx].particleId());
-    auto& child = *particles.find(ordered[orderedChildIdx].particleId());
-
-    parent.addChild(child);
-    child.setParent(&parent);
+  if (!m_cfg.graphvizOutput.empty()) {
+    std::string path = perEventFilepath(m_cfg.graphvizOutput, "particles.dot",
+                                        ctx.eventNumber);
+    std::ofstream dot(path);
+    graphviz(dot, unordered, parentRelationship);
   }
 
   m_outputParticles(ctx, std::move(particles));
@@ -215,10 +240,6 @@ void EDM4hepReader::processChildren(
   std::size_t nParticles = 0;
   for (const auto& daughter : inParticle.getDaughters()) {
     SimParticle particle = EDM4hepUtil::readParticle(daughter);
-    // std::cout << "DOT: "
-    // << "P_" << inParticle.id().index << " -- "
-    // << "P_" << daughter.id().index << "[label=\"" << particle.pdg()
-    // << "\"]" << std::endl;
 
     auto pid = parentId.makeDescendant(nParticles++);
     if (daughter.vertexIsNotEndpointOfParent()) {

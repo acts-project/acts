@@ -37,6 +37,10 @@ class EDM4hepReader final : public IReader {
     std::string inputParticles = "MCParticles";
     /// Which particle collection to read into.
     std::string outputParticles;
+
+    /// Directory into which to write graphviz files for particles
+    /// Empty string means no output
+    std::string graphvizOutput = "";
   };
 
   using ParentRelationship = std::unordered_map<std::size_t, std::size_t>;
@@ -79,6 +83,10 @@ class EDM4hepReader final : public IReader {
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
+
+  void graphviz(std::ostream& os,
+                const SimParticleContainer::sequence_type& container,
+                const ParentRelationship& parents) const;
 };
 
 }  // namespace ActsExamples
