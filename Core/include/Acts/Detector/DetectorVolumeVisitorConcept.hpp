@@ -13,16 +13,18 @@
 
 namespace Acts {
 
+namespace Experimental {
 class DetectorVolume;
+}
 
 template <typename T>
 concept DetectorVolumeVisitor = requires(T v) {
-  {v(std::declval<const DetectorVolume*>())};
+  {v(std::declval<const Experimental::DetectorVolume*>())};
 };
 
 template <typename T>
 concept MutableDetectorVolumeVisitor = requires(T v) {
-  {v(std::declval<DetectorVolume*>())};
+  {v(std::declval<Experimental::DetectorVolume*>())};
 };
 
 }  // namespace Acts
