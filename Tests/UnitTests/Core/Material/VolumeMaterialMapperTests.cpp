@@ -143,6 +143,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
 
   /// The config object
   Acts::VolumeMaterialMapper::Config vmmConfig;
+  vmmConfig.trackingGeometry = tGeometry;
   Acts::VolumeMaterialMapper vmMapper(
       vmmConfig, std::move(propagator),
       getDefaultLogger("VolumeMaterialMapper", Logging::VERBOSE));
@@ -152,7 +153,10 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   MagneticFieldContext mfCtx;
 
   /// Now create the mapper state
-  auto mState = vmMapper.createState(gCtx, mfCtx, *tGeometry);
+  IMaterialMapper::State imState = vmMapper.createState(gCtx, mfCtx);
+
+  Acts::VolumeMaterialMapper::State& mState =
+      static_cast<Acts::VolumeMaterialMapper::State&>(imState);
 
   /// Test if this is not null
   BOOST_CHECK_EQUAL(mState.materialBin.size(), 3u);

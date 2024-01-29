@@ -53,18 +53,20 @@ Acts::VolumeMaterialMapper::VolumeMaterialMapper(
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
       m_propagator(std::move(propagator)),
-      m_logger(std::move(slogger)) {}
+      m_logger(std::move(slogger)) {
+  if (m_cfg.trackingGeometry == nullptr) {
+    throw std::invalid_argument("No tracking geometry was provided");
+  }
+}
 
-Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
-    const GeometryContext& gctx, const MagneticFieldContext& mctx,
-    const TrackingGeometry& tGeometry) const {
+Acts::IMaterialMapper::State Acts::VolumeMaterialMapper::createState(
+    const GeometryContext& gctx, const MagneticFieldContext& mctx) const {
   // Parse the geometry and find all surfaces with material proxies
-  auto world = tGeometry.highestTrackingVolume();
+  auto world = m_cfg.trackingGeometry->highestTrackingVolume();
 
   // The Surface material mapping state
   State mState(gctx, mctx);
   resolveMaterialVolume(mState, *world);
-  collectMaterialSurfaces(mState, *world);
   return mState;
 }
 
@@ -178,67 +180,6 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
   }
 }
 
-void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
-    State& mState, const TrackingVolume& tVolume) const {
-  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
-
-  ACTS_VERBOSE("- boundary surfaces ...");
-  // Check the boundary surfaces
-  for (auto& bSurface : tVolume.boundarySurfaces()) {
-    if (bSurface->surfaceRepresentation().surfaceMaterial() != nullptr) {
-      mState.surfaceMaterial[bSurface->surfaceRepresentation().geometryId()] =
-          bSurface->surfaceRepresentation().surfaceMaterialSharedPtr();
-    }
-  }
-
-  ACTS_VERBOSE("- confined layers ...");
-  // Check the confined layers
-  if (tVolume.confinedLayers() != nullptr) {
-    for (auto& cLayer : tVolume.confinedLayers()->arrayObjects()) {
-      // Take only layers that are not navigation layers
-      if (cLayer->layerType() != navigation) {
-        // Check the representing surface
-        if (cLayer->surfaceRepresentation().surfaceMaterial() != nullptr) {
-          mState.surfaceMaterial[cLayer->surfaceRepresentation().geometryId()] =
-              cLayer->surfaceRepresentation().surfaceMaterialSharedPtr();
-        }
-        // Get the approach surfaces if present
-        if (cLayer->approachDescriptor() != nullptr) {
-          for (auto& aSurface :
-               cLayer->approachDescriptor()->containedSurfaces()) {
-            if (aSurface != nullptr) {
-              if (aSurface->surfaceMaterial() != nullptr) {
-                mState.surfaceMaterial[aSurface->geometryId()] =
-                    aSurface->surfaceMaterialSharedPtr();
-              }
-            }
-          }
-        }
-        // Get the sensitive surface is present
-        if (cLayer->surfaceArray() != nullptr) {
-          // Sensitive surface loop
-          for (auto& sSurface : cLayer->surfaceArray()->surfaces()) {
-            if (sSurface != nullptr) {
-              if (sSurface->surfaceMaterial() != nullptr) {
-                mState.surfaceMaterial[sSurface->geometryId()] =
-                    sSurface->surfaceMaterialSharedPtr();
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  // Step down into the sub volume
-  if (tVolume.confinedVolumes()) {
-    for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
-      // Recursive call
-      collectMaterialSurfaces(mState, *sVolume);
-    }
-  }
-}
-
 void Acts::VolumeMaterialMapper::createExtraHits(
     State& mState,
     std::pair<const GeometryIdentifier, BinUtility>& currentBinning,
@@ -314,7 +255,12 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   }
 }
 
-void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
+Acts::DetectorMaterialMaps Acts::VolumeMaterialMapper::finalizeMaps(
+    IMaterialMapper::State& imState) const {
+  State& mState = static_cast<State&>(imState);
+
+  Acts::DetectorMaterialMaps detectorMaterial;
+
   // iterate over the volumes
   for (auto& matBin : mState.materialBin) {
     ACTS_DEBUG("Create the material for volume  " << matBin.first);
@@ -322,8 +268,8 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       // Average the homogeneous volume material then store it
       ACTS_DEBUG("Homogeneous material volume");
       Acts::Material mat = mState.homogeneousGrid[matBin.first].average();
-      mState.volumeMaterial[matBin.first] =
-          std::make_unique<HomogeneousVolumeMaterial>(mat);
+      detectorMaterial.second[matBin.first] =
+          std::make_shared<HomogeneousVolumeMaterial>(mat);
     } else if (matBin.second.dimensions() == 2) {
       // Average the material in the 2D grid then create an
       // InterpolatedMaterialMap
@@ -333,7 +279,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
         Acts::MaterialGrid2D matGrid = mapMaterialPoints(grid->second);
         MaterialMapper<Acts::MaterialGrid2D> matMap(
             mState.transform2D[matBin.first], matGrid);
-        mState.volumeMaterial[matBin.first] = std::make_unique<
+        detectorMaterial.second[matBin.first] = std::make_shared<
             InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid2D>>>(
             std::move(matMap), matBin.second);
       } else {
@@ -348,7 +294,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
         Acts::MaterialGrid3D matGrid = mapMaterialPoints(grid->second);
         MaterialMapper<Acts::MaterialGrid3D> matMap(
             mState.transform3D[matBin.first], matGrid);
-        mState.volumeMaterial[matBin.first] = std::make_unique<
+        detectorMaterial.second[matBin.first] = std::make_shared<
             InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid3D>>>(
             std::move(matMap), matBin.second);
       } else {
@@ -359,10 +305,13 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
           "Incorrect bin dimension, only 0, 2 and 3 are accepted");
     }
   }
+  return detectorMaterial;
 }
 
 void Acts::VolumeMaterialMapper::mapMaterialTrack(
-    State& mState, RecordedMaterialTrack& mTrack) const {
+    IMaterialMapper::State& imState, RecordedMaterialTrack& mTrack) const {
+  auto mState = static_cast<State&>(imState);
+
   using VectorHelpers::makeVector4;
 
   // Neutral curvilinear parameters

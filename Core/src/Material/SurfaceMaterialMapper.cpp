@@ -28,6 +28,7 @@
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceExtractor.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
@@ -49,13 +50,16 @@ Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
       m_propagator(std::move(propagator)),
-      m_logger(std::move(slogger)) {}
+      m_logger(std::move(slogger)) {
+  if (m_cfg.trackingGeometry == nullptr) {
+    throw std::invalid_argument("Missing tracking geometry.");
+  }
+}
 
-Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
-    const GeometryContext& gctx, const MagneticFieldContext& mctx,
-    const TrackingGeometry& tGeometry) const {
+Acts::IMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
+    const GeometryContext& gctx, const MagneticFieldContext& mctx) const {
   // Parse the geometry and find all surfaces with material proxies
-  auto world = tGeometry.highestTrackingVolume();
+  auto world = m_cfg.trackingGeometry->highestTrackingVolume();
 
   // The Surface material mapping state
   State mState(gctx, mctx);
@@ -72,50 +76,13 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
 
 void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
-  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+  SurfaceExtractor extractor;
+  tVolume.visitSurfaces(extractor, false);
 
-  ACTS_VERBOSE("- boundary surfaces ...");
-  // Check the boundary surfaces
-  for (auto& bSurface : tVolume.boundarySurfaces()) {
-    checkAndInsert(mState, bSurface->surfaceRepresentation());
-  }
-
-  ACTS_VERBOSE("- confined layers ...");
-  // Check the confined layers
-  if (tVolume.confinedLayers() != nullptr) {
-    for (auto& cLayer : tVolume.confinedLayers()->arrayObjects()) {
-      // Take only layers that are not navigation layers
-      if (cLayer->layerType() != navigation) {
-        // Check the representing surface
-        checkAndInsert(mState, cLayer->surfaceRepresentation());
-        // Get the approach surfaces if present
-        if (cLayer->approachDescriptor() != nullptr) {
-          for (auto& aSurface :
-               cLayer->approachDescriptor()->containedSurfaces()) {
-            if (aSurface != nullptr) {
-              checkAndInsert(mState, *aSurface);
-            }
-          }
-        }
-        // Get the sensitive surface is present
-        if (cLayer->surfaceArray() != nullptr) {
-          // Sensitive surface loop
-          for (auto& sSurface : cLayer->surfaceArray()->surfaces()) {
-            if (sSurface != nullptr) {
-              checkAndInsert(mState, *sSurface);
-            }
-          }
-        }
-      }
-    }
-  }
-  // Step down into the sub volume
-  if (tVolume.confinedVolumes()) {
-    for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
-      // Recursive call
-      resolveMaterialSurfaces(mState, *sVolume);
-    }
+  for (const auto& s : extractor.extractedSurfaces) {
+    mState.inputSurfaceMaterial[s->geometryId()] =
+        s->surfaceMaterialSharedPtr();
+    checkAndInsert(mState, *s);
   }
 }
 
@@ -193,24 +160,33 @@ void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
   }
 }
 
-void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
+Acts::DetectorMaterialMaps Acts::SurfaceMaterialMapper::finalizeMaps(
+    IMaterialMapper::State& imState) const {
+  State& mState = static_cast<State&>(imState);
+
+  Acts::DetectorMaterialMaps detectorMaterial;
+
   // iterate over the map to call the total average
   for (auto& accMaterial : mState.accumulatedMaterial) {
     ACTS_DEBUG("Finalizing map for Surface " << accMaterial.first);
-    mState.surfaceMaterial[accMaterial.first] =
+    detectorMaterial.first[accMaterial.first] =
         accMaterial.second.totalAverage();
   }
+
+  return detectorMaterial;
 }
 
 void Acts::SurfaceMaterialMapper::mapMaterialTrack(
-    State& mState, RecordedMaterialTrack& mTrack) const {
+    IMaterialMapper::State& imState, RecordedMaterialTrack& mTrack) const {
+  State& mState = static_cast<State&>(imState);
+
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
                             << " recorded material steps to map.")
 
-  // Check if the material interactions are associated with a surface. If yes we
-  // simply need to loop over them and accumulate the material
+  // Check if the material interactions are associated with a surface. If yes
+  // we simply need to loop over them and accumulate the material
   if (rMaterial.begin()->intersectionID != GeometryIdentifier()) {
     ACTS_VERBOSE(
         "Material surfaces are associated with the material interaction. The "
@@ -219,14 +195,17 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     return;
   } else {
     ACTS_VERBOSE(
-        "Material interactions need to be associated with surfaces. Collecting "
+        "Material interactions need to be associated with surfaces. "
+        "Collecting "
         "all surfaces on the trajectory.");
     mapInteraction(mState, mTrack);
     return;
   }
 }
 void Acts::SurfaceMaterialMapper::mapInteraction(
-    State& mState, RecordedMaterialTrack& mTrack) const {
+    IMaterialMapper::State& imState, RecordedMaterialTrack& mTrack) const {
+  State& mState = static_cast<State&>(imState);
+
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   std::map<GeometryIdentifier, unsigned int> assignedMaterial;
@@ -464,7 +443,10 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
 }
 
 void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
-    State& mState, std::vector<MaterialInteraction>& rMaterial) const {
+    IMaterialMapper::State& imState,
+    std::vector<MaterialInteraction>& rMaterial) const {
+  State& mState = static_cast<State&>(imState);
+
   using MapBin =
       std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
   std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>

@@ -115,6 +115,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
 
   /// The config object
   SurfaceMaterialMapper::Config smmConfig;
+  smmConfig.trackingGeometry = tGeometry;
   SurfaceMaterialMapper smMapper(smmConfig, std::move(propagator));
 
   /// Create some contexts
@@ -122,7 +123,10 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   MagneticFieldContext mfCtx;
 
   /// Now create the mapper state
-  auto mState = smMapper.createState(gCtx, mfCtx, *tGeometry);
+  IMaterialMapper::State imState = smMapper.createState(gCtx, mfCtx);
+
+  SurfaceMaterialMapper::State& mState =
+      static_cast<SurfaceMaterialMapper::State&>(*(&imState));
 
   /// Test if this is not null
   BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3u);

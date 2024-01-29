@@ -18,6 +18,7 @@
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
+#include "Acts/Material/interface/IMaterialMapper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -80,7 +81,7 @@ struct MaterialVolume {
 ///
 ///  4) Each 'hit' bin per event is counted and averaged at the end of the run
 ///
-class SurfaceMaterialMapper {
+class SurfaceMaterialMapper final : public IMaterialMapper {
  public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
@@ -88,6 +89,8 @@ class SurfaceMaterialMapper {
   ///
   /// Nested Configuration struct for the material mapper
   struct Config {
+    std::shared_ptr<const TrackingGeometry> trackingGeometry = nullptr;
+
     /// Mapping range
     std::array<double, 2> etaRange = {{-6., 6.}};
     /// Correct for empty bins (recommended)
@@ -101,7 +104,7 @@ class SurfaceMaterialMapper {
   /// @struct State
   ///
   /// Nested State struct which is used for the mapping prococess
-  struct State {
+  struct State final : public IMaterialMapper::State {
     /// @param [in] gctx The geometry context to use
     /// @param [in] mctx The magnetic field context to use
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
@@ -110,10 +113,6 @@ class SurfaceMaterialMapper {
     /// The accumulated material per geometry ID
     std::map<GeometryIdentifier, AccumulatedSurfaceMaterial>
         accumulatedMaterial;
-
-    /// The created surface material from it
-    std::map<GeometryIdentifier, std::unique_ptr<const ISurfaceMaterial>>
-        surfaceMaterial;
 
     /// The surface material of the input tracking geometry
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
@@ -147,14 +146,12 @@ class SurfaceMaterialMapper {
   ///
   /// @param [in] gctx The geometry context to use
   /// @param [in] mctx The magnetic field context to use
-  /// @param[in] tGeometry The geometry which should be mapped
   ///
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
-  State createState(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
-                    const TrackingGeometry& tGeometry) const;
+  IMaterialMapper::State createState(const GeometryContext& gctx,
+                                     const MagneticFieldContext& mctx) const;
 
   /// @brief Method to finalize the maps
   ///
@@ -162,17 +159,20 @@ class SurfaceMaterialMapper {
   /// the AccumulatedSurface material class to a surface material
   /// class type
   ///
-  /// @param mState
-  void finalizeMaps(State& mState) const;
+  /// @param imState the cached object holding the material
+  ///
+  /// @return a DetectorMaterialMaps object
+  DetectorMaterialMaps finalizeMaps(IMaterialMapper::State& mState) const;
 
   /// Process/map a single track
   ///
-  /// @param mState The current state map
+  /// @param imState The current state map
   /// @param mTrack The material track to be mapped
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  void mapMaterialTrack(IMaterialMapper::State& imState,
+                        RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
@@ -180,7 +180,8 @@ class SurfaceMaterialMapper {
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
   ///
-  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+  void mapInteraction(IMaterialMapper::State& imState,
+                      RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
@@ -189,7 +190,7 @@ class SurfaceMaterialMapper {
   /// @param rMaterial Vector of all the material interactions that will be mapped
   ///
   /// @note The material interactions are assumed to have an associated surface ID
-  void mapSurfaceInteraction(State& mState,
+  void mapSurfaceInteraction(IMaterialMapper::State& imState,
                              std::vector<MaterialInteraction>& rMaterial) const;
 
  private:

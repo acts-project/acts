@@ -273,8 +273,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   return materialMap;
 }
 
-Acts::MaterialMapJsonConverter::DetectorMaterialMaps
-Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
+Acts::DetectorMaterialMaps Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
     const nlohmann::json& materialmap) {
   nlohmann::json materialVolume = materialmap["Volumes"];
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap =
@@ -295,8 +294,7 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
     surfaceMap.insert({hierarchySurfaceMap.idAt(i), std::move(surfacePointer)});
   }
 
-  Acts::MaterialMapJsonConverter::DetectorMaterialMaps maps = {surfaceMap,
-                                                               volumeMap};
+  Acts::DetectorMaterialMaps maps = {surfaceMap, volumeMap};
 
   // Return the filled maps
   return maps;

@@ -11,15 +11,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Material/DetectorMaterial.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
 #include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Surfaces/Surface.hpp>
 
 #include <map>
 #include <memory>
@@ -52,12 +51,6 @@ using TrackingVolumeAndMaterial =
 /// @brief read the material from Json
 class MaterialMapJsonConverter {
  public:
-  using SurfaceMaterialMap =
-      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-  using VolumeMaterialMap =
-      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-  using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
-
   /// @class Config
   /// Configuration of the Converter
   class Config {

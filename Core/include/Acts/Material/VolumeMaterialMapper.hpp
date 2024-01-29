@@ -17,9 +17,11 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
+#include "Acts/Material/DetectorMaterial.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/interface/IMaterialMapper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -74,12 +76,14 @@ class VolumeMaterialMapper {
   struct Config {
     /// Size of the step for the step extrapolation
     float mappingStep = 1.;
+
+    std::shared_ptr<const TrackingGeometry> trackingGeometry = nullptr;
   };
 
   /// @struct State
   ///
   /// Nested State struct which is used for the mapping prococess
-  struct State {
+  struct State final : public IMaterialMapper::State {
     /// Constructor of the State with contexts
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
@@ -108,14 +112,6 @@ class VolumeMaterialMapper {
     /// The binning for each geometry ID
     std::map<const GeometryIdentifier, BinUtility> materialBin;
 
-    /// The surface material of the input tracking geometry
-    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
-        surfaceMaterial;
-
-    /// The created volume material from it
-    std::map<GeometryIdentifier, std::unique_ptr<const IVolumeMaterial>>
-        volumeMaterial;
-
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;
 
@@ -139,14 +135,12 @@ class VolumeMaterialMapper {
   ///
   /// @param[in] gctx The geometry context to use
   /// @param[in] mctx The magnetic field context to use
-  /// @param[in] tGeometry The geometry which should be mapped
   ///
-  /// This method takes a TrackingGeometry,
-  /// finds all surfaces with material proxis
+  /// This method takes a TrackingGeometry from the configuration,
+  /// finds all volumes with material proxis
   /// and returns you a Cache object tO be used
-  State createState(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
-                    const TrackingGeometry& tGeometry) const;
+  IMaterialMapper::State createState(const GeometryContext& gctx,
+                                     const MagneticFieldContext& mctx) const;
 
   /// @brief Method to finalize the maps
   ///
@@ -154,17 +148,20 @@ class VolumeMaterialMapper {
   /// the Homogeneous material into HomogeneousVolumeMaterial and
   /// the 2D and 3D grid into a InterpolatedMaterialMap
   ///
-  /// @param mState
-  void finalizeMaps(State& mState) const;
+  /// @param imState tjhe state object holding the cached material
+  ///
+  /// @return a DetectorMaterialMaps object
+  DetectorMaterialMaps finalizeMaps(IMaterialMapper::State& imState) const;
 
   /// Process/map a single track
   ///
-  /// @param mState The current state map
+  /// @param imState The current state map
   /// @param mTrack The material track to be mapped
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  void mapMaterialTrack(IMaterialMapper::State& imState,
+                        RecordedMaterialTrack& mTrack) const;
 
  private:
   /// selector for finding surface
@@ -193,13 +190,6 @@ class VolumeMaterialMapper {
   /// @param mState is the map to be filled
   /// @param volume is the surface to be checked for a Proxy
   void checkAndInsert(State& mState, const TrackingVolume& volume) const;
-
-  /// @brief check and insert
-  ///
-  /// @param mState is the map to be filled
-  /// @param tVolume is the surface to collect from
-  void collectMaterialSurfaces(State& mState,
-                               const TrackingVolume& tVolume) const;
 
   /// Create extra material point for the mapping and add them to the grid
   ///

@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/DetectorMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
@@ -40,16 +41,7 @@ struct AlgorithmContext;
 namespace Acts {
 
 class TrackingGeometry;
-class ISurfaceMaterial;
-class IVolumeMaterial;
 
-using SurfaceMaterialMap =
-    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
-
-using VolumeMaterialMap =
-    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-
-using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -127,12 +119,11 @@ class MaterialMapping : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Config m_cfg;  //!< internal config object
-  Acts::SurfaceMaterialMapper::State
-      m_mappingState;  //!< Material mapping state
-  Acts::VolumeMaterialMapper::State
-      m_mappingStateVol;  //!< Material mapping state
-                          //
+  Config m_cfg;                                      //!< internal config object
+  Acts::IMaterialMapper::State m_mappingState = {};  //!< Material mapping state
+  Acts::IMaterialMapper::State m_mappingStateVol =
+      {};  //!< Material mapping state
+           //
 
   ReadDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_inputMaterialTracks{this, "InputMaterialTracks"};
