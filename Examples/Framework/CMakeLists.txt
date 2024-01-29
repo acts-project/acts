@@ -7,7 +7,6 @@ add_library(
   ActsExamplesFramework SHARED
   src/EventData/MeasurementCalibration.cpp
   src/EventData/ScalingCalibrator.cpp
-  src/EventData/SimParticle.cpp
   src/Framework/IAlgorithm.cpp
   src/Framework/SequenceElement.cpp
   src/Framework/WhiteBoard.cpp
@@ -68,7 +67,7 @@ install(
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY include/ActsExamples
+  DIRECTORY include/ActsExamples 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)
