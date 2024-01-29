@@ -711,6 +711,10 @@ BOOST_AUTO_TEST_CASE(DidNotConverge) {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
+  // The relChi2changeCutOff = 0 prevents to stop the fitter after convergence,
+  // therefore all updates will be done (even if the result does not change).
+  // Since we didn't break due to convergence, we reach nUpdatesMax and
+  // therefore fail the fit.
   const Experimental::Gx2FitterOptions gx2fOptions(
       geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
       false, false, FreeToBoundCorrection(false), 6, true, 0);
