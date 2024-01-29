@@ -15,7 +15,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <cmath>
@@ -23,9 +22,8 @@
 namespace Acts {
 
 FreeToBoundMatrix detail::freeToCurvilinearJacobian(const Vector3& direction) {
-  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
-  ActsScalar invSinTheta = 1. / sinTheta;
   // Prepare the jacobian to curvilinear
   FreeToBoundMatrix freeToCurvJacobian = FreeToBoundMatrix::Zero();
   if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
@@ -63,7 +61,7 @@ FreeToBoundMatrix detail::freeToCurvilinearJacobian(const Vector3& direction) {
 }
 
 BoundToFreeMatrix detail::curvilinearToFreeJacobian(const Vector3& direction) {
-  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
+  auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
 
   // Prepare the jacobian to free
