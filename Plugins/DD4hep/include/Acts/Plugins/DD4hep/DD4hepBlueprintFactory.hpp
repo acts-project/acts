@@ -37,6 +37,9 @@ class DD4hepBlueprintFactory {
   struct Config {
     std::shared_ptr<Experimental::DD4hepLayerStructure> layerStructure =
         nullptr;
+
+    /// The maximum number of portals to be checked for protal material
+    unsigned int maxPortals = 8u;
   };
 
   /// @brief Nested cache object for the detector store
