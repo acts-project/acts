@@ -144,6 +144,36 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   // Portal A retains identical position to B
   BOOST_CHECK_EQUAL(portalA->surface().center(gctx),
                     portalB->surface().center(gctx));
+
+  // Test visitor pattern - const access
+  bool reached = false;
+  const Portal* cportalB = portalB.get();
+  cportalB->visitSurface([&reached](const auto* s) {
+    if (s != nullptr) {
+      reached = true;
+    }
+  });
+  BOOST_CHECK(reached);
+
+  // Test visitor pattern - non-const access
+  struct SetMaterial {
+    /// The material to set
+    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material =
+        std::make_shared<Acts::HomogeneousSurfaceMaterial>(Acts::MaterialSlab(
+            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.));
+    /// The visitor call
+    void operator()(Acts::Surface* s) {
+      if (s != nullptr) {
+        s->assignSurfaceMaterial(material);
+      }
+    }
+  };
+
+  SetMaterial setMaterial;
+  BOOST_CHECK(portalA->surface().surfaceMaterial() == nullptr);
+  portalA->visitMutableSurface(setMaterial);
+  BOOST_CHECK(portalA->surface().surfaceMaterial() ==
+              setMaterial.material.get());
 }
 
 BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
@@ -236,23 +266,6 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
   BOOST_CHECK_THROW(Portal::fuse(portalA, portalB), std::runtime_error);
   // Same in reverse
   BOOST_CHECK_THROW(Portal::fuse(portalB, portalA), std::runtime_error);
-
-  // Test the visitor pattern for the surface
-  struct ReachSurface {
-    bool reached = false;
-
-    void operator()(const Acts::Surface* s) {
-      if (s != nullptr) {
-        reached = true;
-      }
-    }
-  };
-
-  ReachSurface reachSurface;
-  portalB->visitSurfaces(reachSurface);
-
-  // The visitor should have reached the surface
-  BOOST_CHECK(reachSurface.reached);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
