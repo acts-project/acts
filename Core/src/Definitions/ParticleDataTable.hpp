@@ -13,6 +13,7 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 
 // Rows within the particle data table are sorted by their signed PDG particle
 // number and are then stored column-wise. Since the PDG particle number column
