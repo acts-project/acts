@@ -27,7 +27,7 @@ def main(output_file):
 CODE_HEADER = """\
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -59,7 +59,7 @@ def generate_code(table):
     # name, c++ type, and output format for each column
     columns = [
         ("PdgNumber", "int32_t", "{}"),
-        ("ThreeCharge", "int8_t", "{}"),
+        ("ThreeCharge", "int16_t", "{}"),
         ("MassMeV", "float", "{}f"),
         ("Name", "char* const   ", '"{}"'),
     ]
@@ -72,9 +72,15 @@ def generate_code(table):
         lines.append(
             f"static const {type_name} kParticles{variable_name}[kParticlesCount] = {{"
         )
-        lines.append(
-            "  " + ", ".join(value_format.format(row[i]) for row in table) + ","
-        )
+
+        for row in table:
+            if i < 3:
+                lines.append(f"// {row[-1]}")
+            if row[i] is None and type_name == "float":
+                lines.append("  std::numeric_limits<float>::quiet_NaN(),")
+            else:
+                lines.append("  " + value_format.format(row[i]) + ",")
+
         lines.append("};")
     # ensure we end with a newline
     lines.append("")
