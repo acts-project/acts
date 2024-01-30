@@ -111,6 +111,23 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
         current->rootVolumeFinderBuilder = rootsFinderBuilder;
       }
 
+      // Check for proto material for the portals, max portal number
+      // can be changed in configuration
+      for (unsigned int p = 0u; p < m_cfg.maxPortals; ++p) {
+        std::string pmName = "acts_portal_proto_material_" + std::to_string(p);
+        auto protoMaterial = getParamOr<bool>(pmName, dd4hepElement, false);
+        if (protoMaterial) {
+          ACTS_VERBOSE(ofs << " - proto material binning for portal " << p
+                           << " found");
+          auto pmProtoBinnings = DD4hepBinningHelpers::convertBinning(
+              dd4hepElement, pmName + "_binning");
+          current->portalMaterialBinning[p] =
+              BinningDescription{pmProtoBinnings};
+          ACTS_VERBOSE(ofs << " - binning description is "
+                           << current->portalMaterialBinning[p].toString());
+        }
+      }
+
       // Adding geo Id generator - if present
       if (geoIdGenerator != nullptr) {
         ACTS_VERBOSE(ofs << " - " << auxInt[2u]);
@@ -225,6 +242,11 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
       // Create a new layer builder
       DD4hepLayerStructure::Options lOptions;
       lOptions.name = dd4hepElement.name();
+      // Check whether internal/sensitive surfaces should have directly
+      // translated material
+      auto convertMaterial = Acts::getParamOr<bool>(
+          "acts_surface_material_conversion", dd4hepElement, false);
+      lOptions.conversionOptions.convertMaterial = convertMaterial;
       // Check if the extent should be measured
       auto interenalsMeasure = Acts::getParamOr<std::string>(
           baseName + "_internals_measure", dd4hepElement, "");
