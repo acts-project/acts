@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -54,8 +55,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
     /// Output filename.
     std::string filePath = "tracksummary.root";
     /// Name of the output tree.
@@ -94,8 +95,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   Config m_cfg;  ///< The config class
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMaps"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
 
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};     ///< The output file

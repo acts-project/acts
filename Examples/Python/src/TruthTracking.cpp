@@ -13,6 +13,7 @@
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
@@ -199,6 +200,10 @@ void addTruthTracking(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
                                 inputHits, outputHits, maxTime);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackTruthMatcher, mex,
+                                "TrackTruthMatcher", inputTracks,
+                                inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching, outputParticleTrackMatching, matchingRatio, doubleMatching);
 }
 
 }  // namespace Acts::Python

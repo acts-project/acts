@@ -10,6 +10,7 @@
 
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <cstdint>
 #include <map>
@@ -19,6 +20,10 @@ namespace ActsExamples {
 
 struct TrackMatchEntry {
   std::optional<SimBarcode> particle;
+
+  /// Number of hits on the track that are associated to a particle
+  /// Sorted by decreasing number of hits
+  std::vector<ParticleHitCount> contributingParticles;
 };
 
 struct ParticleMatchEntry {

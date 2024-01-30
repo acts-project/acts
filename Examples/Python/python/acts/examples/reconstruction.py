@@ -442,7 +442,7 @@ def addSeedingTruthSelection(
 
 
 def addTruthSmearedSeeding(
-    sequence: acts.examples.Sequencer,
+    s: acts.examples.Sequencer,
     rnd: Optional[acts.examples.RandomNumbers],
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
@@ -479,7 +479,7 @@ def addTruthSmearedSeeding(
             particleHypothesis=particleHypothesis,
         ),
     )
-    sequence.addAlgorithm(ptclSmear)
+    s.addAlgorithm(ptclSmear)
 
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=logLevel,
@@ -487,7 +487,7 @@ def addTruthSmearedSeeding(
         inputMeasurementParticlesMap="measurement_particles_map",
         outputProtoTracks="truth_particle_tracks",
     )
-    sequence.addAlgorithm(truthTrkFndAlg)
+    s.addAlgorithm(truthTrkFndAlg)
 
 
 def addTruthEstimatedSeeding(
@@ -1207,6 +1207,17 @@ def addCKFTracks(
     s.addAlgorithm(trackFinder)
     s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
 
+    s.addAlgorithm(
+        acts.examples.TrackTruthMatcher(
+            level=customLogLevel(),
+            inputTracks=trackFinder.config.outputTracks,
+            inputParticles="particles_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputTrackParticleMatching="track_particle_matching",
+            outputParticleTrackMatching="particle_track_matching",
+        )
+    )
+
     addTrackWriters(
         s,
         name="ckf",
@@ -1302,8 +1313,8 @@ def addTrackWriters(
                 # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
+                inputTrackParticleMatching="track_particle_matching",
                 inputSimHits="simhits",
-                inputMeasurementParticlesMap="measurement_particles_map",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
                 filePath=str(outputDirRoot / f"trackstates_{name}.root"),
                 treeName="trackstates",
@@ -1320,7 +1331,7 @@ def addTrackWriters(
                 # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
-                inputMeasurementParticlesMap="measurement_particles_map",
+                inputTrackParticleMatching="track_particle_matching",
                 filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
                 treeName="tracksummary",
                 writeCovMat=writeCovMat,
@@ -1331,9 +1342,9 @@ def addTrackWriters(
             # Write CKF performance data
             ckfPerfWriter = acts.examples.CKFPerformanceWriter(
                 level=customLogLevel(),
-                inputParticles="truth_seeds_selected",
                 inputTracks=tracks,
-                inputMeasurementParticlesMap="measurement_particles_map",
+                inputParticles="truth_seeds_selected",
+                inputTrackParticleMatching="track_particle_matching",
                 filePath=str(outputDirRoot / f"performance_{name}.root"),
             )
             s.addWriter(ckfPerfWriter)

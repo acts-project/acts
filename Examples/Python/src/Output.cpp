@@ -323,20 +323,19 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackStatesWriter, mex, "RootTrackStatesWriter",
-      inputTracks, inputParticles, inputSimHits, inputMeasurementParticlesMap,
+      inputTracks, inputParticles, inputTrackParticleMatching, inputSimHits,
       inputMeasurementSimHitsMap, filePath, treeName, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackSummaryWriter, mex, "RootTrackSummaryWriter",
-      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
+      inputTracks, inputParticles, inputTrackParticleMatching, filePath,
       treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
-      inputAllTruthParticles, inputSelectedTruthParticles,
-      inputAssociatedTruthParticles, inputTracks, inputMeasurementParticlesMap,
+      inputParticles, inputTracks, inputTrackParticleMatching, inputParticleTrackMatching,
       inputVertices, bField, filePath, treeName, fileMode,
-      minTrackVtxMatchFraction, truthMatchProbMin, useTracks);
+      minTrackVtxMatchFraction, useTracks);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,

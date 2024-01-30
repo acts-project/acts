@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -54,10 +55,10 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
     /// Input collection of simulated hits.
     std::string inputSimHits;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
     /// output filename.
@@ -96,9 +97,9 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMaps"};
   ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 

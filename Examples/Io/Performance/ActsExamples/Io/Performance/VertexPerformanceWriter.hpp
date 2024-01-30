@@ -15,6 +15,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -43,19 +44,16 @@ class VertexPerformanceWriter final
     : public WriterT<std::vector<Acts::Vertex<Acts::BoundTrackParameters>>> {
  public:
   struct Config {
-    /// All input truth particle collection.
-    std::string inputAllTruthParticles;
-    /// Selected input truth particle collection.
-    std::string inputSelectedTruthParticles;
-    /// Tracks object from track finidng.
-    std::string inputTracks;
-    /// Optional. Truth particles associated to tracks. Using 1:1 matching if
-    /// given.
-    std::string inputAssociatedTruthParticles;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
     std::string inputVertices;
+    /// Tracks object from track finidng.
+    std::string inputTracks;
+    /// All input truth particle collection.
+    std::string inputParticles;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
+    /// Input track-particle matching.
+    std::string inputParticleTrackMatching;
     /// Magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
     /// Output filename.
@@ -67,9 +65,6 @@ class VertexPerformanceWriter final
     /// Minimum fraction of tracks matched between truth
     /// and reco vertices to be matched for resolution plots.
     double minTrackVtxMatchFraction = 0.5;
-    /// Minimum fraction of hits associated to particle to consider
-    /// as truth matched.
-    double truthMatchProbMin = 0.5;
     /// Whether information about tracks is available
     bool useTracks = true;
     /// minimum track weight for track to be considered as part of the fit
@@ -195,12 +190,10 @@ class VertexPerformanceWriter final
 
   std::vector<double> m_trackVtxMatchFraction;
 
-  /// Number of reconstructed vertices
-  int m_nRecoVtx = -1;
   /// Number of true vertices
   int m_nTrueVtx = -1;
-  /// Number of vertices in detector acceptance
-  int m_nVtxDetAcceptance = -1;
+  /// Number of reconstructed vertices
+  int m_nRecoVtx = -1;
   /// Max. number of reconstructable vertices (detector acceptance + tracking
   /// efficiency)
   int m_nVtxReconstructable = -1;
@@ -210,19 +203,14 @@ class VertexPerformanceWriter final
 
   int getNumberOfTruePriVertices(const SimParticleContainer& collection) const;
 
-  ReadDataHandle<SimParticleContainer> m_inputAllTruthParticles{
-      this, "InputAllTruthParticles"};
-
-  ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
-      this, "InputSelectedTruthParticles"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
 
-  ReadDataHandle<SimParticleContainer> m_inputAssociatedTruthParticles{
-      this, "InputAssociatedTruthParticles"};
-
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMap"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
+  ReadDataHandle<ParticleTrackMatching> m_inputParticleTrackMatching{
+      this, "InputParticleTrackMatching"};
 };
 
 }  // namespace ActsExamples

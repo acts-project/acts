@@ -101,7 +101,8 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
 
     if ((!m_cfg.doubleMatching && recoMatched) ||
         (m_cfg.doubleMatching && recoMatched && truthMatched)) {
-      trackParticleMatching[track.index()] = {majorityParticleId};
+      trackParticleMatching[track.index()] = {majorityParticleId,
+                                              particleHitCounts};
 
       auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       if (!particleTrackMatch.track) {
@@ -120,7 +121,7 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
         ++particleTrackMatch.duplicates;
       }
     } else {
-      trackParticleMatching[track.index()] = {std::nullopt};
+      trackParticleMatching[track.index()] = {std::nullopt, particleHitCounts};
 
       auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       ++particleTrackMatch.fakes;
