@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -410,7 +410,7 @@ struct DenseEnvironmentExtension {
     if (state.stepping.covTransport) {
       // Calculate the change of the energy loss per path length and
       // inverse momentum
-      if (state.options.includeGgradient) {
+      if (state.options.includeGradient) {
         if (state.options.meanEnergyLoss) {
           dgdqopValue = deriveEnergyLossMeanQOverP(
               slab, absPdg, mass, static_cast<float>(qop[0]), absQ);
@@ -479,7 +479,7 @@ struct DenseStepperPropagatorOptions
   bool meanEnergyLoss = true;
 
   /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
-  bool includeGgradient = true;
+  bool includeGradient = true;
 
   /// Cut-off value for the momentum in SI units
   double momentumCutOff = 0.;
@@ -504,7 +504,7 @@ struct DenseStepperPropagatorOptions
 
     // Copy dense environment specific parameters
     eoptions.meanEnergyLoss = meanEnergyLoss;
-    eoptions.includeGgradient = includeGgradient;
+    eoptions.includeGradient = includeGradient;
     eoptions.momentumCutOff = momentumCutOff;
 
     // And return the options

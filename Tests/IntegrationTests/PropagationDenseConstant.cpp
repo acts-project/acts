@@ -81,7 +81,7 @@ inline Propagator makePropagator(double bz) {
 
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  auto logger = getDefaultLogger("Dense", Logging::INFO);
+  auto logger = getDefaultLogger("Nominal", Logging::INFO);
   return Propagator(
       std::move(stepper),
       Acts::Navigator{{makeDetector()}, logger->cloneWithSuffix("Nav")},
@@ -93,8 +93,12 @@ inline RiddersPropagator makeRiddersPropagator(double bz) {
 
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return RiddersPropagator(std::move(stepper),
-                           Acts::Navigator{{makeDetector()}});
+  auto logger = getDefaultLogger("Ridder", Logging::INFO);
+  auto propagator = Propagator(
+      std::move(stepper),
+      Acts::Navigator{{makeDetector()}, logger->cloneWithSuffix("Nav")},
+      logger->cloneWithSuffix("Prop"));
+  return RiddersPropagator(std::move(propagator));
 }
 
 }  // namespace

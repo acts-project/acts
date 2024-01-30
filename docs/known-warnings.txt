@@ -6,3 +6,4 @@
 .*doxygenfile: Found multiple matches for file \"SeedFinder.hpp.*
 .*Duplicate explicit target name: .*class_acts_1_1_axis_aligned_bounding_box_.*
 .*undefined label: .*class_acts_1_1_convex_polygon_bounds_3_01_polygon_dynamic_01_4.*
+.*undefined label: .*class_acts_1_1_grid_surface_material_t.*

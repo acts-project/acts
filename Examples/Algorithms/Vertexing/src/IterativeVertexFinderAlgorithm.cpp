@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
@@ -71,9 +71,8 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Set up propagator with void navigator
-  auto propagator =
-      std::make_shared<Propagator>(stepper, Acts::detail::VoidNavigator{},
-                                   logger().cloneWithSuffix("Propagator"));
+  auto propagator = std::make_shared<Propagator>(
+      stepper, Acts::VoidNavigator{}, logger().cloneWithSuffix("Propagator"));
   // Setup the vertex fitter
   Fitter::Config vertexFitterCfg;
   Fitter vertexFitter(vertexFitterCfg,
