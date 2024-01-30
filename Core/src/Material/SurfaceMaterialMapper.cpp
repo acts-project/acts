@@ -180,12 +180,15 @@ Acts::DetectorMaterialMaps Acts::SurfaceMaterialMapper::finalizeMaps(
   return detectorMaterial;
 }
 
-void Acts::SurfaceMaterialMapper::mapMaterialTrack(
-    IMaterialMapper::State& imState, RecordedMaterialTrack& mTrack) const {
+Acts::RecordedMaterialTrack Acts::SurfaceMaterialMapper::mapMaterialTrack(
+    IMaterialMapper::State& imState,
+    const RecordedMaterialTrack& mTrack) const {
   State& mState = static_cast<State&>(imState);
 
+  RecordedMaterialTrack rTrack = mTrack;
+
   // Retrieve the recorded material from the recorded material track
-  auto& rMaterial = mTrack.second.materialInteractions;
+  auto& rMaterial = rTrack.second.materialInteractions;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
                             << " recorded material steps to map.")
 
@@ -196,15 +199,13 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
         "Material surfaces are associated with the material interaction. The "
         "association interaction/surfaces won't be performed again.");
     mapSurfaceInteraction(mState, rMaterial);
-    return;
-  } else {
-    ACTS_VERBOSE(
-        "Material interactions need to be associated with surfaces. "
-        "Collecting "
-        "all surfaces on the trajectory.");
-    mapInteraction(mState, mTrack);
-    return;
+    return rTrack;
   }
+  ACTS_VERBOSE(
+      "Material interactions need to be associated with surfaces. "
+      "Collecting all surfaces on the trajectory.");
+  mapInteraction(mState, rTrack);
+  return rTrack;
 }
 void Acts::SurfaceMaterialMapper::mapInteraction(
     IMaterialMapper::State& imState, RecordedMaterialTrack& mTrack) const {

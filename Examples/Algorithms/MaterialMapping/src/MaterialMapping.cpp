@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <tuple>
 #include <unordered_map>
 
 namespace ActsExamples {
@@ -82,25 +83,36 @@ ActsExamples::MaterialMapping::~MaterialMapping() {
 ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     const ActsExamples::AlgorithmContext& context) const {
   // Take the collection from the EventStore
-  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
-      mtrackCollection = m_inputMaterialTracks(context);
+  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack> inputTracks =
+      m_inputMaterialTracks(context);
 
+  // Map with its cache
+  using MapperCache =
+      std::tuple<const Acts::IMaterialMapper*, Acts::IMaterialMapper::State*>;
+
+  std::vector<const MapperCache> mappersCache = {};
   if (m_cfg.materialSurfaceMapper) {
-    // To make it work with the framework needs a lock guard
-    for (auto& [idTrack, mTrack] : mtrackCollection) {
-      // Map this one onto the geometry
-      m_cfg.materialSurfaceMapper->mapMaterialTrack(*m_mappingState, mTrack);
-    }
+    mappersCache.push_back(
+        {m_cfg.materialSurfaceMapper.get(), m_mappingState.get()});
   }
   if (m_cfg.materialVolumeMapper) {
-    // To make it work with the framework needs a lock guard
-    for (auto& [idTrack, mTrack] : mtrackCollection) {
-      // Map this one onto the geometry
-      m_cfg.materialVolumeMapper->mapMaterialTrack(*m_mappingStateVol, mTrack);
-    }
+    mappersCache.push_back(
+        {m_cfg.materialVolumeMapper.get(), m_mappingStateVol.get()});
   }
-  // Write take the collection to the EventStore
-  m_outputMaterialTracks(context, std::move(mtrackCollection));
+
+  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
+      outputCollection = {};
+
+  // To make it work with the framework needs a lock guard
+  for (const auto& [idTrack, mTrack] : inputTracks) {
+    Acts::RecordedMaterialTrack rTrack = mTrack;
+    for (auto& [mapper, cache] : mappersCache) {
+      mapper->mapMaterialTrack(*cache, rTrack);
+    }
+    outputCollection.insert({idTrack, rTrack});
+  }
+  // Write the collection to the EventStore
+  m_outputMaterialTracks(context, std::move(outputCollection));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

@@ -66,7 +66,7 @@ class TrackingGeometry;
 ///
 ///  3) Each 'hit' bin per event is counted and averaged at the end of the run
 
-class VolumeMaterialMapper {
+class VolumeMaterialMapper final : public IMaterialMapper {
  public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
@@ -161,8 +161,11 @@ class VolumeMaterialMapper {
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(IMaterialMapper::State& imState,
-                        RecordedMaterialTrack& mTrack) const;
+  ///
+  /// @returns the unmapped (remaining) material track
+  RecordedMaterialTrack mapMaterialTrack(
+      IMaterialMapper::State& imState,
+      const RecordedMaterialTrack& mTrack) const;
 
  private:
   /// selector for finding surface

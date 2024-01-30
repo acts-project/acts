@@ -172,8 +172,11 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(IMaterialMapper::State& imState,
-                        RecordedMaterialTrack& mTrack) const;
+  ///
+  /// @returns the unmapped (remaining) material track
+  RecordedMaterialTrack mapMaterialTrack(
+      IMaterialMapper::State& imState,
+      const RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface

@@ -309,16 +309,19 @@ Acts::DetectorMaterialMaps Acts::VolumeMaterialMapper::finalizeMaps(
   return detectorMaterial;
 }
 
-void Acts::VolumeMaterialMapper::mapMaterialTrack(
-    IMaterialMapper::State& imState, RecordedMaterialTrack& mTrack) const {
+Acts::RecordedMaterialTrack Acts::VolumeMaterialMapper::mapMaterialTrack(
+    IMaterialMapper::State& imState,
+    const RecordedMaterialTrack& mTrack) const {
   auto mState = static_cast<State&>(imState);
+
+  RecordedMaterialTrack rTrack = mTrack;
 
   using VectorHelpers::makeVector4;
 
   // Neutral curvilinear parameters
   NeutralCurvilinearTrackParameters start(
-      makeVector4(mTrack.first.first, 0), mTrack.first.second,
-      1 / mTrack.first.second.norm(), std::nullopt,
+      makeVector4(rTrack.first.first, 0), rTrack.first.second,
+      1 / rTrack.first.second.norm(), std::nullopt,
       NeutralParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
@@ -339,7 +342,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   auto mappingVolumes = mvcResult.collected;
 
   // Retrieve the recorded material from the recorded material track
-  auto& rMaterial = mTrack.second.materialInteractions;
+  auto& rMaterial = rTrack.second.materialInteractions;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
                             << " recorded material steps to map.")
 
@@ -457,4 +460,5 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
     }
     ++rmIter;
   }
+  return rTrack;
 }

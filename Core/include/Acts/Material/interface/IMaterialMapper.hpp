@@ -46,8 +46,10 @@ class IMaterialMapper {
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  virtual void mapMaterialTrack(State& mState,
-                                RecordedMaterialTrack& mTrack) const = 0;
+  ///
+  /// @returns the unmapped (remaining) material track
+  virtual RecordedMaterialTrack mapMaterialTrack(
+      State& mState, const RecordedMaterialTrack& mTrack) const = 0;
 
   /// @brief Method to finalize the maps
   ///
