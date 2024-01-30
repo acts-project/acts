@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <map>
+#include <memory>
 
 namespace Acts {
 

@@ -15,7 +15,7 @@
 namespace Acts {
 
 /// @brief selector for extracting surfaces, this is done without
-/// having a requirement on geometry indentifier
+/// having a requirement on geometry identifier
 struct SurfaceExtractor {
   bool material = true;
   bool sensitive = false;

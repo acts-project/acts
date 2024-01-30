@@ -148,7 +148,7 @@ class VolumeMaterialMapper {
   /// the Homogeneous material into HomogeneousVolumeMaterial and
   /// the 2D and 3D grid into a InterpolatedMaterialMap
   ///
-  /// @param imState tjhe state object holding the cached material
+  /// @param imState the state object holding the cached material
   ///
   /// @return a DetectorMaterialMaps object
   DetectorMaterialMaps finalizeMaps(IMaterialMapper::State& imState) const;
