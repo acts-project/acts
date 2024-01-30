@@ -22,7 +22,10 @@ class IMaterialMapper {
  public:
   // The state object as a base class that allows to chain
   // material mappers of different type.
-  struct State {};
+  class State {
+   public:
+    virtual ~State() = default;
+  };
 
   /// @brief Interface method to create a caching state
   ///
@@ -33,8 +36,8 @@ class IMaterialMapper {
   /// @param mctxy the magnetic field context
   ///
   /// @return a state object
-  virtual State createState(const GeometryContext& gctx,
-                            const MagneticFieldContext& mctxy) const = 0;
+  virtual std::unique_ptr<State> createState(
+      const GeometryContext& gctx, const MagneticFieldContext& mctxy) const = 0;
 
   /// @brief Interface mtheod to Process/map a single track
   ///

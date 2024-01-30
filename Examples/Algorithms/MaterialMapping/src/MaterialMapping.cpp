@@ -55,9 +55,9 @@ ActsExamples::MaterialMapping::~MaterialMapping() {
       m_cfg.materialVolumeMapper != nullptr) {
     // Finalize all the maps using the cached state
     auto surfaceDetectorMaterial =
-        m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
+        m_cfg.materialSurfaceMapper->finalizeMaps(*m_mappingState);
     auto volumeDetectorMaterial =
-        m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
+        m_cfg.materialVolumeMapper->finalizeMaps(*m_mappingStateVol);
     // Loop over the state, and collect the maps for surfaces
     for (auto& [key, value] : surfaceDetectorMaterial.first) {
       detectorMaterial.first.insert({key, std::move(value)});
@@ -68,10 +68,10 @@ ActsExamples::MaterialMapping::~MaterialMapping() {
     }
   } else if (m_cfg.materialSurfaceMapper != nullptr) {
     detectorMaterial =
-        m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
+        m_cfg.materialSurfaceMapper->finalizeMaps(*m_mappingState);
   } else if (m_cfg.materialVolumeMapper != nullptr) {
     detectorMaterial =
-        m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
+        m_cfg.materialVolumeMapper->finalizeMaps(*m_mappingStateVol);
   }
   // Loop over the available writers and write the maps
   for (auto& imw : m_cfg.materialWriters) {
@@ -89,18 +89,14 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     // To make it work with the framework needs a lock guard
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
-      auto mappingState =
-          const_cast<Acts::IMaterialMapper::State&>(m_mappingState);
-      m_cfg.materialSurfaceMapper->mapMaterialTrack(mappingState, mTrack);
+      m_cfg.materialSurfaceMapper->mapMaterialTrack(*m_mappingState, mTrack);
     }
   }
   if (m_cfg.materialVolumeMapper) {
     // To make it work with the framework needs a lock guard
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
-      auto mappingState =
-          const_cast<Acts::IMaterialMapper::State&>(m_mappingStateVol);
-      m_cfg.materialVolumeMapper->mapMaterialTrack(mappingState, mTrack);
+      m_cfg.materialVolumeMapper->mapMaterialTrack(*m_mappingStateVol, mTrack);
     }
   }
   // Write take the collection to the EventStore
@@ -113,13 +109,13 @@ ActsExamples::MaterialMapping::scoringParameters(uint64_t surfaceID) {
   std::vector<std::pair<double, int>> scoringParameters;
 
   if (m_cfg.materialSurfaceMapper) {
-    Acts::SurfaceMaterialMapper::State& smState =
-        static_cast<Acts::SurfaceMaterialMapper::State&>(m_mappingState);
+    Acts::SurfaceMaterialMapper::State* smState =
+        static_cast<Acts::SurfaceMaterialMapper::State*>(m_mappingState.get());
 
     auto surfaceAccumulatedMaterial =
-        smState.accumulatedMaterial.find(Acts::GeometryIdentifier(surfaceID));
+        smState->accumulatedMaterial.find(Acts::GeometryIdentifier(surfaceID));
 
-    if (surfaceAccumulatedMaterial != smState.accumulatedMaterial.end()) {
+    if (surfaceAccumulatedMaterial != smState->accumulatedMaterial.end()) {
       auto matrixMaterial =
           surfaceAccumulatedMaterial->second.accumulatedMaterial();
       for (const auto& vectorMaterial : matrixMaterial) {
@@ -131,6 +127,5 @@ ActsExamples::MaterialMapping::scoringParameters(uint64_t surfaceID) {
       }
     }
   }
-
   return scoringParameters;
 }

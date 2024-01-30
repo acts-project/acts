@@ -83,7 +83,8 @@ class VolumeMaterialMapper {
   /// @struct State
   ///
   /// Nested State struct which is used for the mapping prococess
-  struct State final : public IMaterialMapper::State {
+  class State final : public IMaterialMapper::State {
+   public:
     /// Constructor of the State with contexts
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
@@ -95,22 +96,22 @@ class VolumeMaterialMapper {
     /// The recorded 2D transform associated the grid for each geometry ID
     std::map<const GeometryIdentifier,
              std::function<Acts::Vector2(Acts::Vector3)>>
-        transform2D;
+        transform2D = {};
 
     /// The 2D material grid for each geometry ID
-    std::map<const GeometryIdentifier, Grid2D> grid2D;
+    std::map<const GeometryIdentifier, Grid2D> grid2D = {};
 
     /// The recorded 3D transform associated the material grid for each geometry
     /// ID
     std::map<const GeometryIdentifier,
              std::function<Acts::Vector3(Acts::Vector3)>>
-        transform3D;
+        transform3D = {};
 
     /// The 3D material grid for each geometry ID
-    std::map<const GeometryIdentifier, Grid3D> grid3D;
+    std::map<const GeometryIdentifier, Grid3D> grid3D = {};
 
     /// The binning for each geometry ID
-    std::map<const GeometryIdentifier, BinUtility> materialBin;
+    std::map<const GeometryIdentifier, BinUtility> materialBin = {};
 
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -139,8 +140,8 @@ class VolumeMaterialMapper {
   /// This method takes a TrackingGeometry from the configuration,
   /// finds all volumes with material proxis
   /// and returns you a Cache object tO be used
-  IMaterialMapper::State createState(const GeometryContext& gctx,
-                                     const MagneticFieldContext& mctx) const;
+  std::unique_ptr<IMaterialMapper::State> createState(
+      const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
 
   /// @brief Method to finalize the maps
   ///

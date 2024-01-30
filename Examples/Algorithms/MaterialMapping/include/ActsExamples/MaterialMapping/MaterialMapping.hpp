@@ -119,11 +119,11 @@ class MaterialMapping : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Config m_cfg;                                      //!< internal config object
-  Acts::IMaterialMapper::State m_mappingState = {};  //!< Material mapping state
-  Acts::IMaterialMapper::State m_mappingStateVol =
-      {};  //!< Material mapping state
-           //
+  Config m_cfg;  //!< internal config object
+  std::unique_ptr<Acts::IMaterialMapper::State> m_mappingState =
+      nullptr;  //!< Material mapping state
+  std::unique_ptr<Acts::IMaterialMapper::State> m_mappingStateVol =
+      nullptr;  //!< Material mapping state
 
   ReadDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_inputMaterialTracks{this, "InputMaterialTracks"};

@@ -123,13 +123,13 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   MagneticFieldContext mfCtx;
 
   /// Now create the mapper state
-  IMaterialMapper::State imState = smMapper.createState(gCtx, mfCtx);
+  auto imState = smMapper.createState(gCtx, mfCtx);
 
-  SurfaceMaterialMapper::State& mState =
-      static_cast<SurfaceMaterialMapper::State&>(*(&imState));
+  SurfaceMaterialMapper::State* mState =
+      static_cast<SurfaceMaterialMapper::State*>(imState.get());
 
   /// Test if this is not null
-  BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3u);
+  BOOST_CHECK_EQUAL(mState->accumulatedMaterial.size(), 3u);
 }
 
 }  // namespace Test

@@ -81,7 +81,7 @@ struct MaterialCollector {
 namespace Test {
 
 /// Test the filling and conversion
-BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
+BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests) {
   using namespace Acts::UnitLiterals;
 
   BinUtility bu1(4, 0_m, 1_m, open, binX);
@@ -153,13 +153,13 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   MagneticFieldContext mfCtx;
 
   /// Now create the mapper state
-  IMaterialMapper::State imState = vmMapper.createState(gCtx, mfCtx);
+  auto imState = vmMapper.createState(gCtx, mfCtx);
 
-  Acts::VolumeMaterialMapper::State& mState =
-      static_cast<Acts::VolumeMaterialMapper::State&>(imState);
+  Acts::VolumeMaterialMapper::State* mState =
+      static_cast<Acts::VolumeMaterialMapper::State*>(imState.get());
 
   /// Test if this is not null
-  BOOST_CHECK_EQUAL(mState.materialBin.size(), 3u);
+  BOOST_CHECK_EQUAL(mState->materialBin.size(), 3u);
 }
 
 /// @brief Test case for comparison between the mapped material and the

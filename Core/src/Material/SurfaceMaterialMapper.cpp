@@ -56,19 +56,20 @@ Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
   }
 }
 
-Acts::IMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
+std::unique_ptr<Acts::IMaterialMapper::State>
+Acts::SurfaceMaterialMapper::createState(
     const GeometryContext& gctx, const MagneticFieldContext& mctx) const {
   // Parse the geometry and find all surfaces with material proxies
   auto world = m_cfg.trackingGeometry->highestTrackingVolume();
 
   // The Surface material mapping state
-  State mState(gctx, mctx);
-  resolveMaterialSurfaces(mState, *world);
-  collectMaterialVolumes(mState, *world);
+  auto mState = std::make_unique<State>(gctx, mctx);
+  resolveMaterialSurfaces(*mState, *world);
+  collectMaterialVolumes(*mState, *world);
 
-  ACTS_DEBUG(mState.accumulatedMaterial.size()
+  ACTS_DEBUG(mState->accumulatedMaterial.size()
              << " Surfaces with PROXIES collected ... ");
-  for (auto& smg : mState.accumulatedMaterial) {
+  for (auto& smg : mState->accumulatedMaterial) {
     ACTS_VERBOSE(" -> Surface in with id " << smg.first);
   }
   return mState;
@@ -78,6 +79,9 @@ void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
   SurfaceExtractor extractor;
   tVolume.visitSurfaces(extractor, false);
+
+  ACTS_DEBUG("Found " << extractor.extractedSurfaces.size()
+                      << " surfaces with material proxies.");
 
   for (const auto& s : extractor.extractedSurfaces) {
     mState.inputSurfaceMaterial[s->geometryId()] =

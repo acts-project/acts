@@ -104,7 +104,8 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   /// @struct State
   ///
   /// Nested State struct which is used for the mapping prococess
-  struct State final : public IMaterialMapper::State {
+  class State final : public IMaterialMapper::State {
+   public:
     /// @param [in] gctx The geometry context to use
     /// @param [in] mctx The magnetic field context to use
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
@@ -150,8 +151,8 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
-  IMaterialMapper::State createState(const GeometryContext& gctx,
-                                     const MagneticFieldContext& mctx) const;
+  std::unique_ptr<IMaterialMapper::State> createState(
+      const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
 
   /// @brief Method to finalize the maps
   ///

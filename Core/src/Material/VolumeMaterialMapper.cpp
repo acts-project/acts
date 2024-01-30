@@ -59,14 +59,15 @@ Acts::VolumeMaterialMapper::VolumeMaterialMapper(
   }
 }
 
-Acts::IMaterialMapper::State Acts::VolumeMaterialMapper::createState(
+std::unique_ptr<Acts::IMaterialMapper::State>
+Acts::VolumeMaterialMapper::createState(
     const GeometryContext& gctx, const MagneticFieldContext& mctx) const {
   // Parse the geometry and find all surfaces with material proxies
   auto world = m_cfg.trackingGeometry->highestTrackingVolume();
 
   // The Surface material mapping state
-  State mState(gctx, mctx);
-  resolveMaterialVolume(mState, *world);
+  auto mState = std::make_unique<State>(gctx, mctx);
+  resolveMaterialVolume(*mState, *world);
   return mState;
 }
 
