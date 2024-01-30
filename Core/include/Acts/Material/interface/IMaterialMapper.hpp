@@ -15,9 +15,13 @@
 
 namespace Acts {
 
-/// @brief Interface for material mappers
+/// @brief Interface for material mappin tools
+///
+/// Surface and volume based matters should extend this one.
 class IMaterialMapper {
  public:
+  // The state object as a base class that allows to chain
+  // material mappers of different type.
   struct State {};
 
   /// @brief Interface method to create a caching state
