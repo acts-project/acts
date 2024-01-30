@@ -26,9 +26,7 @@ add_executable(
 target_link_libraries(
   ActsExampleVertexFitter
   PRIVATE ${_common_libraries})
-add_executable(
-  ActsTutorialVertexFinder
-  TutorialVertexFinderExample.cpp)
+add_executable(ActsTutorialVertexFinder)
 target_link_libraries(
   ActsTutorialVertexFinder
   PRIVATE ${_common_libraries})

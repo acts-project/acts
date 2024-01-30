@@ -1,7 +1,6 @@
 import pytest
 
 from acts.examples import (
-    TutorialVertexFinderAlgorithm,
     AdaptiveMultiVertexFinderAlgorithm,
     VertexFitterAlgorithm,
     IterativeVertexFinderAlgorithm,
