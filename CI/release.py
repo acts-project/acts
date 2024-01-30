@@ -339,7 +339,9 @@ def execute_bump(next_version: str):
 
 
 @app.command()
-def bump(next_version: str, commit: bool = False):
+def bump(
+    next_version: str = typer.Argument(..., help="Format: X.Y.Z"), commit: bool = False
+):
     execute_bump(next_version)
     next_tag = f"v{next_version}"
 
