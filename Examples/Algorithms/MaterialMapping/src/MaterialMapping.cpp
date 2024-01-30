@@ -51,46 +51,28 @@ ActsExamples::MaterialMapping::MaterialMapping(
 ActsExamples::MaterialMapping::~MaterialMapping() {
   Acts::DetectorMaterialMaps detectorMaterial;
 
-  /**
-    if (m_cfg.materialSurfaceMapper && m_cfg.materialVolumeMapper) {
-      // Finalize all the maps using the cached state
-      m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
-      m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
-      // Loop over the state, and collect the maps for surfaces
-      for (auto& [key, value] : m_mappingState.surfaceMaterial) {
-        detectorMaterial.first.insert({key, std::move(value)});
-      }
-      // Loop over the state, and collect the maps for volumes
-      for (auto& [key, value] : m_mappingStateVol.volumeMaterial) {
-        detectorMaterial.second.insert({key, std::move(value)});
-      }
-    } else {
-      if (m_cfg.materialSurfaceMapper) {
-        // Finalize all the maps using the cached state
+  if (m_cfg.materialSurfaceMapper != nullptr &&
+      m_cfg.materialVolumeMapper != nullptr) {
+    // Finalize all the maps using the cached state
+    auto surfaceDetectorMaterial =
         m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
-        // Loop over the state, and collect the maps for surfaces
-        for (auto& [key, value] : m_mappingState.surfaceMaterial) {
-          detectorMaterial.first.insert({key, std::move(value)});
-        }
-        // Loop over the state, and collect the maps for volumes
-        for (auto& [key, value] : m_mappingState.volumeMaterial) {
-          detectorMaterial.second.insert({key, std::move(value)});
-        }
-      }
-      if (m_cfg.materialVolumeMapper) {
-        // Finalize all the maps using the cached state
+    auto volumeDetectorMaterial =
         m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
-        // Loop over the state, and collect the maps for surfaces
-        for (auto& [key, value] : m_mappingStateVol.surfaceMaterial) {
-          detectorMaterial.first.insert({key, std::move(value)});
-        }
-        // Loop over the state, and collect the maps for volumes
-        for (auto& [key, value] : m_mappingStateVol.volumeMaterial) {
-          detectorMaterial.second.insert({key, std::move(value)});
-        }
-      }
+    // Loop over the state, and collect the maps for surfaces
+    for (auto& [key, value] : surfaceDetectorMaterial.first) {
+      detectorMaterial.first.insert({key, std::move(value)});
     }
-  **/
+    // Loop over the state, and collect the maps for volumes
+    for (auto& [key, value] : volumeDetectorMaterial.second) {
+      detectorMaterial.second.insert({key, std::move(value)});
+    }
+  } else if (m_cfg.materialSurfaceMapper != nullptr) {
+    detectorMaterial =
+        m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
+  } else if (m_cfg.materialVolumeMapper != nullptr) {
+    detectorMaterial =
+        m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
+  }
   // Loop over the available writers and write the maps
   for (auto& imw : m_cfg.materialWriters) {
     imw->writeMaterial(detectorMaterial);
@@ -129,13 +111,15 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
 std::vector<std::pair<double, int>>
 ActsExamples::MaterialMapping::scoringParameters(uint64_t surfaceID) {
   std::vector<std::pair<double, int>> scoringParameters;
-  /**
-  if (m_cfg.materialSurfaceMapper) {
-    auto surfaceAccumulatedMaterial = m_mappingState.accumulatedMaterial.find(
-        Acts::GeometryIdentifier(surfaceID));
 
-    if (surfaceAccumulatedMaterial !=
-        m_mappingState.accumulatedMaterial.end()) {
+  if (m_cfg.materialSurfaceMapper) {
+    Acts::SurfaceMaterialMapper::State& smState =
+        static_cast<Acts::SurfaceMaterialMapper::State&>(m_mappingState);
+
+    auto surfaceAccumulatedMaterial =
+        smState.accumulatedMaterial.find(Acts::GeometryIdentifier(surfaceID));
+
+    if (surfaceAccumulatedMaterial != smState.accumulatedMaterial.end()) {
       auto matrixMaterial =
           surfaceAccumulatedMaterial->second.accumulatedMaterial();
       for (const auto& vectorMaterial : matrixMaterial) {
@@ -147,6 +131,6 @@ ActsExamples::MaterialMapping::scoringParameters(uint64_t surfaceID) {
       }
     }
   }
-  **/
+
   return scoringParameters;
 }
