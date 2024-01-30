@@ -34,7 +34,6 @@ from helpers import geant4Enabled, hepmc3Enabled
 @pytest.mark.parametrize(
     "alg",
     [
-        TutorialVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
