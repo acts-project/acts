@@ -18,7 +18,6 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
@@ -205,6 +204,11 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = freeParams.segment<3>(eFreeDir0);
+  // Get the sines and cosines directly
+  double cosTheta = std::cos(boundParams[eBoundTheta]);
+  double sinTheta = std::sin(boundParams[eBoundTheta]);
+  double cosPhi = std::cos(boundParams[eBoundPhi]);
+  double sinPhi = std::sin(boundParams[eBoundPhi]);
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
 
@@ -216,8 +220,11 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacToGlobal.block<3, 2>(eFreeDir0, eBoundPhi) =
-      sphericalToFreeDirectionJacobian(direction);
+  jacToGlobal(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
+  jacToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
+  jacToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
+  jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
+  jacToGlobal(eFreeDir2, eBoundTheta) = -sinTheta;
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
 
   // For the derivative of global position with bound angles, refer the
