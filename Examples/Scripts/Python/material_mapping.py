@@ -83,7 +83,11 @@ def runMaterialMapping(
             resolvePassive=True,
         )
         propagator = Propagator(stepper, navigator)
-        mapper = SurfaceMaterialMapper(level=acts.logging.INFO, propagator=propagator)
+        mapperConfig = SurfaceMaterialMapper.Config()
+        mapperConfig.trackingGeometry = trackingGeometry
+        mapper = SurfaceMaterialMapper(
+            config=mapperConfig, level=acts.logging.INFO, propagator=propagator
+        )
         mmAlgCfg.materialSurfaceMapper = mapper
 
     if mapVolume:
@@ -91,8 +95,11 @@ def runMaterialMapping(
             trackingGeometry=trackingGeometry,
         )
         propagator = Propagator(stepper, navigator)
+        mapperConfig = VolumeMaterialMapper.Config()
+        mapperConfig.trackingGeometry = trackingGeometry
+        mapperConfig.mappingStep = mappingStep
         mapper = VolumeMaterialMapper(
-            level=acts.logging.INFO, propagator=propagator, mappingStep=mappingStep
+            config=mapperConfig, level=acts.logging.INFO, propagator=propagator
         )
         mmAlgCfg.materialVolumeMapper = mapper
 

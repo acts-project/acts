@@ -142,6 +142,7 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(emptyBinCorrection);
     ACTS_PYTHON_MEMBER(mapperDebugOutput);
     ACTS_PYTHON_MEMBER(computeVariance);
+    ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -162,6 +163,7 @@ void addMaterial(Context& ctx) {
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, VolumeMaterialMapper::Config);
     ACTS_PYTHON_MEMBER(mappingStep);
+    ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_STRUCT_END();
   }
 }
