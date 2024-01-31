@@ -568,8 +568,8 @@ class KalmanFitter {
         // reinitialize navigation surfaces
         newState.navSurfaces = state.navigation.navSurfaces;
         newState.navSurfaceIter =
-          std::find(newState.navSurfaces.begin(), newState.navSurfaces.end(), 
-                    &st.referenceSurface());
+            std::find(newState.navSurfaces.begin(), newState.navSurfaces.end(),
+                      &st.referenceSurface());
       }
 
       state.navigation = std::move(newState);
@@ -1054,9 +1054,8 @@ class KalmanFitter {
       if constexpr (isDirectNavigator) {
         // reinitialize navigation surfaces
         newState.navSurfaces = state.navigation.navSurfaces;
-        newState.navSurfaceIter =
-          std::find(newState.navSurfaces.begin(), newState.navSurfaces.end(), 
-                    &surface);
+        newState.navSurfaceIter = std::find(
+            newState.navSurfaces.begin(), newState.navSurfaces.end(), &surface);
       }
 
       state.navigation = std::move(newState);
