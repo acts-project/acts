@@ -88,8 +88,17 @@ s.addReader(
         #  inputPath="ddsim.edm4hep.root",
         inputPath="ddsim_pi.edm4hep.root",
         #  inputPath="ddsimDefault_singleMuon_ODD_100events_1GeV_muon_eta0_phi0_edm4hep.root",
+        inputSimHits=[
+            "PixelBarrelReadout",
+            "PixelEndcapReadout",
+            "ShortStripBarrelReadout",
+            "ShortStripEndcapReadout",
+            "LongStripBarrelReadout",
+            "LongStripEndcapReadout",
+        ],
         outputParticles="MCParticles",
         level=acts.logging.VERBOSE,
+        graphvizOutput="graphviz",
     )
 )
 

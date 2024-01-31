@@ -20,7 +20,10 @@
 #include <stdexcept>
 
 #include <edm4hep/MCParticle.h>
+#include <edm4hep/SimTrackerHit.h>
+#include <edm4hep/SimTrackerHitCollection.h>
 #include <podio/Frame.h>
+#include <podio/ObjectID.h>
 
 namespace ActsExamples {
 
@@ -148,6 +151,10 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
   // key: child, value: parent
   ParentRelationship parentRelationship;
 
+  // key: input particle address, value: index in the unordered particle
+  // container
+  std::unordered_map<int, std::size_t> edm4hepParticleMap;
+
   std::size_t nPrimaryVertices = 0;
   // Walk the particle tree
   for (const auto& [vtxPos, particles] : primaryVertices) {
@@ -175,8 +182,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
                                     << inParticle.getEndpoint().z);
       const auto pid = particle.particleId();
       unordered.push_back(std::move(particle));
+      edm4hepParticleMap[inParticle.getObjectID().index] = unordered.size() - 1;
       processChildren(inParticle, pid, unordered, parentRelationship,
-                      nSecondaryVertices, maxGen);
+                      edm4hepParticleMap, nSecondaryVertices, maxGen);
     }
     ACTS_VERBOSE("Primary vertex complete, produced "
                  << (unordered.size() - startSize) << " particles and "
@@ -198,6 +206,28 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     graphviz(dot, unordered, parentRelationship);
   }
 
+  ACTS_DEBUG("Reading sim hits from " << m_cfg.inputSimHits.size()
+                                      << " sim hit collections");
+  for (const auto& name : m_cfg.inputSimHits) {
+    const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
+
+    for (const auto& hit : inputHits) {
+      auto simHit = EDM4hepUtil::readSimHit(hit, [&](const auto& inParticle) {
+        ACTS_VERBOSE("SimHit has source particle: "
+                     << hit.getMCParticle().getObjectID().index);
+        auto it = edm4hepParticleMap.find(inParticle.getObjectID().index);
+        if (it == edm4hepParticleMap.end()) {
+          ACTS_ERROR("SimHit has source particle that we did not see before");
+          return SimBarcode{};
+        }
+        const auto& particle = unordered.at(it->second);
+        ACTS_VERBOSE("- " << inParticle.getObjectID().index << " -> "
+                          << particle.particleId());
+        return particle.particleId();
+      });
+    }
+  }
+
   m_outputParticles(ctx, std::move(particles));
 
   return ProcessCode::SUCCESS;
@@ -206,8 +236,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 void EDM4hepReader::processChildren(
     const edm4hep::MCParticle& inParticle, SimBarcode parentId,
     SimParticleContainer::sequence_type& particles,
-    ParentRelationship& parentRelationship, std::size_t& nSecondaryVertices,
-    std::size_t& maxGen) const {
+    ParentRelationship& parentRelationship,
+    std::unordered_map<int, std::size_t>& particleMap,
+    std::size_t& nSecondaryVertices, std::size_t& maxGen) const {
   constexpr auto indent = [&](std::size_t n) {
     std::string result;
     for (std::size_t i = 0; i < n; ++i) {
@@ -270,8 +301,9 @@ void EDM4hepReader::processChildren(
                  << daughter.getEndpoint().z);
 
     particles.push_back(std::move(particle));
+    particleMap[daughter.getObjectID().index] = particles.size() - 1;
     parentRelationship[particles.size() - 1] = parentIndex;
-    processChildren(daughter, pid, particles, parentRelationship,
+    processChildren(daughter, pid, particles, parentRelationship, particleMap,
                     nSecondaryVertices, maxGen);
   }
 }

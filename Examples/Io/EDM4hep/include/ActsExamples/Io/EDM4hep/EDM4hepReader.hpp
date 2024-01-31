@@ -35,6 +35,8 @@ class EDM4hepReader final : public IReader {
     std::string inputPath;
     /// Name of the particle collection in EDM4hep.
     std::string inputParticles = "MCParticles";
+    /// Names of the sim hit collections
+    std::vector<std::string> inputSimHits{};
     /// Which particle collection to read into.
     std::string outputParticles;
 
@@ -65,6 +67,7 @@ class EDM4hepReader final : public IReader {
   void processChildren(const edm4hep::MCParticle& particle, SimBarcode parentId,
                        SimParticleContainer::sequence_type& particles,
                        ParentRelationship& parentRelationship,
+                       std::unordered_map<int, std::size_t>& particleMap,
                        std::size_t& nSecondaryVertices,
                        std::size_t& maxGen) const;
 
