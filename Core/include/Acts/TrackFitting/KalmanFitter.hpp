@@ -562,7 +562,17 @@ class KalmanFitter {
       // Reset navigation state
       // We do not need to specify a target here since this will be handled
       // separately in the KF actor
-      state.navigation = navigator.makeState(&st.referenceSurface(), nullptr);
+      auto newState = navigator.makeState(&st.referenceSurface(), nullptr);
+
+      if constexpr (isDirectNavigator) {
+        // reinitialize navigation surfaces
+        newState.navSurfaces = state.navigation.navSurfaces;
+        newState.navSurfaceIter =
+            std::find(newState.navSurfaces.begin(), newState.navSurfaces.end(),
+                      &st.referenceSurface());
+      }
+
+      state.navigation = std::move(newState);
       navigator.initialize(state, stepper);
 
       // Update material effects for last measurement state in reversed
@@ -1039,7 +1049,16 @@ class KalmanFitter {
       // Reset the navigation state to enable propagation towards the target
       // surface
       // Set targetSurface to nullptr as it is handled manually in the actor
-      state.navigation = navigator.makeState(&surface, nullptr);
+      auto newState = navigator.makeState(&surface, nullptr);
+
+      if constexpr (isDirectNavigator) {
+        // reinitialize navigation surfaces
+        newState.navSurfaces = state.navigation.navSurfaces;
+        newState.navSurfaceIter = std::find(
+            newState.navSurfaces.begin(), newState.navSurfaces.end(), &surface);
+      }
+
+      state.navigation = std::move(newState);
       navigator.initialize(state, stepper);
 
       return Result<void>::success();
