@@ -5,7 +5,7 @@ if test -e /etc/centos-release && grep 'CentOS Linux release 7' /etc/centos-rele
 elif test -e /etc/centos-release && grep 'CentOS Stream release 8' /etc/centos-release; then
   lcg_os=centos8
 # not centos. Check for RHEL  
-elif test -e /etc/redhat-release && grep 'Red Hat Enterprise Linux release 9' /etc/redhat-release; then
+elif test -e /etc/redhat-release && grep 'Linux release 9' /etc/redhat-release; then
   lcg_os=el9
 else
   echo "Unsupported system" 1>&2
