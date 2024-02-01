@@ -130,6 +130,3 @@ run_example ActsExampleMaterialValidationGeneric
 # TODO: Run (AdaptiveMulti|Iterative)?Vertex(Finder|Fitter) examples (currently broken, not ready for CI)
 
 # TODO: Bring back multi-threaded output reproducibility tests
-
-# Run vertex finder tutorial
-run_example ActsTutorialVertexFinder
