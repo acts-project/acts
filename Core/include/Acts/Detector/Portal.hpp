@@ -12,12 +12,12 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 
 #include <array>
@@ -75,7 +75,17 @@ class Portal {
   ///
   /// @param visitor will be called with the represented surface
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
-  void visitSurfaces(visitor_t&& visitor) const {
+  void visitSurface(visitor_t&& visitor) const {
+    visitor(m_surface.get());
+  }
+
+  /// @brief Visit all reachable surfaces of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called with the represented surface
+  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  void visitMutableSurface(visitor_t&& visitor) {
     visitor(m_surface.get());
   }
 

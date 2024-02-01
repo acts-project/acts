@@ -11,11 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/DetectorVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -109,10 +110,78 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @param visitor will be handed to each root volume,
   /// eventually contained volumes within the root volumes are
   /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  ///
+  /// @note due to the fact that portals can be shared between volumes, multiple
+  /// visits may occur, duplicated addressing needs to be taken care of by the
+  /// visitor
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     for (const auto& v : rootVolumes()) {
       v->template visitSurfaces<visitor_t>(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable surfaces of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  ///
+  /// @note due to the fact that this doesn't run over root volumes, and
+  /// due to the fact that portals can be shared between volumes, multiple
+  /// visits may occur, duplicated addressing needs to be taken care of by the
+  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  void visitMutableSurfaces(visitor_t&& visitor) {
+    for (auto& v : volumePtrs()) {
+      v->template visitMutableSurfaces<visitor_t>(
+          std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable detector volumes of the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  template <ACTS_CONCEPT(DetectorVolumeVisitor) visitor_t>
+  void visitVolumes(visitor_t&& visitor) const {
+    for (const auto& v : rootVolumes()) {
+      v->template visitVolumes<visitor_t>(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable detector volumes of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  ///
+  /// @note that due to non running over root volumes, multiple visits
+  /// may occur, duplicated addressing needs to be taken care of by the
+  /// visitor
+  template <ACTS_CONCEPT(MutableDetectorVolumeVisitor) visitor_t>
+  void visitMutableVolumes(visitor_t&& visitor) {
+    for (const auto& v : volumePtrs()) {
+      v->template visitMutableVolumes<visitor_t>(
+          std::forward<visitor_t>(visitor));
     }
   }
 
