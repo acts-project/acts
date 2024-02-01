@@ -579,6 +579,16 @@ def test_truth_tracking_kalman(
             assert_has_entries(fp, tn)
             assert_root_hash(fn, fp)
 
+    import ROOT
+
+    ROOT.PyConfig.IgnoreCommandLineOptions = True
+    ROOT.gROOT.SetBatch(True)
+    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_fitter.root"))
+    keys = [k.GetName() for k in rf.GetListOfKeys()]
+    assert "tracksummary" in keys
+    for entry in rf.Get("tracksummary"):
+        assert entry.hasFittedParams
+
 
 def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
     from truth_tracking_gsf import runTruthTrackingGsf
