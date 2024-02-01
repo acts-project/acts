@@ -537,8 +537,9 @@ def test_event_recording(tmp_path):
 
 
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
+@pytest.mark.parametrize("directNavigation", [False, True])
 def test_truth_tracking_kalman(
-    tmp_path, assert_root_hash, revFiltMomThresh, detector_config
+    tmp_path, assert_root_hash, revFiltMomThresh, directNavigation, detector_config
 ):
     from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -562,6 +563,7 @@ def test_truth_tracking_kalman(
         digiConfigFile=detector_config.digiConfigFile,
         outputDir=tmp_path,
         reverseFilteringMomThreshold=revFiltMomThresh,
+        directNavigation=directNavigation,
         s=seq,
     )
 
