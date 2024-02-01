@@ -42,7 +42,7 @@ struct PathLimitReached {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, const Logger& logger) const {
+                  const navigator_t& /*navigator*/, const Logger& logger) const {
     // Check if the maximum allowed step size has to be updated
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
