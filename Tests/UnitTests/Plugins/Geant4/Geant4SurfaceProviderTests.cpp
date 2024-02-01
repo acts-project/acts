@@ -29,15 +29,17 @@
 
 class G4VPhysicalVolume;
 
-int nLayers = 5;
-int nChips = 5;
-int nArms = 2;
+const int nLayers = 5;
+const int nChips = 5;
+const int nArms = 2;
 
-double cellDimX = 0.4 * cm;
-double cellDimY = 0.3 * cm;
-double cellDimZ = 0.1 * cm;
+const double cellDimX = 0.4 * cm;
+const double cellDimY = 0.3 * cm;
+const double cellDimZ = 0.1 * cm;
 
-double armOffset = 10 * cm;
+const double armOffset = 10 * cm;
+
+const std::filesystem::path gdmlPath = "two-arms-telescope.gdml";
 
 BOOST_AUTO_TEST_SUITE(Geant4SurfaceProvider)
 
@@ -65,6 +67,8 @@ ConstructGeant4World() {
   auto physWorld = new G4PVPlacement(nullptr, G4ThreeVector(), logicWorld,
                                      "World", nullptr, false, 0, checkOverlaps);
 
+  G4Material* material = nist->FindOrBuildMaterial("G4_He");
+
   std::vector<std::string> names;
   for (int nArm = 0; nArm < nArms; nArm++) {
     for (int nLayer = 0; nLayer < nLayers; nLayer++) {
@@ -81,8 +85,6 @@ ConstructGeant4World() {
 
         names.push_back(name);
 
-        G4Material* material = nist->FindOrBuildMaterial("G4_He");
-
         // Box cell
         auto solidCell = new G4Box(name, dims[0], dims[1], dims[2]);
 
@@ -95,20 +97,20 @@ ConstructGeant4World() {
     }
   }
 
+  // Write GDML file
+  G4GDMLParser parser;
+  parser.SetOutputFileOverwrite(true);
+  parser.Write(gdmlPath.string(), physWorld);
+
   return std::make_tuple(physWorld, names);
 }
 
 auto gctx = Acts::GeometryContext();
 
+// Construct the world
+auto [physWorld, names] = ConstructGeant4World();
+
 BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
-  // Construct the world
-  auto [physWorld, names] = ConstructGeant4World();
-
-  // Write GDML file
-  std::filesystem::path gdmlPath = "test.gdml";
-  G4GDMLParser parser;
-  parser.Write(gdmlPath.string(), physWorld);
-
   // Default template parameters are fine
   // when using names as identifiers
   auto spFullCfg = Acts::Experimental::Geant4SurfaceProvider<>::Config();
@@ -181,19 +183,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
                         pos);
     }
   }
-
-  std::filesystem::remove(gdmlPath);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
-  // Construct the world
-  auto [physWorld, names] = ConstructGeant4World();
-
-  // Write GDML file
-  std::filesystem::path gdmlPath = "test.gdml";
-  G4GDMLParser parser;
-  parser.Write(gdmlPath.string(), physWorld);
-
   // 1D selection -- select only the second row
   auto sp1DCfg = Acts::Experimental::Geant4SurfaceProvider<1>::Config();
   sp1DCfg.gdmlPath = gdmlPath.string();
@@ -219,7 +211,8 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
     for (int nChip = 0; nChip < nChips; nChip++) {
       int sign = (nArm == 0) ? 1 : -1;
       double posX = sign * (armOffset + nChip * cm);
-      double posY = 0, posZ = 10;
+      double posY = 0;
+      double posZ = 10;
       Acts::Vector3 pos = Acts::Vector3(posX, posY, posZ);
 
       BOOST_CHECK_EQUAL(s1D.at(nChips * nArm + nChip)->center(gctx), pos);
@@ -290,13 +283,12 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   BOOST_CHECK_EQUAL(s2DPos.size(), nChips);
   for (int nChip = 0; nChip < nChips; nChip++) {
     double posX = armOffset + nChip * cm;
-    double posY = 0, posZ = 10;
+    double posY = 0;
+    double posZ = 10;
     Acts::Vector3 pos = Acts::Vector3(posX, posY, posZ);
 
     BOOST_CHECK_EQUAL(s2DPos.at(nChip)->center(gctx), pos);
   }
-
-  std::filesystem::remove(gdmlPath);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
