@@ -727,6 +727,17 @@ class Gx2Fitter {
     ACTS_VERBOSE("final params:\n" << params);
     /// Finish Fitting /////////////////////////////////////////////////////////
 
+    // Since currently most of our tracks converge in 4-5 updates, we want to
+    // set nUpdateMax higher than that to guarantee convergence for most tracks.
+    // In cases, where we set a smaller nUpdateMax, it's because we want to
+    // investigate the behaviour of the fitter before it converges, like in some
+    // unit-tests.
+    if (nUpdate == gx2fOptions.nUpdateMax && gx2fOptions.nUpdateMax > 5) {
+      ACTS_INFO("Did not converge in " << gx2fOptions.nUpdateMax
+                                       << " updates.");
+      return Experimental::GlobalChiSquareFitterError::DidNotConverge;
+    }
+
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
     bool aMatrixIsInvertible = false;
