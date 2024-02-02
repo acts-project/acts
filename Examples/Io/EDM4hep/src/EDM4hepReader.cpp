@@ -9,7 +9,11 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples//EventData/SimHit.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
@@ -39,6 +43,33 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
   m_eventsRange = std::make_pair(0, m_reader.getEntries("events"));
 
   m_outputParticles.initialize(m_cfg.outputParticles);
+
+  m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
+    const auto* detElement = dynamic_cast<const Acts::DD4hepDetectorElement*>(
+        surface->associatedDetectorElement());
+
+    if (detElement == nullptr) {
+      ACTS_ERROR("Surface has no associated detector element");
+      return;
+    }
+
+    // detElement->sourceElement().readout();
+    ACTS_INFO(
+        "- ACTS surface center: " << surface->center(Acts::GeometryContext{}));
+
+    const auto translation = detElement->sourceElement()
+                                 .nominal()
+                                 .worldTransformation()
+                                 .GetTranslation();
+    Acts::Vector3 position;
+    position << translation[0], translation[1], translation[2];
+    position *= 10;
+    ACTS_INFO("- DD4hep surface position: " << position.transpose());
+    ACTS_INFO("- DD4hep surface id " << detElement->sourceElement().id());
+    ACTS_INFO("- DD4hep surface key " << detElement->sourceElement().key());
+
+    m_surfaceMap.insert({detElement->sourceElement().key(), surface});
+  });
 }
 
 std::string EDM4hepReader::name() const {
@@ -212,19 +243,53 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
 
     for (const auto& hit : inputHits) {
-      auto simHit = EDM4hepUtil::readSimHit(hit, [&](const auto& inParticle) {
-        ACTS_VERBOSE("SimHit has source particle: "
-                     << hit.getMCParticle().getObjectID().index);
-        auto it = edm4hepParticleMap.find(inParticle.getObjectID().index);
-        if (it == edm4hepParticleMap.end()) {
-          ACTS_ERROR("SimHit has source particle that we did not see before");
-          return SimBarcode{};
-        }
-        const auto& particle = unordered.at(it->second);
-        ACTS_VERBOSE("- " << inParticle.getObjectID().index << " -> "
-                          << particle.particleId());
-        return particle.particleId();
-      });
+      auto simHit = EDM4hepUtil::readSimHit(
+          hit,
+          [&](const auto& inParticle) {
+            ACTS_VERBOSE("SimHit has source particle: "
+                         << hit.getMCParticle().getObjectID().index);
+            auto it = edm4hepParticleMap.find(inParticle.getObjectID().index);
+            if (it == edm4hepParticleMap.end()) {
+              ACTS_ERROR(
+                  "SimHit has source particle that we did not see before");
+              return SimBarcode{};
+            }
+            const auto& particle = unordered.at(it->second);
+            ACTS_VERBOSE("- " << inParticle.getObjectID().index << " -> "
+                              << particle.particleId());
+            return particle.particleId();
+          },
+          [&](std::uint64_t cellId) {
+            ACTS_VERBOSE("CellID: " << cellId);
+
+            const auto& vm = m_cfg.dd4hepDetector->geometryService->detector()
+                                 .volumeManager();
+
+            const auto detElement = vm.lookupDetElement(cellId);
+
+            ACTS_VERBOSE(" -> detElement: " << detElement.name());
+            ACTS_VERBOSE("   -> id: " << detElement.id());
+            ACTS_VERBOSE("   -> key: " << detElement.key());
+
+            Acts::Vector3 position;
+            position << detElement.nominal()
+                            .worldTransformation()
+                            .GetTranslation()[0],
+                detElement.nominal().worldTransformation().GetTranslation()[1],
+                detElement.nominal().worldTransformation().GetTranslation()[2];
+            position *= 10;
+
+            ACTS_VERBOSE("   -> detElement position: " << position.transpose());
+
+            auto it = m_surfaceMap.find(detElement.key());
+            if (it == m_surfaceMap.end()) {
+              ACTS_ERROR("Unable to find surface for detElement "
+                         << detElement.name() << " with cellId " << cellId);
+            }
+            const auto* surface = it->second;
+            ACTS_VERBOSE("   -> surface: " << surface->geometryId());
+            return surface->geometryId();
+          });
     }
   }
 

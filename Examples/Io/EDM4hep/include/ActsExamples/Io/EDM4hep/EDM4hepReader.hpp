@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -18,10 +19,15 @@
 #include <memory>
 #include <string>
 
+#include <DD4hep/DetElement.h>
 #include <edm4hep/MCParticleCollection.h>
 #include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
+
+namespace DD4hep {
+struct DD4hepDetector;
+}
 
 /// Read particles from EDM4hep.
 ///
@@ -43,6 +49,12 @@ class EDM4hepReader final : public IReader {
     /// Directory into which to write graphviz files for particles
     /// Empty string means no output
     std::string graphvizOutput = "";
+
+    /// DD4hep detector for cellID resolution.
+    std::shared_ptr<DD4hep::DD4hepDetector> dd4hepDetector;
+
+    /// Tracking geometry for cellID resolution.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   using ParentRelationship = std::unordered_map<std::size_t, std::size_t>;
@@ -81,6 +93,8 @@ class EDM4hepReader final : public IReader {
   Config m_cfg;
   std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  std::unordered_map<unsigned int, const Acts::Surface*> m_surfaceMap;
 
   podio::ROOTFrameReader m_reader;
 
