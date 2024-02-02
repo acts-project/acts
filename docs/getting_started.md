@@ -268,8 +268,14 @@ components.
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_PODIO             | Build Podio plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                |
 | ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
-| ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
-| ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
+| ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                         
+
+| ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`  
+                                                              |
+| ACTS_BUILD_PLUGIN_GEOMODEL          | Build GeoModel plugin<br> type: `bool`, default: `OFF`                                                                                                         
+
+| ACTS_USE_SYSTEM_GEOMODEL            | Use a system-provided GeoModel<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`  
+                                                                      |
 | ACTS_BUILD_PLUGIN_EXATRKX           | Build the Exa.TrkX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
 | ACTS_EXATRKX_ENABLE_ONNX            | Build the Onnx backend for the exatrkx<br>plugin<br> type: `bool`, default: `OFF`                                                                                                                                                  |
 | ACTS_EXATRKX_ENABLE_TORCH           | Build the torchscript backend for the<br>exatrkx plugin<br> type: `bool`, default: `ON`                                                                                                                                            |
