@@ -22,8 +22,7 @@ namespace Acts {
 /// @brief Convert Acts binning value to Geant4 axis
 /// as Geant4 uses a different axis convention
 /// @param bv the Acts binning value
-const EAxis& 
-binToGeant4Axis(const Acts::BinningValue& bv) {
+const EAxis& binToGeant4Axis(const Acts::BinningValue& bv) {
   switch (bv) {
     case Acts::BinningValue::binX:
       return EAxis::kXAxis;
