@@ -123,7 +123,7 @@ class VolumeBounds {
   /// @note This is the default implementation that
   /// returns the bounding box binning. Individual shapes
   /// should override this method
-  virtual std::vector<Acts::BinningValue> canonicalBinning() const {
+  virtual const std::vector<Acts::BinningValue>& canonicalBinning() const {
     return {Acts::binX, Acts::binY, Acts::binZ};
   };
 
