@@ -111,7 +111,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   };
 
   /// Destructor
-  ~Geant4SurfaceProvider() = default;
+  ~Geant4SurfaceProvider() final = default;
 
   std::vector<std::shared_ptr<Acts::Surface>> surfaces(
       [[maybe_unused]] const Acts::GeometryContext& gctx) const override {

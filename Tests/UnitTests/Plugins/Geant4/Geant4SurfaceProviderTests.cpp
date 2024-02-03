@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   sp2DPosCfg.gdmlPath = gdmlPath.string();
   std::map<unsigned int, std::tuple<double, double>> ranges;
 
-  std::array<unsigned int, 3> g4Axes;
+  std::array<unsigned int, 3> g4Axes{0};
   for (auto& bv : {Acts::binX, Acts::binY, Acts::binZ}) {
     g4Axes[bv] = Acts::binToGeant4Axis(bv);
   }
