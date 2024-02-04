@@ -29,7 +29,6 @@ class SurfaceContainer {
     SurfacePtrsContainer surfacePtrs;
     void operator()(const Acts::Surface* surface) {
       surfacePtrs.push_back(surface);
-      std::cout << "Surface added, ID : " << surface->geometryId() << std::endl;
     }
   };
 
