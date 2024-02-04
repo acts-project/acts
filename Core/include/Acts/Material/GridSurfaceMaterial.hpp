@@ -79,7 +79,7 @@ struct IndexedMaterialAccessor {
   }
 };
 
-/// @brief GridSurfaceMaterialBase
+/// @brief GridSurfaceMaterialT
 ///
 /// It extends the @c ISurfaceMaterial base class and allows to create
 /// material maps associated to a grid structure
@@ -90,7 +90,7 @@ struct IndexedMaterialAccessor {
 /// It is templated on the material type and a slab accessor type in order
 /// to allow it to be used in the material recording as well.
 template <typename grid_t, typename material_accessor_t = GridMaterialAccessor>
-class GridSurfaceMaterialBase : public ISurfaceMaterial {
+class GridSurfaceMaterialT : public ISurfaceMaterial {
  public:
   /// Broadcast grid type
   using grid_type = grid_t;
@@ -104,11 +104,11 @@ class GridSurfaceMaterialBase : public ISurfaceMaterial {
   /// @param gcasts global casts -> casts a grid position from global
   /// @param laccessors local accessors -> accessors to the local grid
   /// @param transform  transform from global frame into map frame
-  GridSurfaceMaterialBase(grid_type&& grid,
-                          material_accessor_type&& materialAccessor,
-                          const std::vector<BinningValue>& gcasts,
-                          const std::vector<std::size_t>& laccessors,
-                          const Transform3& transform = Transform3::Identity())
+  GridSurfaceMaterialT(grid_type&& grid,
+                       material_accessor_type&& materialAccessor,
+                       const std::vector<BinningValue>& gcasts,
+                       const std::vector<std::size_t>& laccessors,
+                       const Transform3& transform = Transform3::Identity())
       : m_grid(std::move(grid)),
         m_materialAccessor(std::move(materialAccessor)),
         m_globalCasts(gcasts),
@@ -186,10 +186,10 @@ class GridSurfaceMaterialBase : public ISurfaceMaterial {
 // Indexed Surface material
 template <typename grid_type>
 using IndexedSurfaceMaterial =
-    GridSurfaceMaterialBase<grid_type, IndexedMaterialAccessor>;
+    GridSurfaceMaterialT<grid_type, IndexedMaterialAccessor>;
 
 // Grid Surface material
 template <typename grid_type>
-using GridSurfaceMaterial = GridSurfaceMaterialBase<grid_type>;
+using GridSurfaceMaterial = GridSurfaceMaterialT<grid_type>;
 
 }  // namespace Acts
