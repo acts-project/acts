@@ -128,6 +128,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("covYT", &m_covYT);
     m_outputTree->Branch("covZT", &m_covZT);
 
+    m_outputTree->Branch("sumPt2", &m_sumPt2);
+
     // Branches related to track momenta at vertex
     m_outputTree->Branch("trk_truthPhi", &m_truthPhi);
     m_outputTree->Branch("trk_truthTheta", &m_truthTheta);
@@ -592,6 +594,16 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 Acts::FreeIndices::eFreePos1, Acts::FreeIndices::eFreeTime));
             m_covZT.push_back(vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreeTime));
+
+            double sumPt2 = 0;
+            for (const auto& trk : tracksAtVtx) {
+              if (trk.trackWeight > m_cfg.minTrkWeight) {
+                double pt = trk.originalParams.as<Acts::BoundTrackParameters>()
+                                ->transverseMomentum();
+                sumPt2 += pt * pt;
+              }
+            }
+            m_sumPt2.push_back(sumPt2);
 
             m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
             m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
