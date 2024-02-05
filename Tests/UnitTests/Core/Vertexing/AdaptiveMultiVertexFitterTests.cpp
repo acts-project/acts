@@ -148,9 +148,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   double resTh = resAngDist(gen);
   double resQp = resQoPDist(gen);
 
-  std::vector<Vertex<BoundTrackParameters>> vtxList;
+  std::vector<Vertex> vtxList;
   for (auto& vtxPos : vtxPosVec) {
-    Vertex<BoundTrackParameters> vtx(vtxPos);
+    Vertex vtx(vtxPos);
     // Set some vertex covariance
     SquareMatrix4 posCovariance(SquareMatrix4::Identity());
     vtx.setFullCovariance(posCovariance);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     vtxList.push_back(vtx);
   }
 
-  std::vector<Vertex<BoundTrackParameters>*> vtxPtrList;
+  std::vector<Vertex*> vtxPtrList;
   ACTS_DEBUG("All vertices in test case:");
   int cv = 0;
   for (auto& vtx : vtxList) {
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   // Copy vertex seeds from state.vertexCollection to new
   // list in order to be able to compare later
-  std::vector<Vertex<BoundTrackParameters>> seedListCopy = vtxList;
+  std::vector<Vertex> seedListCopy = vtxList;
 
   auto res1 =
       fitter.addVtxToFit(state, vtxList.at(0), linearizer, vertexingOptions);
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   // Seed position of the vertex
   Vector4 vtxSeedPos(0.0_mm, 0.0_mm, -1.4_mm, 0.0_ps);
 
-  Vertex<BoundTrackParameters> vtx(vtxSeedPos);
+  Vertex vtx(vtxSeedPos);
   // Set initial covariance matrix to a large value
   SquareMatrix4 initialCovariance(SquareMatrix4::Identity() * 1e+8);
   vtx.setFullCovariance(initialCovariance);
@@ -596,13 +596,13 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   // Prepare first vertex
   Vector3 vtxPos1(0.15_mm, 0.15_mm, 2.9_mm);
-  Vertex<BoundTrackParameters> vtx1(vtxPos1);
+  Vertex vtx1(vtxPos1);
 
   // Add to vertex list
   state.vertexCollection.push_back(&vtx1);
 
   // The constraint vtx for vtx1
-  Vertex<BoundTrackParameters> vtx1Constr(vtxPos1);
+  Vertex vtx1Constr(vtxPos1);
   vtx1Constr.setFullCovariance(covConstr);
   vtx1Constr.setFitQuality(0, -3);
 
@@ -623,13 +623,13 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   // Prepare second vertex
   Vector3 vtxPos2(0.3_mm, -0.2_mm, -4.8_mm);
-  Vertex<BoundTrackParameters> vtx2(vtxPos2);
+  Vertex vtx2(vtxPos2);
 
   // Add to vertex list
   state.vertexCollection.push_back(&vtx2);
 
   // The constraint vtx for vtx2
-  Vertex<BoundTrackParameters> vtx2Constr(vtxPos2);
+  Vertex vtx2Constr(vtxPos2);
   vtx2Constr.setFullCovariance(covConstr);
   vtx2Constr.setFitQuality(0, -3);
 

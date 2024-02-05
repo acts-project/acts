@@ -91,7 +91,7 @@ class AdaptiveGridDensityVertexFinder {
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex<InputTrack_t>>> find(
+  Result<std::vector<Vertex>> find(
       const std::vector<InputTrack>& trackVector,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
