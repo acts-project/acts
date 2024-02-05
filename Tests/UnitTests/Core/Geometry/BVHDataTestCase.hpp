@@ -71,7 +71,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   // sort by path length
-  std::sort(hits.begin(), hits.end(), SurfaceIntersection::forwardOrder);
+  std::sort(hits.begin(), hits.end(), SurfaceIntersection::pathLengthOrder);
   std::vector<const Surface*> expHits;
   expHits.reserve(hits.size());
   for (const auto& hit : hits) {
