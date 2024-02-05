@@ -159,6 +159,11 @@ struct SurfaceReached {
   }
 };
 
+struct ForcedSurfaceReached : SurfaceReached {
+  ForcedSurfaceReached()
+      : SurfaceReached(-std::numeric_limits<double>::max()) {}
+};
+
 /// This is the condition that the end of World has been reached
 /// it then triggers an propagation abort
 struct EndOfWorldReached {

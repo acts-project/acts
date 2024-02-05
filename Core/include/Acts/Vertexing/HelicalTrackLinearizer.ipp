@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
@@ -39,7 +40,9 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
-  auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
+  auto result = m_cfg.propagator->template propagate<
+      BoundTrackParameters, propagator_options_t, ForcedSurfaceReached>(
+      params, perigeeSurface, pOptions);
   if (!result.ok()) {
     return result.error();
   }
