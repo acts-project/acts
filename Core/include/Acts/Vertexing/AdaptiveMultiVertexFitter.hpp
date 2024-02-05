@@ -57,7 +57,7 @@ class AdaptiveMultiVertexFitter {
         : ipState(field.makeCache(magContext)),
           linearizerState(field.makeCache(magContext)) {}
     // Vertex collection to be fitted
-    std::vector<Vertex<InputTrack_t>*> vertexCollection;
+    std::vector<Vertex*> vertexCollection;
 
     // Annealing state
     AnnealingUtility::State annealingState;
@@ -70,25 +70,24 @@ class AdaptiveMultiVertexFitter {
 
     // Map to store vertices information
     // @TODO Does this have to be a mutable pointer?
-    std::map<Vertex<InputTrack_t>*, VertexInfo<InputTrack_t>> vtxInfoMap;
+    std::map<Vertex*, VertexInfo<InputTrack_t>> vtxInfoMap;
 
-    std::multimap<InputTrack, Vertex<InputTrack_t>*> trackToVerticesMultiMap;
+    std::multimap<InputTrack, Vertex*> trackToVerticesMultiMap;
 
-    std::map<std::pair<InputTrack, Vertex<InputTrack_t>*>, TrackAtVertex>
-        tracksAtVerticesMap;
+    std::map<std::pair<InputTrack, Vertex*>, TrackAtVertex> tracksAtVerticesMap;
 
     /// @brief Default State constructor
     State() = default;
 
     // Adds a vertex to trackToVerticesMultiMap
-    void addVertexToMultiMap(Vertex<InputTrack_t>& vtx) {
+    void addVertexToMultiMap(Vertex& vtx) {
       for (auto trk : vtxInfoMap[&vtx].trackLinks) {
         trackToVerticesMultiMap.emplace(trk, &vtx);
       }
     }
 
     // Removes a vertex from trackToVerticesMultiMap
-    void removeVertexFromMultiMap(Vertex<InputTrack_t>& vtx) {
+    void removeVertexFromMultiMap(Vertex& vtx) {
       for (auto iter = trackToVerticesMultiMap.begin();
            iter != trackToVerticesMultiMap.end();) {
         if (iter->second == &vtx) {
@@ -99,7 +98,7 @@ class AdaptiveMultiVertexFitter {
       }
     }
 
-    Result<void> removeVertexFromCollection(Vertex<InputTrack_t>& vtxToRemove,
+    Result<void> removeVertexFromCollection(Vertex& vtxToRemove,
                                             const Logger& logger) {
       auto it = std::find(vertexCollection.begin(), vertexCollection.end(),
                           &vtxToRemove);
@@ -202,8 +201,7 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return Result<void> object
   Result<void> addVtxToFit(
-      State& state, Vertex<InputTrack_t>& newVertex,
-      const Linearizer_t& linearizer,
+      State& state, Vertex& newVertex, const Linearizer_t& linearizer,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Performs a simultaneous fit of all vertices in
@@ -239,9 +237,8 @@ class AdaptiveMultiVertexFitter {
   /// @param verticesVec Vector of vertices to search
   ///
   /// @return True if vtx is already in verticesVec
-  bool isAlreadyInList(
-      Vertex<InputTrack_t>* vtx,
-      const std::vector<Vertex<InputTrack_t>*>& verticesVec) const;
+  bool isAlreadyInList(Vertex* vtx,
+                       const std::vector<Vertex*>& verticesVec) const;
 
   /// @brief 1) Calls ImpactPointEstimator::estimate3DImpactParameters
   /// for all tracks that are associated with vtx (i.e., all elements
@@ -252,7 +249,7 @@ class AdaptiveMultiVertexFitter {
   /// @param vtx Vertex object
   /// @param vertexingOptions Vertexing options
   Result<void> prepareVertexForFit(
-      State& state, Vertex<InputTrack_t>* vtx,
+      State& state, Vertex* vtx,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Sets the vertexCompatibility for all TrackAtVertex objects
@@ -262,7 +259,7 @@ class AdaptiveMultiVertexFitter {
   /// @param currentVtx Current vertex
   /// @param vertexingOptions Vertexing options
   Result<void> setAllVertexCompatibilities(
-      State& state, Vertex<InputTrack_t>* currentVtx,
+      State& state, Vertex* currentVtx,
       const VertexingOptions<input_track_t>& vertexingOptions) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)

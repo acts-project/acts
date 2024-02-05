@@ -55,7 +55,7 @@ struct BilloirVertex {
 }  // namespace Acts::detail
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<Acts::Vertex<input_track_t>>
+Acts::Result<Acts::Vertex>
 Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     const std::vector<InputTrack>& paramVector, const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions,
@@ -64,7 +64,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
   double chi2 = std::numeric_limits<double>::max();
 
   if (nTracks == 0) {
-    return Vertex<input_track_t>(Vector3(0., 0., 0.));
+    return Vertex(Vector3(0., 0., 0.));
   }
 
   // Set number of degrees of freedom following Eq. 8.28 from Ref. (2):
@@ -92,7 +92,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
   Vector4 linPoint = vertexingOptions.constraint.fullPosition();
-  Vertex<input_track_t> fittedVertex;
+  Vertex fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
     billoirTracks.clear();
