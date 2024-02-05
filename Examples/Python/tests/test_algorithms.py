@@ -1,7 +1,6 @@
 import pytest
 
 from acts.examples import (
-    TutorialVertexFinderAlgorithm,
     AdaptiveMultiVertexFinderAlgorithm,
     VertexFitterAlgorithm,
     IterativeVertexFinderAlgorithm,
@@ -35,7 +34,6 @@ from helpers import geant4Enabled, hepmc3Enabled
 @pytest.mark.parametrize(
     "alg",
     [
-        TutorialVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,

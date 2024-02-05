@@ -72,11 +72,11 @@ class AdaptiveGridDensityVertexFinder {
     DensityMap mainDensityMap;
 
     // Map from input track to corresponding track density map
-    std::unordered_map<const InputTrack_t*, DensityMap> trackDensities;
+    std::unordered_map<InputTrack, DensityMap> trackDensities;
 
     // Store tracks that have been removed from track collection. These
     // tracks will be removed from the main grid
-    std::vector<const InputTrack_t*> tracksToRemove;
+    std::vector<InputTrack> tracksToRemove;
 
     bool isInitialized = false;
   };
@@ -91,8 +91,8 @@ class AdaptiveGridDensityVertexFinder {
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& trackVector,
+  Result<std::vector<Vertex>> find(
+      const std::vector<InputTrack>& trackVector,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
 
@@ -103,7 +103,9 @@ class AdaptiveGridDensityVertexFinder {
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   AdaptiveGridDensityVertexFinder(const Config& cfg)
-      : m_cfg(cfg), m_extractParameters([](T params) { return params; }) {}
+      : m_cfg(cfg), m_extractParameters([](const InputTrack& params) {
+          return *params.as<BoundTrackParameters>();
+        }) {}
 
   /// @brief Default constructor used if InputTrack_t type ==
   /// BoundTrackParameters
@@ -121,7 +123,7 @@ class AdaptiveGridDensityVertexFinder {
   /// object
   AdaptiveGridDensityVertexFinder(
       const Config& cfg,
-      const std::function<BoundTrackParameters(InputTrack_t)>& func)
+      const std::function<BoundTrackParameters(const InputTrack&)>& func)
       : m_cfg(cfg), m_extractParameters(func) {}
 
   /// @brief Constructor for user-defined InputTrack_t type =!
@@ -130,7 +132,7 @@ class AdaptiveGridDensityVertexFinder {
   /// @param func Function extracting BoundTrackParameters from InputTrack_t
   /// object
   AdaptiveGridDensityVertexFinder(
-      const std::function<BoundTrackParameters(InputTrack_t)>& func)
+      const std::function<BoundTrackParameters(const InputTrack&)>& func)
       : m_extractParameters(func) {}
 
  private:
@@ -147,7 +149,7 @@ class AdaptiveGridDensityVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 };
 
 }  // namespace Acts
