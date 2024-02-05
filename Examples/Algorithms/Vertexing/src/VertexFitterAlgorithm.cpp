@@ -99,7 +99,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       }
     } else {
       // Vertex constraint
-      Acts::Vertex<Acts::BoundTrackParameters> theConstraint;
+      Acts::Vertex theConstraint;
 
       theConstraint.setFullCovariance(m_cfg.constraintCov);
       theConstraint.setFullPosition(m_cfg.constraintPos);

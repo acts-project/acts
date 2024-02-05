@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
                                                           magFieldContext);
-  Vertex<BoundTrackParameters> constraintVtx;
+  Vertex constraintVtx;
   constraintVtx.setCovariance(SquareMatrix3::Identity());
   vertexingOptions.constraint = constraintVtx;
 

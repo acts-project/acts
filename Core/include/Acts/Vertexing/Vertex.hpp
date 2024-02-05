@@ -14,12 +14,7 @@
 namespace Acts {
 
 /// @class Vertex
-///
 /// @brief Class for storing vertex objects
-///
-/// @tparam input_track_t Track object type
-///
-template <typename input_track_t>
 class Vertex {
  public:
   /// @brief Default constructor

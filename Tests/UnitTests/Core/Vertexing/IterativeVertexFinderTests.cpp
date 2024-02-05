@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     std::vector<InputTrack> inputTracks;
 
     // Vector to be filled with truth vertices for later comparison
-    std::vector<Vertex<BoundTrackParameters>> trueVertices;
+    std::vector<Vertex> trueVertices;
 
     // start creating event with nVertices vertices
     std::uint32_t nVertices = nVertexDist(gen);
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       double z = vZDist(gen);
 
       // True vertex
-      Vertex<BoundTrackParameters> trueV(Vector3(x, y, z));
+      Vertex trueV(Vector3(x, y, z));
       std::vector<TrackAtVertex> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     std::vector<InputTrack> inputTracks;
 
     // Vector to be filled with truth vertices for later comparison
-    std::vector<Vertex<InputTrack>> trueVertices;
+    std::vector<Vertex> trueVertices;
 
     // start creating event with nVertices vertices
     std::uint32_t nVertices = nVertexDist(gen);
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       double z = vZDist(gen);
 
       // True vertex
-      Vertex<InputTrack> trueV(Vector3(x, y, z));
+      Vertex trueV(Vector3(x, y, z));
       std::vector<TrackAtVertex> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
     inputTracks.emplace_back(&trk);
   }
 
-  Vertex<BoundTrackParameters> beamSpot = std::get<BeamSpotData>(csvData);
+  Vertex beamSpot = std::get<BeamSpotData>(csvData);
   // Set time covariance
   SquareMatrix4 fullCovariance = SquareMatrix4::Zero();
   fullCovariance.topLeftCorner<3, 3>() = beamSpot.covariance();
@@ -627,7 +627,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   }
 
   // Retrieve vertices found by vertex finder
-  // std::vector<Vertex<BoundTrackParameters>> allVertices = *findResult;
+  // std::vector<Vertex> allVertices = *findResult;
 
   // Test expected outcomes from athena implementation
   // Number of reconstructed vertices
