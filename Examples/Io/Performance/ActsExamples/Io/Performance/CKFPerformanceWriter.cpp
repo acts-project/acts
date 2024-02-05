@@ -123,7 +123,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
       "Duplicate rate with particles (nDuplicateParticles/nTrueParticles) = "
       << duplicationRate_particle);
 
-  auto write_float = [&](float f, const char* name) {
+  auto writeFloat = [&](float f, const char* name) {
     TVectorF v(1);
     v[0] = f;
     m_outputFile->WriteObject(&v, name);
@@ -135,12 +135,12 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
     m_fakeRatePlotTool.write(m_fakeRatePlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
     m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
-    write_float(eff_tracks, "eff_tracks");
-    write_float(fakeRate_tracks, "fakerate_tracks");
-    write_float(duplicationRate_tracks, "duplicaterate_tracks");
-    write_float(eff_particle, "eff_particles");
-    write_float(fakeRate_particle, "fakerate_particles");
-    write_float(duplicationRate_particle, "duplicaterate_particles");
+    writeFloat(eff_tracks, "eff_tracks");
+    writeFloat(fakeRate_tracks, "fakerate_tracks");
+    writeFloat(duplicationRate_tracks, "duplicaterate_tracks");
+    writeFloat(eff_particle, "eff_particles");
+    writeFloat(fakeRate_particle, "fakerate_particles");
+    writeFloat(duplicationRate_particle, "duplicaterate_particles");
 
     if (m_matchingTree != nullptr) {
       m_matchingTree->Write();

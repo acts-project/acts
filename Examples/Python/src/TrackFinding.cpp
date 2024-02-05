@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
+#include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -231,7 +232,7 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SpacePointGridConfig;
+    using Config = Acts::CylindricalSpacePointGridConfig;
     auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -251,7 +252,7 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Options = Acts::SpacePointGridOptions;
+    using Options = Acts::CylindricalSpacePointGridOptions;
     auto c = py::class_<Options>(m, "SpacePointGridOptions").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Options);
@@ -283,6 +284,9 @@ void addTrackFinding(Context& ctx) {
       geometrySelection, inputMeasurements, subRegions, nLayers, xMin, xMax,
       yMin, yMax, houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
       localMaxWindowSize, kA);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
+                                "MuonHoughSeeder", inSimHits, inDriftCircles);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
