@@ -99,6 +99,15 @@ def run_vertexing(fitter, mu, events):
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T),
             seedingAlgorithm=SeedingAlgorithm.Default,
+            initialSigmas=[
+                1 * u.mm,
+                1 * u.mm,
+                1 * u.degree,
+                1 * u.degree,
+                0.1 / u.GeV,
+                1 * u.ns,
+            ],
+            initialVarInflation=[1.0] * 6,
             geoSelectionConfigFile=setup.geoSel,
         )
 

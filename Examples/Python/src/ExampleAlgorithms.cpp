@@ -81,6 +81,14 @@ void addExampleAlgorithms(Context& ctx) {
                     .def(py::init<const EtaBinnedConfig&>(), py::arg("config"));
 
     {
+      auto mc = py::class_<Acts::TrackSelector::MeasurementCounter>(
+                    tool, "MeasurementCounter")
+                    .def(py::init<>())
+                    .def("addCounter",
+                         &Acts::TrackSelector::MeasurementCounter::addCounter);
+    }
+
+    {
       auto c = py::class_<Config>(tool, "Config").def(py::init<>());
 
       patchKwargsConstructor(c);
@@ -101,6 +109,7 @@ void addExampleAlgorithms(Context& ctx) {
       ACTS_PYTHON_MEMBER(ptMin);
       ACTS_PYTHON_MEMBER(ptMax);
       ACTS_PYTHON_MEMBER(minMeasurements);
+      ACTS_PYTHON_MEMBER(measurementCounter);
       ACTS_PYTHON_STRUCT_END();
 
       pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);

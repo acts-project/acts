@@ -8,18 +8,12 @@
 
 #pragma once
 
-#include "Acts/Surfaces/Surface.hpp"
-
-#if defined(__cpp_concepts)
-#include <concepts>
-
+#include <type_traits>
 namespace Acts {
+template <typename stepper_t, typename navigator_t>
+struct SupportsBoundParameters : public std::false_type {};
 
-template <typename T>
-concept SurfaceVisitor = requires(T v) {
-  {v(std::declval<const Surface*>())};
-};
-
+template <typename stepper_t, typename navigator_t>
+constexpr bool SupportsBoundParameters_v =
+    SupportsBoundParameters<stepper_t, navigator_t>::value;
 }  // namespace Acts
-
-#endif

@@ -228,8 +228,8 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   WriteDataHandle<std::vector<Acts::Vector4>> m_outputRecoVtxParameters{
       this, "OutputRecoVertices"};
 
-  WriteDataHandle<Acts::Vertex<Acts::BoundTrackParameters>>
-      m_outputBeamspotConstraint{this, "OutputBeamsspotConstraint"};
+  WriteDataHandle<Acts::Vertex> m_outputBeamspotConstraint{
+      this, "OutputBeamsspotConstraint"};
 };
 
 }  // namespace ActsExamples

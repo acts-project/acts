@@ -148,9 +148,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   double resTh = resAngDist(gen);
   double resQp = resQoPDist(gen);
 
-  std::vector<Vertex<BoundTrackParameters>> vtxList;
+  std::vector<Vertex> vtxList;
   for (auto& vtxPos : vtxPosVec) {
-    Vertex<BoundTrackParameters> vtx(vtxPos);
+    Vertex vtx(vtxPos);
     // Set some vertex covariance
     SquareMatrix4 posCovariance(SquareMatrix4::Identity());
     vtx.setFullCovariance(posCovariance);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     vtxList.push_back(vtx);
   }
 
-  std::vector<Vertex<BoundTrackParameters>*> vtxPtrList;
+  std::vector<Vertex*> vtxPtrList;
   ACTS_DEBUG("All vertices in test case:");
   int cv = 0;
   for (auto& vtx : vtxList) {
@@ -213,22 +213,21 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
        iTrack++) {
     // Index of current vertex
     int vtxIdx = (int)(iTrack / nTracksPerVtx);
-    state.vtxInfoMap[&(vtxList[vtxIdx])].trackLinks.push_back(
-        &(allTracks[iTrack]));
+
+    InputTrack inputTrack{&allTracks[iTrack]};
+
+    state.vtxInfoMap[&(vtxList[vtxIdx])].trackLinks.push_back(inputTrack);
     state.tracksAtVerticesMap.insert(
-        std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList[vtxIdx])),
-                       TrackAtVertex<BoundTrackParameters>(
-                           1., allTracks[iTrack], &(allTracks[iTrack]))));
+        std::make_pair(std::make_pair(inputTrack, &(vtxList[vtxIdx])),
+                       TrackAtVertex(1., allTracks[iTrack], inputTrack)));
 
     // Use first track also for second vertex to let vtx1 and vtx2
     // share this track
     if (iTrack == 0) {
-      state.vtxInfoMap[&(vtxList.at(1))].trackLinks.push_back(
-          &(allTracks[iTrack]));
+      state.vtxInfoMap[&(vtxList.at(1))].trackLinks.push_back(inputTrack);
       state.tracksAtVerticesMap.insert(
-          std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList.at(1))),
-                         TrackAtVertex<BoundTrackParameters>(
-                             1., allTracks[iTrack], &(allTracks[iTrack]))));
+          std::make_pair(std::make_pair(inputTrack, &(vtxList.at(1))),
+                         TrackAtVertex(1., allTracks[iTrack], inputTrack)));
     }
   }
 
@@ -243,7 +242,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   ACTS_DEBUG("Checking all vertices linked to a single track:");
   for (auto& trk : allTracks) {
     ACTS_DEBUG("Track with ptr: " << &trk);
-    auto range = state.trackToVerticesMultiMap.equal_range(&trk);
+    auto range = state.trackToVerticesMultiMap.equal_range(InputTrack{&trk});
     for (auto vtxIter = range.first; vtxIter != range.second; ++vtxIter) {
       ACTS_DEBUG("\t used by vertex: " << vtxIter->second);
     }
@@ -251,7 +250,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   // Copy vertex seeds from state.vertexCollection to new
   // list in order to be able to compare later
-  std::vector<Vertex<BoundTrackParameters>> seedListCopy = vtxList;
+  std::vector<Vertex> seedListCopy = vtxList;
 
   auto res1 =
       fitter.addVtxToFit(state, vtxList.at(0), linearizer, vertexingOptions);
@@ -260,7 +259,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   for (auto& vtx : vtxPtrList) {
     c++;
     ACTS_DEBUG(c << ". vertex, with ptr: " << vtx);
-    for (auto& trk : state.vtxInfoMap[vtx].trackLinks) {
+    for (const auto& trk : state.vtxInfoMap[vtx].trackLinks) {
       ACTS_DEBUG("\t track ptr: " << trk);
     }
   }
@@ -268,7 +267,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   ACTS_DEBUG("Checking all vertices linked to a single track AFTER fit:");
   for (auto& trk : allTracks) {
     ACTS_DEBUG("Track with ptr: " << &trk);
-    auto range = state.trackToVerticesMultiMap.equal_range(&trk);
+    auto range = state.trackToVerticesMultiMap.equal_range(InputTrack{&trk});
     for (auto vtxIter = range.first; vtxIter != range.second; ++vtxIter) {
       ACTS_DEBUG("\t used by vertex: " << vtxIter->second);
     }
@@ -367,7 +366,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   // Seed position of the vertex
   Vector4 vtxSeedPos(0.0_mm, 0.0_mm, -1.4_mm, 0.0_ps);
 
-  Vertex<BoundTrackParameters> vtx(vtxSeedPos);
+  Vertex vtx(vtxSeedPos);
   // Set initial covariance matrix to a large value
   SquareMatrix4 initialCovariance(SquareMatrix4::Identity() * 1e+8);
   vtx.setFullCovariance(initialCovariance);
@@ -425,10 +424,10 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   for (const auto& trk : trks) {
     ACTS_DEBUG("Track parameters:\n" << trk);
     // Index of current vertex
-    state.vtxInfoMap[&vtx].trackLinks.push_back(&trk);
+    state.vtxInfoMap[&vtx].trackLinks.push_back(InputTrack{&trk});
     state.tracksAtVerticesMap.insert(
-        std::make_pair(std::make_pair(&trk, &vtx),
-                       TrackAtVertex<BoundTrackParameters>(1., trk, &trk)));
+        std::make_pair(std::make_pair(InputTrack{&trk}, &vtx),
+                       TrackAtVertex(1., trk, InputTrack{&trk})));
   }
 
   state.addVertexToMultiMap(vtx);
@@ -597,40 +596,40 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   // Prepare first vertex
   Vector3 vtxPos1(0.15_mm, 0.15_mm, 2.9_mm);
-  Vertex<BoundTrackParameters> vtx1(vtxPos1);
+  Vertex vtx1(vtxPos1);
 
   // Add to vertex list
   state.vertexCollection.push_back(&vtx1);
 
   // The constraint vtx for vtx1
-  Vertex<BoundTrackParameters> vtx1Constr(vtxPos1);
+  Vertex vtx1Constr(vtxPos1);
   vtx1Constr.setFullCovariance(covConstr);
   vtx1Constr.setFitQuality(0, -3);
 
   // Prepare vtx info for fitter
   VertexInfo<BoundTrackParameters> vtxInfo1;
+  vtxInfo1.seedPosition = vtxInfo1.linPoint;
   vtxInfo1.linPoint.setZero();
   vtxInfo1.linPoint.head<3>() = vtxPos1;
-  vtxInfo1.constraint = vtx1Constr;
+  vtxInfo1.constraint = std::move(vtx1Constr);
   vtxInfo1.oldPosition = vtxInfo1.linPoint;
-  vtxInfo1.seedPosition = vtxInfo1.linPoint;
 
   for (const auto& trk : params1) {
-    vtxInfo1.trackLinks.push_back(&trk);
+    vtxInfo1.trackLinks.push_back(InputTrack{&trk});
     state.tracksAtVerticesMap.insert(
-        std::make_pair(std::make_pair(&trk, &vtx1),
-                       TrackAtVertex<BoundTrackParameters>(1.5, trk, &trk)));
+        std::make_pair(std::make_pair(InputTrack{&trk}, &vtx1),
+                       TrackAtVertex(1.5, trk, InputTrack{&trk})));
   }
 
   // Prepare second vertex
   Vector3 vtxPos2(0.3_mm, -0.2_mm, -4.8_mm);
-  Vertex<BoundTrackParameters> vtx2(vtxPos2);
+  Vertex vtx2(vtxPos2);
 
   // Add to vertex list
   state.vertexCollection.push_back(&vtx2);
 
   // The constraint vtx for vtx2
-  Vertex<BoundTrackParameters> vtx2Constr(vtxPos2);
+  Vertex vtx2Constr(vtxPos2);
   vtx2Constr.setFullCovariance(covConstr);
   vtx2Constr.setFitQuality(0, -3);
 
@@ -638,15 +637,15 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   VertexInfo<BoundTrackParameters> vtxInfo2;
   vtxInfo2.linPoint.setZero();
   vtxInfo2.linPoint.head<3>() = vtxPos2;
-  vtxInfo2.constraint = vtx2Constr;
+  vtxInfo2.constraint = std::move(vtx2Constr);
   vtxInfo2.oldPosition = vtxInfo2.linPoint;
   vtxInfo2.seedPosition = vtxInfo2.linPoint;
 
   for (const auto& trk : params2) {
-    vtxInfo2.trackLinks.push_back(&trk);
+    vtxInfo2.trackLinks.push_back(InputTrack{&trk});
     state.tracksAtVerticesMap.insert(
-        std::make_pair(std::make_pair(&trk, &vtx2),
-                       TrackAtVertex<BoundTrackParameters>(1.5, trk, &trk)));
+        std::make_pair(std::make_pair(InputTrack{&trk}, &vtx2),
+                       TrackAtVertex(1.5, trk, InputTrack{&trk})));
   }
 
   state.vtxInfoMap[&vtx1] = std::move(vtxInfo1);

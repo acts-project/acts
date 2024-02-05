@@ -59,8 +59,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
       Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
   using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
-  using VertexCollection =
-      std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
+  using VertexCollection = std::vector<Acts::Vertex>;
 
   enum class SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
 
