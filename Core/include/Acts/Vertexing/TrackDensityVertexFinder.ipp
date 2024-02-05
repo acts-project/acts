@@ -8,9 +8,9 @@
 
 template <typename vfitter_t, typename track_density_t>
 auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
-    const std::vector<const InputTrack_t*>& trackVector,
+    const std::vector<InputTrack>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
-    State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
+    State& /*state*/) const -> Result<std::vector<Vertex>> {
   typename track_density_t::State densityState(trackVector.size());
 
   // Calculate z seed position
@@ -25,7 +25,7 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
   Vector4 seedPos =
       vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, 0.);
 
-  Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
+  Vertex returnVertex = Vertex(seedPos);
 
   SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
@@ -36,7 +36,7 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex<InputTrack_t>> seedVec{returnVertex};
+  std::vector<Vertex> seedVec{returnVertex};
 
   return seedVec;
 }

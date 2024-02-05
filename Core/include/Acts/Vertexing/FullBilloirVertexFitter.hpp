@@ -83,7 +83,9 @@ class FullBilloirVertexFitter {
                               getDefaultLogger("FullBilloirVertexFitter",
                                                Logging::INFO))
       : m_cfg(cfg),
-        extractParameters([](T params) { return params; }),
+        extractParameters([](const InputTrack& params) {
+          return *params.as<BoundTrackParameters>();
+        }),
         m_logger(std::move(logger)) {}
 
   /// @brief Constructor for user-defined input_track_t type =!
@@ -95,10 +97,12 @@ class FullBilloirVertexFitter {
   /// @param logger Logging instance
   FullBilloirVertexFitter(
       const Config& cfg,
-      std::function<BoundTrackParameters(input_track_t)> func,
+      std::function<BoundTrackParameters(const InputTrack&)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("FullBilloirVertexFitter", Logging::INFO))
-      : m_cfg(cfg), extractParameters(func), m_logger(std::move(logger)) {}
+      : m_cfg(cfg),
+        extractParameters(std::move(func)),
+        m_logger(std::move(logger)) {}
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
@@ -108,11 +112,10 @@ class FullBilloirVertexFitter {
   /// @param state The state object
   ///
   /// @return Fitted vertex
-  Result<Vertex<input_track_t>> fit(
-      const std::vector<const input_track_t*>& paramVector,
-      const linearizer_t& linearizer,
-      const VertexingOptions<input_track_t>& vertexingOptions,
-      State& state) const;
+  Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
+                     const linearizer_t& linearizer,
+                     const VertexingOptions<input_track_t>& vertexingOptions,
+                     State& state) const;
 
  private:
   /// Configuration object
@@ -122,7 +125,7 @@ class FullBilloirVertexFitter {
   /// input_track_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other input_track_t
   /// objects.
-  std::function<BoundTrackParameters(input_track_t)> extractParameters;
+  std::function<BoundTrackParameters(const InputTrack&)> extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

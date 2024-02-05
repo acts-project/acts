@@ -8,9 +8,9 @@
 
 template <typename vfitter_t>
 auto Acts::ZScanVertexFinder<vfitter_t>::find(
-    const std::vector<const InputTrack_t*>& trackVector,
+    const std::vector<InputTrack>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
-    State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
+    State& /*state*/) const -> Result<std::vector<Vertex>> {
   double ZResult = 0.;
   // Prepare the vector of points, on which the 3d mode has later to be
   // calculated
@@ -18,7 +18,7 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
 
   for (const auto& iTrk : trackVector) {
     // Extract BoundTrackParameters from InputTrack_t object
-    const BoundTrackParameters& params = m_extractParameters(*iTrk);
+    const BoundTrackParameters& params = m_extractParameters(iTrk);
 
     std::pair<double, double> z0AndWeight;
     ImpactParametersAndSigma ipas;
@@ -94,10 +94,10 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
   Vector4 output(vertexingOptions.constraint.position().x(),
                  vertexingOptions.constraint.position().y(), ZResult,
                  vertexingOptions.constraint.time());
-  Vertex<InputTrack_t> vtxResult = Vertex<InputTrack_t>(output);
+  Vertex vtxResult = Vertex(output);
 
   // Vector to be filled with one single vertex
-  std::vector<Vertex<InputTrack_t>> vertexCollection;
+  std::vector<Vertex> vertexCollection;
 
   // Add vertex to vertexCollection
   vertexCollection.push_back(vtxResult);

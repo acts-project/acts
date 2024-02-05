@@ -53,8 +53,7 @@ class VertexFitterAlgorithm final : public IAlgorithm {
   using VertexFitterOptions =
       Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
-  using VertexCollection =
-      std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
+  using VertexCollection = std::vector<Acts::Vertex>;
 
   struct Config {
     /// Optional. Input track parameters collection

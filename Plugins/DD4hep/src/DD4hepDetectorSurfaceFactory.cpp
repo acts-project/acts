@@ -9,6 +9,7 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Detector/detail/ProtoMaterialHelper.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
@@ -112,7 +113,8 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
     cache.sExtent.value().extend(sExtent, cache.extentConstraints);
   }
 
-  attachSurfaceMaterial(dd4hepElement, *sSurface.get(),
+  // Attach surface material if present
+  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface.get(),
                         dd4hepDetElement->thickness(), options);
   // return the surface
   return {dd4hepDetElement, sSurface};
@@ -139,15 +141,30 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
             .extent();
     cache.pExtent.value().extend(sExtent, cache.extentConstraints);
   }
-  attachSurfaceMaterial(dd4hepElement, *pSurface.get(), thickness, options);
+  attachSurfaceMaterial(gctx, "acts_passive_surface", dd4hepElement,
+                        *pSurface.get(), thickness, options);
   // Return a passive surface
   return {pSurface, assignToAll};
 }
 
 void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
+    const GeometryContext& gctx, const std::string& prefix,
     const dd4hep::DetElement& dd4hepElement, Acts::Surface& surface,
     ActsScalar thickness, const Options& options) const {
-  if (options.convertMaterial) {
+  // Bool proto material overrules converted material
+  bool protoMaterial =
+      getParamOr<bool>(prefix + "_proto_material", dd4hepElement, false);
+  if (protoMaterial) {
+    ACTS_VERBOSE(" - proto material binning for passive surface found.");
+    Experimental::BinningDescription pmBinning{
+        DD4hepBinningHelpers::convertBinning(
+            dd4hepElement, prefix + "_proto_material_binning")};
+    ACTS_VERBOSE(" - converted binning is " << pmBinning.toString());
+    Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
+        gctx, surface, pmBinning);
+
+  } else if (options.convertMaterial) {
+    ACTS_VERBOSE(" - direct conversion of DD4hep material triggered.");
     // Extract the material
     const auto& tgeoNode = *(dd4hepElement.placement().ptr());
     auto tgeoMaterial = tgeoNode.GetMedium()->GetMaterial();
