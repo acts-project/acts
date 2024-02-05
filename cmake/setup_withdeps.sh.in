@@ -1,0 +1,40 @@
+# This file is part of the Acts project.
+#
+# Copyright (C) 2024 CERN for the benefit of the Acts project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This script sets up the ACTS Examples environment in a somewhat robust way.
+
+if [ -n "$ZSH_VERSION" ]; then
+    script_dir=${0:a:h}
+elif [ -n "$BASH_VERSION" ]; then
+    script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+else
+    # If the current shell is not ZSH or Bash, we can't guarantee that the
+    # script will work, so we throw an error.
+    echo "ERROR:   neither ZSH nor Bash was detected, other shells are not supported. The environment has not been modified."
+    exit 1
+fi
+
+# source the python and ODD environment
+. $script_dir/python/setup.sh
+
+# set ACTS and ODD environment variables
+ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
+ODD_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@/thirdparty/OpenDataDetector
+
+# modify python environment to include some ACTS helpers
+export PYTHONPATH="$ACTS_SOURCE_DIR/Examples/Scripts/Python:${PYTHONPATH}"
+
+# make ACTS binaries available
+export PATH="$script_dir/bin:${PATH}"
+export LD_LIBRARY_PATH="$script_dir/lib:${LD_LIBRARY_PATH}"
+export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
+
+# activate dependencies
+. @ROOT_DIR@/../bin/thisroot.sh
+. @Geant4_DIR@/../../../bin/geant4.sh
+. @DD4hep_DIR@/bin/thisdd4hep.sh
