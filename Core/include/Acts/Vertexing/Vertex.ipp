@@ -18,10 +18,10 @@ Acts::Vertex<input_track_t>::Vertex(const Vector4& position)
     : m_position(position) {}
 
 template <typename input_track_t>
-Acts::Vertex<input_track_t>::Vertex(
-    const Vector3& position, const SquareMatrix3& covariance,
-    const std::vector<TrackAtVertex<input_track_t>>& tracks)
-    : m_tracksAtVertex(tracks) {
+Acts::Vertex<input_track_t>::Vertex(const Vector3& position,
+                                    const SquareMatrix3& covariance,
+                                    std::vector<TrackAtVertex> tracks)
+    : m_tracksAtVertex(std::move(tracks)) {
   m_position[ePos0] = position[ePos0];
   m_position[ePos1] = position[ePos1];
   m_position[ePos2] = position[ePos2];
@@ -29,12 +29,12 @@ Acts::Vertex<input_track_t>::Vertex(
 }
 
 template <typename input_track_t>
-Acts::Vertex<input_track_t>::Vertex(
-    const Vector4& position, const SquareMatrix4& covariance,
-    const std::vector<TrackAtVertex<input_track_t>>& tracks)
+Acts::Vertex<input_track_t>::Vertex(const Vector4& position,
+                                    const SquareMatrix4& covariance,
+                                    std::vector<TrackAtVertex> tracks)
     : m_position(position),
       m_covariance(covariance),
-      m_tracksAtVertex(tracks) {}
+      m_tracksAtVertex(std::move(tracks)) {}
 
 template <typename input_track_t>
 Acts::Vector3 Acts::Vertex<input_track_t>::position() const {
@@ -72,8 +72,8 @@ Acts::SquareMatrix4& Acts::Vertex<input_track_t>::fullCovariance() {
 }
 
 template <typename input_track_t>
-const std::vector<Acts::TrackAtVertex<input_track_t>>&
-Acts::Vertex<input_track_t>::tracks() const {
+const std::vector<Acts::TrackAtVertex>& Acts::Vertex<input_track_t>::tracks()
+    const {
   return m_tracksAtVertex;
 }
 
@@ -116,8 +116,8 @@ void Acts::Vertex<input_track_t>::setFullCovariance(
 
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setTracksAtVertex(
-    const std::vector<TrackAtVertex<input_track_t>>& tracks) {
-  m_tracksAtVertex = tracks;
+    std::vector<TrackAtVertex> tracks) {
+  m_tracksAtVertex = std::move(tracks);
 }
 
 template <typename input_track_t>
