@@ -34,7 +34,19 @@ export PATH="$script_dir/bin:${PATH}"
 export LD_LIBRARY_PATH="$script_dir/lib:${LD_LIBRARY_PATH}"
 export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
 
-# activate dependencies
-. @ROOT_DIR@/../bin/thisroot.sh
-. @Geant4_DIR@/../../../bin/geant4.sh
-. @DD4hep_DIR@/bin/thisdd4hep.sh
+# activate dependencies if present
+if [[ -d "@ROOT_DIR@" ]]; then
+  . @ROOT_DIR@/../bin/thisroot.sh
+fi
+if [[ -d "@Geant4_DIR@" ]]; then
+  . @Geant4_DIR@/../../../bin/geant4.sh
+fi
+if [[ -d "@DD4hep_DIR@" ]]; then
+  . @DD4hep_DIR@/bin/thisdd4hep.sh
+fi
+if [[ -d "@podio_DIR@" ]]; then
+  export ROOT_INCLUDE_PATH=@podio_DIR@/include:"${ROOT_INCLUDE_PATH}"
+fi
+if [[ -d "@EDM4HEP_DIR@" ]]; then
+  export ROOT_INCLUDE_PATH=@EDM4HEP_DIR@/include:"${ROOT_INCLUDE_PATH}"
+fi
