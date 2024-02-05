@@ -392,6 +392,10 @@ jobs:
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_PLUGIN_JSON=ON
+          -DACTS_BUILD_FATRAS=OFF
+          -DACTS_BUILD_PLUGIN_DD4HEP=OFF
+          -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
       - name: Build
         run: ${SETUP} && ( cmake --build build || cmake --build build )
       # The above line is required as a sort of retry mechanism. Without it,
@@ -557,6 +561,10 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_CUDA=ON
           -DACTS_BUILD_UNITTESTS=ON
+          -DACTS_BUILD_FATRAS=OFF
+          -DACTS_BUILD_PLUGIN_DD4HEP=OFF
+          -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
       - name: Build
         run: cmake --build build
       - name: ccache stats
@@ -599,6 +607,10 @@ jobs:
           -DACTS_SETUP_VECMEM=ON
           -DACTS_BUILD_PLUGIN_SYCL=ON
           -DACTS_BUILD_UNITTESTS=ON
+          -DACTS_BUILD_FATRAS=OFF
+          -DACTS_BUILD_PLUGIN_DD4HEP=OFF
+          -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
       - name: Build
         run: >
           source /opt/intel/oneapi/setvars.sh
