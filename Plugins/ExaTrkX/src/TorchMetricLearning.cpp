@@ -57,7 +57,7 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
 TorchMetricLearning::~TorchMetricLearning() {}
 
 std::tuple<std::any, std::any> TorchMetricLearning::operator()(
-    std::vector<float> &inputValues, std::std::size_t numNodes,
+    std::vector<float> &inputValues, std::size_t numNodes,
     torch::Device device) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
