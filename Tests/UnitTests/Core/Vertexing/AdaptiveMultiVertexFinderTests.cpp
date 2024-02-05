@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
-  auto tracks = std::get<TracksData>(csvData);
+  std::vector<BoundTrackParameters> tracks = std::get<TracksData>(csvData);
 
   if (debugMode) {
     std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
@@ -140,9 +140,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     }
   }
 
-  std::vector<const BoundTrackParameters*> tracksPtr;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : tracks) {
-    tracksPtr.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
   // TODO: test without using beam spot constraint
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
       geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
-  auto findResult = finder.find(tracksPtr, vertexingOptions, state);
+  auto findResult = finder.find(inputTracks, vertexingOptions, state);
   auto t2 = std::chrono::system_clock::now();
 
   auto timediff =
@@ -205,9 +205,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   }
 }
 
-// Dummy user-defined InputTrack type
-struct InputTrack {
-  InputTrack(const BoundTrackParameters& params, int id)
+// Dummy user-defined InputTrackStub type
+struct InputTrackStub {
+  InputTrackStub(const BoundTrackParameters& params, int id)
       : m_parameters(params), m_id(id) {}
 
   const BoundTrackParameters& parameters() const { return m_parameters; }
@@ -237,12 +237,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Create a custom std::function to extract BoundTrackParameters from
-  // user-defined InputTrack
-  std::function<BoundTrackParameters(InputTrack)> extractParameters =
-      [](const InputTrack& params) { return params.parameters(); };
+  // user-defined InputTrackStub
+  std::function<BoundTrackParameters(const InputTrack&)> extractParameters =
+      [](const InputTrack& track) {
+        return track.as<InputTrackStub>()->parameters();
+      };
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<InputTrack, Propagator>;
+  using IPEstimator = ImpactPointEstimator<InputTrackStub, Propagator>;
 
   IPEstimator::Config ipEstimatorCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstimatorCfg);
@@ -252,7 +254,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<InputTrack, Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter<InputTrackStub, Linearizer>;
 
   Fitter::Config fitterCfg(ipEstimator);
 
@@ -268,7 +270,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   Fitter fitter(fitterCfg, extractParameters);
 
   using SeedFinder =
-      TrackDensityVertexFinder<Fitter, GaussianTrackDensity<InputTrack>>;
+      TrackDensityVertexFinder<Fitter, GaussianTrackDensity<InputTrackStub>>;
 
   SeedFinder seedFinder(extractParameters);
 
@@ -283,10 +285,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
 
-  std::vector<InputTrack> userTracks;
+  std::vector<InputTrackStub> userTracks;
   int idCount = 0;
   for (const auto& trk : tracks) {
-    userTracks.push_back(InputTrack(trk, idCount));
+    userTracks.push_back(InputTrackStub(trk, idCount));
     idCount++;
   }
 
@@ -304,19 +306,19 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     }
   }
 
-  std::vector<const InputTrack*> userTracksPtr;
+  std::vector<InputTrack> userInputTracks;
   for (const auto& trk : userTracks) {
-    userTracksPtr.push_back(&trk);
+    userInputTracks.emplace_back(&trk);
   }
 
-  Vertex<InputTrack> constraintVtx;
+  Vertex<InputTrackStub> constraintVtx;
   constraintVtx.setPosition(std::get<BeamSpotData>(csvData).position());
   constraintVtx.setCovariance(std::get<BeamSpotData>(csvData).covariance());
 
-  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
-                                                constraintVtx);
+  VertexingOptions<InputTrackStub> vertexingOptions(geoContext, magFieldContext,
+                                                    constraintVtx);
 
-  auto findResult = finder.find(userTracksPtr, vertexingOptions, state);
+  auto findResult = finder.find(userInputTracks, vertexingOptions, state);
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;
@@ -324,7 +326,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   BOOST_CHECK(findResult.ok());
 
-  std::vector<Vertex<InputTrack>> allVertices = *findResult;
+  std::vector<Vertex<InputTrackStub>> allVertices = *findResult;
 
   if (debugMode) {
     std::cout << "Number of vertices reconstructed: " << allVertices.size()
@@ -341,8 +343,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
       std::cout << "\t with n tracks: " << vtx.tracks().size() << std::endl;
     }
     for (auto& trk : allVertices[0].tracks()) {
-      std::cout << "Track ID at first vertex: " << trk.originalParams->id()
-                << std::endl;
+      std::cout << "Track ID at first vertex: "
+                << trk.originalParams.as<InputTrackStub>()->id() << std::endl;
     }
   }
 
@@ -441,9 +443,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
     }
   }
 
-  std::vector<const BoundTrackParameters*> tracksPtr;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : tracks) {
-    tracksPtr.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
   // TODO: test using beam spot constraint
@@ -452,7 +454,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
       geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
-  auto findResult = finder.find(tracksPtr, vertexingOptions, state);
+  auto findResult = finder.find(inputTracks, vertexingOptions, state);
   auto t2 = std::chrono::system_clock::now();
 
   auto timediff =
@@ -597,9 +599,9 @@ BOOST_AUTO_TEST_CASE(
     }
   }
 
-  std::vector<const BoundTrackParameters*> tracksPtr;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : tracks) {
-    tracksPtr.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
   Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
@@ -607,7 +609,7 @@ BOOST_AUTO_TEST_CASE(
       geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
-  auto findResult = finder.find(tracksPtr, vertexingOptions, state);
+  auto findResult = finder.find(inputTracks, vertexingOptions, state);
   auto t2 = std::chrono::system_clock::now();
 
   auto timediff =

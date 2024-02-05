@@ -8,7 +8,7 @@
 
 template <typename vfitter_t>
 auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
-    const std::vector<const InputTrack_t*>& trackVector,
+    const std::vector<InputTrack>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Remove density contributions from tracks removed from track collection
@@ -26,7 +26,7 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
     state.mainDensityMap = DensityMap();
     // Fill with track densities
     for (auto trk : trackVector) {
-      const BoundTrackParameters& trkParams = m_extractParameters(*trk);
+      const BoundTrackParameters& trkParams = m_extractParameters(trk);
       // Take only tracks that fulfill selection criteria
       if (!doesPassTrackSelection(trkParams)) {
         continue;
