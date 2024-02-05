@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
 #include <map>
@@ -46,9 +47,9 @@ struct VertexInfo {
   bool relinearize = true;
 
   // Vector of all tracks that are currently assigned to vertex
-  std::vector<const input_track_t*> trackLinks;
+  std::vector<InputTrack> trackLinks;
 
-  std::map<const input_track_t*, const BoundTrackParameters> impactParams3D;
+  std::map<InputTrack, const BoundTrackParameters> impactParams3D;
 };
 
 }  // namespace Acts
