@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
             .value();
 
     // Create TrackAtVertex
-    TrackAtVertex<BoundTrackParameters> trkAtVtx(0., params, &params);
+    TrackAtVertex trkAtVtx(0., params, InputTrack{&params});
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;

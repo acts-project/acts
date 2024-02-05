@@ -69,13 +69,12 @@ class AdaptiveMultiVertexFitter {
     typename Linearizer_t::State linearizerState;
 
     // Map to store vertices information
+    // @TODO Does this have to be a mutable pointer?
     std::map<Vertex<InputTrack_t>*, VertexInfo<InputTrack_t>> vtxInfoMap;
 
-    std::multimap<const InputTrack_t*, Vertex<InputTrack_t>*>
-        trackToVerticesMultiMap;
+    std::multimap<InputTrack, Vertex<InputTrack_t>*> trackToVerticesMultiMap;
 
-    std::map<std::pair<const InputTrack_t*, Vertex<InputTrack_t>*>,
-             TrackAtVertex<InputTrack_t>>
+    std::map<std::pair<InputTrack, Vertex<InputTrack_t>*>, TrackAtVertex>
         tracksAtVerticesMap;
 
     /// @brief Default State constructor
@@ -167,7 +166,9 @@ class AdaptiveMultiVertexFitter {
                                 getDefaultLogger("AdaptiveMultiVertexFitter",
                                                  Logging::INFO))
       : m_cfg(std::move(cfg)),
-        m_extractParameters([](T params) { return params; }),
+        m_extractParameters([](const InputTrack& params) {
+          return *params.as<BoundTrackParameters>();
+        }),
         m_logger(std::move(logger)) {}
 
   /// @brief Constructor for user-defined InputTrack_t type !=
@@ -178,11 +179,11 @@ class AdaptiveMultiVertexFitter {
   /// object
   /// @param logger The logging instance
   AdaptiveMultiVertexFitter(
-      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFitter", Logging::INFO))
       : m_cfg(std::move(cfg)),
-        m_extractParameters(func),
+        m_extractParameters(std::move(func)),
         m_logger(std::move(logger)) {}
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
@@ -224,7 +225,7 @@ class AdaptiveMultiVertexFitter {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -282,7 +283,7 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return Vector of compatibility values
   std::vector<double> collectTrackToVertexCompatibilities(
-      State& state, const InputTrack_t* trk) const;
+      State& state, const InputTrack& trk) const;
 
   /// @brief Determines if any vertex position has shifted more than
   /// m_cfg.maxRelativeShift in the last iteration
