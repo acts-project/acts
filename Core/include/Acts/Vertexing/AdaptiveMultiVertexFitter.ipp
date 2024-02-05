@@ -65,8 +65,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
       // Check if we use the constraint during the vertex fit
       if (state.vtxInfoMap[vtx].constraint.fullCovariance() !=
           SquareMatrix4::Zero()) {
-        const Acts::Vertex<input_track_t>& constraint =
-            state.vtxInfoMap[vtx].constraint;
+        const Acts::Vertex& constraint = state.vtxInfoMap[vtx].constraint;
         vtx->setFullPosition(constraint.fullPosition());
         vtx->setFitQuality(constraint.fitQuality());
         vtx->setFullCovariance(constraint.fullCovariance());
@@ -120,8 +119,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
-    State& state, Vertex<input_track_t>& newVertex,
-    const linearizer_t& linearizer,
+    State& state, Vertex& newVertex, const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
     ACTS_ERROR(
@@ -130,12 +128,12 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
     return VertexingError::EmptyInput;
   }
 
-  std::vector<Vertex<input_track_t>*> verticesToFit = {&newVertex};
+  std::vector<Vertex*> verticesToFit = {&newVertex};
 
   // List of vertices added in last iteration
-  std::vector<Vertex<input_track_t>*> lastIterAddedVertices = {&newVertex};
+  std::vector<Vertex*> lastIterAddedVertices = {&newVertex};
   // List of vertices added in current iteration
-  std::vector<Vertex<input_track_t>*> currentIterAddedVertices;
+  std::vector<Vertex*> currentIterAddedVertices;
 
   // Fill verticesToFit with vertices that are connected to newVertex (via
   // tracks and/or other vertices).
@@ -195,15 +193,14 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
 
 template <typename input_track_t, typename linearizer_t>
 bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    isAlreadyInList(Vertex<input_track_t>* vtx,
-                    const std::vector<Vertex<input_track_t>*>& vertices) const {
+    isAlreadyInList(Vertex* vtx, const std::vector<Vertex*>& vertices) const {
   return std::find(vertices.begin(), vertices.end(), vtx) != vertices.end();
 }
 
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void> Acts::
     AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
-        State& state, Vertex<input_track_t>* vtx,
+        State& state, Vertex* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
@@ -228,7 +225,7 @@ template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
     setAllVertexCompatibilities(
-        State& state, Vertex<input_track_t>* vtx,
+        State& state, Vertex* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
 

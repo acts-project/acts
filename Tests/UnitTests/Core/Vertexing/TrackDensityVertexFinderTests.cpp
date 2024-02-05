@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SquareMatrix3 constrCov = ActsSquareMatrix<3>::Identity();
 
-  Vertex<BoundTrackParameters> constraint(constraintPos);
+  Vertex constraint(constraintPos);
   constraint.setCovariance(constrCov);
 
   // Finder options
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SquareMatrix3 constrCov = SquareMatrix3::Identity();
 
-  Vertex<InputTrackStub> constraint(constraintPos);
+  Vertex constraint(constraintPos);
   constraint.setCovariance(constrCov);
 
   // Finder options

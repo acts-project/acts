@@ -173,7 +173,7 @@ class IterativeVertexFinder {
   /// @param state State for fulfilling interfaces
   ///
   /// @return Collection of vertices found by finder
-  Result<std::vector<Vertex<InputTrack_t>>> find(
+  Result<std::vector<Vertex>> find(
       const std::vector<InputTrack>& trackVector,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
@@ -197,7 +197,7 @@ class IterativeVertexFinder {
   ///
   /// @param seedTracks Seeding tracks
   /// @param vertexingOptions Vertexing options
-  Result<Vertex<InputTrack_t>> getVertexSeed(
+  Result<Vertex> getVertexSeed(
       const std::vector<InputTrack>& seedTracks,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
@@ -217,7 +217,7 @@ class IterativeVertexFinder {
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<double> getCompatibility(
-      const BoundTrackParameters& params, const Vertex<InputTrack_t>& vertex,
+      const BoundTrackParameters& params, const Vertex& vertex,
       const Surface& perigeeSurface,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
@@ -232,7 +232,7 @@ class IterativeVertexFinder {
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<void> removeUsedCompatibleTracks(
-      Vertex<InputTrack_t>& vertex, std::vector<InputTrack>& tracksToFit,
+      Vertex& vertex, std::vector<InputTrack>& tracksToFit,
       std::vector<InputTrack>& seedTracks,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
@@ -246,8 +246,7 @@ class IterativeVertexFinder {
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<void> fillTracksToFit(
-      const std::vector<InputTrack>& seedTracks,
-      const Vertex<InputTrack_t>& seedVertex,
+      const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
       std::vector<InputTrack>& tracksToFitOut,
       std::vector<InputTrack>& tracksToFitSplitVertexOut,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
@@ -266,9 +265,8 @@ class IterativeVertexFinder {
   ///
   /// @return Bool if currentVertex is still a good vertex
   Result<bool> reassignTracksToNewVertex(
-      std::vector<Vertex<InputTrack_t>>& vertexCollection,
-      Vertex<InputTrack_t>& currentVertex, std::vector<InputTrack>& tracksToFit,
-      std::vector<InputTrack>& seedTracks,
+      std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
+      std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
       const std::vector<InputTrack>& origTracks,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
@@ -278,7 +276,7 @@ class IterativeVertexFinder {
   /// @param vtx The vertex
   ///
   /// @return Number of significant tracks
-  int countSignificantTracks(const Vertex<InputTrack_t>& vtx) const;
+  int countSignificantTracks(const Vertex& vtx) const;
 };
 
 }  // namespace Acts
