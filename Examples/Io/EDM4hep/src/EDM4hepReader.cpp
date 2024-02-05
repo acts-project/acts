@@ -34,15 +34,31 @@ namespace ActsExamples {
 EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("EDM4hepParticleReader", level)) {
-  if (m_cfg.outputParticles.empty()) {
-    throw std::invalid_argument("Missing output collection");
+  if (m_cfg.outputParticlesInitial.empty()) {
+    throw std::invalid_argument("Missing output collection initial particles");
+  }
+
+  if (m_cfg.outputParticlesFinal.empty()) {
+    throw std::invalid_argument("Missing output collection final particles");
+  }
+
+  if (m_cfg.outputParticlesGenerator.empty()) {
+    throw std::invalid_argument(
+        "Missing output collection generator particles");
+  }
+
+  if (m_cfg.outputSimHits.empty()) {
+    throw std::invalid_argument("Missing output collection sim hits");
   }
 
   m_reader.openFile(m_cfg.inputPath);
 
   m_eventsRange = std::make_pair(0, m_reader.getEntries("events"));
 
-  m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
+  m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
+  m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
     const auto* detElement = dynamic_cast<const Acts::DD4hepDetectorElement*>(
@@ -54,8 +70,8 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
     }
 
     // detElement->sourceElement().readout();
-    ACTS_INFO(
-        "- ACTS surface center: " << surface->center(Acts::GeometryContext{}));
+    // ACTS_INFO(
+    // "- ACTS surface center: " << surface->center(Acts::GeometryContext{}));
 
     const auto translation = detElement->sourceElement()
                                  .nominal()
@@ -64,9 +80,9 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
     Acts::Vector3 position;
     position << translation[0], translation[1], translation[2];
     position *= 10;
-    ACTS_INFO("- DD4hep surface position: " << position.transpose());
-    ACTS_INFO("- DD4hep surface id " << detElement->sourceElement().id());
-    ACTS_INFO("- DD4hep surface key " << detElement->sourceElement().key());
+    // ACTS_INFO("- DD4hep surface position: " << position.transpose());
+    // ACTS_INFO("- DD4hep surface id " << detElement->sourceElement().id());
+    // ACTS_INFO("- DD4hep surface key " << detElement->sourceElement().key());
 
     m_surfaceMap.insert({detElement->sourceElement().key(), surface});
   });
@@ -182,7 +198,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
   // key: child, value: parent
   ParentRelationship parentRelationship;
 
-  // key: input particle address, value: index in the unordered particle
+  // key: input particle index, value: index in the unordered particle
   // container
   std::unordered_map<int, std::size_t> edm4hepParticleMap;
 
@@ -226,9 +242,51 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
   ACTS_DEBUG("Found " << unordered.size() << " particles");
 
+  // @TODO: Order simhits by time
+
+  SimParticleContainer particlesFinal;
+  SimParticleContainer particlesGenerator;
+  for (const auto& inParticle : mcParticleCollection) {
+    const std::size_t index =
+        edm4hepParticleMap.find(inParticle.getObjectID().index)->second;
+    const auto& particleInitial = unordered.at(index);
+    if (!inParticle.isCreatedInSimulation()) {
+      particlesGenerator.insert(particleInitial);
+    }
+    SimParticle particleFinal = particleInitial;
+
+    float time = inParticle.getTime() * Acts::UnitConstants::ns;
+    for (const auto& daughter : inParticle.getDaughters()) {
+      if (!daughter.vertexIsNotEndpointOfParent()) {
+        time = daughter.getTime() * Acts::UnitConstants::ns;
+        break;
+      }
+    }
+
+    particleFinal.setPosition4(
+        inParticle.getEndpoint()[0] * Acts::UnitConstants::mm,
+        inParticle.getEndpoint()[1] * Acts::UnitConstants::mm,
+        inParticle.getEndpoint()[2] * Acts::UnitConstants::mm, time);
+
+    Acts::Vector3 momentumFinal = {inParticle.getMomentumAtEndpoint()[0],
+                                   inParticle.getMomentumAtEndpoint()[1],
+                                   inParticle.getMomentumAtEndpoint()[2]};
+    particleFinal.setDirection(momentumFinal.normalized());
+    particleFinal.setAbsoluteMomentum(momentumFinal.norm());
+
+    ACTS_VERBOSE("- Updated particle initial -> final, position: "
+                 << particleInitial.fourPosition().transpose() << " -> "
+                 << particleFinal.fourPosition().transpose());
+    ACTS_VERBOSE("                                     momentum: "
+                 << particleInitial.fourMomentum().transpose() << " -> "
+                 << particleFinal.fourMomentum().transpose());
+
+    particlesFinal.insert(particleFinal);
+  }
+
   // Write ordered particles container to the EventStore
-  SimParticleContainer particles;
-  particles.insert(unordered.begin(), unordered.end());
+  SimParticleContainer particlesInitial;
+  particlesInitial.insert(unordered.begin(), unordered.end());
 
   if (!m_cfg.graphvizOutput.empty()) {
     std::string path = perEventFilepath(m_cfg.graphvizOutput, "particles.dot",
@@ -236,6 +294,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     std::ofstream dot(path);
     graphviz(dot, unordered, parentRelationship);
   }
+
+  SimHitContainer simHits;
 
   ACTS_DEBUG("Reading sim hits from " << m_cfg.inputSimHits.size()
                                       << " sim hit collections");
@@ -290,10 +350,16 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
             ACTS_VERBOSE("   -> surface: " << surface->geometryId());
             return surface->geometryId();
           });
+
+      simHits.insert(std::move(simHit));
     }
   }
 
-  m_outputParticles(ctx, std::move(particles));
+  m_outputParticlesInitial(ctx, std::move(particlesInitial));
+  m_outputParticlesFinal(ctx, std::move(particlesFinal));
+  m_outputParticlesGenerator(ctx, std::move(particlesGenerator));
+
+  m_outputSimHits(ctx, std::move(simHits));
 
   return ProcessCode::SUCCESS;
 }

@@ -97,8 +97,6 @@ ActsFatras::Hit EDM4hepUtil::readSimHit(
   Acts::Vector4 delta4 = Acts::Vector4::Zero();
   delta4[Acts::eEnergy] = -from.getEDep() * Acts::UnitConstants::GeV;
 
-  std::cout << "SimHit: " << pos4.transpose() << std::endl;
-
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
   // Can extract from time, but we need a complete picture of the trajectory

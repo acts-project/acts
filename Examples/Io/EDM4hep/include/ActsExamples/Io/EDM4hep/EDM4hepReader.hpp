@@ -43,8 +43,15 @@ class EDM4hepReader final : public IReader {
     std::string inputParticles = "MCParticles";
     /// Names of the sim hit collections
     std::vector<std::string> inputSimHits{};
-    /// Which particle collection to read into.
-    std::string outputParticles;
+    /// Particles at creation
+    std::string outputParticlesInitial;
+    /// Particles at their endpoints
+    std::string outputParticlesFinal;
+    /// Particles from the generator
+    std::string outputParticlesGenerator;
+
+    /// Output simulated (truth) hits collection.
+    std::string outputSimHits;
 
     /// Directory into which to write graphviz files for particles
     /// Empty string means no output
@@ -98,8 +105,14 @@ class EDM4hepReader final : public IReader {
 
   podio::ROOTFrameReader m_reader;
 
-  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
-                                                          "OutputParticles"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
+      this, "OutputParticlesInitial"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
+      this, "OutputParticlesFinal"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesGenerator{
+      this, "OutputParticlesGenerator"};
+
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 
   void graphviz(std::ostream& os,
                 const SimParticleContainer::sequence_type& container,

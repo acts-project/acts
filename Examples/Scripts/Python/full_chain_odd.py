@@ -96,7 +96,10 @@ s.addReader(
             "LongStripBarrelReadout",
             "LongStripEndcapReadout",
         ],
-        outputParticles="MCParticles",
+        outputParticlesGenerator="particles_input",
+        outputParticlesInitial="particles_initial",
+        outputParticlesFinal="particles_final",
+        outputSimHits="simhits",
         level=acts.logging.VERBOSE,
         graphvizOutput="graphviz",
         dd4hepDetector=detector,
@@ -104,8 +107,6 @@ s.addReader(
     )
 )
 
-print("GO")
-s.run()
 
 if False:
     if not ttbar:
@@ -139,6 +140,7 @@ if False:
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
         )
+
     if g4_simulation:
         if s.config.numThreads != 1:
             raise ValueError("Geant 4 simulation does not support multi-threading")
@@ -194,16 +196,6 @@ if False:
         rnd=rnd,
     )
 
-    addDigitization(
-        s,
-        trackingGeometry,
-        field,
-        digiConfigFile=oddDigiConfig,
-        outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
-        rnd=rnd,
-    )
-
     addSeeding(
         s,
         trackingGeometry,
@@ -227,6 +219,7 @@ if False:
             # outputDirCsv=outputDir,
         )
 
+if False:
     addCKFTracks(
         s,
         trackingGeometry,
@@ -296,4 +289,5 @@ if False:
             outputDirRoot=outputDir,
         )
 
-        s.run()
+
+s.run()

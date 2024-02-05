@@ -34,10 +34,11 @@ void addEDM4hep(Context& ctx) {
   auto mex = ctx.get("examples");
   auto edm4hep = mex.def_submodule("_edm4hep");
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepReader, edm4hep,
-                             "EDM4hepReader", inputPath, inputParticles,
-                             inputSimHits, outputParticles, graphvizOutput,
-                             dd4hepDetector, trackingGeometry);
+  ACTS_PYTHON_DECLARE_READER(
+      ActsExamples::EDM4hepReader, edm4hep, "EDM4hepReader", inputPath,
+      inputParticles, inputSimHits, outputParticlesInitial,
+      outputParticlesFinal, outputParticlesGenerator, outputSimHits,
+      graphvizOutput, dd4hepDetector, trackingGeometry);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepSimHitReader, edm4hep,
                              "EDM4hepSimHitReader", inputPath, inputParticles,
