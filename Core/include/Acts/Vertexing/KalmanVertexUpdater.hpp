@@ -66,8 +66,7 @@ struct Cache {
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
 template <typename input_track_t, unsigned int nDimVertex>
-void updateVertexWithTrack(Vertex<input_track_t>& vtx,
-                           TrackAtVertex<input_track_t>& trk);
+void updateVertexWithTrack(Vertex<input_track_t>& vtx, TrackAtVertex& trk);
 
 namespace detail {
 void updateVertexWithTrack(Vector4& vtxPos, SquareMatrix4& vtxCov,
