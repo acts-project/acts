@@ -253,6 +253,9 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
@@ -283,6 +286,9 @@ Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
