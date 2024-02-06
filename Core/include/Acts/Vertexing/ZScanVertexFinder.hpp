@@ -85,7 +85,9 @@ class ZScanVertexFinder {
                     std::unique_ptr<const Logger> logger =
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
-        m_extractParameters([](T params) { return params; }),
+        m_extractParameters([](const InputTrack& params) {
+          return *params.as<BoundTrackParameters>();
+        }),
         m_logger(std::move(logger)) {}
 
   /// @brief Constructor for user-defined InputTrack_t type =!
@@ -96,10 +98,12 @@ class ZScanVertexFinder {
   /// object
   /// @param logger Logging instance
   ZScanVertexFinder(const Config& cfg,
-                    std::function<BoundTrackParameters(InputTrack_t)> func,
+                    std::function<BoundTrackParameters(const InputTrack&)> func,
                     std::unique_ptr<const Logger> logger =
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
-      : m_cfg(cfg), m_extractParameters(func), m_logger(std::move(logger)) {}
+      : m_cfg(cfg),
+        m_extractParameters(std::move(func)),
+        m_logger(std::move(logger)) {}
 
   /// @brief Function that determines single vertex,
   /// based on z0 values of input tracks,
@@ -111,8 +115,8 @@ class ZScanVertexFinder {
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& trackVector,
+  Result<std::vector<Vertex>> find(
+      const std::vector<InputTrack>& trackVector,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
 
@@ -122,7 +126,7 @@ class ZScanVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
