@@ -446,7 +446,6 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
 
 
 if "__main__" == __name__:
-
     print(datetime.now().strftime("%H:%M:%S") + "    Starting")
     # Optimiser arguments
     parser = argparse.ArgumentParser()

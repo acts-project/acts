@@ -9,6 +9,7 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Detector/detail/ProtoMaterialHelper.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
@@ -43,6 +44,11 @@ void Acts::DD4hepDetectorSurfaceFactory::construct(
   ACTS_DEBUG("Recursive search did yield: "
              << cache.sensitiveSurfaces.size() << " sensitive surface(s), "
              << cache.passiveSurfaces.size() << " passive surface(s)");
+
+  // Check for auto-range determination
+  if (!cache.binnings.empty() && cache.sExtent.has_value()) {
+    ACTS_DEBUG("Autorange deterimnation of binning enabled.");
+  }
 }
 
 void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
@@ -55,7 +61,8 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
   // Check if any surface binnning can be detected
   int sBinning = getParamOr<int>("acts_surface_binning_dim", dd4hepElement, 0);
   if (sBinning > 0) {
-    cache.binnings = convertBinning(dd4hepElement, "acts_surface_binning");
+    cache.binnings = DD4hepBinningHelpers::convertBinning(
+        dd4hepElement, "acts_surface_binning");
   }
 
   // Deal with passive surface if detected
@@ -103,10 +110,11 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
     auto sExtent =
         sSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
             .extent();
-    cache.sExtent.value().extend(sExtent, cache.extentContraints);
+    cache.sExtent.value().extend(sExtent, cache.extentConstraints);
   }
 
-  attachSurfaceMaterial(dd4hepElement, *sSurface.get(),
+  // Attach surface material if present
+  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface.get(),
                         dd4hepDetElement->thickness(), options);
   // return the surface
   return {dd4hepDetElement, sSurface};
@@ -131,17 +139,32 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
     auto sExtent =
         pSurface->polyhedronRepresentation(gctx, cache.nExtentSegments)
             .extent();
-    cache.pExtent.value().extend(sExtent, cache.extentContraints);
+    cache.pExtent.value().extend(sExtent, cache.extentConstraints);
   }
-  attachSurfaceMaterial(dd4hepElement, *pSurface.get(), thickness, options);
+  attachSurfaceMaterial(gctx, "acts_passive_surface", dd4hepElement,
+                        *pSurface.get(), thickness, options);
   // Return a passive surface
   return {pSurface, assignToAll};
 }
 
 void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
+    const GeometryContext& gctx, const std::string& prefix,
     const dd4hep::DetElement& dd4hepElement, Acts::Surface& surface,
     ActsScalar thickness, const Options& options) const {
-  if (options.convertMaterial) {
+  // Bool proto material overrules converted material
+  bool protoMaterial =
+      getParamOr<bool>(prefix + "_proto_material", dd4hepElement, false);
+  if (protoMaterial) {
+    ACTS_VERBOSE(" - proto material binning for passive surface found.");
+    Experimental::BinningDescription pmBinning{
+        DD4hepBinningHelpers::convertBinning(
+            dd4hepElement, prefix + "_proto_material_binning")};
+    ACTS_VERBOSE(" - converted binning is " << pmBinning.toString());
+    Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
+        gctx, surface, pmBinning);
+
+  } else if (options.convertMaterial) {
+    ACTS_VERBOSE(" - direct conversion of DD4hep material triggered.");
     // Extract the material
     const auto& tgeoNode = *(dd4hepElement.placement().ptr());
     auto tgeoMaterial = tgeoNode.GetMedium()->GetMaterial();

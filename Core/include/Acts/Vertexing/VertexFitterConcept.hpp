@@ -33,11 +33,11 @@ METHOD_TRAIT(fit_t, fit);
 // clang-format off
     template <typename S>
       struct VertexFitterConcept {
-        constexpr static bool fit_exists = has_method<const S, Result<Vertex<typename S::InputTrack_t>>,
-         fit_t, 
-         const std::vector<const typename S::InputTrack_t*>&, 
+        constexpr static bool fit_exists = has_method<const S, Result<Vertex>,
+         fit_t,
+         const std::vector<InputTrack>&,
          const typename S::Linearizer_t&,
-         const VertexingOptions<typename S::InputTrack_t>&,
+         const VertexingOptions&,
          typename S::State&>;
         static_assert(fit_exists, "fit method not found");
 

@@ -92,6 +92,15 @@ addSeeding(
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
+    initialSigmas=[
+        1 * u.mm,
+        1 * u.mm,
+        1 * u.degree,
+        1 * u.degree,
+        0.1 / u.GeV,
+        1 * u.ns,
+    ],
+    initialVarInflation=[1.0] * 6,
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
@@ -110,7 +119,11 @@ addCKFTracks(
 
 addAmbiguityResolution(
     s,
-    AmbiguityResolutionConfig(maximumSharedHits=3),
+    AmbiguityResolutionConfig(
+        maximumSharedHits=3,
+        maximumIterations=10000,
+        nMeasurementsMin=6,
+    ),
     outputDirRoot=outputDir,
 )
 

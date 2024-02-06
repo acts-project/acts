@@ -90,7 +90,7 @@ class CsvSeedWriter : public WriterT<TrackParametersContainer> {
   /// @brief Struct for brief seed summary info
   ///
   struct SeedInfo {
-    std::size_t seedId = 0;
+    std::size_t seedID = 0;
     ActsFatras::Barcode particleId;
     float seedPt = -1;
     float seedPhi = 0;

@@ -15,6 +15,7 @@
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -61,10 +62,19 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     Seeder seedFinder;
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
-    using Seeder = Acts::AdaptiveGridDensityVertexFinder<9, 5, Fitter>;
+    // Set up track density used during vertex seeding
+    Acts::AdaptiveGridTrackDensity::Config trkDensityCfg;
+    // Bin extent in z-direction
+    trkDensityCfg.spatialBinExtent = 15. * Acts::UnitConstants::um;
+    // Bin extent in t-direction
+    trkDensityCfg.temporalBinExtent = 19. * Acts::UnitConstants::mm;
+    trkDensityCfg.useTime = m_cfg.useTime;
+    Acts::AdaptiveGridTrackDensity trkDensity(trkDensityCfg);
+
+    // Set up vertex seeder and finder
+    using Seeder = Acts::AdaptiveGridDensityVertexFinder<Fitter>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
-    // The seeder config argument corresponds to the bin size in mm
-    Seeder::Config seederConfig(0.015, 19.);
+    Seeder::Config seederConfig(trkDensity);
     Seeder seedFinder(seederConfig);
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else {
@@ -112,7 +122,10 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   typename Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
                                        ipEstimator, std::move(linearizer),
                                        m_cfg.bField);
-  finderConfig.looseConstrValue = 1e2;
+  // Set the initial variance of the 4D vertex position. Since time is on a
+  // numerical scale, we have to provide a greater value in the corresponding
+  // dimension.
+  finderConfig.initialVariances << 1e+2, 1e+2, 1e+2, 1e+8;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;
@@ -138,21 +151,19 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
 
   const auto& inputTrackParameters = m_inputTrackParameters(ctx);
   // TODO change this from pointers to tracks parameters to actual tracks
-  auto inputTrackPointers =
-      makeTrackParametersPointerContainer(inputTrackParameters);
+  auto inputTracks = makeInputTracks(inputTrackParameters);
 
-  if (inputTrackParameters.size() != inputTrackPointers.size()) {
+  if (inputTrackParameters.size() != inputTracks.size()) {
     ACTS_ERROR("Input track containers do not align: "
-               << inputTrackParameters.size()
-               << " != " << inputTrackPointers.size());
+               << inputTrackParameters.size() << " != " << inputTracks.size());
   }
 
-  for (const auto trk : inputTrackPointers) {
-    if (trk->covariance() && trk->covariance()->determinant() <= 0) {
+  for (const auto& trk : inputTrackParameters) {
+    if (trk.covariance() && trk.covariance()->determinant() <= 0) {
       // actually we should consider this as an error but I do not want the CI
       // to fail
-      ACTS_WARNING("input track " << *trk << " has det(cov) = "
-                                  << trk->covariance()->determinant());
+      ACTS_WARNING("input track " << trk << " has det(cov) = "
+                                  << trk.covariance()->determinant());
     }
   }
 
@@ -174,7 +185,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
     // find vertices
-    auto result = finder.find(inputTrackPointers, finderOpts, state);
+    auto result = finder.find(inputTracks, finderOpts, state);
 
     if (result.ok()) {
       vertices = std::move(result.value());
@@ -191,7 +202,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   }
 
   // store proto vertices extracted from the found vertices
-  m_outputProtoVertices(ctx, makeProtoVertices(inputTrackPointers, vertices));
+  m_outputProtoVertices(ctx, makeProtoVertices(inputTracks, vertices));
 
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));
