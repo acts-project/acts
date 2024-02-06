@@ -254,16 +254,15 @@ Acts::RotationMatrix3 Acts::Surface::referenceFrame(
 }
 
 Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
-    const GeometryContext& gctx, const BoundVector& boundParams) const {
-  // Transform from bound to free parameters
-  FreeVector freeParams =
-      detail::transformBoundToFreeParameters(*this, gctx, boundParams);
-  // The global position
-  const Vector3 position = freeParams.segment<3>(eFreePos0);
+    const GeometryContext& gctx, const FreeVector& parameters) const {
+  const Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
-  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
+  const Vector3 direction = parameters.segment<3>(eFreeDir0);
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - given by reference frame
@@ -286,6 +285,9 @@ Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // Initialize the jacobian from global to local
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Local position component given by the reference frame
