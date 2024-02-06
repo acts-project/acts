@@ -11,6 +11,7 @@ from acts.examples.simulation import (
     addGeant4,
     ParticleSelectorConfig,
     addDigitization,
+    addParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
@@ -83,28 +84,41 @@ s = acts.examples.Sequencer(
     outputDir=str(outputDir),
 )
 
-s.addReader(
-    acts.examples.edm4hep.EDM4hepReader(
-        #  inputPath="ddsim.edm4hep.root",
-        inputPath="ddsim_pi.edm4hep.root",
-        #  inputPath="ddsimDefault_singleMuon_ODD_100events_1GeV_muon_eta0_phi0_edm4hep.root",
-        inputSimHits=[
-            "PixelBarrelReadout",
-            "PixelEndcapReadout",
-            "ShortStripBarrelReadout",
-            "ShortStripEndcapReadout",
-            "LongStripBarrelReadout",
-            "LongStripEndcapReadout",
-        ],
-        outputParticlesGenerator="particles_input",
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
-        outputSimHits="simhits",
-        level=acts.logging.VERBOSE,
-        graphvizOutput="graphviz",
-        dd4hepDetector=detector,
-        trackingGeometry=trackingGeometry,
-    )
+edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
+    #  inputPath="ddsim.edm4hep.root",
+    inputPath="ddsim_pi.edm4hep.root",
+    #  inputPath="ddsimDefault_singleMuon_ODD_100events_1GeV_muon_eta0_phi0_edm4hep.root",
+    inputSimHits=[
+        "PixelBarrelReadout",
+        "PixelEndcapReadout",
+        "ShortStripBarrelReadout",
+        "ShortStripEndcapReadout",
+        "LongStripBarrelReadout",
+        "LongStripEndcapReadout",
+    ],
+    outputParticlesGenerator="particles_input",
+    outputParticlesInitial="particles_initial",
+    outputParticlesFinal="particles_final",
+    outputSimHits="simhits",
+    level=acts.logging.DEBUG,
+    graphvizOutput="graphviz",
+    dd4hepDetector=detector,
+    trackingGeometry=trackingGeometry,
+)
+s.addReader(edm4hepReader)
+s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
+
+addParticleSelection(
+    s,
+    config=ParticleSelectorConfig(
+        rho=(0.0, 24 * u.mm),
+        absZ=(0.0, 1.0 * u.m),
+        eta=(-3.0, 3.0),
+        pt=(150 * u.MeV, None),
+        removeNeutral=True,
+    ),
+    inputParticles="particles",
+    outputParticles="particles_selected",
 )
 
 
@@ -186,108 +200,82 @@ if False:
             rnd=rnd,
         )
 
-    addDigitization(
+addDigitization(
+    s,
+    trackingGeometry,
+    field,
+    digiConfigFile=oddDigiConfig,
+    outputDirRoot=outputDir,
+    # outputDirCsv=outputDir,
+    rnd=rnd,
+)
+
+addSeeding(
+    s,
+    trackingGeometry,
+    field,
+    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
+    if ttbar
+    else TruthSeedRanges(),
+    geoSelectionConfigFile=oddSeedingSel,
+    outputDirRoot=outputDir,
+    # outputDirCsv=outputDir,
+)
+if seedFilter_ML:
+    addSeedFilterML(
         s,
-        trackingGeometry,
-        field,
-        digiConfigFile=oddDigiConfig,
+        SeedFilterMLDBScanConfig(
+            epsilonDBScan=0.03, minPointsDBScan=2, minSeedScore=0.1
+        ),
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
-        rnd=rnd,
     )
 
-    addSeeding(
+addCKFTracks(
+    s,
+    trackingGeometry,
+    field,
+    TrackSelectorConfig(
+        pt=(1.0 * u.GeV if ttbar else 0.0, None),
+        absEta=(None, 3.0),
+        loc0=(-4.0 * u.mm, 4.0 * u.mm),
+        nMeasurementsMin=7,
+    ),
+    outputDirRoot=outputDir,
+    writeCovMat=True,
+    # outputDirCsv=outputDir,
+)
+
+if ambiguity_MLSolver:
+    addAmbiguityResolutionML(
         s,
-        trackingGeometry,
-        field,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-        if ttbar
-        else TruthSeedRanges(),
-        geoSelectionConfigFile=oddSeedingSel,
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+        ),
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/duplicateClassifier.onnx",
     )
-    if seedFilter_ML:
-        addSeedFilterML(
-            s,
-            SeedFilterMLDBScanConfig(
-                epsilonDBScan=0.03, minPointsDBScan=2, minSeedScore=0.1
-            ),
-            onnxModelFile=os.path.dirname(__file__)
-            + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
-            outputDirRoot=outputDir,
-            # outputDirCsv=outputDir,
-        )
-
-if False:
-    addCKFTracks(
+else:
+    addAmbiguityResolution(
         s,
-        trackingGeometry,
-        field,
-        TrackSelectorConfig(
-            pt=(1.0 * u.GeV if ttbar else 0.0, None),
-            absEta=(None, 3.0),
-            loc0=(-4.0 * u.mm, 4.0 * u.mm),
-            nMeasurementsMin=7,
+        AmbiguityResolutionConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
         ),
         outputDirRoot=outputDir,
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )
 
-    if ambiguity_MLSolver:
-        addAmbiguityResolutionML(
-            s,
-            trackingGeometry,
-            field,
-            TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-            if ttbar
-            else TruthSeedRanges(),
-            geoSelectionConfigFile=oddSeedingSel,
-            outputDirRoot=outputDir,
-            # outputDirCsv=outputDir,
-        )
-
-        addCKFTracks(
-            s,
-            AmbiguityResolutionConfig(
-                maximumSharedHits=3,
-                maximumIterations=1000000,
-                nMeasurementsMin=7,
-            ),
-            outputDirRoot=outputDir,
-            writeCovMat=True,
-            # outputDirCsv=outputDir,
-        )
-
-        if ambiguity_MLSolver:
-            addAmbiguityResolutionML(
-                s,
-                AmbiguityResolutionMLConfig(
-                    maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
-                ),
-                outputDirRoot=outputDir,
-                # outputDirCsv=outputDir,
-                onnxModelFile=os.path.dirname(__file__)
-                + "/MLAmbiguityResolution/duplicateClassifier.onnx",
-            )
-        else:
-            addAmbiguityResolution(
-                s,
-                AmbiguityResolutionConfig(
-                    maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
-                ),
-                outputDirRoot=outputDir,
-                writeCovMat=True,
-                # outputDirCsv=outputDir,
-            )
-
-        addVertexFitting(
-            s,
-            field,
-            vertexFinder=VertexFinder.Iterative,
-            outputDirRoot=outputDir,
-        )
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
+)
 
 
 s.run()
