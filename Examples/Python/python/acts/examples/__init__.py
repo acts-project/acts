@@ -200,6 +200,53 @@ def defaultKWArgs(**kwargs) -> dict:
     }
 
 
+def dump_func_args(func, *args, **kwargs):
+    def valstr(v, d=set()):
+        from collections.abc import Callable
+
+        if re.match(r"^<[\w.]+ object at 0x[\da-f]+>$", repr(v)):
+            name = type(v).__module__ + "." + type(v).__qualname__
+            if len(d) < 10 and name not in d and type(v).__name__ != "Sequencer":
+                try:
+                    a = [
+                        k + " = " + valstr(getattr(v, k), set(d | {name}))
+                        for k in dir(v)
+                        if not (
+                            k.startswith("__") or isinstance(getattr(v, k), Callable)
+                        )
+                    ]
+                except:
+                    a = []
+            else:
+                a = []
+            if a:
+                return name + "{ " + ", ".join(a) + " }"
+            else:
+                return name + "{}"
+        else:
+            return repr(v)
+
+    def keyvalstr(kv):
+        return "{0} = {1}".format(kv[0], valstr(kv[1]))
+
+    try:
+        func_kwargs = inspect.signature(func).bind(*args, **kwargs).arguments
+        func_args = func_kwargs.pop("args", [])
+        func_args.count(None)  # raise AttributeError if not tuple/list
+        func_kwargs.update(func_kwargs.pop("kwargs", {}))
+    except (ValueError, AttributeError):
+        func_kwargs = kwargs
+        func_args = args
+    func_args_str = ", ".join(
+        list(map(valstr, func_args)) + list(map(keyvalstr, func_kwargs.items()))
+    )
+    if not (
+        func_args_str == ""
+        and any([a == "Config" for a in func.__qualname__.split(".")])
+    ):
+        print(f"{func.__module__}.{func.__qualname__} ( {func_args_str} )")
+
+
 def dump_args(func):
     """
     Decorator to print function call details.
@@ -210,21 +257,7 @@ def dump_args(func):
 
     @wraps(func)
     def dump_args_wrapper(*args, **kwargs):
-        try:
-            func_args = inspect.signature(func).bind(*args, **kwargs).arguments
-            func_args_str = ", ".join(
-                map("{0[0]} = {0[1]!r}".format, func_args.items())
-            )
-        except ValueError:
-            func_args_str = ", ".join(
-                list(map("{0!r}".format, args))
-                + list(map("{0[0]} = {0[1]!r}".format, kwargs.items()))
-            )
-        if not (
-            func_args_str == ""
-            and any([a == "Config" for a in func.__qualname__.split(".")])
-        ):
-            print(f"{func.__module__}.{func.__qualname__} ( {func_args_str} )")
+        dump_func_args(func, *args, **kwargs)
         return func(*args, **kwargs)
 
     # fix up any attributes broken by the wrapping
@@ -243,7 +276,7 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
     Wrap all Python bindings calls to acts and its submodules in dump_args.
     Specify myLocal=locals() to include imported symbols too.
     """
-    import collections
+    from collections.abc import Callable
 
     def _allmods(mod, base, found):
         import types
@@ -282,9 +315,10 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
             obj = getattr(mod, name, None)
             if not (
                 not name.startswith("__")
-                and isinstance(obj, collections.abc.Callable)
+                and isinstance(obj, Callable)
                 and hasattr(obj, "__module__")
                 and obj.__module__.startswith("acts.ActsPythonBindings")
+                and obj.__qualname__ != "_Sequencer.Config"
                 and not hasattr(obj, "__wrapped__")
             ):
                 continue
@@ -377,6 +411,8 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
             setattr(cfg, k, v)
 
+        if hasattr(ActsPythonBindings._examples._Sequencer, "__wrapped__"):
+            dump_func_args(Sequencer, cfg)
         super().__init__(cfg)
 
     class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):

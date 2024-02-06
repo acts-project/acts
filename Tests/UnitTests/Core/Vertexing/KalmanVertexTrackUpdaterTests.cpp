@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
             .value();
 
     // Create TrackAtVertex
-    TrackAtVertex<BoundTrackParameters> trkAtVtx(0., params, &params);
+    TrackAtVertex trkAtVtx(0., params, InputTrack{&params});
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // Create a vertex
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
-    Vertex<BoundTrackParameters> vtx(vtxPos);
+    Vertex vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexTrackUpdater::update(trkAtVtx, vtx.fullPosition(),
