@@ -38,7 +38,9 @@ void StraightLineStepper::update(State& state, const FreeVector& freeParams,
                                  const Surface& surface) const {
   state.pars = freeParams;
   state.cov = covariance;
-  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
 }
 
 void StraightLineStepper::update(State& state, const Vector3& uposition,
@@ -79,7 +81,9 @@ void StraightLineStepper::resetState(State& state,
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
-  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();

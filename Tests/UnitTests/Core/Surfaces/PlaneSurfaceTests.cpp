@@ -287,14 +287,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // Get the global position
   Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
-  // Construct a free parameters
-  FreeVector parameters = FreeVector::Zero();
-  parameters.head<3>() = globalPosition;
-  parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentToPathMatrix& alignToPath =
-      planeSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
+      planeSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
+                                                    direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   expAlignToPath << 0, 0, 1, 2, -1, 0;
@@ -314,8 +311,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   FreeVector derivatives = FreeVector::Zero();
   derivatives.head<3>() = direction;
   const AlignmentToBoundMatrix& alignToBound =
-      planeSurfaceObject->alignmentToBoundDerivative(tgContext, parameters,
-                                                     derivatives);
+      planeSurfaceObject->alignmentToBoundDerivative(tgContext, globalPosition,
+                                                     direction, derivatives);
   const AlignmentToPathMatrix alignToloc0 =
       alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
   const AlignmentToPathMatrix alignToloc1 =

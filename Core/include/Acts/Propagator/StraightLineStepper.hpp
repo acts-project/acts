@@ -76,8 +76,10 @@ class StraightLineStepper {
           tolerance(stolerance),
           geoContext(gctx) {
       (void)mctx;
-      pars.template segment<3>(eFreePos0) = par.position(gctx);
-      pars.template segment<3>(eFreeDir0) = par.direction();
+      Vector3 position = par.position(gctx);
+      Vector3 direction = par.direction();
+      pars.template segment<3>(eFreePos0) = position;
+      pars.template segment<3>(eFreeDir0) = direction;
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
       if (par.covariance()) {
@@ -86,7 +88,7 @@ class StraightLineStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSquareMatrix(*par.covariance());
-        jacToGlobal = surface.boundToFreeJacobian(gctx, pars);
+        jacToGlobal = surface.boundToFreeJacobian(gctx, position, direction);
       }
     }
 

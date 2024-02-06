@@ -210,16 +210,13 @@ Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
 }
 
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global position
-  const Vector3 position = parameters.segment<3>(eFreePos0);
-  // The direction
-  const Vector3 direction = parameters.segment<3>(eFreeDir0);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
-
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // calculate the transformation to local coordinates
   const Vector3 pos_loc = transform(gctx).inverse() * position;
@@ -246,19 +243,16 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
 }
 
 Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
 
-  // The global position
-  const auto position = parameters.segment<3>(eFreePos0);
-  // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
-
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // calculate the transformation to local coordinates
   const Vector3 pos_loc = transform(gctx).inverse() * position;

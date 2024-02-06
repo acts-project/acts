@@ -39,7 +39,9 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
-  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
@@ -75,7 +77,9 @@ void Acts::EigenStepper<E, A>::update(State& state,
                                       const Surface& surface) const {
   state.pars = freeParams;
   state.cov = covariance;
-  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
 }
 
 template <typename E, typename A>
