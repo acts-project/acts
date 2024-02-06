@@ -208,6 +208,8 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
 
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
 
