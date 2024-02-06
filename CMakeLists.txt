@@ -62,6 +62,9 @@ option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS
 option(ACTS_SETUP_ALGEBRAPLUGINS "Explicitly set up algebra-plugins for the project" OFF)
 option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
+#detray changes
+option(ACTS_SETUP_DETRAY "Explicitly set up detray for the project" ON)
+option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
@@ -271,6 +274,14 @@ if (ACTS_SETUP_ALGEBRAPLUGINS)
     find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
   else()
     add_subdirectory(thirdparty/algebra-plugins)
+  endif()
+endif()
+
+if (ACTS_SETUP_DETRAY)
+  if (ACTS_USE_SYSTEM_DETRAY)
+    find_package(detray REQUIRED)
+  else()
+    add_subdirectory(thirdparty/detray)
   endif()
 endif()
 
