@@ -119,8 +119,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
 template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
-    State& state, Vertex& newVertex,
-    const linearizer_t& linearizer,
+    State& state, Vertex& newVertex, const linearizer_t& linearizer,
     const VertexingOptions& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
     ACTS_ERROR(
@@ -223,11 +222,11 @@ Acts::Result<void> Acts::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    setAllVertexCompatibilities(
-        State& state, Vertex* vtx,
-        const VertexingOptions& vertexingOptions) const {
+Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
+    input_track_t,
+    linearizer_t>::setAllVertexCompatibilities(State& state, Vertex* vtx,
+                                               const VertexingOptions&
+                                                   vertexingOptions) const {
   VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
 
   // Loop over all tracks that are associated with vtx and estimate their
