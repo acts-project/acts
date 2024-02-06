@@ -34,8 +34,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   int iteration = 0;
   std::vector<InputTrack> removedSeedTracks;
   while (!seedTracks.empty() && iteration < m_cfg.maxIterations &&
-         ((m_cfg.addSingleTrackVertices && seedTracks.size() >= 1) ||
-          (!m_cfg.addSingleTrackVertices && seedTracks.size() >= 2))) {
+         (m_cfg.addSingleTrackVertices || seedTracks.size() >= 2)) {
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
     std::vector<InputTrack> searchTracks;
