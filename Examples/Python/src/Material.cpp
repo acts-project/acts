@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
+#include "Acts/Material/interface/IMaterialMapper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -102,7 +104,6 @@ void addMaterial(Context& ctx) {
                    mex, "MaterialMapping")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
-                   .def("scoringParameters", &Alg::scoringParameters)
                    .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Alg::Config>(alg, "Config")
@@ -111,19 +112,25 @@ void addMaterial(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
     ACTS_PYTHON_MEMBER(collection);
-    ACTS_PYTHON_MEMBER(mappingMaterialCollection);
-    ACTS_PYTHON_MEMBER(materialSurfaceMapper);
-    ACTS_PYTHON_MEMBER(materialVolumeMapper);
+    ACTS_PYTHON_MEMBER(mappedCollection);
+    ACTS_PYTHON_MEMBER(unmappedCollection);
+    ACTS_PYTHON_MEMBER(materialMappers);
     ACTS_PYTHON_MEMBER(materialWriters);
     ACTS_PYTHON_MEMBER(trackingGeometry);
+    ACTS_PYTHON_MEMBER(detector);
     ACTS_PYTHON_MEMBER(geoContext);
     ACTS_PYTHON_MEMBER(magFieldContext);
     ACTS_PYTHON_STRUCT_END();
   }
 
   {
-    auto cls =
-        py::class_<SurfaceMaterialMapper,
+     py::class_<IMaterialMapper, std::shared_ptr<IMaterialMapper>>(
+        m, "IMaterialMapper");
+  }
+
+  {
+    auto sMapper =
+        py::class_<SurfaceMaterialMapper, IMaterialMapper,
                    std::shared_ptr<SurfaceMaterialMapper>>(
             m, "SurfaceMaterialMapper")
             .def(py::init([](const SurfaceMaterialMapper::Config& config,
@@ -135,19 +142,20 @@ void addMaterial(Context& ctx) {
                  }),
                  py::arg("config"), py::arg("propagator"), py::arg("level"));
 
-    auto c = py::class_<SurfaceMaterialMapper::Config>(cls, "Config")
+    auto c = py::class_<SurfaceMaterialMapper::Config>(sMapper, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, SurfaceMaterialMapper::Config);
-    ACTS_PYTHON_MEMBER(etaRange);
     ACTS_PYTHON_MEMBER(emptyBinCorrection);
     ACTS_PYTHON_MEMBER(mapperDebugOutput);
     ACTS_PYTHON_MEMBER(computeVariance);
+    ACTS_PYTHON_MEMBER(veto);
     ACTS_PYTHON_STRUCT_END();
   }
 
   {
-    auto cls =
-        py::class_<VolumeMaterialMapper, std::shared_ptr<VolumeMaterialMapper>>(
+    auto vMapper =
+        py::class_<VolumeMaterialMapper, IMaterialMapper,
+                   std::shared_ptr<VolumeMaterialMapper>>(
             m, "VolumeMaterialMapper")
             .def(py::init([](const VolumeMaterialMapper::Config& config,
                              VolumeMaterialMapper::StraightLinePropagator prop,
@@ -158,10 +166,11 @@ void addMaterial(Context& ctx) {
                  }),
                  py::arg("config"), py::arg("propagator"), py::arg("level"));
 
-    auto c = py::class_<VolumeMaterialMapper::Config>(cls, "Config")
+    auto c = py::class_<VolumeMaterialMapper::Config>(vMapper, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, VolumeMaterialMapper::Config);
     ACTS_PYTHON_MEMBER(mappingStep);
+    ACTS_PYTHON_MEMBER(veto);
     ACTS_PYTHON_STRUCT_END();
   }
 }

@@ -11,10 +11,12 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/interface/IMaterialMapper.hpp" 
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
@@ -80,14 +82,22 @@ struct MaterialVolume {
 ///
 ///  4) Each 'hit' bin per event is counted and averaged at the end of the run
 ///
-class SurfaceMaterialMapper {
+class SurfaceMaterialMapper : public IMaterialMapper {
  public:
-  using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
+  using StraightLineTGPropagator = Propagator<StraightLineStepper, Navigator>;
+  using StraightLineDetPropagator = 
+    Propagator<StraightLineStepper, Acts::Experimental::DetectorNavigator>;
 
   /// @struct Config
   ///
   /// Nested Configuration struct for the material mapper
   struct Config {
+    /// The TrackingGeometry propagator
+    std::shared_ptr<const 
+      Propagator<StraightLineStepper, Navigator>> tgPropagator = nullptr;
+    /// The Detector propagator
+    std::shared_ptr<const Propagator<StraightLineStepper, 
+      Acts::Experimental::DetectorNavigator>> detPropagator = nullptr;
     /// Mapping range
     std::array<double, 2> etaRange = {{-6., 6.}};
     /// Correct for empty bins (recommended)
@@ -96,12 +106,14 @@ class SurfaceMaterialMapper {
     bool mapperDebugOutput = false;
     /// Compute the variance of each material slab (only if using an input map)
     bool computeVariance = false;
+    /// A potential veto
+    MaterialInteractionVeto veto = NoVeto{};
   };
 
   /// @struct State
   ///
   /// Nested State struct which is used for the mapping prococess
-  struct State {
+  struct State : public MaterialMappingState {
     /// @param [in] gctx The geometry context to use
     /// @param [in] mctx The magnetic field context to use
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
@@ -136,9 +148,9 @@ class SurfaceMaterialMapper {
   /// Constructor with config object
   ///
   /// @param cfg Configuration struct
-  /// @param propagator The straight line propagator
+  /// @param propagator The straight line propagator with the TrackingGeometry navigation
   /// @param slogger The logger
-  SurfaceMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
+  SurfaceMaterialMapper(const Config& cfg,
                         std::unique_ptr<const Logger> slogger =
                             getDefaultLogger("SurfaceMaterialMapper",
                                              Logging::INFO));
@@ -152,9 +164,24 @@ class SurfaceMaterialMapper {
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
-  State createState(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
-                    const TrackingGeometry& tGeometry) const;
+  std::unique_ptr<MaterialMappingState> 
+  createState(const GeometryContext& gctx,
+    const MagneticFieldContext& mctx,
+    const TrackingGeometry& tGeometry) const override;
+
+  /// @brief helper method that creates the cache for the mapping
+  ///
+  /// @param [in] gctx The geometry context to use
+  /// @param [in] mctx The magnetic field context to use
+  /// @param[in] detector The Detector which should be mapped
+  ///
+  /// This method takes a Detector,
+  /// finds all surfaces with material proxis
+  /// and returns you a Cache object tO be used
+  std::unique_ptr<MaterialMappingState> 
+  createState(const GeometryContext& gctx,
+    const MagneticFieldContext& mctx,
+    const Acts::Experimental::Detector& detector) const override;
 
   /// @brief Method to finalize the maps
   ///
@@ -163,7 +190,8 @@ class SurfaceMaterialMapper {
   /// class type
   ///
   /// @param mState
-  void finalizeMaps(State& mState) const;
+  MaterialMappingResult 
+  finalizeMaps(MaterialMappingState& mState) const override;
 
   /// Process/map a single track
   ///
@@ -172,7 +200,9 @@ class SurfaceMaterialMapper {
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  std::array<RecordedMaterialTrack, 2u> 
+  mapMaterialTrack(MaterialMappingState& mState, 
+    const RecordedMaterialTrack& mTrack) const override;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
@@ -180,7 +210,8 @@ class SurfaceMaterialMapper {
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
   ///
-  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+  std::array<RecordedMaterialTrack, 2u>  
+  mapInteraction(State& mState, const RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
@@ -189,8 +220,9 @@ class SurfaceMaterialMapper {
   /// @param rMaterial Vector of all the material interactions that will be mapped
   ///
   /// @note The material interactions are assumed to have an associated surface ID
-  void mapSurfaceInteraction(State& mState,
-                             std::vector<MaterialInteraction>& rMaterial) const;
+  std::array<Acts::RecordedMaterialTrack, 2u>  
+  mapSurfaceInteraction(State& mState,
+    const RecordedMaterialTrack& mTrack) const;
 
  private:
   /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume
@@ -199,6 +231,13 @@ class SurfaceMaterialMapper {
   /// @param tVolume is current TrackingVolume
   void resolveMaterialSurfaces(State& mState,
                                const TrackingVolume& tVolume) const;
+
+  /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume
+  ///
+  /// @param mState The state to be filled
+  /// @param dVolume is current DetectorVolume
+  void resolveMaterialSurfaces(State& mState, 
+    const Acts::Experimental::DetectorVolume& dVolume) const;
 
   /// @brief check and insert
   ///
@@ -218,9 +257,6 @@ class SurfaceMaterialMapper {
 
   /// The configuration object
   Config m_cfg;
-
-  /// The straight line propagator
-  StraightLinePropagator m_propagator;
 
   /// The logging instance
   std::unique_ptr<const Logger> m_logger;

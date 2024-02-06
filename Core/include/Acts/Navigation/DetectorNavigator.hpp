@@ -154,6 +154,9 @@ class DetectorNavigator {
       ACTS_ERROR("panic: no detector");
       return;
     }
+
+    fillNavigationState(state, stepper, nState);
+    initializeTarget(state, stepper);
   }
 
   /// @brief Navigator pre step call
