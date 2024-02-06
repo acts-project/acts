@@ -35,7 +35,7 @@ class DummyVertexFitter {
 
   /// @brief Dummy fit method
   Result<Vertex> fit(const std::vector<input_track_t>&, const linearizer_t&,
-                     const VertexingOptions<input_track_t>&) const;
+                     const VertexingOptions&) const;
 };
 
 }  // namespace Acts

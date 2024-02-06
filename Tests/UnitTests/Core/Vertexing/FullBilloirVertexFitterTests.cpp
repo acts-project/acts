@@ -148,9 +148,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   VertexFitter billoirFitter(vertexFitterCfg);
   VertexFitter::State state(bField->makeCache(magFieldContext));
   // Vertexing options for default tracks
-  VertexingOptions<BoundTrackParameters> vfOptions(geoContext, magFieldContext);
-  VertexingOptions<BoundTrackParameters> vfOptionsConstr(
-      geoContext, magFieldContext, constraint);
+  VertexingOptions vfOptions(geoContext, magFieldContext);
+  VertexingOptions vfOptionsConstr(geoContext, magFieldContext, constraint);
 
   // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrack
@@ -167,9 +166,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
                                          extractParameters);
   CustomVertexFitter::State customState(bField->makeCache(magFieldContext));
   // Vertexing options for custom tracks
-  VertexingOptions<InputTrackStub> customVfOptions(geoContext, magFieldContext);
-  VertexingOptions<InputTrackStub> customVfOptionsConstr(
-      geoContext, magFieldContext, customConstraint);
+  VertexingOptions customVfOptions(geoContext, magFieldContext);
+  VertexingOptions customVfOptionsConstr(geoContext, magFieldContext,
+                                         customConstraint);
 
   BOOST_TEST_CONTEXT(
       "Testing FullBilloirVertexFitter when input track vector is empty.") {
