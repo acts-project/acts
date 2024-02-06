@@ -9,8 +9,8 @@
 template <typename vfitter_t>
 auto Acts::ZScanVertexFinder<vfitter_t>::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
-    State& /*state*/) const -> Result<std::vector<Vertex>> {
+    const VertexingOptions& vertexingOptions, State& /*state*/) const
+    -> Result<std::vector<Vertex>> {
   double ZResult = 0.;
   // Prepare the vector of points, on which the 3d mode has later to be
   // calculated

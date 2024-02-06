@@ -37,7 +37,7 @@ METHOD_TRAIT(fit_t, fit);
          fit_t,
          const std::vector<InputTrack>&,
          const typename S::Linearizer_t&,
-         const VertexingOptions<typename S::InputTrack_t>&,
+         const VertexingOptions&,
          typename S::State&>;
         static_assert(fit_exists, "fit method not found");
 
