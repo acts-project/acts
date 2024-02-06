@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
@@ -217,6 +218,9 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // calculate the transformation to local coordinates
   const Vector3 pos_loc = transform(gctx).inverse() * position;
   const double lr = perp(pos_loc);
@@ -253,6 +257,9 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // calculate the transformation to local coordinates
   const Vector3 pos_loc = transform(gctx).inverse() * position;
   const double lr = perp(pos_loc);
