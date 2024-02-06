@@ -9,7 +9,7 @@
 template <typename vfitter_t>
 auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
+    const VertexingOptions& vertexingOptions, State& state) const
     -> Result<std::vector<Vertex>> {
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&

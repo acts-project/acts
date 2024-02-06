@@ -14,7 +14,7 @@ template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
     State& state, const linearizer_t& linearizer,
-    const VertexingOptions<input_track_t>& vertexingOptions) const {
+    const VertexingOptions& vertexingOptions) const {
   // Reset annealing tool
   state.annealingState = AnnealingUtility::State();
 
@@ -33,7 +33,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fit(
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
     for (auto vtx : state.vertexCollection) {
-      VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
+      VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
       vtxInfo.relinearize = false;
       // Store old position of vertex, i.e. seed position
       // in case of first iteration or position determined
@@ -120,7 +120,7 @@ template <typename input_track_t, typename linearizer_t>
 Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
     State& state, Vertex& newVertex, const linearizer_t& linearizer,
-    const VertexingOptions<input_track_t>& vertexingOptions) const {
+    const VertexingOptions& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
     ACTS_ERROR(
         "newVertex does not have any associated tracks (i.e., its trackLinks "
@@ -201,7 +201,7 @@ template <typename input_track_t, typename linearizer_t>
 Acts::Result<void> Acts::
     AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
         State& state, Vertex* vtx,
-        const VertexingOptions<input_track_t>& vertexingOptions) const {
+        const VertexingOptions& vertexingOptions) const {
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
   // Vertex seed position
@@ -222,12 +222,12 @@ Acts::Result<void> Acts::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    setAllVertexCompatibilities(
-        State& state, Vertex* vtx,
-        const VertexingOptions<input_track_t>& vertexingOptions) const {
-  VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
+Acts::Result<void> Acts::AdaptiveMultiVertexFitter<
+    input_track_t,
+    linearizer_t>::setAllVertexCompatibilities(State& state, Vertex* vtx,
+                                               const VertexingOptions&
+                                                   vertexingOptions) const {
+  VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
 
   // Loop over all tracks that are associated with vtx and estimate their
   // compatibility
@@ -269,9 +269,9 @@ template <typename input_track_t, typename linearizer_t>
 Acts::Result<void> Acts::
     AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::setWeightsAndUpdate(
         State& state, const linearizer_t& linearizer,
-        const VertexingOptions<input_track_t>& vertexingOptions) const {
+        const VertexingOptions& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
-    VertexInfo<input_track_t>& vtxInfo = state.vtxInfoMap[vtx];
+    VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
 
     if (vtxInfo.relinearize) {
       vtxInfo.linPoint = vtxInfo.oldPosition;

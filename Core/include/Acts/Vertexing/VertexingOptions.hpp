@@ -19,7 +19,6 @@ namespace Acts {
 
 /// @brief Vertex Finder Options
 ///
-template <typename input_track_t>
 struct VertexingOptions {
   /// Default constructor is deleted
   VertexingOptions() = delete;

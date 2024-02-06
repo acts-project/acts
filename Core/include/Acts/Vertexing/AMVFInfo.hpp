@@ -18,7 +18,6 @@
 namespace Acts {
 
 /// @brief Helper struct for storing vertex related information
-template <typename input_track_t>
 struct VertexInfo {
   VertexInfo() = default;
 
