@@ -47,11 +47,13 @@ and provide:
    expressed (perigee)
 
 3. delegates {class}`Acts::Delegate` mostly via the
-   {struct}`Acts::CombinatorialKalmanFilterExtensions` to define the updater
-   e.g. {class}`Acts::GainMatrixUpdater`, smoother
-   e.g. {class}`Acts::GainMatrixSmoother`, measurement selector
-   e.g. {class}`Acts::MeasurementSelector`, the SourceLinkAccessor, the
-   measurement calibrator and an optional branch stopper.
+   {struct}`Acts::CombinatorialKalmanFilterExtensions` to define
+   - updater e.g. {class}`Acts::GainMatrixUpdater`
+   - smoother e.g. {class}`Acts::GainMatrixSmoother`
+   - measurement selector e.g. {class}`Acts::MeasurementSelector`
+   - SourceLinkAccessor
+   - measurement calibrator
+   - branch stopper (optional)
 
 Typically users have to provide the tracking geometry, an implementation of a
 {class}`Acts::MagneticFieldProvider`, which is needed by the stepper
