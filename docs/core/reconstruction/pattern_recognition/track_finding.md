@@ -56,10 +56,9 @@ and provide:
 Typically users have to provide the tracking geometry, an implementation of a
 {class}`Acts::MagneticFieldProvider`, which is needed by the stepper
 e.g. {class}`Acts::EigenStepper` which is needed by the propagator, a
-SourceLinkAccessor and a measurement calibrator. An implementation of a source link
+source link accessor and a measurement calibrator. An implementation of a source link
 accessor and the measurement calibrator can be found among the examples
-ActsExamples::IndexSourceLinkAccessor, and
-ActsExamples::MeasurementCalibratorAdapter
+`ActsExamples::IndexSourceLinkAccessor`, and `ActsExamples::MeasurementCalibratorAdapter`
 
 
 % Functional approach
