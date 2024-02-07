@@ -64,6 +64,7 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
 
+  (void)position;
   (void)direction;
   assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
