@@ -14,8 +14,8 @@ example algorithm `ActsExamples::TrackFindingAlgorithm`.
 The CKF requires as input a track seed i.e. an estimation of the track parameters,
 and a list of measurements with an association to the (sensitive) surfaces of the
 tracking geometry. The CKF propagates track states initialised by the track
-parameter estimates in direction of the momentum (forward propagation).  When ever
-a surface is reached, compatible measurements are search for. In case of multiple
+parameter estimates in direction of the momentum (forward propagation). Whenever
+a surface is reached, the CKF searches for compatible measurements. In case of multiple
 compatible measurements the trajectory is branched. The track states of all
 branches are updated and smoothed following the Kalman filter prescription. The
 propagation is aborted if either the maximum path length is exceeded or if user
