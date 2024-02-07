@@ -36,7 +36,7 @@ class TruthVertexFinder final : public IAlgorithm {
     /// The output proto vertices collection.
     std::string outputProtoVertices;
     /// Exclude secondary particles not originating from the primary vertex.
-    bool excludeSecondaries = false;
+    bool excludeSecondaries = true;
     /// Build separate proto vertices for the secondary particles.
     bool separateSecondaries = false;
     /// The minimum number of tracks required to create a proto vertex.

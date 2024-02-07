@@ -187,7 +187,7 @@ void addTruthTracking(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputTracks,
       inputParticles, inputMeasurementParticlesMap, outputProtoVertices,
-      excludeSecondaries, separateSecondaries);
+      excludeSecondaries, separateSecondaries, trackMatchingRatio);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackModifier, mex,
                                 "TrackModifier", inputTracks, outputTracks,
