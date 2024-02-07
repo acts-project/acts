@@ -10,13 +10,9 @@
 
 Acts::SurfacePtrsContainer Acts::SurfaceContainer::getPtrs(
     const DetectorPtr& detector) const {
-  Acts::SurfaceContainer::SurfaceVisitor visitor;
-  for (auto& vol : detector->rootVolumePtrs()) {
-    for (auto& surf : vol->surfacePtrs()) {
-      visitor(&(*surf));
-    }
-  }
-  return visitor.surfacePtrs;
+    Acts::SurfaceContainer::SurfaceVisitor visitor;
+    detector->visitSurfaces(visitor);
+    return visitor.surfacePtrs;
 }
 
 Acts::SurfacePtrsContainer Acts::SurfaceContainer::getPtrs(
