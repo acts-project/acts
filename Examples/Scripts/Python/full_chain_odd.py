@@ -36,6 +36,7 @@ parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetect
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
 
 parser.add_argument("--skip", "-s", help="Number of events", type=int, default=0)
+parser.add_argument("--edm4hep", help="Use edm4hep inputs", type=pathlib.Path)
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
 )
@@ -84,45 +85,43 @@ s = acts.examples.Sequencer(
     outputDir=str(outputDir),
 )
 
-edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
-    #  inputPath="ddsim.edm4hep.root",
-    inputPath="ddsim_pi.edm4hep.root",
-    #  inputPath="ddsimDefault_singleMuon_ODD_100events_1GeV_muon_eta0_phi0_edm4hep.root",
-    inputSimHits=[
-        "PixelBarrelReadout",
-        "PixelEndcapReadout",
-        "ShortStripBarrelReadout",
-        "ShortStripEndcapReadout",
-        "LongStripBarrelReadout",
-        "LongStripEndcapReadout",
-    ],
-    outputParticlesGenerator="particles_input",
-    outputParticlesInitial="particles_initial",
-    outputParticlesFinal="particles_final",
-    outputSimHits="simhits",
-    level=acts.logging.DEBUG,
-    graphvizOutput="graphviz",
-    dd4hepDetector=detector,
-    trackingGeometry=trackingGeometry,
-)
-s.addReader(edm4hepReader)
-s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
+if args.edm4hep:
+    edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
+        inputPath=str(args.edm4hep),
+        inputSimHits=[
+            "PixelBarrelReadout",
+            "PixelEndcapReadout",
+            "ShortStripBarrelReadout",
+            "ShortStripEndcapReadout",
+            "LongStripBarrelReadout",
+            "LongStripEndcapReadout",
+        ],
+        outputParticlesGenerator="particles_input",
+        outputParticlesInitial="particles_initial",
+        outputParticlesFinal="particles_final",
+        outputSimHits="simhits",
+        graphvizOutput="graphviz",
+        dd4hepDetector=detector,
+        trackingGeometry=trackingGeometry,
+    )
+    s.addReader(edm4hepReader)
+    s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
 
-addParticleSelection(
-    s,
-    config=ParticleSelectorConfig(
-        rho=(0.0, 24 * u.mm),
-        absZ=(0.0, 1.0 * u.m),
-        eta=(-3.0, 3.0),
-        pt=(150 * u.MeV, None),
-        removeNeutral=True,
-    ),
-    inputParticles="particles",
-    outputParticles="particles_selected",
-)
+    addParticleSelection(
+        s,
+        config=ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
+            eta=(-3.0, 3.0),
+            pt=(150 * u.MeV, None),
+            removeNeutral=True,
+        ),
+        inputParticles="particles",
+        outputParticles="particles_selected",
+    )
 
 
-if False:
+else:
     if not ttbar:
         addParticleGun(
             s,
@@ -276,6 +275,5 @@ addVertexFitting(
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
 )
-
 
 s.run()
