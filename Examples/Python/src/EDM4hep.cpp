@@ -10,10 +10,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryWriter.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepParticleReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackWriter.hpp"
@@ -40,10 +38,6 @@ void addEDM4hep(Context& ctx) {
       outputParticlesFinal, outputParticlesGenerator, outputSimHits,
       graphvizOutput, dd4hepDetector, trackingGeometry);
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepSimHitReader, edm4hep,
-                             "EDM4hepSimHitReader", inputPath, inputParticles,
-                             outputSimHits, dd4hepDetector);
-
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepSimHitWriter, edm4hep,
                              "EDM4hepSimHitWriter", inputSimHits,
                              inputParticles, outputPath, outputParticles,
@@ -57,10 +51,6 @@ void addEDM4hep(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMeasurementWriter, edm4hep,
                              "EDM4hepMeasurementWriter", inputMeasurements,
                              inputClusters, outputPath);
-
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepParticleReader, edm4hep,
-                             "EDM4hepParticleReader", inputPath, inputParticles,
-                             outputParticles);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepParticleWriter, edm4hep,
                              "EDM4hepParticleWriter", inputParticles,
