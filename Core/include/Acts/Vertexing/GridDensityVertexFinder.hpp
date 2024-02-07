@@ -83,15 +83,14 @@ class GridDensityVertexFinder {
     MainGridVector mainGrid = MainGridVector::Zero();
     // Map to store z-bin and track grid (i.e. the density contribution of
     // a single track to the main grid) for every single track
-    std::map<const InputTrack_t*, std::pair<int, TrackGridVector>>
-        binAndTrackGridMap;
+    std::map<InputTrack, std::pair<int, TrackGridVector>> binAndTrackGridMap;
 
     // Map to store bool if track has passed track selection or not
-    std::map<const InputTrack_t*, bool> trackSelectionMap;
+    std::map<InputTrack, bool> trackSelectionMap;
 
     // Store tracks that have been removed from track collection. These
     // track will be removed from the main grid
-    std::vector<const InputTrack_t*> tracksToRemove;
+    std::vector<InputTrack> tracksToRemove;
 
     bool isInitialized = false;
   };
@@ -106,10 +105,9 @@ class GridDensityVertexFinder {
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
+                                   const VertexingOptions& vertexingOptions,
+                                   State& state) const;
 
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
   ///
@@ -118,7 +116,9 @@ class GridDensityVertexFinder {
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   GridDensityVertexFinder(const Config& cfg)
-      : m_cfg(cfg), m_extractParameters([](T params) { return params; }) {}
+      : m_cfg(cfg), m_extractParameters([](const InputTrack& params) {
+          return *params.as<BoundTrackParameters>();
+        }) {}
 
   /// @brief Default constructor used if InputTrack_t type ==
   /// BoundTrackParameters
@@ -136,7 +136,7 @@ class GridDensityVertexFinder {
   /// object
   GridDensityVertexFinder(
       const Config& cfg,
-      const std::function<BoundTrackParameters(InputTrack_t)>& func)
+      const std::function<BoundTrackParameters(const InputTrack&)>& func)
       : m_cfg(cfg), m_extractParameters(func) {}
 
   /// @brief Constructor for user-defined InputTrack_t type =!
@@ -145,7 +145,7 @@ class GridDensityVertexFinder {
   /// @param func Function extracting BoundTrackParameters from InputTrack_t
   /// object
   GridDensityVertexFinder(
-      const std::function<BoundTrackParameters(InputTrack_t)>& func)
+      const std::function<BoundTrackParameters(const InputTrack&)>& func)
       : m_extractParameters(func) {}
 
  private:
@@ -162,7 +162,7 @@ class GridDensityVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 };
 
 }  // namespace Acts

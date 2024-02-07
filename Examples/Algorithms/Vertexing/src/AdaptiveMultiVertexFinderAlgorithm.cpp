@@ -151,21 +151,19 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
 
   const auto& inputTrackParameters = m_inputTrackParameters(ctx);
   // TODO change this from pointers to tracks parameters to actual tracks
-  auto inputTrackPointers =
-      makeTrackParametersPointerContainer(inputTrackParameters);
+  auto inputTracks = makeInputTracks(inputTrackParameters);
 
-  if (inputTrackParameters.size() != inputTrackPointers.size()) {
+  if (inputTrackParameters.size() != inputTracks.size()) {
     ACTS_ERROR("Input track containers do not align: "
-               << inputTrackParameters.size()
-               << " != " << inputTrackPointers.size());
+               << inputTrackParameters.size() << " != " << inputTracks.size());
   }
 
-  for (const auto trk : inputTrackPointers) {
-    if (trk->covariance() && trk->covariance()->determinant() <= 0) {
+  for (const auto& trk : inputTrackParameters) {
+    if (trk.covariance() && trk.covariance()->determinant() <= 0) {
       // actually we should consider this as an error but I do not want the CI
       // to fail
-      ACTS_WARNING("input track " << *trk << " has det(cov) = "
-                                  << trk->covariance()->determinant());
+      ACTS_WARNING("input track " << trk << " has det(cov) = "
+                                  << trk.covariance()->determinant());
     }
   }
 
@@ -187,7 +185,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
     // find vertices
-    auto result = finder.find(inputTrackPointers, finderOpts, state);
+    auto result = finder.find(inputTracks, finderOpts, state);
 
     if (result.ok()) {
       vertices = std::move(result.value());
@@ -204,7 +202,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   }
 
   // store proto vertices extracted from the found vertices
-  m_outputProtoVertices(ctx, makeProtoVertices(inputTrackPointers, vertices));
+  m_outputProtoVertices(ctx, makeProtoVertices(inputTracks, vertices));
 
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));
