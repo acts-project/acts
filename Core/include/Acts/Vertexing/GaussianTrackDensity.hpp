@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 
 #include <map>
 #include <set>
@@ -22,6 +23,7 @@ namespace Acts {
 /// matrices (determining the width of the function)
 template <typename input_track_t>
 class GaussianTrackDensity {
+  // @TODO: Remove template
  public:
   /// @brief Struct to store information for a single track
   struct TrackEntry {
@@ -112,8 +114,8 @@ class GaussianTrackDensity {
   ///
   /// @return Pair of position of global maximum and Gaussian width
   std::pair<double, double> globalMaximumWithWidth(
-      State& state, const std::vector<const input_track_t*>& trackList,
-      const std::function<BoundTrackParameters(input_track_t)>&
+      State& state, const std::vector<InputTrack>& trackList,
+      const std::function<BoundTrackParameters(const InputTrack&)>&
           extractParameters) const;
 
   /// @brief Calculates the z position of the global maximum
@@ -124,10 +126,10 @@ class GaussianTrackDensity {
   /// InputTrack
   ///
   /// @return z position of the global maximum
-  double globalMaximum(State& state,
-                       const std::vector<const input_track_t*>& trackList,
-                       const std::function<BoundTrackParameters(input_track_t)>&
-                           extractParameters) const;
+  double globalMaximum(
+      State& state, const std::vector<InputTrack>& trackList,
+      const std::function<BoundTrackParameters(const InputTrack&)>&
+          extractParameters) const;
 
  private:
   /// The configuration
@@ -140,8 +142,8 @@ class GaussianTrackDensity {
   /// @param extractParameters Function extracting BoundTrackParameters from
   /// InputTrack
   Result<void> addTracks(
-      State& state, const std::vector<const input_track_t*>& trackList,
-      const std::function<BoundTrackParameters(input_track_t)>&
+      State& state, const std::vector<InputTrack>& trackList,
+      const std::function<BoundTrackParameters(const InputTrack&)>&
           extractParameters) const;
 
   /// @brief Evaluate the density function and its two first

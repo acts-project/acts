@@ -13,18 +13,17 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-namespace {
+namespace Acts::detail {
 
 /// @struct BilloirTrack
 ///
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
-template <typename input_track_t>
 struct BilloirTrack {
-  BilloirTrack(const input_track_t* params) : originalTrack(params) {}
+  BilloirTrack(const InputTrack& params) : originalTrack(params) {}
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
-  const input_track_t* originalTrack;
+  InputTrack originalTrack;
   double chi2 = 0;
 
   // We drop the summation index i from Ref. (1) for better readability
@@ -53,20 +52,19 @@ struct BilloirVertex {
   Acts::Vector4 sumBCinvU = Acts::Vector4::Zero();
 };
 
-}  // end anonymous namespace
+}  // namespace Acts::detail
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<Acts::Vertex<input_track_t>>
+Acts::Result<Acts::Vertex>
 Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
-    const std::vector<const input_track_t*>& paramVector,
-    const linearizer_t& linearizer,
+    const std::vector<InputTrack>& paramVector, const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions,
     State& state) const {
   unsigned int nTracks = paramVector.size();
   double chi2 = std::numeric_limits<double>::max();
 
   if (nTracks == 0) {
-    return Vertex<input_track_t>(Vector3(0., 0., 0.));
+    return Vertex(Vector3(0., 0., 0.));
   }
 
   // Set number of degrees of freedom following Eq. 8.28 from Ref. (2):
@@ -90,16 +88,16 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     ndf += 3;
   }
 
-  std::vector<BilloirTrack<input_track_t>> billoirTracks;
+  std::vector<detail::BilloirTrack> billoirTracks;
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
   Vector4 linPoint = vertexingOptions.constraint.fullPosition();
-  Vertex<input_track_t> fittedVertex;
+  Vertex fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
     billoirTracks.clear();
     double newChi2 = 0;
-    BilloirVertex billoirVertex;
+    detail::BilloirVertex billoirVertex;
 
     Vector3 linPointPos = VectorHelpers::position(linPoint);
     // Make Perigee surface at linPointPos, transverse plane of Perigee
@@ -109,9 +107,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
     // iterate over all tracks
     for (std::size_t iTrack = 0; iTrack < nTracks; ++iTrack) {
-      const input_track_t* trackContainer = paramVector[iTrack];
+      const InputTrack& trackContainer = paramVector[iTrack];
 
-      const auto& trackParams = extractParameters(*trackContainer);
+      const auto& trackParams = extractParameters(trackContainer);
 
       auto result = linearizer.linearizeTrack(
           trackParams, linPoint[3], *perigeeSurface,
@@ -143,7 +141,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       double fTheta = trackMomenta[iTrack][1];
       double fQOvP = trackMomenta[iTrack][2];
       double fTime = linPoint[FreeIndices::eFreeTime];
-      BilloirTrack<input_track_t> billoirTrack(trackContainer);
+      detail::BilloirTrack billoirTrack(trackContainer);
 
       billoirTrack.deltaQ << d0, z0, phi - fPhi, theta - fTheta, qOverP - fQOvP,
           t0 - fTime;
@@ -307,7 +305,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       fittedVertex.setFullCovariance(covV);
       fittedVertex.setFitQuality(chi2, ndf);
 
-      std::vector<TrackAtVertex<input_track_t>> tracksAtVertex;
+      std::vector<TrackAtVertex> tracksAtVertex;
 
       std::shared_ptr<PerigeeSurface> perigee =
           Surface::makeShared<PerigeeSurface>(
@@ -328,14 +326,13 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         paramVec[eBoundTime] = linPoint[FreeIndices::eFreeTime];
         BoundTrackParameters refittedParams(
             perigee, paramVec, covDeltaP[iTrack],
-            extractParameters(*billoirTrack.originalTrack)
-                .particleHypothesis());
-        TrackAtVertex<input_track_t> trackAtVertex(
-            billoirTrack.chi2, refittedParams, billoirTrack.originalTrack);
+            extractParameters(billoirTrack.originalTrack).particleHypothesis());
+        TrackAtVertex trackAtVertex(billoirTrack.chi2, refittedParams,
+                                    billoirTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackAtVertex));
       }
 
-      fittedVertex.setTracksAtVertex(tracksAtVertex);
+      fittedVertex.setTracksAtVertex(std::move(tracksAtVertex));
     }
   }  // end loop iterations
 

@@ -26,17 +26,10 @@ add_executable(
 target_link_libraries(
   ActsExampleVertexFitter
   PRIVATE ${_common_libraries})
-add_executable(
-  ActsTutorialVertexFinder
-  TutorialVertexFinderExample.cpp)
-target_link_libraries(
-  ActsTutorialVertexFinder
-  PRIVATE ${_common_libraries})
 
 install(
   TARGETS
     ActsExampleAdaptiveMultiVertexFinder
     ActsExampleIterativeVertexFinder
     ActsExampleVertexFitter
-    ActsTutorialVertexFinder
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

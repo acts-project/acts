@@ -181,7 +181,7 @@ class ImpactPointEstimator {
   /// @param mctx The magnetic field context
   /// @param calculateTimeIP If true, the difference in time is computed
   Result<ImpactParametersAndSigma> getImpactParameters(
-      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       bool calculateTimeIP = false) const;
 
@@ -198,7 +198,7 @@ class ImpactPointEstimator {
   ///
   /// @return A pair holding the sign for the 2D and Z lifetimes
   Result<std::pair<double, double>> getLifetimeSignOfTrack(
-      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex& vtx,
       const Acts::Vector3& direction, const GeometryContext& gctx,
       const MagneticFieldContext& mctx) const;
 
@@ -213,7 +213,7 @@ class ImpactPointEstimator {
   ///
   /// @return The value of the 3D lifetime
   Result<double> get3DLifetimeSignOfTrack(
-      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex& vtx,
       const Acts::Vector3& direction, const GeometryContext& gctx,
       const MagneticFieldContext& mctx) const;
 

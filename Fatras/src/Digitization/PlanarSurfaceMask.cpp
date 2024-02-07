@@ -58,7 +58,7 @@ Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D> maskAndReturn(
     std::vector<Acts::Intersection2D>& intersections,
     const ActsFatras::PlanarSurfaceMask::Segment2D& segment, bool firstInside) {
   std::sort(intersections.begin(), intersections.end(),
-            Acts::Intersection2D::forwardOrder);
+            Acts::Intersection2D::pathLengthOrder);
   if (intersections.size() >= 2) {
     return ActsFatras::PlanarSurfaceMask::Segment2D{
         intersections[0].position(), intersections[1].position()};

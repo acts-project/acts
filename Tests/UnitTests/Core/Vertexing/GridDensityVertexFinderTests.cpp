@@ -150,17 +150,17 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
                            .value());
   }
 
-  std::vector<const BoundTrackParameters*> trackPtrVec;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : trackVec) {
-    trackPtrVec.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
-  auto res1 = finder1.find(trackPtrVec, vertexingOptions, state1);
+  auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
   }
 
-  auto res2 = finder2.find(trackPtrVec, vertexingOptions, state2);
+  auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res2.ok()) {
     std::cout << res2.error().message() << std::endl;
   }
@@ -268,9 +268,9 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
                            .value());
   }
 
-  std::vector<const BoundTrackParameters*> trackPtrVec;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : trackVec) {
-    trackPtrVec.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
   Finder1::State state1;
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   double zResult1 = 0;
   double zResult2 = 0;
 
-  auto res1 = finder1.find(trackPtrVec, vertexingOptions, state1);
+  auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
   }
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     zResult1 = result[eZ];
   }
 
-  auto res2 = finder2.find(trackPtrVec, vertexingOptions, state2);
+  auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res2.ok()) {
     std::cout << res2.error().message() << std::endl;
   }
@@ -312,10 +312,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   CHECK_CLOSE_REL(zResult1, zResult2, 1e-5);
 
   int trkCount = 0;
-  std::vector<const BoundTrackParameters*> removedTracks;
+  std::vector<InputTrack> removedTracks;
   for (const auto& trk : trackVec) {
     if ((trkCount % 4) != 0) {
-      removedTracks.push_back(&trk);
+      removedTracks.emplace_back(&trk);
     }
     trkCount++;
   }
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   state1.tracksToRemove = removedTracks;
   state2.tracksToRemove = removedTracks;
 
-  auto res3 = finder1.find(trackPtrVec, vertexingOptions, state1);
+  auto res3 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res3.ok()) {
     std::cout << res3.error().message() << std::endl;
   }
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     zResult1 = result[eZ];
   }
 
-  auto res4 = finder2.find(trackPtrVec, vertexingOptions, state2);
+  auto res4 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res4.ok()) {
     std::cout << res4.error().message() << std::endl;
   }
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
                                                           magFieldContext);
-  Vertex<BoundTrackParameters> constraintVtx;
+  Vertex constraintVtx;
   constraintVtx.setCovariance(SquareMatrix3::Identity());
   vertexingOptions.constraint = constraintVtx;
 
@@ -433,13 +433,13 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
                            .value());
   }
 
-  std::vector<const BoundTrackParameters*> trackPtrVec;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : trackVec) {
-    trackPtrVec.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
   // Test finder 1
-  auto res1 = finder1.find(trackPtrVec, vertexingOptions, state1);
+  auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
   }
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   }
 
   // Test finder 2
-  auto res2 = finder2.find(trackPtrVec, vertexingOptions, state2);
+  auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res2.ok()) {
     std::cout << res2.error().message() << std::endl;
   }
