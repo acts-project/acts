@@ -134,13 +134,12 @@ void addMaterial(Context& ctx) {
                    std::shared_ptr<SurfaceMaterialMapper>>(
             m, "SurfaceMaterialMapper")
             .def(py::init([](const SurfaceMaterialMapper::Config& config,
-                             SurfaceMaterialMapper::StraightLinePropagator prop,
                              Acts::Logging::Level level) {
                    return std::make_shared<SurfaceMaterialMapper>(
-                       config, std::move(prop),
+                       config,
                        getDefaultLogger("SurfaceMaterialMapper", level));
                  }),
-                 py::arg("config"), py::arg("propagator"), py::arg("level"));
+                 py::arg("config"), py::arg("level"));
 
     auto c = py::class_<SurfaceMaterialMapper::Config>(sMapper, "Config")
                  .def(py::init<>());
@@ -153,9 +152,8 @@ void addMaterial(Context& ctx) {
   }
 
   {
-    auto vMapper =
-        py::class_<VolumeMaterialMapper, IMaterialMapper,
-                   std::shared_ptr<VolumeMaterialMapper>>(
+    auto cls =
+        py::class_<VolumeMaterialMapper, std::shared_ptr<VolumeMaterialMapper>>(
             m, "VolumeMaterialMapper")
             .def(py::init([](const VolumeMaterialMapper::Config& config,
                              VolumeMaterialMapper::StraightLinePropagator prop,
@@ -166,11 +164,11 @@ void addMaterial(Context& ctx) {
                  }),
                  py::arg("config"), py::arg("propagator"), py::arg("level"));
 
-    auto c = py::class_<VolumeMaterialMapper::Config>(vMapper, "Config")
+    auto c = py::class_<VolumeMaterialMapper::Config>(cls, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, VolumeMaterialMapper::Config);
     ACTS_PYTHON_MEMBER(mappingStep);
-    ACTS_PYTHON_MEMBER(veto);
+    // ACTS_PYTHON_MEMBER(veto);
     ACTS_PYTHON_STRUCT_END();
   }
 }
