@@ -64,6 +64,7 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
 
+  (void)direction;
   assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // 1) Calculate the derivative of bound parameter local position w.r.t.
@@ -91,6 +92,7 @@ Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
 
+  (void)direction;
   assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // The vector between position and center
