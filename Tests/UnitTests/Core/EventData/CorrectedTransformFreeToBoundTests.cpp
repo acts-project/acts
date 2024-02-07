@@ -77,7 +77,8 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // the intersection of the track with the end surface
   SurfaceIntersection intersection =
-      eSurface->intersect(geoCtx, Vector3(0, 0, 0), dir, BoundaryCheck(true))
+      eSurface
+          ->intersect(geoCtx, Vector3(0, 0, 0), dir, Acts::BoundaryCheck(true))
           .closest();
   Vector3 tpos = intersection.position();
   auto s = intersection.pathLength();
@@ -86,14 +87,14 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // construct the free parameters vector
   FreeVector eFreeParams = FreeVector::Zero();
-  eFreeParams.segment<3>(eFreePos0) = tpos;
+  eFreeParams.segment<3>(0) = tpos;
   eFreeParams[eFreeTime] = t;
-  eFreeParams.segment<3>(eFreeDir0) = dir;
+  eFreeParams.segment<3>(4) = dir;
   eFreeParams[eFreeQOverP] = qOverP;
 
   // the jacobian from local to global at the starting position
   BoundToFreeMatrix boundToFreeJac =
-      eSurface->boundToFreeJacobian(geoCtx, eFreeParams);
+      sSurface->boundToFreeJacobian(geoCtx, eFreeParams);
 
   // the transport jacobian without B field
   FreeMatrix transportJac = FreeMatrix::Identity();
