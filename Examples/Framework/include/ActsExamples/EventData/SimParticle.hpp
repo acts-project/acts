@@ -14,62 +14,40 @@
 #include <boost/container/flat_set.hpp>
 
 namespace ActsExamples {
-
-class SimParticle : public ::ActsFatras::Particle {
- public:
-  using ::ActsFatras::Particle::Particle;
-
-  SimParticle(Particle&& particle) : Particle(std::move(particle)) {}
-  SimParticle(const Particle& particle) : Particle(particle) {}
-
-  SimParticle* parent() { return m_parent; }
-  const SimParticle* parent() const { return m_parent; }
-  void setParent(SimParticle* parent) { m_parent = parent; }
-
-  auto childrenBegin() { return m_children.begin(); }
-  auto childrenBgin() const { return m_children.begin(); }
-  auto childrenEnd() { return m_children.end(); }
-  auto childrenEnd() const { return m_children.end(); }
-
-  void addChild(SimParticle& child) { m_children.push_back(&child); }
-
- private:
-  SimParticle* m_parent = nullptr;
-  std::vector<SimParticle*> m_children = {};
-};
-
 namespace detail {
 struct CompareParticleId {
   using is_transparent = void;
-  constexpr bool operator()(const SimParticle& lhs,
-                            const SimParticle& rhs) const {
+  constexpr bool operator()(const ActsFatras::Particle& lhs,
+                            const ActsFatras::Particle& rhs) const {
     return lhs.particleId() < rhs.particleId();
   }
   constexpr bool operator()(ActsFatras::Barcode lhs,
-                            const SimParticle& rhs) const {
+                            const ActsFatras::Particle& rhs) const {
     return lhs < rhs.particleId();
   }
-  constexpr bool operator()(const SimParticle& lhs,
+  constexpr bool operator()(const ActsFatras::Particle& lhs,
                             ActsFatras::Barcode rhs) const {
     return lhs.particleId() < rhs;
   }
 };
 struct PrimaryVertexIdGetter {
-  constexpr ActsFatras::Barcode operator()(const SimParticle& particle) const {
-    return ActsFatras::Barcode().setVertexPrimary(
+  constexpr ActsFatras::Barcode operator()(
+      const ActsFatras::Particle& particle) const {
+    return ActsFatras::Barcode(0u).setVertexPrimary(
         particle.particleId().vertexPrimary());
   }
 };
 struct SecondaryVertexIdGetter {
-  constexpr ActsFatras::Barcode operator()(const SimParticle& particle) const {
-    return ActsFatras::Barcode()
+  constexpr ActsFatras::Barcode operator()(
+      const ActsFatras::Particle& particle) const {
+    return ActsFatras::Barcode(0u)
         .setVertexPrimary(particle.particleId().vertexPrimary())
         .setVertexSecondary(particle.particleId().vertexSecondary());
   }
 };
 }  // namespace detail
 
-// using SimParticle = ::ActsFatras::Particle;
+using SimParticle = ::ActsFatras::Particle;
 /// Store particles ordered by particle identifier.
 using SimParticleContainer =
     ::boost::container::flat_set<SimParticle, detail::CompareParticleId>;
