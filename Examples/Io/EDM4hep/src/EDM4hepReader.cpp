@@ -109,7 +109,7 @@ std::string vid(unsigned int vtx) {
 
 std::string pid(const SimParticle& particle) {
   return "P" + std::to_string(particle.particleId().value());
-};
+}
 
 std::string plabel(const SimParticle& particle) {
   using namespace Acts::UnitLiterals;
@@ -118,7 +118,7 @@ std::string plabel(const SimParticle& particle) {
      << "p=" << std::setprecision(3) << particle.absoluteMomentum() / 1_GeV
      << " GeV";
   return ss.str();
-};
+}
 
 }  // namespace
 

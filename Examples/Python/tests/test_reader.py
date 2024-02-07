@@ -357,7 +357,7 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_simhit_particle_reader(tmp_path):
-    from acts.examples.edm4hep import EDM4hepSimHitReader
+    from acts.examples.edm4hep import EDM4hepReader
 
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
@@ -374,11 +374,23 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     s = Sequencer(numThreads=1)
 
     s.addReader(
-        EDM4hepSimHitReader(
+        EDM4hepReader(
             level=acts.logging.INFO,
             inputPath=tmp_file,
+            inputSimHits=[
+                "PixelBarrelReadout",
+                "PixelEndcapReadout",
+                "ShortStripBarrelReadout",
+                "ShortStripEndcapReadout",
+                "LongStripBarrelReadout",
+                "LongStripEndcapReadout",
+            ],
+            outputParticlesGenerator="particles_input",
+            outputParticlesInitial="particles_initial",
+            outputParticlesFinal="particles_final",
             outputSimHits="simhits",
             dd4hepDetector=detector,
+            trackingGeometry=trackingGeometry,
         )
     )
 
@@ -386,7 +398,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     s.addAlgorithm(alg)
 
     alg = AssertCollectionExistsAlg(
-        "input_particles", "check_alg", acts.logging.WARNING
+        "particles_input", "check_alg", acts.logging.WARNING
     )
     s.addAlgorithm(alg)
 
