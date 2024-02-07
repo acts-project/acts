@@ -178,8 +178,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     VertexFinder finder(cfg);
 
-    VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                            magFieldContext);
+    VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
     VertexFinder::State state;
     auto res = finder.find(inputTracks, vertexingOptions, state);
@@ -310,8 +309,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     VertexFinder finder(cfg, extractParameters);
     VertexFinder::State state;
 
-    VertexingOptions<InputTrackStub> vertexingOptions(geoContext,
-                                                      magFieldContext);
+    VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
     auto res = finder.find(inputTracks, vertexingOptions, state);
 
