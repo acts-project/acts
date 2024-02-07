@@ -40,7 +40,7 @@ template parameters:
 and provide:
 
 1. user defined geometry (e.g. alignment), magnetic field and measurement
-   calibration context which are unused by Acts but passed to the possibly
+   calibration context which are unused by ACTS but passed to the possibly
    user defined delegates.
 
 2. the reference surface with respect to which the track defining parameters are
