@@ -80,7 +80,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 s = acts.examples.Sequencer(
     events=args["events"],
     skip=args["skip"],
-    numThreads=1,
+    numThreads=-1,
     outputDir=str(outputDir),
 )
 

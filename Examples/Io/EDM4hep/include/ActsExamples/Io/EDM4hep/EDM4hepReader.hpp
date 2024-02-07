@@ -22,6 +22,7 @@
 #include <DD4hep/DetElement.h>
 #include <edm4hep/MCParticleCollection.h>
 #include <podio/ROOTFrameReader.h>
+#include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
 
@@ -103,7 +104,9 @@ class EDM4hepReader final : public IReader {
 
   std::unordered_map<unsigned int, const Acts::Surface*> m_surfaceMap;
 
-  podio::ROOTFrameReader m_reader;
+  tbb::enumerable_thread_specific<podio::ROOTFrameReader> m_reader;
+
+  podio::ROOTFrameReader& reader();
 
   WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
       this, "OutputParticlesInitial"};

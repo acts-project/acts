@@ -28,6 +28,7 @@
 #include <edm4hep/SimTrackerHitCollection.h>
 #include <podio/Frame.h>
 #include <podio/ObjectID.h>
+#include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
 
@@ -51,9 +52,7 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
     throw std::invalid_argument("Missing output collection sim hits");
   }
 
-  m_reader.openFile(m_cfg.inputPath);
-
-  m_eventsRange = std::make_pair(0, m_reader.getEntries("events"));
+  m_eventsRange = std::make_pair(0, reader().getEntries("events"));
 
   m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
   m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
@@ -80,12 +79,19 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
     Acts::Vector3 position;
     position << translation[0], translation[1], translation[2];
     position *= 10;
-    // ACTS_INFO("- DD4hep surface position: " << position.transpose());
-    // ACTS_INFO("- DD4hep surface id " << detElement->sourceElement().id());
-    // ACTS_INFO("- DD4hep surface key " << detElement->sourceElement().key());
 
     m_surfaceMap.insert({detElement->sourceElement().key(), surface});
   });
+}
+
+podio::ROOTFrameReader& EDM4hepReader::reader() {
+  bool exists = false;
+  auto& reader = m_reader.local(exists);
+  if (!exists) {
+    reader.openFile(m_cfg.inputPath);
+  }
+
+  return reader;
 }
 
 std::string EDM4hepReader::name() const {
@@ -155,7 +161,7 @@ void EDM4hepReader::graphviz(
 }
 
 ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
-  podio::Frame frame = m_reader.readEntry("events", ctx.eventNumber);
+  podio::Frame frame = reader().readEntry("events", ctx.eventNumber);
   const auto& mcParticleCollection =
       frame.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
 
