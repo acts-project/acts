@@ -82,6 +82,7 @@ Acts::AlignmentToBoundMatrix
 Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
+  (void)direction;
   assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // The vector between position and center
