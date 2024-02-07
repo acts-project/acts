@@ -7,9 +7,9 @@ Write CKF documentation
 (ckf_core)=
 ## Combinatorial Kalman Filter
 
-Acts provides a Combinatorial Kalman Filter (CKF) implementation for track finding
-( {class}`Acts::CombinatorialKalmanFilter`).  Its usage is demonstrated in the
-example algorithm ActsExamples::TrackFindingAlgorithm.
+ACTS provides a Combinatorial Kalman Filter (CKF) implementation for track finding
+({class}`Acts::CombinatorialKalmanFilter`). Its usage is demonstrated in the
+example algorithm `ActsExamples::TrackFindingAlgorithm`.
 
 The CKF requires as input a track seed i.e. an estimation of the track parameters,
 and a list of measurements with an association to the (sensitive) surfaces of the
