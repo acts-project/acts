@@ -198,6 +198,9 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
 
 Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const FreeVector& parameters) const {
+  BoundToFreeMatrix jacToGlobal =
+      Surface::boundToFreeJacobian(gctx, parameters);
+
   // The global position
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
@@ -205,17 +208,12 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
 
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
-
   Vector2 local = *globalToLocal(gctx, position, direction,
                                  std::numeric_limits<double>::max());
 
   // For the derivative of global position with bound angles, refer the
   // following white paper:
   // https://acts.readthedocs.io/en/latest/white_papers/line-surface-jacobian.html
-
-  BoundToFreeMatrix jacToGlobal =
-      Surface::boundToFreeJacobian(gctx, parameters);
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
