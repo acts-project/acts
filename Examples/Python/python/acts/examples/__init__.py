@@ -159,7 +159,9 @@ def NamedTypeArgs(**namedTypeArgs):
                     cls is not None
                     and v is not None
                     and type(v).__module__ == int.__module__  # is v a 'builtins'?
-                    and not (issubclass(type(v), Iterable) and all(type(e) is cls for e in v))  # not [cls]
+                    and not (
+                        issubclass(type(v), Iterable) and all(type(e) is cls for e in v)
+                    )  # not [cls]
                 ):
                     if issubclass(cls, Iterable):
                         kwargs[k] = cls(*v)

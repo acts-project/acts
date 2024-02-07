@@ -1129,7 +1129,9 @@ def addCKFTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    trackSelectorConfig: Optional[Union[TrackSelectorConfig, List[TrackSelectorConfig]]] = None,
+    trackSelectorConfig: Optional[
+        Union[TrackSelectorConfig, List[TrackSelectorConfig]]
+    ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -1151,6 +1153,7 @@ def addCKFTracks(
         the output folder for the Root output, None triggers no output
     trackSelectorConfig : TrackSelectorConfig(loc0, loc1, time, eta, absEta, pt, phi, minMeasurements)
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
+        Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
     writeTrajectories : bool, True
         write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.

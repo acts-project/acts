@@ -105,14 +105,21 @@ addSeeding(
     outputDirRoot=outputDir,
 )
 
+allEtaCuts = {"maxHoles": 2, "maxSharedHits": 2}
 addCKFTracks(
     s,
     trackingGeometry,
     field,
     trackSelectorConfig=(
-      TrackSelectorConfig(absEta=(None, 2.0), pt=(0.9 * u.GeV, None), nMeasurementsMin=9, maxHoles=2, maxSharedHits=2),
-      TrackSelectorConfig(absEta=(None, 2.6), pt=(0.4 * u.GeV, None), nMeasurementsMin=8, maxHoles=2, maxSharedHits=2),
-      TrackSelectorConfig(absEta=(None, 4.0), pt=(0.4 * u.GeV, None), nMeasurementsMin=7, maxHoles=2, maxSharedHits=2),
+        TrackSelectorConfig(
+            absEta=(None, 2.0), pt=(0.9 * u.GeV, None), nMeasurementsMin=9, **allEtaCuts
+        ),
+        TrackSelectorConfig(
+            absEta=(None, 2.6), pt=(0.4 * u.GeV, None), nMeasurementsMin=8, **allEtaCuts
+        ),
+        TrackSelectorConfig(
+            absEta=(None, 4.0), pt=(0.4 * u.GeV, None), nMeasurementsMin=7, **allEtaCuts
+        ),
     ),
     outputDirRoot=outputDir,
 )
