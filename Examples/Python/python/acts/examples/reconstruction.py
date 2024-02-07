@@ -1224,7 +1224,6 @@ def addCKFTracks(
                 )
             ]
         ),
-        trackSelectorCfg=trkSelCfg,
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
@@ -1233,6 +1232,7 @@ def addCKFTracks(
             trackingGeometry, field, customLogLevel()
         ),
         **acts.examples.defaultKWArgs(
+            trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
         ),
     )
