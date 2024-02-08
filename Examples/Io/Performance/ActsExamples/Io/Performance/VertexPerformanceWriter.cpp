@@ -761,6 +761,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_covYZ.clear();
   m_covYT.clear();
   m_covZT.clear();
+  m_sumPt2.clear();
   m_truthPhi.clear();
   m_truthTheta.clear();
   m_truthQOverP.clear();
