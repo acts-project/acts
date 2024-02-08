@@ -91,7 +91,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Seeder seeder{{{densityCfg}}};
   // Set up the actual vertex finder
   Finder::Config finderCfg(std::move(vertexFitter), std::move(linearizer),
-                           std::move(seeder), ipEst);
+                           seeder, ipEst);
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = false;
   finderCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
