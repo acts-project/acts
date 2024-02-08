@@ -84,9 +84,11 @@ def runMaterialMapping(
         )
         propagator = Propagator(stepper, navigator)
         mapper = SurfaceMaterialMapper(level=acts.logging.INFO, propagator=propagator)
-        mmAlgCfg.materialSurfaceMapper = mapper
+        mmAlgCfg.materialMappers += [mapper]
 
+    '''
     if mapVolume:
+        print('Mapping volumes')
         navigator = Navigator(
             trackingGeometry=trackingGeometry,
         )
@@ -94,7 +96,9 @@ def runMaterialMapping(
         mapper = VolumeMaterialMapper(
             level=acts.logging.INFO, propagator=propagator, mappingStep=mappingStep
         )
-        mmAlgCfg.materialVolumeMapper = mapper
+        mmAlgCfg.materialMappers += [mapper]
+        print('len(mmAlgCfg.materialMappers):', len(mmAlgCfg.materialMappers))
+    '''
 
     jmConverterCfg = MaterialMapJsonConverter.Config(
         processSensitives=True,
@@ -114,12 +118,20 @@ def runMaterialMapping(
 
     mmAlgCfg.materialWriters = [jmw]
 
+    print('\n\n\n')
+    print('-'*80)
+    print('lean(mmAlgCfg.materialMappers):', len(mmAlgCfg.materialMappers))
+    print('lean(mmAlgCfg.materialWriters):', len(mmAlgCfg.materialWriters))
+    print('-'*80)
+    print('\n\n\n')
+
+
     s.addAlgorithm(MaterialMapping(level=acts.logging.INFO, config=mmAlgCfg))
 
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
-            collection=mmAlgCfg.mappingMaterialCollection,
+            collection=mmAlgCfg.mappedCollection,
             filePath=os.path.join(
                 outputDir,
                 mapName + "_tracks.root",

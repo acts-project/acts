@@ -92,14 +92,6 @@ class SurfaceMaterialMapper : public IMaterialMapper {
   ///
   /// Nested Configuration struct for the material mapper
   struct Config {
-    /// The TrackingGeometry propagator
-    std::shared_ptr<const 
-      Propagator<StraightLineStepper, Navigator>> tgPropagator = nullptr;
-    /// The Detector propagator
-    std::shared_ptr<const Propagator<StraightLineStepper, 
-      Acts::Experimental::DetectorNavigator>> detPropagator = nullptr;
-    /// Mapping range
-    std::array<double, 2> etaRange = {{-6., 6.}};
     /// Correct for empty bins (recommended)
     bool emptyBinCorrection = true;
     /// Mapping output to debug stream
@@ -151,6 +143,18 @@ class SurfaceMaterialMapper : public IMaterialMapper {
   /// @param propagator The straight line propagator with the TrackingGeometry navigation
   /// @param slogger The logger
   SurfaceMaterialMapper(const Config& cfg,
+                        StraightLineTGPropagator& propagator,
+                        std::unique_ptr<const Logger> slogger =
+                            getDefaultLogger("SurfaceMaterialMapper",
+                                             Logging::INFO));
+
+  /// Constructor with config object
+  ///
+  /// @param cfg Configuration struct
+  /// @param propagator The straight line propagator with the TrackingGeometry navigation
+  /// @param slogger The logger
+  SurfaceMaterialMapper(const Config& cfg,
+                        StraightLineDetPropagator& propagator,
                         std::unique_ptr<const Logger> slogger =
                             getDefaultLogger("SurfaceMaterialMapper",
                                              Logging::INFO));
@@ -257,6 +261,9 @@ class SurfaceMaterialMapper : public IMaterialMapper {
 
   /// The configuration object
   Config m_cfg;
+
+  std::shared_ptr<StraightLineTGPropagator> m_tgPropagator = nullptr;
+  std::shared_ptr<StraightLineDetPropagator> m_detPropagator = nullptr;
 
   /// The logging instance
   std::unique_ptr<const Logger> m_logger;

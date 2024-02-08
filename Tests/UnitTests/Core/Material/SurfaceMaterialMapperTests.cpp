@@ -74,11 +74,9 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometry) {
 
     Acts::SurfaceMaterialMapper::Config smmConfig;
 
-    smmConfig.tgPropagator = 
-        std::make_shared<Acts::SurfaceMaterialMapper::StraightLineTGPropagator>(std::move(propagator));
-
     Acts::SurfaceMaterialMapper smMapper(
         smmConfig,
+        propagator,
         Acts::getDefaultLogger("SurfaceMaterialMapper", Acts::Logging::VERBOSE));
 
     auto state = smMapper.createState(tContext, tContext, *tGeometry);
@@ -137,11 +135,10 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometryWithVeto) {
     Acts::SurfaceMaterialMapper::Config smmConfig;
     smmConfig.veto = PositiveXVeto{};
     
-        smmConfig.tgPropagator = 
-            std::make_shared<Acts::SurfaceMaterialMapper::StraightLineTGPropagator>(std::move(propagator));
     
     Acts::SurfaceMaterialMapper smMapper(
         smmConfig,
+        propagator,
         Acts::getDefaultLogger("VetoSurfaceMaterialMapper",
                                 Acts::Logging::VERBOSE));
 
@@ -182,10 +179,9 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometrRemappingWithVeto) {
 
     Acts::SurfaceMaterialMapper::Config psmmConfig;
     
-        psmmConfig.tgPropagator = 
-            std::make_shared<Acts::SurfaceMaterialMapper::StraightLineTGPropagator>(std::move(ppropagator));
     Acts::SurfaceMaterialMapper psmMapper(
         psmmConfig, 
+        ppropagator,
         Acts::getDefaultLogger("PlainSurfaceMaterialMapper",
                                 Acts::Logging::VERBOSE));
 
@@ -207,10 +203,9 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometrRemappingWithVeto) {
     Acts::SurfaceMaterialMapper::Config smmConfig;
     smmConfig.veto = PositiveXVeto{};
     
-        smmConfig.tgPropagator = 
-            std::make_shared<Acts::SurfaceMaterialMapper::StraightLineTGPropagator>(std::move(propagator));
     Acts::SurfaceMaterialMapper smMapper(
-        smmConfig, 
+        smmConfig,
+        propagator, 
         Acts::getDefaultLogger("VetoSurfaceMaterialMapper",
                                 Acts::Logging::VERBOSE));
 
@@ -244,11 +239,9 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperDetector) {
 
     Acts::SurfaceMaterialMapper::Config smmConfig;
 
-    smmConfig.detPropagator = 
-        std::make_shared<Acts::SurfaceMaterialMapper::StraightLineDetPropagator>(std::move(propagator));
-
     Acts::SurfaceMaterialMapper smMapper(
         smmConfig,
+        propagator,
         Acts::getDefaultLogger("SurfaceMaterialMapper", Acts::Logging::VERBOSE));
 
     auto state = smMapper.createState(tContext, tContext, *detector);

@@ -134,12 +134,25 @@ void addMaterial(Context& ctx) {
                    std::shared_ptr<SurfaceMaterialMapper>>(
             m, "SurfaceMaterialMapper")
             .def(py::init([](const SurfaceMaterialMapper::Config& config,
+                             SurfaceMaterialMapper::StraightLineTGPropagator& prop,
                              Acts::Logging::Level level) {
                    return std::make_shared<SurfaceMaterialMapper>(
                        config,
+                       prop,
                        getDefaultLogger("SurfaceMaterialMapper", level));
                  }),
-                 py::arg("config"), py::arg("level"));
+                 py::arg("config"), py::arg("propagator"), py::arg("level"))
+            .def(py::init([](const SurfaceMaterialMapper::Config& config,
+                             SurfaceMaterialMapper::StraightLineDetPropagator& prop,
+                             Acts::Logging::Level level) {
+                   return std::make_shared<SurfaceMaterialMapper>(
+                       config,
+                       prop,
+                       getDefaultLogger("SurfaceMaterialMapper", level));
+                 }),
+                 py::arg("config"), py::arg("propagator"), py::arg("level"))
+
+                 ;
 
     auto c = py::class_<SurfaceMaterialMapper::Config>(sMapper, "Config")
                  .def(py::init<>());

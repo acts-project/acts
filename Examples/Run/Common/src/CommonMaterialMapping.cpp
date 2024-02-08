@@ -128,9 +128,9 @@ int runMaterialMapping(int argc, char* argv[],
     Propagator propagator(stepper, std::move(navigator));
     /// The material surface mapper
     Acts::SurfaceMaterialMapper::Config smmConfig;
-    smmConfig.tgPropagator = std::make_shared<Propagator>(std::move(propagator));
     auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
         smmConfig, 
+        propagator,
         Acts::getDefaultLogger("SurfaceMaterialMapper", logLevel));
     mmAlgConfig.materialMappers.push_back(smm);
   }

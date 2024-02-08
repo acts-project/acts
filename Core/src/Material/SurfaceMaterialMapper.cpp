@@ -46,8 +46,18 @@ struct EndOfWorldReached;
 
 Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
     const Config& cfg,
+    StraightLineTGPropagator& propagator,
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
+      m_tgPropagator(std::make_shared<StraightLineTGPropagator>(std::move(propagator))),
+      m_logger(std::move(slogger)) {}
+
+Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
+    const Config& cfg,
+    StraightLineDetPropagator& propagator,
+    std::unique_ptr<const Logger> slogger)
+    : m_cfg(cfg),
+      m_detPropagator(std::make_shared<StraightLineDetPropagator>(std::move(propagator))),
       m_logger(std::move(slogger)) {}
 
 std::unique_ptr<Acts::MaterialMappingState> 
@@ -303,11 +313,11 @@ Acts::SurfaceMaterialMapper::mapInteraction(
 
     MaterialSurfaceCollector::result_type mcResult;
     // Now collect the material layers by using the straight line propagator
-    if(m_cfg.tgPropagator) {
-      const auto& result = m_cfg.tgPropagator->propagate(start, options).value();
+    if(m_tgPropagator) {
+      const auto& result = m_tgPropagator->propagate(start, options).value();
       mcResult = result.get<MaterialSurfaceCollector::result_type>();
     } else {
-      const auto& result = m_cfg.detPropagator->propagate(start, options).value();
+      const auto& result = m_detPropagator->propagate(start, options).value();
       mcResult = result.get<MaterialSurfaceCollector::result_type>();
     }
     auto mappingSurfaces = mcResult.collected;
