@@ -239,7 +239,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
-  const auto& particleTrackMatching = m_inputParticleTrackMatching(ctx);
+  // TODO
+  // const auto& particleTrackMatching = m_inputParticleTrackMatching(ctx);
 
   // Get number of generated true primary vertices
   m_nTrueVtx = getNumberOfTruePriVertices(particles);
@@ -328,7 +329,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // Containers for storing truth particles and truth vertices that contribute
     // to the reconstructed vertex
     SimParticleContainer particleAtVtx;
-    std::vector<int> contributingTruthVertices;
+    SimBarcodeContainer contributingTruthVertices;
 
     if (m_cfg.useTracks) {
       for (const auto& trk : tracksAtVtx) {
@@ -355,8 +356,11 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             const auto& particle = *particleOpt;
 
             particleAtVtx.insert(particle);
-            int priVtxId = particle.particleId().vertexPrimary();
-            contributingTruthVertices.push_back(priVtxId);
+            SimBarcode vtxId = SimBarcode(particle.particleId())
+                                   .setParticle(0)
+                                   .setGeneration(0)
+                                   .setSubParticle(0);
+            contributingTruthVertices.insert(vtxId);
 
             foundMatchingParticle = true;
 
@@ -374,30 +378,36 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }
     } else {
       for (const auto& particle : particles) {
-        int priVtxId = particle.particleId().vertexPrimary();
-        contributingTruthVertices.push_back(priVtxId);
+        SimBarcode vtxId = SimBarcode(particle.particleId())
+                               .setParticle(0)
+                               .setGeneration(0)
+                               .setSubParticle(0);
+        contributingTruthVertices.insert(vtxId);
       }
     }
 
     // Find true vertex that contributes most to the reconstructed vertex
-    std::map<int, int> fmap;
-    for (int priVtxId : contributingTruthVertices) {
-      fmap[priVtxId]++;
+    std::map<SimBarcode, std::uint32_t> fmap;
+    for (SimBarcode vtxId : contributingTruthVertices) {
+      fmap[vtxId]++;
     }
-    int maxOccurrence = -1;
-    int maxOccurrenceId = -1;
-    for (auto it : fmap) {
-      if (it.second > maxOccurrence) {
-        maxOccurrenceId = it.first;
-        maxOccurrence = it.second;
+    std::uint32_t maxOccurrence = 0;
+    SimBarcode maxOccurrenceId;
+    for (const auto& [vtxId, count] : fmap) {
+      if (count > maxOccurrence) {
+        maxOccurrenceId = vtxId;
+        maxOccurrence = count;
       }
     }
 
     // Count number of reconstructible tracks on truth vertex
-    int nTracksOnTruthVertex = 0;
+    std::uint32_t nTracksOnTruthVertex = 0;
     for (const auto& particle : associatedParticles) {
-      int priVtxId = particle.particleId().vertexPrimary();
-      if (priVtxId == maxOccurrenceId) {
+      SimBarcode vtxId = SimBarcode(particle.particleId())
+                             .setParticle(0)
+                             .setGeneration(0)
+                             .setSubParticle(0);
+      if (vtxId == maxOccurrenceId) {
         ++nTracksOnTruthVertex;
       }
     }
@@ -471,12 +481,11 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             return diff / std;
           };
 
-      const auto& truthVertexParticle = *std::find_if(
-          associatedParticles.begin(), associatedParticles.end(),
-          [&](const auto& particle) {
-            return particle.particleId().vertexPrimary() == maxOccurrenceId &&
-                   particle.particleId().vertexSecondary() == 0;
-          });
+      const auto& truthVertexParticle =
+          *std::find_if(associatedParticles.begin(), associatedParticles.end(),
+                        [&](const auto& particle) {
+                          return particle.particleId() == maxOccurrenceId;
+                        });
 
       const Acts::ActsVector<4>& truePos = truthVertexParticle.fourPosition();
 
