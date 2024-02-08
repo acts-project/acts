@@ -152,8 +152,6 @@ int runRecTruthTracks(
   trackStatesWriter.inputTracks = fitter.outputTracks;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
-  trackStatesWriter.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =
       digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.filePath = outputDir + "/trackstates_fitter.root";
@@ -164,8 +162,6 @@ int runRecTruthTracks(
   RootTrackSummaryWriter::Config trackSummaryWriter;
   trackSummaryWriter.inputTracks = fitter.outputTracks;
   trackSummaryWriter.inputParticles = inputParticles;
-  trackSummaryWriter.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
   trackSummaryWriter.filePath = outputDir + "/tracksummary_fitter.root";
   sequencer.addWriter(
       std::make_shared<RootTrackSummaryWriter>(trackSummaryWriter, logLevel));

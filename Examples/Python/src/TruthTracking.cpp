@@ -201,9 +201,10 @@ void addTruthTracking(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
                                 inputHits, outputHits, maxTime);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackTruthMatcher, mex,
-                                "TrackTruthMatcher", inputTracks,
-                                inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching, outputParticleTrackMatching, matchingRatio, doubleMatching);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,
+      inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching,
+      outputParticleTrackMatching, matchingRatio, doubleMatching);
 }
 
 }  // namespace Acts::Python

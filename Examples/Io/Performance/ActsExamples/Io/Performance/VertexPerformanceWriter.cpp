@@ -342,7 +342,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         // Finding the matching parameters in the container of all track
         // parameters. This allows us to identify the corresponding particle.
         // TODO this should not be necessary if the tracks at vertex would keep
-        // this inforamtion
+        // this information
         for (const auto& inputTrk : *tracks) {
           const auto& params = inputTrk.parameters();
 

@@ -102,12 +102,8 @@ int main(int argc, char* argv[]) {
 
   // write track parameters from fitting
   VertexPerformanceWriter::Config vertexWriterConfig;
-  vertexWriterConfig.inputAllTruthParticles =
-      particleReaderConfig.particleCollection;
-  vertexWriterConfig.inputSelectedTruthParticles = select.outputParticles;
-  vertexWriterConfig.inputAssociatedTruthParticles =
-      trackSummaryReader.outputParticles;
   vertexWriterConfig.inputTracks = trackSummaryReader.outputTracks;
+  vertexWriterConfig.inputParticles = select.outputParticles;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
   vertexWriterConfig.filePath = outputDir + "/vertexperformance_AMVF.root";
   vertexWriterConfig.treeName = "amvf";

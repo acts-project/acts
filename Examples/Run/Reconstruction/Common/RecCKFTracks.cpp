@@ -279,8 +279,6 @@ int runRecCKFTracks(
   // selection algorithm is used.
   trackStatesWriter.inputParticles = particleReader.outputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
-  trackStatesWriter.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =
       digiCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.filePath = outputDir + "/trackstates_ckf.root";
@@ -296,8 +294,6 @@ int runRecCKFTracks(
   // filtered particle collection. This could be avoided when a separate track
   // selection algorithm is used.
   trackSummaryWriter.inputParticles = particleReader.outputParticles;
-  trackSummaryWriter.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
   trackSummaryWriter.filePath = outputDir + "/tracksummary_ckf.root";
   trackSummaryWriter.treeName = "tracksummary";
   sequencer.addWriter(
@@ -318,8 +314,6 @@ int runRecCKFTracks(
   CKFPerformanceWriter::Config perfWriterCfg;
   perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputTracks = trackFindingCfg.outputTracks;
-  perfWriterCfg.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
   perfWriterCfg.filePath = outputDir + "/performance_ckf.root";
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
