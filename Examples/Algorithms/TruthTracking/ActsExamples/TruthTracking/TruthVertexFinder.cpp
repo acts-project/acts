@@ -160,10 +160,10 @@ ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
   ProtoVertexContainer protoVertices;
 
   // assumes the begin/end iterator references the particles container
-  auto addProtoVertex = [&](const std::vector<TrackIndex>& tracks) {
+  auto addProtoVertex = [&](const std::vector<TrackIndex>& vtxTracks) {
     ProtoVertex protoVertex;
-    protoVertex.reserve(tracks.size());
-    for (const auto& track : tracks) {
+    protoVertex.reserve(vtxTracks.size());
+    for (const auto& track : vtxTracks) {
       protoVertex.push_back(track);
     }
     protoVertices.push_back(std::move(protoVertex));
