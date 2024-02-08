@@ -142,15 +142,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   customConstraint.setFullPosition(Vector4(0, 0, 0, 0));
 
   // Set up Billoir vertex fitter with default tracks
-  using VertexFitter =
-      FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
+  using VertexFitter = FullBilloirVertexFitter<Linearizer>;
   VertexFitter::Config vertexFitterCfg;
-  VertexFitter billoirFitter(vertexFitterCfg);
+  VertexFitter billoirFitter(vertexFitterCfg, InputTrack::extractParameters);
   VertexFitter::State state(bField->makeCache(magFieldContext));
   // Vertexing options for default tracks
-  VertexingOptions<BoundTrackParameters> vfOptions(geoContext, magFieldContext);
-  VertexingOptions<BoundTrackParameters> vfOptionsConstr(
-      geoContext, magFieldContext, constraint);
+  VertexingOptions vfOptions(geoContext, magFieldContext);
+  VertexingOptions vfOptionsConstr(geoContext, magFieldContext, constraint);
 
   // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrack
@@ -160,16 +158,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       };
 
   // Set up Billoir vertex fitter with user-defined input tracks
-  using CustomVertexFitter =
-      FullBilloirVertexFitter<InputTrackStub, Linearizer>;
-  CustomVertexFitter::Config customVertexFitterCfg;
-  CustomVertexFitter customBilloirFitter(customVertexFitterCfg,
-                                         extractParameters);
-  CustomVertexFitter::State customState(bField->makeCache(magFieldContext));
+  VertexFitter::Config customVertexFitterCfg;
+  VertexFitter customBilloirFitter(customVertexFitterCfg, extractParameters);
+  VertexFitter::State customState(bField->makeCache(magFieldContext));
   // Vertexing options for custom tracks
-  VertexingOptions<InputTrackStub> customVfOptions(geoContext, magFieldContext);
-  VertexingOptions<InputTrackStub> customVfOptionsConstr(
-      geoContext, magFieldContext, customConstraint);
+  VertexingOptions customVfOptions(geoContext, magFieldContext);
+  VertexingOptions customVfOptionsConstr(geoContext, magFieldContext,
+                                         customConstraint);
 
   BOOST_TEST_CONTEXT(
       "Testing FullBilloirVertexFitter when input track vector is empty.") {

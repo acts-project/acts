@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<Propagator>;
 
   IPEstimator::Config ipEstimatorCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstimatorCfg);
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter<Linearizer>;
 
   Fitter::Config fitterCfg(ipEstimator);
 
@@ -107,20 +107,18 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
 
-  Fitter fitter(fitterCfg);
+  Fitter fitter(fitterCfg, InputTrack::extractParameters);
 
-  using SeedFinder =
-      TrackDensityVertexFinder<Fitter,
-                               GaussianTrackDensity<BoundTrackParameters>>;
+  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
 
-  SeedFinder seedFinder;
+  SeedFinder seedFinder{{}, InputTrack::extractParameters};
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
                               ipEstimator, std::move(linearizer), bField);
 
-  Finder finder(std::move(finderConfig));
+  Finder finder(std::move(finderConfig), InputTrack::extractParameters);
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -147,8 +145,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   // TODO: test without using beam spot constraint
   Vertex bsConstr = std::get<BeamSpotData>(csvData);
-  VertexingOptions<BoundTrackParameters> vertexingOptions(
-      geoContext, magFieldContext, bsConstr);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(inputTracks, vertexingOptions, state);
@@ -244,7 +241,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
       };
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<InputTrackStub, Propagator>;
+  using IPEstimator = ImpactPointEstimator<Propagator>;
 
   IPEstimator::Config ipEstimatorCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstimatorCfg);
@@ -254,7 +251,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<InputTrackStub, Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter<Linearizer>;
 
   Fitter::Config fitterCfg(ipEstimator);
 
@@ -269,10 +266,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   Fitter fitter(fitterCfg, extractParameters);
 
-  using SeedFinder =
-      TrackDensityVertexFinder<Fitter, GaussianTrackDensity<InputTrackStub>>;
+  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
 
-  SeedFinder seedFinder(extractParameters);
+  SeedFinder seedFinder({}, extractParameters);
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
@@ -315,8 +311,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   constraintVtx.setPosition(std::get<BeamSpotData>(csvData).position());
   constraintVtx.setCovariance(std::get<BeamSpotData>(csvData).covariance());
 
-  VertexingOptions<InputTrackStub> vertexingOptions(geoContext, magFieldContext,
-                                                    constraintVtx);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext, constraintVtx);
 
   auto findResult = finder.find(userInputTracks, vertexingOptions, state);
 
@@ -387,7 +382,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP Estimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<Propagator>;
 
   IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEst(ipEstCfg);
@@ -397,7 +392,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter<Linearizer>;
 
   Fitter::Config fitterCfg(ipEst);
 
@@ -410,20 +405,20 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
 
-  Fitter fitter(fitterCfg);
+  Fitter fitter(fitterCfg, InputTrack::extractParameters);
 
   using SeedFinder = GridDensityVertexFinder<4000, 55>;
   SeedFinder::Config seedFinderCfg(250);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
 
-  SeedFinder seedFinder(seedFinderCfg);
+  SeedFinder seedFinder(seedFinderCfg, InputTrack::extractParameters);
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
-  Finder finder(std::move(finderConfig));
+  Finder finder(std::move(finderConfig), InputTrack::extractParameters);
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -450,8 +445,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   // TODO: test using beam spot constraint
   Vertex bsConstr = std::get<BeamSpotData>(csvData);
-  VertexingOptions<BoundTrackParameters> vertexingOptions(
-      geoContext, magFieldContext, bsConstr);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(inputTracks, vertexingOptions, state);
@@ -535,7 +529,7 @@ BOOST_AUTO_TEST_CASE(
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP Estimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<Propagator>;
 
   IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEst(ipEstCfg);
@@ -545,7 +539,7 @@ BOOST_AUTO_TEST_CASE(
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter<Linearizer>;
 
   Fitter::Config fitterCfg(ipEst);
 
@@ -558,7 +552,7 @@ BOOST_AUTO_TEST_CASE(
   // Test smoothing
   fitterCfg.doSmoothing = true;
 
-  Fitter fitter(fitterCfg);
+  Fitter fitter(fitterCfg, InputTrack::extractParameters);
 
   // Grid density used during vertex seed finding
   AdaptiveGridTrackDensity::Config gridDensityCfg;
@@ -572,14 +566,14 @@ BOOST_AUTO_TEST_CASE(
   SeedFinder::Config seedFinderCfg(gridDensity);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
 
-  SeedFinder seedFinder(seedFinderCfg);
+  SeedFinder seedFinder(seedFinderCfg, InputTrack::extractParameters);
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
 
-  Finder finder(std::move(finderConfig));
+  Finder finder(std::move(finderConfig), InputTrack::extractParameters);
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -605,8 +599,7 @@ BOOST_AUTO_TEST_CASE(
   }
 
   Vertex bsConstr = std::get<BeamSpotData>(csvData);
-  VertexingOptions<BoundTrackParameters> vertexingOptions(
-      geoContext, magFieldContext, bsConstr);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(inputTracks, vertexingOptions, state);
