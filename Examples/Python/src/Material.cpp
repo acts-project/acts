@@ -9,7 +9,6 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/interface/IMaterialMapper.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
@@ -125,7 +124,7 @@ void addMaterial(Context& ctx) {
   }
 
   {
-     py::class_<IMaterialMapper, std::shared_ptr<IMaterialMapper>>(
+    py::class_<IMaterialMapper, std::shared_ptr<IMaterialMapper>>(
         m, "IMaterialMapper");
   }
 
@@ -138,7 +137,7 @@ void addMaterial(Context& ctx) {
                              SurfaceMaterialMapper::StraightLineTGPropagator& prop,
                              Acts::Logging::Level level) {
                    return std::make_shared<SurfaceMaterialMapper>(
-                       config,
+                       config, 
                        prop,
                        getDefaultLogger("SurfaceMaterialMapper", level));
                  }),
@@ -147,7 +146,7 @@ void addMaterial(Context& ctx) {
                              SurfaceMaterialMapper::StraightLineDetPropagator& prop,
                              Acts::Logging::Level level) {
                    return std::make_shared<SurfaceMaterialMapper>(
-                       config,
+                       config, 
                        prop,
                        getDefaultLogger("SurfaceMaterialMapper", level));
                  }),
@@ -164,8 +163,9 @@ void addMaterial(Context& ctx) {
   }
 
   {
-    auto cls =
-        py::class_<VolumeMaterialMapper, std::shared_ptr<VolumeMaterialMapper>>(
+    auto vMapper =
+        py::class_<VolumeMaterialMapper, IMaterialMapper,
+                   std::shared_ptr<VolumeMaterialMapper>>(
             m, "VolumeMaterialMapper")
             .def(py::init([](const VolumeMaterialMapper::Config& config,
                              VolumeMaterialMapper::StraightLinePropagator prop,
@@ -176,11 +176,11 @@ void addMaterial(Context& ctx) {
                  }),
                  py::arg("config"), py::arg("propagator"), py::arg("level"));
 
-    auto c = py::class_<VolumeMaterialMapper::Config>(cls, "Config")
+    auto c = py::class_<VolumeMaterialMapper::Config>(vMapper, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, VolumeMaterialMapper::Config);
     ACTS_PYTHON_MEMBER(mappingStep);
-    // ACTS_PYTHON_MEMBER(veto);
+    ACTS_PYTHON_MEMBER(veto);
     ACTS_PYTHON_STRUCT_END();
   }
 }

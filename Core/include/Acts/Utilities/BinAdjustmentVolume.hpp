@@ -53,7 +53,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binR && bval != binPhi && bval != binZ) {
+    } else if (bval != binR and bval != binPhi and bval != binZ) {
       throw std::invalid_argument("Cylinder volume binning must be: phi, r, z");
     }
     float min = 0;
@@ -108,7 +108,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binR && bval != binPhi && bval != binZ) {
+    } else if (bval != binR and bval != binPhi and bval != binZ) {
       throw std::invalid_argument(
           "Cutout cylinder volume binning must be: phi, r, z");
     }
@@ -163,7 +163,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binX && bval != binY && bval != binZ) {
+    } else if (bval != binX and bval != binY and bval != binZ) {
       throw std::invalid_argument("Cylinder volume binning must be: x, y, z");
     }
     float min = 0;
@@ -186,35 +186,48 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   return uBinUtil;
 }
 
-/// @brief adjust the BinUtility bu to a volume
+/// @brief adjust the BinUtilty ro volume bounds and transform
+///
+/// @param bu BinUtility at source
+/// @param volumeBounds the bounds of the volume for the bin adjustment
+/// @param transform the transform of the volume
+///
+/// @return a new fitting BinUtility
+BinUtility adjustBinUtility(const BinUtility& bu,
+                            const VolumeBounds& volumeBounds,
+                            const Transform3& transform) {
+  auto cyBounds = dynamic_cast<const CylinderVolumeBounds*>(&(volumeBounds));
+  auto cutcylBounds =
+      dynamic_cast<const CutoutCylinderVolumeBounds*>(&(volumeBounds));
+  auto cuBounds = dynamic_cast<const CuboidVolumeBounds*>(&(volumeBounds));
+
+  if (cyBounds != nullptr) {
+    // Cylinder bounds
+    return adjustBinUtility(bu, *cyBounds, transform);
+
+  } else if (cutcylBounds != nullptr) {
+    // Cutout Cylinder bounds
+    return adjustBinUtility(bu, *cutcylBounds, transform);
+
+  } else if (cuBounds != nullptr) {
+    // Cuboid bounds
+    return adjustBinUtility(bu, *cuBounds, transform);
+  }
+
+  throw std::invalid_argument(
+      "Bin adjustment not implemented for this volume yet!");
+
+  return BinUtility();
+}
+
+/// @brief adjust the BinUtility to a volume
 ///
 /// @param bu BinUtility at source
 /// @param volume Volume to which the adjustment is being done
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {
-  auto cyBounds =
-      dynamic_cast<const CylinderVolumeBounds*>(&(volume.volumeBounds()));
-  auto cutcylBounds =
-      dynamic_cast<const CutoutCylinderVolumeBounds*>(&(volume.volumeBounds()));
-  auto cuBounds =
-      dynamic_cast<const CuboidVolumeBounds*>(&(volume.volumeBounds()));
-
-  if (cyBounds != nullptr) {
-    // Cylinder bounds
-    return adjustBinUtility(bu, *cyBounds, volume.transform());
-
-  } else if (cutcylBounds != nullptr) {
-    // Cutout Cylinder bounds
-    return adjustBinUtility(bu, *cutcylBounds, volume.transform());
-
-  } else if (cuBounds != nullptr) {
-    // Cuboid bounds
-    return adjustBinUtility(bu, *cuBounds, volume.transform());
-  }
-
-  throw std::invalid_argument(
-      "Bin adjustment not implemented for this volume yet!");
+  return adjustBinUtility(bu, volume.volumeBounds(), volume.transform());
 }
 
 }  // namespace Acts

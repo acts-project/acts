@@ -655,7 +655,7 @@ def test_particle_gun(tmp_path, assert_root_hash):
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_mapping(material_recording, tmp_path, assert_root_hash):
-    map_file = tmp_path / "material-map_tracks.root"
+    map_file = tmp_path / "material-map_mapped.root"
     assert not map_file.exists()
 
     s = Sequencer(numThreads=1)
@@ -728,7 +728,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash):
-    map_file = tmp_path / "material-map-volume_tracks.root"
+    map_file = tmp_path / "material-map-volume_mapped.root"
     assert not map_file.exists()
 
     s = Sequencer(numThreads=1)

@@ -10,11 +10,10 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/ApproachDescriptor.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
-#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
@@ -26,19 +25,12 @@
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
+// #include "Acts/Utilities/detail/Grid.hpp"
 
-#include <cmath>
-#include <cstddef>
-#include <iosfwd>
-#include <ostream>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -55,26 +47,37 @@ Acts::VolumeMaterialMapper::VolumeMaterialMapper(
       m_propagator(std::move(propagator)),
       m_logger(std::move(slogger)) {}
 
-Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
+std::unique_ptr<Acts::MaterialMappingState>
+Acts::VolumeMaterialMapper::createState(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const TrackingGeometry& tGeometry) const {
-  // Parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
+  // The Volume material mapping state
+  auto mState = std::make_unique<State>(gctx, mctx);
+  resolveMaterialVolume(*mState, *world);
+  return mState;
+}
 
-  // The Surface material mapping state
-  State mState(gctx, mctx);
-  resolveMaterialVolume(mState, *world);
-  collectMaterialSurfaces(mState, *world);
+std::unique_ptr<Acts::MaterialMappingState>
+Acts::VolumeMaterialMapper::createState(
+    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    const Experimental::Detector& detector) const {
+  auto mState = std::make_unique<State>(gctx, mctx);
+  for (const auto* volume : detector.volumes()) {
+    resolveMaterialVolume(*mState, *volume);
+  }
   return mState;
 }
 
 void Acts::VolumeMaterialMapper::resolveMaterialVolume(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+                                   << "' for proto volume material.")
 
-  ACTS_VERBOSE("- Insert Volume ...");
-  checkAndInsert(mState, tVolume);
+  if (tVolume.volumeMaterial() != nullptr) {
+    checkAndInsert(mState, *tVolume.volumeMaterial(), tVolume.volumeBounds(),
+                   tVolume.transform(), tVolume.geometryId());
+  }
 
   // Step down into the sub volume
   if (tVolume.confinedVolumes()) {
@@ -92,150 +95,103 @@ void Acts::VolumeMaterialMapper::resolveMaterialVolume(
   }
 }
 
-void Acts::VolumeMaterialMapper::checkAndInsert(
-    State& mState, const TrackingVolume& volume) const {
-  auto volumeMaterial = volume.volumeMaterial();
-  // Check if the volume has a proxy
-  if (volumeMaterial != nullptr) {
-    auto geoID = volume.geometryId();
-    std::size_t volumeID = geoID.volume();
-    ACTS_DEBUG("Material volume found with volumeID " << volumeID);
-    ACTS_DEBUG("       - ID is " << geoID);
+void Acts::VolumeMaterialMapper::resolveMaterialVolume(
+    State& mState, const Experimental::DetectorVolume& dVolume) const {
+  ACTS_VERBOSE("Checking volume '" << dVolume.name()
+                                   << "' for proto volume material.")
 
-    // We need a dynamic_cast to either a volume material proxy or
-    // proper surface material
-    auto psm = dynamic_cast<const ProtoVolumeMaterial*>(volumeMaterial);
-    // Get the bin utility: try proxy material first
-    const BinUtility* bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;
-    if (bu != nullptr) {
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (proto) binning is " << *bu);
-      // Now update
-      BinUtility buAdjusted = adjustBinUtility(*bu, volume);
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
-      mState.materialBin[geoID] = buAdjusted;
-      if (bu->dimensions() == 0) {
-        ACTS_DEBUG("Binning of dimension 0 create AccumulatedVolumeMaterial");
-        Acts::AccumulatedVolumeMaterial homogeneousAccumulation;
-        mState.homogeneousGrid[geoID] = homogeneousAccumulation;
-      } else if (bu->dimensions() == 2) {
-        ACTS_DEBUG("Binning of dimension 2 create 2D Grid");
-        std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
-        Acts::Grid2D Grid = createGrid2D(buAdjusted, transfoGlobalToLocal);
-        mState.grid2D.insert(std::make_pair(geoID, Grid));
-        mState.transform2D.insert(std::make_pair(geoID, transfoGlobalToLocal));
-      } else if (bu->dimensions() == 3) {
-        ACTS_DEBUG("Binning of dimension 3 create 3D Grid");
-        std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
-        Acts::Grid3D Grid = createGrid3D(buAdjusted, transfoGlobalToLocal);
-        mState.grid3D.insert(std::make_pair(geoID, Grid));
-        mState.transform3D.insert(std::make_pair(geoID, transfoGlobalToLocal));
-      } else {
-        throw std::invalid_argument(
-            "Incorrect bin dimension, only 0, 2 and 3 are accepted");
-      }
-      return;
-    }
-    // Second attempt: 2D binned material
-    auto bmp2 = dynamic_cast<
-        const InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid2D>>*>(
-        volumeMaterial);
-    bu = (bmp2 != nullptr) ? (&bmp2->binUtility()) : nullptr;
-    if (bu != nullptr) {
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (2D grid) binning is " << *bu);
-      mState.materialBin[geoID] = *bu;
-      std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
-      Acts::Grid2D Grid = createGrid2D(*bu, transfoGlobalToLocal);
-      mState.grid2D.insert(std::make_pair(geoID, Grid));
-      mState.transform2D.insert(std::make_pair(geoID, transfoGlobalToLocal));
-      return;
-    }
-    // Third attempt: 3D binned material
-    auto bmp3 = dynamic_cast<
-        const InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid3D>>*>(
-        volumeMaterial);
-    bu = (bmp3 != nullptr) ? (&bmp3->binUtility()) : nullptr;
-    if (bu != nullptr) {
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (3D grid) binning is " << *bu);
-      mState.materialBin[geoID] = *bu;
-      std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
-      Acts::Grid3D Grid = createGrid3D(*bu, transfoGlobalToLocal);
-      mState.grid3D.insert(std::make_pair(geoID, Grid));
-      mState.transform3D.insert(std::make_pair(geoID, transfoGlobalToLocal));
-      return;
-    } else {
-      // Create a homogeneous type of material
-      ACTS_DEBUG("       - this is homogeneous material.");
-      BinUtility buHomogeneous;
-      mState.materialBin[geoID] = buHomogeneous;
-      Acts::AccumulatedVolumeMaterial homogeneousAccumulation;
-      mState.homogeneousGrid[geoID] = homogeneousAccumulation;
-      return;
+  if (dVolume.volumeMaterial() != nullptr) {
+    checkAndInsert(mState, *dVolume.volumeMaterial(), dVolume.volumeBounds(),
+                   dVolume.transform(mState.geoContext), dVolume.geometryId());
+  }
+  // Step down into the sub volume
+  if (not dVolume.volumes().empty()) {
+    ACTS_VERBOSE("- Check children volume ...");
+    for (const auto* volume : dVolume.volumes()) {
+      // Recursive call
+      resolveMaterialVolume(mState, *volume);
     }
   }
 }
 
-void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
-    State& mState, const TrackingVolume& tVolume) const {
-  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+void Acts::VolumeMaterialMapper::checkAndInsert(
+    State& mState, const IVolumeMaterial& volumeMaterial,
+    const VolumeBounds& volumeBounds, const Transform3& transform,
+    const GeometryIdentifier& geoID) const {
+  size_t volumeID = geoID.volume();
+  ACTS_DEBUG("Material volume found with volumeID " << volumeID);
+  ACTS_DEBUG("       - ID is " << geoID);
 
-  ACTS_VERBOSE("- boundary surfaces ...");
-  // Check the boundary surfaces
-  for (auto& bSurface : tVolume.boundarySurfaces()) {
-    if (bSurface->surfaceRepresentation().surfaceMaterial() != nullptr) {
-      mState.surfaceMaterial[bSurface->surfaceRepresentation().geometryId()] =
-          bSurface->surfaceRepresentation().surfaceMaterialSharedPtr();
+  auto psm = dynamic_cast<const ProtoVolumeMaterial*>(&volumeMaterial);
+  // Get the bin utility: try proxy material first
+  const BinUtility* bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;
+  if (bu != nullptr) {
+    // Screen output for Binned Proto material
+    ACTS_DEBUG("       - (proto) binning is " << *bu);
+    // Now update
+    BinUtility buAdjusted = adjustBinUtility(*bu, volumeBounds, transform);
+    // Screen output for Binned Proto material
+    ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
+    mState.materialBin[geoID] = buAdjusted;
+    if (bu->dimensions() == 0) {
+      ACTS_DEBUG("Binning of dimension 0 create AccumulatedVolumeMaterial");
+      Acts::AccumulatedVolumeMaterial homogeneousAccumulation;
+      mState.homogeneousGrid[geoID] = homogeneousAccumulation;
+    } else if (bu->dimensions() == 2) {
+      ACTS_DEBUG("Binning of dimension 2 create 2D Grid");
+      std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
+      Acts::Grid2D Grid = createGrid2D(buAdjusted, transfoGlobalToLocal);
+      mState.grid2D.insert(std::make_pair(geoID, Grid));
+      mState.transform2D.insert(std::make_pair(geoID, transfoGlobalToLocal));
+    } else if (bu->dimensions() == 3) {
+      ACTS_DEBUG("Binning of dimension 3 create 3D Grid");
+      std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
+      Acts::Grid3D Grid = createGrid3D(buAdjusted, transfoGlobalToLocal);
+      mState.grid3D.insert(std::make_pair(geoID, Grid));
+      mState.transform3D.insert(std::make_pair(geoID, transfoGlobalToLocal));
+    } else {
+      throw std::invalid_argument(
+          "Incorrect bin dimension, only 0, 2 and 3 are accepted");
     }
+    return;
   }
-
-  ACTS_VERBOSE("- confined layers ...");
-  // Check the confined layers
-  if (tVolume.confinedLayers() != nullptr) {
-    for (auto& cLayer : tVolume.confinedLayers()->arrayObjects()) {
-      // Take only layers that are not navigation layers
-      if (cLayer->layerType() != navigation) {
-        // Check the representing surface
-        if (cLayer->surfaceRepresentation().surfaceMaterial() != nullptr) {
-          mState.surfaceMaterial[cLayer->surfaceRepresentation().geometryId()] =
-              cLayer->surfaceRepresentation().surfaceMaterialSharedPtr();
-        }
-        // Get the approach surfaces if present
-        if (cLayer->approachDescriptor() != nullptr) {
-          for (auto& aSurface :
-               cLayer->approachDescriptor()->containedSurfaces()) {
-            if (aSurface != nullptr) {
-              if (aSurface->surfaceMaterial() != nullptr) {
-                mState.surfaceMaterial[aSurface->geometryId()] =
-                    aSurface->surfaceMaterialSharedPtr();
-              }
-            }
-          }
-        }
-        // Get the sensitive surface is present
-        if (cLayer->surfaceArray() != nullptr) {
-          // Sensitive surface loop
-          for (auto& sSurface : cLayer->surfaceArray()->surfaces()) {
-            if (sSurface != nullptr) {
-              if (sSurface->surfaceMaterial() != nullptr) {
-                mState.surfaceMaterial[sSurface->geometryId()] =
-                    sSurface->surfaceMaterialSharedPtr();
-              }
-            }
-          }
-        }
-      }
-    }
+  // Second attempt: 2D binned material
+  auto bmp2 = dynamic_cast<
+      const InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid2D>>*>(
+      &volumeMaterial);
+  bu = (bmp2 != nullptr) ? (&bmp2->binUtility()) : nullptr;
+  if (bu != nullptr) {
+    // Screen output for Binned Proto material
+    ACTS_DEBUG("       - (2D grid) binning is " << *bu);
+    mState.materialBin[geoID] = *bu;
+    std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
+    Acts::Grid2D Grid = createGrid2D(*bu, transfoGlobalToLocal);
+    mState.grid2D.insert(std::make_pair(geoID, Grid));
+    mState.transform2D.insert(std::make_pair(geoID, transfoGlobalToLocal));
+    return;
   }
-  // Step down into the sub volume
-  if (tVolume.confinedVolumes()) {
-    for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
-      // Recursive call
-      collectMaterialSurfaces(mState, *sVolume);
-    }
+  // Third attempt: 3D binned material
+  auto bmp3 = dynamic_cast<
+      const InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid3D>>*>(
+      &volumeMaterial);
+  bu = (bmp3 != nullptr) ? (&bmp3->binUtility()) : nullptr;
+  if (bu != nullptr) {
+    // Screen output for Binned Proto material
+    ACTS_DEBUG("       - (3D grid) binning is " << *bu);
+    mState.materialBin[geoID] = *bu;
+    std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
+    Acts::Grid3D Grid = createGrid3D(*bu, transfoGlobalToLocal);
+    mState.grid3D.insert(std::make_pair(geoID, Grid));
+    mState.transform3D.insert(std::make_pair(geoID, transfoGlobalToLocal));
+    return;
+  } else {
+    // Create a homogeneous type of material
+    ACTS_DEBUG("       - this is homogeneous material.");
+    BinUtility buHomogeneous;
+    mState.materialBin[geoID] = buHomogeneous;
+    Acts::AccumulatedVolumeMaterial homogeneousAccumulation;
+    mState.homogeneousGrid[geoID] = homogeneousAccumulation;
+    return;
   }
 }
 
@@ -286,7 +242,7 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   }
 
   if (remainder > 0) {
-    // We need to have an additional extra hit with the remainder length. Adjust
+    // We need to had an additional extra hit with the remainder length. Adjust
     // the thickness of the last extrapolated step
     properties.scaleThickness(remainder / properties.thickness());
     Vector3 extraPosition = position + volumeStep * direction;
@@ -314,26 +270,32 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   }
 }
 
-void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
+Acts::MaterialMappingResult Acts::VolumeMaterialMapper::finalizeMaps(
+    MaterialMappingState& mState) const {
+  State& state = static_cast<State&>(mState);
+
+  // Fill the material maps
+  Acts::MaterialMappingResult maps{};
+
   // iterate over the volumes
-  for (auto& matBin : mState.materialBin) {
+  for (auto& matBin : state.materialBin) {
     ACTS_DEBUG("Create the material for volume  " << matBin.first);
     if (matBin.second.dimensions() == 0) {
       // Average the homogeneous volume material then store it
       ACTS_DEBUG("Homogeneous material volume");
-      Acts::Material mat = mState.homogeneousGrid[matBin.first].average();
-      mState.volumeMaterial[matBin.first] =
+      Acts::Material mat = state.homogeneousGrid[matBin.first].average();
+      maps.volumeMaterial[matBin.first] =
           std::make_unique<HomogeneousVolumeMaterial>(mat);
     } else if (matBin.second.dimensions() == 2) {
       // Average the material in the 2D grid then create an
       // InterpolatedMaterialMap
       ACTS_DEBUG("Grid material volume");
-      auto grid = mState.grid2D.find(matBin.first);
-      if (grid != mState.grid2D.end()) {
+      auto grid = state.grid2D.find(matBin.first);
+      if (grid != state.grid2D.end()) {
         Acts::MaterialGrid2D matGrid = mapMaterialPoints(grid->second);
         MaterialMapper<Acts::MaterialGrid2D> matMap(
-            mState.transform2D[matBin.first], matGrid);
-        mState.volumeMaterial[matBin.first] = std::make_unique<
+            state.transform2D[matBin.first], matGrid);
+        maps.volumeMaterial[matBin.first] = std::make_unique<
             InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid2D>>>(
             std::move(matMap), matBin.second);
       } else {
@@ -343,12 +305,12 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       // Average the material in the 3D grid then create an
       // InterpolatedMaterialMap
       ACTS_DEBUG("Grid material volume");
-      auto grid = mState.grid3D.find(matBin.first);
-      if (grid != mState.grid3D.end()) {
+      auto grid = state.grid3D.find(matBin.first);
+      if (grid != state.grid3D.end()) {
         Acts::MaterialGrid3D matGrid = mapMaterialPoints(grid->second);
         MaterialMapper<Acts::MaterialGrid3D> matMap(
-            mState.transform3D[matBin.first], matGrid);
-        mState.volumeMaterial[matBin.first] = std::make_unique<
+            state.transform3D[matBin.first], matGrid);
+        maps.volumeMaterial[matBin.first] = std::make_unique<
             InterpolatedMaterialMap<MaterialMapper<Acts::MaterialGrid3D>>>(
             std::move(matMap), matBin.second);
       } else {
@@ -359,11 +321,18 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
           "Incorrect bin dimension, only 0, 2 and 3 are accepted");
     }
   }
+  return maps;
 }
 
-void Acts::VolumeMaterialMapper::mapMaterialTrack(
-    State& mState, RecordedMaterialTrack& mTrack) const {
+std::array<Acts::RecordedMaterialTrack, 2u>
+Acts::VolumeMaterialMapper::mapMaterialTrack(
+    MaterialMappingState& mState, const RecordedMaterialTrack& mTrack) const {
   using VectorHelpers::makeVector4;
+
+  State& state = static_cast<State&>(mState);
+
+  RecordedMaterialTrack mapped{mTrack.first, RecordedMaterial{}};
+  RecordedMaterialTrack unmapped{mTrack.first, RecordedMaterial{}};
 
   // Neutral curvilinear parameters
   NeutralCurvilinearTrackParameters start(
@@ -372,20 +341,17 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
       NeutralParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
-  using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolumeSelector>;
-  using ActionList = ActionList<BoundSurfaceCollector, MaterialVolumeCollector>;
+  using ActionList = ActionList<MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
-                                                   mState.magFieldContext);
+  PropagatorOptions<ActionList, AbortList> options(state.geoContext,
+                                                   state.magFieldContext);
 
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
-  auto mcResult = result.get<BoundSurfaceCollector::result_type>();
   auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
 
-  auto mappingSurfaces = mcResult.collected;
   auto mappingVolumes = mvcResult.collected;
 
   // Retrieve the recorded material from the recorded material track
@@ -393,7 +359,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
                             << " recorded material steps to map.")
 
-  // These should be mapped onto the mapping surfaces found
+  // These should be mapped onto the volumes
   ACTS_VERBOSE("Found     " << mappingVolumes.size()
                             << " mapping volumes for this track.");
   ACTS_VERBOSE("Mapping volumes are :")
@@ -408,13 +374,12 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   // Run the mapping process, i.e. take the recorded material and map it
   // onto the mapping volume:
   auto rmIter = rMaterial.begin();
-  auto sfIter = mappingSurfaces.begin();
   auto volIter = mappingVolumes.begin();
 
   // Use those to minimize the lookup
   GeometryIdentifier lastID = GeometryIdentifier();
   GeometryIdentifier currentID = GeometryIdentifier();
-  auto currentBinning = mState.materialBin.end();
+  auto currentBinning = state.materialBin.end();
 
   // store end position of the last material slab
   Acts::Vector3 lastPositionEnd = {0, 0, 0};
@@ -427,10 +392,20 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   // loop over all the material hit in the track or until there no more volume
   // to map onto
   while (rmIter != rMaterial.end() && volIter != mappingVolumes.end()) {
+    // Check if the the recorded material interaction is vetoed
+    if (m_cfg.veto(*rmIter)) {
+      unmapped.second.materialInX0 += rmIter->materialSlab.thicknessInX0();
+      unmapped.second.materialInL0 += rmIter->materialSlab.thicknessInL0();
+      unmapped.second.materialInteractions.push_back(*rmIter);
+      ++rmIter;
+      continue;
+    }
+    // Assume it's mapped then
+    auto mappedRecord = (*rmIter);
     if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
       // Check if the material point is past the entry point to the current
-      // volume (this prevents switching volume before the first volume has been
+      // volume (this prevent switching volume before the first volume has been
       // reached)
       double distVol = (volIter->position - mTrack.first.first).norm();
       double distMat = (rmIter->position - mTrack.first.first).norm();
@@ -444,67 +419,48 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         volIter->volume->inside(rmIter->position, s_epsilon)) {
       currentID = volIter->volume->geometryId();
       direction = rmIter->direction;
-      if (!(currentID == lastID)) {
+      if (not(currentID == lastID)) {
         // Let's (re-)assess the information
         lastID = currentID;
         lastPositionEnd = volIter->position;
-        currentBinning = mState.materialBin.find(currentID);
+        currentBinning = state.materialBin.find(currentID);
       }
       // If the current volume has a ProtoVolumeMaterial
       // and the material hit has a non 0 thickness
-      if (currentBinning != mState.materialBin.end() &&
+      if (currentBinning != state.materialBin.end() &&
           rmIter->materialSlab.thickness() > 0) {
         // check if there is vacuum between this material point and the last one
         float vacuumThickness = (rmIter->position - lastPositionEnd).norm();
         if (vacuumThickness > s_epsilon) {
           auto properties = Acts::MaterialSlab(vacuumThickness);
-          // creat vacuum hits
-          createExtraHits(mState, *currentBinning, properties, lastPositionEnd,
+          // Creat vacuum hits
+          createExtraHits(state, *currentBinning, properties, lastPositionEnd,
                           direction);
         }
-        // determine the position of the last material slab using the track
+        // Determine the position of the last material slab using the track
         // direction
         direction =
             direction * (rmIter->materialSlab.thickness() / direction.norm());
         lastPositionEnd = rmIter->position + direction;
         // create additional material point
-        createExtraHits(mState, *currentBinning, rmIter->materialSlab,
+        createExtraHits(state, *currentBinning, rmIter->materialSlab,
                         rmIter->position, direction);
       }
-
-      // check if we have reached the end of the volume or the last hit of the
-      // track.
-      if ((rmIter + 1) == rMaterial.end() ||
-          !volIter->volume->inside((rmIter + 1)->position, s_epsilon)) {
-        // find the boundary surface corresponding to the end of the volume
-        while (sfIter != mappingSurfaces.end()) {
-          if (sfIter->surface->geometryId().volume() == lastID.volume() ||
-              ((volIter + 1) != mappingVolumes.end() &&
-               sfIter->surface->geometryId().volume() ==
-                   (volIter + 1)->volume->geometryId().volume())) {
-            double distVol = (volIter->position - mTrack.first.first).norm();
-            double distSur = (sfIter->position - mTrack.first.first).norm();
-            if (distSur - distVol > s_epsilon) {
-              float vacuumThickness =
-                  (sfIter->position - lastPositionEnd).norm();
-              // if the last material slab stop before the boundary surface
-              // create vacuum hits
-              if (vacuumThickness > s_epsilon) {
-                auto properties = Acts::MaterialSlab(vacuumThickness);
-                createExtraHits(mState, *currentBinning, properties,
-                                lastPositionEnd, direction);
-                lastPositionEnd = sfIter->position;
-              }
-              break;
-            }
-          }
-          sfIter++;
-        }
-      }
-      rmIter->volume = volIter->volume;
-      rmIter->intersectionID = currentID;
-      rmIter->intersection = rmIter->position;
+      // mappedRecord.volume = volIter->volume;
+      mappedRecord.intersectionID = currentID;
+      mappedRecord.intersection = rmIter->position;
+      mapped.second.materialInX0 += rmIter->materialSlab.thicknessInX0();
+      mapped.second.materialInL0 += rmIter->materialSlab.thicknessInL0();
+      mapped.second.materialInteractions.push_back(*rmIter);
+    } else {
+      unmapped.second.materialInX0 += rmIter->materialSlab.thicknessInX0();
+      unmapped.second.materialInL0 += rmIter->materialSlab.thicknessInL0();
+      unmapped.second.materialInteractions.push_back(*rmIter);
+      ++rmIter;
+      continue;
     }
     ++rmIter;
   }
+
+  return {mapped, unmapped};
 }

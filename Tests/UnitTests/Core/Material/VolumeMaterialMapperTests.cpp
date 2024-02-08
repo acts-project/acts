@@ -81,7 +81,7 @@ struct MaterialCollector {
 namespace Test {
 
 /// Test the filling and conversion
-BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
+BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests) {
   using namespace Acts::UnitLiterals;
 
   BinUtility bu1(4, 0_m, 1_m, open, binX);
@@ -153,9 +153,10 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
 
   /// Now create the mapper state
   auto mState = vmMapper.createState(gCtx, mfCtx, *tGeometry);
+  auto state = dynamic_cast<Acts::VolumeMaterialMapper::State*>(mState.get());
 
   /// Test if this is not null
-  BOOST_CHECK_EQUAL(mState.materialBin.size(), 3u);
+  BOOST_CHECK_EQUAL(state->materialBin.size(), 3u);
 }
 
 /// @brief Test case for comparison between the mapped material and the
@@ -213,8 +214,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set up a random engine for sampling material
   std::random_device rd;
   std::mt19937 gen(42);
-  std::uniform_real_distribution<double> disX(0., 3_m);
-  std::uniform_real_distribution<double> disYZ(-0.5_m, 0.5_m);
+  std::uniform_real_distribution<> disX(0., 3_m);
+  std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
   RecordedMaterialVolumePoint matRecord;
@@ -238,7 +239,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
     return {pos.x(), pos.y(), pos.z()};
   };
 
-  // Walk over each property
+  // Walk over each properties
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {

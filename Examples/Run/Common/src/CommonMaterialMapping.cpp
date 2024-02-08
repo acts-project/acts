@@ -129,8 +129,7 @@ int runMaterialMapping(int argc, char* argv[],
     /// The material surface mapper
     Acts::SurfaceMaterialMapper::Config smmConfig;
     auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
-        smmConfig, 
-        propagator,
+        smmConfig, propagator,
         Acts::getDefaultLogger("SurfaceMaterialMapper", logLevel));
     mmAlgConfig.materialMappers.push_back(smm);
   }
@@ -169,8 +168,7 @@ int runMaterialMapping(int argc, char* argv[],
       // Write the propagation steps as ROOT TTree
       ActsExamples::RootMaterialTrackWriter::Config matTrackWriterRootConfig;
       matTrackWriterRootConfig.filePath = materialFileName + "_tracks.root";
-      matTrackWriterRootConfig.collection =
-          mmAlgConfig.mappedCollection;
+      matTrackWriterRootConfig.collection = mmAlgConfig.mappedCollection;
       matTrackWriterRootConfig.storeSurface = true;
       matTrackWriterRootConfig.storeVolume = true;
       auto matTrackWriterRoot =

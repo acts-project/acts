@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,11 +20,11 @@
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/interface/IMaterialMapper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -36,11 +36,15 @@
 
 namespace Acts {
 
-class ISurfaceMaterial;
 class IVolumeMaterial;
 class TrackingGeometry;
+class VolumeBounds;
 
-//
+namespace Experimental {
+class Detector;
+class DetectorVolume;
+}  // namespace Experimental
+
 /// @brief VolumeMaterialMapper
 ///
 /// This is the main feature tool to map material information
@@ -49,9 +53,13 @@ class TrackingGeometry;
 ///
 /// The process runs as such:
 ///
-///  1) TrackingGeometry is parsed and for each Volume with
+///  1) Input geometry is parsed and for each Volume with
 ///     ProtoVolumeMaterial a local store is initialized
-///     the identification is done hereby through the Volume::GeometryIdentifier
+///     the identification is done hereby through the
+///     'Volume'::GeometryIdentifier
+///
+/// @note that this mapper is designed to work with both the `TrackingGeometry` and
+/// the `Detector` schema as long as they co-exist.
 ///
 ///  2) A number of N material tracks is read in, each track has :
 ///       origin, direction, material steps (< position, step length, x0, l0, a,
@@ -64,7 +72,7 @@ class TrackingGeometry;
 ///
 ///  3) Each 'hit' bin per event is counted and averaged at the end of the run
 
-class VolumeMaterialMapper {
+class VolumeMaterialMapper final : public IMaterialMapper {
  public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
@@ -73,13 +81,15 @@ class VolumeMaterialMapper {
   /// Nested Configuration struct for the material mapper
   struct Config {
     /// Size of the step for the step extrapolation
-    float mappingStep = 1.;
+    ActsScalar mappingStep = 1.;
+    /// A potential veto
+    MaterialInteractionVeto veto = NoVeto{};
   };
 
   /// @struct State
   ///
   /// Nested State struct which is used for the mapping prococess
-  struct State {
+  struct State final : public MaterialMappingState {
     /// Constructor of the State with contexts
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
@@ -96,8 +106,7 @@ class VolumeMaterialMapper {
     /// The 2D material grid for each geometry ID
     std::map<const GeometryIdentifier, Grid2D> grid2D;
 
-    /// The recorded 3D transform associated the material grid for each geometry
-    /// ID
+    /// Recorded 3D transform associated the material grid for each geometry ID
     std::map<const GeometryIdentifier,
              std::function<Acts::Vector3(Acts::Vector3)>>
         transform3D;
@@ -107,14 +116,6 @@ class VolumeMaterialMapper {
 
     /// The binning for each geometry ID
     std::map<const GeometryIdentifier, BinUtility> materialBin;
-
-    /// The surface material of the input tracking geometry
-    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
-        surfaceMaterial;
-
-    /// The created volume material from it
-    std::map<GeometryIdentifier, std::unique_ptr<const IVolumeMaterial>>
-        volumeMaterial;
 
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -142,11 +143,24 @@ class VolumeMaterialMapper {
   /// @param[in] tGeometry The geometry which should be mapped
   ///
   /// This method takes a TrackingGeometry,
-  /// finds all surfaces with material proxis
-  /// and returns you a Cache object tO be used
-  State createState(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
-                    const TrackingGeometry& tGeometry) const;
+  /// finds all volume material proxes and fills them into a State
+  /// object to be used in the mapping process
+  std::unique_ptr<MaterialMappingState> createState(
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
+      const TrackingGeometry& tGeometry) const final;
+
+  /// @brief helper method that creates the cache for the mapping
+  ///
+  /// @param[in] gctx The geometry context to use
+  /// @param[in] mctx The magnetic field context to use
+  /// @param[in] detector The detector which should be mapped
+  ///
+  /// This method takes a Detector object,
+  /// finds all volume material proxes and fills them into a State
+  /// object to be used in the mapping process
+  std::unique_ptr<MaterialMappingState> createState(
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
+      const Experimental::Detector& detector) const final;
 
   /// @brief Method to finalize the maps
   ///
@@ -155,7 +169,7 @@ class VolumeMaterialMapper {
   /// the 2D and 3D grid into a InterpolatedMaterialMap
   ///
   /// @param mState
-  void finalizeMaps(State& mState) const;
+  MaterialMappingResult finalizeMaps(MaterialMappingState& mState) const final;
 
   /// Process/map a single track
   ///
@@ -164,42 +178,45 @@ class VolumeMaterialMapper {
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  ///
+  /// @note it will @return the mapped and unmapped part of the material track
+  std::array<RecordedMaterialTrack, 2u> mapMaterialTrack(
+      MaterialMappingState& mState, const RecordedMaterialTrack& mTrack) const;
 
  private:
-  /// selector for finding surface
-  struct BoundSurfaceSelector {
-    bool operator()(const Surface& sf) const {
-      return (sf.geometryId().boundary() != 0);
-    }
-  };
-
   /// selector for finding
   struct MaterialVolumeSelector {
-    bool operator()(const TrackingVolume& vf) const {
+    template <typename volume_type>
+    bool operator()(const volume_type& vf) const {
       return (vf.volumeMaterial() != nullptr);
     }
   };
 
-  /// @brief finds all surfaces with ProtoVolumeMaterial of a volume
+  /// @brief finds all TrackingVolume objects with ProtoVolumeMaterial
   ///
   /// @param mState The state to be filled
   /// @param tVolume is current TrackingVolume
   void resolveMaterialVolume(State& mState,
                              const TrackingVolume& tVolume) const;
 
-  /// @brief check and insert
+  /// @brief finds all DetectorVolume objects with ProtoVolumeMaterial
   ///
-  /// @param mState is the map to be filled
-  /// @param volume is the surface to be checked for a Proxy
-  void checkAndInsert(State& mState, const TrackingVolume& volume) const;
+  /// @param mState The state to be filled
+  /// @param dVolume is current TrackingVolume
+  void resolveMaterialVolume(State& mState,
+                             const Experimental::DetectorVolume& dVolume) const;
 
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
-  /// @param tVolume is the surface to collect from
-  void collectMaterialSurfaces(State& mState,
-                               const TrackingVolume& tVolume) const;
+  /// @param volumeMaterial is the material found for this volume
+  /// @param volumeBounds the bounds of the volume
+  /// @param transform the transform of the volume
+  /// @param geoID is the volume geometry identifier which is used to store
+  void checkAndInsert(State& mState, const IVolumeMaterial& volumeMaterial,
+                      const VolumeBounds& volumeBounds,
+                      const Transform3& transform,
+                      const GeometryIdentifier& geoID) const;
 
   /// Create extra material point for the mapping and add them to the grid
   ///
