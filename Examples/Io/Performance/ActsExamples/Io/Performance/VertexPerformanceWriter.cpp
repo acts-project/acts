@@ -548,7 +548,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
             Acts::Surface::makeShared<Acts::PerigeeSurface>(truePos.head(3));
         // Lambda for propagating the tracks to the PCA
-        auto propagateToVtx = [&](const auto& params)
+        auto propagateToVtx = [&](const Acts::BoundTrackParameters& params)
             -> std::optional<Acts::BoundTrackParameters> {
           auto intersection =
               perigeeSurface
@@ -589,7 +589,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           innerTruthQOverP.push_back(trueMom[2]);
 
           // Save track parameters before the vertex fit
-          const auto paramsAtVtx = propagateToVtx(*(trkAtVtx.originalParams));
+          const auto paramsAtVtx = propagateToVtx(
+              *trkAtVtx.originalParams.as<Acts::BoundTrackParameters>());
           if (paramsAtVtx != std::nullopt) {
             Acts::ActsVector<3> recoMom =
                 paramsAtVtx->parameters().segment(Acts::eBoundPhi, 3);
