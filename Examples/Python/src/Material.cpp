@@ -9,6 +9,7 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/interface/IMaterialMapper.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
@@ -150,9 +151,7 @@ void addMaterial(Context& ctx) {
                        prop,
                        getDefaultLogger("SurfaceMaterialMapper", level));
                  }),
-                 py::arg("config"), py::arg("propagator"), py::arg("level"))
-
-                 ;
+                 py::arg("config"), py::arg("propagator"), py::arg("level"));
 
     auto c = py::class_<SurfaceMaterialMapper::Config>(sMapper, "Config")
                  .def(py::init<>());
