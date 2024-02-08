@@ -3,7 +3,7 @@
 numpy==1.24.4
 
 pytest
-pytest-check==2.1.5
+pytest-check
 uproot
 awkward
 pyyaml

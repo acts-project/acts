@@ -214,6 +214,9 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
   const Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   const Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();

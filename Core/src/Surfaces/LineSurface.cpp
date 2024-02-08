@@ -198,18 +198,21 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
 
 Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const FreeVector& parameters) const {
-  BoundToFreeMatrix jacToGlobal =
-      Surface::boundToFreeJacobian(gctx, parameters);
-
   // The global position
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
 
   Vector2 local = *globalToLocal(gctx, position, direction,
                                  std::numeric_limits<double>::max());
+
+  BoundToFreeMatrix jacToGlobal =
+      Surface::boundToFreeJacobian(gctx, parameters);
 
   // For the derivative of global position with bound angles, refer the
   // following white paper:
@@ -240,6 +243,9 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
@@ -270,6 +276,9 @@ Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis

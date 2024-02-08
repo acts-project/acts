@@ -43,7 +43,7 @@ struct ImpactParametersAndSigma {
 /// A description of the underlying mathematics can be found here:
 /// https://github.com/acts-project/acts/pull/2506
 /// TODO: Upload reference at a better place
-template <typename input_track_t, typename propagator_t,
+template <typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class ImpactPointEstimator {
  public:
@@ -181,7 +181,7 @@ class ImpactPointEstimator {
   /// @param mctx The magnetic field context
   /// @param calculateTimeIP If true, the difference in time is computed
   Result<ImpactParametersAndSigma> getImpactParameters(
-      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       bool calculateTimeIP = false) const;
 
@@ -198,7 +198,7 @@ class ImpactPointEstimator {
   ///
   /// @return A pair holding the sign for the 2D and Z lifetimes
   Result<std::pair<double, double>> getLifetimeSignOfTrack(
-      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex& vtx,
       const Acts::Vector3& direction, const GeometryContext& gctx,
       const MagneticFieldContext& mctx) const;
 
@@ -213,7 +213,7 @@ class ImpactPointEstimator {
   ///
   /// @return The value of the 3D lifetime
   Result<double> get3DLifetimeSignOfTrack(
-      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex& vtx,
       const Acts::Vector3& direction, const GeometryContext& gctx,
       const MagneticFieldContext& mctx) const;
 
