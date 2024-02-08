@@ -324,7 +324,8 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter<linearizer_t>::fit(
         paramVec[eBoundTime] = linPoint[FreeIndices::eFreeTime];
         BoundTrackParameters refittedParams(
             perigee, paramVec, covDeltaP[iTrack],
-            m_cfg.extractParameters(billoirTrack.originalTrack).particleHypothesis());
+            m_cfg.extractParameters(billoirTrack.originalTrack)
+                .particleHypothesis());
         TrackAtVertex trackAtVertex(billoirTrack.chi2, refittedParams,
                                     billoirTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackAtVertex));

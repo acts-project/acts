@@ -233,8 +233,8 @@ Acts::AdaptiveMultiVertexFitter<linearizer_t>::setAllVertexCompatibilities(
     if (vtxInfo.impactParams3D.find(trk) == vtxInfo.impactParams3D.end()) {
       auto res = m_cfg.ipEst.estimate3DImpactParameters(
           vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-          m_cfg.extractParameters(trk), VectorHelpers::position(vtxInfo.linPoint),
-          state.ipState);
+          m_cfg.extractParameters(trk),
+          VectorHelpers::position(vtxInfo.linPoint), state.ipState);
       if (!res.ok()) {
         return res.error();
       }
@@ -289,9 +289,9 @@ Acts::AdaptiveMultiVertexFitter<linearizer_t>::setWeightsAndUpdate(
         // relinearize
         if (!trkAtVtx.isLinearized || vtxInfo.relinearize) {
           auto result = linearizer.linearizeTrack(
-              m_cfg.extractParameters(trk), vtxInfo.linPoint[3], *vtxPerigeeSurface,
-              vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-              state.linearizerState);
+              m_cfg.extractParameters(trk), vtxInfo.linPoint[3],
+              *vtxPerigeeSurface, vertexingOptions.geoContext,
+              vertexingOptions.magFieldContext, state.linearizerState);
           if (!result.ok()) {
             return result.error();
           }

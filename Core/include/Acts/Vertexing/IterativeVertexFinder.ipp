@@ -374,7 +374,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
     // If a large amount of tracks is available, we check their compatibility
     // with the vertex before adding them to the fit:
     else {
-      const BoundTrackParameters& sTrackParams = m_cfg.extractParameters(sTrack);
+      const BoundTrackParameters& sTrackParams =
+          m_cfg.extractParameters(sTrack);
       auto distanceRes = m_cfg.ipEst.calculateDistance(
           vertexingOptions.geoContext, sTrackParams, seedVertex.position(),
           state.ipState);
