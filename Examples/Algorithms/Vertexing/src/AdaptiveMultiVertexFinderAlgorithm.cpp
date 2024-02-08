@@ -15,8 +15,10 @@
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
@@ -55,17 +57,26 @@ ActsExamples::ProcessCode
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
-    using Seeder = Acts::TrackDensityVertexFinder<
-        Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+    using Seeder =
+        Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
-    Seeder seedFinder;
+    Seeder seedFinder{{}, Acts::InputTrack::extractParameters};
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
-    using Seeder = Acts::AdaptiveGridDensityVertexFinder<109, Fitter>;
+    // Set up track density used during vertex seeding
+    Acts::AdaptiveGridTrackDensity::Config trkDensityCfg;
+    // Bin extent in z-direction
+    trkDensityCfg.spatialBinExtent = 15. * Acts::UnitConstants::um;
+    // Bin extent in t-direction
+    trkDensityCfg.temporalBinExtent = 19. * Acts::UnitConstants::mm;
+    trkDensityCfg.useTime = m_cfg.useTime;
+    Acts::AdaptiveGridTrackDensity trkDensity(trkDensityCfg);
+
+    // Set up vertex seeder and finder
+    using Seeder = Acts::AdaptiveGridDensityVertexFinder<Fitter>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
-    // The seeder config argument corresponds to the bin size in mm
-    Seeder::Config seederConfig(0.05);
-    Seeder seedFinder(seederConfig);
+    Seeder::Config seederConfig(trkDensity);
+    Seeder seedFinder(seederConfig, Acts::InputTrack::extractParameters);
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else {
     return ActsExamples::ProcessCode::ABORT;
@@ -87,11 +98,13 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
 
   // Set up ImpactPointEstimator
   IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
-  IPEstimator ipEstimator(ipEstimatorCfg);
+  IPEstimator ipEstimator(ipEstimatorCfg,
+                          logger().cloneWithSuffix("ImpactPointEstimator"));
 
   // Set up the helical track linearizer
   Linearizer::Config ltConfig(m_cfg.bField, propagator);
-  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
+  Linearizer linearizer(ltConfig,
+                        logger().cloneWithSuffix("HelicalTrackLinearizer"));
 
   // Set up deterministic annealing with user-defined temperatures
   Acts::AnnealingUtility::Config annealingConfig;
@@ -103,37 +116,56 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.annealingTool = annealingUtility;
   fitterCfg.minWeight = 0.001;
   fitterCfg.doSmoothing = true;
-  Fitter fitter(std::move(fitterCfg), logger().cloneWithSuffix("AMVFitter"));
+  fitterCfg.useTime = m_cfg.useTime;
+  Fitter fitter(std::move(fitterCfg), Acts::InputTrack::extractParameters,
+                logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
-  typename Finder::Config finderConfig(std::move(fitter), seedFinder,
+  typename Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
                                        ipEstimator, std::move(linearizer),
                                        m_cfg.bField);
-  finderConfig.looseConstrValue = 1e2;
+  // Set the initial variance of the 4D vertex position. Since time is on a
+  // numerical scale, we have to provide a greater value in the corresponding
+  // dimension.
+  finderConfig.initialVariances << 1e+2, 1e+2, 1e+2, 1e+8;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
+  finderConfig.useTime = m_cfg.useTime;
+  if (m_cfg.useTime) {
+    // When using time, we have an extra contribution to the chi2 by the time
+    // coordinate. We thus need to increase tracksMaxSignificance (i.e., the
+    // maximum chi2 that a track can have to be associated with a vertex).
+    finderConfig.tracksMaxSignificance = 7.5;
+    // Check if vertices are merged in space and time
+    // TODO rename do3dSplitting -> doFullSplitting
+    finderConfig.do3dSplitting = true;
+    // Reset the maximum significance that two vertices can have before they are
+    // considered as merged. The default value 3 is tuned for comparing the
+    // vertices' z-coordinates. Since we consider 4 dimensions here, we need to
+    // multiply the value by 4 and thus we set it to 3 * 4 = 12.
+    finderConfig.maxMergeVertexSignificance = 12.;
+  }
 
   // Instantiate the finder
-  Finder finder(std::move(finderConfig), logger().cloneWithSuffix("AMVFinder"));
+  Finder finder(std::move(finderConfig), Acts::InputTrack::extractParameters,
+                logger().clone());
 
   // retrieve input tracks and convert into the expected format
 
   const auto& inputTrackParameters = m_inputTrackParameters(ctx);
   // TODO change this from pointers to tracks parameters to actual tracks
-  auto inputTrackPointers =
-      makeTrackParametersPointerContainer(inputTrackParameters);
+  auto inputTracks = makeInputTracks(inputTrackParameters);
 
-  if (inputTrackParameters.size() != inputTrackPointers.size()) {
+  if (inputTrackParameters.size() != inputTracks.size()) {
     ACTS_ERROR("Input track containers do not align: "
-               << inputTrackParameters.size()
-               << " != " << inputTrackPointers.size());
+               << inputTrackParameters.size() << " != " << inputTracks.size());
   }
 
-  for (const auto trk : inputTrackPointers) {
-    if (trk->covariance() && trk->covariance()->determinant() <= 0) {
+  for (const auto& trk : inputTrackParameters) {
+    if (trk.covariance() && trk.covariance()->determinant() <= 0) {
       // actually we should consider this as an error but I do not want the CI
       // to fail
-      ACTS_WARNING("input track " << *trk << " has det(cov) = "
-                                  << trk->covariance()->determinant());
+      ACTS_WARNING("input track " << trk << " has det(cov) = "
+                                  << trk.covariance()->determinant());
     }
   }
 
@@ -155,7 +187,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
     // find vertices
-    auto result = finder.find(inputTrackPointers, finderOpts, state);
+    auto result = finder.find(inputTracks, finderOpts, state);
 
     if (result.ok()) {
       vertices = std::move(result.value());
@@ -172,7 +204,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   }
 
   // store proto vertices extracted from the found vertices
-  m_outputProtoVertices(ctx, makeProtoVertices(inputTrackPointers, vertices));
+  m_outputProtoVertices(ctx, makeProtoVertices(inputTracks, vertices));
 
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));

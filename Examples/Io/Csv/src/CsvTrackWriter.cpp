@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
@@ -108,9 +109,18 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
       // n Majority hits
       nMajorityHits = particleHitCount.front().hitCount;
     }
+
+    static const Acts::ConstProxyAccessor<unsigned int> seedNumber(
+        "trackGroup");
+
     // track info
     TrackInfo toAdd;
     toAdd.trackId = trackId;
+    if (tracks.hasColumn(Acts::hashString("trackGroup"))) {
+      toAdd.seedID = seedNumber(track);
+    } else {
+      toAdd.seedID = 0;
+    }
     toAdd.particleId = majorityParticleId;
     toAdd.nStates = track.nTrackStates();
     toAdd.nMajorityHits = nMajorityHits;
@@ -166,7 +176,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   }
 
   // write csv header
-  mos << "track_id,particleId,"
+  mos << "track_id,seed_id,particleId,"
       << "nStates,nMajorityHits,nMeasurements,nOutliers,nHoles,nSharedHits,"
       << "chi2,ndf,chi2/ndf,"
       << "pT,eta,phi,"
@@ -190,6 +200,7 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
 
     // write the track info
     mos << trajState.trackId << ",";
+    mos << trajState.seedID << ",";
     mos << trajState.particleId << ",";
     mos << trajState.nStates << ",";
     mos << trajState.nMajorityHits << ",";

@@ -7,21 +7,14 @@ Currently implemented is clang-tidy warnings.
 
 import argparse
 import re
-from collections import namedtuple
-from itertools import groupby
 import os
-import html
 from fnmatch import fnmatch
-import json
-import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 from item import Item, ItemCollection
 
 
 def parse_clang_tidy_item(itemstr):
-
     try:
         m = re.match(
             r"(?P<file>[/.\-+\w]+):(?P<line>\d+):(?P<col>\d+): (?P<sev>.*?):(?P<msg>[\s\S]*)\[(?P<code>.*)\]\n(?P<info>[\s\S]*)",
@@ -52,7 +45,6 @@ def parse_clang_tidy_item(itemstr):
 
 
 def parse_clang_tidy_output(output):
-
     # cleanup
     itemstr = output
     itemstr = re.sub(r"Enabled checks:\n[\S\s]+?\n\n", "", itemstr)
@@ -148,7 +140,7 @@ def main():
 
     print("Write to", args.output)
     with open(args.output, "w+") as jf:
-        jf.write(ItemCollection(__root__=items).json(indent=2))
+        jf.write(ItemCollection(root=items).model_dump_json(indent=2))
 
 
 if "__main__" == __name__:

@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/DetectorVolumeVisitorConcept.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -19,7 +21,9 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -40,7 +44,6 @@ class VolumeBounds;
 namespace Experimental {
 
 class DetectorVolume;
-class Portal;
 class Detector;
 
 /// A detector volume description which can be:
@@ -99,8 +102,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param bounds the volume bounds
   /// @param surfaces are the contained surfaces of this volume
   /// @param volumes are the contains volumes of this volume
-  /// @param detectorVolumeUpdator is a Delegate to find the associated volume
-  /// @param surfaceCandidateUpdator the navigation state updator for surfaces/portals
+  /// @param detectorVolumeUpdater is a Delegate to find the associated volume
+  /// @param surfaceCandidateUpdater the navigation state updator for surfaces/portals
   ///
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
@@ -110,8 +113,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdator detectorVolumeUpdator,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator) noexcept(false);
+      DetectorVolumeUpdater detectorVolumeUpdater,
+      SurfaceCandidatesUpdater surfaceCandidateUpdater) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
@@ -119,7 +122,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param name the volume name
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
-  /// @param surfaceCandidateUpdator the navigation state updator for surfaces/portals
+  /// @param surfaceCandidateUpdater the navigation state updator for surfaces/portals
   ///
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
@@ -127,7 +130,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   DetectorVolume(
       const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator) noexcept(false);
+      SurfaceCandidatesUpdater surfaceCandidateUpdater) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
@@ -137,8 +140,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdator detectorVolumeUpdator,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator);
+      DetectorVolumeUpdater detectorVolumeUpdater,
+      SurfaceCandidatesUpdater surfaceCandidateUpdater);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
@@ -146,7 +149,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   static std::shared_ptr<DetectorVolume> makeShared(
       const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator);
+      SurfaceCandidatesUpdater surfaceCandidateUpdater);
 
  public:
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
@@ -280,22 +283,96 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   const std::vector<const DetectorVolume*>& volumes() const;
 
   /// Const access to the detector volume updator
-  const DetectorVolumeUpdator& detectorVolumeUpdator() const;
+  const DetectorVolumeUpdater& detectorVolumeUpdater() const;
+
+  /// @brief Visit all reachable surfaces of the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called for each found surface,
+  /// it will be handed down to contained volumes and portals
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    for (const auto& s : surfaces()) {
+      visitor(s);
+    }
+    for (const auto& p : portals()) {
+      p->visitSurface(std::forward<visitor_t>(visitor));
+    }
+    for (const auto& v : volumes()) {
+      v->visitSurfaces(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable surfaces of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called for each found surface,
+  /// it will be handed down to contained volumes and portals
+  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  void visitMutableSurfaces(visitor_t&& visitor) {
+    for (auto& s : surfacePtrs()) {
+      visitor(s.get());
+    }
+    for (auto& p : portalPtrs()) {
+      p->visitMutableSurface(std::forward<visitor_t>(visitor));
+    }
+    for (auto& v : volumePtrs()) {
+      v->visitMutableSurfaces(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable detector volumes of the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  template <ACTS_CONCEPT(DetectorVolumeVisitor) visitor_t>
+  void visitVolumes(visitor_t&& visitor) const {
+    visitor(this);
+    for (const auto& v : volumes()) {
+      v->visitVolumes(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable detector volumes of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  template <ACTS_CONCEPT(MutableDetectorVolumeVisitor) visitor_t>
+  void visitMutableVolumes(visitor_t&& visitor) {
+    visitor(this);
+    for (auto& v : volumePtrs()) {
+      v->visitMutableVolumes(std::forward<visitor_t>(visitor));
+    }
+  }
 
   /// This method allows to udate the navigation state updator
   /// module.
   ///
-  /// @param surfaceCandidateUpdator the new navigation state updator for surfaces
+  /// @param surfaceCandidateUpdater the new navigation state updator for surfaces
   /// @param surfaces the surfaces the new navigation state updator points to
   /// @param volumes the volumes the new navigation state updator points to
   ///
-  void assignSurfaceCandidatesUpdator(
-      SurfaceCandidatesUpdator surfaceCandidateUpdator,
+  void assignSurfaceCandidatesUpdater(
+      SurfaceCandidatesUpdater surfaceCandidateUpdater,
       const std::vector<std::shared_ptr<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
   /// Const access to the navigation state updator
-  const SurfaceCandidatesUpdator& surfaceCandidatesUpdator() const;
+  const SurfaceCandidatesUpdater& surfaceCandidatesUpdater() const;
 
   /// Update a portal given a portal index
   ///
@@ -389,10 +466,10 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// BoundingBox
   std::shared_ptr<const BoundingBox> m_boundingBox;
 
-  DetectorVolumeUpdator m_detectorVolumeUpdator;
+  DetectorVolumeUpdater m_detectorVolumeUpdater;
 
   /// The navigation state updator
-  SurfaceCandidatesUpdator m_surfaceCandidatesUpdator;
+  SurfaceCandidatesUpdater m_surfaceCandidatesUpdater;
 
   /// Volume material (optional)
   std::shared_ptr<IVolumeMaterial> m_volumeMaterial = nullptr;
@@ -416,11 +493,11 @@ class DetectorVolumeFactory {
       std::shared_ptr<VolumeBounds> bounds,
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-      DetectorVolumeUpdator detectorVolumeUpdator,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator) {
+      DetectorVolumeUpdater detectorVolumeUpdater,
+      SurfaceCandidatesUpdater surfaceCandidateUpdater) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, name, transform, std::move(bounds), surfaces, volumes,
-        std::move(detectorVolumeUpdator), std::move(surfaceCandidateUpdator));
+        std::move(detectorVolumeUpdater), std::move(surfaceCandidateUpdater));
     dVolume->construct(gctx, portalGenerator);
     return dVolume;
   }
@@ -430,10 +507,10 @@ class DetectorVolumeFactory {
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
       std::string name, const Transform3& transform,
       std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator) {
+      SurfaceCandidatesUpdater surfaceCandidateUpdater) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, std::move(name), transform, std::move(bounds),
-        std::move(surfaceCandidateUpdator));
+        std::move(surfaceCandidateUpdater));
     dVolume->construct(gctx, portalGenerator);
     return dVolume;
   }

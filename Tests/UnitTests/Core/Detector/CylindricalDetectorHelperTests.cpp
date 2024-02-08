@@ -12,6 +12,7 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -19,7 +20,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -149,6 +150,16 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
     BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[0u], protoContainer[0u]);
     BOOST_CHECK_EQUAL(rVolumes[0u]->portalPtrs()[1u], protoContainer[1u]);
 
+    // Assign geometry ids to the volumes
+    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+    GeometryIdGenerator generator(
+        generatorConfig, Acts::getDefaultLogger("SequentialIdGenerator",
+                                                Acts::Logging::VERBOSE));
+    auto cache = generator.generateCache();
+    for (auto& vol : rVolumes) {
+      generator.assignGeometryId(cache, *vol);
+    }
+
     // A detector construction that should work
     auto detector =
         Detector::makeShared("DetectorInR", rVolumes, tryRootVolumes());
@@ -274,6 +285,16 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
         BOOST_CHECK_EQUAL(protoContainer[ip], zVolumes[0u]->portalPtrs()[ip]);
       }
 
+      // Assign geometry ids to the volumes
+      Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+      GeometryIdGenerator generator(
+          generatorConfig, Acts::getDefaultLogger("SequentialIdGenerator",
+                                                  Acts::Logging::VERBOSE));
+      auto cache = generator.generateCache();
+      for (auto& vol : zVolumes) {
+        generator.assignGeometryId(cache, *vol);
+      }
+
       auto detector =
           Detector::makeShared("DetectorInZ", zVolumes, tryRootVolumes());
     }
@@ -355,6 +376,16 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
           BOOST_CHECK_EQUAL(current->portalPtrs()[ch], last->portalPtrs()[ch]);
         }
       }
+    }
+
+    // Assign geometry ids to the volumes
+    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+    GeometryIdGenerator generator(
+        generatorConfig, Acts::getDefaultLogger("SequentialIdGenerator",
+                                                Acts::Logging::VERBOSE));
+    auto cache = generator.generateCache();
+    for (auto& vol : phiVolumes) {
+      generator.assignGeometryId(cache, *vol);
     }
 
     auto detector =
@@ -533,6 +564,16 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
     dVolumes.insert(dVolumes.end(), zVolumes.begin(), zVolumes.end());
     dVolumes.push_back(pecInner);
     dVolumes.push_back(pecOuter);
+
+    // Assign geometry ids to the volumes
+    Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+    GeometryIdGenerator generator(
+        generatorConfig, Acts::getDefaultLogger("SequentialIdGenerator",
+                                                Acts::Logging::VERBOSE));
+    auto cache = generator.generateCache();
+    for (auto& vol : dVolumes) {
+      generator.assignGeometryId(cache, *vol);
+    }
 
     auto detector = Detector::makeShared("DetectorFromProtoContainer", dVolumes,
                                          tryRootVolumes());

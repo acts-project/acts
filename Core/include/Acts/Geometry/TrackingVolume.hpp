@@ -15,12 +15,13 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
+#include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Concepts.hpp"
@@ -69,17 +70,19 @@ using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
 /// Intersection with @c Layer
-using LayerIntersection = ObjectIntersection<Layer, Surface>;
+using LayerIntersection = std::pair<SurfaceIntersection, const Layer*>;
 /// Multi-intersection with @c Layer
-using LayerMultiIntersection = ObjectMultiIntersection<Layer, Surface>;
+using LayerMultiIntersection =
+    std::pair<SurfaceMultiIntersection, const Layer*>;
 
 /// BoundarySurface of a volume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
 /// Intersection with a @c BoundarySurface
-using BoundaryIntersection = ObjectIntersection<BoundarySurface, Surface>;
+using BoundaryIntersection =
+    std::pair<SurfaceIntersection, const BoundarySurface*>;
 /// Multi-intersection with a @c BoundarySurface
 using BoundaryMultiIntersection =
-    ObjectMultiIntersection<BoundarySurface, Surface>;
+    std::pair<SurfaceMultiIntersection, const BoundarySurface*>;
 
 /// @class TrackingVolume
 ///
@@ -257,34 +260,89 @@ class TrackingVolume : public Volume {
   /// Return the confined dense volumes
   const MutableTrackingVolumeVector denseVolumes() const;
 
-  /// @brief Visit all sensitive surfaces
+  /// @brief Visit all reachable surfaces
   ///
   /// @tparam visitor_t Type of the callable visitor
   ///
-  /// @param visitor The callable. Will be called for each sensitive surface
-  /// that is found
+  /// @param visitor The callable. Will be called for each reachable surface
+  /// that is found, a selection of the surfaces can be done in the visitor
+  /// @param restrictToSensitives If true, only sensitive surfaces are visited
   ///
-  /// If a context is needed for the visit, the vistitor has to provide this
-  /// e.g. as a private member
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
-  void visitSurfaces(visitor_t&& visitor) const {
-    if (!m_confinedVolumes) {
+  void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
+    if (!restrictToSensitives) {
+      // Visit the boundary surfaces
+      for (const auto& bs : m_boundarySurfaces) {
+        visitor(&(bs->surfaceRepresentation()));
+      }
+    }
+
+    // Internal structure
+    if (m_confinedVolumes == nullptr) {
       // no sub volumes => loop over the confined layers
-      if (m_confinedLayers) {
+      if (m_confinedLayers != nullptr) {
         for (const auto& layer : m_confinedLayers->arrayObjects()) {
-          if (layer->surfaceArray() == nullptr) {
-            // no surface array (?)
-            continue;
+          // Surfaces contained in the surface array
+          if (layer->surfaceArray() != nullptr) {
+            for (const auto& srf : layer->surfaceArray()->surfaces()) {
+              visitor(srf);
+              continue;
+            }
           }
-          for (const auto& srf : layer->surfaceArray()->surfaces()) {
-            visitor(srf);
+          if (!restrictToSensitives) {
+            // Surfaces of the layer
+            visitor(&layer->surfaceRepresentation());
+            // Approach surfaces of the layer
+            if (layer->approachDescriptor() != nullptr) {
+              for (const auto& srf :
+                   layer->approachDescriptor()->containedSurfaces()) {
+                visitor(srf);
+              }
+            }
           }
         }
       }
     } else {
       // contains sub volumes
       for (const auto& volume : m_confinedVolumes->arrayObjects()) {
-        volume->visitSurfaces(visitor);
+        volume->visitSurfaces(visitor, restrictToSensitives);
+      }
+    }
+  }
+
+  /// @brief Visit all sensitive surfaces
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each sensitive surface
+  /// that is found, a selection of the surfaces can be done in the visitor
+  ///
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    visitSurfaces(std::forward<visitor_t>(visitor), true);
+  }
+
+  /// @brief Visit all reachable tracking volumes
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each reachable volume
+  /// that is found, a selection of the volumes can be done in the visitor
+  /// @param restrictToSensitives If true, only sensitive surfaces are visited
+  ///
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
+  template <ACTS_CONCEPT(TrackingVolumeVisitor) visitor_t>
+  void visitVolumes(visitor_t&& visitor) const {
+    visitor(this);
+    if (m_confinedVolumes != nullptr) {
+      // contains sub volumes
+      for (const auto& volume : m_confinedVolumes->arrayObjects()) {
+        volume->visitVolumes(visitor);
       }
     }
   }

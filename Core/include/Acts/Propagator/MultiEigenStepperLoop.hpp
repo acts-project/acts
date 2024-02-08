@@ -662,7 +662,7 @@ class MultiEigenStepperLoop
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       Direction direction, bool release = true) const {
-    const Surface& surface = *oIntersection.representation();
+    const Surface& surface = *oIntersection.object();
 
     for (auto& component : state.components) {
       auto intersection = surface.intersect(
@@ -675,17 +675,16 @@ class MultiEigenStepperLoop
     }
   }
 
-  /// Set Step size - explicitly with a double
+  /// Update step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
   /// @param release [in] Do we release the step size?
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor,
-                   bool release = true) const {
+  void updateStepSize(State& state, double stepSize,
+                      ConstrainedStep::Type stype, bool release = true) const {
     for (auto& component : state.components) {
-      SingleStepper::setStepSize(component.state, stepSize, stype, release);
+      SingleStepper::updateStepSize(component.state, stepSize, stype, release);
     }
   }
 
@@ -708,9 +707,10 @@ class MultiEigenStepperLoop
   /// Release the step-size for all components
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
+  /// @param [in] stype The step size type to be released
+  void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
     for (auto& component : state.components) {
-      SingleStepper::releaseStepSize(component.state);
+      SingleStepper::releaseStepSize(component.state, stype);
     }
   }
 

@@ -14,10 +14,7 @@
 #include <optional>
 #include <stdexcept>
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 namespace states {

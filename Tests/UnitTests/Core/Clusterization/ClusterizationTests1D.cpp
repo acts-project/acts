@@ -88,8 +88,9 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
 
   while (ntries-- > 0) {
     std::mt19937_64 rnd(startSeed++);
-    std::uniform_int_distribution<std::size_t> distr_size(minsize, maxsize);
-    std::uniform_int_distribution<std::size_t> distr_space(minspace, maxspace);
+    std::uniform_int_distribution<std::uint32_t> distr_size(minsize, maxsize);
+    std::uniform_int_distribution<std::uint32_t> distr_space(minspace,
+                                                             maxspace);
 
     int col = 0;
 
@@ -98,8 +99,8 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
     for (std::size_t i = 0; i < nclusters; i++) {
       Cluster cl;
       col += distr_space(rnd);
-      std::size_t size = distr_size(rnd);
-      for (std::size_t j = 0; j < size; j++) {
+      std::uint32_t size = distr_size(rnd);
+      for (std::uint32_t j = 0; j < size; j++) {
         Cell cell(col++);
         cells.push_back(cell);
         clusterAddCell(cl, cell);

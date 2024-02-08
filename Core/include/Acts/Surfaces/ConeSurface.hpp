@@ -18,7 +18,9 @@
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -277,5 +279,7 @@ class ConeSurface : public RegularSurface {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, ConeSurface);
 
 }  // namespace Acts

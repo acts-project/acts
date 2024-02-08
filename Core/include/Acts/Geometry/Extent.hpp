@@ -190,6 +190,13 @@ class Extent {
   /// @return true if the rhs is contained
   bool contains(const Extent& rhs, BinningValue bValue = binValues) const;
 
+  /// Contains check for a single point
+  ///
+  /// @param vtx the point that is check if it is contained
+  ///
+  /// @return true if the rhs is contained
+  bool contains(const Vector3& vtx) const;
+
   /// Intersection checks
   ///
   /// @param rhs the extent that is check for intersection

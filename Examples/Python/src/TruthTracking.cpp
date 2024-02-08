@@ -17,6 +17,7 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/Utilities/HitSelector.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <array>
@@ -195,6 +196,9 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
       inputParticles, inputMeasurementParticlesMap, inputSpacePoints,
       outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
+                                inputHits, outputHits, maxTime);
 }
 
 }  // namespace Acts::Python

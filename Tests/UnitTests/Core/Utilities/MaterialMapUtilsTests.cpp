@@ -21,8 +21,6 @@
 
 namespace bdata = boost::unit_test::data;
 
-using Acts::VectorHelpers::perp;
-
 namespace Acts {
 namespace Test {
 

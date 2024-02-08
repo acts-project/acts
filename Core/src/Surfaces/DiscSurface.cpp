@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
@@ -218,34 +219,26 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
   const Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
   const Vector3 direction = freeParams.segment<3>(eFreeDir0);
-  // Get the sines and cosines directly
-  const double cos_theta = std::cos(boundParams[eBoundTheta]);
-  const double sin_theta = std::sin(boundParams[eBoundTheta]);
-  const double cos_phi = std::cos(boundParams[eBoundPhi]);
-  const double sin_phi = std::sin(boundParams[eBoundPhi]);
   // special polar coordinates for the Disc
   double lrad = boundParams[eBoundLoc0];
   double lphi = boundParams[eBoundLoc1];
-  double lcos_phi = cos(lphi);
-  double lsin_phi = sin(lphi);
+  double lcphi = std::cos(lphi);
+  double lsphi = std::sin(lphi);
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - rotated from reference frame
   jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc0) =
-      lcos_phi * rframe.block<3, 1>(0, 0) + lsin_phi * rframe.block<3, 1>(0, 1);
+      lcphi * rframe.block<3, 1>(0, 0) + lsphi * rframe.block<3, 1>(0, 1);
   jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc1) =
-      lrad * (lcos_phi * rframe.block<3, 1>(0, 1) -
-              lsin_phi * rframe.block<3, 1>(0, 0));
+      lrad *
+      (lcphi * rframe.block<3, 1>(0, 1) - lsphi * rframe.block<3, 1>(0, 0));
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacToGlobal(eFreeDir0, eBoundPhi) = (-sin_theta) * sin_phi;
-  jacToGlobal(eFreeDir0, eBoundTheta) = cos_theta * cos_phi;
-  jacToGlobal(eFreeDir1, eBoundPhi) = sin_theta * cos_phi;
-  jacToGlobal(eFreeDir1, eBoundTheta) = cos_theta * sin_phi;
-  jacToGlobal(eFreeDir2, eBoundTheta) = (-sin_theta);
+  jacToGlobal.block<3, 2>(eFreeDir0, eBoundPhi) =
+      sphericalToFreeDirectionJacobian(direction);
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
   return jacToGlobal;
 }
@@ -258,16 +251,6 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
-  // Optimized trigonometry on the propagation direction
-  const double x = direction(0);  // == cos(phi) * sin(theta)
-  const double y = direction(1);  // == sin(phi) * sin(theta)
-  const double z = direction(2);  // == cos(theta)
-  // can be turned into cosine/sine
-  const double cosTheta = z;
-  const double sinTheta = std::hypot(x, y);
-  const double invSinTheta = 1. / sinTheta;
-  const double cosPhi = x * invSinTheta;
-  const double sinPhi = y * invSinTheta;
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
@@ -275,8 +258,8 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   const Vector3 pos_loc = transform(gctx).inverse() * position;
   const double lr = perp(pos_loc);
   const double lphi = phi(pos_loc);
-  const double lcphi = cos(lphi);
-  const double lsphi = sin(lphi);
+  const double lcphi = std::cos(lphi);
+  const double lsphi = std::sin(lphi);
   // rotate into the polar coorindates
   auto lx = rframeT.block<1, 3>(0, 0);
   auto ly = rframeT.block<1, 3>(1, 0);
@@ -289,11 +272,8 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   // Time element
   jacToLocal(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  jacToLocal(eBoundPhi, eFreeDir0) = -sinPhi * invSinTheta;
-  jacToLocal(eBoundPhi, eFreeDir1) = cosPhi * invSinTheta;
-  jacToLocal(eBoundTheta, eFreeDir0) = cosPhi * cosTheta;
-  jacToLocal(eBoundTheta, eFreeDir1) = sinPhi * cosTheta;
-  jacToLocal(eBoundTheta, eFreeDir2) = -sinTheta;
+  jacToLocal.block<2, 3>(eBoundPhi, eFreeDir0) =
+      freeToSphericalDirectionJacobian(direction);
   jacToLocal(eBoundQOverP, eFreeQOverP) = 1;
   return jacToLocal;
 }
@@ -309,8 +289,8 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != Intersection3D::Status::unreachable && bcheck &&
-      m_bounds != nullptr) {
+  if (intersection.status() != Intersection3D::Status::unreachable &&
+      bcheck.isEnabled() && m_bounds != nullptr) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));

@@ -52,15 +52,12 @@ struct AlgorithmContext;
 class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using IPEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
+  using IPEstimator = Acts::ImpactPointEstimator<Propagator>;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using Fitter =
-      Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
+  using Fitter = Acts::AdaptiveMultiVertexFitter<Linearizer>;
+  using Options = Acts::VertexingOptions;
 
-  using VertexCollection =
-      std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
+  using VertexCollection = std::vector<Acts::Vertex>;
 
   enum class SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
 
@@ -73,6 +70,8 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputVertices = "vertices";
     /// Enum member determining the choice of the vertex seed finder
     SeedFinder seedFinder;
+    /// Use time information in vertex seeder, finder, and fitter
+    bool useTime = false;
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
@@ -110,4 +109,5 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
 };
+
 }  // namespace ActsExamples

@@ -98,6 +98,9 @@ struct BetheHeitlerApproxSingleCmp {
 /// mixture. To enable an approximation for continuous input variables, the
 /// weights, means and variances are internally parametrized as a Nth order
 /// polynomial.
+/// @todo This class is rather inflexible: It forces two data representations,
+/// making it a bit awkward to add a single parameterization. It would be good
+/// to generalize this at some point.
 template <int NComponents, int PolyDegree>
 class AtlasBetheHeitlerApprox {
   static_assert(NComponents > 0);
@@ -112,32 +115,39 @@ class AtlasBetheHeitlerApprox {
 
   using Data = std::array<PolyData, NComponents>;
 
-  constexpr static double noChangeLimit = 0.0001;
-  constexpr static double singleGaussianLimit = 0.002;
-  constexpr static double lowerLimit = 0.10;
-  constexpr static double higherLimit = 0.20;
-
  private:
-  Data m_low_data;
-  Data m_high_data;
-  bool m_low_transform;
-  bool m_high_transform;
+  Data m_lowData;
+  Data m_highData;
+  bool m_lowTransform;
+  bool m_highTransform;
+
+  constexpr static double m_noChangeLimit = 0.0001;
+  constexpr static double m_singleGaussianLimit = 0.002;
+  double m_lowLimit = 0.10;
+  double m_highLimit = 0.20;
 
  public:
-  /// Construct the Bethe-Heitler approximation description. Additional to the
-  /// coefficients of the polynomials, the information whether these values need
-  /// to be transformed beforehand must be given (see ATLAS code).
+  /// Construct the Bethe-Heitler approximation description with two
+  /// parameterizations, one for lower ranges, one for higher ranges.
+  /// Is it assumed that the lower limit of the high-x/x0 data is equal
+  /// to the upper limit of the low-x/x0 data.
   ///
-  /// @param low_data data for the lower x/x0 range
-  /// @param high_data data for the higher x/x0 range
-  /// @param low_transform whether the low data need to be transformed
-  /// @param high_transform whether the high data need to be transformed
-  constexpr AtlasBetheHeitlerApprox(const Data &low_data, const Data &high_data,
-                                    bool low_transform, bool high_transform)
-      : m_low_data(low_data),
-        m_high_data(high_data),
-        m_low_transform(low_transform),
-        m_high_transform(high_transform) {}
+  /// @param lowData data for the lower x/x0 range
+  /// @param highData data for the higher x/x0 range
+  /// @param lowTransform whether the low data need to be transformed
+  /// @param highTransform whether the high data need to be transformed
+  /// @param lowLimit the upper limit for the low data
+  /// @param highLimit the upper limit for the high data
+  constexpr AtlasBetheHeitlerApprox(const Data &lowData, const Data &highData,
+                                    bool lowTransform, bool highTransform,
+                                    double lowLimit = 0.1,
+                                    double highLimit = 0.2)
+      : m_lowData(lowData),
+        m_highData(highData),
+        m_lowTransform(lowTransform),
+        m_highTransform(highTransform),
+        m_lowLimit(lowLimit),
+        m_highLimit(highLimit) {}
 
   /// Returns the number of components the returned mixture will have
   constexpr auto numComponents() const { return NComponents; }
@@ -145,7 +155,7 @@ class AtlasBetheHeitlerApprox {
   /// Checks if an input is valid for the parameterization
   ///
   /// @param x pathlength in terms of the radiation length
-  constexpr bool validXOverX0(ActsScalar x) const { return x < higherLimit; }
+  constexpr bool validXOverX0(ActsScalar x) const { return x < m_highLimit; }
 
   /// Generates the mixture from the polynomials and reweights them, so
   /// that the sum of all weights is 1
@@ -194,7 +204,7 @@ class AtlasBetheHeitlerApprox {
     };
 
     // Return no change
-    if (x < noChangeLimit) {
+    if (x < m_noChangeLimit) {
       Array ret(1);
 
       ret[0].weight = 1.0;
@@ -204,19 +214,19 @@ class AtlasBetheHeitlerApprox {
       return ret;
     }
     // Return single gaussian approximation
-    if (x < singleGaussianLimit) {
+    if (x < m_singleGaussianLimit) {
       Array ret(1);
       ret[0] = BetheHeitlerApproxSingleCmp::mixture(x)[0];
       return ret;
     }
     // Return a component representation for lower x0
-    if (x < lowerLimit) {
-      return make_mixture(m_low_data, x, m_low_transform);
+    if (x < m_lowLimit) {
+      return make_mixture(m_lowData, x, m_lowTransform);
     }
     // Return a component representation for higher x0
     // Cap the x because beyond the parameterization goes wild
-    const auto high_x = std::min(higherLimit, x);
-    return make_mixture(m_high_data, high_x, m_high_transform);
+    const auto high_x = std::min(m_highLimit, x);
+    return make_mixture(m_highData, high_x, m_highTransform);
   }
 
   /// Loads a parameterization from a file according to the Atlas file
@@ -226,8 +236,11 @@ class AtlasBetheHeitlerApprox {
   /// the parameterization for low x/x0
   /// @param high_parameters_path Path to the foo.par file that stores
   /// the parameterization for high x/x0
+  /// @param lowLimit the upper limit for the low x/x0-data
+  /// @param highLimit the upper limit for the high x/x0-data
   static auto loadFromFiles(const std::string &low_parameters_path,
-                            const std::string &high_parameters_path) {
+                            const std::string &high_parameters_path,
+                            double lowLimit = 0.1, double highLimit = 0.2) {
     auto read_file = [](const std::string &filepath) {
       std::ifstream file(filepath);
 
@@ -267,11 +280,11 @@ class AtlasBetheHeitlerApprox {
       return std::make_tuple(data, transform_code);
     };
 
-    const auto [low_data, low_transform] = read_file(low_parameters_path);
-    const auto [high_data, high_transform] = read_file(high_parameters_path);
+    const auto [lowData, lowTransform] = read_file(low_parameters_path);
+    const auto [highData, highTransform] = read_file(high_parameters_path);
 
-    return AtlasBetheHeitlerApprox(low_data, high_data, low_transform,
-                                   high_transform);
+    return AtlasBetheHeitlerApprox(lowData, highData, lowTransform,
+                                   highTransform, lowLimit, highLimit);
   }
 };
 

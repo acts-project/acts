@@ -8,9 +8,9 @@
 
 template <typename vfitter_t, typename track_density_t>
 auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
-    const std::vector<const InputTrack_t*>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
-    State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
+    const std::vector<InputTrack>& trackVector,
+    const VertexingOptions& vertexingOptions, State& /*state*/) const
+    -> Result<std::vector<Vertex>> {
   typename track_density_t::State densityState(trackVector.size());
 
   // Calculate z seed position
@@ -22,20 +22,21 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
 
   // Calculate seed position
   // Note: constraint position is (0,0,0) if no constraint provided
-  Vector3 seedPos = vertexingOptions.constraint.position() + Vector3(0., 0., z);
+  Vector4 seedPos =
+      vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, 0.);
 
-  Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
+  Vertex returnVertex = Vertex(seedPos);
 
-  SquareMatrix3 seedCov = vertexingOptions.constraint.covariance();
+  SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
   // Check if a constraint is provided and set the new z position constraint
-  if (seedCov != SquareMatrix3::Zero() && std::isnormal(zAndWidth.second)) {
+  if (seedCov != SquareMatrix4::Zero() && std::isnormal(zAndWidth.second)) {
     seedCov(eZ, eZ) = zAndWidth.second * zAndWidth.second;
   }
 
-  returnVertex.setCovariance(seedCov);
+  returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex<InputTrack_t>> seedVec{returnVertex};
+  std::vector<Vertex> seedVec{returnVertex};
 
   return seedVec;
 }

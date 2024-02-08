@@ -13,6 +13,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -137,6 +138,12 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
     m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
     m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
     m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
+
+    if (m_cfg.writeGsfSpecific) {
+      m_outputTree->Branch("max_material_fwd", &m_gsf_max_material_fwd);
+      m_outputTree->Branch("sum_material_fwd", &m_gsf_sum_material_fwd);
+    }
+
     if (m_cfg.writeCovMat == true) {
       // create one branch for every entry of covariance matrix
       // one block for every row of the matrix, every entry gets own branch
@@ -181,6 +188,10 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
       m_outputTree->Branch("cov_eT_eTHETA", &m_cov_eT_eTHETA);
       m_outputTree->Branch("cov_eT_eQOP", &m_cov_eT_eQOP);
       m_outputTree->Branch("cov_eT_eT", &m_cov_eT_eT);
+    }
+
+    if (m_cfg.writeGx2fSpecific) {
+      m_outputTree->Branch("nUpdatesGx2f", &m_nUpdatesGx2f);
     }
   }
 }
@@ -440,6 +451,24 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     m_pull_eT_fit.push_back(pull[Acts::eBoundTime]);
 
     m_hasFittedParams.push_back(hasFittedParams);
+
+    if (m_cfg.writeGsfSpecific) {
+      using namespace Acts::GsfConstants;
+      if (tracks.hasColumn(Acts::hashString(kFwdMaxMaterialXOverX0))) {
+        m_gsf_max_material_fwd.push_back(
+            track.template component<double>(kFwdMaxMaterialXOverX0));
+      } else {
+        m_gsf_max_material_fwd.push_back(NaNfloat);
+      }
+
+      if (tracks.hasColumn(Acts::hashString(kFwdSumMaterialXOverX0))) {
+        m_gsf_sum_material_fwd.push_back(
+            track.template component<double>(kFwdSumMaterialXOverX0));
+      } else {
+        m_gsf_sum_material_fwd.push_back(NaNfloat);
+      }
+    }
+
     if (m_cfg.writeCovMat) {
       // write all entries of covariance matrix to output file
       // one branch for every entry of the matrix.
@@ -484,6 +513,17 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
       m_cov_eT_eTHETA.push_back(getCov(5, 3));
       m_cov_eT_eQOP.push_back(getCov(5, 4));
       m_cov_eT_eT.push_back(getCov(5, 5));
+    }
+
+    if (m_cfg.writeGx2fSpecific) {
+      if (tracks.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
+        int nUpdate = static_cast<int>(
+            track.template component<std::size_t,
+                                     Acts::hashString("Gx2fnUpdateColumn")>());
+        m_nUpdatesGx2f.push_back(nUpdate);
+      } else {
+        m_nUpdatesGx2f.push_back(-1);
+      }
     }
   }
 
@@ -549,6 +589,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
   m_pull_eQOP_fit.clear();
   m_pull_eT_fit.clear();
 
+  m_gsf_max_material_fwd.clear();
+  m_gsf_sum_material_fwd.clear();
+
   if (m_cfg.writeCovMat) {
     m_cov_eLOC0_eLOC0.clear();
     m_cov_eLOC0_eLOC1.clear();
@@ -592,6 +635,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     m_cov_eT_eQOP.clear();
     m_cov_eT_eT.clear();
   }
+
+  m_nUpdatesGx2f.clear();
 
   return ProcessCode::SUCCESS;
 }

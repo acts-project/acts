@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -42,7 +43,7 @@ struct ImpactParametersAndSigma {
 /// A description of the underlying mathematics can be found here:
 /// https://github.com/acts-project/acts/pull/2506
 /// TODO: Upload reference at a better place
-template <typename input_track_t, typename propagator_t,
+template <typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class ImpactPointEstimator {
  public:
@@ -86,7 +87,18 @@ class ImpactPointEstimator {
   /// @brief Constructor
   ///
   /// @param cfg Configuration object
-  ImpactPointEstimator(const Config& cfg) : m_cfg(cfg) {}
+  /// @param logger Logging instance
+  ImpactPointEstimator(const Config& cfg,
+                       std::unique_ptr<const Logger> logger = getDefaultLogger(
+                           "ImpactPointEstimator", Logging::INFO))
+      : m_cfg(cfg), m_logger(std::move(logger)) {}
+
+  /// @brief Copy constructor to clone logger (class owns a unique pointer to it,
+  /// which can't be copied)
+  ///
+  /// @param other Impact point estimator to be cloned
+  ImpactPointEstimator(const ImpactPointEstimator& other)
+      : m_cfg(other.m_cfg), m_logger(other.logger().clone()) {}
 
   /// @brief Calculates 3D distance between a track and a vertex
   ///
@@ -169,7 +181,7 @@ class ImpactPointEstimator {
   /// @param mctx The magnetic field context
   /// @param calculateTimeIP If true, the difference in time is computed
   Result<ImpactParametersAndSigma> getImpactParameters(
-      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       bool calculateTimeIP = false) const;
 
@@ -186,7 +198,7 @@ class ImpactPointEstimator {
   ///
   /// @return A pair holding the sign for the 2D and Z lifetimes
   Result<std::pair<double, double>> getLifetimeSignOfTrack(
-      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex& vtx,
       const Acts::Vector3& direction, const GeometryContext& gctx,
       const MagneticFieldContext& mctx) const;
 
@@ -201,13 +213,19 @@ class ImpactPointEstimator {
   ///
   /// @return The value of the 3D lifetime
   Result<double> get3DLifetimeSignOfTrack(
-      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex& vtx,
       const Acts::Vector3& direction, const GeometryContext& gctx,
       const MagneticFieldContext& mctx) const;
 
  private:
   /// Configuration object
   const Config m_cfg;
+
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger;
+
+  /// Private access to logging instance
+  const Logger& logger() const { return *m_logger; }
 
   /// @brief Performs a Newton approximation to retrieve a point
   /// of closest approach in 3D to a reference position
