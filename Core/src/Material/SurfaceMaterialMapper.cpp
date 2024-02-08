@@ -157,7 +157,7 @@ void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
     ACTS_INFO("Checking volume '" << dVolume.name()
       << "' for material surfaces.")
   
-    // Check the surfaces withing the volume
+    // Check the surfaces within the volume
     ACTS_INFO("- Internal surfaces ...");
     for (auto& surf : dVolume.surfaces()) {
         checkAndInsert(mState, *surf);

@@ -79,11 +79,11 @@ ActsExamples::MaterialMapping::~MaterialMapping() {
 ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     const ActsExamples::AlgorithmContext& context) const {
       // Take the input collection from the EventStore
-      std::unordered_map<size_t, Acts::RecordedMaterialTrack> inputMaterialTracks =
+      std::unordered_map<std::size_t, Acts::RecordedMaterialTrack> inputMaterialTracks =
           m_inputMaterialTracks(context);
       // Write the output collection to the EventStore
-        std::unordered_map<size_t, Acts::RecordedMaterialTrack> mappedMaterialTracks;
-        std::unordered_map<size_t, Acts::RecordedMaterialTrack>
+        std::unordered_map<std::size_t, Acts::RecordedMaterialTrack> mappedMaterialTracks;
+        std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
             unmappedMaterialTracks;
 
       for (auto [idTrack, mTrack] : inputMaterialTracks) {

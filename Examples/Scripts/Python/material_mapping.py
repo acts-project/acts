@@ -84,7 +84,7 @@ def runMaterialMapping(
         )
         propagator = Propagator(stepper, navigator)
         mapper = SurfaceMaterialMapper(level=acts.logging.INFO, propagator=propagator)
-        mmAlgCfg.materialMappers += [mapper]
+        mmAlgCfg.materialMappers.append(mapper)
 
     '''
     if mapVolume:
@@ -117,14 +117,6 @@ def runMaterialMapping(
     )
 
     mmAlgCfg.materialWriters = [jmw]
-
-    print('\n\n\n')
-    print('-'*80)
-    print('lean(mmAlgCfg.materialMappers):', len(mmAlgCfg.materialMappers))
-    print('lean(mmAlgCfg.materialWriters):', len(mmAlgCfg.materialWriters))
-    print('-'*80)
-    print('\n\n\n')
-
 
     s.addAlgorithm(MaterialMapping(level=acts.logging.INFO, config=mmAlgCfg))
 
