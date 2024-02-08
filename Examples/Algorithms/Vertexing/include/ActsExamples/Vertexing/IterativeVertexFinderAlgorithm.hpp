@@ -60,10 +60,9 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
   using Seeder = Acts::TrackDensityVertexFinder<
       Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
   using Finder = Acts::IterativeVertexFinder<Fitter, Seeder>;
-  using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
+  using Options = Acts::VertexingOptions;
 
-  using VertexCollection =
-      std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
+  using VertexCollection = std::vector<Acts::Vertex>;
 
   struct Config {
     /// Optional. Input track parameters collection

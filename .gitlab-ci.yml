@@ -213,7 +213,7 @@ linux_test_examples:
     - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
     - cd src
     - pip3 install -r Examples/Python/tests/requirements.txt
-    - pytest -rFsv -k "not exatrkx" -v -n auto
+    - pytest -rFsv -k "not exatrkx" -v
 
 linux_physmon:
   stage: test
@@ -407,7 +407,6 @@ linux_ubuntu_2204_clang:
       -DACTS_BUILD_PLUGIN_JSON=ON
       -DACTS_BUILD_FATRAS=ON
       -DACTS_BUILD_PLUGIN_LEGACY=ON
-      -DACTS_BUILD_PLUGIN_AUTODIFF=OFF
       -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
       -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
       -DACTS_BUILD_EXAMPLES_GEANT4=ON

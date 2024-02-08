@@ -41,7 +41,7 @@ struct AlgorithmContext;
 /// Additionally it matches the reco vertices to their truth vertices
 /// and write out the difference in x,y and z position.
 class VertexPerformanceWriter final
-    : public WriterT<std::vector<Acts::Vertex<Acts::BoundTrackParameters>>> {
+    : public WriterT<std::vector<Acts::Vertex>> {
  public:
   struct Config {
     /// Input vertex collection.
@@ -88,10 +88,8 @@ class VertexPerformanceWriter final
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
-  ProcessCode writeT(
-      const AlgorithmContext& ctx,
-      const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices)
-      override;
+  ProcessCode writeT(const AlgorithmContext& ctx,
+                     const std::vector<Acts::Vertex>& vertices) override;
 
  private:
   Config m_cfg;             ///< The config class

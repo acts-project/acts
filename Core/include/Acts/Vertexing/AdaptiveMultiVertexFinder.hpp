@@ -180,7 +180,9 @@ class AdaptiveMultiVertexFinder {
                                 getDefaultLogger("AdaptiveMultiVertexFinder",
                                                  Logging::INFO))
       : m_cfg(std::move(cfg)),
-        m_extractParameters([](T params) { return params; }),
+        m_extractParameters([](const InputTrack& params) {
+          return *params.as<BoundTrackParameters>();
+        }),
         m_logger(std::move(logger)) {}
 
   /// @brief Constructor for user-defined InputTrack_t type !=
@@ -191,11 +193,11 @@ class AdaptiveMultiVertexFinder {
   /// object
   /// @param logger The logging instance
   AdaptiveMultiVertexFinder(
-      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
-        m_extractParameters(func),
+        m_extractParameters(std::move(func)),
         m_logger(std::move(logger)) {}
 
   AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
@@ -208,10 +210,9 @@ class AdaptiveMultiVertexFinder {
   /// @param state State for fulfilling interfaces
   ///
   /// @return Vector of all reconstructed vertices
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& allTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& allTracks,
+                                   const VertexingOptions& vertexingOptions,
+                                   State& state) const;
 
  private:
   /// Configuration object
@@ -220,7 +221,7 @@ class AdaptiveMultiVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -241,21 +242,20 @@ class AdaptiveMultiVertexFinder {
   /// from seed track collection in last iteration
   ///
   /// @return The seed vertex
-  Result<Vertex<InputTrack_t>> doSeeding(
-      const std::vector<const InputTrack_t*>& trackVector,
-      Vertex<InputTrack_t>& currentConstraint,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
+  Result<Vertex> doSeeding(
+      const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
+      const VertexingOptions& vertexingOptions,
       SeedFinderState_t& seedFinderState,
-      const std::vector<const InputTrack_t*>& removedSeedTracks) const;
+      const std::vector<InputTrack>& removedSeedTracks) const;
 
   /// @brief Sets constraint vertex after seeding
   ///
   /// @param currentConstraint Vertex constraint
   /// @param useVertexConstraintInFit Indicates whether constraint is used during vertex fit
   /// @param seedVertex Seed vertex
-  void setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
+  void setConstraintAfterSeeding(Vertex& currentConstraint,
                                  bool useVertexConstraintInFit,
-                                 Vertex<InputTrack_t>& seedVertex) const;
+                                 Vertex& seedVertex) const;
 
   /// @brief Calculates the IP significance of a track to a given vertex
   ///
@@ -265,8 +265,8 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @return The IP significance
   Result<double> getIPSignificance(
-      const InputTrack_t* track, const Vertex<InputTrack_t>& vtx,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const InputTrack& track, const Vertex& vtx,
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Adds compatible track to vertex candidate
   ///
@@ -275,9 +275,9 @@ class AdaptiveMultiVertexFinder {
   /// @param[out] fitterState The vertex fitter state
   /// @param vertexingOptions Vertexing options
   Result<void> addCompatibleTracksToVertex(
-      const std::vector<const InputTrack_t*>& tracks, Vertex<InputTrack_t>& vtx,
+      const std::vector<InputTrack>& tracks, Vertex& vtx,
       FitterState_t& fitterState,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Method that tries to recover from cases where no tracks
   /// were added to the vertex candidate after seeding
@@ -292,11 +292,10 @@ class AdaptiveMultiVertexFinder {
   ///
   /// return True if recovery was successful, false otherwise
   Result<bool> canRecoverFromNoCompatibleTracks(
-      const std::vector<const InputTrack_t*>& allTracks,
-      const std::vector<const InputTrack_t*>& seedTracks,
-      Vertex<InputTrack_t>& vtx, const Vertex<InputTrack_t>& currentConstraint,
-      FitterState_t& fitterState,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const std::vector<InputTrack>& allTracks,
+      const std::vector<InputTrack>& seedTracks, Vertex& vtx,
+      const Vertex& currentConstraint, FitterState_t& fitterState,
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Method that tries to prepare the vertex for the fit
   ///
@@ -310,11 +309,10 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @return True if preparation was successful, false otherwise
   Result<bool> canPrepareVertexForFit(
-      const std::vector<const InputTrack_t*>& allTracks,
-      const std::vector<const InputTrack_t*>& seedTracks,
-      Vertex<InputTrack_t>& vtx, const Vertex<InputTrack_t>& currentConstraint,
-      FitterState_t& fitterState,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const std::vector<InputTrack>& allTracks,
+      const std::vector<InputTrack>& seedTracks, Vertex& vtx,
+      const Vertex& currentConstraint, FitterState_t& fitterState,
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Method that checks if vertex is a good vertex and if
   /// compatible tracks are available
@@ -326,8 +324,7 @@ class AdaptiveMultiVertexFinder {
   ///
   /// @return pair(nCompatibleTracks, isGoodVertex)
   std::pair<int, bool> checkVertexAndCompatibleTracks(
-      Vertex<InputTrack_t>& vtx,
-      const std::vector<const InputTrack_t*>& seedTracks,
+      Vertex& vtx, const std::vector<InputTrack>& seedTracks,
       FitterState_t& fitterState, bool useVertexConstraintInFit) const;
 
   /// @brief Method that removes all tracks that are compatible with
@@ -339,9 +336,9 @@ class AdaptiveMultiVertexFinder {
   /// @param[out] removedSeedTracks Collection of seed track that will be
   /// removed
   void removeCompatibleTracksFromSeedTracks(
-      Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
+      Vertex& vtx, std::vector<InputTrack>& seedTracks,
       FitterState_t& fitterState,
-      std::vector<const InputTrack_t*>& removedSeedTracks) const;
+      std::vector<InputTrack>& removedSeedTracks) const;
 
   /// @brief Method that tries to remove an incompatible track
   /// from seed tracks after removing a compatible track failed.
@@ -354,11 +351,11 @@ class AdaptiveMultiVertexFinder {
   /// @param[in] geoCtx The geometry context to access global positions
   ///
   /// @return Incompatible track was removed
-  bool removeTrackIfIncompatible(
-      Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
-      FitterState_t& fitterState,
-      std::vector<const InputTrack_t*>& removedSeedTracks,
-      const GeometryContext& geoCtx) const;
+  bool removeTrackIfIncompatible(Vertex& vtx,
+                                 std::vector<InputTrack>& seedTracks,
+                                 FitterState_t& fitterState,
+                                 std::vector<InputTrack>& removedSeedTracks,
+                                 const GeometryContext& geoCtx) const;
 
   /// @brief Method that evaluates if the new vertex candidate should
   /// be kept, i.e. saved, or not
@@ -368,8 +365,7 @@ class AdaptiveMultiVertexFinder {
   /// @param fitterState The vertex fitter state
   ///
   /// @return Keep new vertex
-  bool keepNewVertex(Vertex<InputTrack_t>& vtx,
-                     const std::vector<Vertex<InputTrack_t>*>& allVertices,
+  bool keepNewVertex(Vertex& vtx, const std::vector<Vertex*>& allVertices,
                      FitterState_t& fitterState) const;
 
   /// @brief Method that evaluates if the new vertex candidate is
@@ -379,9 +375,8 @@ class AdaptiveMultiVertexFinder {
   /// @param allVertices All so far found vertices
   ///
   /// @return Vertex is merged
-  bool isMergedVertex(
-      const Vertex<InputTrack_t>& vtx,
-      const std::vector<Vertex<InputTrack_t>*>& allVertices) const;
+  bool isMergedVertex(const Vertex& vtx,
+                      const std::vector<Vertex*>& allVertices) const;
 
   /// @brief Method that deletes last vertex from list of all vertices
   /// and refits all vertices afterwards
@@ -392,11 +387,9 @@ class AdaptiveMultiVertexFinder {
   /// @param fitterState The current vertex fitter state
   /// @param vertexingOptions Vertexing options
   Result<void> deleteLastVertex(
-      Vertex<InputTrack_t>& vtx,
-      std::vector<std::unique_ptr<Vertex<InputTrack_t>>>& allVertices,
-      std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
-      FitterState_t& fitterState,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      Vertex& vtx, std::vector<std::unique_ptr<Vertex>>& allVertices,
+      std::vector<Vertex*>& allVerticesPtr, FitterState_t& fitterState,
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Prepares the output vector of vertices
   ///
@@ -404,8 +397,8 @@ class AdaptiveMultiVertexFinder {
   /// @param fitterState The vertex fitter state
   ///
   /// @return The output vertex collection
-  Result<std::vector<Vertex<InputTrack_t>>> getVertexOutputList(
-      const std::vector<Vertex<InputTrack_t>*>& allVerticesPtr,
+  Result<std::vector<Vertex>> getVertexOutputList(
+      const std::vector<Vertex*>& allVerticesPtr,
       FitterState_t& fitterState) const;
 };
 
