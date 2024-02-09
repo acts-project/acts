@@ -47,7 +47,7 @@ inline Acts::Vector4& Acts::Vertex::fullPosition() {
   return m_position;
 }
 
-inline Acts::Vector4& Acts::Vertex::fullSeedPosition() {
+inline const Acts::Vector4& Acts::Vertex::fullSeedPosition() {
   return m_seedPosition;
 }
 
