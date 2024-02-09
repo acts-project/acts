@@ -47,17 +47,11 @@ inline Acts::Vector4& Acts::Vertex::fullPosition() {
   return m_position;
 }
 
-<<<<<<< HEAD
-template <typename input_track_t>
-const Acts::Vector4& Acts::Vertex<input_track_t>::fullSeedPosition() const {
+inline Acts::Vector4& Acts::Vertex::fullSeedPosition() {
   return m_seedPosition;
 }
 
-template <typename input_track_t>
-Acts::SquareMatrix3 Acts::Vertex<input_track_t>::covariance() const {
-=======
 inline Acts::SquareMatrix3 Acts::Vertex::covariance() const {
->>>>>>> 3fa1300db51178db48f288982bfe7f45e0b77fcf
   return m_covariance.block<3, 3>(ePos0, ePos0);
 }
 
