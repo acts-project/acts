@@ -93,7 +93,7 @@ class KdtSurfaces {
     std::vector<std::shared_ptr<Surface>> surfacePtrs;
     auto surfaceQuery = m_kdt->rangeSearchWithKey(range);
     std::for_each(surfaceQuery.begin(), surfaceQuery.end(),
-                  [&](auto& s) { surfacePtrs.push_back(s.second); });
+                  [&](auto& surf) { surfacePtrs.push_back(surf.second); });
     return surfacePtrs;
   }
 

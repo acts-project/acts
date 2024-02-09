@@ -626,7 +626,7 @@ Acts::TrackingVolume::compatibleLayers(
     }
     std::sort(lIntersections.begin(), lIntersections.end(),
               [](const LayerIntersection& a, const LayerIntersection& b) {
-                return SurfaceIntersection::forwardOrder(a.first, b.first);
+                return SurfaceIntersection::pathLengthOrder(a.first, b.first);
               });
   }
   // and return
@@ -709,7 +709,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
 
   // Sort according to the path length
   std::sort(sIntersections.begin(), sIntersections.end(),
-            SurfaceIntersection::forwardOrder);
+            SurfaceIntersection::pathLengthOrder);
 
   return sIntersections;
 }

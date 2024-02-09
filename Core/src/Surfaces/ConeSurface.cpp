@@ -336,6 +336,9 @@ Acts::AlignmentToPathMatrix Acts::ConeSurface::alignmentToPathDerivative(
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
