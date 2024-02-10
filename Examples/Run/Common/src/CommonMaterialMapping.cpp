@@ -93,7 +93,7 @@ int runMaterialMapping(int argc, char* argv[],
 
   auto mapSurface = vm["mat-mapping-surfaces"].template as<bool>();
   auto mapVolume = vm["mat-mapping-volumes"].template as<bool>();
-  // auto volumeStep = vm["mat-mapping-volume-stepsize"].template as<float>();
+  auto volumeStep = vm["mat-mapping-volume-stepsize"].template as<float>();
   if (!mapSurface && !mapVolume) {
     return EXIT_FAILURE;
   }
@@ -131,9 +131,8 @@ int runMaterialMapping(int argc, char* argv[],
     auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
         smmConfig, propagator,
         Acts::getDefaultLogger("SurfaceMaterialMapper", logLevel));
-    mmAlgConfig.materialMappers.push_back(smm);
+    mmAlgConfig.materialSurfaceMapper = smm;
   }
-  /*
   if (mapVolume) {
     // Get a Navigator
     Acts::Navigator navigator({tGeometry});
@@ -144,11 +143,10 @@ int runMaterialMapping(int argc, char* argv[],
     Acts::VolumeMaterialMapper::Config vmmConfig;
     vmmConfig.mappingStep = volumeStep;
     auto vmm = std::make_shared<Acts::VolumeMaterialMapper>(
-        vmmConfig, std::move(propagator),
+        vmmConfig, propagator,
         Acts::getDefaultLogger("VolumeMaterialMapper", logLevel));
     mmAlgConfig.materialVolumeMapper = vmm;
   }
-  */
   mmAlgConfig.trackingGeometry = tGeometry;
 
   // Get the file name from the options
