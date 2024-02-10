@@ -94,6 +94,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     throw std::bad_alloc();
   } else {
     // I/O parameters.
+    m_outputTree->Branch("event_nr", &m_eventNr);
+
     // Branches related to the 4D vertex position
     m_outputTree->Branch("truthX", &m_truthX);
     m_outputTree->Branch("truthY", &m_truthY);
@@ -230,8 +232,7 @@ int ActsExamples::VertexPerformanceWriter::getNumberOfTruePriVertices(
 }
 
 ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
-    const AlgorithmContext& ctx,
-    const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
+    const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -261,6 +262,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
   TrackParametersContainer trackParameters;
   std::vector<SimParticle> associatedTruthParticles;
+
+  // Get the event number
+  m_eventNr = ctx.eventNumber;
 
   // The i-th entry in associatedTruthParticles corresponds to the i-th entry in
   // trackParameters. If we know the truth particles associated to the track
@@ -395,7 +399,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     if (m_cfg.useTracks) {
       for (const auto& trk : tracksAtVtx) {
         // Track parameters before the vertex fit
-        Acts::BoundTrackParameters origTrack = *(trk.originalParams);
+        const Acts::BoundTrackParameters& origTrack =
+            *trk.originalParams.as<Acts::BoundTrackParameters>();
 
         // Finding the matching parameters in the container of all track
         // parameters. This allows us to identify the corresponding particle,
@@ -405,7 +410,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         for (std::size_t i = 0; i < trackParameters.size(); ++i) {
           const auto& params = trackParameters[i].parameters();
 
-          if (origTrack.parameters() == params) {
+          if (origTrack.parameters() == params &&
+              trk.trackWeight > m_cfg.minTrkWeight) {
             // We expect that the i-th associated truth particle corresponds to
             // the i-th track parameters
             const auto& particle = associatedTruthParticles[i];
@@ -450,11 +456,18 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }
     }
 
+    // Get number of contributing tracks (i.e., tracks with a weight above
+    // threshold)
+    auto weightHighEnough = [this](const auto& trkAtVtx) {
+      return trkAtVtx.trackWeight > m_cfg.minTrkWeight;
+    };
+    unsigned int nTracksOnRecoVertex =
+        std::count_if(tracksAtVtx.begin(), tracksAtVtx.end(), weightHighEnough);
     // Match reconstructed and truth vertex if the tracks of the truth vertex
     // make up at least minTrackVtxMatchFraction of the tracks at the
     // reconstructed vertex.
     double trackVtxMatchFraction =
-        (m_cfg.useTracks ? (double)fmap[maxOccurrenceId] / tracksAtVtx.size()
+        (m_cfg.useTracks ? (double)fmap[maxOccurrenceId] / nTracksOnRecoVertex
                          : 1.0);
     if (trackVtxMatchFraction > m_cfg.minTrackVtxMatchFraction) {
       int count = 0;
@@ -581,7 +594,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreeTime));
 
             m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
-            m_nTracksOnRecoVertex.push_back(tracksAtVtx.size());
+            m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
 
             m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
           }
@@ -621,7 +634,10 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Check if they correspond to a track that contributed to the vertex.
           // We save the momenta if we find a match.
           for (const auto& trk : tracksAtVtx) {
-            if (trk.originalParams->parameters() == params) {
+            const auto& boundParams =
+                *trk.originalParams.as<Acts::BoundTrackParameters>();
+            if (boundParams.parameters() == params) {
+              innerTrkWeight.push_back(trk.trackWeight);
               const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
               trueMom.head(2) = Acts::makePhiThetaFromDirection(trueUnitDir);
@@ -631,7 +647,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               innerTruthQOverP.push_back(trueMom[2]);
 
               // Save track parameters before the vertex fit
-              const auto paramsAtVtx = propagateToVtx(*(trk.originalParams));
+              const auto paramsAtVtx = propagateToVtx(boundParams);
               if (paramsAtVtx != std::nullopt) {
                 Acts::ActsVector<3> recoMom =
                     paramsAtVtx->parameters().segment(Acts::eBoundPhi, 3);
@@ -665,7 +681,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
               // Save track parameters after the vertex fit
               const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
-              if (paramsAtVtxFitted != std::nullopt) {
+              if (paramsAtVtxFitted != std::nullopt &&
+                  trk.trackWeight > m_cfg.minTrkWeight) {
                 Acts::ActsVector<3> recoMomFitted =
                     paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
                 const Acts::ActsMatrix<3, 3>& momCovFitted =
@@ -690,8 +707,6 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                     pull(diffMomFitted[1], momCovFitted(1, 1), "theta"));
                 innerPullQOverPFitted.push_back(
                     pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
-
-                innerTrkWeight.push_back(trk.trackWeight);
 
                 const auto& recoUnitDirFitted = paramsAtVtxFitted->direction();
                 double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);

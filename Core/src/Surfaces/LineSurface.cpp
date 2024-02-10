@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
@@ -180,7 +181,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
   Vector3 result = ma + u * ea;
   // Evaluate the boundary check if requested
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
-  if (bcheck && m_bounds) {
+  if (bcheck.isEnabled() && m_bounds) {
     // At closest approach: check inside R or and inside Z
     Vector3 vecLocal = result - mb;
     double cZ = vecLocal.dot(eb);
@@ -204,13 +205,10 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = freeParams.segment<3>(eFreeDir0);
-  // Get the sines and cosines directly
-  double cosTheta = std::cos(boundParams[eBoundTheta]);
-  double sinTheta = std::sin(boundParams[eBoundTheta]);
-  double cosPhi = std::cos(boundParams[eBoundPhi]);
-  double sinPhi = std::sin(boundParams[eBoundPhi]);
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
@@ -220,12 +218,13 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacToGlobal(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
-  jacToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
-  jacToGlobal(eFreeDir2, eBoundTheta) = -sinTheta;
+  jacToGlobal.block<3, 2>(eFreeDir0, eBoundPhi) =
+      sphericalToFreeDirectionJacobian(direction);
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
+
+  // For the derivative of global position with bound angles, refer the
+  // following white paper:
+  // https://acts.readthedocs.io/en/latest/white_papers/line-surface-jacobian.html
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
@@ -254,6 +253,9 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
@@ -284,6 +286,9 @@ Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis

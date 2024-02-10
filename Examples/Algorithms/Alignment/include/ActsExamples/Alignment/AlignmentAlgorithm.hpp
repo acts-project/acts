@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -25,22 +26,24 @@
 namespace ActsExamples {
 
 class AlignmentGroup {
+
     std::vector<const Acts::Surface*> filteredSurfaces; 
     Eigen::vector3 centerOfMass;
     std::unordered_map<const Acts::Surface*, Eigen::Affine3d surfaceTransforms; 
     std::string m_name;  
     std::unordered_set<Acts::GeometryIdentifier> matchIds;
 
+ public:
+  AlignmentGroup(const std::string& name,
+                 const std::vector<Acts::GeometryIdentifier>& geoIds)
+      : m_name(name), m_map(constructHierarchyMap(geoIds)) {
 
-public:
-    AlignmentGroup(const std::string& name, const std::vector<Acts::GeometryIdentifier>& geoIds)
-        : m_name(name) {
-        for (const auto& id : geoIds) {
+                for (const auto& id : geoIds) {
             matchIds.insert(id); // filter condition: match surfaces based on AlignmentGroup criteria
         }
-    }
+      }
 
-    void initialize(const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry, 
+          void initialize(const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry, 
                    const Acts::GeometryContext& gctx) {
         trackingGeometry->visitSurfaces([&](const Acts::Surface* surface) {
             if (filter(surface)) { 
@@ -51,32 +54,34 @@ public:
         relativeTransforms(gctx);
     }
 
-    // Access the name of the group
-    std::string getNameOfGroup() const {
-        return m_name;
+  // Access the name of the group
+  std::string getNameOfGroup() const { return m_name; }
+
+  // Useful for testing
+  bool has(Acts::GeometryIdentifier geoId) {
+    auto it = m_map.find(geoId);
+    return (it == m_map.end()) ? false : *it;
+  }
+
+ private:
+  std::string m_name;  //  storing the name in the class
+  Acts::GeometryHierarchyMap<bool> m_map;
+
+  Acts::GeometryHierarchyMap<bool> constructHierarchyMap(
+      const std::vector<Acts::GeometryIdentifier>& geoIds) {
+    std::vector<Acts::GeometryHierarchyMap<bool>::InputElement> ies;
+    for (const auto& geoId : geoIds) {
+      ies.emplace_back(geoId, true);
     }
+    return Acts::GeometryHierarchyMap<bool>(ies);
+  }
 
-    
-
-private:
-    std::string m_name;  //  storing the name in the class
-    GeometryHierarchyMap<bool> m_map;
-
-    GeometryHierarchyMap<bool> constructHierarchyMap(const std::vector<GeometryIdentifier>& geoIds) {
-        std::vector<GeometryHierarchyMap<bool>::InputElement> ies;
-        for (const auto& geoId : geoIds) {
-            ies.emplace_back(geoId, true);
-        }
-        return GeometryHierarchyMap<bool>(ies);
-    }
-
-    bool filter(const Acts::Surface* surface) const {
+      bool filter(const Acts::Surface* surface) const {
         return relevantIds.find(surface->geometryId()) != matchIds.end();
     }
 
 
-
-   // calculating the center of mass for all the surfaces as an average of their center position 
+    // calculating the center of mass for all the surfaces as an average of their center position 
     Eigen::Vector3 calculateCenterOfMass(const std::vector<const Acts::Surface*>& surfaces, 
                                          const Acts::GeometryContext& gctx) const {
                 
@@ -87,8 +92,9 @@ private:
                 }
                 return sumPosition / static_cast<double>(surfaces.size());
             }
+};
 
-};    // for given filter surface this function calculates relative transformations (center of mass -> relative position)
+    // for given filter surface this function calculates relative transformations (center of mass -> relative position)
        void relativeTransforms(const Acts::GeometryContext& gctx) {
         Eigen::vector3 reference = ReferenceDirection(); 
         for (const auto& surface : filteredSurfaces) {
@@ -104,7 +110,8 @@ private:
     Eigen::vector3 ReferenceDirection() const {
         return Eigen::vector3::UnitX();
     }
-};
+
+
 
 class AlignmentAlgorithm final : public IAlgorithm {
  public:

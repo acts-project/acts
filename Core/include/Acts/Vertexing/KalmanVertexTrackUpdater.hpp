@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
+#include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -29,22 +31,17 @@ namespace KalmanVertexTrackUpdater {
 /// @brief Refits a single track with the knowledge of
 /// the vertex it has originated from
 ///
-/// @tparam input_track_t Track object type
-/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
-/// fit its spatial coordinates) or 4 (if we also fit time).
-///
 /// @param track Track to update
-/// @param vtx Vertex `track` belongs to
-template <typename input_track_t, unsigned int nDimVertex>
-void update(TrackAtVertex<input_track_t>& track,
-            const Vertex<input_track_t>& vtx);
+/// @param vtxPosFull full vertex position
+/// @param vtxCovFull full vertex covariance matrix
+/// @param nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+void update(TrackAtVertexRef track, const Vector4& vtxPosFull,
+            const SquareMatrix4& vtxCovFull, unsigned int nDimVertex);
 
 namespace detail {
 
 /// @brief Calculates a covariance matrix for the refitted track parameters
-///
-/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
-/// fit its spatial coordinates) or 4 (if we also fit time).
 ///
 /// @param wMat W_k matrix from Ref. (1)
 /// @param crossCovVP Cross-covariance matrix between vertex position and track
@@ -61,5 +58,3 @@ inline BoundMatrix calculateTrackCovariance(
 
 }  // Namespace KalmanVertexTrackUpdater
 }  // Namespace Acts
-
-#include "Acts/Vertexing/KalmanVertexTrackUpdater.ipp"
