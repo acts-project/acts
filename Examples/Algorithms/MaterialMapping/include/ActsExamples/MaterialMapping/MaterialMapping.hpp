@@ -12,7 +12,9 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Material/interface/IMaterialMapper.hpp"
+// #include "Acts/Material/interface/IMaterialMapper.hpp"
+#include "Acts/Material/SurfaceMaterialMapper.hpp"
+#include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -84,6 +86,11 @@ class MaterialMapping final : public IAlgorithm {
     /// i.e. the subsequent mapper runs only on the remaining hits of the
     /// prior mappper
     std::vector<std::shared_ptr<Acts::IMaterialMapper>> materialMappers = {};
+
+    std::shared_ptr<Acts::SurfaceMaterialMapper> materialSurfaceMapper =
+            nullptr;
+
+    std::shared_ptr<Acts::VolumeMaterialMapper> materialVolumeMapper = nullptr;
 
     /// The writer of the material
     std::vector<std::shared_ptr<IMaterialWriter>> materialWriters{};

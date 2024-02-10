@@ -86,7 +86,7 @@ def runMaterialMapping(
         )
         propagator = Propagator(stepper, navigator)
         mapper = SurfaceMaterialMapper(level=acts.logging.INFO, propagator=propagator)
-        mmAlgCfg.materialMappers += [mapper]
+        mmAlgCfg.materialSurfaceMapper = mapper
 
     if mapVolume:
         navigator = Navigator(
@@ -96,7 +96,7 @@ def runMaterialMapping(
         mapper = VolumeMaterialMapper(
             level=acts.logging.INFO, propagator=propagator, mappingStep=mappingStep
         )
-        mmAlgCfg.materialMappers += [mapper]
+        mmAlgCfg.materialVolumeMapper = mapper
 
     jmConverterCfg = MaterialMapJsonConverter.Config(
         processSensitives=True,
