@@ -87,6 +87,11 @@ class MaterialMapping final : public IAlgorithm {
     /// prior mappper
     std::vector<std::shared_ptr<Acts::IMaterialMapper>> materialMappers = {};
 
+    std::shared_ptr<Acts::SurfaceMaterialMapper> materialSurfaceMapper =
+            nullptr;
+
+    std::shared_ptr<Acts::VolumeMaterialMapper> materialVolumeMapper = nullptr;
+
     /// The writer of the material
     std::vector<std::shared_ptr<IMaterialWriter>> materialWriters{};
 
