@@ -112,6 +112,9 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
       &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
       &kfSmoother);
 
+  auto trackingGeometry = ctx.geoContext.trackingGeometry; 
+  AlignmentGroup alignmentGroup(trackingGeometry, ctx.geoContext);
+
   // Set the KalmanFitter options
   TrackFitterOptions kfOptions(ctx.geoContext, ctx.magFieldContext,
                                ctx.calibContext, extensions,

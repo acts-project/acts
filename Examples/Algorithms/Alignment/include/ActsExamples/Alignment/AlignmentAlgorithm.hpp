@@ -25,16 +25,38 @@
 namespace ActsExamples {
 
 class AlignmentGroup {
+    std::vector<const Acts::Surface*> filteredSurfaces; 
+    Eigen::vector3 centerOfMass;
+    std::unordered_map<const Acts::Surface*, Eigen::Affine3d surfaceTransforms; 
+    std::string m_name;  
+    std::unordered_set<Acts::GeometryIdentifier> matchIds;
+
 
 public:
-    AlignmentGroup(const std::string& name, const std::vector<GeometryIdentifier>& geoIds)
-        : m_name(name), m_map(constructHierarchyMap(geoIds)) {
+    AlignmentGroup(const std::string& name, const std::vector<Acts::GeometryIdentifier>& geoIds)
+        : m_name(name) {
+        for (const auto& id : geoIds) {
+            matchIds.insert(id); // filter condition: match surfaces based on AlignmentGroup criteria
+        }
+    }
+
+    void initialize(const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry, 
+                   const Acts::GeometryContext& gctx) {
+        trackingGeometry->visitSurfaces([&](const Acts::Surface* surface) {
+            if (filter(surface)) { 
+                filteredSurfaces.push_back(surface);
+            }
+        });
+        centerOfMass = calculateCenterOfMass(filteredSurfaces, gctx); 
+        relativeTransforms(gctx);
     }
 
     // Access the name of the group
     std::string getNameOfGroup() const {
         return m_name;
     }
+
+    
 
 private:
     std::string m_name;  //  storing the name in the class
@@ -46,6 +68,41 @@ private:
             ies.emplace_back(geoId, true);
         }
         return GeometryHierarchyMap<bool>(ies);
+    }
+
+    bool filter(const Acts::Surface* surface) const {
+        return relevantIds.find(surface->geometryId()) != matchIds.end();
+    }
+
+
+
+   // calculating the center of mass for all the surfaces as an average of their center position 
+    Eigen::Vector3 calculateCenterOfMass(const std::vector<const Acts::Surface*>& surfaces, 
+                                         const Acts::GeometryContext& gctx) const {
+                
+                Eigen::vector3 sumPosition(0,0,0); 
+                if (surfaces.empty()) return sumPosition; 
+                for (const auto& surface:surfaces) {
+                    sumPosition += surface->center(gctx);
+                }
+                return sumPosition / static_cast<double>(surfaces.size());
+            }
+
+};    // for given filter surface this function calculates relative transformations (center of mass -> relative position)
+       void relativeTransforms(const Acts::GeometryContext& gctx) {
+        Eigen::vector3 reference = ReferenceDirection(); 
+        for (const auto& surface : filteredSurfaces) {
+            Eigen::vector3 normal = surface->normal(gctx); 
+            Eigen::vector3 center = surface->center(gctx); 
+            
+            Eigen::Affine3d transform = Eigen::Translation3d(center - centerOfMass);
+            surfaceTransforms[surface] = transform;
+        }
+    }  
+
+      // return value of this function is a unit vector that points in x - direction (x direction is a choice)
+    Eigen::vector3 ReferenceDirection() const {
+        return Eigen::vector3::UnitX();
     }
 };
 
