@@ -37,18 +37,16 @@ class ZScanVertexFinder {
   using Propagator_t = typename vfitter_t::Propagator_t;
 
  public:
-  using InputTrack_t = typename vfitter_t::InputTrack_t;
-
   /// Configuration struct
   struct Config {
     /// @brief Finder configuration
     ///
     /// @param ipEst ImpactPointEstimator
-    Config(const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst)
+    Config(const ImpactPointEstimator<Propagator_t>& ipEst)
         : ipEstimator(ipEst) {}
 
     // ImpactPointEstimator
-    ImpactPointEstimator<InputTrack_t, Propagator_t> ipEstimator;
+    ImpactPointEstimator<Propagator_t> ipEstimator;
 
     // FsmwMode1dFinder
     FsmwMode1dFinder mode1dFinder;
@@ -73,29 +71,11 @@ class ZScanVertexFinder {
   /// State struct for fulfilling interface
   struct State {};
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param logger The logging instance
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-
-  ZScanVertexFinder(const Config& cfg,
-                    std::unique_ptr<const Logger> logger =
-                        getDefaultLogger("ZScanVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters([](const InputTrack& params) {
-          return *params.as<BoundTrackParameters>();
-        }),
-        m_logger(std::move(logger)) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters
+  /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
   /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
+  ///             object
   /// @param logger Logging instance
   ZScanVertexFinder(const Config& cfg,
                     std::function<BoundTrackParameters(const InputTrack&)> func,
@@ -123,8 +103,6 @@ class ZScanVertexFinder {
   Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
   std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance

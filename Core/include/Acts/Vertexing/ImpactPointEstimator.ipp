@@ -11,13 +11,11 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
-Acts::Result<double>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    calculateDistance(const GeometryContext& gctx,
-                      const BoundTrackParameters& trkParams,
-                      const Vector3& vtxPos, State& state) const {
+template <typename propagator_t, typename propagator_options_t>
+Acts::Result<double> Acts::
+    ImpactPointEstimator<propagator_t, propagator_options_t>::calculateDistance(
+        const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+        const Vector3& vtxPos, State& state) const {
   auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
 
   if (!res.ok()) {
@@ -28,10 +26,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return res.value().first.norm();
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
+template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::BoundTrackParameters>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
     estimate3DImpactParameters(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
                                const BoundTrackParameters& trkParams,
@@ -106,11 +103,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
+template <typename propagator_t, typename propagator_options_t>
 template <unsigned int nDim>
 Acts::Result<double>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
     getVertexCompatibility(const GeometryContext& gctx,
                            const BoundTrackParameters* trkParams,
                            const ActsVector<nDim>& vertexPos) const {
@@ -176,10 +172,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return residual.dot(weight * residual);
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
+template <typename propagator_t, typename propagator_options_t>
 Acts::Result<double> Acts::ImpactPointEstimator<
-    input_track_t, propagator_t,
+    propagator_t,
     propagator_options_t>::performNewtonOptimization(const Vector3& helixCenter,
                                                      const Vector3& vtxPos,
                                                      double phi, double theta,
@@ -234,11 +229,10 @@ Acts::Result<double> Acts::ImpactPointEstimator<
   return phi;
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
+template <typename propagator_t, typename propagator_options_t>
 template <unsigned int nDim>
 Acts::Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundTrackParameters& trkParams,
                            const ActsVector<nDim>& vtxPos, State& state) const {
@@ -372,10 +366,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return std::make_pair(deltaR, momDir);
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
+template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::ImpactParametersAndSigma>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
     getImpactParameters(const BoundTrackParameters& track, const Vertex& vtx,
                         const GeometryContext& gctx,
                         const Acts::MagneticFieldContext& mctx,
@@ -458,10 +451,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return ipAndSigma;
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
+template <typename propagator_t, typename propagator_options_t>
 Acts::Result<std::pair<double, double>>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
     getLifetimeSignOfTrack(const BoundTrackParameters& track, const Vertex& vtx,
                            const Acts::Vector3& direction,
                            const GeometryContext& gctx,
@@ -501,10 +493,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return vszs;
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
+template <typename propagator_t, typename propagator_options_t>
 Acts::Result<double>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
     get3DLifetimeSignOfTrack(const BoundTrackParameters& track,
                              const Vertex& vtx, const Acts::Vector3& direction,
                              const GeometryContext& gctx,
