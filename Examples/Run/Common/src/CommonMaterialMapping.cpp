@@ -131,7 +131,7 @@ int runMaterialMapping(int argc, char* argv[],
     auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
         smmConfig, propagator,
         Acts::getDefaultLogger("SurfaceMaterialMapper", logLevel));
-    mmAlgConfig.materialSurfaceMapper = smm;
+    mmAlgConfig.materialMappers.push_back(smm);
   }
   if (mapVolume) {
     // Get a Navigator
@@ -145,7 +145,7 @@ int runMaterialMapping(int argc, char* argv[],
     auto vmm = std::make_shared<Acts::VolumeMaterialMapper>(
         vmmConfig, propagator,
         Acts::getDefaultLogger("VolumeMaterialMapper", logLevel));
-    mmAlgConfig.materialVolumeMapper = vmm;
+    mmAlgConfig.materialMappers.push_back(vmm);
   }
   mmAlgConfig.trackingGeometry = tGeometry;
 

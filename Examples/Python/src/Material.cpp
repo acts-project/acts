@@ -114,8 +114,6 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(collection);
     ACTS_PYTHON_MEMBER(mappedCollection);
     ACTS_PYTHON_MEMBER(unmappedCollection);
-    ACTS_PYTHON_MEMBER(materialSurfaceMapper);
-    ACTS_PYTHON_MEMBER(materialVolumeMapper);
     ACTS_PYTHON_MEMBER(materialMappers);
     ACTS_PYTHON_MEMBER(materialWriters);
     ACTS_PYTHON_MEMBER(trackingGeometry);
