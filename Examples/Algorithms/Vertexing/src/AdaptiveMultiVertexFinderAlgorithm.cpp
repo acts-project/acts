@@ -18,6 +18,7 @@
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
@@ -56,10 +57,10 @@ ActsExamples::ProcessCode
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
-    using Seeder = Acts::TrackDensityVertexFinder<
-        Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+    using Seeder =
+        Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
-    Seeder seedFinder;
+    Seeder seedFinder{{}, Acts::InputTrack::extractParameters};
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
     // Set up track density used during vertex seeding
@@ -75,7 +76,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     using Seeder = Acts::AdaptiveGridDensityVertexFinder<Fitter>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
     Seeder::Config seederConfig(trkDensity);
-    Seeder seedFinder(seederConfig);
+    Seeder seedFinder(seederConfig, Acts::InputTrack::extractParameters);
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else {
     return ActsExamples::ProcessCode::ABORT;
@@ -116,7 +117,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.minWeight = 0.001;
   fitterCfg.doSmoothing = true;
   fitterCfg.useTime = m_cfg.useTime;
-  Fitter fitter(std::move(fitterCfg),
+  Fitter fitter(std::move(fitterCfg), Acts::InputTrack::extractParameters,
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
   typename Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
@@ -145,7 +146,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   }
 
   // Instantiate the finder
-  Finder finder(std::move(finderConfig), logger().clone());
+  Finder finder(std::move(finderConfig), Acts::InputTrack::extractParameters,
+                logger().clone());
 
   // retrieve input tracks and convert into the expected format
 
