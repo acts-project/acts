@@ -147,7 +147,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                 layer, SpacePoint{static_cast<float>(globalPos.x()),
                                   static_cast<float>(globalPos.y()),
                                   static_cast<float>(globalPos.z()), r,
-                                  static_cast<int>(geoId.layer()), 0., 0.});
+                                  static_cast<int>(geoId.layer()), 0., 0.,
+                                  std::nullopt, std::nullopt});
             if (spacePoints.size() == 1) {
               bottomSurface = surface;
             }
@@ -215,7 +216,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                           1e-2);
           CHECK_CLOSE_ABS(estFullParams[eBoundQOverP], expParams[eBoundQOverP],
                           1e-2);
-          CHECK_CLOSE_ABS(estFullParams[eBoundTime], expParams[eBoundTime], 1.);
+          // time is not estimated so we check if it is default zero
+          CHECK_CLOSE_ABS(estFullParams[eBoundTime], 0, 1e-6);
         }
       }
     }

@@ -94,6 +94,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     throw std::bad_alloc();
   } else {
     // I/O parameters.
+    m_outputTree->Branch("event_nr", &m_eventNr);
+
     // Branches related to the 4D vertex position
     m_outputTree->Branch("truthX", &m_truthX);
     m_outputTree->Branch("truthY", &m_truthY);
@@ -230,8 +232,7 @@ int ActsExamples::VertexPerformanceWriter::getNumberOfTruePriVertices(
 }
 
 ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
-    const AlgorithmContext& ctx,
-    const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
+    const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -261,6 +262,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
   TrackParametersContainer trackParameters;
   std::vector<SimParticle> associatedTruthParticles;
+
+  // Get the event number
+  m_eventNr = ctx.eventNumber;
 
   // The i-th entry in associatedTruthParticles corresponds to the i-th entry in
   // trackParameters. If we know the truth particles associated to the track
@@ -395,7 +399,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     if (m_cfg.useTracks) {
       for (const auto& trk : tracksAtVtx) {
         // Track parameters before the vertex fit
-        Acts::BoundTrackParameters origTrack = *(trk.originalParams);
+        const Acts::BoundTrackParameters& origTrack =
+            *trk.originalParams.as<Acts::BoundTrackParameters>();
 
         // Finding the matching parameters in the container of all track
         // parameters. This allows us to identify the corresponding particle,
@@ -629,7 +634,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Check if they correspond to a track that contributed to the vertex.
           // We save the momenta if we find a match.
           for (const auto& trk : tracksAtVtx) {
-            if (trk.originalParams->parameters() == params) {
+            const auto& boundParams =
+                *trk.originalParams.as<Acts::BoundTrackParameters>();
+            if (boundParams.parameters() == params) {
               innerTrkWeight.push_back(trk.trackWeight);
               const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
@@ -640,7 +647,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               innerTruthQOverP.push_back(trueMom[2]);
 
               // Save track parameters before the vertex fit
-              const auto paramsAtVtx = propagateToVtx(*(trk.originalParams));
+              const auto paramsAtVtx = propagateToVtx(boundParams);
               if (paramsAtVtx != std::nullopt) {
                 Acts::ActsVector<3> recoMom =
                     paramsAtVtx->parameters().segment(Acts::eBoundPhi, 3);

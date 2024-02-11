@@ -14,7 +14,6 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -83,7 +82,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   BField_t b{{transformPos, transformBField, std::move(g)}};
 
   auto bCacheAny = b.makeCache(mfContext);
-  BField_t::Cache& bCache = bCacheAny.get<BField_t::Cache>();
+  BField_t::Cache& bCache = bCacheAny.as<BField_t::Cache>();
 
   auto check = [&](double i) {
     BOOST_CHECK(b.isInside({0, 0, i * 4.9}));
@@ -142,7 +141,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   pos << 0, 1.5, -2.5;
   BOOST_CHECK(b.isInside(pos));
   bCacheAny = b.makeCache(mfContext);
-  BField_t::Cache& bCache2 = bCacheAny.get<BField_t::Cache>();
+  BField_t::Cache& bCache2 = bCacheAny.as<BField_t::Cache>();
   CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
   c = *bCache2.fieldCell;
@@ -156,7 +155,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   pos << 2, 2.2, -4;
   BOOST_CHECK(b.isInside(pos));
   bCacheAny = b.makeCache(mfContext);
-  BField_t::Cache& bCache3 = bCacheAny.get<BField_t::Cache>();
+  BField_t::Cache& bCache3 = bCacheAny.as<BField_t::Cache>();
   CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
   c = *bCache3.fieldCell;

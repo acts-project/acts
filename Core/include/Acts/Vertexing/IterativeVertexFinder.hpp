@@ -64,8 +64,7 @@ class IterativeVertexFinder {
   using Linearizer_t = typename vfitter_t::Linearizer_t;
 
  public:
-  using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
+  using IPEstimator = ImpactPointEstimator<Propagator_t>;
 
   /// Configuration struct
   struct Config {
@@ -135,33 +134,18 @@ class IterativeVertexFinder {
     typename vfitter_t::State fitterState;
   };
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
+  /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
+  /// @param func Function extracting BoundTrackParameters from InputTrack
+  ///             object
   /// @param logger The logging instance
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  IterativeVertexFinder(Config cfg,
-                        std::unique_ptr<const Logger> logger = getDefaultLogger(
-                            "IterativeVertexFinder", Logging::INFO))
+  IterativeVertexFinder(
+      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("IterativeVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
-        m_extractParameters([](T params) { return params; }),
-        m_logger(std::move(logger)) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
-  /// @param logger The logging instance
-  IterativeVertexFinder(Config cfg,
-                        std::function<BoundTrackParameters(InputTrack_t)> func,
-                        std::unique_ptr<const Logger> logger = getDefaultLogger(
-                            "IterativeVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(func),
+        m_extractParameters(std::move(func)),
         m_logger(std::move(logger)) {}
 
   /// @brief Finds vertices corresponding to input trackVector
@@ -171,19 +155,16 @@ class IterativeVertexFinder {
   /// @param state State for fulfilling interfaces
   ///
   /// @return Collection of vertices found by finder
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
+                                   const VertexingOptions& vertexingOptions,
+                                   State& state) const;
 
  private:
   /// Configuration object
   const Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -195,16 +176,15 @@ class IterativeVertexFinder {
   ///
   /// @param seedTracks Seeding tracks
   /// @param vertexingOptions Vertexing options
-  Result<Vertex<InputTrack_t>> getVertexSeed(
-      const std::vector<const InputTrack_t*>& seedTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+  Result<Vertex> getVertexSeed(const std::vector<InputTrack>& seedTracks,
+                               const VertexingOptions& vertexingOptions) const;
 
   /// @brief Removes all tracks in tracksToRemove from seedTracks
   ///
   /// @param tracksToRemove Tracks to be removed from seedTracks
   /// @param seedTracks List to remove tracks from
-  void removeTracks(const std::vector<const InputTrack_t*>& tracksToRemove,
-                    std::vector<const InputTrack_t*>& seedTracks) const;
+  void removeTracks(const std::vector<InputTrack>& tracksToRemove,
+                    std::vector<InputTrack>& seedTracks) const;
 
   /// @brief Function for calculating how compatible
   /// a given track is to a given vertex
@@ -214,11 +194,11 @@ class IterativeVertexFinder {
   /// @param perigeeSurface The perigee surface at vertex position
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
-  Result<double> getCompatibility(
-      const BoundTrackParameters& params, const Vertex<InputTrack_t>& vertex,
-      const Surface& perigeeSurface,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<double> getCompatibility(const BoundTrackParameters& params,
+                                  const Vertex& vertex,
+                                  const Surface& perigeeSurface,
+                                  const VertexingOptions& vertexingOptions,
+                                  State& state) const;
 
   /// @brief Function that removes used tracks compatible with
   /// current vertex (`vertex`) from `tracksToFit` and `seedTracks`
@@ -230,11 +210,9 @@ class IterativeVertexFinder {
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<void> removeUsedCompatibleTracks(
-      Vertex<InputTrack_t>& vertex,
-      std::vector<const InputTrack_t*>& tracksToFit,
-      std::vector<const InputTrack_t*>& seedTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+      Vertex& vertex, std::vector<InputTrack>& tracksToFit,
+      std::vector<InputTrack>& seedTracks,
+      const VertexingOptions& vertexingOptions, State& state) const;
 
   /// @brief Function that fills vector with tracks compatible with seed vertex
   ///
@@ -245,12 +223,10 @@ class IterativeVertexFinder {
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<void> fillTracksToFit(
-      const std::vector<const InputTrack_t*>& seedTracks,
-      const Vertex<InputTrack_t>& seedVertex,
-      std::vector<const InputTrack_t*>& tracksToFitOut,
-      std::vector<const InputTrack_t*>& tracksToFitSplitVertexOut,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+      const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
+      std::vector<InputTrack>& tracksToFitOut,
+      std::vector<InputTrack>& tracksToFitSplitVertexOut,
+      const VertexingOptions& vertexingOptions, State& state) const;
 
   /// @brief Function that reassigns tracks from other vertices
   ///        to the current vertex if they are more compatible
@@ -265,20 +241,17 @@ class IterativeVertexFinder {
   ///
   /// @return Bool if currentVertex is still a good vertex
   Result<bool> reassignTracksToNewVertex(
-      std::vector<Vertex<InputTrack_t>>& vertexCollection,
-      Vertex<InputTrack_t>& currentVertex,
-      std::vector<const InputTrack_t*>& tracksToFit,
-      std::vector<const InputTrack_t*>& seedTracks,
-      const std::vector<const InputTrack_t*>& origTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+      std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
+      std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
+      const std::vector<InputTrack>& origTracks,
+      const VertexingOptions& vertexingOptions, State& state) const;
 
   /// @brief Counts all tracks that are significant for a vertex
   ///
   /// @param vtx The vertex
   ///
   /// @return Number of significant tracks
-  int countSignificantTracks(const Vertex<InputTrack_t>& vtx) const;
+  int countSignificantTracks(const Vertex& vtx) const;
 };
 
 }  // namespace Acts

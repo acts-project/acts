@@ -17,6 +17,8 @@
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <array>
 #include <map>
@@ -66,6 +68,26 @@ class Portal {
 
   /// Non-const access to the surface reference
   RegularSurface& surface();
+
+  /// @brief Visit all reachable surfaces of the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called with the represented surface
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurface(visitor_t&& visitor) const {
+    visitor(m_surface.get());
+  }
+
+  /// @brief Visit all reachable surfaces of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called with the represented surface
+  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  void visitMutableSurface(visitor_t&& visitor) {
+    visitor(m_surface.get());
+  }
 
   /// Update the current volume
   ///

@@ -217,7 +217,7 @@ class DetectorNavigator {
                                   << "next surface candidate will be "
                                   << surface.geometryId());
       // Estimate the surface status
-      bool boundaryCheck = c.boundaryCheck;
+      bool boundaryCheck = c.boundaryCheck.isEnabled();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
           state.options.direction, BoundaryCheck(boundaryCheck),
@@ -271,7 +271,7 @@ class DetectorNavigator {
     const Portal* nextPortal = nullptr;
     const Surface* nextSurface = nullptr;
     bool isPortal = false;
-    bool boundaryCheck = nState.surfaceCandidate().boundaryCheck;
+    bool boundaryCheck = nState.surfaceCandidate().boundaryCheck.isEnabled();
 
     if (nState.surfaceCandidate().surface != nullptr) {
       nextSurface = nState.surfaceCandidate().surface;
