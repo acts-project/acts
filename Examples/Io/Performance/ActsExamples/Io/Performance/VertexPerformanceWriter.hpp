@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -16,7 +15,6 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -42,7 +40,7 @@ struct AlgorithmContext;
 /// Additionally it matches the reco vertices to their truth vertices
 /// and write out the difference in x,y and z position.
 class VertexPerformanceWriter final
-    : public WriterT<std::vector<Acts::Vertex<Acts::BoundTrackParameters>>> {
+    : public WriterT<std::vector<Acts::Vertex>> {
  public:
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
@@ -97,16 +95,17 @@ class VertexPerformanceWriter final
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
-  ProcessCode writeT(
-      const AlgorithmContext& ctx,
-      const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices)
-      override;
+  ProcessCode writeT(const AlgorithmContext& ctx,
+                     const std::vector<Acts::Vertex>& vertices) override;
 
  private:
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
+
+  /// The event number
+  std::uint32_t m_eventNr{0};
 
   // True 4D vertex position
   std::vector<double> m_truthX;
@@ -120,7 +119,7 @@ class VertexPerformanceWriter final
   std::vector<double> m_recoZ;
   std::vector<double> m_recoT;
 
-  /// Difference of reconstructed and true vertex 4D position
+  // Difference of reconstructed and true vertex 4D position
   std::vector<double> m_resX;
   std::vector<double> m_resY;
   std::vector<double> m_resZ;
@@ -143,6 +142,9 @@ class VertexPerformanceWriter final
   std::vector<double> m_covYZ;
   std::vector<double> m_covYT;
   std::vector<double> m_covZT;
+
+  // Sum pT^2 of all tracks associated with the vertex
+  std::vector<double> m_sumPt2;
 
   //--------------------------------------------------------------
   // Track-related variables are contained in a vector of vectors: The inner

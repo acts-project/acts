@@ -362,9 +362,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     copy.stepSize = state.stepSize;
     copy.previousStepSize = state.previousStepSize;
 
-    copy.fieldCache =
-        MagneticFieldProvider::Cache::make<typename field_t::Cache>(
-            state.fieldCache.template get<typename field_t::Cache>());
+    copy.fieldCache = MagneticFieldProvider::Cache(
+        std::in_place_type<typename field_t::Cache>,
+        state.fieldCache.template as<typename field_t::Cache>());
 
     copy.geoContext = state.geoContext;
     copy.extension = state.extension;
@@ -505,17 +505,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Update in context of a surface
   freeParams = detail::transformBoundToFreeParameters(
       bp.referenceSurface(), tgContext, bp.parameters());
-  freeParams.segment<3>(eFreePos0) *= 2;
-  freeParams[eFreeTime] *= 2;
-  freeParams[eFreeQOverP] *= -0.5;
 
   es.update(esState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
             *plane);
-  CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(es.position(esState), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
-  CHECK_CLOSE_REL(es.absoluteMomentum(esState), 2 * absMom, eps);
-  BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
-  CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
+  CHECK_CLOSE_REL(es.absoluteMomentum(esState), absMom, eps);
+  BOOST_CHECK_EQUAL(es.charge(esState), charge);
+  CHECK_CLOSE_OR_SMALL(es.time(esState), time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -71,10 +72,10 @@ class Intersection {
 
   constexpr static Intersection invalid() { return Intersection(); }
 
-  /// Comparison function for forward order i.e. intersection closest to -inf
-  /// will be first.
-  constexpr static bool forwardOrder(const Intersection& aIntersection,
-                                     const Intersection& bIntersection) {
+  /// Comparison function for path length order i.e. intersection closest to
+  /// -inf will be first.
+  constexpr static bool pathLengthOrder(const Intersection& aIntersection,
+                                        const Intersection& bIntersection) {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return a < b;
@@ -96,6 +97,16 @@ class Intersection {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return std::abs(a) < std::abs(b);
+  }
+
+  /// Comparison function for closest forward order i.e. intersection closest to
+  /// 0 with positive path length will be first.
+  constexpr static bool closestForwardOrder(const Intersection& aIntersection,
+                                            const Intersection& bIntersection) {
+    auto a = aIntersection.pathLength();
+    auto b = bIntersection.pathLength();
+    return std::signbit(a) == std::signbit(b) ? std::abs(a) < std::abs(b)
+                                              : a > b;
   }
 
  private:
@@ -156,16 +167,24 @@ class ObjectIntersection {
 
   constexpr static ObjectIntersection invalid() { return ObjectIntersection(); }
 
-  constexpr static bool forwardOrder(const ObjectIntersection& aIntersection,
-                                     const ObjectIntersection& bIntersection) {
-    return Intersection3D::forwardOrder(aIntersection.intersection(),
-                                        bIntersection.intersection());
+  constexpr static bool pathLengthOrder(
+      const ObjectIntersection& aIntersection,
+      const ObjectIntersection& bIntersection) {
+    return Intersection3D::pathLengthOrder(aIntersection.intersection(),
+                                           bIntersection.intersection());
   }
 
   constexpr static bool closestOrder(const ObjectIntersection& aIntersection,
                                      const ObjectIntersection& bIntersection) {
     return Intersection3D::closestOrder(aIntersection.intersection(),
                                         bIntersection.intersection());
+  }
+
+  constexpr static bool closestForwardOrder(
+      const ObjectIntersection& aIntersection,
+      const ObjectIntersection& bIntersection) {
+    return Intersection3D::closestForwardOrder(aIntersection.intersection(),
+                                               bIntersection.intersection());
   }
 
  private:
@@ -217,6 +236,13 @@ class ObjectMultiIntersection {
                              ObjectIntersection<object_t>::closestOrder);
   }
 
+  constexpr ObjectIntersection<object_t> closestForward() const {
+    auto splitIntersections = split();
+    return *std::min_element(splitIntersections.begin(),
+                             splitIntersections.end(),
+                             ObjectIntersection<object_t>::closestForwardOrder);
+  }
+
  private:
   /// The intersections
   MultiIntersection3D m_intersections;
@@ -230,26 +256,25 @@ namespace detail {
 /// path-limit and overstep-limit
 ///
 /// @tparam intersection_t Type of the intersection object
-/// @tparam logger_t The logger type, which defaults to std::false_type to
-/// prevent the generation of logging code
 ///
 /// @param intersection The intersection to check
-/// @param pLimit The path-limit
-/// @param oLimit The overstep-limit
-/// @param tolerance The tolerance that is applied to the path-limit criterion
+/// @param nearLimit The minimum distance for an intersection to be considered
+/// @param farLimit The maximum distance for an intersection to be considered
 /// @param logger A optionally supplied logger which prints out a lot of infos
-/// at VERBOSE level
-template <typename intersection_t, typename logger_t = std::false_type>
-bool checkIntersection(const intersection_t& intersection, double pLimit,
-                       double oLimit, double tolerance,
+///               at VERBOSE level
+template <typename intersection_t>
+bool checkIntersection(const intersection_t& intersection, double nearLimit,
+                       double farLimit,
                        const Logger& logger = getDummyLogger()) {
-  const double cLimit = intersection.pathLength();
+  const double distance = intersection.pathLength();
+  // TODO why?
+  const double tolerance = s_onSurfaceTolerance;
 
-  ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                              << ", " << cLimit);
+  ACTS_VERBOSE(" -> near limit, far limit, distance: "
+               << nearLimit << ", " << farLimit << ", " << distance);
 
-  const bool coCriterion = cLimit > oLimit;
-  const bool cpCriterion = std::abs(cLimit) < std::abs(pLimit) + tolerance;
+  const bool coCriterion = distance > nearLimit;
+  const bool cpCriterion = std::abs(distance) < std::abs(farLimit) + tolerance;
 
   const bool accept = coCriterion && cpCriterion;
 
@@ -259,12 +284,12 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
     ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
     if (!coCriterion) {
       ACTS_VERBOSE("- intersection path length "
-                   << cLimit << " <= overstep limit " << oLimit);
+                   << distance << " <= near limit " << nearLimit);
     }
     if (!cpCriterion) {
       ACTS_VERBOSE("- intersection path length "
-                   << std::abs(cLimit) << " is over the path limit "
-                   << (std::abs(pLimit) + tolerance)
+                   << std::abs(distance) << " is over the far limit "
+                   << (std::abs(farLimit) + tolerance)
                    << " (including tolerance of " << tolerance << ")");
     }
   }

@@ -80,6 +80,7 @@ def run() -> None:
         "Acts::Experimental::DetectorNavigator::State",
         "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
+        "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
     }
 
     role_instances["class"] |= {

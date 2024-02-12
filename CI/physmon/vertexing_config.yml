@@ -89,6 +89,11 @@ histograms:
     nbins: 100
     min: -0.01
     max: 1.01
+  
+  "sumPt2":
+    nbins: 100
+    min: 0
+    max: 700
 
 extra_histograms:
   - expression: df["nRecoVtx"] / df["nTrueVtx"]
@@ -106,3 +111,6 @@ extra_histograms:
     nbins: 50
     min: 0.8
     max: 1.2
+
+exclude:
+  - event_nr

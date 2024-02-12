@@ -39,6 +39,8 @@ struct ProtoBinning {
   std::vector<ActsScalar> edges = {};
   /// An expansion for the filling (in bins)
   std::size_t expansion = 0u;
+  /// Indication if this is an auto-range binning
+  bool autorange = false;
 
   /// Convenience constructors - for variable binning
   ///
@@ -106,7 +108,8 @@ struct ProtoBinning {
       : binValue(bValue),
         boundaryType(bType),
         edges(nbins + 1, 0.),
-        expansion(exp) {}
+        expansion(exp),
+        autorange(true) {}
 
   // Return the number of bins
   std::size_t bins() const { return edges.size() - 1u; }
@@ -118,7 +121,11 @@ struct ProtoBinning {
        << binningValueNames()[binValue];
     ss << (axisType == Acts::detail::AxisType::Variable ? ", variable "
                                                         : ", equidistant ");
-    ss << "within [" << edges.front() << ", " << edges.back() << "] ";
+    if (!autorange) {
+      ss << "within [" << edges.front() << ", " << edges.back() << "] ";
+    } else {
+      ss << "within automatic range";
+    }
     return ss.str();
   }
 };

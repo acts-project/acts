@@ -31,17 +31,13 @@ namespace Acts {
 ///
 /// @tparam vfitter_t The vertex fitter type (needed to fulfill concept)
 /// @tparam track_density_t The track density type
-template <typename vfitter_t,
-          typename track_density_t =
-              GaussianTrackDensity<typename vfitter_t::InputTrack_t>>
+template <typename vfitter_t, typename track_density_t = GaussianTrackDensity>
 class TrackDensityVertexFinder {
   // Provided vertex fitter type should comply with the VertexFitterConcept
   // to ensure providing an input track type InputTrack_t
 
   // static_assert(VertexFitterConcept<vfitter_t>,
   //              "Vertex fitter does not fulfill vertex fitter concept.");
-
-  using InputTrack_t = typename vfitter_t::InputTrack_t;
 
  public:
   /// @brief The Config struct
@@ -61,55 +57,25 @@ class TrackDensityVertexFinder {
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
+                                   const VertexingOptions& vertexingOptions,
+                                   State& state) const;
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
+  /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  TrackDensityVertexFinder(const Config& cfg)
-      : m_cfg(cfg), m_extractParameters([](T params) { return params; }) {}
-
-  /// @brief Default constructor used if InputTrack_t type ==
-  /// BoundTrackParameters
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  TrackDensityVertexFinder()
-      : m_extractParameters([](T params) { return params; }) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
+  /// @param func Function extracting BoundTrackParameters from InputTrack
+  ///             object
   TrackDensityVertexFinder(
       const Config& cfg,
-      const std::function<BoundTrackParameters(InputTrack_t)>& func)
+      const std::function<BoundTrackParameters(const InputTrack&)>& func)
       : m_cfg(cfg), m_extractParameters(func) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters with default Config object
-  ///
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
-  TrackDensityVertexFinder(
-      const std::function<BoundTrackParameters(InputTrack_t)>& func)
-      : m_extractParameters(func) {}
 
  private:
   Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 };
 
 }  // namespace Acts

@@ -85,7 +85,7 @@ static inline nlohmann::json toJson(
   // Convert if dynamic cast happens to work
   nlohmann::json jIndexedVolumes;
   unrollConvert(jIndexedVolumes, delegate, detray,
-                Experimental::detail::GridAxisGenerators::PossibleAxes{});
+                GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
   return jIndexedVolumes;
 }

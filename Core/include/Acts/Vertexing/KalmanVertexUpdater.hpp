@@ -59,15 +59,13 @@ struct Cache {
 /// However, it does not add the track to the TrackAtVertex list. This to be
 /// done manually after calling the method.
 ///
-/// @tparam input_track_t Track object type
 /// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
 /// fit its spatial coordinates) or 4 (if we also fit time).
 ///
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
-template <typename input_track_t, unsigned int nDimVertex>
-void updateVertexWithTrack(Vertex<input_track_t>& vtx,
-                           TrackAtVertex<input_track_t>& trk);
+template <unsigned int nDimVertex>
+void updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk);
 
 namespace detail {
 void updateVertexWithTrack(Vector4& vtxPos, SquareMatrix4& vtxCov,
@@ -92,17 +90,17 @@ void calculateUpdate4(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
 /// updated track momentum when adding/removing linTrack. Saves the result in
 /// cache.
 ///
-/// @tparam input_track_t Track object type
 /// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
 /// fit its spatial coordinates) or 4 (if we also fit time).
 ///
-/// @param vtx Vertex
+/// @param vtxPos Vertex position
+/// @param vtxCov Vertex covariance matrix
 /// @param linTrack Linearized track to be added or removed
 /// @param trackWeight Track weight
 /// @param sign +1 (add track) or -1 (remove track)
 /// @note Tracks are removed during the smoothing procedure to compute
 /// the chi2 of the track wrt the updated vertex position
-/// @param[out] cache A cache to store the results of this function
+/// @param[in,out] cache A cache to store the results of this function
 template <unsigned int nDimVertex>
 void calculateUpdate(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
                      const Acts::LinearizedTrack& linTrack,
