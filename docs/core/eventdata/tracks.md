@@ -295,6 +295,7 @@ and the innermost track state becomes directly accessible via
 :members:
 :::
 
+(track_edm_component_sharing)=
 ## Component sharing
 
 {class}`Acts::MultiTrajectory` is designed so that components can be shared
@@ -320,6 +321,7 @@ the track states, the changes will be visible when accessed from the other
 track state as well.
 :::
 
+(track_edm_dynamic_columns)=
 ## Dynamic columns
 
 Aside from the static properties that both the track states and the track, the
@@ -439,6 +441,31 @@ void doSomething(track_proxy_t track, float value) {
 }
 ```
 
+## Holders
+
+The {class}`Acts::TrackContainer` implements a mechanism to optionally own the
+backends that it is constructed with. This is implemented using a *holder*
+type, which is passed either as a template parameter, or deduced automatically.
+
+Available default holders are:
+
+- `Acts::detail::RefHolder` which does not own the backends
+- `Acts::detail::ConstRefHolder` which does not own the backends and does not permit mutations.
+- `Acts::detail::ValueHolder` which owns the backends by value. This is
+  auto-deduced if the backends are given as values or rvalue-references.
+
+Other user-specified holders can also be used, for example, it is possible to use `std::shared_ptr` as a holder directly, like:
+
+```cpp
+
+std::shared_ptr<Acts::VectorTrackContainer> vtc{
+    std::make_shared<Acts::VectorTrackContainer>()};
+std::shared_ptr<Acts::VectorMultiTrajectory> mtj{
+    std::make_shared<Acts::VectorMultiTrajectory>()};
+
+Acts::TrackContainer<Acts::VectorTrackContainer, Acts::VectorMultiTrajectory, std::shared_ptr>
+tc{vtc, mtj};
+```
 
 ### How to create a track from scratch
 
@@ -449,6 +476,24 @@ void doSomething(track_proxy_t track, float value) {
 
 #### Transient vector backend
 
+The transient vector backend implements the reference backend for the track EDM.
+It does not implement any persistency directly. The implementation of this backend for both track and track state containers uses seperate classes for the mutable and const versions, in order to fully comply with const correctness. It also uses a common base class internally, which is however an implementation detail.
+
+To build a track container with this backend, you can write
+
+```cpp
+Acts::VectorMultiTrajectory mtj{};
+Acts::VectorTrackContainer vtc{};
+Acts::TrackContainer tc{vtc, mtj};
+```
+
+or
+
+```cpp
+Acts::ConstVectorTrackContainer vtc{/* ... */};
+Acts::ConstVectorMultiTrajectory mtj{/* ... */};
+Acts::TrackContainer ctc{vtc, mtj};
+```
 :::{note}
 There are currently no restrictions on types that can be used as dynamic
 columns. Any type can be stored and retrieved back from the backend.
@@ -460,6 +505,40 @@ columns for that matter) to disk and read them back in.
 
 #### PODIO backend
 
+The PODIO track EDM backend shipped with the library uses a custom PODIO-EDM
+defined in `edm.yml` in the ACTS core repository.
+
+The working model is this:
+
+1. Mutable PODIO track and track state backends are created with a
+   [helper](#podio_helper)
+   ```cpp
+   Acts::MutablePodioTrackStateContainer tsc{helper};
+   Acts::MutablePodioTrackContainer ptc{helper};
+   ```
+2. A track container is built using these PODIO backend instances
+   ```cpp
+   Acts::TrackContainer tc{ptc, tsc};
+   ```
+3. The track container is used by some algorithm
+   ```cpp
+   tc.makeTrack();
+   // ...
+   ```
+4. The mutable backends *relased into* a `podio::Frame` for writing.
+   ```cpp
+   ptc.releaseInto(frame);
+   tsc.releaseInto(frame);
+   // write frame
+   ```
+5. When reading, const track state and track PODIO backends are created from a
+   `podio::Frame`
+   ```cpp
+   auto frame = /* read frame */;
+   Acts::ConstPodioTrackStateContainer tsc{helper, frame};
+   Acts::ConstPodioTrackContainer ptc{helper, frame};
+   ```
+
 :::{note}
 The PODIO backend currently supports all types that can be written to a
 `podio::UserDataCollection` for dynamic columns. At the time of writing these
@@ -468,12 +547,177 @@ are: `float`, `double`, `int8_t`, `int16_t`, `int32_t`, `int64_t`, `uint8_t`,
 
 In particular, it is not possible to write `bool` values directly. A workaround
 is using `uint8_t` and making boolean expressions explicit.
-
-There is ongoing work to add support for PODIO *components* as values of
-dynamic columns.
 :::
 
+(podio_helper)=
+##### Helper for `Surface`s and `SourceLink`s
+
+PODIO cannot directly store `Surface`s and `SourceLink`s. The PODIO backends rely on a helper class
+that implements the following interface:
+
+:::{doxygenclass} Acts::PodioUtil::ConversionHelper
+:::
+
+Speficially, the PODIO backends will, before persisting and after reading,
+consult the helper object to convert between an in-memory `Surface` and an
+optional identifier. The identifier a 64-bit integer whose interpretation can
+depend on the experiment, it could be a sensor index (hash in ATLAS) for
+example.
+
+If no identifier is returned, that means the surface is not expressible as an
+aidentifier, and it needs to be persisted directly, which is implemented
+centrally. In that case, the defining parameters of the surface are saved, and
+the object is rebuilt when reading. An example of this is in the case of a
+reference surface like a perigee surface that represents the beam axis, which
+is not commonly identified in the experiment geometry.
+
+A similar mechanism is used for source links. Remember that
+{class}`Acts::SourceLink` is type-erased proxy object that stands for an
+experiment-specific *uncalibrated* measurement. As such, the PODIO backend
+cannot directly store these. For use with the PODIO backends, source links need
+to be convertible to and from 64-bit integers, with the help of the helper
+object, that can communicate with the experiment infrastructure.
+
 ### How to build a backend
+
+Both track and track state backends need to conform to respective concepts.
+Effectively, the backend has to allow for collection functionality, like
+getting the current size etc.
+
+Further, the backend needs to respond to queries for properties of the
+elements, where the element is identified by an index.
+
+The backend needs to flag itself as mutable or const, by specializing
+
+```cpp
+template <typename T>
+struct IsReadOnlyMultiTrajectory;
+// or
+template <typename T>
+struct IsReadOnlyTrackContainer;
+```
+
+This informs the interface layer to permit or prevent mutable access.
+
+Common between both track and track state backends is the component access.
+Here, the component is identified by a compile-time string hash of the
+component name, which the backend responds to by a type-erased mutable or const
+pointer. There is a hard requirement for the backend to return stable pointers
+here, as the interface layer expects this and exposes this in the API.
+
+This can be accomplished like in the transient backend with a `switch`-statements like:
+
+```cpp
+switch (key) {
+  case "previous"_hash:
+    return &m_previous[istate];
+  case "next"_hash:
+    return &m_next[istate];
+  case "predicted"_hash:
+    return &m_index[istate].ipredicted;
+  case "filtered"_hash:
+    return &m_index[istate].ifiltered;
+  case "smoothed"_hash:
+    return &m_index[istate].ismoothed;
+  case "projector"_hash:
+    return &m_projectors[instance.m_index[istate].iprojector];
+  case "measdim"_hash:
+    return &m_index[istate].measdim;
+  case "chi2"_hash:
+    return &m_index[istate].chi2;
+  case "pathLength"_hash:
+    return &m_index[istate].pathLength;
+  case "typeFlags"_hash:
+    return &m_index[istate].typeFlags;
+  default:
+    // handle dynamic columns
+}
+```
+
+The `default` statement deals with [](#track_edm_dynamic_columns).  For support
+of dynamic columns, the backend needs to implement `hasColumn_impl` to return
+if a column exists, mutable backends need to implement `addColumn_impl` which
+adds a column with a type and a string name. `copyDynamicFrom_impl` and
+`ensureDynamicColumn_impl` on mutable backends allows copying dynamic content
+between container backends. `dynamicKeys_impl` rteurns an iterator pair that
+informs the caller of which dynamic keys are registered. This is also used in
+dynamic column copies.
+
+Both backend types return parameter vectors and covariance matrices. This is
+always done as `Eigen` maps, which have reference semantics into the backing
+storage.
+
+#### TrackContainer backend
+
+- Mutable & const
+    - Get size
+    - Reference parameter vector and covariance matrix access
+    - Get if column exists
+    - Get reference surface (returns `const Surface*`)
+    - Get particle hypothesis (returns by-value, so allows on-the-fly creation)
+    - Get dynamic keys
+    - Type-erased component access
+- Mutable
+    - Add and remove a track
+    - Add column
+    - Ensure dynamic columns, copy dynamic columns
+    - Reserve number of entries
+    - Set reference surface
+    - Set particle hypothesis
+    - Clear the container
+
+#### MultiTrajectory (track state) backend
+
+The track state container can [share]
+components](#track_edm_component_sharing). This is implemented for the
+shareable components by the interface layer looking up a *component* that
+stores an index into a separate shareable-component-container. Then, functions
+exists which return `Eigen` maps into the relevant backend storage based on the
+index looked up as a component before.
+
+The track state container also handles *calibrated* measurement in a packed
+way. This is to say, that for $N$ dimensional measurement, the backend can
+store only the dimension $N$ and then $N$ numbers representing the measurement
+vector and $N\times N$ numbers for the associated covariance matrix. To enable
+this, a mutable backend exposes `allocateCalibrated_impl` which accepts a track
+state index and the measurement size, and ensures storage is available to hand
+out a reference into associated backing storage. An example is the transient
+vector backend, which stores the offset into measurement and covariance matrix
+vector, and ensures its size is consistent.
+
+In both above cases, the *absence* of the value can be indicated by setting the
+indices to the sentinel value `kInvalid`. The backend also has query methods
+that test if the index is invalid and return a boolean.
+
+The track state container also stores `SourceLink`s, which are assigned by
+value and returned by value, which allows the backend to unpack assigned source
+links and repackage uncalibrated measurement references back into a source link
+when returning.
+
+- Mutable & const
+    - Get the calibrated measurement dimension (*size*)
+    - Get uncalibrated source link
+    - Get reference surface
+    - Get parameter from *parameter* index
+    - Get covariance from *covariance* index
+    - Get jacobian from *jacobian* index
+    - Get measurement vector given compile-time measurement dimension
+    - Get measurement covariance matrix given compile-time measurement dimension
+    - Check if an optional component is set
+    - Get the container size
+    - Type-erased component access
+    - Get if column exists
+    - Get dynamic keys
+
+- Mutable
+    - Add a track state
+    - Share track state components from another track state of the same container (otherwise no sharing is supported)
+    - Unset an optional component
+    - Clear the container
+    - Add column
+    - Ensure dynamic columns, copy dynamic columns
+    - Set an uncalibrated source link that is passed by value
+    - Set the reference surface
 
 ## Glossary
 
