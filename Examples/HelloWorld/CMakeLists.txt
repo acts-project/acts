@@ -8,7 +8,7 @@ target_link_libraries(
   ActsExampleHelloWorld
   PRIVATE
     ActsCore
-    ActsExamplesFramework ActsExamplesCommon)
+    ActsExamplesFramework)
 
 install(
   TARGETS ActsExampleHelloWorld
