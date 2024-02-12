@@ -11,7 +11,6 @@
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Options/CommonOptions.hpp"
 
 #include <cstdlib>
 #include <memory>
@@ -21,29 +20,19 @@
 #include "HelloWhiteBoardAlgorithm.hpp"
 
 int main(int argc, char* argv[]) {
-  // setup options
-  // every component should have an associated option setup function
-  // that should be called here.
-  auto opt = ActsExamples::Options::makeDefaultOptions();
-  ActsExamples::Options::addSequencerOptions(opt);
-  ActsExamples::Options::addRandomNumbersOptions(opt);
-  // parse options from command line flags
-  auto vm = ActsExamples::Options::parse(opt, argc, argv);
-  // an empty variables map indicates an error
-  if (vm.empty()) {
-    return EXIT_FAILURE;
-  }
-
-  // extract some common options
-  auto logLevel = ActsExamples::Options::readLogLevel(vm);
+  (void)argc;
+  (void)argv;
+  Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
   // setup basic tools shared among algorithms
   auto rnd = std::make_shared<ActsExamples::RandomNumbers>(
-      ActsExamples::Options::readRandomNumbersConfig(vm));
+      ActsExamples::RandomNumbers::Config{});
 
   // setup the sequencer first w/ config derived from options
-  ActsExamples::Sequencer sequencer(
-      ActsExamples::Options::readSequencerConfig(vm));
+  ActsExamples::Sequencer::Config seqCfg;
+  seqCfg.events = 10;
+  seqCfg.numThreads = -1;
+  ActsExamples::Sequencer sequencer(seqCfg);
 
   // add HelloWorld algorithm that does nothing
   sequencer.addAlgorithm(

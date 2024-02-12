@@ -63,7 +63,6 @@ option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_BINARIES "Build the examples binaries (deprecated)" OFF)
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examples" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
@@ -131,7 +130,7 @@ set_option_if(
   ACTS_BUILD_EVERYTHING)
 set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
-    ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)  
+    ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
   ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
@@ -146,7 +145,7 @@ set_option_if(
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
-set_option_if(ACTS_BUILD_PLUGIN_FPEMON 
+set_option_if(ACTS_BUILD_PLUGIN_FPEMON
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 
 # feature tests
@@ -317,7 +316,7 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
     message(WARNING "CUDA not found, build Exa.TrkX plugin only for CPU")
   endif()
   if(NOT (ACTS_EXATRKX_ENABLE_ONNX OR ACTS_EXATRKX_ENABLE_TORCH))
-    message(FATAL_ERROR 
+    message(FATAL_ERROR
       "When building the Exa.TrkX plugin, at least one of ACTS_EXATRKX_ENABLE_ONNX \
       and ACTS_EXATRKX_ENABLE_TORCHSCRIPT must be enabled."
     )
@@ -354,7 +353,7 @@ if(ACTS_BUILD_EXAMPLES)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
   find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-  if(ACTS_USE_SYSTEM_PYBIND11) 
+  if(ACTS_USE_SYSTEM_PYBIND11)
     find_package(pybind11 CONFIG REQUIRED)
   else()
     add_subdirectory(thirdparty/pybind11)
