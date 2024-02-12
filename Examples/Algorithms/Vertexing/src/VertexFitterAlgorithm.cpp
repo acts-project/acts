@@ -49,7 +49,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
-  VertexFitter vertexFitter(vertexFitterCfg);
+  VertexFitter vertexFitter(vertexFitterCfg,
+                            Acts::InputTrack::extractParameters);
   VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
   // Setup the linearizer
   Linearizer::Config ltConfig(m_cfg.bField, propagator);
@@ -59,20 +60,11 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
   const auto& inputTrackParameters = m_inputTrackParameters(ctx);
-  auto inputTrackPointers =
-      makeTrackParametersPointerContainer(inputTrackParameters);
-
-  if (inputTrackParameters.size() != inputTrackPointers.size()) {
-    ACTS_ERROR("Input track containers do not align: "
-               << inputTrackParameters.size()
-               << " != " << inputTrackPointers.size());
-  }
-
   ACTS_VERBOSE("Have " << inputTrackParameters.size() << " track parameters");
   const auto& protoVertices = m_inputProtoVertices(ctx);
   ACTS_VERBOSE("Have " << protoVertices.size() << " proto vertices");
 
-  std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
+  std::vector<Acts::InputTrack> inputTracks;
 
   VertexCollection fittedVertices;
 
@@ -86,22 +78,21 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     }
 
     // select input tracks for the input proto vertex
-    inputTrackPtrCollection.clear();
-    inputTrackPtrCollection.reserve(protoVertex.size());
+    inputTracks.clear();
+    inputTracks.reserve(protoVertex.size());
     for (const auto& trackIdx : protoVertex) {
       if (trackIdx >= inputTrackParameters.size()) {
         ACTS_ERROR("track parameters " << trackIdx << " does not exist");
         continue;
       }
 
-      inputTrackPtrCollection.push_back(inputTrackPointers[trackIdx]);
+      inputTracks.emplace_back(&inputTrackParameters[trackIdx]);
     }
 
     if (!m_cfg.doConstrainedFit) {
       VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
 
-      auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
-                                     vfOptions, state);
+      auto fitRes = vertexFitter.fit(inputTracks, linearizer, vfOptions, state);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
@@ -109,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       }
     } else {
       // Vertex constraint
-      Acts::Vertex<Acts::BoundTrackParameters> theConstraint;
+      Acts::Vertex theConstraint;
 
       theConstraint.setFullCovariance(m_cfg.constraintCov);
       theConstraint.setFullPosition(m_cfg.constraintPos);
@@ -118,8 +109,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,
                                           theConstraint);
 
-      auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
-                                     vfOptionsConstr, state);
+      auto fitRes =
+          vertexFitter.fit(inputTracks, linearizer, vfOptionsConstr, state);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {

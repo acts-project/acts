@@ -34,7 +34,8 @@ namespace KalmanVertexTrackUpdater {
 /// @param track Track to update
 /// @param vtxPosFull full vertex position
 /// @param vtxCovFull full vertex covariance matrix
-/// @param nDimVertex number of dimensions of the vertex
+/// @param nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
 void update(TrackAtVertexRef track, const Vector4& vtxPosFull,
             const SquareMatrix4& vtxCovFull, unsigned int nDimVertex);
 
