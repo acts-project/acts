@@ -140,7 +140,7 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   /// Constructor with config object
   ///
   /// @param cfg Configuration struct
-  /// @param propagator The straight line propagator with the TrackingGeometry navigation
+  /// @param propagator The straight line propagator with the Detector navigation
   /// @param slogger The logger
   SurfaceMaterialMapper(const Config& cfg,
                         StraightLineDetPropagator& propagator,

@@ -87,8 +87,8 @@ class DetectorNavigator {
     return state.currentSurface;
   }
 
-  const TrackingVolume* currentVolume(const State& /*state*/) const {
-    return nullptr;  // TODO we do not have a tracking volume
+  const DetectorVolume* currentVolume(const State& state) const {
+    return state.currentVolume;
   }
 
   const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
@@ -155,6 +155,9 @@ class DetectorNavigator {
       return;
     }
 
+    /// Probably temporary. Needed for the first step
+    /// to not be aborted by the EndOfWorldReached
+    /// but there should be a better way to handle this
     fillNavigationState(state, stepper, nState);
     initializeTarget(state, stepper);
   }
@@ -198,6 +201,15 @@ class DetectorNavigator {
       nState.surfaceCandidateIndex = 0;
 
       nState.currentPortal->updateDetectorVolume(state.geoContext, nState);
+
+      /// Seems like updating into nullptr is consistent with the
+      /// EndOfWorldReached check. Looks like a hack, though. So 
+      /// it should be revisited.
+      if (nState.currentVolume == nullptr) {
+        ACTS_VERBOSE(volInfo(state)
+                     << posInfo(state, stepper) << "no volume after Portal update");
+        return;
+      }
 
       initializeTarget(state, stepper);
     }

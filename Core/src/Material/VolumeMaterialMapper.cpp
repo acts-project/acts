@@ -41,10 +41,17 @@ struct EndOfWorldReached;
 }  // namespace Acts
 
 Acts::VolumeMaterialMapper::VolumeMaterialMapper(
-    const Config& cfg, StraightLinePropagator propagator,
+    const Config& cfg, StraightLineTGPropagator& propagator,
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
-      m_propagator(std::move(propagator)),
+      m_tgPropagator(std::make_shared<StraightLineTGPropagator>(std::move(propagator))),
+      m_logger(std::move(slogger)) {}
+
+Acts::VolumeMaterialMapper::VolumeMaterialMapper(
+    const Config& cfg, StraightLineDetPropagator& propagator,
+    std::unique_ptr<const Logger> slogger)
+    : m_cfg(cfg),
+      m_detPropagator(std::make_shared<StraightLineDetPropagator>(std::move(propagator))),
       m_logger(std::move(slogger)) {}
 
 std::unique_ptr<Acts::MaterialMappingState>
@@ -105,7 +112,7 @@ void Acts::VolumeMaterialMapper::resolveMaterialVolume(
                    dVolume.transform(mState.geoContext), dVolume.geometryId());
   }
   // Step down into the sub volume
-  if (not dVolume.volumes().empty()) {
+  if (!dVolume.volumes().empty()) {
     ACTS_VERBOSE("- Check children volume ...");
     for (const auto* volume : dVolume.volumes()) {
       // Recursive call
@@ -346,13 +353,20 @@ Acts::VolumeMaterialMapper::mapMaterialTrack(
   using AbortList = AbortList<EndOfWorldReached>;
 
   PropagatorOptions<ActionList, AbortList> options(state.geoContext,
-                                                   state.magFieldContext);
+                                                  state.magFieldContext);
 
-  // Now collect the material volume by using the straight line propagator
-  const auto& result = m_propagator.propagate(start, options).value();
-  auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
-
-  auto mappingVolumes = mvcResult.collected;
+  // Now collect the material layers by using the straight line propagator
+  MaterialVolumeCollector::result_type mcResult;
+  // Now collect the material layers by using the straight line propagator
+  if(m_tgPropagator) {
+    const auto& result = m_tgPropagator->propagate(start, options).value();
+    mcResult = result.get<MaterialVolumeCollector::result_type>();
+  } else {
+    // Now collect the material layers by using the straight line propagator
+    const auto& result = m_detPropagator->propagate(start, options).value();
+    mcResult = result.get<MaterialVolumeCollector::result_type>();
+  }
+  auto mappingVolumes = mcResult.collected;
 
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
@@ -364,12 +378,12 @@ Acts::VolumeMaterialMapper::mapMaterialTrack(
                             << " mapping volumes for this track.");
   ACTS_VERBOSE("Mapping volumes are :")
   for (auto& mVolumes : mappingVolumes) {
-    ACTS_VERBOSE(" - Volume : " << mVolumes.volume->geometryId()
+    ACTS_VERBOSE(" - Volume : " << mVolumes.geometryId()
                                 << " at position = (" << mVolumes.position.x()
                                 << ", " << mVolumes.position.y() << ", "
                                 << mVolumes.position.z() << ")");
 
-    mappingVolumes.push_back(mVolumes);
+    // mappingVolumes.push_back(mVolumes);
   }
   // Run the mapping process, i.e. take the recorded material and map it
   // onto the mapping volume:
@@ -403,7 +417,7 @@ Acts::VolumeMaterialMapper::mapMaterialTrack(
     // Assume it's mapped then
     auto mappedRecord = (*rmIter);
     if (volIter != mappingVolumes.end() &&
-        !volIter->volume->inside(rmIter->position)) {
+      !volIter->inside(state.geoContext, rmIter->position)) {
       // Check if the material point is past the entry point to the current
       // volume (this prevent switching volume before the first volume has been
       // reached)
@@ -416,10 +430,10 @@ Acts::VolumeMaterialMapper::mapMaterialTrack(
       }
     }
     if (volIter != mappingVolumes.end() &&
-        volIter->volume->inside(rmIter->position, s_epsilon)) {
-      currentID = volIter->volume->geometryId();
+        volIter->inside(state.geoContext, rmIter->position, s_epsilon)) {
+      currentID = volIter->geometryId();
       direction = rmIter->direction;
-      if (not(currentID == lastID)) {
+      if (!(currentID == lastID)) {
         // Let's (re-)assess the information
         lastID = currentID;
         lastPositionEnd = volIter->position;

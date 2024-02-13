@@ -12,11 +12,18 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/detail/CuboidalDetectorHelper.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
@@ -81,7 +88,7 @@ struct MaterialCollector {
 namespace Test {
 
 /// Test the filling and conversion
-BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests) {
+BOOST_AUTO_TEST_CASE(VolumeMaterialMapperTrackingGeometryTests) {
   using namespace Acts::UnitLiterals;
 
   BinUtility bu1(4, 0_m, 1_m, open, binX);
@@ -138,13 +145,13 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests) {
   /// We need a Navigator, Stepper to build a Propagator
   Navigator navigator({tGeometry});
   StraightLineStepper stepper;
-  VolumeMaterialMapper::StraightLinePropagator propagator(stepper,
+  VolumeMaterialMapper::StraightLineTGPropagator propagator(stepper,
                                                           std::move(navigator));
 
   /// The config object
   Acts::VolumeMaterialMapper::Config vmmConfig;
   Acts::VolumeMaterialMapper vmMapper(
-      vmmConfig, std::move(propagator),
+      vmmConfig, propagator,
       getDefaultLogger("VolumeMaterialMapper", Logging::VERBOSE));
 
   /// Create some contexts
@@ -161,7 +168,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests) {
 
 /// @brief Test case for comparison between the mapped material and the
 /// associated material by propagation
-BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
+BOOST_AUTO_TEST_CASE(VolumeMaterialMapperTrackingGeometryComparisonTests) {
   using namespace Acts::UnitLiterals;
 
   // Build a vacuum volume
@@ -286,6 +293,310 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
     trueX0 += 1 / stepResult.matTrue[i].X0();
     trueL0 += 1 / stepResult.matTrue[i].L0();
   }
+  std::cout << "X0: " << gridX0 << " vs " << trueX0 << std::endl;
+  std::cout << "L0: " << gridL0 << " vs " << trueL0 << std::endl;
+  CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
+  CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
+}
+
+/// Test the filling and conversion
+BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorTests) {
+  using namespace Acts::UnitLiterals;
+
+  BinUtility bu1(4, 0_m, 1_m, open, binX);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
+
+  BinUtility bu2(4, 1_m, 2_m, open, binX);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
+
+  BinUtility bu3(4, 2_m, 3_m, open, binX);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, binY);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, binZ);
+
+  GeometryContext gc;
+
+  auto generatePortalsUpdateInternals = Acts::Experimental::defaultPortalAndSubPortalGenerator();
+
+  // Build a vacuum volume
+  auto position1 = Acts::Transform3::Identity()*
+    Acts::Translation3(Vector3(0.5_m, 0., 0.));
+  auto bounds1 =
+      std::make_unique<Acts::CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto name1 = "Vacuum volume";
+  auto volumeMaterial1 = std::make_shared<ProtoVolumeMaterial>(bu1);
+
+  auto volume1 = Acts::Experimental::DetectorVolumeFactory::construct(
+      generatePortalsUpdateInternals, gc, name1, position1,
+      std::move(bounds1), {}, {}, Acts::Experimental::tryAllSubVolumes(),
+      Acts::Experimental::tryAllPortals());
+
+  Acts::GeometryIdentifier geoId1;
+  geoId1.setVolume(1);
+  volume1->assignGeometryId(geoId1);
+
+  volume1->assignVolumeMaterial(volumeMaterial1);
+
+  // Build a material volume
+  auto position2 = Acts::Transform3::Identity()*
+    Acts::Translation3(Vector3(1.5_m, 0., 0.));
+  auto bounds2 =
+      std::make_unique<Acts::CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto name2 = "First material volume";
+  auto volumeMaterial2 = std::make_shared<ProtoVolumeMaterial>(bu2);
+
+  auto volume2 = Acts::Experimental::DetectorVolumeFactory::construct(
+      generatePortalsUpdateInternals, gc, name2, position2,
+      std::move(bounds2), {}, {}, Acts::Experimental::tryAllSubVolumes(),
+      Acts::Experimental::tryAllPortals());
+
+  Acts::GeometryIdentifier geoId2;
+  geoId2.setVolume(2);
+  volume2->assignGeometryId(geoId2);
+
+  volume2->assignVolumeMaterial(volumeMaterial2);
+
+  // Build another material volume with different material
+  auto position3 = Acts::Transform3::Identity()*
+    Acts::Translation3(Vector3(2.5_m, 0., 0.));
+  auto bounds3 =
+      std::make_unique<Acts::CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto name3 = "Second material volume";
+  auto volumeMaterial3 = std::make_shared<ProtoVolumeMaterial>(bu3);
+
+  auto volume3 = Acts::Experimental::DetectorVolumeFactory::construct(
+      generatePortalsUpdateInternals, gc, name3, position3,
+      std::move(bounds3), {}, {}, Acts::Experimental::tryAllSubVolumes(),
+      Acts::Experimental::tryAllPortals());
+
+  Acts::GeometryIdentifier geoId3;
+  geoId3.setVolume(3);
+  volume3->assignGeometryId(geoId3);
+
+  volume3->assignVolumeMaterial(volumeMaterial3);
+
+  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> detectorVolumes = 
+      {volume1, volume2, volume3};
+
+  // Connect the detector volumes
+  auto portalContainer = 
+      Acts::Experimental::detail::CuboidalDetectorHelper::connect(
+          gc, detectorVolumes, Acts::BinningValue::binX, 
+          {}, Acts::Logging::VERBOSE);
+
+  volume1->closePortals();
+  volume2->closePortals();
+  volume3->closePortals();
+
+  // Build a detector
+  auto detector = Acts::Experimental::Detector::makeShared(
+      "detector", {volume1,volume2,volume3}, 
+      Acts::Experimental::tryRootVolumes());
+
+  /// We need a Navigator, Stepper to build a Propagator
+  Acts::Experimental::DetectorNavigator::Config navCfg;
+  navCfg.detector = detector.get();
+
+  Acts::Experimental::DetectorNavigator navigator(navCfg);
+  StraightLineStepper stepper;
+  VolumeMaterialMapper::StraightLineDetPropagator propagator(stepper,
+                                                          std::move(navigator));
+
+  /// The config object
+  Acts::VolumeMaterialMapper::Config vmmConfig;
+  Acts::VolumeMaterialMapper vmMapper(
+      vmmConfig, propagator,
+      getDefaultLogger("VolumeMaterialMapper", Logging::VERBOSE));
+
+  /// Create some contexts
+  GeometryContext gCtx;
+  MagneticFieldContext mfCtx;
+
+  /// Now create the mapper state
+  auto mState = vmMapper.createState(gCtx, mfCtx, *detector);
+  auto state = dynamic_cast<Acts::VolumeMaterialMapper::State*>(mState.get());
+
+  /// Test if this is not null
+  BOOST_CHECK_EQUAL(state->materialBin.size(), 3u);
+}
+
+/// @brief Test case for comparison between the mapped material and the
+/// associated material by propagation
+BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorComparisonTests) {
+  using namespace Acts::UnitLiterals;
+
+  GeometryContext gc;
+
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig, 
+      Acts::getDefaultLogger("SequentialIdGenerator", 
+          Acts::Logging::VERBOSE));
+
+  auto generatePortalsUpdateInternals = Acts::Experimental::defaultPortalAndSubPortalGenerator();
+
+  // Build a vacuum volume
+  auto position1 = Acts::Transform3::Identity()*
+    Acts::Translation3(Vector3(0.5_m, 0., 0.));
+  auto bounds1 =
+      std::make_unique<Acts::CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto name1 = "Vacuum volume";
+  auto volumeMaterial1 = 
+      std::make_shared<HomogeneousVolumeMaterial>(Material());
+
+  auto volume1 = Acts::Experimental::DetectorVolumeFactory::construct(
+      generatePortalsUpdateInternals, gc, name1, position1,
+      std::move(bounds1), {}, {}, Acts::Experimental::tryNoVolumes(),
+      Acts::Experimental::tryAllPortals());
+
+  volume1->assignVolumeMaterial(volumeMaterial1);
+
+  auto cache = generator.generateCache();
+  generator.assignGeometryId(cache, *volume1);
+
+  // Build a material volume
+  auto position2 = Acts::Transform3::Identity()*
+    Acts::Translation3(Vector3(1.5_m, 0., 0.));
+  auto bounds2 =
+      std::make_unique<Acts::CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto name2 = "First material volume";
+  auto volumeMaterial2 =
+      std::make_shared<HomogeneousVolumeMaterial>(makeSilicon());
+
+  auto volume2 = Acts::Experimental::DetectorVolumeFactory::construct(
+      generatePortalsUpdateInternals, gc, name2, position2,
+      std::move(bounds2), {}, {}, Acts::Experimental::tryNoVolumes(),
+      Acts::Experimental::tryAllPortals());
+
+  generator.assignGeometryId(cache, *volume2);
+
+  volume2->assignVolumeMaterial(volumeMaterial2);
+
+  // Build another material volume with different material
+  auto position3 = Acts::Transform3::Identity()*
+    Acts::Translation3(Vector3(2.5_m, 0., 0.));
+  auto bounds3 =
+      std::make_unique<Acts::CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto name3 = "Second material volume";
+  auto volumeMaterial3 = 
+      std::make_shared<HomogeneousVolumeMaterial>(Material());
+
+  auto volume3 = Acts::Experimental::DetectorVolumeFactory::construct(
+      generatePortalsUpdateInternals, gc, name3, position3,
+      std::move(bounds3), {}, {}, Acts::Experimental::tryNoVolumes(),
+      Acts::Experimental::tryAllPortals());
+
+  generator.assignGeometryId(cache, *volume3);
+
+  volume3->assignVolumeMaterial(volumeMaterial3);
+
+  std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> detectorVolumes = 
+      {volume1, volume2, volume3};
+
+  // Connect the detector volumes
+  auto portalContainer = 
+      Acts::Experimental::detail::CuboidalDetectorHelper::connect(
+          gc, detectorVolumes, Acts::BinningValue::binX, 
+          {}, Acts::Logging::VERBOSE);
+
+  volume1->closePortals();
+  volume2->closePortals();
+  volume3->closePortals();
+
+  // Assign the portal id
+  for (auto& portal : portalContainer) {
+      generator.assignGeometryId(cache, portal.second->surface());
+  }
+
+  // Build a detector
+  auto detector = Acts::Experimental::Detector::makeShared(
+      "detector", {volume1,volume2,volume3}, 
+      Acts::Experimental::tryRootVolumes());
+
+  // Set up the grid axes
+  Acts::MaterialGridAxisData xAxis{0_m, 3_m, 7};
+  Acts::MaterialGridAxisData yAxis{-0.5_m, 0.5_m, 7};
+  Acts::MaterialGridAxisData zAxis{-0.5_m, 0.5_m, 7};
+
+  // Set up a random engine for sampling material
+  std::random_device rd;
+  std::mt19937 gen(42);
+  std::uniform_real_distribution<> disX(0., 3_m);
+  std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
+
+  // Sample the Material in the detector
+  RecordedMaterialVolumePoint matRecord;
+  for (unsigned int i = 0; i < 1e4; i++) {
+    Vector3 pos(disX(gen), disYZ(gen), disYZ(gen));
+    std::vector<Vector3> volPos;
+    volPos.push_back(pos);
+    Material tv =
+        (detector->findDetectorVolume(gc, pos)->volumeMaterial() != nullptr)
+            ? (detector->findDetectorVolume(gc, pos)->volumeMaterial())
+                  ->material(pos)
+            : Material();
+    MaterialSlab matProp(tv, 1);
+    matRecord.push_back(std::make_pair(matProp, volPos));
+  }
+
+  // Build the material grid
+  Grid3D Grid = createGrid(xAxis, yAxis, zAxis);
+  std::function<Vector3(Vector3)> transfoGlobalToLocal =
+      [](Vector3 pos) -> Vector3 {
+    return {pos.x(), pos.y(), pos.z()};
+  };
+
+  // Walk over each properties
+  for (const auto& rm : matRecord) {
+    // Walk over each point associated with the properties
+    for (const auto& point : rm.second) {
+      // Search for fitting grid point and accumulate
+      Acts::Grid3D::index_t index =
+          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid.atLocalBins(index).accumulate(rm.first);
+    }
+  }
+
+  MaterialGrid3D matGrid = mapMaterialPoints(Grid);
+
+  // Construct a simple propagation through the detector
+  StraightLineStepper sls;
+  Acts::Experimental::DetectorNavigator::Config navCfg;
+  navCfg.detector = detector.get();
+  Acts::Experimental::DetectorNavigator nav(navCfg, getDefaultLogger("DetectorNavigator",
+                                     Acts::Logging::Level::VERBOSE));
+  VolumeMaterialMapper::StraightLineDetPropagator prop(sls, std::move(nav));
+
+  // Set some start parameters
+  Vector4 pos4(0., 0., 0., 42_ns);
+  Vector3 dir(1., 0., 0.);
+  CurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV, std::nullopt,
+                                  ParticleHypothesis::pion0());
+
+  MagneticFieldContext mc;
+  // Launch propagation and gather result
+  PropagatorOptions<ActionList<MaterialCollector>, AbortList<EndOfWorldReached>>
+      po(gc, mc);
+  po.maxStepSize = 10._mm;
+  po.maxSteps = 4e2;
+
+  const auto& result = prop.propagate(sctp, po).value();
+  const MaterialCollector::this_result& stepResult =
+      result.get<typename MaterialCollector::result_type>();
+
+  // Collect the material as given by the grid and test it
+  std::vector<Material> matvector;
+  double gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
+  for (unsigned int i = 0; i < stepResult.position.size(); i++) {
+    matvector.push_back(matGrid.atPosition(stepResult.position[i]));
+    gridX0 += 1 / matvector[i].X0();
+    gridL0 += 1 / matvector[i].L0();
+    trueX0 += 1 / stepResult.matTrue[i].X0();
+    trueL0 += 1 / stepResult.matTrue[i].L0();
+  }
+  std::cout << "X0: " << gridX0 << " vs " << trueX0 << std::endl;
+  std::cout << "L0: " << gridL0 << " vs " << trueL0 << std::endl;
   CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
   CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
 }

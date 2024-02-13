@@ -10,6 +10,9 @@
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+
 #include <sstream>
 
 namespace Acts {
@@ -49,8 +52,38 @@ struct VolumeSelector {
 };
 
 /// The information to be writtern out per hit volume
-struct VolumeHit {
-  const TrackingVolume* volume = nullptr;
+struct HitVolume : public InteractionVolume {
+  /// Empty constructor
+  HitVolume() = delete;
+
+  /// Constructor from a tracking volume
+  ///
+  /// @param tv The tracking volume
+  /// @param pos The position of the hit
+  /// @param dir The direction of the hit
+  HitVolume(const TrackingVolume* tv, 
+  Vector3 pos, 
+  Vector3 dir) : InteractionVolume(tv), position(pos), direction(dir) {};
+
+  /// Constructor from a detector volume
+  ///
+  /// @param dv The detector volume
+  /// @param pos The position of the hit
+  /// @param dir The direction of the hit
+  HitVolume(const Experimental::DetectorVolume* dv,
+  Vector3 pos,
+  Vector3 dir) : InteractionVolume(dv), position(pos), direction(dir) {};
+
+  bool inside(const GeometryContext& gctx, 
+    const Acts::Vector3& gpos,
+    double tol = 0.0) const {
+      if (trackingVolume != nullptr) {
+        return trackingVolume->inside(gpos, tol);
+      } else {
+        return detectorVolume->inside(gctx, gpos);
+      }
+  };
+
   Vector3 position;
   Vector3 direction;
 };
@@ -61,16 +94,18 @@ struct VolumeHit {
 /// Whenever a volume is passed in the propagation
 /// that satisfies the selector, it is recorded
 /// for further usage in the flow.
+// template <typename volume_type, typename Selector = VolumeSelector>
 template <typename Selector = VolumeSelector>
 struct VolumeCollector {
   /// The selector used for this volume
   Selector selector;
 
   /// Simple result struct to be returned
-  /// It has all the VolumeHit objects that
+  /// It has all the HitVolume objects that
   /// are collected (and thus have been selected)
   struct this_result {
-    std::vector<VolumeHit> collected;
+    // std::vector<HitVolume<volume_type>> collected;
+    std::vector<HitVolume> collected;
   };
 
   using result_type = this_result;
@@ -99,14 +134,13 @@ struct VolumeCollector {
     // The current volume has been assigned by the navigator
     if (currentVolume && selector(*currentVolume)) {
       // Create for recording
-      VolumeHit volume_hit;
-      volume_hit.volume = currentVolume;
-      volume_hit.position = stepper.position(state.stepping);
-      volume_hit.direction = stepper.direction(state.stepping);
+      HitVolume volume_hit(currentVolume,
+                           stepper.position(state.stepping),
+                           stepper.direction(state.stepping));
       bool save = true;
       // Check if the Volume ws already encountered
       for (auto const& res : result.collected) {
-        if (res.volume == volume_hit.volume) {
+        if (res.geometryId() == volume_hit.geometryId()) {
           save = false;
           break;
         }

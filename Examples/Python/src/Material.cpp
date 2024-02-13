@@ -170,10 +170,20 @@ void addMaterial(Context& ctx) {
                    std::shared_ptr<VolumeMaterialMapper>>(
             m, "VolumeMaterialMapper")
             .def(py::init([](const VolumeMaterialMapper::Config& config,
-                             VolumeMaterialMapper::StraightLinePropagator prop,
+                             VolumeMaterialMapper::StraightLineTGPropagator& prop,
                              Acts::Logging::Level level) {
                    return std::make_shared<VolumeMaterialMapper>(
-                       config, std::move(prop),
+                       config, 
+                       prop,
+                       getDefaultLogger("VolumeMaterialMapper", level));
+                 }),
+                 py::arg("config"), py::arg("propagator"), py::arg("level"))
+            .def(py::init([](const VolumeMaterialMapper::Config& config,
+                             VolumeMaterialMapper::StraightLineDetPropagator& prop,
+                             Acts::Logging::Level level) {
+                   return std::make_shared<VolumeMaterialMapper>(
+                       config, 
+                       prop,
                        getDefaultLogger("VolumeMaterialMapper", level));
                  }),
                  py::arg("config"), py::arg("propagator"), py::arg("level"));

@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometryWithVeto) {
                 mTrack.second.materialInteractions.size() - negativeSide);
 }
 
-BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometrRemappingWithVeto) {
+BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometryRemappingWithVeto) {
     // Helepr class for positive X veto
     struct PositiveXVeto {
         bool operator()(const Acts::MaterialInteraction& mi) const {
@@ -280,5 +280,118 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperDetector) {
                 reunmapped.second.materialInteractions.size());
 }
 
+BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperDetectorWithVeto) {
+    // Helepr class for positive X veto
+    struct PositiveXVeto {
+        bool operator()(const Acts::MaterialInteraction& mi) const {
+        return mi.position.x() > 0;
+        }
+    };
+
+    auto cube = Acts::Test::CubicDetector(tContext);
+    auto detector = cube();
+
+    auto dnCfg = Acts::Experimental::DetectorNavigator::Config();
+    dnCfg.detector = detector.get();
+
+    Acts::Experimental::DetectorNavigator navigator(dnCfg);
+    Acts::StraightLineStepper stepper;
+    Acts::SurfaceMaterialMapper::StraightLineDetPropagator propagator(
+        stepper, std::move(navigator),
+        Acts::getDefaultLogger("StraightLinePropagator", Acts::Logging::VERBOSE));
+
+    Acts::SurfaceMaterialMapper::Config smmConfig;
+    smmConfig.veto = PositiveXVeto{};
+    
+    Acts::SurfaceMaterialMapper smMapper(
+        smmConfig,
+        propagator,
+        Acts::getDefaultLogger("VetoSurfaceMaterialMapper",
+                                Acts::Logging::VERBOSE));
+
+    auto state = smMapper.createState(tContext, tContext, *detector);
+    auto mTrack = createRecordedMaterialTrack(materialSteps);
+    auto [mapped, unmapped] = smMapper.mapMaterialTrack(*state, mTrack);
+
+    std::size_t negativeSide = 0;
+    std::for_each(materialSteps.begin(), materialSteps.end(),
+                    [&](const Acts::ActsScalar& p) {
+                    if (p < 0)
+                        negativeSide++;
+                    });
+
+    // Check that all material is mapped
+    BOOST_CHECK_EQUAL(mapped.second.materialInteractions.size(), negativeSide);
+    BOOST_CHECK_EQUAL(unmapped.second.materialInteractions.size(),
+                mTrack.second.materialInteractions.size() - negativeSide);
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperDetectorRemappingWithVeto) {
+    // Helepr class for positive X veto
+    struct PositiveXVeto {
+        bool operator()(const Acts::MaterialInteraction& mi) const {
+        return mi.position.x() > 0;
+        }
+    };
+
+    auto cube = Acts::Test::CubicDetector(tContext);
+    auto detector = cube();
+
+    auto dnCfg = Acts::Experimental::DetectorNavigator::Config();
+    dnCfg.detector = detector.get();
+
+    // First the plain mapper
+    Acts::Experimental::DetectorNavigator pnavigator(dnCfg);
+    Acts::StraightLineStepper pstepper;
+    Acts::SurfaceMaterialMapper::StraightLineDetPropagator ppropagator(
+        pstepper, std::move(pnavigator),
+        Acts::getDefaultLogger("StraightLinePropagator", Acts::Logging::VERBOSE));
+
+    Acts::SurfaceMaterialMapper::Config psmmConfig;
+    
+    Acts::SurfaceMaterialMapper psmMapper(
+        psmmConfig, 
+        ppropagator,
+        Acts::getDefaultLogger("PlainSurfaceMaterialMapper",
+                                Acts::Logging::VERBOSE));
+
+    auto pstate = psmMapper.createState(tContext, tContext, *detector);
+    auto mTrack = createRecordedMaterialTrack(materialSteps);
+    auto [mapped, unmapped] = psmMapper.mapMaterialTrack(*pstate, mTrack);
+
+    // Check that all material is mapped
+    BOOST_CHECK_EQUAL(mapped.second.materialInteractions.size(),
+                mTrack.second.materialInteractions.size());
+
+    // Now the veto mapper
+    Acts::Experimental::DetectorNavigator navigator(dnCfg);
+    Acts::StraightLineStepper stepper;
+    Acts::SurfaceMaterialMapper::StraightLineDetPropagator propagator(
+        stepper, std::move(navigator),
+        Acts::getDefaultLogger("StraightLinePropagator", Acts::Logging::VERBOSE));
+
+    Acts::SurfaceMaterialMapper::Config smmConfig;
+    smmConfig.veto = PositiveXVeto{};
+    
+    Acts::SurfaceMaterialMapper smMapper(
+        smmConfig,
+        propagator, 
+        Acts::getDefaultLogger("VetoSurfaceMaterialMapper",
+                                Acts::Logging::VERBOSE));
+
+    auto restate = smMapper.createState(tContext, tContext, *detector);
+    auto [remapped, reunmapped] = smMapper.mapMaterialTrack(*restate, mapped);
+
+    std::size_t negativeSide = 0;
+    std::for_each(materialSteps.begin(), materialSteps.end(),
+                    [&](const Acts::ActsScalar& p) {
+                    if (p < 0)
+                        negativeSide++;
+                    });
+    // Check that all material is mapped
+    BOOST_CHECK_EQUAL(remapped.second.materialInteractions.size(), negativeSide);
+    BOOST_CHECK_EQUAL(reunmapped.second.materialInteractions.size(),
+                mTrack.second.materialInteractions.size() - negativeSide);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

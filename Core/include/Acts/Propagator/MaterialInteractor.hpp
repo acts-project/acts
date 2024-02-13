@@ -119,7 +119,7 @@ struct MaterialInteractor {
       updateResult(state, stepper, result);
     }
 
-    const TrackingVolume* volume = navigator.currentVolume(state.navigation);
+    auto volume = navigator.currentVolume(state.navigation);
 
     // We only have material interactions if there is potential material
     if (volume && volume->volumeMaterial()) {
