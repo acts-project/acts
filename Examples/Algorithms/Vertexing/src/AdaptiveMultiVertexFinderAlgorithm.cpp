@@ -18,6 +18,8 @@
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+#include "Acts/Vertexing/GaussianTrackDensity.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
@@ -56,10 +58,14 @@ ActsExamples::ProcessCode
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
-    using Seeder = Acts::TrackDensityVertexFinder<
-        Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+    using Seeder =
+        Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
-    Seeder seedFinder;
+    Acts::GaussianTrackDensity::Config trkDensityCfg;
+    trkDensityCfg.extractParameters
+        .connect<&Acts::InputTrack::extractParameters>();
+    Seeder seedFinder{{trkDensityCfg}};
+
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
     // Set up track density used during vertex seeding
@@ -75,6 +81,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     using Seeder = Acts::AdaptiveGridDensityVertexFinder<Fitter>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
     Seeder::Config seederConfig(trkDensity);
+    seederConfig.extractParameters
+        .connect<&Acts::InputTrack::extractParameters>();
     Seeder seedFinder(seederConfig);
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else {
@@ -116,6 +124,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.minWeight = 0.001;
   fitterCfg.doSmoothing = true;
   fitterCfg.useTime = m_cfg.useTime;
+  fitterCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
   Fitter fitter(std::move(fitterCfg),
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
@@ -143,6 +152,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
     // multiply the value by 4 and thus we set it to 3 * 4 = 12.
     finderConfig.maxMergeVertexSignificance = 12.;
   }
+  finderConfig.extractParameters
+      .template connect<&Acts::InputTrack::extractParameters>();
 
   // Instantiate the finder
   Finder finder(std::move(finderConfig), logger().clone());

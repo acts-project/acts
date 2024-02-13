@@ -64,8 +64,7 @@ class IterativeVertexFinder {
   using Linearizer_t = typename vfitter_t::Linearizer_t;
 
  public:
-  using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
+  using IPEstimator = ImpactPointEstimator<Propagator_t>;
 
   /// Configuration struct
   struct Config {
@@ -118,6 +117,9 @@ class IterativeVertexFinder {
     /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
     /// decide if a track should be checked for reassignment to other vertices
     double cutOffTrackWeightReassign = 1;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// State struct
@@ -135,36 +137,14 @@ class IterativeVertexFinder {
     typename vfitter_t::State fitterState;
   };
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
+  /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
   /// @param logger The logging instance
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   IterativeVertexFinder(Config cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "IterativeVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters([](const InputTrack& params) {
-          return *params.as<BoundTrackParameters>();
-        }),
-        m_logger(std::move(logger)) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
-  /// @param logger The logging instance
-  IterativeVertexFinder(
-      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("IterativeVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {}
 
   /// @brief Finds vertices corresponding to input trackVector
   ///
@@ -180,11 +160,6 @@ class IterativeVertexFinder {
  private:
   /// Configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

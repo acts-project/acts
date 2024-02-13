@@ -33,9 +33,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
   int iteration = 0;
   std::vector<InputTrack> removedSeedTracks;
-  while (((m_cfg.addSingleTrackVertices && !seedTracks.empty()) ||
-          ((!m_cfg.addSingleTrackVertices) && !seedTracks.empty())) &&
-         iteration < m_cfg.maxIterations) {
+  while (!seedTracks.empty() && iteration < m_cfg.maxIterations &&
+         (m_cfg.addSingleTrackVertices || seedTracks.size() >= 2)) {
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
     std::vector<InputTrack> searchTracks;
@@ -203,7 +202,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
   }
 
   auto estRes = m_cfg.ipEstimator.getImpactParameters(
-      m_extractParameters(track), newVtx, vertexingOptions.geoContext,
+      m_cfg.extractParameters(track), newVtx, vertexingOptions.geoContext,
       vertexingOptions.magFieldContext, m_cfg.useTime);
   if (!estRes.ok()) {
     return estRes.error();
@@ -235,7 +234,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
                                 const VertexingOptions& vertexingOptions) const
     -> Result<void> {
   for (const auto& trk : tracks) {
-    auto params = m_extractParameters(trk);
+    auto params = m_cfg.extractParameters(trk);
     auto pos = params.position(vertexingOptions.geoContext);
     // If track is too far away from vertex, do not consider checking the IP
     // significance
@@ -276,7 +275,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     double newZ = 0;
     bool nearTrackFound = false;
     for (const auto& trk : seedTracks) {
-      auto pos = m_extractParameters(trk).position(vertexingOptions.geoContext);
+      auto pos =
+          m_cfg.extractParameters(trk).position(vertexingOptions.geoContext);
       auto zDistance = std::abs(pos[eZ] - vtx.position()[eZ]);
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;
@@ -449,7 +449,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     double smallestDeltaZ = std::numeric_limits<double>::max();
     auto smallestDzSeedIter = seedTracks.end();
     for (unsigned int i = 0; i < seedTracks.size(); i++) {
-      auto pos = m_extractParameters(seedTracks[i]).position(geoCtx);
+      auto pos = m_cfg.extractParameters(seedTracks[i]).position(geoCtx);
       double zDistance = std::abs(pos[eZ] - vtx.position()[eZ]);
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;

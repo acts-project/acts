@@ -34,7 +34,6 @@ namespace Acts {
 template <typename vfitter_t, typename sfinder_t>
 class AdaptiveMultiVertexFinder {
   using Propagator_t = typename vfitter_t::Propagator_t;
-  using InputTrack_t = typename vfitter_t::InputTrack_t;
   using Linearizer_t = typename vfitter_t::Linearizer_t;
   using FitterState_t = typename vfitter_t::State;
   using SeedFinderState_t = typename sfinder_t::State;
@@ -59,8 +58,8 @@ class AdaptiveMultiVertexFinder {
     /// @param lin Track linearizer
     /// @param bIn Input magnetic field
     Config(vfitter_t fitter, sfinder_t sfinder,
-           ImpactPointEstimator<InputTrack_t, Propagator_t> ipEst,
-           Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
+           ImpactPointEstimator<Propagator_t> ipEst, Linearizer_t lin,
+           std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEstimator(std::move(ipEst)),
@@ -74,7 +73,7 @@ class AdaptiveMultiVertexFinder {
     sfinder_t seedFinder;
 
     // ImpactPointEstimator
-    ImpactPointEstimator<InputTrack_t, Propagator_t> ipEstimator;
+    ImpactPointEstimator<Propagator_t> ipEstimator;
 
     // Track linearizer
     Linearizer_t linearizer;
@@ -163,42 +162,31 @@ class AdaptiveMultiVertexFinder {
     // true, useTime of the vertex fitter configuration should also be set to
     // true, and time seeding should be enabled.
     bool useTime = false;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };  // Config struct
 
   /// State struct for fulfilling interface
   struct State {};
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param logger The logging instance
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFinder(Config cfg,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("AdaptiveMultiVertexFinder",
-                                                 Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters([](const InputTrack& params) {
-          return *params.as<BoundTrackParameters>();
-        }),
-        m_logger(std::move(logger)) {}
-
   /// @brief Constructor for user-defined InputTrack_t type !=
   /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
   /// @param logger The logging instance
-  AdaptiveMultiVertexFinder(
-      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+  AdaptiveMultiVertexFinder(Config cfg,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("AdaptiveMultiVertexFinder",
+                                                 Logging::INFO))
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFinder: "
+          "No function to extract parameters "
+          "from InputTrack provided.");
+    }
+  }
 
   AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
 
@@ -217,11 +205,6 @@ class AdaptiveMultiVertexFinder {
  private:
   /// Configuration object
   Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

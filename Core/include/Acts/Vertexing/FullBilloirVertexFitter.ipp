@@ -54,9 +54,8 @@ struct BilloirVertex {
 
 }  // namespace Acts::detail
 
-template <typename input_track_t, typename linearizer_t>
-Acts::Result<Acts::Vertex>
-Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
+template <typename linearizer_t>
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter<linearizer_t>::fit(
     const std::vector<InputTrack>& paramVector, const linearizer_t& linearizer,
     const VertexingOptions& vertexingOptions, State& state) const {
   unsigned int nTracks = paramVector.size();
@@ -108,7 +107,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     for (std::size_t iTrack = 0; iTrack < nTracks; ++iTrack) {
       const InputTrack& trackContainer = paramVector[iTrack];
 
-      const auto& trackParams = extractParameters(trackContainer);
+      const auto& trackParams = m_cfg.extractParameters(trackContainer);
 
       auto result = linearizer.linearizeTrack(
           trackParams, linPoint[3], *perigeeSurface,
@@ -325,7 +324,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         paramVec[eBoundTime] = linPoint[FreeIndices::eFreeTime];
         BoundTrackParameters refittedParams(
             perigee, paramVec, covDeltaP[iTrack],
-            extractParameters(billoirTrack.originalTrack).particleHypothesis());
+            m_cfg.extractParameters(billoirTrack.originalTrack)
+                .particleHypothesis());
         TrackAtVertex trackAtVertex(billoirTrack.chi2, refittedParams,
                                     billoirTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackAtVertex));

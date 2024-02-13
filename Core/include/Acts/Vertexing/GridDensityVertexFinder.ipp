@@ -37,7 +37,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
     state.mainGrid = MainGridVector::Zero();
     // Fill with track densities
     for (auto trk : trackVector) {
-      const BoundTrackParameters& trkParams = m_extractParameters(trk);
+      const BoundTrackParameters& trkParams = m_cfg.extractParameters(trk);
       // Take only tracks that fulfill selection criteria
       if (!doesPassTrackSelection(trkParams)) {
         if (m_cfg.cacheGridStateForTrackRemoval) {
