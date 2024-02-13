@@ -236,6 +236,8 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
 Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
@@ -263,6 +265,8 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
 Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
