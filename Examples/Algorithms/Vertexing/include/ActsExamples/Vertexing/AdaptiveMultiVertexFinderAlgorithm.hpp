@@ -52,12 +52,10 @@ struct AlgorithmContext;
 class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using IPEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
+  using IPEstimator = Acts::ImpactPointEstimator<Propagator>;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using Fitter =
-      Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
+  using Fitter = Acts::AdaptiveMultiVertexFitter<Linearizer>;
+  using Options = Acts::VertexingOptions;
 
   using VertexCollection = std::vector<Acts::Vertex>;
 

@@ -35,7 +35,9 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <tbb/combinable.h>
@@ -100,7 +102,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Compute shared hit information
     bool computeSharedHits = false;
     /// Track selector config
-    std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
+    std::optional<std::variant<Acts::TrackSelector::Config,
+                               Acts::TrackSelector::EtaBinnedConfig>>
+        trackSelectorCfg = std::nullopt;
     /// Maximum number of propagation steps
     unsigned int maxSteps = 100000;
     /// Extrapolation strategy

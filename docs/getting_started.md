@@ -204,7 +204,7 @@ $ pip install -r docs/requirements.txt
 :::{tip}
 It is **strongly recommended** to use a [virtual
 environment](https://realpython.com/python-virtual-environments-a-primer/) for
-this purpose! For example, run 
+this purpose! For example, run
 
 ```console
 $ python -m venv docvenv
@@ -229,7 +229,7 @@ $ cmake --build <build> --target docs
 The default option includes the Doxygen, Sphinx, and the Breathe extension,
 i.e. the source code information can be used in the manually written
 documentation. An attempt is made to pull in symbols that are cross-referenced from
-other parts of the documentation. This is not guaranteed to work: in case 
+other parts of the documentation. This is not guaranteed to work: in case
 of errors you will need to manually pull in symbols to be documented.
 
 [doxygen]: https://doxygen.nl/
@@ -260,8 +260,6 @@ components.
 | ACTS_SOURCELINK_SBO_SIZE            | Customize the SBO size used by<br>SourceLink<br> type: `string`, default: `""`                                                                                                                                                     |
 | ACTS_FORCE_ASSERTIONS               | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                      |
 | ACTS_USE_SYSTEM_LIBS                | Use system libraries by default<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
-| ACTS_BUILD_PLUGIN_AUTODIFF          | Build the autodiff plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
-| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system<br>instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                     |
 | ACTS_USE_SYSTEM_ACTSVG              | Use the ActSVG system library<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                             |
 | ACTS_BUILD_PLUGIN_ACTSVG            | Build SVG display plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                          |
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
@@ -293,7 +291,6 @@ components.
 | ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
-| ACTS_BUILD_EXAMPLES_BINARIES        | Build the examples binaries (deprecated)<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_USE_SYSTEM_PYBIND11            | Use a system installation of pybind11<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                     |
 | ACTS_USE_EXAMPLES_TBB               | Use Threading Building Blocks library in<br>the examples<br> type: `bool`, default: `ON`                                                                                                                                           |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
@@ -352,7 +349,7 @@ The following environment variables might be useful.
 
 ## The OpenDataDetector
 
-ACTS comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map. 
+ACTS comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map.
 It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.github.com/) need to be installed on your machine):
 
 ```console
@@ -360,7 +357,7 @@ $ git submodule init
 $ git submodule update
 ```
 
-To use it, you will then need to build ACTS with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or 
+To use it, you will then need to build ACTS with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or
 `DYLD_LIBRARY_PATH` and `DD4HEP_LIBRARY_PATH` on MacOs to the install path of the ODD factory (for example: `build/thirdparty/OpenDataDetector/factory`).
 
 You can now use the ODD in the python binding by using:
