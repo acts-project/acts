@@ -60,9 +60,11 @@ def runMaterialMapping(
             fileList=[
                 os.path.join(
                     inputDir,
-                    mapName + "_tracks.root"
-                    if readCachedSurfaceInformation
-                    else "geant4_material_tracks.root",
+                    (
+                        mapName + "_tracks.root"
+                        if readCachedSurfaceInformation
+                        else "geant4_material_tracks.root"
+                    ),
                 )
             ],
             readCachedSurfaceInformation=readCachedSurfaceInformation,
