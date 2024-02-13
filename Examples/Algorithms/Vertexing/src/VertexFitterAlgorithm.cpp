@@ -49,7 +49,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
-  VertexFitter vertexFitter(vertexFitterCfg);
+  VertexFitter vertexFitter(vertexFitterCfg,
+                            Acts::InputTrack::extractParameters);
   VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
   // Setup the linearizer
   Linearizer::Config ltConfig(m_cfg.bField, propagator);

@@ -71,9 +71,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
   using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>,
-                               GaussianTrackDensity<BoundTrackParameters>>;
-  Finder finder;
+      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  Finder finder{{}, InputTrack::extractParameters};
   Finder::State state;
 
   // Start creating some track parameters
@@ -151,9 +150,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   // Finder options
   VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
   using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>,
-                               GaussianTrackDensity<BoundTrackParameters>>;
-  Finder finder;
+      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  Finder finder{{}, InputTrack::extractParameters};
   Finder::State state;
 
   // Start creating some track parameters
@@ -228,9 +226,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
   using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>,
-                               GaussianTrackDensity<BoundTrackParameters>>;
-  Finder finder;
+      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  Finder finder{{}, InputTrack::extractParameters};
   Finder::State state;
 
   int mySeed = 31415;
@@ -330,9 +327,9 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
       };
 
   using Finder = TrackDensityVertexFinder<DummyVertexFitter<InputTrackStub>,
-                                          GaussianTrackDensity<InputTrackStub>>;
+                                          GaussianTrackDensity>;
 
-  Finder finder(extractParameters);
+  Finder finder({}, extractParameters);
   Finder::State state;
 
   // Start creating some track parameters
