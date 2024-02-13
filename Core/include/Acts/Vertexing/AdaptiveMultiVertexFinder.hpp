@@ -162,6 +162,9 @@ class AdaptiveMultiVertexFinder {
     // true, useTime of the vertex fitter configuration should also be set to
     // true, and time seeding should be enabled.
     bool useTime = false;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };  // Config struct
 
   /// State struct for fulfilling interface
@@ -171,15 +174,19 @@ class AdaptiveMultiVertexFinder {
   /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack
   /// @param logger The logging instance
-  AdaptiveMultiVertexFinder(
-      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+  AdaptiveMultiVertexFinder(Config cfg,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("AdaptiveMultiVertexFinder",
+                                                 Logging::INFO))
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFinder: "
+          "No function to extract parameters "
+          "from InputTrack provided.");
+    }
+  }
 
   AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
 
@@ -198,9 +205,6 @@ class AdaptiveMultiVertexFinder {
  private:
   /// Configuration object
   Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

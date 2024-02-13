@@ -67,22 +67,27 @@ class FullBilloirVertexFitter {
   struct Config {
     /// Maximum number of iterations in fitter
     int maxIterations = 5;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack
-  ///             object
   /// @param logger Logging instance
-  FullBilloirVertexFitter(
-      const Config& cfg,
-      std::function<BoundTrackParameters(const InputTrack&)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("FullBilloirVertexFitter", Logging::INFO))
-      : m_cfg(cfg),
-        extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+  FullBilloirVertexFitter(const Config& cfg,
+                          std::unique_ptr<const Logger> logger =
+                              getDefaultLogger("FullBilloirVertexFitter",
+                                               Logging::INFO))
+      : m_cfg(cfg), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "FullBilloirVertexFitter: "
+          "No function to extract parameters "
+          "provided.");
+    }
+  }
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
@@ -100,9 +105,6 @@ class FullBilloirVertexFitter {
  private:
   /// Configuration object
   Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
