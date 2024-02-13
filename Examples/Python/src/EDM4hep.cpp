@@ -37,7 +37,7 @@ void addEDM4hep(Context& ctx) {
       ActsExamples::EDM4hepReader, edm4hep, "EDM4hepReader", inputPath,
       inputParticles, inputSimHits, outputParticlesInitial,
       outputParticlesFinal, outputParticlesGenerator, outputSimHits,
-      graphvizOutput, dd4hepDetector, trackingGeometry);
+      graphvizOutput, dd4hepDetector, trackingGeometry, sortSimHitsInTime);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepSimHitWriter, edm4hep,
                              "EDM4hepSimHitWriter", inputSimHits,

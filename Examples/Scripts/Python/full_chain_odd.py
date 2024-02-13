@@ -85,9 +85,9 @@ s = acts.examples.Sequencer(
     outputDir=str(outputDir),
 )
 
-if args.edm4hep:
+if args["edm4hep"]:
     edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
-        inputPath=str(args.edm4hep),
+        inputPath=str(args["edm4hep"]),
         inputSimHits=[
             "PixelBarrelReadout",
             "PixelEndcapReadout",
@@ -103,6 +103,8 @@ if args.edm4hep:
         graphvizOutput="graphviz",
         dd4hepDetector=detector,
         trackingGeometry=trackingGeometry,
+        sortSimHitsInTime=True,
+        level=acts.logging.INFO,
     )
     s.addReader(edm4hepReader)
     s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)

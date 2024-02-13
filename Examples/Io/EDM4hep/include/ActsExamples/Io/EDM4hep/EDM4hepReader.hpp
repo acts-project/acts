@@ -63,6 +63,9 @@ class EDM4hepReader final : public IReader {
 
     /// Tracking geometry for cellID resolution.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+
+    /// Whether to sort sim hits in time to produce index sequence
+    bool sortSimHitsInTime = false;
   };
 
   using ParentRelationship = std::unordered_map<std::size_t, std::size_t>;

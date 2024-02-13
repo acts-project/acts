@@ -18,9 +18,11 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <algorithm>
 #include <iomanip>
+#include <map>
 #include <stdexcept>
 
 #include <edm4hep/MCParticle.h>
@@ -67,10 +69,6 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
       ACTS_ERROR("Surface has no associated detector element");
       return;
     }
-
-    // detElement->sourceElement().readout();
-    // ACTS_INFO(
-    // "- ACTS surface center: " << surface->center(Acts::GeometryContext{}));
 
     const auto translation = detElement->sourceElement()
                                  .nominal()
@@ -358,6 +356,56 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
           });
 
       simHits.insert(std::move(simHit));
+    }
+  }
+
+  if (m_cfg.sortSimHitsInTime) {
+    ACTS_DEBUG("Sorting sim hits in time");
+    std::multimap<ActsFatras::Barcode, std::size_t> hitsByParticle;
+
+    for (std::size_t i = 0; i < simHits.size(); ++i) {
+      hitsByParticle.insert({simHits.nth(i)->particleId(), i});
+    }
+
+    for (auto it = hitsByParticle.begin(), end = hitsByParticle.end();
+         it != end; it = hitsByParticle.upper_bound(it->first)) {
+      std::cout << "Particle " << it->first << " has "
+                << hitsByParticle.count(it->first) << " hits" << std::endl;
+
+      std::vector<std::size_t> hitIndices;
+      hitIndices.reserve(hitsByParticle.count(it->first));
+      for (auto hitIndex : makeRange(hitsByParticle.equal_range(it->first))) {
+        hitIndices.push_back(hitIndex.second);
+      }
+
+      if (logger().doPrint(Acts::Logging::VERBOSE)) {
+        ACTS_VERBOSE("Before sorting:");
+        for (const auto& hitIdx : hitIndices) {
+          ACTS_VERBOSE(" - " << hitIdx << " / " << simHits.nth(hitIdx)->index()
+                             << " " << simHits.nth(hitIdx)->time());
+        }
+      }
+
+      std::sort(hitIndices.begin(), hitIndices.end(),
+                [&](std::size_t a, std::size_t b) {
+                  return simHits.nth(a)->time() < simHits.nth(b)->time();
+                });
+
+      for (std::size_t i = 0; i < hitIndices.size(); ++i) {
+        auto& hit = *simHits.nth(hitIndices[i]);
+        SimHit updatedHit{hit.geometryId(),     hit.particleId(),
+                          hit.fourPosition(),   hit.momentum4Before(),
+                          hit.momentum4After(), int32_t(i)};
+        hit = updatedHit;
+      }
+
+      if (logger().doPrint(Acts::Logging::VERBOSE)) {
+        ACTS_VERBOSE("After sorting:");
+        for (const auto& hitIdx : hitIndices) {
+          ACTS_VERBOSE(" - " << hitIdx << " / " << simHits.nth(hitIdx)->index()
+                             << " " << simHits.nth(hitIdx)->time());
+        }
+      }
     }
   }
 
