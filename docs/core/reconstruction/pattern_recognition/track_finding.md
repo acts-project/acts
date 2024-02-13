@@ -25,7 +25,7 @@ The CKF is customizable via template parameters, and options. The template param
 allow
 
 1. to steer the propagation of the track states e.g. {class}`Acts::Propagator`, and
-2. to the define the storage container for the trajectories and its track states
+2. to define the storage container for the trajectories and its track states
    e.g. {class}`Acts::VectorMultiTrajectory`
 
 The options {struct}`Acts::CombinatorialKalmanFilterOptions` are also customizable via
