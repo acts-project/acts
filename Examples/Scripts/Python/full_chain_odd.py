@@ -235,7 +235,7 @@ else:
 addVertexFitting(
     s,
     field,
-    vertexFinder=VertexFinder.Truth,
+    vertexFinder=VertexFinder. Iterative,
     outputDirRoot=outputDir,
 )
 
