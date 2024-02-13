@@ -14,7 +14,7 @@ particle_hypothesis
 
 The various tracking components in ACTS can be assembled into a full
 reconstruction chain.  Between these components, data needs to be exchanged in
-a well-defined way. This is achieved through the {term}`EDM`, which
+a well-defined way. This is achieved through the {term}`EDM` (Event Data Model), which
 is a set of data types and interfaces representing the content of an event.
 Until very recently, ACTS has focused mainly on an *internal* {term}`EDM`, which
 is really focused on efficient interchange between components inside the

@@ -2,7 +2,8 @@
 
 :::{glossary}
 EDM
-  Event Data Model is a sta
+  Event Data Model is a set of classes that can be used to describe the
+  contents of an event.
 
 Hole
   A hole is a state on a track where no measurement was found.
@@ -14,13 +15,14 @@ Outlier
   larger than a certain threshold value.
 
 SoA
-  Memory layout in which individual properties of an object are stored as
-  contiguous arrays in a structure, where the same index is associated with
-  logically connected entries. The opposite is {term}`AoS`.
+  *Struct of Arrays* is a memory layout in which individual properties of an
+  object are stored as contiguous arrays in a structure, where the same index
+  is associated with logically connected entries. The opposite is {term}`AoS`.
 
 AoS
-  Memory layout where a collection of objects are stored in a single array,
-  where each object internally has a member for each property.
+  *Array of Structs* is a memory layout where a collection of objects are
+  stored in a single array, where each object internally has a member for each
+  property.
 
 Seed
   A starting point for the track finding stage. E.g. a triplet of {term}`space

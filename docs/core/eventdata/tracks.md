@@ -21,14 +21,14 @@ fit.
 Tracks are built-up from track states, where each track state corresponds to a
 discrete state determining the track properties. This mainly includes
 measurements states, expected intersections with sensors where no measurement
-was found ({term}`holes<Hole>`), and intersections with known passive material.  The
+was found ({term}`holes<Hole>`), and intersections with known passive material. The
 {term}`EDM` allows building up a track from these track states iteratively. For
 example, the Kalman Filter will append track states to the sequence whenever it
 encounters a sensitive detector layer. The content of the track states is
 defined such that the fitter can store all relevant information, with as little
 need for extra information as possible. It is also designed to be flexible
 enough to support different fitters, which might require different information
-to be stored, as well as the combinatorial Kalman Filter, which produces a tree
+to be stored, as well as the Combinatorial Kalman Filter, which produces a tree
 of track states, instead of a fully linear sequence.
 
 Ultimately, each output track is associated with a well-defined sequence of
@@ -51,7 +51,7 @@ The Track {term}`EDM` is structured such that the memory-layout can be
 usage.
 
 {numref}`track_proxy` shows this object-oriented access model for
-the example of the track container and track proxy object.  The track container
+the example of the track container and track proxy object. The track container
 holds vectors of the various pieces of information, and has methods to add a
 track, and to allow iteration over all tracks. This iteration, or index based
 access, yields a track proxy object, which exposes the properties as methods
@@ -92,19 +92,23 @@ objects or in the containers, depending on whether they operate on a single
 element or the entire container.
 
 Overall, there are four main classes that make up the frontend layer:
-{class}`Acts::TrackProxy`, `TrackContainer`, `TrackStateProxy` and `MultiTrajectory`.  The
-latter serves as the track state container, where the name indicates that it is
-able to handle a branching tree structure of track states.  `TrackProxy` and
+{class}`Acts::TrackProxy`, {class}`Acts::TrackContainer`,
+{class}`Acts::TrackStateProxy` and {class}`Acts::MultiTrajectory`. The latter
+serves as the track state container, where the name indicates that it is able
+to handle a branching tree structure of track states. `TrackProxy` and
 `TrackStateProxy` expose methods to get the local track parameters and
 covariance, corresponding reference surface, and also includes global
 statistics like the total number of measurements, {term}`outliers<Outlier>` or
-{term}`holes<Hole>` in case of `TrackProxy`.  `TrackProxy` also has a method to
-conveniently iterate over the associated track states from the outside inwards,
-yielding `TrackStateProxy` objects from the track state container.
+{term}`holes<Hole>` in case of `TrackProxy`. `TrackProxy` also has a method to
+conveniently iterate over the associated track states from the last track state
+to the first one yielding `TrackStateProxy` objects from the track state
+container. In the common case of a track from the center of a cylindrical
+detector going outward, the default iteration order is from the outside
+inwards.
 
 In case of `TrackStateProxy`, functionality is exposed in the frontend
 layer to allocate optional components, with the goal of reduced memory
-footprint. There are two main uses of this: track parameters and measurements.
+footprint. There are two main use cases of this: track parameters and measurements.
 The track-state {term}`EDM` supports storing up to three sets of local track parameters
 and covariance matrices, modeled after the information the Kalman Filter
 formalism needs to store:
@@ -129,7 +133,7 @@ layer to ensure enough memory is available, where the specifics are again left
 up to the backend layer.
 
 The backend layer exposes an interface that is used by the frontend layer to
-store and retrieve information.  It uses dedicated methods where needed, such as
+store and retrieve information. It uses dedicated methods where needed, such as
 for storing reference surfaces or source-link objects, which are lightweight
 container objects for experiment-specific measurements. For the majority of
 components, the frontend communicates with the backend through a single method
@@ -155,10 +159,10 @@ of direct backend implementations are shown.
 {numref}`track_architecture` shows a diagram of the {term}`EDM` architecture. At the center
 are the `TrackProxy` and `TrackContainer`. These classes are
 produced by the track finding and track fitting components, and are the main
-interface point with the clients of tracking.  In ACTS itself, all of the
+interface point with the clients of tracking. In ACTS itself, all of the
 performance monitoring and downstream reconstruction is either directly built on
 top of these objects, or converts them into an internal {term}`EDM` on the use
-case.  Behind the backend interface, the track container coordinates with both a
+case. Behind the backend interface, the track container coordinates with both a
 track state and a track backend, where a few examples are shown, and will be
 discussed below.
 
@@ -203,7 +207,6 @@ auto track = getTrackFromSomewhere();
 for(const auto trackState : track.trackStatesReversed()) {
   // do something with track state
 }
-
 ```
 
 Note that {func}`Acts::TrackProxy::trackStatesReversed` iterates from the {term}`tip state` to
@@ -316,7 +319,7 @@ will use the sharing functionality to share these components.
 
 :::{attention}
 Sharing these components introduces *cross-talk* between track states, and this
-is intentional.  If e.g. the predicted covariance is modified through either of
+is intentional. If e.g. the predicted covariance is modified through either of
 the track states, the changes will be visible when accessed from the other
 track state as well.
 :::
@@ -324,12 +327,12 @@ track state as well.
 (track_edm_dynamic_columns)=
 ## Dynamic columns
 
-Aside from the static properties that both the track states and the track, the
-EDM supports adding almost arbitrary additional information as dynamic columns.
-The implementation of the dynamic column mechanism is given by the backend,
-where the interface layer classes {class}`Acts::MultiTrajectory` and
-{class}`Acts::TrackContainer` and associated proxies only coordinate the
-creation, access and copying of dynamic columns.
+Aside from the static properties that both the track states and the track have,
+the {term}`EDM` supports adding almost arbitrary additional information as
+dynamic columns.  The implementation of the dynamic column mechanism is given
+by the backend, where the interface layer classes
+{class}`Acts::MultiTrajectory` and {class}`Acts::TrackContainer` and associated
+proxies only coordinate the creation, access and copying of dynamic columns.
 
 The following illustrates the
 usage of dynamic columns for {class}`Acts::TrackContainer`, but usage on
@@ -384,7 +387,7 @@ using namespace Acts::HashedStringLiterals;
 
 The components are accessed by a hash of the name of the component. This hash
 can be calculated from a string at compile-time, if the string is known at
-compile time.  The difference between the two component access signatures is
+compile time. The difference between the two component access signatures is
 that in the first case, the hash of the component is guaranteed to be evaluated
 at compile-time, since it is given to the `component` function as a template
 argument. A third option is available to access components: see
@@ -396,7 +399,7 @@ argument. A third option is available to access components: see
 
 It can be inconvenient to have to write the full component access signature,
 especially if you want to access the same components repeatedly. An alternative
-are **accessors**.  They encapsulate the type of the component, and the
+are **accessors**. They encapsulate the type of the component, and the
 component name hash into an object:
 
 ```cpp
@@ -457,7 +460,6 @@ Available default holders are:
 Other user-specified holders can also be used, for example, it is possible to use `std::shared_ptr` as a holder directly, like:
 
 ```cpp
-
 std::shared_ptr<Acts::VectorTrackContainer> vtc{
     std::make_shared<Acts::VectorTrackContainer>()};
 std::shared_ptr<Acts::VectorMultiTrajectory> mtj{
@@ -469,6 +471,44 @@ tc{vtc, mtj};
 
 ### How to create a track from scratch
 
+Tracks can be created directly from the {term}`EDM` interface. You start by creating or obtaining a mutable track container:
+
+```cpp
+Acts::TrackContainer tc{Acts::VectorTrackContainer{}, Acts::VectorMutiTrajectory{}};
+```
+
+A single track can be added like this:
+
+```cpp
+auto track = tc.makeTrack();
+// set some properties
+track.parameters() << 0.1_mm, 3_mm, 1/20_GeV, 0.2, 0.4, 25_mm;
+track.setReferenceSurface(
+    Acts::Surface::makeSurface<Acts::PerigeeSurface>(Acts::Vector3::Zero()));
+```
+
+The track is still lacking track states. You can *append* track states to the
+track, which means that a track state is attached behind the outermost track
+state currently assigned.
+
+```cpp
+auto ts1 = track.appendTrackState();
+ts1.smoothed() << 0.4_um, 1_mm, 1/19_GeV, 0.21, 0.37, 40_ns;
+//...
+auto ts2 = track.appendTrackState();
+ts2.smoothed() << 0.4_um, 1_mm, 1/19_GeV, 0.21, 0.37, 40_ns;
+
+```
+
+Note that this means that you have to create track state from the inside out!
+If you have to add track states from the outside in, you can still append them
+and reverse the track at the very end.
+
+```cpp
+track.reverseTrackStates();
+```
+
+
 ## Track EDM backends
 
 (edm_track_backends)=
@@ -476,8 +516,12 @@ tc{vtc, mtj};
 
 #### Transient vector backend
 
-The transient vector backend implements the reference backend for the track EDM.
-It does not implement any persistency directly. The implementation of this backend for both track and track state containers uses seperate classes for the mutable and const versions, in order to fully comply with const correctness. It also uses a common base class internally, which is however an implementation detail.
+The transient vector backend implements the reference backend for the track
+{term}`EDM`. It does not implement any persistency directly. The implementation of
+this backend for both track and track state containers uses seperate classes
+for the mutable and const versions, in order to fully comply with const
+correctness. It also uses a common base class internally, which is however an
+implementation detail.
 
 To build a track container with this backend, you can write
 
@@ -505,7 +549,7 @@ columns for that matter) to disk and read them back in.
 
 #### PODIO backend
 
-The PODIO track EDM backend shipped with the library uses a custom PODIO-EDM
+The PODIO track {term}`EDM` backend shipped with the library uses a custom PODIO-{term}`EDM`
 defined in `edm.yml` in the ACTS core repository.
 
 The working model is this:
@@ -558,14 +602,14 @@ that implements the following interface:
 :::{doxygenclass} Acts::PodioUtil::ConversionHelper
 :::
 
-Speficially, the PODIO backends will, before persisting and after reading,
+Specifically, the PODIO backends will, before persisting and after reading,
 consult the helper object to convert between an in-memory `Surface` and an
 optional identifier. The identifier a 64-bit integer whose interpretation can
 depend on the experiment, it could be a sensor index (hash in ATLAS) for
 example.
 
 If no identifier is returned, that means the surface is not expressible as an
-aidentifier, and it needs to be persisted directly, which is implemented
+identifier, and it needs to be persisted directly, which is implemented
 centrally. In that case, the defining parameters of the surface are saved, and
 the object is rebuilt when reading. An example of this is in the case of a
 reference surface like a perigee surface that represents the beam axis, which
@@ -634,12 +678,12 @@ switch (key) {
 }
 ```
 
-The `default` statement deals with [](#track_edm_dynamic_columns).  For support
+The `default` statement deals with [](#track_edm_dynamic_columns). For support
 of dynamic columns, the backend needs to implement `hasColumn_impl` to return
 if a column exists, mutable backends need to implement `addColumn_impl` which
 adds a column with a type and a string name. `copyDynamicFrom_impl` and
 `ensureDynamicColumn_impl` on mutable backends allows copying dynamic content
-between container backends. `dynamicKeys_impl` rteurns an iterator pair that
+between container backends. `dynamicKeys_impl` returns an iterator pair that
 informs the caller of which dynamic keys are registered. This is also used in
 dynamic column copies.
 
@@ -668,12 +712,12 @@ storage.
 
 #### MultiTrajectory (track state) backend
 
-The track state container can [share]
-components](#track_edm_component_sharing). This is implemented for the
-shareable components by the interface layer looking up a *component* that
-stores an index into a separate shareable-component-container. Then, functions
-exists which return `Eigen` maps into the relevant backend storage based on the
-index looked up as a component before.
+The track state container can [share components](#track_edm_component_sharing).
+This is implemented for the shareable components by the interface layer looking
+up a *component* that stores an index into a separate
+shareable-component-container. Then, functions exists which return `Eigen` maps
+into the relevant backend storage based on the index looked up as a component
+before.
 
 The track state container also handles *calibrated* measurement in a packed
 way. This is to say, that for $N$ dimensional measurement, the backend can
