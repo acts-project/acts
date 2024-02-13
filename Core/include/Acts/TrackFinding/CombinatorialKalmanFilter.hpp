@@ -1126,12 +1126,14 @@ class CombinatorialKalmanFilter {
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
     using TrackContainer = typename std::decay_t<decltype(trackContainer)>;
+    using SourceLinkAccessor =
+        SourceLinkAccessorDelegate<source_link_iterator_t>;
 
     // Create the ActionList and AbortList
     using CombinatorialKalmanFilterAborter =
-        Aborter<source_link_iterator_t, parameters_t>;
+        Aborter<SourceLinkAccessor, parameters_t>;
     using CombinatorialKalmanFilterActor =
-        Actor<source_link_iterator_t, parameters_t>;
+        Actor<SourceLinkAccessor, parameters_t>;
     using Actors = ActionList<CombinatorialKalmanFilterActor>;
     using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
