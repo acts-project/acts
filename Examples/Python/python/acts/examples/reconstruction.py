@@ -1092,10 +1092,10 @@ def addKalmanTracks(
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
-        "trackParticleMatching", matchAlg.config.outputTrackParticleMatching
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
     )
     s.addWhiteboardAlias(
-        "particleTrackMatching", matchAlg.config.outputParticleTrackMatching
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
     return s
@@ -1275,8 +1275,8 @@ def addCKFTracks(
         inputTracks=trackFinder.config.outputTracks,
         inputParticles="particles_selected",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputTrackParticleMatching="track_particle_matching",
-        outputParticleTrackMatching="particle_track_matching",
+        outputTrackParticleMatching="ckf_track_particle_matching",
+        outputParticleTrackMatching="ckf_particle_track_matching",
     )
     s.addAlgorithm(matcher)
     s.addWhiteboardAlias(
@@ -1352,8 +1352,8 @@ def addGx2fTracks(
         inputTracks=fitAlg.config.outputTracks,
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputTrackParticleMatching="gsf_track_particle_matching",
-        outputParticleTrackMatching="gsf_particle_track_matching",
+        outputTrackParticleMatching="gx2f_track_particle_matching",
+        outputParticleTrackMatching="gx2f_particle_track_matching",
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
@@ -1429,6 +1429,7 @@ def addTrackWriters(
                 inputTracks=tracks,
                 inputParticles="truth_seeds_selected",
                 inputTrackParticleMatching="track_particle_matching",
+                inputParticleTrackMatching="particle_track_matching",
                 filePath=str(outputDirRoot / f"performance_{name}.root"),
             )
             s.addWriter(ckfPerfWriter)
@@ -1670,8 +1671,8 @@ def addAmbiguityResolution(
         inputTracks=alg.config.outputTracks,
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputTrackParticleMatching="gsf_track_particle_matching",
-        outputParticleTrackMatching="gsf_particle_track_matching",
+        outputTrackParticleMatching="ambi_track_particle_matching",
+        outputParticleTrackMatching="ambi_particle_track_matching",
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
@@ -1930,12 +1931,11 @@ def addVertexFitting(
         s.addWriter(
             VertexPerformanceWriter(
                 level=customLogLevel(),
-                inputAllTruthParticles=inputParticles,
-                inputSelectedTruthParticles=selectedParticles,
-                inputMeasurementParticlesMap="measurement_particles_map",
-                inputTracks=tracks,
-                inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
+                inputTracks=tracks,
+                inputParticles=inputParticles,
+                inputTrackParticleMatching="track_particle_matching",
+                inputParticleTrackMatching="particle_track_matching",
                 bField=field,
                 minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",

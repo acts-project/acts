@@ -26,7 +26,6 @@ void ActsExamples::EffPlotTool::book(
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
-  PlotHelpers::Binning bDeltaR = m_cfg.varBinning.at("DeltaR");
   ACTS_DEBUG("Initialize the histograms for efficiency plots");
   // efficiency vs pT
   effPlotCache.trackEff_vs_pT = PlotHelpers::bookEff(

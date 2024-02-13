@@ -74,6 +74,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+  m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
 
   if (m_cfg.useTracks) {
     m_inputTracks.initialize(m_cfg.inputTracks);

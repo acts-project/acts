@@ -128,6 +128,9 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
     }
   }
 
+  m_outputTrackParticleMatching(ctx, std::move(trackParticleMatching));
+  m_outputParticleTrackMatching(ctx, std::move(particleTrackMatching));
+
   return ProcessCode::SUCCESS;
 }
 

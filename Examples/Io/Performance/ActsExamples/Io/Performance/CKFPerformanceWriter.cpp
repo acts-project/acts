@@ -49,6 +49,7 @@ CKFPerformanceWriter::CKFPerformanceWriter(CKFPerformanceWriter::Config cfg,
     throw std::invalid_argument("Missing output filename");
   }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
   m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
 
