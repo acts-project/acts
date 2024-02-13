@@ -34,20 +34,18 @@ namespace Acts {
 ///
 ///////////////////////////////////////////////////////////////////////////
 ///
-/// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
-template <typename input_track_t, typename linearizer_t>
+template <typename linearizer_t>
 class AdaptiveMultiVertexFitter {
   static_assert(LinearizerConcept<linearizer_t>,
                 "Linearizer does not fulfill linearizer concept.");
 
  public:
-  using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
   using Linearizer_t = linearizer_t;
 
  private:
-  using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
+  using IPEstimator = ImpactPointEstimator<Propagator_t>;
 
  public:
   /// @brief The fitter state
@@ -152,23 +150,6 @@ class AdaptiveMultiVertexFitter {
     // Use time information when calculating the vertex compatibility
     bool useTime{false};
   };
-
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param logger The logging instance
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFitter(Config cfg,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("AdaptiveMultiVertexFitter",
-                                                 Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters([](const InputTrack& params) {
-          return *params.as<BoundTrackParameters>();
-        }),
-        m_logger(std::move(logger)) {}
 
   /// @brief Constructor for user-defined InputTrack_t type !=
   /// BoundTrackParameters
