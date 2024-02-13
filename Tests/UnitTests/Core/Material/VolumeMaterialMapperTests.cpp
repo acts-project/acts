@@ -293,8 +293,6 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperTrackingGeometryComparisonTests) {
     trueX0 += 1 / stepResult.matTrue[i].X0();
     trueL0 += 1 / stepResult.matTrue[i].L0();
   }
-  std::cout << "X0: " << gridX0 << " vs " << trueX0 << std::endl;
-  std::cout << "L0: " << gridL0 << " vs " << trueL0 << std::endl;
   CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
   CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
 }
@@ -377,10 +375,6 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorTests) {
   // Connect the detector volumes
   auto portalContainer = Experimental::detail::CuboidalDetectorHelper::connect(
       gc, detectorVolumes, BinningValue::binX, {}, Logging::VERBOSE);
-
-  volume1->closePortals();
-  volume2->closePortals();
-  volume3->closePortals();
 
   // Build a detector
   auto detector = Experimental::Detector::makeShared(
@@ -484,10 +478,6 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorComparisonTests) {
   auto portalContainer = Experimental::detail::CuboidalDetectorHelper::connect(
       gc, detectorVolumes, BinningValue::binX, {}, Logging::VERBOSE);
 
-  volume1->closePortals();
-  volume2->closePortals();
-  volume3->closePortals();
-
   // Assign the portal id
   for (auto& portal : portalContainer) {
     generator.assignGeometryId(cache, portal.second->surface());
@@ -548,7 +538,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorComparisonTests) {
   Experimental::DetectorNavigator::Config navCfg;
   navCfg.detector = detector.get();
   Experimental::DetectorNavigator nav(
-      navCfg, getDefaultLogger("DetectorNavigator", Logging::Level::VERBOSE));
+      navCfg, getDefaultLogger("DetectorNavigator", Logging::Level::INFO));
   VolumeMaterialMapper::StraightLineDetPropagator prop(sls, std::move(nav));
 
   // Set some start parameters
@@ -561,8 +551,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorComparisonTests) {
   // Launch propagation and gather result
   PropagatorOptions<ActionList<MaterialCollector>, AbortList<EndOfWorldReached>>
       po(gc, mc);
-  po.maxStepSize = 10._mm;
-  po.maxSteps = 4e2;
+  po.maxStepSize = 1._mm;
+  po.maxSteps = 1e6;
 
   const auto& result = prop.propagate(sctp, po).value();
   const MaterialCollector::this_result& stepResult =
@@ -578,8 +568,6 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorComparisonTests) {
     trueX0 += 1 / stepResult.matTrue[i].X0();
     trueL0 += 1 / stepResult.matTrue[i].L0();
   }
-  std::cout << "X0: " << gridX0 << " vs " << trueX0 << std::endl;
-  std::cout << "L0: " << gridL0 << " vs " << trueL0 << std::endl;
   CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
   CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
 }
