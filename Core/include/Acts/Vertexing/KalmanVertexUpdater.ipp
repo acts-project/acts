@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-template <typename input_track_t, unsigned int nDimVertex>
+template <unsigned int nDimVertex>
 void Acts::KalmanVertexUpdater::updateVertexWithTrack(Vertex& vtx,
                                                       TrackAtVertex& trk) {
   std::pair<double, double> fitQuality = vtx.fitQuality();

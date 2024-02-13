@@ -124,9 +124,13 @@ TrackSelectorConfig = namedtuple(
         "pt",
         "phi",
         "nMeasurementsMin",
+        "maxHoles",
+        "maxOutliers",
+        "maxSharedHits",
+        "maxChi2",
         "nMeasurementsGroupMin",
     ],
-    defaults=[(None, None)] * 7 + [None] * 2,
+    defaults=[(None, None)] * 7 + [None] * 6,
 )
 
 CkfConfig = namedtuple(
@@ -1156,7 +1160,9 @@ def addCKFTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    trackSelectorConfig: Optional[TrackSelectorConfig] = None,
+    trackSelectorConfig: Optional[
+        Union[TrackSelectorConfig, List[TrackSelectorConfig]]
+    ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -1178,12 +1184,59 @@ def addCKFTracks(
         the output folder for the Root output, None triggers no output
     trackSelectorConfig : TrackSelectorConfig(loc0, loc1, time, eta, absEta, pt, phi, minMeasurements)
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
+        Specify as a list(TrackSelectorConfig) for eta-dependent cuts, with binning specified by absEta[1].
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
     writeTrajectories : bool, True
         write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    tslist = (
+        []
+        if trackSelectorConfig is None
+        else (
+            [trackSelectorConfig]
+            if type(trackSelectorConfig) is TrackSelectorConfig
+            else trackSelectorConfig
+        )
+    )
+    cutSets = [
+        acts.TrackSelector.Config(
+            **acts.examples.defaultKWArgs(
+                loc0Min=c.loc0[0],
+                loc0Max=c.loc0[1],
+                loc1Min=c.loc1[0],
+                loc1Max=c.loc1[1],
+                timeMin=c.time[0],
+                timeMax=c.time[1],
+                phiMin=c.phi[0],
+                phiMax=c.phi[1],
+                etaMin=c.eta[0],
+                etaMax=c.eta[1],
+                absEtaMin=c.absEta[0],
+                absEtaMax=c.absEta[1] if len(tslist) == 1 else None,
+                ptMin=c.pt[0],
+                ptMax=c.pt[1],
+                minMeasurements=c.nMeasurementsMin,
+                maxHoles=c.maxHoles,
+                maxOutliers=c.maxOutliers,
+                maxSharedHits=c.maxSharedHits,
+                maxChi2=c.maxChi2,
+                measurementCounter=c.nMeasurementsGroupMin,
+            )
+        )
+        for c in tslist
+    ]
+    if len(tslist) == 0:
+        trkSelCfg = None
+    elif len(tslist) == 1:
+        trkSelCfg = cutSets[0]
+    else:
+        trkSelCfg = acts.TrackSelector.EtaBinnedConfig(
+            cutSets=cutSets,
+            absEtaEdges=[cutSets[0].absEtaMin] + [c.absEta[1] for c in tslist],
+        )
 
     # Setup the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
@@ -1202,28 +1255,6 @@ def addCKFTracks(
                 )
             ]
         ),
-        trackSelectorCfg=acts.TrackSelector.Config(
-            **acts.examples.defaultKWArgs(
-                loc0Min=trackSelectorConfig.loc0[0],
-                loc0Max=trackSelectorConfig.loc0[1],
-                loc1Min=trackSelectorConfig.loc1[0],
-                loc1Max=trackSelectorConfig.loc1[1],
-                timeMin=trackSelectorConfig.time[0],
-                timeMax=trackSelectorConfig.time[1],
-                phiMin=trackSelectorConfig.phi[0],
-                phiMax=trackSelectorConfig.phi[1],
-                etaMin=trackSelectorConfig.eta[0],
-                etaMax=trackSelectorConfig.eta[1],
-                absEtaMin=trackSelectorConfig.absEta[0],
-                absEtaMax=trackSelectorConfig.absEta[1],
-                ptMin=trackSelectorConfig.pt[0],
-                ptMax=trackSelectorConfig.pt[1],
-                minMeasurements=trackSelectorConfig.nMeasurementsMin,
-                measurementCounter=trackSelectorConfig.nMeasurementsGroupMin,
-            )
-        )
-        if trackSelectorConfig is not None
-        else None,
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
@@ -1232,6 +1263,7 @@ def addCKFTracks(
             trackingGeometry, field, customLogLevel()
         ),
         **acts.examples.defaultKWArgs(
+            trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
         ),
     )

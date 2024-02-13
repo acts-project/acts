@@ -57,6 +57,10 @@ struct InputTrack {
 
   friend struct std::hash<Acts::InputTrack>;
 
+  static BoundTrackParameters extractParameters(const InputTrack& track) {
+    return *track.as<BoundTrackParameters>();
+  }
+
  private:
   std::type_index m_type;
   const void* m_ptr;

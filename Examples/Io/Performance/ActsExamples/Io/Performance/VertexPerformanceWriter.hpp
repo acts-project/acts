@@ -112,7 +112,7 @@ class VertexPerformanceWriter final
   std::vector<double> m_recoZ;
   std::vector<double> m_recoT;
 
-  /// Difference of reconstructed and true vertex 4D position
+  // Difference of reconstructed and true vertex 4D position
   std::vector<double> m_resX;
   std::vector<double> m_resY;
   std::vector<double> m_resZ;
@@ -135,6 +135,9 @@ class VertexPerformanceWriter final
   std::vector<double> m_covYZ;
   std::vector<double> m_covYT;
   std::vector<double> m_covZT;
+
+  // Sum pT^2 of all tracks associated with the vertex
+  std::vector<double> m_sumPt2;
 
   //--------------------------------------------------------------
   // Track-related variables are contained in a vector of vectors: The inner
