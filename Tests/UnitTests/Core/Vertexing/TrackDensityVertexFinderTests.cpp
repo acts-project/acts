@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
 
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect(extractParameters);
-  Finder finder({densityCfg});
+  Finder finder{{{densityCfg}}};
   Finder::State state;
 
   // Start creating some track parameters
