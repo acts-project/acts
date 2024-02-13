@@ -1,10 +1,3 @@
-:::{attention}
-This section is **incomplete!**
-:::
-
-:::{contents}
-:::
-
 (edm_tracks)=
 # High-level Track Event Data Model
 
@@ -186,7 +179,7 @@ example of a track state tree, like it is constructed by the combinatorial
 track finding.
 
 In {numref}`ckf_tree` states $S_7$ and $S_6$ are the two {term}`tip states<tip
-state>` of the track state tree, whil $S_1$ is the single {term}`stem state`.
+state>` of the track state tree, while $S_1$ is the single {term}`stem state`.
 In the case of combinatorial track finding starting from e.g. a
 {term}`seed<Seed>`, it could be the location of the innermost {term}`space
 point<Space point>`.
@@ -217,7 +210,7 @@ By-default, it is not possible to iterate *forward* through the track states on 
 The track's track states need to be *forward-linked* for this to be possible.
 :::
 
-The reason for this is this:
+The reason for this is:
 As the trajectory branches at the second sensor into $S_2$/$S_3$, it is not
 possible to connect the states forward, i.e. store in $S_1$ what the *next*
 state is going to be: it is ambiguous!
@@ -288,6 +281,19 @@ for(const auto trackState : track.trackStates()) {
 and the innermost track state becomes directly accessible via
 {func}`Acts::TrackProxy::innermostTrackState`.
 
+:::{Attention}
+If the track container has branching track state sequences, running a smoothing
+step in-place on branching tracks is problematic: if tracks are smoothed one by
+one, the last track of each shared track state (i.e. the track state where
+branching occurs) will overwite the smoothing result of all previous tracks.
+
+Consider again the track states in {numref}`ckf_tree`. $S_1$ is the common
+ancestor for $S_2$ and $S_3$, and has a single slot to store smoothed
+parameters. If smoothing happens for the track ending in $S_6$, then smoothing
+the track ending in $S_7$ only the values written by the final smoothing of
+$S_37 will survive in $S_1$'s storage. This can be unexpected!
+:::
+
 ## Track State API
 
 :::{doxygenclass} Acts::TrackStateProxy
@@ -302,7 +308,7 @@ and the innermost track state becomes directly accessible via
 ## Component sharing
 
 {class}`Acts::MultiTrajectory` is designed so that components can be shared
-between components. This can be achieved using the
+between track states. This can be achieved using the
 {func}`Acts::TrackStateProxy::shareFrom` can be used to set this up.
 
 Shareable components are
@@ -729,7 +735,7 @@ out a reference into associated backing storage. An example is the transient
 vector backend, which stores the offset into measurement and covariance matrix
 vector, and ensures its size is consistent.
 
-In both above cases, the *absence* of the value can be indicated by setting the
+In both cases above, the *absence* of the value can be indicated by setting the
 indices to the sentinel value `kInvalid`. The backend also has query methods
 that test if the index is invalid and return a boolean.
 
