@@ -76,7 +76,7 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
                                  .GetTranslation();
     Acts::Vector3 position;
     position << translation[0], translation[1], translation[2];
-    position *= 10;
+    position *= Acts::UnitConstants::cm;
 
     m_surfaceMap.insert({detElement->sourceElement().key(), surface});
   });
@@ -341,7 +341,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
                             .GetTranslation()[0],
                 detElement.nominal().worldTransformation().GetTranslation()[1],
                 detElement.nominal().worldTransformation().GetTranslation()[2];
-            position *= 10;
+            position *= Acts::UnitConstants::cm;
 
             ACTS_VERBOSE("   -> detElement position: " << position.transpose());
 
