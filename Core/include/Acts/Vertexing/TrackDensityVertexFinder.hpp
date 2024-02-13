@@ -66,16 +66,10 @@ class TrackDensityVertexFinder {
   /// @param cfg Configuration object
   /// @param func Function extracting BoundTrackParameters from InputTrack
   ///             object
-  TrackDensityVertexFinder(
-      const Config& cfg,
-      const std::function<BoundTrackParameters(const InputTrack&)>& func)
-      : m_cfg(cfg), m_extractParameters(func) {}
+  TrackDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
 
  private:
   Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 };
 
 }  // namespace Acts

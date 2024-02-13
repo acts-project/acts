@@ -61,6 +61,9 @@ class AdaptiveGridDensityVertexFinder {
     double d0SignificanceCut = maxD0TrackSignificance * maxD0TrackSignificance;
     double z0SignificanceCut = maxZ0TrackSignificance * maxZ0TrackSignificance;
     bool estimateSeedWidth = false;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// @brief The State struct
@@ -99,10 +102,7 @@ class AdaptiveGridDensityVertexFinder {
   /// @param cfg Configuration object
   /// @param func Function extracting BoundTrackParameters from InputTrack
   ///             object
-  AdaptiveGridDensityVertexFinder(
-      const Config& cfg,
-      const std::function<BoundTrackParameters(const InputTrack&)>& func)
-      : m_cfg(cfg), m_extractParameters(func) {}
+  AdaptiveGridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
 
  private:
   /// @brief Checks if a track passes the selection criteria for seeding
@@ -114,9 +114,6 @@ class AdaptiveGridDensityVertexFinder {
 
   // The configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 };
 
 }  // namespace Acts
