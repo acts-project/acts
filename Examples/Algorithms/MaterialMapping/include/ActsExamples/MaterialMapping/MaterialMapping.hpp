@@ -129,11 +129,11 @@ class MaterialMapping final : public IAlgorithm {
   std::vector<std::unique_ptr<Acts::MaterialMappingState>>
       m_mappingStates;  //!< Material mapping states, one for each mapper
 
-  ReadDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  ReadDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_inputMaterialTracks{this, "InputMaterialTracks"};
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_mappedMaterialTracks{this, "MappedMaterialTracks"};
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_unmappedMaterialTracks{this, "UnmappedMaterialTracks"};
 };
 

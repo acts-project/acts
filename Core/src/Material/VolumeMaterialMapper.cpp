@@ -125,7 +125,7 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
     State& mState, const IVolumeMaterial& volumeMaterial,
     const VolumeBounds& volumeBounds, const Transform3& transform,
     const GeometryIdentifier& geoID) const {
-  size_t volumeID = geoID.volume();
+  std::size_t volumeID = geoID.volume();
   ACTS_DEBUG("Material volume found with volumeID " << volumeID);
   ACTS_DEBUG("       - ID is " << geoID);
 

@@ -8,9 +8,10 @@
 
 #pragma once
 
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Definitions/Algebra.hpp"
 
 #include <sstream>

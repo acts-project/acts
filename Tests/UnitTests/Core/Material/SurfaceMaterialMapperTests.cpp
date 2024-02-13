@@ -60,7 +60,7 @@ Acts::RecordedMaterialTrack createRecordedMaterialTrack(
   return rmt;
 }
 
-BOOST_AUTO_TEST_SUITE(SurfaceMaterialMapper)
+BOOST_AUTO_TEST_SUITE(SurfaceMaterialMapperTests)
 
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometry) {
     auto cube = Acts::Test::CubicTrackingGeometry(tContext);
