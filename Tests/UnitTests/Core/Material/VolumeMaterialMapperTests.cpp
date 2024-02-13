@@ -11,19 +11,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/detail/CuboidalDetectorHelper.hpp"
-#include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
@@ -33,6 +31,8 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -83,7 +83,6 @@ struct MaterialCollector {
       result.position.push_back(position);
     }
   }
-
 };
 
 BOOST_AUTO_TEST_SUITE(VolumeMaterialMapperTests)
@@ -146,8 +145,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperTrackingGeometryTests) {
   /// We need a Navigator, Stepper to build a Propagator
   Navigator navigator({tGeometry});
   StraightLineStepper stepper;
-  VolumeMaterialMapper::StraightLineTGPropagator propagator(stepper,
-                                                          std::move(navigator));
+  VolumeMaterialMapper::StraightLineTGPropagator propagator(
+      stepper, std::move(navigator));
 
   /// The config object
   VolumeMaterialMapper::Config vmmConfig;
@@ -318,20 +317,19 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorTests) {
 
   GeometryContext gc;
 
-  auto generatePortalsUpdateInternals = Experimental::defaultPortalAndSubPortalGenerator();
+  auto generatePortalsUpdateInternals =
+      Experimental::defaultPortalAndSubPortalGenerator();
 
   // Build a vacuum volume
-  auto position1 = Transform3::Identity()*
-    Translation3(Vector3(0.5_m, 0., 0.));
-  auto bounds1 =
-      std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto position1 =
+      Transform3::Identity() * Translation3(Vector3(0.5_m, 0., 0.));
+  auto bounds1 = std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
   auto name1 = "Vacuum volume";
   auto volumeMaterial1 = std::make_shared<ProtoVolumeMaterial>(bu1);
 
   auto volume1 = Experimental::DetectorVolumeFactory::construct(
-      generatePortalsUpdateInternals, gc, name1, position1,
-      std::move(bounds1), {}, {}, Experimental::tryAllSubVolumes(),
-      Experimental::tryAllPortals());
+      generatePortalsUpdateInternals, gc, name1, position1, std::move(bounds1),
+      {}, {}, Experimental::tryAllSubVolumes(), Experimental::tryAllPortals());
 
   GeometryIdentifier geoId1;
   geoId1.setVolume(1);
@@ -340,17 +338,15 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorTests) {
   volume1->assignVolumeMaterial(volumeMaterial1);
 
   // Build a material volume
-  auto position2 = Transform3::Identity()*
-    Translation3(Vector3(1.5_m, 0., 0.));
-  auto bounds2 =
-      std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto position2 =
+      Transform3::Identity() * Translation3(Vector3(1.5_m, 0., 0.));
+  auto bounds2 = std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
   auto name2 = "First material volume";
   auto volumeMaterial2 = std::make_shared<ProtoVolumeMaterial>(bu2);
 
   auto volume2 = Experimental::DetectorVolumeFactory::construct(
-      generatePortalsUpdateInternals, gc, name2, position2,
-      std::move(bounds2), {}, {}, Experimental::tryAllSubVolumes(),
-      Experimental::tryAllPortals());
+      generatePortalsUpdateInternals, gc, name2, position2, std::move(bounds2),
+      {}, {}, Experimental::tryAllSubVolumes(), Experimental::tryAllPortals());
 
   GeometryIdentifier geoId2;
   geoId2.setVolume(2);
@@ -359,17 +355,15 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorTests) {
   volume2->assignVolumeMaterial(volumeMaterial2);
 
   // Build another material volume with different material
-  auto position3 = Transform3::Identity()*
-    Translation3(Vector3(2.5_m, 0., 0.));
-  auto bounds3 =
-      std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto position3 =
+      Transform3::Identity() * Translation3(Vector3(2.5_m, 0., 0.));
+  auto bounds3 = std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
   auto name3 = "Second material volume";
   auto volumeMaterial3 = std::make_shared<ProtoVolumeMaterial>(bu3);
 
   auto volume3 = Experimental::DetectorVolumeFactory::construct(
-      generatePortalsUpdateInternals, gc, name3, position3,
-      std::move(bounds3), {}, {}, Experimental::tryAllSubVolumes(),
-      Experimental::tryAllPortals());
+      generatePortalsUpdateInternals, gc, name3, position3, std::move(bounds3),
+      {}, {}, Experimental::tryAllSubVolumes(), Experimental::tryAllPortals());
 
   GeometryIdentifier geoId3;
   geoId3.setVolume(3);
@@ -377,14 +371,12 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorTests) {
 
   volume3->assignVolumeMaterial(volumeMaterial3);
 
-  std::vector<std::shared_ptr<Experimental::DetectorVolume>> detectorVolumes = 
-      {volume1, volume2, volume3};
+  std::vector<std::shared_ptr<Experimental::DetectorVolume>> detectorVolumes = {
+      volume1, volume2, volume3};
 
   // Connect the detector volumes
-  auto portalContainer = 
-      Experimental::detail::CuboidalDetectorHelper::connect(
-          gc, detectorVolumes, BinningValue::binX, 
-          {}, Logging::VERBOSE);
+  auto portalContainer = Experimental::detail::CuboidalDetectorHelper::connect(
+      gc, detectorVolumes, BinningValue::binX, {}, Logging::VERBOSE);
 
   volume1->closePortals();
   volume2->closePortals();
@@ -392,8 +384,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorTests) {
 
   // Build a detector
   auto detector = Experimental::Detector::makeShared(
-      "detector", {volume1,volume2,volume3}, 
-      Experimental::tryRootVolumes());
+      "detector", {volume1, volume2, volume3}, Experimental::tryRootVolumes());
 
   /// We need a Navigator, Stepper to build a Propagator
   Experimental::DetectorNavigator::Config navCfg;
@@ -401,8 +392,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorTests) {
 
   Experimental::DetectorNavigator navigator(navCfg);
   StraightLineStepper stepper;
-  VolumeMaterialMapper::StraightLineDetPropagator propagator(stepper,
-                                                          std::move(navigator));
+  VolumeMaterialMapper::StraightLineDetPropagator propagator(
+      stepper, std::move(navigator));
 
   /// The config object
   VolumeMaterialMapper::Config vmmConfig;
@@ -431,25 +422,23 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorComparisonTests) {
 
   Experimental::GeometryIdGenerator::Config generatorConfig;
   Experimental::GeometryIdGenerator generator(
-      generatorConfig, 
-      getDefaultLogger("SequentialIdGenerator", 
-          Logging::VERBOSE));
+      generatorConfig,
+      getDefaultLogger("SequentialIdGenerator", Logging::VERBOSE));
 
-  auto generatePortalsUpdateInternals = Experimental::defaultPortalAndSubPortalGenerator();
+  auto generatePortalsUpdateInternals =
+      Experimental::defaultPortalAndSubPortalGenerator();
 
   // Build a vacuum volume
-  auto position1 = Transform3::Identity()*
-    Translation3(Vector3(0.5_m, 0., 0.));
-  auto bounds1 =
-      std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto position1 =
+      Transform3::Identity() * Translation3(Vector3(0.5_m, 0., 0.));
+  auto bounds1 = std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
   auto name1 = "Vacuum volume";
-  auto volumeMaterial1 = 
+  auto volumeMaterial1 =
       std::make_shared<HomogeneousVolumeMaterial>(Material());
 
   auto volume1 = Experimental::DetectorVolumeFactory::construct(
-      generatePortalsUpdateInternals, gc, name1, position1,
-      std::move(bounds1), {}, {}, Experimental::tryNoVolumes(),
-      Experimental::tryAllPortals());
+      generatePortalsUpdateInternals, gc, name1, position1, std::move(bounds1),
+      {}, {}, Experimental::tryNoVolumes(), Experimental::tryAllPortals());
 
   volume1->assignVolumeMaterial(volumeMaterial1);
 
@@ -457,49 +446,43 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorComparisonTests) {
   generator.assignGeometryId(cache, *volume1);
 
   // Build a material volume
-  auto position2 = Transform3::Identity()*
-    Translation3(Vector3(1.5_m, 0., 0.));
-  auto bounds2 =
-      std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto position2 =
+      Transform3::Identity() * Translation3(Vector3(1.5_m, 0., 0.));
+  auto bounds2 = std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
   auto name2 = "First material volume";
   auto volumeMaterial2 =
       std::make_shared<HomogeneousVolumeMaterial>(Test::makeSilicon());
 
   auto volume2 = Experimental::DetectorVolumeFactory::construct(
-      generatePortalsUpdateInternals, gc, name2, position2,
-      std::move(bounds2), {}, {}, Experimental::tryNoVolumes(),
-      Experimental::tryAllPortals());
+      generatePortalsUpdateInternals, gc, name2, position2, std::move(bounds2),
+      {}, {}, Experimental::tryNoVolumes(), Experimental::tryAllPortals());
 
   generator.assignGeometryId(cache, *volume2);
 
   volume2->assignVolumeMaterial(volumeMaterial2);
 
   // Build another material volume with different material
-  auto position3 = Transform3::Identity()*
-    Translation3(Vector3(2.5_m, 0., 0.));
-  auto bounds3 =
-      std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
+  auto position3 =
+      Transform3::Identity() * Translation3(Vector3(2.5_m, 0., 0.));
+  auto bounds3 = std::make_unique<CuboidVolumeBounds>(0.5_m, 0.5_m, 0.5_m);
   auto name3 = "Second material volume";
-  auto volumeMaterial3 = 
+  auto volumeMaterial3 =
       std::make_shared<HomogeneousVolumeMaterial>(Material());
 
   auto volume3 = Experimental::DetectorVolumeFactory::construct(
-      generatePortalsUpdateInternals, gc, name3, position3,
-      std::move(bounds3), {}, {}, Experimental::tryNoVolumes(),
-      Experimental::tryAllPortals());
+      generatePortalsUpdateInternals, gc, name3, position3, std::move(bounds3),
+      {}, {}, Experimental::tryNoVolumes(), Experimental::tryAllPortals());
 
   generator.assignGeometryId(cache, *volume3);
 
   volume3->assignVolumeMaterial(volumeMaterial3);
 
-  std::vector<std::shared_ptr<Experimental::DetectorVolume>> detectorVolumes = 
-      {volume1, volume2, volume3};
+  std::vector<std::shared_ptr<Experimental::DetectorVolume>> detectorVolumes = {
+      volume1, volume2, volume3};
 
   // Connect the detector volumes
-  auto portalContainer = 
-      Experimental::detail::CuboidalDetectorHelper::connect(
-          gc, detectorVolumes, BinningValue::binX, 
-          {}, Logging::VERBOSE);
+  auto portalContainer = Experimental::detail::CuboidalDetectorHelper::connect(
+      gc, detectorVolumes, BinningValue::binX, {}, Logging::VERBOSE);
 
   volume1->closePortals();
   volume2->closePortals();
@@ -507,13 +490,12 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorComparisonTests) {
 
   // Assign the portal id
   for (auto& portal : portalContainer) {
-      generator.assignGeometryId(cache, portal.second->surface());
+    generator.assignGeometryId(cache, portal.second->surface());
   }
 
   // Build a detector
   auto detector = Experimental::Detector::makeShared(
-      "detector", {volume1,volume2,volume3}, 
-      Experimental::tryRootVolumes());
+      "detector", {volume1, volume2, volume3}, Experimental::tryRootVolumes());
 
   // Set up the grid axes
   MaterialGridAxisData xAxis{0_m, 3_m, 7};
@@ -565,8 +547,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapperDetectorComparisonTests) {
   StraightLineStepper sls;
   Experimental::DetectorNavigator::Config navCfg;
   navCfg.detector = detector.get();
-  Experimental::DetectorNavigator nav(navCfg, getDefaultLogger("DetectorNavigator",
-                                     Logging::Level::VERBOSE));
+  Experimental::DetectorNavigator nav(
+      navCfg, getDefaultLogger("DetectorNavigator", Logging::Level::VERBOSE));
   VolumeMaterialMapper::StraightLineDetPropagator prop(sls, std::move(nav));
 
   // Set some start parameters

@@ -43,19 +43,19 @@ struct EndOfWorldReached;
 }  // namespace Acts
 
 Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
-    const Config& cfg,
-    StraightLineTGPropagator& propagator,
+    const Config& cfg, StraightLineTGPropagator& propagator,
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
-      m_tgPropagator(std::make_shared<StraightLineTGPropagator>(std::move(propagator))),
+      m_tgPropagator(
+          std::make_shared<StraightLineTGPropagator>(std::move(propagator))),
       m_logger(std::move(slogger)) {}
 
 Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
-    const Config& cfg,
-    StraightLineDetPropagator& propagator,
+    const Config& cfg, StraightLineDetPropagator& propagator,
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
-      m_detPropagator(std::make_shared<StraightLineDetPropagator>(std::move(propagator))),
+      m_detPropagator(
+          std::make_shared<StraightLineDetPropagator>(std::move(propagator))),
       m_logger(std::move(slogger)) {}
 
 std::unique_ptr<Acts::MaterialMappingState>
@@ -146,28 +146,26 @@ void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
 }
 
 void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
-  State& mState, 
-  const Acts::Experimental::DetectorVolume& dVolume) const {
-    ACTS_INFO("Checking volume '" << dVolume.name()
-      << "' for material surfaces.")
-  
-    // Check the surfaces within the volume
-    ACTS_INFO("- Internal surfaces ...");
-    for (auto& surf : dVolume.surfaces()) {
-        checkAndInsert(mState, *surf);
-    }
-  
-    // Check portal surfaces
-    ACTS_INFO("- Portals ...");
-    for (auto& port : dVolume.portals()) {
-      checkAndInsert(mState, port->surface());
-    }
+    State& mState, const Acts::Experimental::DetectorVolume& dVolume) const {
+  ACTS_INFO("Checking volume '" << dVolume.name() << "' for material surfaces.")
 
-    // Step down into the sub volume
-    for (auto& sVolume : dVolume.volumes()) {
-      // Recursive call
-      resolveMaterialSurfaces(mState, *sVolume);
-    }
+  // Check the surfaces within the volume
+  ACTS_INFO("- Internal surfaces ...");
+  for (auto& surf : dVolume.surfaces()) {
+    checkAndInsert(mState, *surf);
+  }
+
+  // Check portal surfaces
+  ACTS_INFO("- Portals ...");
+  for (auto& port : dVolume.portals()) {
+    checkAndInsert(mState, port->surface());
+  }
+
+  // Step down into the sub volume
+  for (auto& sVolume : dVolume.volumes()) {
+    // Recursive call
+    resolveMaterialSurfaces(mState, *sVolume);
+  }
 }
 
 void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
@@ -279,7 +277,7 @@ Acts::SurfaceMaterialMapper::mapInteraction(
   // Now collect the material layers by using the straight line propagator
   MaterialSurfaceCollector::result_type mcResult;
   // Now collect the material layers by using the straight line propagator
-  if(m_tgPropagator) {
+  if (m_tgPropagator) {
     const auto& result = m_tgPropagator->propagate(start, options).value();
     mcResult = result.get<MaterialSurfaceCollector::result_type>();
   } else {
@@ -316,10 +314,12 @@ Acts::SurfaceMaterialMapper::mapInteraction(
   auto currentAccMaterial = mState.accumulatedMaterial.end();
 
   // To remember the bins of this event
-  using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
+  using MapBin =
+      std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
   using MaterialBin = std::pair<AccumulatedSurfaceMaterial*,
                                 std::shared_ptr<const ISurfaceMaterial>>;
-  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>> touchedMapBins;
+  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>
+      touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
       touchedMaterialBin;
   if (sfIter != mappingSurfaces.end() &&
@@ -509,8 +509,10 @@ Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
       mTrack.second.materialInteractions;
 
   // Mapping statistics
-  using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
-  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>> touchedMapBins;
+  using MapBin =
+      std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
+  std::map<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>
+      touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
       touchedMaterialBin;
 

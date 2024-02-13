@@ -133,23 +133,23 @@ void addMaterial(Context& ctx) {
         py::class_<SurfaceMaterialMapper, IMaterialMapper,
                    std::shared_ptr<SurfaceMaterialMapper>>(
             m, "SurfaceMaterialMapper")
-            .def(py::init([](const SurfaceMaterialMapper::Config& config,
-                             SurfaceMaterialMapper::StraightLineTGPropagator& prop,
-                             Acts::Logging::Level level) {
-                   return std::make_shared<SurfaceMaterialMapper>(
-                       config, 
-                       prop,
-                       getDefaultLogger("SurfaceMaterialMapper", level));
-                 }),
+            .def(py::init(
+                     [](const SurfaceMaterialMapper::Config& config,
+                        SurfaceMaterialMapper::StraightLineTGPropagator& prop,
+                        Acts::Logging::Level level) {
+                       return std::make_shared<SurfaceMaterialMapper>(
+                           config, prop,
+                           getDefaultLogger("SurfaceMaterialMapper", level));
+                     }),
                  py::arg("config"), py::arg("propagator"), py::arg("level"))
-            .def(py::init([](const SurfaceMaterialMapper::Config& config,
-                             SurfaceMaterialMapper::StraightLineDetPropagator& prop,
-                             Acts::Logging::Level level) {
-                   return std::make_shared<SurfaceMaterialMapper>(
-                       config, 
-                       prop,
-                       getDefaultLogger("SurfaceMaterialMapper", level));
-                 }),
+            .def(py::init(
+                     [](const SurfaceMaterialMapper::Config& config,
+                        SurfaceMaterialMapper::StraightLineDetPropagator& prop,
+                        Acts::Logging::Level level) {
+                       return std::make_shared<SurfaceMaterialMapper>(
+                           config, prop,
+                           getDefaultLogger("SurfaceMaterialMapper", level));
+                     }),
                  py::arg("config"), py::arg("propagator"), py::arg("level"));
 
     auto c = py::class_<SurfaceMaterialMapper::Config>(sMapper, "Config")
@@ -167,23 +167,23 @@ void addMaterial(Context& ctx) {
         py::class_<VolumeMaterialMapper, IMaterialMapper,
                    std::shared_ptr<VolumeMaterialMapper>>(
             m, "VolumeMaterialMapper")
-            .def(py::init([](const VolumeMaterialMapper::Config& config,
-                             VolumeMaterialMapper::StraightLineTGPropagator& prop,
-                             Acts::Logging::Level level) {
-                   return std::make_shared<VolumeMaterialMapper>(
-                       config, 
-                       prop,
-                       getDefaultLogger("VolumeMaterialMapper", level));
-                 }),
+            .def(py::init(
+                     [](const VolumeMaterialMapper::Config& config,
+                        VolumeMaterialMapper::StraightLineTGPropagator& prop,
+                        Acts::Logging::Level level) {
+                       return std::make_shared<VolumeMaterialMapper>(
+                           config, prop,
+                           getDefaultLogger("VolumeMaterialMapper", level));
+                     }),
                  py::arg("config"), py::arg("propagator"), py::arg("level"))
-            .def(py::init([](const VolumeMaterialMapper::Config& config,
-                             VolumeMaterialMapper::StraightLineDetPropagator& prop,
-                             Acts::Logging::Level level) {
-                   return std::make_shared<VolumeMaterialMapper>(
-                       config, 
-                       prop,
-                       getDefaultLogger("VolumeMaterialMapper", level));
-                 }),
+            .def(py::init(
+                     [](const VolumeMaterialMapper::Config& config,
+                        VolumeMaterialMapper::StraightLineDetPropagator& prop,
+                        Acts::Logging::Level level) {
+                       return std::make_shared<VolumeMaterialMapper>(
+                           config, prop,
+                           getDefaultLogger("VolumeMaterialMapper", level));
+                     }),
                  py::arg("config"), py::arg("propagator"), py::arg("level"));
 
     auto c = py::class_<VolumeMaterialMapper::Config>(vMapper, "Config")

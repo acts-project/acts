@@ -11,7 +11,6 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
-#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -19,6 +18,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/interface/IMaterialMapper.hpp"
+#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -79,8 +79,8 @@ struct MaterialSurface {
 class SurfaceMaterialMapper final : public IMaterialMapper {
  public:
   using StraightLineTGPropagator = Propagator<StraightLineStepper, Navigator>;
-  using StraightLineDetPropagator = 
-    Propagator<StraightLineStepper, Experimental::DetectorNavigator>;
+  using StraightLineDetPropagator =
+      Propagator<StraightLineStepper, Experimental::DetectorNavigator>;
 
   /// @struct Config
   ///
@@ -131,8 +131,7 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator with the TrackingGeometry navigation
   /// @param slogger The logger
-  SurfaceMaterialMapper(const Config& cfg,
-                        StraightLineTGPropagator& propagator,
+  SurfaceMaterialMapper(const Config& cfg, StraightLineTGPropagator& propagator,
                         std::unique_ptr<const Logger> slogger =
                             getDefaultLogger("SurfaceMaterialMapper",
                                              Logging::INFO));

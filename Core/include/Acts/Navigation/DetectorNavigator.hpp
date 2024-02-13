@@ -203,11 +203,11 @@ class DetectorNavigator {
       nState.currentPortal->updateDetectorVolume(state.geoContext, nState);
 
       /// Seems like updating into nullptr is consistent with the
-      /// EndOfWorldReached check. Looks like a hack, though. So 
+      /// EndOfWorldReached check. Looks like a hack, though. So
       /// it should be revisited.
       if (nState.currentVolume == nullptr) {
-        ACTS_VERBOSE(volInfo(state)
-                     << posInfo(state, stepper) << "no volume after Portal update");
+        ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
+                                    << "no volume after Portal update");
         return;
       }
 

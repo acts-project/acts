@@ -43,14 +43,16 @@ Acts::VolumeMaterialMapper::VolumeMaterialMapper(
     const Config& cfg, StraightLineTGPropagator& propagator,
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
-      m_tgPropagator(std::make_shared<StraightLineTGPropagator>(std::move(propagator))),
+      m_tgPropagator(
+          std::make_shared<StraightLineTGPropagator>(std::move(propagator))),
       m_logger(std::move(slogger)) {}
 
 Acts::VolumeMaterialMapper::VolumeMaterialMapper(
     const Config& cfg, StraightLineDetPropagator& propagator,
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
-      m_detPropagator(std::make_shared<StraightLineDetPropagator>(std::move(propagator))),
+      m_detPropagator(
+          std::make_shared<StraightLineDetPropagator>(std::move(propagator))),
       m_logger(std::move(slogger)) {}
 
 std::unique_ptr<Acts::MaterialMappingState>
@@ -352,12 +354,12 @@ Acts::VolumeMaterialMapper::mapMaterialTrack(
   using AbortList = AbortList<EndOfWorldReached>;
 
   PropagatorOptions<ActionList, AbortList> options(state.geoContext,
-                                                  state.magFieldContext);
+                                                   state.magFieldContext);
 
   // Now collect the material layers by using the straight line propagator
   MaterialVolumeCollector::result_type mcResult;
   // Now collect the material layers by using the straight line propagator
-  if(m_tgPropagator) {
+  if (m_tgPropagator) {
     const auto& result = m_tgPropagator->propagate(start, options).value();
     mcResult = result.get<MaterialVolumeCollector::result_type>();
   } else {
@@ -377,9 +379,9 @@ Acts::VolumeMaterialMapper::mapMaterialTrack(
                             << " mapping volumes for this track.");
   ACTS_VERBOSE("Mapping volumes are :")
   for (auto& mVolumes : mappingVolumes) {
-    ACTS_VERBOSE(" - Volume : " << mVolumes.geometryId()
-                                << " at position = (" << mVolumes.position.x()
-                                << ", " << mVolumes.position.y() << ", "
+    ACTS_VERBOSE(" - Volume : " << mVolumes.geometryId() << " at position = ("
+                                << mVolumes.position.x() << ", "
+                                << mVolumes.position.y() << ", "
                                 << mVolumes.position.z() << ")");
 
     // mappingVolumes.push_back(mVolumes);
@@ -416,7 +418,7 @@ Acts::VolumeMaterialMapper::mapMaterialTrack(
     // Assume it's mapped then
     auto mappedRecord = (*rmIter);
     if (volIter != mappingVolumes.end() &&
-      !volIter->inside(state.geoContext, rmIter->position)) {
+        !volIter->inside(state.geoContext, rmIter->position)) {
       // Check if the material point is past the entry point to the current
       // volume (this prevent switching volume before the first volume has been
       // reached)

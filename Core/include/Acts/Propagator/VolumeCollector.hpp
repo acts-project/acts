@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Definitions/Algebra.hpp"
 
 #include <sstream>
 
@@ -62,27 +62,24 @@ struct HitVolume : public InteractionVolume {
   /// @param tv The tracking volume
   /// @param pos The position of the hit
   /// @param dir The direction of the hit
-  HitVolume(const TrackingVolume* tv, 
-  Vector3 pos, 
-  Vector3 dir) : InteractionVolume(tv), position(pos), direction(dir) {};
+  HitVolume(const TrackingVolume* tv, Vector3 pos, Vector3 dir)
+      : InteractionVolume(tv), position(pos), direction(dir){};
 
   /// Constructor from a detector volume
   ///
   /// @param dv The detector volume
   /// @param pos The position of the hit
   /// @param dir The direction of the hit
-  HitVolume(const Experimental::DetectorVolume* dv,
-  Vector3 pos,
-  Vector3 dir) : InteractionVolume(dv), position(pos), direction(dir) {};
+  HitVolume(const Experimental::DetectorVolume* dv, Vector3 pos, Vector3 dir)
+      : InteractionVolume(dv), position(pos), direction(dir){};
 
-  bool inside(const GeometryContext& gctx, 
-    const Acts::Vector3& gpos,
-    double tol = 0.0) const {
-      if (trackingVolume != nullptr) {
-        return trackingVolume->inside(gpos, tol);
-      } else {
-        return detectorVolume->inside(gctx, gpos);
-      }
+  bool inside(const GeometryContext& gctx, const Acts::Vector3& gpos,
+              double tol = 0.0) const {
+    if (trackingVolume != nullptr) {
+      return trackingVolume->inside(gpos, tol);
+    } else {
+      return detectorVolume->inside(gctx, gpos);
+    }
   };
 
   Vector3 position;
@@ -135,8 +132,7 @@ struct VolumeCollector {
     // The current volume has been assigned by the navigator
     if (currentVolume && selector(*currentVolume)) {
       // Create for recording
-      HitVolume volume_hit(currentVolume,
-                           stepper.position(state.stepping),
+      HitVolume volume_hit(currentVolume, stepper.position(state.stepping),
                            stepper.direction(state.stepping));
       bool save = true;
       // Check if the Volume ws already encountered

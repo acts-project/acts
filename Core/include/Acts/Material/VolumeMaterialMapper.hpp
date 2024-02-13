@@ -11,7 +11,6 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
-#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -22,14 +21,14 @@
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/interface/IMaterialMapper.hpp"
+#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
-#include "Acts/Propagator/VolumeCollector.hpp"
 
 #include <functional>
 #include <map>
@@ -78,8 +77,8 @@ class DetectorVolume;
 class VolumeMaterialMapper final : public IMaterialMapper {
  public:
   using StraightLineTGPropagator = Propagator<StraightLineStepper, Navigator>;
-  using StraightLineDetPropagator = 
-    Propagator<StraightLineStepper, Experimental::DetectorNavigator>;
+  using StraightLineDetPropagator =
+      Propagator<StraightLineStepper, Experimental::DetectorNavigator>;
 
   /// @struct Config
   ///
