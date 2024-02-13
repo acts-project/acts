@@ -58,10 +58,8 @@ using MagneticField = Acts::ConstantBField;
 using StraightPropagator = Acts::Propagator<StraightLineStepper>;
 using Stepper = Acts::EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper>;
-using Estimator =
-    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-using StraightLineEstimator =
-    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, StraightPropagator>;
+using Estimator = Acts::ImpactPointEstimator<Propagator>;
+using StraightLineEstimator = Acts::ImpactPointEstimator<StraightPropagator>;
 
 const Acts::GeometryContext geoContext;
 const Acts::MagneticFieldContext magFieldContext;
