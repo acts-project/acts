@@ -29,7 +29,6 @@
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Result.hpp"
-// #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <string>
 #include <tuple>

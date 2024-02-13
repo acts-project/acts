@@ -252,8 +252,8 @@ class VolumeMaterialMapper final : public IMaterialMapper {
   Config m_cfg;
 
   /// The straight line propagator
-  std::shared_ptr<StraightLineTGPropagator> m_tgPropagator = nullptr;
-  std::shared_ptr<StraightLineDetPropagator> m_detPropagator = nullptr;
+  std::shared_ptr<const StraightLineTGPropagator> m_tgPropagator = nullptr;
+  std::shared_ptr<const StraightLineDetPropagator> m_detPropagator = nullptr;
 
   /// The logging instance
   std::unique_ptr<const Logger> m_logger;
