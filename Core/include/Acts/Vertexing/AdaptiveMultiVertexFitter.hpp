@@ -149,22 +149,28 @@ class AdaptiveMultiVertexFitter {
 
     // Use time information when calculating the vertex compatibility
     bool useTime{false};
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// @brief Constructor for user-defined InputTrack_t type !=
   /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
   /// object
   /// @param logger The logging instance
-  AdaptiveMultiVertexFitter(
-      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("AdaptiveMultiVertexFitter", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+  AdaptiveMultiVertexFitter(Config cfg,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("AdaptiveMultiVertexFitter",
+                                                 Logging::INFO))
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFitter: No function to extract parameters "
+          "from InputTrack_t provided.");
+    }
+  }
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
@@ -199,11 +205,6 @@ class AdaptiveMultiVertexFitter {
  private:
   /// Configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

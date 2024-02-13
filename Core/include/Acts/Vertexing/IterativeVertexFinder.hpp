@@ -117,6 +117,9 @@ class IterativeVertexFinder {
     /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
     /// decide if a track should be checked for reassignment to other vertices
     double cutOffTrackWeightReassign = 1;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// State struct
@@ -137,16 +140,11 @@ class IterativeVertexFinder {
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack
-  ///             object
   /// @param logger The logging instance
-  IterativeVertexFinder(
-      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("IterativeVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+  IterativeVertexFinder(Config cfg,
+                        std::unique_ptr<const Logger> logger = getDefaultLogger(
+                            "IterativeVertexFinder", Logging::INFO))
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {}
 
   /// @brief Finds vertices corresponding to input trackVector
   ///
@@ -162,9 +160,6 @@ class IterativeVertexFinder {
  private:
   /// Configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
