@@ -769,10 +769,8 @@ class Gx2Fitter {
     // obtain the propagated covariance for each state.
     if (gx2fOptions.nUpdateMax > 0) {
       ACTS_VERBOSE("Propagate with the final covariance.");
-      ACTS_VERBOSE("pre-updated params:\n" << params);
       // update covariance
       params.covariance() = fullCovariancePredicted;
-      ACTS_VERBOSE("updated params:\n" << params);
 
       // set up propagator and co
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
