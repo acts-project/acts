@@ -1213,9 +1213,9 @@ class CombinatorialKalmanFilter {
       track.tipIndex() = tip;
 
       // Set fitted track parameters if available. This will only be the case if
-      // a target surface is set. Without a target surface there cannot be fitted
-      // parameters and the user will have to extrapolate the track to a target
-      // surface themselves.
+      // a target surface is set. Without a target surface there cannot be
+      // fitted parameters and the user will have to extrapolate the track to a
+      // target surface themselves.
       if (auto it = combKalmanResult.fittedParameters.find(tip);
           it != combKalmanResult.fittedParameters.end()) {
         const BoundTrackParameters& parameters = it->second;
