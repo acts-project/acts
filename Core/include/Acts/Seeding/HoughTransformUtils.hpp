@@ -62,7 +62,7 @@ struct HoughAxisRanges {
 /// @return the bin number.
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
-int binIndex(double min, double max, unsigned nSteps, double val) {
+inline int binIndex(double min, double max, unsigned nSteps, double val) {
   return static_cast<int>((val - min) / (max - min) * nSteps);
 }
 // Returns the lower bound of the bin specified by step
@@ -73,7 +73,7 @@ int binIndex(double min, double max, unsigned nSteps, double val) {
 /// @return the parameter value at the lower bin edge.
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
-double lowerBinEdge(double min, double max, unsigned nSteps,
+inline double lowerBinEdge(double min, double max, unsigned nSteps,
                     std::size_t binIndex) {
   return min + (max - min) * binIndex / nSteps;
 }
@@ -85,7 +85,7 @@ double lowerBinEdge(double min, double max, unsigned nSteps,
 /// @return the parameter value at the bin center.
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
-double binCenter(double min, double max, unsigned nSteps,
+inline double binCenter(double min, double max, unsigned nSteps,
                  std::size_t binIndex) {
   return min + (max - min) * 0.5 * (2 * binIndex + 1) / nSteps;
 }
