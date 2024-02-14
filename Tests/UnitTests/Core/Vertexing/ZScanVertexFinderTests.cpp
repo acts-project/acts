@@ -174,8 +174,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     IPEstimator ipEstimator(ipEstimatorCfg);
 
     VertexFinder::Config cfg(ipEstimator);
+    cfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-    VertexFinder finder(cfg, Acts::InputTrack::extractParameters);
+    VertexFinder finder(cfg);
 
     VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
@@ -300,12 +301,12 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrackStub
-    std::function<BoundTrackParameters(const InputTrack&)> extractParameters =
-        [](const InputTrack& params) {
-          return params.as<InputTrackStub>()->parameters();
-        };
+    auto extractParameters = [](const InputTrack& params) {
+      return params.as<InputTrackStub>()->parameters();
+    };
 
-    VertexFinder finder(cfg, extractParameters);
+    cfg.extractParameters.connect(extractParameters);
+    VertexFinder finder(cfg);
     VertexFinder::State state;
 
     VertexingOptions vertexingOptions(geoContext, magFieldContext);

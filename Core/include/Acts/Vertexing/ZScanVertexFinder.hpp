@@ -66,6 +66,9 @@ class ZScanVertexFinder {
     double expPt = 1.;
     // minimum required weight
     double minWeight = 0.01;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// State struct for fulfilling interface
@@ -74,16 +77,17 @@ class ZScanVertexFinder {
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  ///             object
   /// @param logger Logging instance
   ZScanVertexFinder(const Config& cfg,
-                    std::function<BoundTrackParameters(const InputTrack&)> func,
                     std::unique_ptr<const Logger> logger =
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
-      : m_cfg(cfg),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+      : m_cfg(cfg), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "ZScanVertexFinder: "
+          "No track parameter extractor provided.");
+    }
+  }
 
   /// @brief Function that determines single vertex,
   /// based on z0 values of input tracks,
@@ -101,9 +105,6 @@ class ZScanVertexFinder {
 
  private:
   Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

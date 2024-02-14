@@ -167,9 +167,7 @@ void update(Vector4& vtxPos, SquareMatrix4& vtxCov,
 
   // Updating the vertex
   if constexpr (nDimVertex == 3) {
-    vtxPos.setZero();
     vtxPos.head<3>() = cache.newVertexPos.template head<3>();
-    vtxCov.setZero();
     vtxCov.template topLeftCorner<3, 3>() =
         cache.newVertexCov.template topLeftCorner<3, 3>();
   } else if constexpr (nDimVertex == 4) {
