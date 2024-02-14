@@ -210,8 +210,9 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometryRemappingWithVeto) {
   std::size_t negativeSide = 0;
   std::for_each(materialSteps.begin(), materialSteps.end(),
                 [&](const Acts::ActsScalar& p) {
-                  if (p < 0)
+                  if (p < 0) {
                     negativeSide++;
+                  }
                 });
   // Check that all material is mapped
   BOOST_CHECK_EQUAL(remapped.second.materialInteractions.size(), negativeSide);
@@ -309,8 +310,9 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperDetectorWithVeto) {
   std::size_t negativeSide = 0;
   std::for_each(materialSteps.begin(), materialSteps.end(),
                 [&](const Acts::ActsScalar& p) {
-                  if (p < 0)
+                  if (p < 0) {
                     negativeSide++;
+                  }
                 });
 
   // Check that all material is mapped
@@ -376,8 +378,9 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperDetectorRemappingWithVeto) {
   std::size_t negativeSide = 0;
   std::for_each(materialSteps.begin(), materialSteps.end(),
                 [&](const Acts::ActsScalar& p) {
-                  if (p < 0)
+                  if (p < 0) {
                     negativeSide++;
+                  }
                 });
   // Check that all material is mapped
   BOOST_CHECK_EQUAL(remapped.second.materialInteractions.size(), negativeSide);
