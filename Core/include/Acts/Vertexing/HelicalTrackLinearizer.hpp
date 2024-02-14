@@ -43,9 +43,6 @@ namespace Acts {
 /// Ref. (1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 class HelicalTrackLinearizer {
  public:
-  /// State struct
-  struct State {};
-
   /// @brief Configuration struct
   struct Config {
     // The magnetic field

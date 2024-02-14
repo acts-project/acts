@@ -39,10 +39,6 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
-  // auto result = m_cfg.propagator->propagate(params, perigeeSurface,
-  // pOptions); if (!result.ok()) { return result.error();
-  // }
-  // const auto& endParams = *result->endParameters;
   const auto res =
       m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
   if (!res.ok()) {
