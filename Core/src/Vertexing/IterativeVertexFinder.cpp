@@ -11,6 +11,35 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
+Acts::IterativeVertexFinder::IterativeVertexFinder(
+    Config cfg, std::unique_ptr<const Logger> logger)
+    : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+  if (!m_cfg.extractParameters.connected()) {
+    throw std::invalid_argument(
+        "IterativeVertexFinder: "
+        "No function to extract parameters "
+        "provided.");
+  }
+
+  if (!m_cfg.trackLinearizer.connected()) {
+    throw std::invalid_argument(
+        "IterativeVertexFinder: "
+        "No track linearizer provided.");
+  }
+
+  if (!m_cfg.seedFinder) {
+    throw std::invalid_argument(
+        "IterativeVertexFinder: "
+        "No seed finder provided.");
+  }
+
+  if (!m_cfg.field) {
+    throw std::invalid_argument(
+        "IterativeVertexFinder: "
+        "No magnetic field provider provided.");
+  }
+}
+
 auto Acts::IterativeVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,

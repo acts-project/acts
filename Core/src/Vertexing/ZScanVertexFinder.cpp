@@ -8,6 +8,16 @@
 
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
+Acts::ZScanVertexFinder::ZScanVertexFinder(const Config& cfg,
+                                           std::unique_ptr<const Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {
+  if (!m_cfg.extractParameters.connected()) {
+    throw std::invalid_argument(
+        "ZScanVertexFinder: "
+        "No track parameter extractor provided.");
+  }
+}
+
 auto Acts::ZScanVertexFinder::find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
                                    IVertexFinder::State& /*state*/) const

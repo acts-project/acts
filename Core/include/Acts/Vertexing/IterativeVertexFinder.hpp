@@ -138,33 +138,7 @@ class IterativeVertexFinder final : public IVertexFinder {
   /// @param logger The logging instance
   IterativeVertexFinder(Config cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
-                            "IterativeVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
-    if (!m_cfg.extractParameters.connected()) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No function to extract parameters "
-          "provided.");
-    }
-
-    if (!m_cfg.trackLinearizer.connected()) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No track linearizer provided.");
-    }
-
-    if (!m_cfg.seedFinder) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No seed finder provided.");
-    }
-
-    if (!m_cfg.field) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No magnetic field provider provided.");
-    }
-  }
+                            "IterativeVertexFinder", Logging::INFO));
 
   /// @brief Finds vertices corresponding to input trackVector
   ///
