@@ -52,7 +52,6 @@ struct AlgorithmContext;
 class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using IPEstimator = Acts::ImpactPointEstimator;
   using Linearizer = Acts::HelicalTrackLinearizer;
   using Fitter = Acts::FullBilloirVertexFitter<Linearizer>;
   using Seeder =

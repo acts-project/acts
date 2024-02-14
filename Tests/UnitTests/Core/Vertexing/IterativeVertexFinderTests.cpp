@@ -148,11 +148,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     BilloirFitter bFitter(vertexFitterCfg);
 
-    // Impact point estimator
-    using IPEstimator = ImpactPointEstimator;
-
-    IPEstimator::Config ipEstimatorCfg(bField, propagator);
-    IPEstimator ipEstimator(ipEstimatorCfg);
+    ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+    ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
     using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
 
@@ -376,11 +373,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     BilloirFitter bFitter(vertexFitterCfg);
 
-    // IP Estimator
-    using IPEstimator = ImpactPointEstimator;
-
-    IPEstimator::Config ipEstimatorCfg(bField, propagator);
-    IPEstimator ipEstimator(ipEstimatorCfg);
+    ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+    ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
     using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
     ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
@@ -578,11 +572,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
 
   BilloirFitter bFitter(vertexFitterCfg);
 
-  // Impact point estimator
-  using IPEstimator = ImpactPointEstimator;
-
-  IPEstimator::Config ipEstimatorCfg(bField, propagator);
-  IPEstimator ipEstimator(ipEstimatorCfg);
+  ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+  ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
   using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
 

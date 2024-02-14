@@ -64,8 +64,6 @@ class IterativeVertexFinder {
   using Linearizer_t = typename vfitter_t::Linearizer_t;
 
  public:
-  using IPEstimator = ImpactPointEstimator;
-
   /// Configuration struct
   struct Config {
     /// @brief Config constructor
@@ -75,7 +73,7 @@ class IterativeVertexFinder {
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
     Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder,
-           IPEstimator est)
+           ImpactPointEstimator est)
         : vertexFitter(std::move(fitter)),
           linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
@@ -91,7 +89,7 @@ class IterativeVertexFinder {
     sfinder_t seedFinder;
 
     /// ImpactPointEstimator
-    IPEstimator ipEst;
+    ImpactPointEstimator ipEst;
 
     /// Vertex finder configuration variables.
     /// Tracks that are within a distance of
@@ -130,7 +128,7 @@ class IterativeVertexFinder {
           fitterState(field.makeCache(magContext)),
           fieldCache(field.makeCache(magContext)) {}
     /// The IP estimator state
-    typename IPEstimator::State ipState;
+    ImpactPointEstimator::State ipState;
     /// The fitter state
     typename vfitter_t::State fitterState;
 

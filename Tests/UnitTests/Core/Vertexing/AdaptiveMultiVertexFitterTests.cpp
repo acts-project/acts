@@ -334,11 +334,8 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
-  // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator;
-
-  IPEstimator::Config ip3dEstCfg(bField, propagator);
-  IPEstimator ip3dEst(ip3dEstCfg);
+  ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
+  ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
   AdaptiveMultiVertexFitter<Linearizer>::Config fitterCfg(ip3dEst);
 
@@ -471,11 +468,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
-  // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator;
-
-  IPEstimator::Config ip3dEstCfg(bField, propagator);
-  IPEstimator ip3dEst(ip3dEstCfg);
+  ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
+  ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
   std::vector<double> temperatures(1, 3.);
   AnnealingUtility::Config annealingConfig;

@@ -103,10 +103,9 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up ImpactPointEstimator, used for comparisons later
-  using IPEstimator = ImpactPointEstimator;
-  IPEstimator::Config ip3dEstConfig(bField, propagator);
-  IPEstimator ip3dEst(ip3dEstConfig);
-  IPEstimator::State state(bField->makeCache(magFieldContext));
+  ImpactPointEstimator::Config ip3dEstConfig(bField, propagator);
+  ImpactPointEstimator ip3dEst(ip3dEstConfig);
+  ImpactPointEstimator::State state(bField->makeCache(magFieldContext));
 
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
   // Linearizer for BoundTrackParameters type test

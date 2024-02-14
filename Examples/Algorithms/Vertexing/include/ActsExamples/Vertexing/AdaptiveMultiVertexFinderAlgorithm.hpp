@@ -52,7 +52,6 @@ struct AlgorithmContext;
 class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using IPEstimator = Acts::ImpactPointEstimator;
   using Linearizer = Acts::HelicalTrackLinearizer;
   using Fitter = Acts::AdaptiveMultiVertexFitter<Linearizer>;
   using Options = Acts::VertexingOptions;
